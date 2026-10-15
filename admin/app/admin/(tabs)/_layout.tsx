@@ -125,7 +125,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
-  'admin-products': { key: 'tabMarket', title: 'Market', icon: 'storefront-outline', iconFilled: 'storefront' },
+  'admin-products': { key: 'tabMarket' as any, title: 'Market', icon: 'storefront-outline', iconFilled: 'storefront' },
   'super-users': { key: 'tabUsers', title: 'Users', icon: 'people-outline', iconFilled: 'people' },
   'super-coupons': { key: 'tabCoupons', title: 'Coupons', icon: 'ticket-outline', iconFilled: 'ticket' },
   'super-accounts': { key: 'tabAccounts', title: 'Finance', icon: 'cash-outline', iconFilled: 'cash' },
@@ -424,7 +424,7 @@ export default function TabLayout() {
               isDarkTheme && { color: '#38bdf8' },
             ]}
           >
-            DOMAIN PILLARS
+            COMMAND HUBS
           </Text>
 
           {/* Navigation Pillars List (Effective Prominent Buttons) */}

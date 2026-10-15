@@ -11,7 +11,9 @@ import {
   View,
   useWindowDimensions,
   Image,
+  Animated,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -55,6 +57,54 @@ export default function LoginScreen() {
   };
 
   const [activeTab, setActiveTab] = useState<LoginTab>('password');
+  const [tabRowWidth, setTabRowWidth] = useState(0);
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+  const formFadeAnim = useRef(new Animated.Value(1)).current;
+  const formTranslateY = useRef(new Animated.Value(0)).current;
+
+  const handleTabSwitch = (tab: LoginTab) => {
+    if (tab === activeTab) return;
+    setActiveTab(tab);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Animated.parallel([
+      Animated.spring(tabSlideAnim, {
+        toValue: tab === 'password' ? 0 : 1,
+        tension: 90,
+        friction: 9.5,
+        useNativeDriver: false,
+      }),
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(formFadeAnim, {
+            toValue: 0.35,
+            duration: 70,
+            useNativeDriver: true,
+          }),
+          Animated.timing(formTranslateY, {
+            toValue: 8,
+            duration: 70,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.spring(formFadeAnim, {
+            toValue: 1,
+            tension: 85,
+            friction: 9,
+            useNativeDriver: true,
+          }),
+          Animated.spring(formTranslateY, {
+            toValue: 0,
+            tension: 85,
+            friction: 9,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    ]).start();
+  };
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -383,26 +433,54 @@ export default function LoginScreen() {
 
             <div id="recaptcha-container" />
 
-            {/* Tabs */}
-            <View style={styles.tabRow}>
-              {(['password', 'otp'] as const).map(tab => (
-                <TouchableOpacity
-                  key={tab}
-                  style={[styles.tab, activeTab === tab && styles.tabActive]}
-                  onPress={() => setActiveTab(tab)}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={tab === 'password' ? 'lock-closed' : 'phone-portrait-outline'}
-                    size={14}
-                    color={activeTab === tab ? '#10b981' : '#94a3b8'}
-                  />
-                  <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                    {tab === 'password' ? 'Password' : 'OTP'}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            {/* Movement Animated Tabs */}
+            <View
+              style={styles.tabRow}
+              onLayout={(e) => setTabRowWidth(e.nativeEvent.layout.width)}
+            >
+              {tabRowWidth > 0 && (
+                <Animated.View
+                  style={[
+                    styles.slidingActivePill,
+                    {
+                      width: (tabRowWidth - 8) / 2,
+                      transform: [
+                        {
+                          translateX: tabSlideAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, (tabRowWidth - 8) / 2],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              )}
+
+              {(['password', 'otp'] as const).map((tab) => {
+                const isSelected = activeTab === tab;
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    style={styles.tab}
+                    onPress={() => handleTabSwitch(tab)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons
+                      name={tab === 'password' ? 'lock-closed' : 'phone-portrait-outline'}
+                      size={14}
+                      color={isSelected ? '#059669' : '#64748b'}
+                    />
+                    <Text style={[styles.tabText, isSelected && styles.tabTextActive]}>
+                      {tab === 'password' ? 'Password' : 'OTP'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+
+            {/* Form Canvas with Spring Slide-and-Fade Motion */}
+            <Animated.View style={{ opacity: formFadeAnim, transform: [{ translateY: formTranslateY }] }}>
 
             {/* Mobile Input */}
             <Text style={styles.label}>{activeTab === 'password' ? 'Mobile / King ID' : 'Mobile Number'}</Text>
@@ -538,6 +616,7 @@ export default function LoginScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             ) : null}
+            </Animated.View>
 
             {/* Divider */}
             <View style={styles.dividerRow}>
@@ -620,7 +699,7 @@ const styles = StyleSheet.create({
     borderRightColor: 'rgba(255,255,255,0.12)',
   },
   leftGridOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.08,
     ...(Platform.OS === 'web'
       ? ({
@@ -738,28 +817,43 @@ const styles = StyleSheet.create({
 
   // Tabs
   tabRow: {
+    position: 'relative',
     flexDirection: 'row',
-    gap: 6,
-    marginBottom: 14,
+    marginBottom: 16,
     backgroundColor: '#f1f5f9',
     borderRadius: 14,
     padding: 4,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 10 },
-  tabActive: {
+  slidingActivePill: {
+    position: 'absolute',
+    left: 4,
+    top: 4,
+    bottom: 4,
     backgroundColor: '#ffffff',
-    shadowColor: '#10b981',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+    shadowColor: '#10b981',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 1,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    zIndex: 2,
   },
   tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
-  tabTextActive: { color: '#059669' },
+  tabTextActive: { color: '#059669', fontFamily: FONT.extraBold },
 
   // Inputs
   label: { fontSize: 11, color: '#475569', fontFamily: FONT.bold, marginBottom: 5, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },

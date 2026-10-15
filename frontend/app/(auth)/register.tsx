@@ -11,12 +11,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Animated,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { lookupPincode } from '@/src/api/pincode.api';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
@@ -55,6 +57,30 @@ export default function RegisterScreen() {
   ).trim();
   const referredViaLink = incomingRefCode.length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
+  const [accountTypeWidth, setAccountTypeWidth] = useState(0);
+  const accountSlideAnim = useRef(new Animated.Value(0)).current;
+  const farmerFormFadeAnim = useRef(new Animated.Value(0)).current;
+
+  const handleSwitchAccountType = (typeVal: 'CUSTOMER' | 'FARMER' | 'GARDENER') => {
+    if (typeVal === accountType) return;
+    setAccountType(typeVal);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Animated.parallel([
+      Animated.spring(accountSlideAnim, {
+        toValue: typeVal === 'CUSTOMER' ? 0 : 1,
+        tension: 90,
+        friction: 9.5,
+        useNativeDriver: false,
+      }),
+      Animated.timing(farmerFormFadeAnim, {
+        toValue: typeVal === 'FARMER' ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(20);
   const [farmName, setFarmName] = useState('');
   const [farmAddress, setFarmAddress] = useState('');
@@ -241,16 +267,38 @@ export default function RegisterScreen() {
             <Text style={styles.subtitle}>Enter details to get started</Text>
           </View>
 
-          {/* Account Type Selector (Customer / Farmer) */}
-          <View style={styles.accountTypeWrap}>
+          {/* Account Type Selector (Customer / Farmer) with Movement Animation */}
+          <View
+            style={styles.accountTypeWrap}
+            onLayout={(e) => setAccountTypeWidth(e.nativeEvent.layout.width)}
+          >
+            {accountTypeWidth > 0 && (
+              <Animated.View
+                style={[
+                  styles.slidingAccountPill,
+                  {
+                    width: (accountTypeWidth - 8) / 2,
+                    transform: [
+                      {
+                        translateX: accountSlideAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, (accountTypeWidth - 8) / 2],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            )}
+
             {ACCOUNT_TYPES.map((type) => {
               const isSelected = accountType === type.value;
               return (
                 <TouchableOpacity
                   key={type.value}
-                  style={[styles.accountTypeChip, isSelected && styles.accountTypeChipActive]}
-                  onPress={() => setAccountType(type.value)}
-                  activeOpacity={0.8}
+                  style={styles.accountTypeChip}
+                  onPress={() => handleSwitchAccountType(type.value)}
+                  activeOpacity={0.85}
                 >
                   <Ionicons name={type.icon} size={16} color={isSelected ? '#ffffff' : '#64748b'} />
                   <Text style={[styles.accountTypeChipText, isSelected && styles.accountTypeChipTextActive]}>
@@ -652,10 +700,29 @@ const styles = StyleSheet.create({
   title: { fontSize: 23, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
   subtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   accountTypeWrap: {
+    position: 'relative',
     flexDirection: 'row',
-    gap: 8,
     width: '100%',
-    marginBottom: 10,
+    marginBottom: 14,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  slidingAccountPill: {
+    position: 'absolute',
+    left: 4,
+    top: 4,
+    bottom: 4,
+    backgroundColor: '#16a34a',
+    borderRadius: 10,
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+    zIndex: 1,
   },
   accountTypeChip: {
     flex: 1,
@@ -663,18 +730,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    paddingVertical: 9,
+    borderRadius: 10,
+    zIndex: 2,
   },
-  accountTypeChipActive: {
-    backgroundColor: theme.primary,
-    borderColor: theme.primary,
-  },
-  accountTypeChipText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#475569' },
-  accountTypeChipTextActive: { color: '#ffffff' },
+  accountTypeChipText: { fontSize: 13, fontFamily: FONT.bold, color: '#475569' },
+  accountTypeChipTextActive: { color: '#ffffff', fontFamily: FONT.extraBold },
   fieldBlock: { width: '100%', marginBottom: 10 },
   rowTwoCols: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 10 },
   label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4 },

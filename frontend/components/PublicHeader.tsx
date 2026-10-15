@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   Linking,
+  Animated as RNAnimated,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -210,6 +211,29 @@ export default function PublicHeader({
       window.dispatchEvent(new CustomEvent('farmsking_language_change', { detail: l }));
     }
   };
+
+  // Animated Gliding Pill for Theme Toggle (Day / Night)
+  const themeAnim = useRef(new RNAnimated.Value(isDay ? 0 : 1)).current;
+  useEffect(() => {
+    RNAnimated.spring(themeAnim, {
+      toValue: isDay ? 0 : 1,
+      tension: 100,
+      friction: 10,
+      useNativeDriver: false,
+    }).start();
+  }, [isDay]);
+
+  // Animated Gliding Pill for Language Selector [ EN | PA | HI ]
+  const langAnim = useRef(new RNAnimated.Value(lang === 'EN' ? 0 : lang === 'PA' ? 1 : 2)).current;
+  useEffect(() => {
+    const targetIdx = lang === 'EN' ? 0 : lang === 'PA' ? 1 : 2;
+    RNAnimated.spring(langAnim, {
+      toValue: targetIdx,
+      tension: 100,
+      friction: 10,
+      useNativeDriver: false,
+    }).start();
+  }, [lang]);
 
   // Pulse animation on Login CTA when no user
   const pulseScale = useSharedValue(1);
@@ -555,15 +579,27 @@ export default function PublicHeader({
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Day / Night Theme Toggle */}
+            {/* Day / Night Theme Toggle with Spring Gliding Pill */}
             <View
               style={[
                 styles.themeToggleBox,
                 isDay ? styles.themeToggleBoxDay : styles.themeToggleBoxNight,
               ]}
             >
+              <RNAnimated.View
+                style={[
+                  styles.slidingThemePill,
+                  isDay ? styles.slidingThemePillDay : styles.slidingThemePillNight,
+                  {
+                    left: themeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['2%', '51%'],
+                    }),
+                  },
+                ]}
+              />
               <TouchableOpacity
-                style={[styles.themeSegment, isDay && styles.themeSegmentActiveDay]}
+                style={styles.themeSegment}
                 onPress={() => handleToggleTheme('day')}
                 activeOpacity={0.85}
               >
@@ -575,7 +611,7 @@ export default function PublicHeader({
                 )}
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.themeSegment, !isDay && styles.themeSegmentActiveNight]}
+                style={styles.themeSegment}
                 onPress={() => handleToggleTheme('night')}
                 activeOpacity={0.85}
               >
@@ -588,7 +624,7 @@ export default function PublicHeader({
               </TouchableOpacity>
             </View>
 
-            {/* Language Selector */}
+            {/* Language Selector with Spring Gliding Pill */}
             <View
               style={[
                 styles.langPicker,
@@ -596,7 +632,19 @@ export default function PublicHeader({
                 isMobile && styles.langPickerMobile,
               ]}
             >
-              <TouchableOpacity onPress={() => handleLanguageChange('EN')}>
+              <RNAnimated.View
+                style={[
+                  styles.slidingLangPill,
+                  isDay ? styles.slidingLangPillDay : styles.slidingLangPillNight,
+                  {
+                    left: langAnim.interpolate({
+                      inputRange: [0, 1, 2],
+                      outputRange: ['2%', '35%', '68%'],
+                    }),
+                  },
+                ]}
+              />
+              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('EN')} activeOpacity={0.85}>
                 <Text
                   style={[
                     styles.langOption,
@@ -607,15 +655,7 @@ export default function PublicHeader({
                   {isMobile ? 'EN' : 'English'}
                 </Text>
               </TouchableOpacity>
-              <Text
-                style={[
-                  styles.langDivider,
-                  isDay ? styles.langDividerDay : styles.langDividerNight,
-                ]}
-              >
-                |
-              </Text>
-              <TouchableOpacity onPress={() => handleLanguageChange('PA')}>
+              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('PA')} activeOpacity={0.85}>
                 <Text
                   style={[
                     styles.langOption,
@@ -626,15 +666,7 @@ export default function PublicHeader({
                   {isMobile ? 'PA' : 'ਪੰਜਾਬੀ'}
                 </Text>
               </TouchableOpacity>
-              <Text
-                style={[
-                  styles.langDivider,
-                  isDay ? styles.langDividerDay : styles.langDividerNight,
-                ]}
-              >
-                |
-              </Text>
-              <TouchableOpacity onPress={() => handleLanguageChange('HI')}>
+              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('HI')} activeOpacity={0.85}>
                 <Text
                   style={[
                     styles.langOption,
@@ -1416,6 +1448,8 @@ const styles = StyleSheet.create({
 
   // Theme Toggle Switch
   themeToggleBox: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: RADIUS.pill,
@@ -1430,7 +1464,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderColor: 'rgba(255, 255, 255, 0.14)',
   },
+  slidingThemePill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    width: '47%',
+    borderRadius: RADIUS.pill,
+    zIndex: 0,
+  },
+  slidingThemePillDay: {
+    backgroundColor: '#ffffff',
+    ...premiumShadow('#0f172a', 'xs'),
+  },
+  slidingThemePillNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    ...premiumShadow('#000000', 'xs'),
+  },
   themeSegment: {
+    position: 'relative',
+    zIndex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
@@ -1460,11 +1512,13 @@ const styles = StyleSheet.create({
 
   // Language Picker
   langPicker: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 2,
+    paddingHorizontal: 2,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
@@ -1478,9 +1532,36 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   langPickerMobile: {
-    paddingHorizontal: 5,
-    paddingVertical: 2.5,
-    gap: 3,
+    paddingHorizontal: 2,
+    paddingVertical: 2,
+    gap: 1,
+  },
+  slidingLangPill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    width: '30%',
+    borderRadius: RADIUS.pill,
+    zIndex: 0,
+  },
+  slidingLangPillDay: {
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+    ...premiumShadow('rgba(16,185,129,0.15)', 'xs'),
+  },
+  slidingLangPillNight: {
+    backgroundColor: 'rgba(16,185,129,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(52,211,153,0.45)',
+  },
+  langSegment: {
+    position: 'relative',
+    zIndex: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   langOption: {
     fontSize: 10.5,

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AreaUnit } from '@/src/types/api';
 import { useCreateFarm } from '@/src/hooks/useFarms';
 import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
@@ -37,6 +38,19 @@ export default function OnboardingScreen() {
   const [areaUnit, setAreaUnit] = useState<AreaUnit>('ACRE');
   const [irrigationSource, setIrrigationSource] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Animated sliding pill for unit selection
+  const unitSlideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleSelectUnit = (unit: AreaUnit, index: number) => {
+    setAreaUnit(unit);
+    Animated.spring(unitSlideAnim, {
+      toValue: index,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  };
 
   const finish = () => router.replace('/(tabs)' as any);
 
@@ -112,21 +126,29 @@ export default function OnboardingScreen() {
           </View>
 
           <Text style={styles.label}>Land Measurement Unit</Text>
-          <View style={styles.unitRow}>
-            {AREA_UNITS.map((unit) => (
+          <View style={styles.unitSegmentTrack}>
+            <Animated.View
+              style={[
+                styles.slidingUnitPill,
+                {
+                  left: unitSlideAnim.interpolate({
+                    inputRange: [0, 1, 2, 3],
+                    outputRange: ['1%', '25.5%', '50.5%', '75.5%'],
+                  }),
+                },
+              ]}
+            />
+            {AREA_UNITS.map((unit, idx) => (
               <TouchableOpacity
                 key={unit}
-                style={[
-                  styles.unitChip,
-                  areaUnit === unit && styles.unitChipActive,
-                ]}
-                activeOpacity={0.75}
-                onPress={() => setAreaUnit(unit)}
+                style={styles.unitSegmentBtn}
+                activeOpacity={0.8}
+                onPress={() => handleSelectUnit(unit, idx)}
               >
                 <Text
                   style={[
-                    styles.unitChipText,
-                    areaUnit === unit && styles.unitChipTextActive,
+                    styles.unitSegmentText,
+                    areaUnit === unit && styles.unitSegmentTextActive,
                   ]}
                 >
                   {unit}
@@ -292,32 +314,44 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#0f172a',
   },
-  unitRow: {
+  unitSegmentTrack: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
-    marginTop: 2,
-  },
-  unitChip: {
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.pill,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    backgroundColor: '#f8fafc',
+    padding: 3,
+    marginTop: 2,
   },
-  unitChipActive: {
+  slidingUnitPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '23.5%',
     backgroundColor: '#059669',
-    borderColor: '#059669',
+    borderRadius: RADIUS.pill,
+    ...premiumShadow('#059669', 'sm'),
+    zIndex: 0,
   },
-  unitChipText: {
-    color: '#475569',
-    fontSize: 12.5,
-    fontFamily: FONT.semiBold,
+  unitSegmentBtn: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 1,
+    paddingVertical: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  unitChipTextActive: {
-    color: '#ffffff',
+  unitSegmentText: {
+    color: '#64748b',
+    fontSize: 12,
     fontFamily: FONT.bold,
+  },
+  unitSegmentTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.extraBold,
   },
   errorBox: {
     flexDirection: 'row',

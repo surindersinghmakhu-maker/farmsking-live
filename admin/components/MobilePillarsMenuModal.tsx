@@ -109,7 +109,7 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
             <View style={styles.headerTitleBlock}>
               <View style={[styles.headerBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
                 <View style={[styles.badgePulseDot, isLight && { backgroundColor: '#16a34a' }]} />
-                <Text style={[styles.headerBadgeText, isLight && { color: '#16a34a' }]}>7 DOMAIN PILLARS</Text>
+                <Text style={[styles.headerBadgeText, isLight && { color: '#16a34a' }]}>4 COMMAND HUBS</Text>
               </View>
               <Text style={[styles.sheetTitle, isLight && { color: '#0f172a' }]}>Command Navigation</Text>
             </View>

@@ -1130,6 +1130,7 @@ const styles = StyleSheet.create({
 });
 
 function AdminBonusSectionComponent() {
+  const { isLight } = useExecutiveTheme();
   const { data: bonusReport, isLoading } = useAdminBonusReport();
   const [filter, setFilter] = useState<'ALL' | 'WELCOME' | 'REFERRAL_SIGNUP' | 'REFERRAL_PLAN' | 'OTHER'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');

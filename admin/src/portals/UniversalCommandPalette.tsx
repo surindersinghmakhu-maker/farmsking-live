@@ -192,7 +192,7 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
           promises.push(
             listUsers({ search: trimmed, limit: 4 })
               .then((resp) => {
-                const usersList = resp?.users || [];
+                const usersList = (resp as any)?.items || (resp as any)?.users || [];
                 for (const u of usersList) {
                   results.push({
                     id: `user-${u.id}`,
@@ -217,15 +217,16 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
               .then((items: SprayProductCatalogItem[]) => {
                 const matches = (items || []).slice(0, 3);
                 for (const item of matches) {
+                  const itemAny = item as any;
                   results.push({
                     id: `dose-${item.id}`,
                     type: 'DOSE',
-                    title: item.productName,
-                    subtitle: `Dose: ${item.defaultDose || 'Standard'} • Category: ${item.category || 'Agri Nutrition'}`,
+                    title: item.name || itemAny.productName || 'Plant Dose Item',
+                    subtitle: `Category: ${item.sprayType || itemAny.category || 'Agri Care'}`,
                     badgeText: 'DOSE',
                     badgeColor: '#ec4899',
                     icon: 'medkit',
-                    actionPath: `/garden/(tabs)/doses`,
+                    actionPath: `/admin/(tabs)/dose`,
                   });
                 }
               })

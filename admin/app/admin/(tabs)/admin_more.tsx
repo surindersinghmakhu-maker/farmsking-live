@@ -29,7 +29,10 @@ export default function AdminMoreScreen() {
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [collapsedPillars, setCollapsedPillars] = useState<Record<string, boolean>>({});
+  const [collapsedPillars, setCollapsedPillars] = useState<Record<string, boolean>>({
+    ECOSYSTEM: true,
+    PLATFORM: true,
+  });
 
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
@@ -162,7 +165,7 @@ export default function AdminMoreScreen() {
             )}
           </View>
 
-          {/* 7 DOMAIN PILLARS (Fully synchronized with Desktop Sidebar) */}
+          {/* 4 COMMAND HUBS (Synchronized with Desktop Sidebar & Mobile Navigation) */}
           {filteredPillars.map((pillar) => {
             const isCollapsed = collapsedPillars[pillar.id] ?? false;
 

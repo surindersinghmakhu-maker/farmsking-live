@@ -336,7 +336,7 @@ function CropCardItem({
 export default function AdvisorFarmsScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const isGardenAdvisor = user?.role === 'GARDEN_ADVISOR' || (user as any)?.advisorType === 'GARDEN';
+  const isGardenAdvisor = (user?.role as string) === 'GARDEN_ADVISOR' || (user as any)?.advisorType === 'GARDEN';
   const [activeTab, setActiveTab] = useState<FarmSubTab>('PLOTS');
   const [expandedFarmerId, setExpandedFarmerId] = useState<string | null>(null);
   const [expandedCropCycleId, setExpandedCropCycleId] = useState<string | null>(null);

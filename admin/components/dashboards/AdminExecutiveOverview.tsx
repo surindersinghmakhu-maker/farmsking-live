@@ -24,7 +24,7 @@ import { useAdminConversations } from '@/src/hooks/useAdminChat';
 import { useCrops } from '@/src/store/crops-context';
 import * as withdrawalsApi from '@/src/api/withdrawals.api';
 import * as planPaymentsApi from '@/src/api/planPayments.api';
-import { ADMIN_PILLARS } from '@/constants/navigationPillars';
+import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 const tap = () => {
   if (Platform.OS !== 'web') {
@@ -41,7 +41,7 @@ export const AdminExecutiveOverview: React.FC = () => {
   const isDesktop = width >= 1024;
   const isTablet = width >= 768 && width < 1024;
 
-  const [activeDomainFilter, setActiveDomainFilter] = useState<string>('ALL');
+  const [showTelemetry, setShowTelemetry] = useState(false);
 
   // Live Backend Queries
   const { data: products, isLoading: isLoadingProducts, refetch: refetchProducts } = useProducts(true);
@@ -62,7 +62,7 @@ export const AdminExecutiveOverview: React.FC = () => {
 
   // Calculate live counts
   const pendingWithdrawals = (withdrawals ?? []).filter((w) => w.status === 'PENDING');
-  const pendingWithdrawalAmount = pendingWithdrawals.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+  const pendingWithdrawalAmount = pendingWithdrawals.reduce((sum, w) => sum + (Number(w.requestedAmount) || 0), 0);
   const pendingPlans = planPayments ?? [];
   const pendingGps = gpsUnlockRequests.filter((r) => r.status === 'PENDING');
   const totalUnreadChat = rawConversations.reduce((sum, c: any) => sum + (c.unreadCount || 0), 0);
@@ -71,6 +71,8 @@ export const AdminExecutiveOverview: React.FC = () => {
   const lowStockProducts = (products ?? []).filter((p) => p.stockQty > 0 && p.stockQty <= 5);
   const totalCatalogCount = products?.length || 0;
   const activeCatalogCount = (products ?? []).filter((p) => p.isActive).length || 0;
+
+  const totalActionsCount = pendingWithdrawals.length + pendingPlans.length + outOfStockProducts.length + totalUnreadChat;
 
   // Refresh All
   const handleRefreshAll = () => {
@@ -97,13 +99,23 @@ export const AdminExecutiveOverview: React.FC = () => {
     }
   };
 
+  const handleNavigateTab = (tab: SubTabItem) => {
+    tap();
+    if (tab.params) {
+      const queryString = new URLSearchParams(tab.params as Record<string, string>).toString();
+      router.push(`${tab.path}?${queryString}` as any);
+    } else {
+      router.push(tab.path as any);
+    }
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.bg }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* 👑 1. EXECUTIVE COCKPIT HEADER */}
+      {/* 👑 1. STREAMLINED EXECUTIVE HEADER */}
       <View
         style={[
           styles.cockpitHeader,
@@ -114,7 +126,7 @@ export const AdminExecutiveOverview: React.FC = () => {
         <LinearGradient
           colors={
             isLight
-              ? ['#ffffff', '#f0fdf4']
+              ? ['#ffffff', '#f8fafc']
               : isDarkTheme
               ? ['rgba(2, 6, 23, 0.98)', 'rgba(15, 23, 42, 0.95)']
               : ['rgba(4, 20, 10, 0.98)', 'rgba(2, 13, 6, 0.95)']
@@ -123,7 +135,6 @@ export const AdminExecutiveOverview: React.FC = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          {/* Header Row: User Info + Health Radar Pill */}
           <View style={styles.topInfoRow}>
             <View style={styles.userInfoLeft}>
               <View style={[styles.avatarBox, isLight && styles.avatarBoxLight]}>
@@ -145,7 +156,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                   </View>
                 </View>
                 <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
-                  360° Project Overview · Executive Control Console
+                  Executive Command HQ · 4 Master Hubs Synchronized
                 </Text>
               </View>
             </View>
@@ -185,23 +196,119 @@ export const AdminExecutiveOverview: React.FC = () => {
         </LinearGradient>
       </View>
 
-      {/* 🚨 2. LIVE ALERTS & CRITICAL ACTION RADAR ("ALERTS") */}
+      {/* 📊 2. TOP EXECUTIVE 4-METRIC STRIP */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.kpiGrid}>
+          {/* KPI 1: Catalog & Products */}
+          <TouchableOpacity
+            style={[
+              styles.kpiCard,
+              isLight && styles.kpiCardLight,
+              isDarkTheme && styles.kpiCardDark,
+            ]}
+            onPress={() => router.push('/admin/(tabs)/admin-products' as any)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.kpiTopRow}>
+              <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
+                <Ionicons name="cube-outline" size={17} color="#0284c7" />
+              </View>
+              <Text style={[styles.kpiBadgeText, { color: '#0284c7' }]}>Products</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: textColor }]}>{totalCatalogCount}</Text>
+            <Text style={[styles.kpiSubtext, { color: subTextColor }]}>
+              {activeCatalogCount} Active Live in Store
+            </Text>
+          </TouchableOpacity>
+
+          {/* KPI 2: Settlements & Payouts */}
+          <TouchableOpacity
+            style={[
+              styles.kpiCard,
+              isLight && styles.kpiCardLight,
+              isDarkTheme && styles.kpiCardDark,
+            ]}
+            onPress={() => router.push('/admin/(tabs)/super-accounts' as any)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.kpiTopRow}>
+              <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(234, 179, 8, 0.12)' }]}>
+                <Ionicons name="wallet-outline" size={17} color="#eab308" />
+              </View>
+              <Text style={[styles.kpiBadgeText, { color: '#eab308' }]}>Treasury</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: pendingWithdrawals.length > 0 ? '#ef4444' : textColor }]}>
+              ₹{pendingWithdrawalAmount.toLocaleString()}
+            </Text>
+            <Text style={[styles.kpiSubtext, { color: subTextColor }]}>
+              {pendingWithdrawals.length} Pending Payouts
+            </Text>
+          </TouchableOpacity>
+
+          {/* KPI 3: Support Inquiries */}
+          <TouchableOpacity
+            style={[
+              styles.kpiCard,
+              isLight && styles.kpiCardLight,
+              isDarkTheme && styles.kpiCardDark,
+            ]}
+            onPress={() => router.push('/admin/(tabs)/chat' as any)}
+            activeOpacity={0.75}
+          >
+            <View style={styles.kpiTopRow}>
+              <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                <Ionicons name="chatbubbles-outline" size={17} color="#10b981" />
+              </View>
+              <Text style={[styles.kpiBadgeText, { color: '#10b981' }]}>Concierge</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: totalUnreadChat > 0 ? '#0284c7' : textColor }]}>
+              {totalUnreadChat}
+            </Text>
+            <Text style={[styles.kpiSubtext, { color: subTextColor }]}>
+              Farmer Support Messages
+            </Text>
+          </TouchableOpacity>
+
+          {/* KPI 4: System Health */}
+          <TouchableOpacity
+            style={[
+              styles.kpiCard,
+              isLight && styles.kpiCardLight,
+              isDarkTheme && styles.kpiCardDark,
+            ]}
+            onPress={handleOpenRadar}
+            activeOpacity={0.75}
+          >
+            <View style={styles.kpiTopRow}>
+              <View style={[styles.kpiIconWrap, { backgroundColor: 'rgba(34, 197, 94, 0.12)' }]}>
+                <Ionicons name="pulse-outline" size={17} color="#22c55e" />
+              </View>
+              <Text style={[styles.kpiBadgeText, { color: '#22c55e' }]}>Platform</Text>
+            </View>
+            <Text style={[styles.kpiValue, { color: '#22c55e' }]}>99.9%</Text>
+            <Text style={[styles.kpiSubtext, { color: subTextColor }]}>
+              Core Services Online
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 🚨 3. ACTION CENTER / TRIAGE INBOX */}
       <View style={styles.sectionWrap}>
         <View style={styles.sectionTitleRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="notifications" size={16} color="#ef4444" />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>CRITICAL ALERTS & ACTIONS</Text>
+            <Ionicons name="flash" size={15} color={totalActionsCount > 0 ? '#ef4444' : '#10b981'} />
+            <Text style={[styles.sectionTitle, { color: textColor }]}>ACTION CENTER</Text>
           </View>
-          <View style={styles.alertCountBadge}>
-            <Text style={styles.alertCountText}>
-              {pendingWithdrawals.length + pendingPlans.length + pendingGps.length + outOfStockProducts.length} ACTIVE
+          <View style={[styles.alertCountBadge, totalActionsCount === 0 && { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}>
+            <Text style={[styles.alertCountText, totalActionsCount === 0 && { color: '#10b981' }]}>
+              {totalActionsCount > 0 ? `${totalActionsCount} REQUIRED` : 'ALL CLEAR'}
             </Text>
           </View>
         </View>
 
-        {/* Alerts Cards Stack */}
+        {/* Action Items List */}
         <View style={styles.alertsContainer}>
-          {/* Alert: Pending Withdrawals */}
           {pendingWithdrawals.length > 0 && (
             <TouchableOpacity
               style={[
@@ -219,19 +326,18 @@ export const AdminExecutiveOverview: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <View style={styles.alertHeaderLine}>
                   <Text style={[styles.alertHeading, { color: textColor }]}>
-                    {pendingWithdrawals.length} Pending Payout Requests
+                    {pendingWithdrawals.length} Pending Payout Settlements
                   </Text>
                   <Text style={styles.alertAmountHighlight}>₹{pendingWithdrawalAmount.toLocaleString()}</Text>
                 </View>
                 <Text style={[styles.alertDesc, { color: subTextColor }]}>
-                  Farmers and sellers waiting for wallet settlement transfer approval.
+                  Partner wallet withdrawals awaiting executive approval.
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color="#ef4444" />
             </TouchableOpacity>
           )}
 
-          {/* Alert: Out of Stock Market Items */}
           {outOfStockProducts.length > 0 && (
             <TouchableOpacity
               style={[
@@ -249,7 +355,7 @@ export const AdminExecutiveOverview: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <View style={styles.alertHeaderLine}>
                   <Text style={[styles.alertHeading, { color: textColor }]}>
-                    {outOfStockProducts.length} Products Out of Stock
+                    {outOfStockProducts.length} Depleted Inventory Items
                   </Text>
                   <Text style={[styles.alertTagPill, { color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
                     Restock
@@ -263,407 +369,168 @@ export const AdminExecutiveOverview: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {/* Alert: Unread Farmer Chat / Queries */}
           {totalUnreadChat > 0 && (
             <TouchableOpacity
               style={[
                 styles.alertCard,
-                { borderLeftColor: '#00f2fe' },
+                { borderLeftColor: '#0284c7' },
                 isLight && { backgroundColor: '#ffffff', borderColor: '#e0f2fe' },
-                isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(0, 242, 254, 0.3)' },
+                isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(2, 132, 199, 0.3)' },
               ]}
               onPress={() => router.push('/admin/(tabs)/chat' as any)}
               activeOpacity={0.8}
             >
-              <View style={[styles.alertIconWrap, { backgroundColor: 'rgba(0, 242, 254, 0.12)' }]}>
-                <Ionicons name="chatbubbles-outline" size={18} color="#00f2fe" />
+              <View style={[styles.alertIconWrap, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
+                <Ionicons name="chatbubbles-outline" size={18} color="#0284c7" />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={styles.alertHeaderLine}>
                   <Text style={[styles.alertHeading, { color: textColor }]}>
-                    {totalUnreadChat} Farmer Support Pings
+                    {totalUnreadChat} Farmer Support Queries
                   </Text>
-                  <Text style={[styles.alertTagPill, { color: '#00f2fe', backgroundColor: 'rgba(0, 242, 254, 0.1)' }]}>
+                  <Text style={[styles.alertTagPill, { color: '#0284c7', backgroundColor: 'rgba(2, 132, 199, 0.1)' }]}>
                     Priority
                   </Text>
                 </View>
                 <Text style={[styles.alertDesc, { color: subTextColor }]}>
-                  Unassigned farmer crop disease questions or advisory assistance requests.
+                  Unassigned farmer advisory questions and assistance requests.
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color="#00f2fe" />
+              <Ionicons name="chevron-forward" size={16} color="#0284c7" />
             </TouchableOpacity>
           )}
 
-          {/* All Clear Banner (if no urgent alerts) */}
-          {pendingWithdrawals.length === 0 && outOfStockProducts.length === 0 && totalUnreadChat === 0 && (
+          {totalActionsCount === 0 && (
             <View style={[styles.allClearBanner, isLight && styles.allClearBannerLight]}>
               <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
               <Text style={[styles.allClearText, isLight && { color: '#16a34a' }]}>
-                All 7 Domain Pillars Healthy & Synchronized · Zero Critical Escalations
+                All 4 Command Hubs Synchronized & Healthy · Zero Critical Escalations
               </Text>
             </View>
           )}
         </View>
       </View>
 
-      {/* 🟢 3. SYSTEM INDICATIONS & HEALTH RADAR ("INDICATIONS") */}
+      {/* 🏛️ 4. THE 4 COMMAND HUBS */}
       <View style={styles.sectionWrap}>
         <View style={styles.sectionTitleRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="pulse" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>SYSTEM INDICATIONS & RADAR</Text>
+            <Ionicons name="grid" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.sectionTitle, { color: textColor }]}>4 COMMAND HUBS</Text>
           </View>
-          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>Live Telemetry</Text>
+          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>Core Workspaces</Text>
         </View>
 
-        {/* 4-Matrix Indications Grid */}
-        <View style={styles.indicationsGrid}>
-          {/* Node 1: NestJS Core API */}
-          <View
-            style={[
-              styles.indicationCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(56, 189, 248, 0.2)' },
-            ]}
-          >
-            <View style={styles.indicationHeader}>
-              <View style={[styles.indicationDot, { backgroundColor: '#22c55e' }]} />
-              <Text style={[styles.indicationTitle, { color: textColor }]}>Backend Core</Text>
-            </View>
-            <Text style={styles.indicationValue}>Port 3000</Text>
-            <Text style={[styles.indicationStatus, { color: '#22c55e' }]}>● ONLINE · 14ms</Text>
-          </View>
-
-          {/* Node 2: PostgreSQL Prisma DB */}
-          <View
-            style={[
-              styles.indicationCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(56, 189, 248, 0.2)' },
-            ]}
-          >
-            <View style={styles.indicationHeader}>
-              <View style={[styles.indicationDot, { backgroundColor: '#22c55e' }]} />
-              <Text style={[styles.indicationTitle, { color: textColor }]}>PostgreSQL DB</Text>
-            </View>
-            <Text style={styles.indicationValue}>Prisma Sync</Text>
-            <Text style={[styles.indicationStatus, { color: '#22c55e' }]}>● ACTIVE · 0 Stalls</Text>
-          </View>
-
-          {/* Node 3: WebSocket Live Sync */}
-          <View
-            style={[
-              styles.indicationCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(56, 189, 248, 0.2)' },
-            ]}
-          >
-            <View style={styles.indicationHeader}>
-              <View style={[styles.indicationDot, { backgroundColor: '#38bdf8' }]} />
-              <Text style={[styles.indicationTitle, { color: textColor }]}>Live WebSockets</Text>
-            </View>
-            <Text style={styles.indicationValue}>Socket.IO</Text>
-            <Text style={[styles.indicationStatus, { color: '#38bdf8' }]}>● CONNECTED</Text>
-          </View>
-
-          {/* Node 4: Payments & UPI Gateway */}
-          <View
-            style={[
-              styles.indicationCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(56, 189, 248, 0.2)' },
-            ]}
-          >
-            <View style={styles.indicationHeader}>
-              <View style={[styles.indicationDot, { backgroundColor: '#f59e0b' }]} />
-              <Text style={[styles.indicationTitle, { color: textColor }]}>Payment Gateway</Text>
-            </View>
-            <Text style={styles.indicationValue}>Razorpay & UPI</Text>
-            <Text style={[styles.indicationStatus, { color: '#22c55e' }]}>● 100% READY</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 🌐 4. 360° PURE PROJECT OVERVIEW ("PURE PROJECT DA OVERVIEW") */}
-      <View style={styles.sectionWrap}>
-        <View style={styles.sectionTitleRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="grid" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>PROJECT MULTI-DOMAIN OVERVIEW</Text>
-          </View>
-          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>Single Glance</Text>
-        </View>
-
-        {/* Domain Overview Cards */}
-        <View style={styles.domainCardsGrid}>
-          {/* DOMAIN 1: Market & Multi-Vendor E-Commerce */}
-          <TouchableOpacity
-            style={[
-              styles.domainCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#05180c', borderColor: 'rgba(0, 255, 135, 0.25)' },
-              premiumShadow('#000000', 'sm') as any,
-            ]}
-            onPress={() => router.push('/admin/(tabs)/admin-products' as any)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.domainCardTop}>
-              <View style={[styles.domainIconCircle, { backgroundColor: 'rgba(0, 255, 135, 0.12)' }]}>
-                <Ionicons name="storefront" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.domainTitle, { color: textColor }]}>Market & Products</Text>
-                <Text style={[styles.domainRuleText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
-                  🛍️ Store for Customers & Advisors · Moderated by Admin
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={isLight ? '#64748b' : '#94a3b8'} />
-            </View>
-
-            <View style={styles.domainStatsRow}>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: textColor }]}>{totalCatalogCount}</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Catalog Items</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#22c55e' }]}>{activeCatalogCount}</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Active Live</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: outOfStockProducts.length > 0 ? '#ef4444' : '#22c55e' }]}>
-                  {outOfStockProducts.length}
-                </Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Stock Depleted</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* DOMAIN 2: Garden Care & Crop Management */}
-          <TouchableOpacity
-            style={[
-              styles.domainCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(56, 189, 248, 0.25)' },
-              premiumShadow('#000000', 'sm') as any,
-            ]}
-            onPress={() => router.push('/admin/(tabs)/satellite-map' as any)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.domainCardTop}>
-              <View style={[styles.domainIconCircle, { backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}>
-                <Ionicons name="leaf" size={18} color="#38bdf8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.domainTitle, { color: textColor }]}>Garden Care & Crop Doctor</Text>
-                <Text style={[styles.domainRuleText, { color: '#38bdf8' }]}>
-                  🌾 Crop Doctor → Farmers · 🏡 Garden Advisor → Gardeners
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={isLight ? '#64748b' : '#94a3b8'} />
-            </View>
-
-            <View style={styles.domainStatsRow}>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: textColor }]}>Active</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Satellite Radar</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#38bdf8' }]}>AI Plant</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Disease Scanner</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#22c55e' }]}>8 Tools</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Garden System</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* DOMAIN 3: Treasury, Accounts & Ledger */}
-          <TouchableOpacity
-            style={[
-              styles.domainCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(234, 179, 8, 0.25)' },
-              premiumShadow('#000000', 'sm') as any,
-            ]}
-            onPress={() => router.push('/admin/(tabs)/super-accounts' as any)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.domainCardTop}>
-              <View style={[styles.domainIconCircle, { backgroundColor: 'rgba(234, 179, 8, 0.12)' }]}>
-                <Ionicons name="cash" size={18} color="#eab308" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.domainTitle, { color: textColor }]}>Treasury & Ledger Vault</Text>
-                <Text style={[styles.domainRuleText, { color: '#eab308' }]}>
-                  💰 Automated settlement, plan payments & payout approvals
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={isLight ? '#64748b' : '#94a3b8'} />
-            </View>
-
-            <View style={styles.domainStatsRow}>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: textColor }]}>
-                  {pendingWithdrawals.length}
-                </Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Pending Payouts</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#eab308' }]}>
-                  {pendingPlans.length}
-                </Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Plan Claims</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#22c55e' }]}>Audited</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Ledger Integrity</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          {/* DOMAIN 4: User Directory & Ecosystem */}
-          <TouchableOpacity
-            style={[
-              styles.domainCard,
-              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-              isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(168, 85, 247, 0.25)' },
-              premiumShadow('#000000', 'sm') as any,
-            ]}
-            onPress={() => router.push('/admin/(tabs)/super-users' as any)}
-            activeOpacity={0.8}
-          >
-            <View style={styles.domainCardTop}>
-              <View style={[styles.domainIconCircle, { backgroundColor: 'rgba(168, 85, 247, 0.12)' }]}>
-                <Ionicons name="people" size={18} color="#a855f7" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.domainTitle, { color: textColor }]}>User & Community Directory</Text>
-                <Text style={[styles.domainRuleText, { color: '#a855f7' }]}>
-                  👥 Farmers, Gardeners, Advisors, Sellers & Staff
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={isLight ? '#64748b' : '#94a3b8'} />
-            </View>
-
-            <View style={styles.domainStatsRow}>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: textColor }]}>Farmers</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Primary Ag</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#a855f7' }]}>Gardeners</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Urban / Plant</Text>
-              </View>
-              <View style={styles.domainStatMini}>
-                <Text style={[styles.domainStatNum, { color: '#38bdf8' }]}>Advisors</Text>
-                <Text style={[styles.domainStatLbl, { color: subTextColor }]}>Consultants</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* ⚡ 5. REAL-TIME ACTIVITY & UPDATES STREAM ("UPDATES") */}
-      <View style={styles.sectionWrap}>
-        <View style={styles.sectionTitleRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="time" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>LIVE PROJECT UPDATES & STREAM</Text>
-          </View>
-          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>Chronological</Text>
-        </View>
-
-        <View
-          style={[
-            styles.activityCard,
-            isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-            isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(255, 255, 255, 0.08)' },
-          ]}
-        >
-          {/* Update Item 1 */}
-          <View style={styles.activityRow}>
-            <View style={[styles.activityDot, { backgroundColor: '#22c55e' }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.activityTitle, { color: textColor }]}>
-                Marketplace Inventory Synchronized
-              </Text>
-              <Text style={[styles.activitySub, { color: subTextColor }]}>
-                {activeCatalogCount} approved multi-vendor listings actively receiving orders.
-              </Text>
-            </View>
-            <Text style={[styles.activityTime, { color: subTextColor }]}>Just now</Text>
-          </View>
-
-          {/* Update Item 2 */}
-          <View style={styles.activityRow}>
-            <View style={[styles.activityDot, { backgroundColor: '#38bdf8' }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.activityTitle, { color: textColor }]}>
-                Garden Care System Active
-              </Text>
-              <Text style={[styles.activitySub, { color: subTextColor }]}>
-                8 garden management tools and AI scanner telemetry running smoothly.
-              </Text>
-            </View>
-            <Text style={[styles.activityTime, { color: subTextColor }]}>Live</Text>
-          </View>
-
-          {/* Update Item 3 */}
-          <View style={[styles.activityRow, { borderBottomWidth: 0 }]}>
-            <View style={[styles.activityDot, { backgroundColor: '#eab308' }]} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.activityTitle, { color: textColor }]}>
-                Treasury & Wallet Security Guard
-              </Text>
-              <Text style={[styles.activitySub, { color: subTextColor }]}>
-                Zero unverified transactions; automated ledger reconciliation active.
-              </Text>
-            </View>
-            <Text style={[styles.activityTime, { color: subTextColor }]}>Continuous</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* 🚀 6. DOMAIN PILLARS 1-TAP LAUNCHER */}
-      <View style={[styles.sectionWrap, { marginBottom: 20 }]}>
-        <View style={styles.sectionTitleRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="rocket" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>DOMAIN PILLARS JUMP</Text>
-          </View>
-          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>7 Pillars</Text>
-        </View>
-
-        <View style={styles.pillarsGrid}>
-          {ADMIN_PILLARS.map((pillar) => (
-            <TouchableOpacity
-              key={pillar.id}
+        <View style={styles.hubsGrid}>
+          {ADMIN_PILLARS.map((hub) => (
+            <View
+              key={hub.id}
               style={[
-                styles.pillarQuickPill,
-                isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-                isDarkTheme && { backgroundColor: '#020617', borderColor: 'rgba(255, 255, 255, 0.08)' },
+                styles.hubCard,
+                isLight && styles.hubCardLight,
+                isDarkTheme && styles.hubCardDark,
               ]}
-              onPress={() => {
-                tap();
-                if (pillar.subTabs && pillar.subTabs.length > 0) {
-                  router.push(pillar.subTabs[0].path as any);
-                }
-              }}
-              activeOpacity={0.7}
             >
-              <Ionicons
-                name={pillar.icon}
-                size={14}
-                color={pillar.color || (isLight ? '#16a34a' : '#00ff87')}
-              />
-              <Text style={[styles.pillarQuickText, { color: textColor }]} numberOfLines={1}>
-                {pillar.title}
-              </Text>
-            </TouchableOpacity>
+              {/* Hub Card Header */}
+              <TouchableOpacity
+                style={styles.hubHeaderRow}
+                activeOpacity={0.7}
+                onPress={() => {
+                  if (hub.subTabs && hub.subTabs.length > 0) {
+                    handleNavigateTab(hub.subTabs[0]);
+                  }
+                }}
+              >
+                <View style={[styles.hubIconCircle, { backgroundColor: `${hub.color}15`, borderColor: `${hub.color}30` }]}>
+                  <Ionicons name={hub.iconFilled || hub.icon} size={18} color={hub.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.hubTitle, { color: textColor }]}>{hub.title}</Text>
+                  <Text style={[styles.hubSubtitle, { color: subTextColor }]}>
+                    {hub.subTabs.length} Dedicated Tools · Tap to open
+                  </Text>
+                </View>
+                <View style={[styles.hubBadge, { borderColor: `${hub.color}40`, backgroundColor: `${hub.color}10` }]}>
+                  <Text style={[styles.hubBadgeText, { color: hub.color }]}>{hub.badge}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Hub Sub-Tools Chips */}
+              <View style={styles.hubChipsContainer}>
+                {hub.subTabs.slice(0, 6).map((tab) => (
+                  <TouchableOpacity
+                    key={tab.id}
+                    style={[
+                      styles.hubChip,
+                      isLight && styles.hubChipLight,
+                      isDarkTheme && styles.hubChipDark,
+                    ]}
+                    onPress={() => handleNavigateTab(tab)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name={tab.icon} size={12} color={hub.color} />
+                    <Text style={[styles.hubChipText, { color: textColor }]} numberOfLines={1}>
+                      {tab.shortTitle || tab.title}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           ))}
         </View>
+      </View>
+
+      {/* 📡 5. INFRASTRUCTURE TELEMETRY (CLEAN & EXPANDABLE) */}
+      <View style={[styles.sectionWrap, { marginBottom: 25 }]}>
+        <TouchableOpacity
+          style={[
+            styles.telemetryToggleBar,
+            isLight && styles.telemetryToggleBarLight,
+            isDarkTheme && styles.telemetryToggleBarDark,
+          ]}
+          onPress={() => setShowTelemetry(!showTelemetry)}
+          activeOpacity={0.8}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+            <Ionicons name="hardware-chip-outline" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.telemetryToggleText, { color: textColor }]}>
+              Infrastructure Health & Live Services
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={styles.livePulseDot} />
+            <Text style={[styles.telemetryStatusLabel, { color: '#22c55e' }]}>All Systems Operational</Text>
+            <Ionicons name={showTelemetry ? 'chevron-up' : 'chevron-down'} size={15} color={subTextColor} />
+          </View>
+        </TouchableOpacity>
+
+        {showTelemetry && (
+          <View style={styles.telemetryGrid}>
+            <View style={[styles.telemetryCard, isLight && styles.telemetryCardLight]}>
+              <Text style={[styles.telemetryCardTitle, { color: textColor }]}>Backend Core</Text>
+              <Text style={styles.telemetryCardValue}>NestJS :3000</Text>
+              <Text style={[styles.telemetryCardStatus, { color: '#22c55e' }]}>● ONLINE · 14ms</Text>
+            </View>
+
+            <View style={[styles.telemetryCard, isLight && styles.telemetryCardLight]}>
+              <Text style={[styles.telemetryCardTitle, { color: textColor }]}>PostgreSQL DB</Text>
+              <Text style={styles.telemetryCardValue}>Prisma Sync</Text>
+              <Text style={[styles.telemetryCardStatus, { color: '#22c55e' }]}>● ACTIVE · 0 Stalls</Text>
+            </View>
+
+            <View style={[styles.telemetryCard, isLight && styles.telemetryCardLight]}>
+              <Text style={[styles.telemetryCardTitle, { color: textColor }]}>WebSockets</Text>
+              <Text style={styles.telemetryCardValue}>Socket.IO Sync</Text>
+              <Text style={[styles.telemetryCardStatus, { color: '#38bdf8' }]}>● CONNECTED</Text>
+            </View>
+
+            <View style={[styles.telemetryCard, isLight && styles.telemetryCardLight]}>
+              <Text style={[styles.telemetryCardTitle, { color: textColor }]}>Payment Gateway</Text>
+              <Text style={styles.telemetryCardValue}>Razorpay & UPI</Text>
+              <Text style={[styles.telemetryCardStatus, { color: '#22c55e' }]}>● 100% READY</Text>
+            </View>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -693,9 +560,9 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(56, 189, 248, 0.2)',
   },
   cockpitGradient: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   topInfoRow: {
     flexDirection: 'row',
@@ -712,8 +579,8 @@ const styles = StyleSheet.create({
     minWidth: 200,
   },
   avatarBox: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     backgroundColor: 'rgba(0, 255, 135, 0.12)',
     borderWidth: 1.5,
@@ -726,7 +593,7 @@ const styles = StyleSheet.create({
     borderColor: '#16a34a',
   },
   greetingTitle: {
-    fontSize: 14.5,
+    fontSize: 14,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
   },
@@ -815,14 +682,14 @@ const styles = StyleSheet.create({
 
   /* Sections */
   sectionWrap: {
-    paddingHorizontal: 10,
-    marginTop: 12,
+    paddingHorizontal: 12,
+    marginTop: 14,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 8,
     paddingHorizontal: 2,
   },
   sectionTitle: {
@@ -848,6 +715,62 @@ const styles = StyleSheet.create({
     color: '#ef4444',
   },
 
+  /* 4-KPI Grid */
+  kpiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  kpiCard: {
+    flex: 1,
+    minWidth: 140,
+    backgroundColor: '#04150b',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.16)',
+    padding: 12,
+  },
+  kpiCardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  kpiCardDark: {
+    backgroundColor: '#020617',
+    borderColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  kpiTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  kpiIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kpiBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+  kpiValue: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.3,
+  },
+  kpiSubtext: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    marginTop: 2,
+  },
+
   /* Alerts */
   alertsContainer: {
     gap: 6,
@@ -856,17 +779,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 10,
+    backgroundColor: '#03140a',
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(0, 255, 135, 0.16)',
     borderLeftWidth: 3.5,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   alertIconWrap: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -875,14 +798,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 6,
   },
   alertHeading: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
   },
   alertAmountHighlight: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: FONT.extraBold,
     color: '#ef4444',
   },
@@ -891,186 +813,182 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 4,
+    borderRadius: 3,
   },
   alertDesc: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.regular,
-    marginTop: 2,
+    marginTop: 1,
   },
   allClearBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 8,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
   allClearBannerLight: {
     backgroundColor: '#f0fdf4',
-    borderColor: 'rgba(22, 163, 74, 0.25)',
+    borderColor: '#bbf7d0',
   },
   allClearText: {
     fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#22c55e',
+    color: '#10b981',
     flex: 1,
   },
 
-  /* Indications Grid */
-  indicationsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  /* 4 Command Hubs Grid */
+  hubsGrid: {
+    gap: 10,
   },
-  indicationCard: {
-    flex: 1,
-    minWidth: '48%',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 10,
+  hubCard: {
+    backgroundColor: '#04150b',
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    gap: 2,
+    borderColor: 'rgba(0, 255, 135, 0.16)',
+    padding: 12,
   },
-  indicationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
+  hubCardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  indicationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  hubCardDark: {
+    backgroundColor: '#020617',
+    borderColor: 'rgba(56, 189, 248, 0.2)',
   },
-  indicationTitle: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-  },
-  indicationValue: {
-    fontSize: 12,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  indicationStatus: {
-    fontSize: 9,
-    fontFamily: FONT.bold,
-    marginTop: 1,
-  },
-
-  /* Domain Cards */
-  domainCardsGrid: {
-    gap: 8,
-  },
-  domainCard: {
-    backgroundColor: '#04140a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.18)',
-    padding: 10,
-    gap: 8,
-  },
-  domainCardTop: {
+  hubHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    marginBottom: 10,
   },
-  domainIconCircle: {
+  hubIconCircle: {
     width: 34,
     height: 34,
     borderRadius: 10,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  domainTitle: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-  },
-  domainRuleText: {
-    fontSize: 10,
-    fontFamily: FONT.medium,
-    marginTop: 1,
-  },
-  domainStatsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.06)',
-    paddingTop: 6,
-  },
-  domainStatMini: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  domainStatNum: {
+  hubTitle: {
     fontSize: 12.5,
     fontFamily: FONT.extraBold,
+    letterSpacing: 0.2,
   },
-  domainStatLbl: {
-    fontSize: 9,
+  hubSubtitle: {
+    fontSize: 10,
     fontFamily: FONT.medium,
     marginTop: 1,
   },
-
-  /* Activity Stream */
-  activityCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 10,
+  hubBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
   },
-  activityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 7,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  activityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  activityTitle: {
-    fontSize: 11.5,
+  hubBadgeText: {
+    fontSize: 9,
     fontFamily: FONT.bold,
   },
-  activitySub: {
-    fontSize: 10,
-    fontFamily: FONT.regular,
-    marginTop: 1,
-  },
-  activityTime: {
-    fontSize: 9,
-    fontFamily: FONT.medium,
-  },
-
-  /* Pillars Grid */
-  pillarsGrid: {
+  hubChipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  pillarQuickPill: {
+  hubChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 9,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 8,
     paddingVertical: 5,
-    borderRadius: 8,
   },
-  pillarQuickText: {
+  hubChipLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  hubChipDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(56, 189, 248, 0.15)',
+  },
+  hubChipText: {
     fontSize: 10.5,
+    fontFamily: FONT.medium,
+  },
+
+  /* Telemetry Toggle Bar */
+  telemetryToggleBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#03140a',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  telemetryToggleBarLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  telemetryToggleBarDark: {
+    backgroundColor: '#020617',
+    borderColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  telemetryToggleText: {
+    fontSize: 11,
     fontFamily: FONT.bold,
+  },
+  telemetryStatusLabel: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+  telemetryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  telemetryCard: {
+    flex: 1,
+    minWidth: 130,
+    backgroundColor: '#020b06',
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.12)',
+    padding: 8,
+  },
+  telemetryCardLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  telemetryCardTitle: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  telemetryCardValue: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#38bdf8',
+    marginTop: 2,
+  },
+  telemetryCardStatus: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    marginTop: 2,
   },
 });

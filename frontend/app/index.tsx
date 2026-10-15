@@ -9,6 +9,7 @@ import {
   Platform,
   useWindowDimensions,
   Modal,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -323,8 +324,11 @@ function SpatialTiltCard({
             right: 0,
             bottom: 0,
             pointerEvents: 'none',
-            borderRadius: 'inherit',
-            background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.04) 45%, transparent 75%)`,
+            ...(Platform.OS === 'web'
+              ? ({
+                  background: `radial-gradient(circle at ${tilt.glareX}% ${tilt.glareY}%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.04) 45%, transparent 75%)`,
+                } as any)
+              : {}),
             zIndex: 99,
           }}
         />
@@ -2804,7 +2808,7 @@ export default function PublicLandingPage() {
       >
         <View style={S.modalOverlayBackdrop}>
           <TouchableOpacity
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             activeOpacity={1}
             onPress={() => setMobileMenuOpen(false)}
           />
@@ -3972,6 +3976,9 @@ const S = StyleSheet.create({
     borderRadius: RADIUS.xs,
     marginTop: 1,
   },
+  rollerTrendPillNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.28)',
+  },
   rollerTrendText: {
     fontSize: 9.5,
     fontFamily: FONT.extraBold,
@@ -4725,12 +4732,6 @@ const S = StyleSheet.create({
   },
   brandLogoTextDay: {
     color: '#0f172a',
-  },
-  navLinkDay: {
-    color: '#64748b',
-  },
-  navLinkActiveDay: {
-    color: '#3b82f6',
   },
 
   // Theme Toggle Switch
@@ -6195,58 +6196,6 @@ const S = StyleSheet.create({
   },
   socialProofTextDay: { color: '#047857' },
   socialProofTextNight: { color: '#a7f3d0' },
-
-  // ── Wide Glowing "Get Started Free" Button ──
-  primaryBtnContainerWide: {
-    minWidth: 240,
-    borderWidth: 1.5,
-    borderColor: 'rgba(52, 211, 153, 0.7)',
-  },
-  primaryBtnContainerNight: {
-    ...premiumShadow('#10b981', 'lg'),
-  },
-  btnPrimaryWide: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  btnPrimarySparkleWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 240, 138, 0.6)',
-  },
-  btnPrimaryTextBox: {
-    flexDirection: 'column',
-  },
-  btnPrimaryTextWide: {
-    color: '#ffffff',
-    fontSize: 14.5,
-    fontFamily: FONT.extraBold,
-    letterSpacing: 0.2,
-    lineHeight: 18,
-  },
-  btnPrimarySubWide: {
-    color: '#d1fae5',
-    fontSize: 9,
-    fontFamily: FONT.semiBold,
-    letterSpacing: 0.2,
-  },
-  btnPrimaryArrowPill: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 6,
-  },
 
   // ── 4 Pillars Micro Value Badges ──
   pillarMicroBadge: {

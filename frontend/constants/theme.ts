@@ -6,6 +6,7 @@ export const RADIUS = {
   md: 18,
   lg: 24,
   xl: 32,
+  xxl: 40,
   pill: 999,
 };
 
@@ -31,11 +32,13 @@ export const FONT = {
  * shadow and elevation props; react-native-web translates the shadow
  * props to a CSS box-shadow, so the same call works on web too.
  */
-export function premiumShadow(color: string = '#00ff87', level: 'sm' | 'md' | 'lg' = 'md'): ViewStyle {
+export function premiumShadow(color: string = '#00ff87', level: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'md'): ViewStyle {
   const shadowMap = {
+    xs: { opacity: 0.10, radius: 6, offsetY: 2, elevation: 2 },
     sm: { opacity: 0.16, radius: 10, offsetY: 3, elevation: 3 },
     md: { opacity: 0.24, radius: 18, offsetY: 6, elevation: 6 },
     lg: { opacity: 0.36, radius: 28, offsetY: 10, elevation: 10 },
+    xl: { opacity: 0.45, radius: 36, offsetY: 14, elevation: 14 },
   };
   const levels = shadowMap[level] ?? shadowMap.sm;
 

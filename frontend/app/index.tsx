@@ -136,6 +136,7 @@ const MANDI_DATA: Record<string, Record<string, { rate: string; change: string; 
 const ALL_INDIA_LIVE_MANDI_FEED = [
   {
     crop: 'Wheat',
+    cropPunjabi: 'ਕਣਕ',
     variety: 'Mill Grade',
     emoji: '🌾',
     mandi: 'Khanna APMC',
@@ -143,12 +144,12 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹2,285',
     unit: 'qtl',
     change: '+₹35 ↑',
-    color: '#f59e0b',
-    glow: 'rgba(245, 158, 11, 0.22)',
+    color: '#059669',
     tag: 'Govt APMC',
   },
   {
     crop: 'Basmati',
+    cropPunjabi: 'ਬਾਸਮਤੀ',
     variety: '1121 Steam',
     emoji: '🌾',
     mandi: 'Amritsar APMC',
@@ -157,11 +158,11 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     unit: 'qtl',
     change: '+₹60 ↑',
     color: '#10b981',
-    glow: 'rgba(16, 185, 129, 0.22)',
     tag: 'Export Grade',
   },
   {
     crop: 'Mustard',
+    cropPunjabi: 'ਸਰ੍ਹੋਂ',
     variety: '42% Oil',
     emoji: '🌼',
     mandi: 'Kota APMC',
@@ -169,12 +170,12 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹5,450',
     unit: 'qtl',
     change: '+₹45 ↑',
-    color: '#eab308',
-    glow: 'rgba(234, 179, 8, 0.22)',
+    color: '#d97706',
     tag: 'High Oil',
   },
   {
     crop: 'Paddy',
+    cropPunjabi: 'ਝੋਨਾ',
     variety: 'PR-126 Golden',
     emoji: '🌾',
     mandi: 'Karnal APMC',
@@ -182,38 +183,12 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹2,340',
     unit: 'qtl',
     change: '+₹40 ↑',
-    color: '#34d399',
-    glow: 'rgba(52, 211, 153, 0.22)',
+    color: '#0d9488',
     tag: 'Live Auction',
   },
   {
-    crop: 'Potato',
-    variety: 'Pukhraj Fresh',
-    emoji: '🥔',
-    mandi: 'Jalandhar APMC',
-    state: 'Punjab',
-    price: '₹1,800',
-    unit: 'qtl',
-    change: '+₹25 ↑',
-    color: '#d97706',
-    glow: 'rgba(217, 119, 6, 0.22)',
-    tag: 'Cold Storage',
-  },
-  {
-    crop: 'Onion',
-    variety: 'Red Nashik',
-    emoji: '🧅',
-    mandi: 'Lasalgaon APMC',
-    state: 'Maharashtra',
-    price: '₹2,420',
-    unit: 'qtl',
-    change: '+₹70 ↑',
-    color: '#ec4899',
-    glow: 'rgba(236, 72, 153, 0.22)',
-    tag: 'Asia Largest',
-  },
-  {
     crop: 'Cotton',
+    cropPunjabi: 'ਨਰਮਾ',
     variety: 'Narma BT-II',
     emoji: '🌿',
     mandi: 'Abohar APMC',
@@ -221,12 +196,38 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹7,150',
     unit: 'qtl',
     change: '+₹80 ↑',
-    color: '#06b6d4',
-    glow: 'rgba(6, 182, 212, 0.22)',
+    color: '#0284c7',
     tag: 'High Bidding',
   },
   {
+    crop: 'Potato',
+    cropPunjabi: 'ਆਲੂ',
+    variety: 'Pukhraj Fresh',
+    emoji: '🥔',
+    mandi: 'Jalandhar APMC',
+    state: 'Punjab',
+    price: '₹1,800',
+    unit: 'qtl',
+    change: '+₹25 ↑',
+    color: '#b45309',
+    tag: 'Cold Storage',
+  },
+  {
+    crop: 'Onion',
+    cropPunjabi: 'ਪਿਆਜ਼',
+    variety: 'Red Nashik',
+    emoji: '🧅',
+    mandi: 'Lasalgaon APMC',
+    state: 'Maharashtra',
+    price: '₹2,420',
+    unit: 'qtl',
+    change: '+₹70 ↑',
+    color: '#be185d',
+    tag: 'Asia Largest',
+  },
+  {
     crop: 'Tomato',
+    cropPunjabi: 'ਟਮਾਟਰ',
     variety: 'Hybrid Red',
     emoji: '🍅',
     mandi: 'Kolar APMC',
@@ -234,12 +235,12 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹1,650',
     unit: 'qtl',
     change: '+₹50 ↑',
-    color: '#ef4444',
-    glow: 'rgba(239, 68, 68, 0.22)',
+    color: '#dc2626',
     tag: 'Bulk Trade',
   },
   {
     crop: 'Maize',
+    cropPunjabi: 'ਮੱਕੀ',
     variety: 'Feed Grain',
     emoji: '🌽',
     mandi: 'Chhindwara APMC',
@@ -247,8 +248,7 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     price: '₹2,180',
     unit: 'qtl',
     change: '+₹30 ↑',
-    color: '#f97316',
-    glow: 'rgba(249, 115, 22, 0.22)',
+    color: '#ea580c',
     tag: 'Poultry Demand',
   },
 ];
@@ -1443,6 +1443,25 @@ export default function PublicLandingPage() {
             z-index: 12 !important;
           }
 
+          /* ── 4D Live Mandi Upward Slide Animation (Price Moves Up) ── */
+          @keyframes mandiPriceSlideUp {
+            0% {
+              transform: translateY(28px);
+              opacity: 0;
+            }
+            35% {
+              opacity: 0.85;
+            }
+            100% {
+              transform: translateY(0px);
+              opacity: 1;
+            }
+          }
+          .mandi-item-slide-anim {
+            animation: mandiPriceSlideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+            will-change: transform, opacity !important;
+          }
+
           /* ── Voice Audio Readout Equalizer ── */
           @keyframes audioEqualizerWave {
             0%, 100% { height: 4px; }
@@ -1626,9 +1645,9 @@ export default function PublicLandingPage() {
               </View>
 
 
-              {/* ── 1-by-1 Vertical Slide-Up All India Mandi Rate Roller ── */}
+              {/* ── 1-by-1 Vertical Slide-Up All India Mandi Rate Roller (Prices Move Upwards) ── */}
               <TouchableOpacity
-                style={[S.mandiRollerSlot, isDay && S.mandiRollerSlotDay]}
+                style={[S.mandiRollerSlot, isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight]}
                 activeOpacity={0.92}
                 onPress={() => {
                   if (user) {
@@ -1645,10 +1664,23 @@ export default function PublicLandingPage() {
                   const item = ALL_INDIA_LIVE_MANDI_FEED[activeMandiRollIdx] || ALL_INDIA_LIVE_MANDI_FEED[0];
                   return (
                     <View key={activeMandiRollIdx} style={S.mandiRollerItem} className="mandi-item-slide-anim">
-                      {/* Left: Colorful Crop Pill */}
-                      <View style={[S.rollerCropBadge, { backgroundColor: item.glow, borderColor: item.color }]}>
-                        <Text style={{ fontSize: 13.5 }}>{item.emoji}</Text>
-                        <Text style={[S.rollerCropText, { color: item.color }]}>{item.crop}</Text>
+                      {/* Left: High-Contrast Crop Badge with Clear Name & Punjabi Subtitle */}
+                      <View
+                        style={[
+                          S.rollerCropBadge,
+                          isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
+                          { borderColor: item.color },
+                        ]}
+                      >
+                        <Text style={{ fontSize: 18 }}>{item.emoji}</Text>
+                        <View style={{ flexDirection: 'column' }}>
+                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
+                            {item.crop}
+                          </Text>
+                          <Text style={[S.rollerCropPunjabiText, { color: item.color }]}>
+                            {item.cropPunjabi}
+                          </Text>
+                        </View>
                       </View>
 
                       {/* Middle: Mandi & State / Variety */}
@@ -1666,13 +1698,18 @@ export default function PublicLandingPage() {
                         </Text>
                       </View>
 
-                      {/* Right: Live Price & Up Trend Pill */}
+                      {/* Right: Live Price & Up Trend (Moving Upwards) */}
                       <View style={S.rollerPriceGroup}>
-                        <Text style={[S.rollerPriceVal, isDay && S.rollerPriceValDay]}>
-                          {item.price}<Text style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay]}>/{item.unit}</Text>
-                        </Text>
-                        <View style={[S.rollerTrendPill, isDay && S.rollerTrendPillDay]}>
-                          <Ionicons name="trending-up" size={9.5} color={isDay ? '#047857' : '#34d399'} />
+                        <View style={S.rollerPriceValueRow}>
+                          <Text style={[S.rollerPriceVal, isDay ? S.rollerPriceValDay : S.rollerPriceValNight]}>
+                            {item.price}
+                          </Text>
+                          <Text style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay]}>
+                            /{item.unit}
+                          </Text>
+                        </View>
+                        <View style={[S.rollerTrendPill, isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight]}>
+                          <Ionicons name="arrow-up" size={10} color={isDay ? '#047857' : '#34d399'} />
                           <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay]}>{item.change}</Text>
                         </View>
                       </View>
@@ -1695,7 +1732,7 @@ export default function PublicLandingPage() {
                         isDay && S.rollerDotDay,
                         i === activeMandiRollIdx && {
                           backgroundColor: f.color,
-                          width: 10,
+                          width: 12,
                           borderRadius: 3,
                         },
                       ]}
@@ -1704,35 +1741,22 @@ export default function PublicLandingPage() {
                 </View>
               </View>
 
-              {/* ── High-Converting 4D CTA: "Login for your own crop live prices" ── */}
+              {/* ── Sleek Integrated Live Rates Inline Strip (Replaces bulky button) ── */}
               <TouchableOpacity
-                style={[S.loginOwnRatesBtn, isDay && S.loginOwnRatesBtnDay]}
-                onPress={() => {
-                  if (user) {
-                    router.push('/(dashboard)');
-                  } else {
-                    router.push('/(auth)/login');
-                  }
-                }}
-                activeOpacity={0.88}
-                // @ts-ignore
-                className="kinetic-login-rates-btn"
+                style={[S.mandiInlinePrompt, isDay ? S.mandiInlinePromptDay : S.mandiInlinePromptNight]}
+                onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
+                activeOpacity={0.85}
               >
-                <View style={S.loginOwnRatesLeft}>
-                  <View style={[S.loginOwnRatesIconCircle, isDay && S.loginOwnRatesIconCircleDay]}>
-                    <Ionicons name="sparkles" size={13} color="#fef08a" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.loginOwnRatesText, isDay && S.loginOwnRatesTextDay]}>
-                      {user ? 'View Your Own Crop Live Prices' : 'Login for your own crop live prices'}
-                    </Text>
-                    <Text style={[S.loginOwnRatesSub, isDay && S.loginOwnRatesSubDay]}>
-                      Get instant personalized APMC rates for your exact mandi & crops
-                    </Text>
-                  </View>
+                <View style={S.mandiInlinePromptLeft}>
+                  <Ionicons name="sparkles" size={13} color="#f59e0b" />
+                  <Text style={[S.mandiInlinePromptText, isDay ? S.mandiInlinePromptTextDay : S.mandiInlinePromptTextNight]}>
+                    {user ? 'Viewing your personalized live mandi prices' : 'Live rates for your own farm crops'}
+                  </Text>
                 </View>
-                <View style={[S.loginOwnRatesArrowPill, isDay && S.loginOwnRatesArrowPillDay]}>
-                  <Ionicons name="arrow-forward" size={12} color="#ffffff" />
+                <View style={[S.mandiInlinePromptPill, isDay ? S.mandiInlinePromptPillDay : S.mandiInlinePromptPillNight]}>
+                  <Text style={[S.mandiInlinePromptPillText, isDay ? S.mandiInlinePromptPillTextDay : S.mandiInlinePromptPillNight]}>
+                    {user ? 'My Rates →' : 'Login Live Rates →'}
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -1834,10 +1858,10 @@ export default function PublicLandingPage() {
               </View>
             </Modal>
 
-            {/* CTAs */}
+            {/* ══ HIGH-CONVERTING UNIFIED HERO CTA (MERGED WITH "LOGIN FOR LIVE PRICES") ══ */}
             <View style={S.ctaRow}>
               <TouchableOpacity
-                onPress={() => router.push('/(auth)/login')}
+                onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
                 activeOpacity={0.88}
                 style={[
                   S.primaryBtnContainer,
@@ -1847,20 +1871,24 @@ export default function PublicLandingPage() {
                 ]}
               >
                 <LinearGradient
-                  colors={isDay ? ['#10b981', '#059669', '#047857'] : ['#10b981', '#059669', '#047857']}
+                  colors={['#10b981', '#059669', '#047857']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={[S.btnPrimary, S.btnPrimaryWide]}
                 >
                   <View style={S.btnPrimarySparkleWrap}>
-                    <Ionicons name="sparkles" size={16} color="#fef08a" />
+                    <Ionicons name="sparkles" size={18} color="#fef08a" />
                   </View>
                   <View style={S.btnPrimaryTextBox}>
-                    <Text style={S.btnPrimaryTextWide}>{t.getStarted}</Text>
-                    <Text style={S.btnPrimarySubWide}>Explore Store, Doctors & Tools</Text>
+                    <Text style={S.btnPrimaryTextWide}>
+                      {user ? 'Open Farmer Dashboard →' : 'Get Started Free • Login for Your Own Crop Live Prices'}
+                    </Text>
+                    <Text style={S.btnPrimarySubWide}>
+                      Instant Live APMC Mandi Radar • 5-Sec AI Crop Doctor • Certified Agri Store
+                    </Text>
                   </View>
                   <View style={S.btnPrimaryArrowPill}>
-                    <Ionicons name="arrow-forward" size={14} color="#ffffff" />
+                    <Ionicons name="arrow-forward" size={15} color="#ffffff" />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -4283,16 +4311,20 @@ const S = StyleSheet.create({
   },
   // ─── 1-by-1 Vertical Slide-Up All India Mandi Roller Styles ─────────────
   mandiRollerSlot: {
-    height: 52,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    height: 56,
+    backgroundColor: 'rgba(2, 14, 10, 0.85)',
     borderWidth: 1.2,
-    borderColor: 'rgba(52, 211, 153, 0.32)',
-    borderRadius: RADIUS.md,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    borderRadius: 14,
     paddingHorizontal: 10,
     justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
+  },
+  mandiRollerSlotNight: {
+    backgroundColor: 'rgba(2, 14, 10, 0.85)',
+    borderColor: 'rgba(52, 211, 153, 0.35)',
   },
   mandiRollerItem: {
     flexDirection: 'row',
@@ -4303,16 +4335,34 @@ const S = StyleSheet.create({
   rollerCropBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     paddingHorizontal: 8,
-    paddingVertical: 4.5,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1.5,
+  },
+  rollerCropBadgeDay: {
+    backgroundColor: '#ffffff',
+    ...premiumShadow('rgba(0, 0, 0, 0.05)', 'xs'),
+  },
+  rollerCropBadgeNight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   rollerCropText: {
-    fontSize: 11.5,
+    fontSize: 13,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.2,
+  },
+  rollerCropTextDay: {
+    color: '#0f172a',
+  },
+  rollerCropTextNight: {
+    color: '#ffffff',
+  },
+  rollerCropPunjabiText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    lineHeight: 11,
   },
   rollerMandiInfo: {
     flex: 1,
@@ -4344,11 +4394,21 @@ const S = StyleSheet.create({
   rollerPriceGroup: {
     alignItems: 'flex-end',
   },
+  rollerPriceValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 2,
+  },
   rollerPriceVal: {
-    fontSize: 14.5,
+    fontSize: 15.5,
     fontFamily: FONT.extraBold,
-    color: '#ffffff',
     letterSpacing: -0.3,
+  },
+  rollerPriceValDay: {
+    color: '#047857',
+  },
+  rollerPriceValNight: {
+    color: '#34d399',
   },
   rollerPriceUnit: {
     fontSize: 9.5,
@@ -4360,8 +4420,8 @@ const S = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     backgroundColor: 'rgba(16, 185, 129, 0.16)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.xs,
     marginTop: 1,
   },
@@ -4394,68 +4454,61 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
   },
 
-  // ─── High-Converting "Login for your own crop live prices" 4D Button ────
-  loginOwnRatesBtn: {
+  // ─── Sleek Integrated Live Rates Inline Prompt ──────────────────────────
+  mandiInlinePrompt: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    backgroundColor: '#047857',
-    borderWidth: 1.2,
-    borderColor: '#34d399',
+    paddingHorizontal: 10,
+    paddingVertical: 6.5,
+    borderRadius: 10,
+    borderWidth: 1,
     marginTop: 8,
-    ...(Platform.OS === 'web'
-      ? ({
-          background: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%)',
-          boxShadow: '0 6px 18px rgba(16, 185, 129, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.45)',
-          cursor: 'pointer',
-        } as any)
-      : {
-          elevation: 5,
-          shadowColor: '#10b981',
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.45,
-          shadowRadius: 8,
-        }),
   },
-  loginOwnRatesLeft: {
+  mandiInlinePromptDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  mandiInlinePromptNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: 'rgba(52, 211, 153, 0.28)',
+  },
+  mandiInlinePromptLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     flex: 1,
   },
-  loginOwnRatesIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(254, 240, 138, 0.6)',
+  mandiInlinePromptText: {
+    fontSize: 10.5,
+    fontFamily: FONT.semiBold,
   },
-  loginOwnRatesText: {
-    fontSize: 12,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    letterSpacing: -0.2,
+  mandiInlinePromptTextDay: {
+    color: '#065f46',
   },
-  loginOwnRatesSub: {
-    fontSize: 9.5,
-    fontFamily: FONT.regular,
+  mandiInlinePromptTextNight: {
     color: '#d1fae5',
-    marginTop: 1,
   },
-  loginOwnRatesArrowPill: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
+  mandiInlinePromptPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  mandiInlinePromptPillDay: {
+    backgroundColor: '#059669',
+  },
+  mandiInlinePromptPillNight: {
+    backgroundColor: 'rgba(52, 211, 153, 0.25)',
+  },
+  mandiInlinePromptPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+  },
+  mandiInlinePromptPillTextDay: {
+    color: '#ffffff',
+  },
+  mandiInlinePromptPillTextNight: {
+    color: '#a7f3d0',
   },
 
   // ─── Verified APMC Footer ──────────────────────────────────────────────
@@ -5304,7 +5357,7 @@ const S = StyleSheet.create({
   mandiRollerSlotDay: {
     backgroundColor: '#ffffff',
     borderColor: 'rgba(16, 185, 129, 0.35)',
-    ...premiumShadow('#0f172a', 'xs'),
+    ...premiumShadow('rgba(16, 185, 129, 0.08)', 'xs'),
   },
   rollerMandiNameDay: {
     color: '#0f172a',
@@ -5317,9 +5370,6 @@ const S = StyleSheet.create({
   },
   rollerStateSubDay: {
     color: '#64748b',
-  },
-  rollerPriceValDay: {
-    color: '#0f172a',
   },
   rollerPriceUnitDay: {
     color: '#64748b',
@@ -5335,38 +5385,6 @@ const S = StyleSheet.create({
   },
   rollerDotDay: {
     backgroundColor: '#cbd5e1',
-  },
-
-  // ─── Login For Your Own Crop Live Prices Button Day Mode ───────────────
-  loginOwnRatesBtnDay: {
-    backgroundColor: '#059669',
-    borderColor: '#10b981',
-    ...(Platform.OS === 'web'
-      ? ({
-          background: 'linear-gradient(135deg, #047857 0%, #059669 50%, #10b981 100%)',
-          boxShadow: '0 6px 18px rgba(5, 150, 105, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.5)',
-          cursor: 'pointer',
-        } as any)
-      : {
-          elevation: 5,
-          shadowColor: '#059669',
-          shadowOffset: { width: 0, height: 3 },
-          shadowOpacity: 0.35,
-          shadowRadius: 8,
-        }),
-  },
-  loginOwnRatesIconCircleDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    borderColor: 'rgba(254, 240, 138, 0.75)',
-  },
-  loginOwnRatesTextDay: {
-    color: '#ffffff',
-  },
-  loginOwnRatesSubDay: {
-    color: '#ecfdf5',
-  },
-  loginOwnRatesArrowPillDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
   },
 
   // ─── Verified APMC Footer Day Mode ─────────────────────────────────────

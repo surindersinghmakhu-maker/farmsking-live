@@ -55,9 +55,10 @@ Every AI assistant and developer working on FarmsKing MUST strictly uphold the f
 ---
 
 ## 0. 🔤 100% Pure English Language Standard & Executive Copy
-- **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, and technical documentation MUST be written in **100% pure professional English language**.
+- **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, mandi rate tickers, AI diagnostic demos, audio controls, and technical documentation MUST be written in **100% pure professional English language**.
+- **No Vernacular Subtitles in Core Pages**: Do NOT hardcode Punjabi, Hindi, or mixed-language subtitles (e.g., no `(ਕਣਕ)`, no `ਬੋਲ ਕੇ ਸੁਣੋ`, no vernacular translations inline) in the primary interfaces or landing page.
+- **Sole Exception - Language Selector Box**: The ONLY UI component where regional scripts (Gurmukhi `ਪੰਜਾਬੀ` or Devanagari `हिंदी`) are permitted is inside the dedicated **Language Selector / Switcher Box** (`[ EN | PA | HI ]`). Outside this language selector, everything across the entire platform must be 100% pure English.
 - **Compact & Easily Understandable Copy**: Use concise, executive, high-clarity wording that is instantly understandable for farmers, nursery owners, corporate partners, and platform administrators. Avoid confusing jargon while maintaining a 5-star executive feel.
-- No mixed-language text or local slang in core application interfaces unless explicitly requested by the user for a specific multi-language component.
 
 ---
 

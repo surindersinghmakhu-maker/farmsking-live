@@ -136,7 +136,6 @@ const MANDI_DATA: Record<string, Record<string, { rate: string; change: string; 
 const ALL_INDIA_LIVE_MANDI_FEED = [
   {
     crop: 'Wheat',
-    cropPunjabi: 'ਕਣਕ',
     variety: 'Mill Grade',
     emoji: '🌾',
     mandi: 'Khanna APMC',
@@ -148,8 +147,7 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     tag: 'Govt APMC',
   },
   {
-    crop: 'Basmati',
-    cropPunjabi: 'ਬਾਸਮਤੀ',
+    crop: 'Basmati Rice',
     variety: '1121 Steam',
     emoji: '🌾',
     mandi: 'Amritsar APMC',
@@ -161,8 +159,7 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     tag: 'Export Grade',
   },
   {
-    crop: 'Mustard',
-    cropPunjabi: 'ਸਰ੍ਹੋਂ',
+    crop: 'Mustard Seeds',
     variety: '42% Oil',
     emoji: '🌼',
     mandi: 'Kota APMC',
@@ -174,8 +171,7 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
     tag: 'High Oil',
   },
   {
-    crop: 'Paddy',
-    cropPunjabi: 'ਝੋਨਾ',
+    crop: 'Paddy Grain',
     variety: 'PR-126 Golden',
     emoji: '🌾',
     mandi: 'Karnal APMC',
@@ -188,7 +184,6 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
   },
   {
     crop: 'Cotton',
-    cropPunjabi: 'ਨਰਮਾ',
     variety: 'Narma BT-II',
     emoji: '🌿',
     mandi: 'Abohar APMC',
@@ -201,7 +196,6 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
   },
   {
     crop: 'Potato',
-    cropPunjabi: 'ਆਲੂ',
     variety: 'Pukhraj Fresh',
     emoji: '🥔',
     mandi: 'Jalandhar APMC',
@@ -214,7 +208,6 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
   },
   {
     crop: 'Onion',
-    cropPunjabi: 'ਪਿਆਜ਼',
     variety: 'Red Nashik',
     emoji: '🧅',
     mandi: 'Lasalgaon APMC',
@@ -227,7 +220,6 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
   },
   {
     crop: 'Tomato',
-    cropPunjabi: 'ਟਮਾਟਰ',
     variety: 'Hybrid Red',
     emoji: '🍅',
     mandi: 'Kolar APMC',
@@ -240,7 +232,6 @@ const ALL_INDIA_LIVE_MANDI_FEED = [
   },
   {
     crop: 'Maize',
-    cropPunjabi: 'ਮੱਕੀ',
     variety: 'Feed Grain',
     emoji: '🌽',
     mandi: 'Chhindwara APMC',
@@ -542,9 +533,8 @@ const LIVE_FARMER_ACTIVITIES = [
 const AI_DOCTOR_SAMPLES = [
   {
     id: 'wheat',
-    crop: 'Wheat (ਕਣਕ)',
+    crop: 'Wheat',
     disease: 'Yellow Rust / Stripe Rust',
-    punjabiName: 'ਕਣਕ ਦਾ ਪੀਲਾ ਕੁੰਗੀ ਰੋਗ',
     pathogen: 'Puccinia striiformis',
     leafEmoji: '🌾',
     color: '#eab308',
@@ -556,14 +546,12 @@ const AI_DOCTOR_SAMPLES = [
     dosage: '200 ml in 200 Litres water per acre',
     prevention: 'Spray on morning calm before rust spreads to upper flag leaf',
     shopQuery: 'Propiconazole',
-    audioNarrationPunjabi: 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਕਿਸਾਨ ਵੀਰੋ। ਕਣਕ ਵਿੱਚ ਪੀਲੀ ਕੁੰਗੀ ਰੋਗ ਦੀ ਪੁਸ਼ਟੀ ਹੋਈ ਹੈ। ਇਸ ਦੇ ਇਲਾਜ ਲਈ ਟਿਲਟ ਜਾਂ ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25 ਈ ਸੀ, 200 ਐਮ ਐਲ ਨੂੰ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕਾਅ ਕਰੋ।',
     audioNarrationEnglish: 'Diagnosis confirmed: Wheat Yellow Rust. Recommended treatment: Propiconazole 25 EC at 200 ml in 200 liters of water per acre.',
   },
   {
     id: 'cotton',
-    crop: 'Cotton (ਨਰਮਾ)',
+    crop: 'Cotton',
     disease: 'Whitefly Infestation',
-    punjabiName: 'ਨਰਮੇ ਦਾ ਚਿੱਟਾ ਮੱਛਰ',
     pathogen: 'Bemisia tabaci',
     leafEmoji: '🌱',
     color: '#06b6d4',
@@ -575,14 +563,12 @@ const AI_DOCTOR_SAMPLES = [
     dosage: '250 g in 150 Litres water per acre',
     prevention: 'Spray targeting undersides of foliage using hollow cone nozzle',
     shopQuery: 'Diafenthiuron',
-    audioNarrationPunjabi: 'ਕਿਸਾਨ ਵੀਰੋ, ਨਰਮੇ ਵਿੱਚ ਚਿੱਟੇ ਮੱਛਰ ਦਾ ਹਮਲਾ ਹੋਇਆ ਹੈ। ਤੁਰੰਤ ਬਚਾਅ ਲਈ ਪੈਗਾਸਸ ਜਾਂ ਡਾਇਫੈਨਥਿਊਰੋਨ 50 ਡਬਲਯੂ ਪੀ, 250 ਗ੍ਰਾਮ ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕਾਅ ਕਰੋ।',
     audioNarrationEnglish: 'Diagnosis confirmed: Cotton Whitefly Infestation. Recommended treatment: Diafenthiuron 50 WP at 250 grams per acre.',
   },
   {
     id: 'potato',
-    crop: 'Potato (ਆਲੂ)',
+    crop: 'Potato',
     disease: 'Late Blight Disease',
-    punjabiName: 'ਆਲੂ ਦਾ ਪਛੇਤਾ ਝੁਲਸਾ ਰੋਗ',
     pathogen: 'Phytophthora infestans',
     leafEmoji: '🥔',
     color: '#10b981',
@@ -594,7 +580,6 @@ const AI_DOCTOR_SAMPLES = [
     dosage: '600 g in 200 Litres water per acre',
     prevention: 'Preventive spray before dense fog and cold damp nights',
     shopQuery: 'Ridomil',
-    audioNarrationPunjabi: 'ਕਿਸਾਨ ਵੀਰੋ, ਆਲੂ ਦੀ ਫਸਲ ਵਿੱਚ ਪਛੇਤਾ ਝੁਲਸਾ ਰੋਗ ਪਾਇਆ ਗਿਆ ਹੈ। ਫਸਲ ਨੂੰ ਬਚਾਉਣ ਲਈ ਰਿਡੋਮਿਲ ਗੋਲਡ 600 ਗ੍ਰਾਮ ਨੂੰ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਘੋਲ ਕੇ ਤੁਰੰਤ ਸਪਰੇਅ ਕਰੋ।',
     audioNarrationEnglish: 'Diagnosis confirmed: Potato Late Blight. Recommended treatment: Ridomil Gold at 600 grams in 200 liters of water per acre.',
   },
 ];
@@ -607,7 +592,7 @@ export default function PublicLandingPage() {
   const isTablet = width > 768 && width <= 1024;
   const isMobile = width <= 768;
 
-  // ── Farmers "ਬੋਲ ਕੇ ਸੁਣੋ" (Audio Readout) Voice State ──
+  // ── Farmers Audio Advisory Voice Assistant State ──
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [currentSpeakingId, setCurrentSpeakingId] = useState<string | null>(null);
 
@@ -1559,7 +1544,7 @@ export default function PublicLandingPage() {
                 </Text>
               </View>
 
-              {/* 🔊 ਕਿਸਾਨਾਂ ਲਈ "ਬੋਲ ਕੇ ਸੁਣੋ" (Audio Readout Quick Chip) */}
+              {/* 🔊 Audio Readout Quick Chip */}
               <TouchableOpacity
                 style={[
                   S.heroAudioReadoutBtn,
@@ -1590,7 +1575,7 @@ export default function PublicLandingPage() {
                       : (isDay ? { color: '#047857' } : { color: '#34d399' }),
                   ]}
                 >
-                  {isSpeaking && currentSpeakingId === 'hero-advisory' ? '🔊 ਬੋਲ ਰਿਹਾ ਹੈ... (Stop)' : '🔊 ਬੋਲ ਕੇ ਸੁਣੋ (Audio Advisory)'}
+                  {isSpeaking && currentSpeakingId === 'hero-advisory' ? '🔊 Speaking... (Tap to Stop)' : '🔊 Listen (Audio Advisory)'}
                 </Text>
                 {isSpeaking && currentSpeakingId === 'hero-advisory' && (
                   <View style={S.audioWaveBarContainer}>
@@ -1694,14 +1679,9 @@ export default function PublicLandingPage() {
                       >
                         <Text style={{ fontSize: isMobile ? 18 : 20 }}>{item.emoji}</Text>
                         <View style={{ flexDirection: 'column' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                            <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
-                              {item.crop}
-                            </Text>
-                            <Text style={[S.rollerCropPunjabiTag, isDay ? S.rollerCropPunjabiTagDay : S.rollerCropPunjabiTagNight]}>
-                              ({item.cropPunjabi})
-                            </Text>
-                          </View>
+                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
+                            {item.crop}
+                          </Text>
                           <Text style={[S.rollerVarietyText, isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight]} numberOfLines={1}>
                             {item.variety}
                           </Text>
@@ -2753,7 +2733,7 @@ export default function PublicLandingPage() {
                       </LinearGradient>
                     </TouchableOpacity>
 
-                    {/* 🔊 ਕਿਸਾਨਾਂ ਲਈ "ਬੋਲ ਕੇ ਸੁਣੋ" (Audio Readout in Punjabi) */}
+                    {/* 🔊 Audio Readout Button */}
                     <TouchableOpacity
                       style={[
                         S.aiDoctorAudioBtn,
@@ -2762,14 +2742,10 @@ export default function PublicLandingPage() {
                           : (isDay ? S.aiDoctorAudioBtnDay : S.aiDoctorAudioBtnNight),
                       ]}
                       onPress={() => {
-                        const narration =
-                          lang === 'EN'
-                            ? activeAiSample.audioNarrationEnglish
-                            : activeAiSample.audioNarrationPunjabi;
-                        speakText(narration, `ai-doc-${activeAiSample.id}`);
+                        speakText(activeAiSample.audioNarrationEnglish, `ai-doc-${activeAiSample.id}`);
                       }}
                       activeOpacity={0.85}
-                      accessibilityLabel="Listen crop disease diagnosis aloud in Punjabi"
+                      accessibilityLabel="Listen to crop disease diagnosis aloud"
                     >
                       <Ionicons
                         name={isSpeaking && currentSpeakingId === `ai-doc-${activeAiSample.id}` ? 'volume-high' : 'volume-medium-outline'}
@@ -2785,8 +2761,8 @@ export default function PublicLandingPage() {
                         ]}
                       >
                         {isSpeaking && currentSpeakingId === `ai-doc-${activeAiSample.id}`
-                          ? '🔊 ਸੁਣ ਰਹੇ ਹੋ... (Stop)'
-                          : '🔊 ਬੋਲ ਕੇ ਸੁਣੋ (Audio Readout)'}
+                          ? '🔊 Speaking... (Tap to Stop)'
+                          : '🔊 Listen to Diagnosis (Audio Readout)'}
                       </Text>
                       {isSpeaking && currentSpeakingId === `ai-doc-${activeAiSample.id}` && (
                         <View style={S.audioWaveBarContainer}>
@@ -3607,7 +3583,7 @@ export default function PublicLandingPage() {
         ]}
         onPress={() => {
           const msg = encodeURIComponent(
-            'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਜੀ, ਮੈਨੂੰ ਮੇਰੀ ਫਸਲ ਅਤੇ ਖੇਤੀਬਾੜੀ ਲਈ ਮਾਹਿਰ ਦੀ ਸਲਾਹ ਚਾਹੀਦੀ ਹੈ। (Hello FarmsKing Expert, I need agricultural guidance)'
+            'Hello FarmsKing Expert Agronomist, I need agricultural guidance for my crops and farm management.'
           );
           const url = `https://wa.me/9195776220000?text=${msg}`;
           if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -3635,7 +3611,7 @@ export default function PublicLandingPage() {
           {!isMobile ? (
             <View style={S.whatsAppTextCol}>
               <Text style={S.whatsAppTopLabel}>EXPERT HELP</Text>
-              <Text style={S.whatsAppMainText}>WhatsApp Kisan Desk</Text>
+              <Text style={S.whatsAppMainText}>WhatsApp Farmer Desk</Text>
             </View>
           ) : (
             <Text style={S.whatsAppMobileText}>WhatsApp</Text>

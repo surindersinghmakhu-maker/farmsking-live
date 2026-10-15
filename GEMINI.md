@@ -16,8 +16,10 @@
 - **Proactive Implementation**: Automatically apply the recommended highest-tier industry standard without forcing the user to pick low-level technical options.
 - **Preservation**: Preserve all working APIs, database schemas, and real data. Never replace live data with dummy data.
 
-## 1. 100% Pure English UI Standard & Executive Copy
-- All user-facing UI text, buttons, modals, headings, badges, dashboards, and system messages MUST be in 100% pure professional English.
+## 1. 100% Pure English UI Standard & Executive Copy (ਸਿਰਫ਼ ਅੰਗਰੇਜ਼ੀ ਭਾਸ਼ਾ ਨਿਯਮ)
+- **Strict 100% English Language**: All user-facing UI text, buttons, modals, headings, badges, dashboards, audio assistant controls, telemetry cards, and system messages MUST be written in 100% pure professional English.
+- **No Mixed or Hardcoded Vernacular Text**: Do NOT include Punjabi or Hindi vernacular text (e.g. `(ਕਣਕ)`, `ਬੋਲ ਕੇ ਸੁਣੋ`, etc.) in the core application or landing page UI.
+- **Sole Exception - Dedicated Language Switcher Box**: The only element on any page permitted to show regional language scripts is the dedicated Language Selector / Switcher box (e.g., `[ EN | PA | HI ]` or `English / ਪੰਜਾਬੀ / हिंदी`). Every other component, header, hero card, diagnostic widget, and footer must be 100% pure English.
 - Compact, clear, 5-star easily understandable executive wording.
 
 ## 2. 100% Pure React & Universal Responsive Architecture

@@ -1443,23 +1443,38 @@ export default function PublicLandingPage() {
             z-index: 12 !important;
           }
 
-          /* ── 4D Live Mandi Upward Slide Animation (Price Moves Up) ── */
-          @keyframes mandiPriceSlideUp {
+          /* ── Continuous Live Mandi Upward Scroll Animation (Prices Gliding Upwards) ── */
+          @keyframes mandiContinuousUpwardScroll {
             0% {
-              transform: translateY(28px);
-              opacity: 0;
-            }
-            35% {
-              opacity: 0.85;
+              transform: translateY(0px);
             }
             100% {
-              transform: translateY(0px);
-              opacity: 1;
+              transform: translateY(-522px);
             }
           }
-          .mandi-item-slide-anim {
-            animation: mandiPriceSlideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-            will-change: transform, opacity !important;
+          .mandi-vertical-ticker-window {
+            height: 114px !important;
+            overflow: hidden !important;
+            position: relative !important;
+            border-radius: 14px !important;
+          }
+          .mandi-vertical-ticker-track {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            animation: mandiContinuousUpwardScroll 22s linear infinite !important;
+            will-change: transform !important;
+          }
+          .mandi-vertical-ticker-window:hover .mandi-vertical-ticker-track {
+            animation-play-state: paused !important;
+          }
+          .mandi-roller-row-item {
+            height: 52px !important;
+            box-sizing: border-box !important;
+            transition: transform 0.15s ease, background-color 0.15s ease !important;
+          }
+          .mandi-roller-row-item:hover {
+            transform: scale(1.008) !important;
           }
 
           /* ── Voice Audio Readout Equalizer ── */
@@ -1608,14 +1623,14 @@ export default function PublicLandingPage() {
             <View nativeID="mandi-rates" {...(Platform.OS === 'web' ? ({ id: 'mandi-rates' } as any) : {})} />
             <SpatialTiltCard
               style={[S.mandiDiscoveryCard, isDay && S.mandiDiscoveryCardDay]}
-              glowColor={isDay ? 'rgba(16, 185, 129, 0.22)' : 'rgba(16, 185, 129, 0.35)'}
+              glowColor={isDay ? 'rgba(16, 185, 129, 0.28)' : 'rgba(16, 185, 129, 0.38)'}
               tiltMax={3}
               isInteractive={true}
             >
               {/* ── Top Header Row: Title & 4D Official Rates Action Button ── */}
               <View style={S.mandiHeaderRow}>
                 <View style={S.mandiHeaderTitleGroup}>
-                  <Ionicons name="trending-up" size={14} color={isDay ? '#059669' : '#34d399'} />
+                  <Ionicons name="trending-up" size={16} color={isDay ? '#059669' : '#34d399'} />
                   <Text style={[S.mandiCardTitle, isDay && S.mandiCardTitleDay]}>{t.instantMandi}</Text>
                   <View style={[S.liveBadgeMini, isDay && S.liveBadgeMiniDay]}>
                     <View style={S.pulseDot} />
@@ -1637,18 +1652,17 @@ export default function PublicLandingPage() {
                   // @ts-ignore
                   className="four-d-official-btn"
                 >
-                  <Ionicons name="lock-closed" size={11} color={isDay ? '#047857' : '#34d399'} />
+                  <Ionicons name="shield-checkmark" size={12} color={isDay ? '#047857' : '#34d399'} />
                   <Text style={[S.mandiRate4DBtnText, isDay && S.mandiRate4DBtnTextDay]}>
                     {user ? t.myRates : t.officialRatesBtn}
                   </Text>
                 </TouchableOpacity>
               </View>
 
-
-              {/* ── 1-by-1 Vertical Slide-Up All India Mandi Rate Roller (Prices Move Upwards) ── */}
+              {/* ── Continuous Upward Live APMC Mandi Rate Board (Prices Move Upwards) ── */}
               <TouchableOpacity
                 style={[S.mandiRollerSlot, isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight]}
-                activeOpacity={0.92}
+                activeOpacity={0.94}
                 onPress={() => {
                   if (user) {
                     router.push('/(dashboard)');
@@ -1657,44 +1671,50 @@ export default function PublicLandingPage() {
                   }
                 }}
                 // @ts-ignore
-                onMouseEnter={() => setIsRollPaused(true)}
-                onMouseLeave={() => setIsRollPaused(false)}
+                className="mandi-vertical-ticker-window"
               >
-                {(() => {
-                  const item = ALL_INDIA_LIVE_MANDI_FEED[activeMandiRollIdx] || ALL_INDIA_LIVE_MANDI_FEED[0];
-                  return (
-                    <View key={activeMandiRollIdx} style={S.mandiRollerItem} className="mandi-item-slide-anim">
+                {/* Upward Scrolling Continuous Track */}
+                <View
+                  // @ts-ignore
+                  className="mandi-vertical-ticker-track"
+                >
+                  {[...ALL_INDIA_LIVE_MANDI_FEED, ...ALL_INDIA_LIVE_MANDI_FEED].map((item, idx) => (
+                    <View
+                      key={`mandi-feed-${idx}`}
+                      style={[S.mandiRollerRowItem, isDay && S.mandiRollerRowItemDay]}
+                      // @ts-ignore
+                      className="mandi-roller-row-item"
+                    >
                       {/* Left: High-Contrast Crop Badge with Clear Name & Punjabi Subtitle */}
                       <View
                         style={[
                           S.rollerCropBadge,
                           isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
-                          { borderColor: item.color },
                         ]}
                       >
-                        <Text style={{ fontSize: 18 }}>{item.emoji}</Text>
+                        <Text style={{ fontSize: isMobile ? 18 : 20 }}>{item.emoji}</Text>
                         <View style={{ flexDirection: 'column' }}>
-                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
-                            {item.crop}
-                          </Text>
-                          <Text style={[S.rollerCropPunjabiText, { color: item.color }]}>
-                            {item.cropPunjabi}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
+                              {item.crop}
+                            </Text>
+                            <Text style={[S.rollerCropPunjabiTag, isDay ? S.rollerCropPunjabiTagDay : S.rollerCropPunjabiTagNight]}>
+                              ({item.cropPunjabi})
+                            </Text>
+                          </View>
+                          <Text style={[S.rollerVarietyText, isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight]} numberOfLines={1}>
+                            {item.variety}
                           </Text>
                         </View>
                       </View>
 
-                      {/* Middle: Mandi & State / Variety */}
+                      {/* Middle: Mandi & State */}
                       <View style={S.rollerMandiInfo}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <Text style={[S.rollerMandiName, isDay && S.rollerMandiNameDay]} numberOfLines={1}>
-                            📍 {item.mandi}
-                          </Text>
-                          <View style={[S.rollerTagPill, isDay && S.rollerTagPillDay]}>
-                            <Text style={[S.rollerTagText, isDay && S.rollerTagTextDay]}>{item.tag}</Text>
-                          </View>
-                        </View>
+                        <Text style={[S.rollerMandiName, isDay && S.rollerMandiNameDay]} numberOfLines={1}>
+                          📍 {item.mandi}
+                        </Text>
                         <Text style={[S.rollerStateSub, isDay && S.rollerStateSubDay]} numberOfLines={1}>
-                          {item.state} • {item.variety}
+                          {item.state} • {item.tag}
                         </Text>
                       </View>
 
@@ -1709,63 +1729,73 @@ export default function PublicLandingPage() {
                           </Text>
                         </View>
                         <View style={[S.rollerTrendPill, isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight]}>
-                          <Ionicons name="arrow-up" size={10} color={isDay ? '#047857' : '#34d399'} />
+                          <Ionicons name="caret-up" size={11} color={isDay ? '#047857' : '#34d399'} />
                           <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay]}>{item.change}</Text>
                         </View>
                       </View>
                     </View>
-                  );
-                })()}
+                  ))}
+                </View>
+
+                {/* Top and Bottom Edge Smooth Gradient Masks */}
+                {Platform.OS === 'web' && (
+                  <>
+                    <View
+                      // @ts-ignore
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 12,
+                        pointerEvents: 'none',
+                        background: isDay
+                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.95), transparent)'
+                          : 'linear-gradient(180deg, rgba(3, 20, 14, 0.95), transparent)',
+                        zIndex: 2,
+                      }}
+                    />
+                    <View
+                      // @ts-ignore
+                      style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 12,
+                        pointerEvents: 'none',
+                        background: isDay
+                          ? 'linear-gradient(0deg, rgba(255, 255, 255, 0.95), transparent)'
+                          : 'linear-gradient(0deg, rgba(3, 20, 14, 0.95), transparent)',
+                        zIndex: 2,
+                      }}
+                    />
+                  </>
+                )}
               </TouchableOpacity>
 
-              {/* ── Roller Micro Indicators (Live Mandi Index & Dots) ── */}
+              {/* ── Roller Micro Indicators (Continuous Sync & Live Upward Status) ── */}
               <View style={S.rollerIndicatorsRow}>
-                <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay]}>
-                  Live APMC Auction {activeMandiRollIdx + 1} of {ALL_INDIA_LIVE_MANDI_FEED.length} • Updated Just Now
-                </Text>
-                <View style={S.rollerDotsGroup}>
-                  {ALL_INDIA_LIVE_MANDI_FEED.map((f, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        S.rollerDot,
-                        isDay && S.rollerDotDay,
-                        i === activeMandiRollIdx && {
-                          backgroundColor: f.color,
-                          width: 12,
-                          borderRadius: 3,
-                        },
-                      ]}
-                    />
-                  ))}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name="pulse" size={12} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay]}>
+                    Live APMC Auction Radar • 9 Regional Mandis
+                  </Text>
+                </View>
+                <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight]}>
+                  <Ionicons name="trending-up" size={11} color={isDay ? '#047857' : '#34d399'} />
+                  <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight]}>
+                    Prices Rising ↑
+                  </Text>
                 </View>
               </View>
 
-              {/* ── Sleek Integrated Live Rates Inline Strip (Replaces bulky button) ── */}
-              <TouchableOpacity
-                style={[S.mandiInlinePrompt, isDay ? S.mandiInlinePromptDay : S.mandiInlinePromptNight]}
-                onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
-                activeOpacity={0.85}
-              >
-                <View style={S.mandiInlinePromptLeft}>
-                  <Ionicons name="sparkles" size={13} color="#f59e0b" />
-                  <Text style={[S.mandiInlinePromptText, isDay ? S.mandiInlinePromptTextDay : S.mandiInlinePromptTextNight]}>
-                    {user ? 'Viewing your personalized live mandi prices' : 'Live rates for your own farm crops'}
-                  </Text>
-                </View>
-                <View style={[S.mandiInlinePromptPill, isDay ? S.mandiInlinePromptPillDay : S.mandiInlinePromptPillNight]}>
-                  <Text style={[S.mandiInlinePromptPillText, isDay ? S.mandiInlinePromptPillTextDay : S.mandiInlinePromptPillNight]}>
-                    {user ? 'My Rates →' : 'Login Live Rates →'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
               {/* ── Transparency & Trust Footer Strip ── */}
               <View style={[S.mandiVerifiedFooter, isDay && S.mandiVerifiedFooterDay]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="shield-checkmark" size={10} color={isDay ? '#047857' : '#34d399'} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name="shield-checkmark" size={11} color={isDay ? '#047857' : '#34d399'} />
                   <Text style={[S.mandiVerifiedText, isDay && S.mandiVerifiedTextDay]}>
-                    AGMARKNET & eNAM Synchronized
+                    AGMARKNET & eNAM Synchronized Real-Time Feeds
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setOfficialRatesModalVisible(true)} activeOpacity={0.8}>
@@ -4226,19 +4256,26 @@ const S = StyleSheet.create({
   // Compact 4D Mandi Discovery Card
   mandiDiscoveryCard: {
     width: '100%',
-    backgroundColor: 'rgba(10, 20, 16, 0.90)',
+    backgroundColor: '#041d14',
     borderRadius: RADIUS.lg,
-    borderWidth: 1.2,
-    borderColor: 'rgba(52, 211, 153, 0.35)',
-    padding: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.45)',
+    padding: 12,
     marginBottom: 14,
-    ...premiumShadow('#000000', 'md'),
+    ...(Platform.OS === 'web'
+      ? ({
+          background: 'linear-gradient(145deg, rgba(6, 44, 30, 0.96) 0%, rgba(2, 26, 18, 0.96) 60%, rgba(8, 18, 14, 0.98) 100%)',
+          boxShadow: '0 16px 36px -8px rgba(0, 0, 0, 0.75), 0 0 24px rgba(16, 185, 129, 0.22), inset 0 1px 1px rgba(52, 211, 153, 0.35)',
+        } as any)
+      : {
+          ...premiumShadow('#000000', 'md'),
+        }),
   },
   mandiHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 7,
+    marginBottom: 8,
   },
   mandiHeaderTitleGroup: {
     flexDirection: 'row',
@@ -4246,8 +4283,8 @@ const S = StyleSheet.create({
     gap: 6,
   },
   mandiCardTitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.2,
   },
@@ -4255,14 +4292,16 @@ const S = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.18)',
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
   },
   liveBadgeMiniText: {
-    fontSize: 8.5,
-    fontFamily: FONT.bold,
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
     color: '#34d399',
     letterSpacing: 0.4,
   },
@@ -4270,8 +4309,8 @@ const S = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 4.5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
     backgroundColor: '#052e16',
     borderWidth: 1.2,
@@ -4279,8 +4318,7 @@ const S = StyleSheet.create({
     ...(Platform.OS === 'web'
       ? ({
           background: 'linear-gradient(135deg, #052e16 0%, #064e3b 50%, #047857 100%)',
-          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -1px 2px rgba(0, 0, 0, 0.5)',
-          transform: 'perspective(400px) translateZ(2px)',
+          boxShadow: '0 4px 12px rgba(16, 185, 129, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.4)',
           cursor: 'pointer',
         } as any)
       : {
@@ -4292,7 +4330,7 @@ const S = StyleSheet.create({
         }),
   },
   mandiRate4DBtnText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#a7f3d0',
     letterSpacing: 0.2,
@@ -4309,84 +4347,84 @@ const S = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#6ee7b7',
   },
-  // ─── 1-by-1 Vertical Slide-Up All India Mandi Roller Styles ─────────────
+
+  // ─── Continuous Upward Mandi Ticker Window & Slot Styles ─────────────
   mandiRollerSlot: {
-    height: 56,
-    backgroundColor: 'rgba(2, 14, 10, 0.85)',
-    borderWidth: 1.2,
-    borderColor: 'rgba(52, 211, 153, 0.35)',
+    height: 114,
+    backgroundColor: 'rgba(3, 20, 14, 0.92)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.4)',
     borderRadius: 14,
-    paddingHorizontal: 10,
-    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     overflow: 'hidden',
     position: 'relative',
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : {}),
   },
   mandiRollerSlotNight: {
-    backgroundColor: 'rgba(2, 14, 10, 0.85)',
-    borderColor: 'rgba(52, 211, 153, 0.35)',
+    backgroundColor: 'rgba(3, 20, 14, 0.92)',
+    borderColor: 'rgba(52, 211, 153, 0.4)',
   },
-  mandiRollerItem: {
+  mandiRollerRowItem: {
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.2)',
   },
   rollerCropBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1.5,
-  },
-  rollerCropBadgeDay: {
-    backgroundColor: '#ffffff',
-    ...premiumShadow('rgba(0, 0, 0, 0.05)', 'xs'),
+    borderRadius: 8,
+    borderWidth: 1.2,
+    backgroundColor: 'rgba(6, 78, 59, 0.55)',
+    borderColor: '#34d399',
   },
   rollerCropBadgeNight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(6, 78, 59, 0.55)',
+    borderColor: '#34d399',
   },
   rollerCropText: {
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.2,
-  },
-  rollerCropTextDay: {
-    color: '#0f172a',
   },
   rollerCropTextNight: {
     color: '#ffffff',
   },
-  rollerCropPunjabiText: {
-    fontSize: 9.5,
+  rollerCropPunjabiTag: {
+    fontSize: 12,
     fontFamily: FONT.bold,
-    lineHeight: 11,
+  },
+  rollerCropPunjabiTagNight: {
+    color: '#6ee7b7',
+  },
+  rollerVarietyText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+  },
+  rollerVarietyTextNight: {
+    color: '#94a3b8',
   },
   rollerMandiInfo: {
     flex: 1,
-    marginHorizontal: 10,
+    marginHorizontal: 8,
     justifyContent: 'center',
   },
   rollerMandiName: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
-  rollerTagPill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: RADIUS.xs,
-  },
-  rollerTagText: {
-    fontSize: 8.5,
-    fontFamily: FONT.bold,
-    color: '#94a3b8',
-  },
   rollerStateSub: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontFamily: FONT.regular,
     color: '#94a3b8',
     marginTop: 1,
@@ -4400,115 +4438,66 @@ const S = StyleSheet.create({
     gap: 2,
   },
   rollerPriceVal: {
-    fontSize: 15.5,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.3,
-  },
-  rollerPriceValDay: {
-    color: '#047857',
   },
   rollerPriceValNight: {
     color: '#34d399',
   },
   rollerPriceUnit: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
+    fontSize: 10,
+    fontFamily: FONT.bold,
     color: '#94a3b8',
   },
   rollerTrendPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    backgroundColor: 'rgba(16, 185, 129, 0.28)',
     paddingHorizontal: 6,
-    paddingVertical: 1.5,
+    paddingVertical: 2,
     borderRadius: RADIUS.xs,
     marginTop: 1,
   },
   rollerTrendText: {
-    fontSize: 9,
-    fontFamily: FONT.bold,
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+  },
+  rollerTrendTextNight: {
     color: '#34d399',
   },
   rollerIndicatorsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 6,
+    marginTop: 7,
     paddingHorizontal: 2,
   },
   rollerCounterText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#64748b',
   },
-  rollerDotsGroup: {
+  upwardMovingIndicatorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  rollerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-  },
-
-  // ─── Sleek Integrated Live Rates Inline Prompt ──────────────────────────
-  mandiInlinePrompt: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 6.5,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 8,
-  },
-  mandiInlinePromptDay: {
-    backgroundColor: '#ecfdf5',
-    borderColor: '#a7f3d0',
-  },
-  mandiInlinePromptNight: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderColor: 'rgba(52, 211, 153, 0.28)',
-  },
-  mandiInlinePromptLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  mandiInlinePromptText: {
-    fontSize: 10.5,
-    fontFamily: FONT.semiBold,
-  },
-  mandiInlinePromptTextDay: {
-    color: '#065f46',
-  },
-  mandiInlinePromptTextNight: {
-    color: '#d1fae5',
-  },
-  mandiInlinePromptPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
   },
-  mandiInlinePromptPillDay: {
-    backgroundColor: '#059669',
+  upwardMovingIndicatorBadgeNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderColor: 'rgba(52, 211, 153, 0.4)',
   },
-  mandiInlinePromptPillNight: {
-    backgroundColor: 'rgba(52, 211, 153, 0.25)',
-  },
-  mandiInlinePromptPillText: {
-    fontSize: 9.5,
+  upwardMovingIndicatorText: {
+    fontSize: 9,
     fontFamily: FONT.extraBold,
   },
-  mandiInlinePromptPillTextDay: {
-    color: '#ffffff',
-  },
-  mandiInlinePromptPillTextNight: {
-    color: '#a7f3d0',
+  upwardMovingIndicatorTextNight: {
+    color: '#34d399',
   },
 
   // ─── Verified APMC Footer ──────────────────────────────────────────────
@@ -4516,18 +4505,18 @@ const S = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 7,
-    paddingTop: 6,
+    marginTop: 8,
+    paddingTop: 7,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.07)',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   mandiVerifiedText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#94a3b8',
   },
   mandiVerifiedLink: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#34d399',
   },
@@ -4652,6 +4641,54 @@ const S = StyleSheet.create({
     borderRadius: RADIUS.pill,
     overflow: 'hidden',
     ...premiumShadow('#a7f3d0', 'md'),
+  },
+  primaryBtnContainerWide: {
+    borderRadius: 16,
+    flex: 1,
+    minWidth: 280,
+  },
+  primaryBtnContainerNight: {
+    ...premiumShadow('#10b981', 'md'),
+  },
+  btnPrimaryWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  btnPrimarySparkleWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnPrimaryTextBox: {
+    flex: 1,
+  },
+  btnPrimaryTextWide: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.2,
+  },
+  btnPrimarySubWide: {
+    color: '#d1fae5',
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    marginTop: 2,
+    letterSpacing: 0.1,
+  },
+  btnPrimaryArrowPill: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   btnPrimary: {
     flexDirection: 'row',
@@ -5314,15 +5351,24 @@ const S = StyleSheet.create({
 
   // Mandi Discovery Day
   mandiDiscoveryCardDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderColor: 'rgba(16, 185, 129, 0.35)',
-    ...premiumShadow('#0f172a', 'md'),
+    backgroundColor: '#f0fdf4',
+    borderColor: '#10b981',
+    borderWidth: 1.5,
+    ...(Platform.OS === 'web'
+      ? ({
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 45%, #ffffff 100%)',
+          boxShadow: '0 12px 30px -6px rgba(5, 150, 105, 0.18), 0 0 0 1px rgba(16, 185, 129, 0.25), inset 0 1px 2px #ffffff',
+        } as any)
+      : {
+          ...premiumShadow('rgba(5, 150, 105, 0.2)', 'md'),
+        }),
   },
   mandiCardTitleDay: {
-    color: '#0f172a',
+    color: '#064e3b',
   },
   liveBadgeMiniDay: {
     backgroundColor: '#d1fae5',
+    borderColor: '#a7f3d0',
   },
   liveBadgeMiniTextDay: {
     color: '#047857',
@@ -5333,7 +5379,7 @@ const S = StyleSheet.create({
     ...(Platform.OS === 'web'
       ? ({
           background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 60%, #a7f3d0 100%)',
-          boxShadow: '0 3px 10px rgba(5, 150, 105, 0.28), inset 0 1px 1px #ffffff, inset 0 -1px 2px rgba(5, 150, 105, 0.2)',
+          boxShadow: '0 3px 10px rgba(5, 150, 105, 0.28), inset 0 1px 1px #ffffff',
           transform: 'perspective(400px) translateZ(2px)',
         } as any)
       : {
@@ -5353,23 +5399,39 @@ const S = StyleSheet.create({
   fourDBtnPillTextDay: {
     color: '#047857',
   },
-  // ─── 1-by-1 Mandi Roller Day Mode Styles ────────────────────────────────
+  // ─── Continuous Upward Mandi Ticker Day Mode Styles ───────────────────
   mandiRollerSlotDay: {
     backgroundColor: '#ffffff',
-    borderColor: 'rgba(16, 185, 129, 0.35)',
-    ...premiumShadow('rgba(16, 185, 129, 0.08)', 'xs'),
+    borderColor: 'rgba(16, 185, 129, 0.45)',
+    borderWidth: 1.5,
+    ...premiumShadow('rgba(16, 185, 129, 0.12)', 'xs'),
+  },
+  mandiRollerRowItemDay: {
+    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  rollerCropBadgeDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#059669',
+    borderWidth: 1.2,
+  },
+  rollerCropTextDay: {
+    color: '#064e3b',
+  },
+  rollerCropPunjabiTagDay: {
+    color: '#047857',
+  },
+  rollerVarietyTextDay: {
+    color: '#64748b',
   },
   rollerMandiNameDay: {
     color: '#0f172a',
   },
-  rollerTagPillDay: {
-    backgroundColor: '#f1f5f9',
-  },
-  rollerTagTextDay: {
+  rollerStateSubDay: {
     color: '#475569',
   },
-  rollerStateSubDay: {
-    color: '#64748b',
+  rollerPriceValDay: {
+    color: '#047857',
   },
   rollerPriceUnitDay: {
     color: '#64748b',
@@ -5381,18 +5443,22 @@ const S = StyleSheet.create({
     color: '#047857',
   },
   rollerCounterTextDay: {
-    color: '#64748b',
+    color: '#475569',
   },
-  rollerDotDay: {
-    backgroundColor: '#cbd5e1',
+  upwardMovingIndicatorBadgeDay: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#86efac',
+  },
+  upwardMovingIndicatorTextDay: {
+    color: '#047857',
   },
 
   // ─── Verified APMC Footer Day Mode ─────────────────────────────────────
   mandiVerifiedFooterDay: {
-    borderTopColor: '#e2e8f0',
+    borderTopColor: 'rgba(16, 185, 129, 0.2)',
   },
   mandiVerifiedTextDay: {
-    color: '#64748b',
+    color: '#475569',
   },
   mandiVerifiedLinkDay: {
     color: '#047857',

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { ActivityIndicator, Animated, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -108,6 +108,19 @@ export default function SuperAccountsScreen() {
   const [section, setSection] = useState<SectionKey>('REQUESTS');
   const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTab>('VENDORS');
 
+  // Animated sliding pill for section tabs
+  const sectionSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const idx = section === 'REQUESTS' ? 0 : section === 'WALLETS' ? 1 : section === 'PARTNERS' ? 2 : 3;
+    Animated.spring(sectionSlideAnim, {
+      toValue: idx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [section]);
+
   const pending = (withdrawals ?? []).filter((w) => w.status === 'PENDING');
   const processed = (withdrawals ?? []).filter((w) => w.status !== 'PENDING');
 
@@ -171,24 +184,46 @@ export default function SuperAccountsScreen() {
           </View>
         </View>
 
-        {/* Top Sections Bar */}
-        <View style={styles.sectionTabRow}>
+        {/* Top Sections Bar with Liquid Spring Sliding Pill */}
+        <View style={[styles.sectionTabRow, isLight && styles.sectionTabRowLight]}>
+          <Animated.View
+            style={[
+              styles.slidingSectionPill,
+              isLight && styles.slidingSectionPillLight,
+              {
+                left: sectionSlideAnim.interpolate({
+                  inputRange: [0, 1, 2, 3],
+                  outputRange: ['0.8%', '25.6%', '50.4%', '75.2%'],
+                }),
+              },
+            ]}
+          />
           {SECTIONS.map((t) => {
             const active = section === t.value;
             return (
               <TouchableOpacity
                 key={t.value}
-                style={[
-                  styles.sectionTab,
-                  isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
-                  active && (isLight ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : styles.sectionTabActive),
-                  { flex: 1, paddingVertical: 10 },
-                ]}
+                style={styles.sectionTab}
                 activeOpacity={0.85}
-                onPress={() => { tap(); setSection(t.value); }}
+                onPress={() => {
+                  tap();
+                  setSection(t.value);
+                }}
               >
-                <Ionicons name={t.icon} size={15} color={active ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')} />
-                <Text style={[styles.sectionTabText, active && { color: '#ffffff' }, isLight && !active && { color: '#64748b' }, { fontSize: 11.5, fontFamily: FONT.bold }]}>{t.label}</Text>
+                <Ionicons
+                  name={t.icon}
+                  size={15}
+                  color={active ? '#ffffff' : isLight ? '#64748b' : '#94a3b8'}
+                />
+                <Text
+                  style={[
+                    styles.sectionTabText,
+                    active && styles.sectionTabTextActive,
+                    isLight && !active && { color: '#64748b' },
+                  ]}
+                >
+                  {t.label}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -1018,7 +1053,35 @@ const styles = StyleSheet.create({
   statValue: { color: '#ffffff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.3 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#d97706' },
 
-  sectionTabRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  sectionTabRow: {
+    position: 'relative',
+    overflow: 'hidden',
+    flexDirection: 'row',
+    backgroundColor: '#051b11',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,135,0.25)',
+    padding: 3,
+    marginTop: 14,
+  },
+  sectionTabRowLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  slidingSectionPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '24%',
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#10b981',
+    ...premiumShadow('#10b981', 'sm'),
+    zIndex: 0,
+  },
+  slidingSectionPillLight: {
+    backgroundColor: '#16a34a',
+    ...premiumShadow('#16a34a', 'sm'),
+  },
   sectionTab: {
     flex: 1,
     flexDirection: 'row',
@@ -1027,12 +1090,12 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingVertical: 9,
     borderRadius: RADIUS.pill,
-    backgroundColor: '#051b11',
-    borderWidth: 1,
-    borderColor: 'rgba(0,255,135,0.3)',
+    position: 'relative',
+    zIndex: 1,
   },
-  sectionTabActive: { backgroundColor: '#10b981', borderColor: '#059669' },
+  sectionTabActive: {},
   sectionTabText: { color: '#475569', fontSize: 11.5, fontFamily: FONT.bold },
+  sectionTabTextActive: { color: '#ffffff', fontFamily: FONT.extraBold },
   tabBadge: { minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   tabBadgeText: { color: '#fff', fontSize: 9.5, fontFamily: FONT.extraBold },
 

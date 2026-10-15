@@ -92,7 +92,11 @@ export default function AdminOrdersScreen() {
               styles.filterChip,
               isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
               isMedium && { backgroundColor: 'rgba(16, 25, 40, 0.7)', borderColor: 'rgba(255, 255, 255, 0.12)' },
-              filter === f.value && { backgroundColor: isLight ? '#16a34a' : '#10b981', borderColor: isLight ? '#16a34a' : '#10b981' },
+              filter === f.value && {
+                backgroundColor: isLight ? '#16a34a' : '#10b981',
+                borderColor: isLight ? '#15803d' : '#059669',
+                ...premiumShadow(isLight ? '#16a34a' : '#10b981', 'sm'),
+              },
             ]}
             onPress={() => {
               tap();

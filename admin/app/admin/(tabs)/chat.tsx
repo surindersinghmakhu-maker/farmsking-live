@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   View,
   Text,
   StyleSheet,
@@ -38,6 +39,19 @@ export default function ChatScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'ALL' | 'UNREAD' | 'ONLINE'>('ALL');
+
+  // Animated sliding pill for chat filter tabs
+  const chatFilterSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const target = filterMode === 'ALL' ? 0 : filterMode === 'UNREAD' ? 1 : 2;
+    Animated.spring(chatFilterSlideAnim, {
+      toValue: target,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [filterMode]);
 
   const unreadTotal = (conversations ?? []).reduce((sum, c) => sum + (c.unreadCount || 0), 0);
   const onlineTotal = (conversations ?? []).filter((c) => !!c.isOnline).length;
@@ -120,10 +134,21 @@ export default function ChatScreen() {
           )}
         </View>
 
-        {/* Filter Chips */}
+        {/* Filter Chips with Liquid Spring Sliding Pill */}
         <View style={styles.filterChipsRow}>
+          <Animated.View
+            style={[
+              styles.slidingChatFilterPill,
+              {
+                left: chatFilterSlideAnim.interpolate({
+                  inputRange: [0, 1, 2],
+                  outputRange: ['1%', '34.5%', '68%'],
+                }),
+              },
+            ]}
+          />
           <TouchableOpacity
-            style={[styles.filterChip, filterMode === 'ALL' && styles.filterChipActive]}
+            style={styles.filterChip}
             onPress={() => setFilterMode('ALL')}
             activeOpacity={0.8}
           >
@@ -133,7 +158,7 @@ export default function ChatScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterMode === 'UNREAD' && styles.filterChipActive]}
+            style={styles.filterChip}
             onPress={() => setFilterMode('UNREAD')}
             activeOpacity={0.8}
           >
@@ -143,7 +168,7 @@ export default function ChatScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.filterChip, filterMode === 'ONLINE' && styles.filterChipActive]}
+            style={styles.filterChip}
             onPress={() => setFilterMode('ONLINE')}
             activeOpacity={0.8}
           >
@@ -364,24 +389,43 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   filterChipsRow: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 3,
+    maxWidth: 420,
+    width: '100%',
   },
-  filterChipActive: {
+  slidingChatFilterPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '31%',
     backgroundColor: '#16a34a',
-    borderColor: '#22c55e',
+    borderRadius: RADIUS.pill,
+    shadowColor: '#22c55e',
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    elevation: 3,
+    zIndex: 0,
   },
+  filterChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    position: 'relative',
+    zIndex: 1,
+  },
+  filterChipActive: {},
   filterChipText: {
     fontSize: 11,
     fontFamily: FONT.bold,

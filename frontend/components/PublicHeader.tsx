@@ -28,6 +28,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 // ── Streamlined Top Navigation: Exactly 4 Core Links ──
 const MAIN_NAV_LINKS = [
   {
+    id: 'home',
+    label: 'Home',
+    path: '/',
+    icon: 'home-outline',
+    image: null,
+    color: '#10b981',
+    bg: 'rgba(16,185,129,0.1)',
+    bgNight: 'rgba(16,185,129,0.22)',
+    isAction: 'home',
+  },
+  {
     id: 'store',
     label: 'Agri Store',
     path: '/shop',
@@ -48,17 +59,6 @@ const MAIN_NAV_LINKS = [
     bgNight: 'rgba(6,182,212,0.22)',
   },
   {
-    id: 'mandi',
-    label: 'Mandi Rates',
-    path: '/#mandi-rates',
-    icon: 'trending-up-outline',
-    image: null,
-    color: '#10b981',
-    bg: 'rgba(16,185,129,0.1)',
-    bgNight: 'rgba(16,185,129,0.22)',
-    isAction: 'mandi',
-  },
-  {
     id: 'helpline',
     label: 'Helpline',
     path: '#helpline',
@@ -73,6 +73,15 @@ const MAIN_NAV_LINKS = [
 
 // ── Secondary Links under "More ▾" ──
 const MORE_NAV_LINKS = [
+  {
+    id: 'mandi',
+    label: 'Mandi Rates',
+    subtext: 'Live APMC daily auction rates across India',
+    path: '/#mandi-rates',
+    icon: 'trending-up-outline',
+    image: null,
+    color: '#10b981',
+  },
   {
     id: 'farming',
     label: 'Farming Advisory',
@@ -258,6 +267,16 @@ export default function PublicHeader({
 
   const handleNavClick = (link: (typeof MAIN_NAV_LINKS)[0]) => {
     setMoreMenuOpen(false);
+    if (link.isAction === 'home') {
+      if (pathname === '/' || pathname === '/index' || pathname === '') {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
+      goTo('/');
+      return;
+    }
     if (link.isAction === 'helpline') {
       setHelplineModalOpen(true);
       return;

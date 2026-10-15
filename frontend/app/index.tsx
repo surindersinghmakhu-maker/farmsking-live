@@ -1899,8 +1899,8 @@ export default function PublicLandingPage() {
                     <Ionicons name="sparkles" size={isMobile ? 15 : 18} color="#fef08a" />
                   </View>
                   <View style={S.btnPrimaryTextBox}>
-                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: width < 380 ? 12.5 : 13.5, lineHeight: 17 }]}>
-                      {user ? 'Open Farmer Dashboard →' : isMobile ? 'Get Started Free • Login for Rates' : 'Get Started Free • Login for Your Own Crop Live Prices'}
+                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 14.5, lineHeight: 18 }]}>
+                      {user ? 'Open Farmer Dashboard →' : 'Get Started Free'}
                     </Text>
                     <Text style={[S.btnPrimarySubWide, isMobile && { fontSize: 9.5, lineHeight: 13 }]}>
                       {isMobile ? 'Live Mandi Radar • 5-Sec AI Scan • Agri Store' : 'Instant Live APMC Mandi Radar • 5-Sec AI Crop Doctor • Certified Agri Store'}

@@ -1428,15 +1428,16 @@ export default function PublicLandingPage() {
           <View style={[S.heroLeft, isDesktop ? { flex: 6 } : { width: '100%' }]}>
 
             {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP ══ */}
-            <View style={[S.heroBadgesRow, isMobile && { gap: 6, marginBottom: 8 }]}>
+            {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP (SINGLE TIGHT ROW) ══ */}
+            <View style={[S.heroBadgesRow, { gap: 6, marginBottom: isMobile ? 3 : 5, flexWrap: isMobile ? 'nowrap' : 'wrap' }]}>
               <View
                 style={[
                   S.socialProofBadge,
                   isDay ? S.socialProofBadgeDay : S.socialProofBadgeNight,
-                  isMobile && {
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    marginBottom: 4,
+                  {
+                    paddingHorizontal: isMobile ? 7 : 9,
+                    paddingVertical: isMobile ? 3 : 4,
+                    marginBottom: 0,
                     flexWrap: 'nowrap',
                     maxWidth: '100%',
                   },
@@ -1444,19 +1445,19 @@ export default function PublicLandingPage() {
               >
                 <View style={S.starsGroup}>
                   {[1, 2, 3, 4, 5].map((_, i) => (
-                    <Ionicons key={i} name="star" size={isMobile ? 10.5 : 13} color="#f59e0b" style={{ marginRight: 1 }} />
+                    <Ionicons key={i} name="star" size={isMobile ? 9.5 : 12} color="#f59e0b" style={{ marginRight: 1 }} />
                   ))}
                 </View>
-                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight, isMobile && { fontSize: 10.5 }]}>
+                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight, { fontSize: isMobile ? 10 : 11 }]}>
                   4.9/5
                 </Text>
-                <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight, isMobile && { fontSize: 9 }]}>
+                <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight, { fontSize: isMobile ? 8.5 : 9.5 }]}>
                   {isMobile ? '(14.2k)' : '(14,200+ Reviews)'}
                 </Text>
-                <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight, isMobile && { marginHorizontal: 3 }]} />
-                <Ionicons name="shield-checkmark" size={isMobile ? 11 : 12} color={isDay ? '#059669' : '#34d399'} />
-                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, isMobile && { fontSize: 9.5 }]} numberOfLines={1}>
-                  {isMobile ? 'Verified Agri Platform' : `Trusted by ${userRegion.farmerCount} Cultivators in ${userRegion.regionText}`}
+                <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight, { marginHorizontal: isMobile ? 2 : 3 }]} />
+                <Ionicons name="shield-checkmark" size={isMobile ? 10 : 12} color={isDay ? '#059669' : '#34d399'} />
+                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, { fontSize: isMobile ? 9 : 10.5 }]} numberOfLines={1}>
+                  {isMobile ? '48k+ Cultivators' : `Trusted by ${userRegion.farmerCount} Cultivators Across India`}
                 </Text>
               </View>
 
@@ -1467,7 +1468,7 @@ export default function PublicLandingPage() {
                   isSpeaking && currentSpeakingId === 'hero-advisory'
                     ? S.heroAudioReadoutBtnActive
                     : (isDay ? S.heroAudioReadoutBtnDay : S.heroAudioReadoutBtnNight),
-                  isMobile && { paddingHorizontal: 8, paddingVertical: 4, marginBottom: 4 },
+                  { paddingHorizontal: isMobile ? 7 : 9, paddingVertical: isMobile ? 3 : 4, marginBottom: 0 },
                 ]}
                 onPress={() => {
                   const speech =
@@ -1479,7 +1480,7 @@ export default function PublicLandingPage() {
               >
                 <Ionicons
                   name={isSpeaking && currentSpeakingId === 'hero-advisory' ? 'volume-high' : 'volume-medium-outline'}
-                  size={isMobile ? 12 : 14}
+                  size={isMobile ? 11 : 13}
                   color={isSpeaking && currentSpeakingId === 'hero-advisory' ? '#ffffff' : (isDay ? '#059669' : '#34d399')}
                 />
                 <Text
@@ -1488,12 +1489,12 @@ export default function PublicLandingPage() {
                     isSpeaking && currentSpeakingId === 'hero-advisory'
                       ? { color: '#ffffff' }
                       : (isDay ? { color: '#047857' } : { color: '#34d399' }),
-                    isMobile && { fontSize: 10 },
+                    { fontSize: isMobile ? 9.5 : 10.5 },
                   ]}
                 >
                   {isSpeaking && currentSpeakingId === 'hero-advisory'
-                    ? '🔊 Speaking...'
-                    : (isMobile ? '🔊 Listen' : '🔊 Listen (Audio Advisory)')}
+                    ? 'Speaking...'
+                    : (isMobile ? 'Listen' : 'Listen (Advisory)')}
                 </Text>
                 {isSpeaking && currentSpeakingId === 'hero-advisory' && (
                   <View style={S.audioWaveBarContainer}>
@@ -1509,8 +1510,9 @@ export default function PublicLandingPage() {
             <Text
               style={[
                 S.heroMainTitle,
-                isTablet && { fontSize: 26, lineHeight: 33 },
-                isMobile && { fontSize: width < 380 ? 17.5 : 20, lineHeight: width < 380 ? 23 : 26, marginBottom: 8 },
+                isTablet && { fontSize: 22, lineHeight: 28, marginBottom: 3 },
+                isMobile && { fontSize: width < 380 ? 15.5 : 17.5, lineHeight: width < 380 ? 20 : 22, marginBottom: 3 },
+                !isMobile && !isTablet && { fontSize: 26, lineHeight: 32, marginBottom: 3 },
                 isDay && S.heroMainTitleDay,
                 Platform.OS === 'web' ? ({ className: isDay ? 'holo-day-title' : 'holo-night-title' } as any) : {},
               ]}
@@ -1522,7 +1524,8 @@ export default function PublicLandingPage() {
             <Text
               style={[
                 S.heroSubTitle,
-                isMobile && { fontSize: width < 380 ? 11.5 : 12.5, lineHeight: width < 380 ? 16 : 18, marginBottom: 14 },
+                isMobile && { fontSize: width < 380 ? 10.5 : 11.5, lineHeight: width < 380 ? 14 : 15.5, marginBottom: 6 },
+                !isMobile && { fontSize: 13, lineHeight: 18, marginBottom: 6 },
                 isDay && S.heroSubTitleDay,
               ]}
             >
@@ -1532,25 +1535,29 @@ export default function PublicLandingPage() {
             {/* ══ COMPACT 4D MANDI DIRECTORY TELEMETRY WIDGET ══ */}
             <View nativeID="mandi-rates" {...(Platform.OS === 'web' ? ({ id: 'mandi-rates' } as any) : {})} />
             <SpatialTiltCard
-              style={[S.mandiDiscoveryCard, isDay && S.mandiDiscoveryCardDay]}
+              style={[
+                S.mandiDiscoveryCard,
+                isDay && S.mandiDiscoveryCardDay,
+                isMobile && { padding: 7, marginBottom: 6 },
+              ]}
               glowColor={isDay ? 'rgba(16, 185, 129, 0.28)' : 'rgba(16, 185, 129, 0.38)'}
               tiltMax={3}
               isInteractive={true}
             >
               {/* ── Top Header Row: Title & 4D Official Rates Action Button ── */}
-              <View style={S.mandiHeaderRow}>
+              <View style={[S.mandiHeaderRow, isMobile && { marginBottom: 3 }]}>
                 <View style={S.mandiHeaderTitleGroup}>
-                  <Ionicons name="trending-up" size={16} color={isDay ? '#059669' : '#34d399'} />
-                  <Text style={[S.mandiCardTitle, isDay && S.mandiCardTitleDay]}>{t.instantMandi}</Text>
-                  <View style={[S.liveBadgeMini, isDay && S.liveBadgeMiniDay]}>
+                  <Ionicons name="trending-up" size={isMobile ? 14 : 16} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.mandiCardTitle, isDay && S.mandiCardTitleDay, isMobile && { fontSize: 12.5 }]}>{t.instantMandi}</Text>
+                  <View style={[S.liveBadgeMini, isDay && S.liveBadgeMiniDay, isMobile && { paddingHorizontal: 4, paddingVertical: 1.5 }]}>
                     <View style={S.pulseDot} />
-                    <Text style={[S.liveBadgeMiniText, isDay && S.liveBadgeMiniTextDay]}>{t.liveApmc}</Text>
+                    <Text style={[S.liveBadgeMiniText, isDay && S.liveBadgeMiniTextDay, isMobile && { fontSize: 8 }]}>{t.liveApmc}</Text>
                   </View>
                 </View>
 
                 {/* ── 4D Official Rates Button ── */}
                 <TouchableOpacity
-                  style={[S.mandiRate4DBtn, isDay && S.mandiRate4DBtnDay]}
+                  style={[S.mandiRate4DBtn, isDay && S.mandiRate4DBtnDay, isMobile && { paddingHorizontal: 6, paddingVertical: 2.5 }]}
                   onPress={() => {
                     if (user) {
                       router.push('/(dashboard)');
@@ -1562,8 +1569,8 @@ export default function PublicLandingPage() {
                   // @ts-ignore
                   className="four-d-official-btn"
                 >
-                  <Ionicons name="shield-checkmark" size={12} color={isDay ? '#047857' : '#34d399'} />
-                  <Text style={[S.mandiRate4DBtnText, isDay && S.mandiRate4DBtnTextDay]}>
+                  <Ionicons name="shield-checkmark" size={isMobile ? 10 : 12} color={isDay ? '#047857' : '#34d399'} />
+                  <Text style={[S.mandiRate4DBtnText, isDay && S.mandiRate4DBtnTextDay, isMobile && { fontSize: 9.5 }]}>
                     {user ? t.myRates : t.officialRatesBtn}
                   </Text>
                 </TouchableOpacity>
@@ -1574,7 +1581,7 @@ export default function PublicLandingPage() {
                 style={[
                   S.mandiRollerSlot,
                   isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight,
-                  { height: isMobile ? 74 : 78, paddingVertical: 0, paddingHorizontal: 0 },
+                  { height: isMobile ? 54 : 76, paddingVertical: 0, paddingHorizontal: 0 },
                 ]}
                 activeOpacity={0.94}
                 onPress={() => {
@@ -1859,7 +1866,7 @@ export default function PublicLandingPage() {
             </Modal>
 
             {/* ══ HIGH-CONVERTING UNIFIED HERO CTA (MERGED WITH "LOGIN FOR LIVE PRICES") ══ */}
-            <View style={[S.ctaRow, isMobile && { gap: 10, marginBottom: 16 }]}>
+            <View style={[S.ctaRow, isMobile && { flexDirection: 'row', gap: 6, marginBottom: 6 }]}>
               <TouchableOpacity
                 onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
                 activeOpacity={0.88}
@@ -1867,7 +1874,7 @@ export default function PublicLandingPage() {
                   S.primaryBtnContainer,
                   S.primaryBtnContainerWide,
                   isDay ? S.primaryBtnContainerDay : S.primaryBtnContainerNight,
-                  isMobile && { minWidth: '100%', width: '100%' },
+                  isMobile && { flex: 1.15, minWidth: 0, width: 'auto' },
                   Platform.OS === 'web' ? ({ className: 'wide-glowing-get-started-btn' } as any) : {},
                 ]}
               >
@@ -1875,60 +1882,66 @@ export default function PublicLandingPage() {
                   colors={['#10b981', '#059669', '#047857']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[S.btnPrimary, S.btnPrimaryWide, isMobile && { paddingHorizontal: 14, paddingVertical: 11, gap: 8 }]}
+                  style={[S.btnPrimary, S.btnPrimaryWide, isMobile && { paddingHorizontal: 8, paddingVertical: 7.5, gap: 5 }]}
                 >
-                  <View style={[S.btnPrimarySparkleWrap, isMobile && { width: 32, height: 32, borderRadius: 16 }]}>
-                    <Ionicons name="sparkles" size={isMobile ? 15 : 18} color="#fef08a" />
+                  <View style={[S.btnPrimarySparkleWrap, isMobile && { width: 22, height: 22, borderRadius: 11 }]}>
+                    <Ionicons name="sparkles" size={isMobile ? 12 : 18} color="#fef08a" />
                   </View>
                   <View style={S.btnPrimaryTextBox}>
-                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 15, lineHeight: 20 }]}>
-                      {user ? 'Open Farmer Dashboard →' : 'Get Started Free'}
+                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 12.5, lineHeight: 16 }]} numberOfLines={1}>
+                      {user ? 'Dashboard →' : 'Get Started Free'}
                     </Text>
                   </View>
-                  <View style={[S.btnPrimaryArrowPill, isMobile && { width: 28, height: 28, borderRadius: 14 }]}>
-                    <Ionicons name="arrow-forward" size={isMobile ? 13 : 15} color="#ffffff" />
+                  <View style={[S.btnPrimaryArrowPill, isMobile && { width: 20, height: 20, borderRadius: 10 }]}>
+                    <Ionicons name="arrow-forward" size={isMobile ? 10 : 15} color="#ffffff" />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[S.btnSecondary, isDay && S.btnSecondaryDay, isMobile && { width: '100%', justifyContent: 'center', paddingVertical: 10 }]}
+                style={[
+                  S.btnSecondary,
+                  isDay && S.btnSecondaryDay,
+                  isMobile && { flex: 0.85, width: 'auto', justifyContent: 'center', paddingVertical: 7.5, paddingHorizontal: 6, gap: 4 },
+                ]}
                 onPress={() => router.push('/shop')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="cart-outline" size={16} color={isDay ? '#0284c7' : '#bae6fd'} />
-                <Text style={[S.btnSecondaryText, isDay && S.btnSecondaryTextDay]}>{t.exploreStore}</Text>
+                <Ionicons name="cart-outline" size={isMobile ? 13 : 16} color={isDay ? '#0284c7' : '#bae6fd'} />
+                <Text style={[S.btnSecondaryText, isDay && S.btnSecondaryTextDay, isMobile && { fontSize: 12 }]} numberOfLines={1}>
+                  {t.exploreStore}
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Trust Stats Bar */}
-            <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay, isMobile && { justifyContent: 'space-around', gap: 6, paddingTop: 10 }]}>
+            <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay, isMobile && { justifyContent: 'space-around', gap: 4, paddingTop: 4, marginBottom: 4 }]}>
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }, isMobile && { fontSize: 15 }]}>50,000+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.cultivators}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }, isMobile && { fontSize: 12 }]}>50,000+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.cultivators}</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }, isMobile && { fontSize: 15 }]}>₹14.8 Cr+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.traded}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }, isMobile && { fontSize: 12 }]}>₹14.8 Cr+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.traded}</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }, isMobile && { fontSize: 15 }]}>1,200+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.agronomists}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }, isMobile && { fontSize: 12 }]}>1,200+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 8 }]}>{t.agronomists}</Text>
               </View>
             </View>
           </View>
 
           {/* Right Column: Clean 3D Living Showcase Frame with Drone Spray Mist, Farmer Tablet Scan HUD, and Breeze Motion */}
-          <View style={[S.heroRight, isDesktop ? { flex: 5 } : { width: '100%', marginTop: 16 }]}>
+          <View style={[S.heroRight, isDesktop ? { flex: 5 } : { width: '100%', marginTop: isMobile ? 4 : 16 }]}>
             <SpatialTiltCard
-              style={[S.showcaseFrame, isDay && S.showcaseFrameDay]}
+              style={[S.showcaseFrame, isDay && S.showcaseFrameDay, isMobile && { padding: 4 }]}
               glowColor={isDay ? 'rgba(16, 185, 129, 0.25)' : 'rgba(167, 243, 208, 0.4)'}
               tiltMax={5}
             >
               {/* ── Top Micro-Telemetry HUD Strip ── */}
-              <View style={[S.showcaseTopBar, isDay && S.showcaseTopBarDay, isMobile && { paddingHorizontal: 8, paddingVertical: 5 }]}>
+              <View style={[S.showcaseTopBar, isDay && S.showcaseTopBarDay, isMobile && { paddingHorizontal: 6, paddingVertical: 3 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={S.showcaseLiveDot} />
                   <Text style={[S.showcaseTopText, isDay && S.showcaseTopTextDay, isMobile && { fontSize: 9.5 }]}>
@@ -4130,8 +4143,8 @@ const S = StyleSheet.create({
   heroSection: {
     position: 'relative',
     paddingHorizontal: '5%',
-    paddingTop: 8,
-    paddingBottom: 20,
+    paddingTop: 4,
+    paddingBottom: 10,
     maxWidth: 1360,
     alignSelf: 'center',
     width: '100%',
@@ -4144,6 +4157,8 @@ const S = StyleSheet.create({
   heroMobile: {
     flexDirection: 'column',
     alignItems: 'center',
+    paddingTop: 0,
+    paddingBottom: 4,
   },
   glowOrbBabyMint: {
     position: 'absolute',
@@ -4215,19 +4230,19 @@ const S = StyleSheet.create({
     letterSpacing: 0.8,
   },
   heroMainTitle: {
-    fontSize: 32,
+    fontSize: 26,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    lineHeight: 40,
-    marginBottom: 10,
+    lineHeight: 32,
+    marginBottom: 4,
     letterSpacing: -0.4,
   },
   heroSubTitle: {
-    fontSize: 16,
+    fontSize: 13.5,
     fontFamily: FONT.medium,
     color: '#cbd5e1',
-    lineHeight: 24,
-    marginBottom: 24,
+    lineHeight: 18,
+    marginBottom: 8,
     maxWidth: 580,
   },
 
@@ -6623,9 +6638,9 @@ const S = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 5.5,
     borderRadius: RADIUS.pill,
-    marginBottom: 12,
+    marginBottom: 0,
     borderWidth: 1,
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   socialProofBadgeDay: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -7401,9 +7416,9 @@ const S = StyleSheet.create({
   heroBadgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: 8,
-    marginBottom: 14,
+    marginBottom: 6,
   },
   ratingReviewsCount: {
     fontSize: 10,
@@ -7420,6 +7435,7 @@ const S = StyleSheet.create({
     paddingVertical: 5.5,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
+    marginBottom: 0,
     ...premiumShadow('rgba(16, 185, 129, 0.2)', 'xs'),
   },
   heroAudioReadoutBtnDay: {

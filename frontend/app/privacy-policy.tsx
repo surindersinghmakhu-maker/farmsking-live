@@ -100,7 +100,7 @@ export default function PrivacyPolicyScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-  const [lang, setLang] = useState<'PA' | 'EN'>('PA');
+  const [lang, setLang] = useState<'PA' | 'EN'>('EN');
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<PolicyModule[]>(FALLBACK_MODULES);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }));

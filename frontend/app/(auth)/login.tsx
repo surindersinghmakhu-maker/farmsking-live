@@ -288,31 +288,57 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Subtle Ambient Glowing Baby Light Orbs */}
+      <View style={styles.glowOrbBabyMint} />
+      <View style={styles.glowOrbBabyBlue} />
+
       <ScrollView contentContainerStyle={[styles.scroll, isDesktop && styles.scrollDesktop]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
         {/* ── LEFT BRAND PANEL (desktop only) ── */}
         {isDesktop && (
           <View style={styles.leftPanel}>
-            <LinearGradient colors={['#10b981', '#059669', '#047857']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+            <LinearGradient colors={['#042f2e', '#064e3b', '#065f46']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+            {/* Subtle Grid Pattern Overlay */}
+            <View style={styles.leftGridOverlay} />
+
             <View style={styles.leftContent}>
-              <BrandLogo size={64} useHdQuality style={{ marginBottom: 20 }} />
+              <View style={styles.logoBadgeContainer}>
+                <BrandLogo size={68} useHdQuality />
+                <View style={styles.livePulseDot} />
+              </View>
               <Text style={styles.leftTitle}>FarmsKing</Text>
-              <Text style={styles.leftSub}>India's #1 Smart Farming Platform</Text>
+              <Text style={styles.leftSub}>India's Leading Digital Agriculture & Farm Intelligence Platform</Text>
+              
+              <View style={styles.trustBadgeStrip}>
+                <Ionicons name="shield-checkmark" size={13} color="#34d399" />
+                <Text style={styles.trustBadgeStripText}>ISO 27001 SECURED • eNAM ALIGNED</Text>
+              </View>
+
               <View style={styles.leftDivider} />
+              
               {[
-                { icon: 'leaf', text: 'AI-powered Crop Intelligence' },
-                { icon: 'storefront', text: 'Certified Agri Store' },
-                { icon: 'medkit', text: '24/7 Crop Doctor Support' },
-                { icon: 'shield-checkmark', text: 'ISO 27001 Certified Security' },
+                { icon: 'scan-outline', text: 'AI Crop Pathology & 5-Second Diagnostics' },
+                { icon: 'trending-up-outline', text: 'Live APMC Mandi Rates & 4D Market Telemetry' },
+                { icon: 'storefront-outline', text: 'Certified Agri Inputs Delivered Directly to Farm' },
+                { icon: 'calendar-outline', text: 'Digital Farm Records & Scientific Spray Calendars' },
               ].map((item, i) => (
                 <View key={i} style={styles.leftFeature}>
                   <View style={styles.leftFeatureIcon}>
-                    <Ionicons name={item.icon as any} size={16} color="#10b981" />
+                    <Ionicons name={item.icon as any} size={16} color="#34d399" />
                   </View>
                   <Text style={styles.leftFeatureText}>{item.text}</Text>
                 </View>
               ))}
-              <Text style={styles.leftFooter}>Trusted by 50,000+ Farmers across India</Text>
+
+              <View style={styles.leftSocialProofBox}>
+                <View style={styles.leftStarsRow}>
+                  {[1, 2, 3, 4, 5].map((_, i) => (
+                    <Ionicons key={i} name="star" size={12} color="#f59e0b" style={{ marginRight: 1 }} />
+                  ))}
+                  <Text style={styles.leftStarsRating}>4.9/5</Text>
+                </View>
+                <Text style={styles.leftFooter}>Trusted by 50,000+ Cultivators & Agronomists across India</Text>
+              </View>
             </View>
           </View>
         )}
@@ -320,25 +346,25 @@ export default function LoginScreen() {
         {/* ── RIGHT FORM PANEL ── */}
         <View style={[styles.rightPanel, isDesktop && styles.rightPanelDesktop]}>
 
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
-            <Ionicons name="arrow-back" size={16} color="#10b981" />
-            <Text style={styles.backBtnText}>Back</Text>
+          {/* Back to Home Button */}
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')} activeOpacity={0.8}>
+            <Ionicons name="arrow-back" size={15} color="#059669" />
+            <Text style={styles.backBtnText}>Back to FarmsKing</Text>
           </TouchableOpacity>
 
           {/* Logo (mobile only) */}
           {!isDesktop && (
             <View style={styles.mobileBrand}>
-              <BrandLogo size={44} useHdQuality />
-              <View>
+              <BrandLogo size={46} useHdQuality />
+              <View style={{ marginLeft: 12 }}>
                 <Text style={styles.mobileBrandName}>FarmsKing</Text>
-                <Text style={styles.mobileBrandTag}>Smart Farming Platform</Text>
+                <Text style={styles.mobileBrandTag}>Smart Farming & Agri Intelligence</Text>
               </View>
             </View>
           )}
 
-          {/* Card */}
-          <View style={[styles.card, premiumShadow('rgba(0,0,0,0.07)', 'lg')]}>
+          {/* Frosted Glass Card */}
+          <View style={[styles.card, premiumShadow('rgba(16,185,129,0.12)', 'lg')]}>
             {redirect ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 }}>
                 <Ionicons name="cart" size={22} color="#059669" />
@@ -552,89 +578,260 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  // Subtle Ambient Glowing Orbs
+  glowOrbBabyMint: {
+    position: 'absolute',
+    width: 520,
+    height: 520,
+    borderRadius: 260,
+    backgroundColor: 'rgba(167, 243, 208, 0.35)',
+    top: -120,
+    right: -100,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+  },
+  glowOrbBabyBlue: {
+    position: 'absolute',
+    width: 480,
+    height: 480,
+    borderRadius: 240,
+    backgroundColor: 'rgba(186, 230, 253, 0.35)',
+    bottom: -100,
+    left: -100,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+  },
 
   // Layouts
   scroll: { flexGrow: 1 },
   scrollDesktop: { flexDirection: 'row', minHeight: '100%' },
 
   // Left green brand panel (desktop)
-  leftPanel: { width: 400, overflow: 'hidden' },
-  leftContent: { flex: 1, padding: 48, justifyContent: 'center' },
+  leftPanel: {
+    width: 440,
+    overflow: 'hidden',
+    position: 'relative',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.12)',
+  },
+  leftGridOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.08,
+    ...(Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
+          backgroundSize: '24px 24px',
+        } as any)
+      : {}),
+  },
+  leftContent: { flex: 1, padding: 44, justifyContent: 'center' },
+  logoBadgeContainer: {
+    position: 'relative',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.4)',
+  },
+  livePulseDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#34d399',
+    borderWidth: 2,
+    borderColor: '#064e3b',
+  },
   leftTitle: { fontSize: 34, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.3 },
-  leftSub: { fontSize: 14, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.75)', marginTop: 6, marginBottom: 28 },
-  leftDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginBottom: 24 },
-  leftFeature: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  leftFeatureIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  leftFeatureText: { fontSize: 13, fontFamily: FONT.bold, color: 'rgba(255,255,255,0.9)' },
-  leftFooter: { fontSize: 12, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.5)', marginTop: 28, textAlign: 'center' },
+  leftSub: { fontSize: 13.5, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.85)', marginTop: 8, marginBottom: 18, lineHeight: 20 },
+  trustBadgeStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    marginBottom: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(52,211,153,0.3)',
+  },
+  trustBadgeStripText: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#a7f3d0',
+    letterSpacing: 0.5,
+  },
+  leftDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.18)', marginBottom: 22 },
+  leftFeature: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 15 },
+  leftFeatureIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
+  leftFeatureText: { fontSize: 13, fontFamily: FONT.bold, color: '#f8fafc', flex: 1, lineHeight: 18 },
+  leftSocialProofBox: {
+    marginTop: 26,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.15)',
+  },
+  leftStarsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  leftStarsRating: { fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff', marginLeft: 4 },
+  leftFooter: { fontSize: 11.5, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.75)', lineHeight: 16 },
 
   // Right form panel
-  rightPanel: { flex: 1, justifyContent: 'center', padding: 20, paddingTop: 60, paddingBottom: 32 },
-  rightPanelDesktop: { maxWidth: 520, alignSelf: 'center', width: '100%' },
+  rightPanel: { flex: 1, justifyContent: 'center', padding: 20, paddingTop: 40, paddingBottom: 32, zIndex: 10 },
+  rightPanelDesktop: { maxWidth: 500, alignSelf: 'center', width: '100%' },
 
   // Back button
-  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20, alignSelf: 'flex-start', backgroundColor: 'rgba(16,185,129,0.08)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)' },
-  backBtnText: { color: '#10b981', fontSize: 12, fontFamily: FONT.bold },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    ...premiumShadow('rgba(0,0,0,0.05)', 'xs'),
+  },
+  backBtnText: { color: '#059669', fontSize: 12, fontFamily: FONT.bold },
 
   // Mobile brand
-  mobileBrand: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  mobileBrandName: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a' },
-  mobileBrandTag: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  mobileBrand: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  mobileBrandName: { fontSize: 21, fontFamily: FONT.extraBold, color: '#0f172a' },
+  mobileBrandTag: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
 
   // Card
-  card: { backgroundColor: '#ffffff', borderRadius: 20, padding: 24, borderWidth: 1, borderColor: '#e2e8f0' },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderRadius: 24,
+    padding: 26,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.22)',
+    ...(Platform.OS === 'web'
+      ? ({
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 20px 40px -12px rgba(16, 185, 129, 0.14), 0 0 1px rgba(0,0,0,0.06)',
+        } as any)
+      : {
+          ...premiumShadow('rgba(16,185,129,0.15)', 'lg'),
+        }),
+  },
 
-  title: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#64748b', fontFamily: FONT.medium, marginBottom: 20 },
+  title: { fontSize: 24, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 4 },
+  subtitle: { fontSize: 13, color: '#64748b', fontFamily: FONT.medium, marginBottom: 18 },
 
   // Tabs
-  tabRow: { flexDirection: 'row', gap: 8, marginBottom: 14, backgroundColor: '#f8fafc', borderRadius: 12, padding: 4, borderWidth: 1, borderColor: '#e2e8f0' },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 9 },
-  tabActive: { backgroundColor: '#ffffff', shadowColor: '#000', shadowOpacity: 0.07, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3, elevation: 2 },
-  tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#94a3b8' },
-  tabTextActive: { color: '#10b981' },
+  tabRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 14,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 10 },
+  tabActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#10b981',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
+  tabTextActive: { color: '#059669' },
 
   // Inputs
-  label: { fontSize: 11, color: '#64748b', fontFamily: FONT.bold, marginBottom: 5, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  inputWrap: { width: '100%', height: 46, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, backgroundColor: '#f8fafc', paddingHorizontal: 13 },
-  inputWrapFocused: { borderColor: '#10b981', backgroundColor: '#ffffff', shadowColor: '#10b981', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 0 }, shadowRadius: 6, elevation: 1 },
+  label: { fontSize: 11, color: '#475569', fontFamily: FONT.bold, marginBottom: 5, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  inputWrap: {
+    width: '100%',
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 13,
+  },
+  inputWrapFocused: {
+    borderColor: '#059669',
+    backgroundColor: '#ffffff',
+    shadowColor: '#10b981',
+    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
   inputIcon: { marginRight: 9 },
-  input: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
+  input: { flex: 1, fontSize: 14.5, fontFamily: FONT.medium, color: '#0f172a' },
 
   forgotLink: { alignSelf: 'flex-end', marginTop: 8 },
-  forgotText: { color: '#10b981', fontSize: 12, fontFamily: FONT.bold },
+  forgotText: { color: '#059669', fontSize: 12, fontFamily: FONT.bold },
 
-  sendOtpBtn: { width: '100%', marginTop: 14, borderRadius: 12, overflow: 'hidden' },
-  otpSentMsg: { fontSize: 12, fontFamily: FONT.bold, color: '#059669', backgroundColor: 'rgba(16,185,129,0.07)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)', borderRadius: 10, padding: 10, marginTop: 10, textAlign: 'center' },
+  sendOtpBtn: { width: '100%', marginTop: 14, borderRadius: 14, overflow: 'hidden' },
+  otpSentMsg: { fontSize: 12, fontFamily: FONT.bold, color: '#059669', backgroundColor: 'rgba(16,185,129,0.08)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', borderRadius: 12, padding: 10, marginTop: 10, textAlign: 'center' },
   devOtpBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(245,158,11,0.08)', borderWidth: 1, borderColor: 'rgba(245,158,11,0.2)', borderRadius: 10, padding: 8, marginTop: 8 },
   devOtpLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#d97706' },
   devOtpCode: { fontSize: 18, fontFamily: FONT.extraBold, color: '#d97706', letterSpacing: 4 },
   resendRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
   resendTimer: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' },
-  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#0ea5e9' },
+  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#0284c7' },
 
-  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: 'rgba(220,38,38,0.06)', borderWidth: 1, borderColor: 'rgba(220,38,38,0.15)', padding: 10, borderRadius: 10 },
+  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: 'rgba(220,38,38,0.06)', borderWidth: 1, borderColor: 'rgba(220,38,38,0.18)', padding: 10, borderRadius: 12 },
   error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12, lineHeight: 16, flex: 1 },
 
-  button: { width: '100%', marginTop: 16, borderRadius: 12, overflow: 'hidden', ...premiumShadow('rgba(16,185,129,0.3)', 'md') },
-  gradientBtn: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.bold },
+  button: {
+    width: '100%',
+    marginTop: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(16,185,129,0.35)', 'md'),
+  },
+  gradientBtn: { paddingVertical: 13.5, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { color: '#ffffff', fontSize: 14.5, fontFamily: FONT.bold },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 10 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
   dividerText: { color: '#94a3b8', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 0.5 },
 
-  googleIconBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', paddingVertical: 12, borderRadius: 12, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' },
+  googleIconBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.03)', 'xs'),
+  },
   googleBtnDisabled: { opacity: 0.6 },
-  googleText: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
+  googleText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
 
-  registerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18, gap: 2 },
+  registerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18, gap: 3 },
   registerText: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b' },
-  registerLink: { fontSize: 13, fontFamily: FONT.bold, color: '#10b981' },
-
-  // Legacy aliases (keep for safety)
-  registerHighlightBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 18, paddingVertical: 13, backgroundColor: 'rgba(16,185,129,0.06)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(16,185,129,0.15)' },
-  registerHighlightText: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b' },
-  registerHighlightBtnText: { color: '#10b981', fontSize: 13, fontFamily: FONT.bold },
+  registerLink: { fontSize: 13, fontFamily: FONT.bold, color: '#059669' },
 });

@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,12 +18,15 @@ import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { firebaseForgotPasswordReset } from '@/src/api/auth.api';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 const theme = RoleThemes.FARMER;
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
+
   const [step, setStep] = useState<'phone' | 'otp' | 'new-password' | 'done'>('phone');
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -88,7 +92,7 @@ export default function ForgotPasswordScreen() {
     setError(null);
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     if (!cleanNum || cleanNum.length < 10) {
-      setError('Enter a valid 10-digit mobile number.');
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
     
@@ -122,7 +126,7 @@ export default function ForgotPasswordScreen() {
     setError(null);
     const cleanCode = otp.trim();
     if (!cleanCode || cleanCode.length < 6) {
-      setError('Enter the 6-digit OTP code received via SMS.');
+      setError('Please enter the 6-digit OTP code sent via SMS.');
       return;
     }
     setIsSubmitting(true);
@@ -150,7 +154,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match. Please re-type your password.');
+      setError('Passwords do not match. Please re-enter your password.');
       return;
     }
     if (!idToken) {
@@ -173,183 +177,575 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+  const stepsList = [
+    { key: 'phone', label: 'Mobile' },
+    { key: 'otp', label: 'Verify' },
+    { key: 'new-password', label: 'Reset' },
+    { key: 'done', label: 'Success' },
+  ];
+
+  const currentStepIndex = stepsList.findIndex((s) => s.key === step);
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Ambient background glows */}
+      <View style={styles.glowOrbMint} pointerEvents="none" />
+      <View style={styles.glowOrbBlue} pointerEvents="none" />
+
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity style={styles.backBtn} onPress={() => (step === 'phone' ? router.back() : setStep('phone'))}>
-          <Ionicons name="arrow-back" size={20} color="#0f172a" />
+        {/* Quick Back Pill */}
+        <TouchableOpacity
+          style={styles.backPill}
+          onPress={() => (step === 'phone' ? router.back() : setStep('phone'))}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={16} color="#065f46" />
+          <Text style={styles.backPillText}>Back</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>
-          {step === 'phone' && 'Enter your 10-digit mobile number to receive an SMS OTP.'}
-          {step === 'otp' && `Enter the 6-digit OTP sent to your number (+91 ${mobile}).`}
-          {step === 'new-password' && 'Enter and confirm your new account password.'}
-          {step === 'done' && 'Your password has been updated successfully!'}
-        </Text>
-
-        <div id="recaptcha-container"></div>
-
-        {/* STEP 1: PHONE */}
-        {step === 'phone' && (
-          <>
-            <Text style={styles.label}>Mobile Number</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="call-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                keyboardType="phone-pad"
-                maxLength={10}
-                placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
-                value={mobile}
-                onChangeText={setMobile}
-                onSubmitEditing={onSendOtp}
-              />
+        {/* Card Container */}
+        <View style={[styles.card, isMobile && styles.cardMobile]}>
+          {/* Header */}
+          <View style={styles.logoRow}>
+            <BrandLogo size={42} useHdQuality />
+            <View>
+              <Text style={styles.brandTitle}>FarmsKing</Text>
+              <Text style={styles.brandSubtitle}>Secure Account Recovery</Text>
             </View>
+          </View>
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* Stepper Dots */}
+          <View style={styles.stepperRow}>
+            {stepsList.map((s, idx) => (
+              <View key={s.key} style={styles.stepItem}>
+                <View
+                  style={[
+                    styles.stepDot,
+                    idx <= currentStepIndex && styles.stepDotActive,
+                    idx === currentStepIndex && styles.stepDotCurrent,
+                  ]}
+                >
+                  {idx < currentStepIndex ? (
+                    <Ionicons name="checkmark" size={11} color="#ffffff" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.stepDotText,
+                        idx <= currentStepIndex && styles.stepDotTextActive,
+                      ]}
+                    >
+                      {idx + 1}
+                    </Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.stepLabel,
+                    idx === currentStepIndex && styles.stepLabelActive,
+                  ]}
+                >
+                  {s.label}
+                </Text>
+              </View>
+            ))}
+          </View>
 
-            <TouchableOpacity onPress={onSendOtp} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send SMS OTP</Text>}
-            </TouchableOpacity>
-          </>
-        )}
+          <Text style={styles.title}>
+            {step === 'phone' && 'Reset Account Password'}
+            {step === 'otp' && 'Verify Phone Number'}
+            {step === 'new-password' && 'Create New Password'}
+            {step === 'done' && 'Password Updated!'}
+          </Text>
 
-        {/* STEP 2: OTP VERIFICATION */}
-        {step === 'otp' && (
-          <>
-            <Text style={styles.label}>Enter 6-Digit OTP</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="key-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput
-                ref={otpInputRef}
-                style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
-                keyboardType="numeric"
-                maxLength={6}
-                placeholder="• • • • • •"
-                placeholderTextColor="#94a3b8"
-                value={otp}
-                onChangeText={setOtp}
-                onSubmitEditing={onVerifyOtp}
-              />
-            </View>
+          <Text style={styles.subtitle}>
+            {step === 'phone' && 'Enter your registered 10-digit mobile number to receive an SMS verification code.'}
+            {step === 'otp' && `Enter the 6-digit SMS verification code sent to +91 ${mobile}.`}
+            {step === 'new-password' && 'Set a strong new password with at least 8 characters.'}
+            {step === 'done' && 'Your password has been reset securely. You can now log in.'}
+          </Text>
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+          <div id="recaptcha-container"></div>
 
-            <TouchableOpacity onPress={onVerifyOtp} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify OTP</Text>}
-            </TouchableOpacity>
+          {/* STEP 1: PHONE */}
+          {step === 'phone' && (
+            <View style={styles.formSection}>
+              <Text style={styles.label}>Mobile Number</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="call-outline" size={18} color="#059669" style={styles.inputIcon} />
+                <Text style={styles.prefixText}>+91</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  placeholderTextColor="#94a3b8"
+                  value={mobile}
+                  onChangeText={setMobile}
+                  onSubmitEditing={onSendOtp}
+                  autoFocus={Platform.OS === 'web'}
+                />
+              </View>
 
-            <View style={styles.resendRow}>
-              {resendTimer > 0 ? (
-                <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
-              ) : (
-                <TouchableOpacity onPress={onSendOtp} disabled={isSubmitting}>
-                  <Text style={styles.resendLink}>🔄 Resend SMS OTP</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </>
-        )}
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={15} color="#dc2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
 
-        {/* STEP 3: CREATE NEW PASSWORD */}
-        {step === 'new-password' && (
-          <>
-            <Text style={styles.label}>New Password</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                secureTextEntry={!showPassword}
-                placeholder="Min 8 characters"
-                placeholderTextColor="#94a3b8"
-                value={newPassword}
-                onChangeText={setNewPassword}
-              />
-              <TouchableOpacity onPress={() => setShowPassword((s) => !s)}>
-                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
+              <TouchableOpacity
+                onPress={onSendOtp}
+                disabled={isSubmitting}
+                activeOpacity={0.85}
+                style={[styles.primaryButton, isSubmitting && { opacity: 0.7 }]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.buttonText}>Send SMS OTP</Text>
+                    <Ionicons name="arrow-forward" size={17} color="#ffffff" />
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
+          )}
 
-            <Text style={styles.label}>Confirm New Password</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                secureTextEntry={!showPassword}
-                placeholder="Re-type new password"
-                placeholderTextColor="#94a3b8"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                onSubmitEditing={onResetPassword}
-              />
+          {/* STEP 2: OTP */}
+          {step === 'otp' && (
+            <View style={styles.formSection}>
+              <Text style={styles.label}>6-Digit SMS Code</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="key-outline" size={18} color="#059669" style={styles.inputIcon} />
+                <TextInput
+                  ref={otpInputRef}
+                  style={[styles.input, styles.otpInput]}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  placeholder="• • • • • •"
+                  placeholderTextColor="#94a3b8"
+                  value={otp}
+                  onChangeText={setOtp}
+                  onSubmitEditing={onVerifyOtp}
+                />
+              </View>
+
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={15} color="#dc2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                onPress={onVerifyOtp}
+                disabled={isSubmitting}
+                activeOpacity={0.85}
+                style={[styles.primaryButton, isSubmitting && { opacity: 0.7 }]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.buttonText}>Verify OTP</Text>
+                    <Ionicons name="checkmark-circle" size={17} color="#ffffff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.resendRow}>
+                {resendTimer > 0 ? (
+                  <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
+                ) : (
+                  <TouchableOpacity onPress={onSendOtp} disabled={isSubmitting} activeOpacity={0.7}>
+                    <Text style={styles.resendLink}>Resend SMS OTP</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
+          )}
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* STEP 3: NEW PASSWORD */}
+          {step === 'new-password' && (
+            <View style={styles.formSection}>
+              <Text style={styles.label}>New Password</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="lock-closed-outline" size={18} color="#059669" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  secureTextEntry={!showPassword}
+                  placeholder="Minimum 8 characters"
+                  placeholderTextColor="#94a3b8"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword((s) => !s)} hitSlop={10}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#64748b" />
+                </TouchableOpacity>
+              </View>
 
-            <TouchableOpacity onPress={onResetPassword} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Update Password</Text>}
-            </TouchableOpacity>
-          </>
-        )}
+              <Text style={styles.label}>Confirm New Password</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="lock-closed-outline" size={18} color="#059669" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  secureTextEntry={!showPassword}
+                  placeholder="Re-enter new password"
+                  placeholderTextColor="#94a3b8"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  onSubmitEditing={onResetPassword}
+                />
+              </View>
 
-        {/* STEP 4: SUCCESS / DONE */}
-        {step === 'done' && (
-          <>
-            <View style={styles.successBox}>
-              <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
-              <Text style={styles.successText}>{successMessage}</Text>
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="alert-circle" size={15} color="#dc2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                onPress={onResetPassword}
+                disabled={isSubmitting}
+                activeOpacity={0.85}
+                style={[styles.primaryButton, isSubmitting && { opacity: 0.7 }]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <View style={styles.buttonInner}>
+                    <Text style={styles.buttonText}>Update Password</Text>
+                    <Ionicons name="shield-checkmark" size={17} color="#ffffff" />
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.85} style={styles.button}>
-              <Text style={styles.buttonText}>Back to Login</Text>
+          )}
+
+          {/* STEP 4: SUCCESS */}
+          {step === 'done' && (
+            <View style={styles.formSection}>
+              <View style={styles.successBox}>
+                <Ionicons name="checkmark-circle" size={28} color="#059669" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.successTitle}>Password Reset Complete</Text>
+                  <Text style={styles.successText}>
+                    {successMessage || 'Your account password has been updated successfully. You can now log in.'}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => router.replace('/(auth)/login')}
+                activeOpacity={0.85}
+                style={styles.primaryButton}
+              >
+                <View style={styles.buttonInner}>
+                  <Text style={styles.buttonText}>Proceed to Login</Text>
+                  <Ionicons name="log-in-outline" size={18} color="#ffffff" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Footer Assistance */}
+          <View style={styles.footerRow}>
+            <Text style={styles.footerText}>Remember your password?</Text>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.7}>
+              <Text style={styles.footerLink}>Log In</Text>
             </TouchableOpacity>
-          </>
-        )}
+          </View>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  scroll: { padding: SPACING.xxl, paddingTop: Platform.OS === 'web' ? 36 : 56 },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 16,
+  container: {
+    flex: 1,
+    backgroundColor: '#031a16',
+    position: 'relative',
   },
-  title: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
-  subtitle: { fontSize: 14, color: '#64748b', fontFamily: FONT.medium, marginBottom: 20, marginTop: 4, lineHeight: 19 },
-  label: { fontSize: 13, color: '#334155', fontFamily: FONT.bold, marginBottom: 7, marginTop: 14 },
-  inputWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderColor: '#eef2f6', borderRadius: RADIUS.md,
-    backgroundColor: '#f8fafc', paddingHorizontal: 14,
+  glowOrbMint: {
+    position: 'absolute',
+    top: -120,
+    right: -120,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(90px)' } : {}),
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 13, fontSize: 15.5, fontFamily: FONT.medium, color: '#0f172a' },
-  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12.5, marginTop: 10 },
-  button: {
-    backgroundColor: theme.primary,
-    borderRadius: RADIUS.md,
-    paddingVertical: 15,
+  glowOrbBlue: {
+    position: 'absolute',
+    bottom: -100,
+    left: -100,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(14, 165, 233, 0.12)',
+    ...(Platform.OS === 'web' ? { filter: 'blur(80px)' } : {}),
+  },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
+    padding: SPACING.lg,
+    paddingVertical: 48,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: FONT.bold },
-  resendRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 },
-  resendTimer: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  resendLink: { fontSize: 13, fontFamily: FONT.bold, color: '#0284c7' },
+  backPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    marginBottom: 20,
+    alignSelf: 'center',
+  },
+  backPillText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#065f46',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.18)',
+    ...(Platform.OS === 'web'
+      ? {
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(16, 185, 129, 0.1)',
+        }
+      : {
+          elevation: 10,
+        }),
+  },
+  cardMobile: {
+    padding: 22,
+    borderRadius: 20,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+  brandTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#064e3b',
+    letterSpacing: -0.2,
+  },
+  brandSubtitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    marginBottom: 18,
+  },
+  stepItem: {
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  stepDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepDotActive: {
+    backgroundColor: '#059669',
+  },
+  stepDotCurrent: {
+    backgroundColor: '#047857',
+    transform: [{ scale: 1.15 }],
+  },
+  stepDotText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  stepDotTextActive: {
+    color: '#ffffff',
+  },
+  stepLabel: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  stepLabelActive: {
+    color: '#065f46',
+    fontFamily: FONT.bold,
+  },
+  title: {
+    fontSize: 22,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#64748b',
+    fontFamily: FONT.medium,
+    lineHeight: 19,
+    marginTop: 4,
+    marginBottom: 18,
+  },
+  formSection: {
+    gap: 4,
+  },
+  label: {
+    fontSize: 12.5,
+    color: '#1e293b',
+    fontFamily: FONT.bold,
+    marginBottom: 6,
+    marginTop: 8,
+  },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 14,
+    height: 48,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  prefixText: {
+    fontSize: 14.5,
+    fontFamily: FONT.bold,
+    color: '#065f46',
+    marginRight: 6,
+  },
+  input: {
+    flex: 1,
+    height: '100%',
+    fontSize: 14.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  otpInput: {
+    letterSpacing: 8,
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#064e3b',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: RADIUS.sm,
+    padding: 10,
+    marginTop: 10,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#b91c1c',
+  },
+  primaryButton: {
+    backgroundColor: '#059669',
+    borderRadius: RADIUS.md,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 18,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  buttonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontFamily: FONT.bold,
+  },
+  resendRow: {
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  resendTimer: {
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  resendLink: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
   successBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
+    gap: 12,
     backgroundColor: '#f0fdf4',
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
     borderRadius: RADIUS.md,
     padding: 16,
     marginTop: 6,
   },
-  successText: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#166534', lineHeight: 20 },
+  successTitle: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#166534',
+    marginBottom: 4,
+  },
+  successText: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    color: '#15803d',
+    lineHeight: 18,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 22,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  footerText: {
+    fontSize: 12.5,
+    color: '#64748b',
+    fontFamily: FONT.regular,
+  },
+  footerLink: {
+    fontSize: 12.5,
+    color: '#059669',
+    fontFamily: FONT.bold,
+  },
 });

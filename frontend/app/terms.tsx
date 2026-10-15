@@ -1,280 +1,559 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  useWindowDimensions,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { useExecutiveTheme } from '@/src/store/theme-context';
+import PublicHeader from '@/components/PublicHeader';
 
 export default function TermsOfServiceScreen() {
   const router = useRouter();
-  const { colors } = useExecutiveTheme();
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
+
+  const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('farmsking_theme_mode');
+      if (savedTheme === 'night' || savedTheme === 'day') {
+        setThemeMode(savedTheme);
+      }
+      const handleStorage = () => {
+        const t = localStorage.getItem('farmsking_theme_mode');
+        if (t === 'night' || t === 'day') setThemeMode(t);
+      };
+      window.addEventListener('storage', handleStorage);
+      return () => window.removeEventListener('storage', handleStorage);
+    }
+  }, []);
+
+  const toggleTheme = (mode: 'day' | 'night') => {
+    setThemeMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('farmsking_theme_mode', mode);
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const isDay = themeMode === 'day';
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.root, isDay ? styles.rootDay : styles.rootNight]}>
       <Stack.Screen options={{ headerShown: false, title: 'Terms of Service • FarmsKing' }} />
 
-      {/* Header Bar */}
-      <View style={[styles.headerBar, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={20} color={colors.text} />
-          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.titleColor }]}>Terms of Service</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      {/* Unified Public Floating Header */}
+      <PublicHeader themeMode={themeMode} onThemeToggle={toggleTheme} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Banner */}
-        <LinearGradient
-          colors={colors.headerGradient}
-          style={styles.heroBanner}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={styles.badgeRow}>
-            <Ionicons name="shield-checkmark" size={14} color="#00ff87" />
-            <Text style={styles.badgeText}>COMPANIES ACT, 2013 & IT ACT, 2000 COMPLIANT</Text>
-          </View>
-          <Text style={styles.heroTitle}>FarmsKing Terms of Service</Text>
-          <Text style={styles.heroSubtitle}>
-            Official Legal Agreement for Cultivators, Agronomists, Store Vendors, and Platform Members
-          </Text>
-          <Text style={styles.effectiveDate}>Last Updated: October 2026 • FarmsKing India Private Limited</Text>
-        </LinearGradient>
-
-        {/* Section 1: Entity & Agreement */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>1. Corporate Identity & Acceptance</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            These Terms of Service ("Terms") govern your access to and use of the FarmsKing digital platform, mobile applications, APMC mandi price telemetry, AI Crop Doctor tools, and e-commerce services operated by <Text style={{ color: colors.primary, fontFamily: FONT.bold }}>FarmsKing India Private Limited</Text> (incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India).
-          </Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted, marginTop: 10 }]}>
-            By downloading, registering, accessing, or placing orders on farmsking.in or related applications, you enter into a legally binding agreement in accordance with the Information Technology Act, 2000 and applicable digital commerce rules.
-          </Text>
-        </View>
-
-        {/* Section 2: APMC Mandi Price Intelligence */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>2. Mandi Price Telemetry & Market Intelligence</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            FarmsKing provides agricultural commodity price aggregation, historical price graphs, and arrival estimates from regulated Agricultural Produce Market Committees (APMCs) across Punjab, Haryana, Rajasthan, and wider India.
-          </Text>
-          <View style={styles.bulletBox}>
-            <Text style={[styles.bulletItem, { color: colors.textMuted }]}>
-              • <Text style={{ fontFamily: FONT.bold, color: colors.text }}>Advisory Nature:</Text> Commodity rates displayed on the platform represent recent market trade entries and verified platform transactions. Official mandi bidding and physical trade settlements are conducted in accordance with the respective State APMC Acts.
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, isMobile && styles.scrollContentMobile]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          {/* Top Breadcrumb */}
+          <TouchableOpacity
+            style={styles.backRow}
+            onPress={() => router.back()}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="arrow-back" size={16} color={isDay ? '#059669' : '#34d399'} />
+            <Text style={[styles.backText, isDay ? styles.backTextDay : styles.backTextNight]}>
+              Back to FarmsKing
             </Text>
-            <Text style={[styles.bulletItem, { color: colors.textMuted, marginTop: 8 }]}>
-              • <Text style={{ fontFamily: FONT.bold, color: colors.text }}>No Financial Speculation:</Text> FarmsKing does not operate unregulated futures or illegal commodity pools. All platform trade connectivity is designed for transparent physical price discovery.
+          </TouchableOpacity>
+
+          {/* Hero Banner */}
+          <View style={[styles.heroCard, isDay ? styles.heroCardDay : styles.heroCardNight]}>
+            <View style={styles.badgeRow}>
+              <View style={[styles.govBadge, isDay ? styles.govBadgeDay : styles.govBadgeNight]}>
+                <Ionicons name="shield-checkmark" size={14} color={isDay ? '#059669' : '#00ff87'} />
+                <Text style={[styles.govBadgeText, isDay ? styles.govBadgeTextDay : styles.govBadgeTextNight]}>
+                  COMPANIES ACT 2013 & IT ACT 2000 COMPLIANT
+                </Text>
+              </View>
+              <View style={[styles.statuteBadge, isDay ? styles.statuteBadgeDay : styles.statuteBadgeNight]}>
+                <Text style={[styles.statuteBadgeText, isDay ? styles.statuteBadgeTextDay : styles.statuteBadgeTextNight]}>
+                  LEGAL FRAMEWORK
+                </Text>
+              </View>
+            </View>
+
+            <Text style={[styles.heroTitle, isDay ? styles.heroTitleDay : styles.heroTitleNight]}>
+              FarmsKing Terms of Service
+            </Text>
+            <Text style={[styles.heroSubtitle, isDay ? styles.heroSubtitleDay : styles.heroSubtitleNight]}>
+              Official Legal Agreement for Cultivators, Agronomists, Store Vendors, and Platform Members
+            </Text>
+            <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
+              Last Updated: October 2026 • FarmsKing India Private Limited • Registered in Punjab, India
             </Text>
           </View>
-        </View>
 
-        {/* Section 3: AI Crop Doctor & Agronomy Advice */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>3. AI Crop Doctor & Diagnostic Advisory</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            Our AI-powered image diagnostics and tele-consultations with certified agronomists provide scientific advisory guidelines based on agronomic standards published by the Indian Council of Agricultural Research (ICAR) and State Agricultural Universities.
-          </Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted, marginTop: 10 }]}>
-            Because local micro-climates, soil pH, irrigation salinity, and sprayer calibration affect crop response, cultivators must follow manufacturer chemical label directions and adhere to standard safety waiting periods (pre-harvest intervals).
-          </Text>
-        </View>
-
-        {/* Section 4: Certified Agri Store Marketplace */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>4. Agri Store, Vendor Marketplace & Product Compliance</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            All hybrid seeds, bio-fertilizers, water-soluble nutrients, spray equipment, and organic inputs available on FarmsKing Agri Store comply with the Seeds Act (1966), Fertilizer (Control) Order (1985), and Insecticides Act (1968).
-          </Text>
-          <View style={styles.bulletBox}>
-            <Text style={[styles.bulletItem, { color: colors.textMuted }]}>
-              • All registered vendors and sellers undergo identity verification and license auditing.
+          {/* Section 1: Entity & Acceptance */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(5,150,105,0.1)' : 'rgba(52,211,153,0.15)' }]}>
+                <Ionicons name="business-outline" size={18} color={isDay ? '#059669' : '#34d399'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                1. Corporate Identity & Acceptance
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              These Terms of Service ("Terms") govern your access to and use of the FarmsKing digital platform, mobile applications, APMC mandi price telemetry, AI Crop Doctor tools, and e-commerce services operated by <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>FarmsKing India Private Limited</Text> (incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India).
             </Text>
-            <Text style={[styles.bulletItem, { color: colors.textMuted, marginTop: 6 }]}>
-              • Genuine branded inputs are shipped with manufacturer batch seals and GST invoices.
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              By downloading, registering, browsing, or placing orders on farmsking.in or associated mobile apps, you enter into a legally binding contract in accordance with the Information Technology Act, 2000 and applicable digital commerce regulations.
             </Text>
           </View>
-        </View>
 
-        {/* Section 5: Data Privacy & Security */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>5. Data Protection & Plot Telemetry</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            Under the Digital Personal Data Protection Act (DPDPA), 2023, your personal data, GPS plot boundaries, farm ledgers, and transactions remain strictly protected. We do not sell or monetize cultivator crop data to speculative third parties.
-          </Text>
-        </View>
+          {/* Section 2: APMC Mandi Telemetry */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(2,132,199,0.1)' : 'rgba(56,189,248,0.15)' }]}>
+                <Ionicons name="trending-up" size={18} color={isDay ? '#0284c7' : '#38bdf8'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                2. Mandi Price Telemetry & Market Intelligence
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              FarmsKing aggregates agricultural commodity price data, historical trends, and market arrival insights from regulated Agricultural Produce Market Committees (APMCs) across Punjab, Haryana, Rajasthan, and throughout India.
+            </Text>
+            <View style={styles.bulletList}>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Advisory Nature: </Text>
+                  Rates displayed represent recent verified mandi transactions and platform records. Physical trade settlements follow respective State APMC Acts.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>No Unregulated Speculation: </Text>
+                  FarmsKing operates exclusively for physical trade discovery and transparent farmer connectivity without speculative commodity pooling.
+                </Text>
+              </View>
+            </View>
+          </View>
 
-        {/* Section 6: Grievance Redressal */}
-        <View style={[styles.legalCard, { backgroundColor: colors.cardBg, borderColor: colors.borderColor }]}>
-          <Text style={[styles.sectionHeading, { color: colors.titleColor }]}>6. Statutory Grievance Redressal Officer</Text>
-          <Text style={[styles.bodyText, { color: colors.textMuted }]}>
-            In compliance with the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020:
-          </Text>
-          <View style={[styles.officerBox, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}>
-            <Text style={[styles.officerTitle, { color: colors.primary }]}>Grievance Officer: Surinder Singh</Text>
-            <Text style={[styles.officerDetail, { color: colors.text }]}>Designation: Legal & Agronomy Operations Desk</Text>
-            <Text style={[styles.officerDetail, { color: colors.text }]}>E-mail: farmskingindia@gmail.com / grievance@farmsking.in</Text>
-            <Text style={[styles.officerDetail, { color: colors.text }]}>Farmer Helpline: 95776-22000 (6:00 AM – 10:00 PM IST)</Text>
-            <Text style={[styles.officerDetail, { color: colors.text }]}>Jurisdiction: Courts of Punjab, India</Text>
+          {/* Section 3: AI Crop Doctor & Agronomy Advice */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(217,119,6,0.1)' : 'rgba(251,191,36,0.15)' }]}>
+                <Ionicons name="medkit-outline" size={18} color={isDay ? '#d97706' : '#fbbf24'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                3. AI Crop Doctor & Agronomic Advisory
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              Our AI image diagnostics and certified agronomist consultations provide scientific recommendations benchmarked against Indian Council of Agricultural Research (ICAR) protocols and State Agricultural University standards.
+            </Text>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              Because soil micro-climates, water salinity, and application timing vary per farm, cultivators must follow manufacturer label instructions and adhere strictly to statutory pre-harvest intervals (PHI).
+            </Text>
+          </View>
+
+          {/* Section 4: Agri Store Marketplace */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(16,185,129,0.1)' : 'rgba(52,211,153,0.15)' }]}>
+                <Ionicons name="storefront-outline" size={18} color={isDay ? '#059669' : '#34d399'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                4. Agri Store, Marketplace & Product Compliance
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              All hybrid seeds, bio-fertilizers, soluble nutrients, spray equipment, and organic inputs on FarmsKing Agri Store adhere to the Seeds Act (1966), Fertilizer Control Order (1985), and Insecticides Act (1968).
+            </Text>
+            <View style={styles.bulletList}>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  Vendors are vetted for verified business registrations, GST compliance, and trade licenses.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  Original branded inputs are sealed by manufacturers and accompanied by GST tax invoices.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Section 5: Data Privacy & Security */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(99,102,241,0.1)' : 'rgba(129,140,248,0.15)' }]}>
+                <Ionicons name="lock-closed-outline" size={18} color={isDay ? '#4f46e5' : '#818cf8'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                5. Data Protection & Plot Telemetry
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              Under the Digital Personal Data Protection Act (DPDPA), 2023, your personal credentials, farm GPS boundaries, financial ledgers, and transaction records remain strictly confidential. We never monetize cultivator crop data to third-party data brokers.
+            </Text>
+          </View>
+
+          {/* Section 6: Grievance Desk */}
+          <View style={[styles.sectionCard, isDay ? styles.sectionCardDay : styles.sectionCardNight]}>
+            <View style={styles.cardHeaderRow}>
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? 'rgba(5,150,105,0.1)' : 'rgba(52,211,153,0.15)' }]}>
+                <Ionicons name="person-outline" size={18} color={isDay ? '#059669' : '#34d399'} />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>
+                6. Statutory Grievance Redressal Desk
+              </Text>
+            </View>
+            <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+              In compliance with the Information Technology Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020:
+            </Text>
+            <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
+              <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
+                Surinder Singh
+              </Text>
+              <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
+                Grievance Officer • Legal & Agronomy Operations Desk
+              </Text>
+              <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
+                Email: farmskingindia@gmail.com / grievance@farmsking.in
+              </Text>
+              <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
+                Helpline: 95776-22000 (Farmer Support Desk • 6:00 AM – 10:00 PM IST)
+              </Text>
+              <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
+                Registered Office: Makhu, District Ferozepur, Punjab - 142044 • Jurisdiction: Courts of Punjab, India
+              </Text>
+            </View>
+          </View>
+
+          {/* Bottom Back Button */}
+          <View style={styles.bottomCtaRow}>
+            <TouchableOpacity
+              style={styles.homeBtn}
+              onPress={() => router.push('/')}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={isDay ? ['#059669', '#047857'] : ['#10b981', '#059669']}
+                style={styles.homeBtnInner}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons name="home" size={17} color="#ffffff" />
+                <Text style={styles.homeBtnText}>Return to FarmsKing Homepage</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Back to Home Button */}
-        <TouchableOpacity
-          style={[styles.returnButton, { backgroundColor: colors.primary }]}
-          onPress={() => router.push('/')}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="home" size={18} color="#020d06" />
-          <Text style={styles.returnButtonText}>Return to FarmsKing Home</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
   },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
+  rootDay: {
+    backgroundColor: '#f8fafc',
   },
-  backButton: {
+  rootNight: {
+    backgroundColor: '#040a17',
+  },
+  scrollContent: {
+    paddingTop: 84,
+    paddingBottom: 60,
+  },
+  scrollContentMobile: {
+    paddingTop: 68,
+    paddingBottom: 80,
+  },
+  container: {
+    width: '92%',
+    maxWidth: 960,
+    alignSelf: 'center',
+    gap: 18,
+  },
+  backRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    padding: 6,
+    paddingVertical: 4,
   },
   backText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONT.bold,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontFamily: FONT.extraBold,
+  backTextDay: {
+    color: '#059669',
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 60,
-    maxWidth: 860,
-    alignSelf: 'center',
-    width: '100%',
+  backTextNight: {
+    color: '#34d399',
   },
-  heroBanner: {
-    borderRadius: RADIUS.lg,
+  heroCard: {
+    borderRadius: 20,
     padding: 24,
-    marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    gap: 10,
+  },
+  heroCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'md'),
+  },
+  heroCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...premiumShadow('rgba(0,0,0,0.4)', 'md'),
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  govBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0, 255, 135, 0.12)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
   },
-  badgeText: {
-    fontSize: 10,
+  govBadgeDay: {
+    backgroundColor: 'rgba(5,150,105,0.1)',
+  },
+  govBadgeNight: {
+    backgroundColor: 'rgba(0,255,135,0.12)',
+  },
+  govBadgeText: {
+    fontSize: 10.5,
     fontFamily: FONT.extraBold,
-    color: '#00ff87',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
+  },
+  govBadgeTextDay: {
+    color: '#059669',
+  },
+  govBadgeTextNight: {
+    color: '#34d399',
+  },
+  statuteBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+  },
+  statuteBadgeDay: {
+    backgroundColor: '#f1f5f9',
+  },
+  statuteBadgeNight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  statuteBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+  statuteBadgeTextDay: {
+    color: '#64748b',
+  },
+  statuteBadgeTextNight: {
+    color: '#94a3b8',
   },
   heroTitle: {
     fontSize: 24,
     fontFamily: FONT.extraBold,
+    lineHeight: 30,
+  },
+  heroTitleDay: {
+    color: '#0f172a',
+  },
+  heroTitleNight: {
     color: '#ffffff',
-    marginBottom: 6,
   },
   heroSubtitle: {
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: 'rgba(255, 255, 255, 0.85)',
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 19,
+  },
+  heroSubtitleDay: {
+    color: '#475569',
+  },
+  heroSubtitleNight: {
+    color: '#94a3b8',
   },
   effectiveDate: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
   },
-  legalCard: {
-    borderRadius: RADIUS.md,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1.2,
+  effectiveDateDay: {
+    color: '#059669',
   },
-  sectionHeading: {
+  effectiveDateNight: {
+    color: '#6ee7b7',
+  },
+  sectionCard: {
+    borderRadius: 18,
+    padding: 22,
+    borderWidth: 1,
+    gap: 12,
+  },
+  sectionCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.04)', 'sm'),
+  },
+  sectionCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    ...premiumShadow('rgba(0,0,0,0.3)', 'sm'),
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: {
     fontSize: 16,
     fontFamily: FONT.bold,
-    marginBottom: 10,
+    flex: 1,
+  },
+  cardTitleDay: {
+    color: '#0f172a',
+  },
+  cardTitleNight: {
+    color: '#f8fafc',
   },
   bodyText: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontFamily: FONT.regular,
     lineHeight: 21,
   },
-  bulletBox: {
-    marginTop: 10,
-    paddingLeft: 6,
+  bodyTextDay: {
+    color: '#334155',
+  },
+  bodyTextNight: {
+    color: '#cbd5e1',
+  },
+  bulletList: {
+    gap: 8,
+    marginTop: 4,
   },
   bulletItem: {
-    fontSize: 12.5,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  bulletDot: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    lineHeight: 20,
+  },
+  bulletDotDay: {
+    color: '#059669',
+  },
+  bulletDotNight: {
+    color: '#34d399',
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 13,
     fontFamily: FONT.regular,
-    lineHeight: 19,
+    lineHeight: 20,
+  },
+  bulletTextDay: {
+    color: '#475569',
+  },
+  bulletTextNight: {
+    color: '#94a3b8',
   },
   officerBox: {
-    marginTop: 12,
-    borderRadius: RADIUS.sm,
-    padding: 14,
+    padding: 16,
+    borderRadius: 12,
     borderWidth: 1,
-    gap: 4,
+    gap: 6,
+    marginTop: 4,
   },
-  officerTitle: {
-    fontSize: 14,
+  officerBoxDay: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  officerBoxNight: {
+    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    borderColor: 'rgba(52, 211, 153, 0.25)',
+  },
+  officerName: {
+    fontSize: 15,
     fontFamily: FONT.extraBold,
-    marginBottom: 4,
+  },
+  officerNameDay: {
+    color: '#166534',
+  },
+  officerNameNight: {
+    color: '#34d399',
+  },
+  officerRole: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+  },
+  officerRoleDay: {
+    color: '#15803d',
+  },
+  officerRoleNight: {
+    color: '#a7f3d0',
   },
   officerDetail: {
     fontSize: 12,
-    fontFamily: FONT.medium,
+    fontFamily: FONT.regular,
     lineHeight: 18,
   },
-  returnButton: {
+  officerDetailDay: {
+    color: '#334155',
+  },
+  officerDetailNight: {
+    color: '#cbd5e1',
+  },
+  bottomCtaRow: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  homeBtn: {
+    borderRadius: RADIUS.pill,
+    overflow: 'hidden',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  homeBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
-    borderRadius: RADIUS.pill,
-    marginTop: 16,
-    marginBottom: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
-  returnButtonText: {
+  homeBtnText: {
+    color: '#ffffff',
     fontSize: 14,
-    fontFamily: FONT.extraBold,
-    color: '#020d06',
+    fontFamily: FONT.bold,
   },
 });

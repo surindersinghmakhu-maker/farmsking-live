@@ -202,14 +202,24 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Subtle Ambient Glowing Baby Light Orbs */}
+      <View style={styles.glowOrbBabyMint} />
+      <View style={styles.glowOrbBabyBlue} />
+
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        {/* Back to Home Button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')} activeOpacity={0.8}>
+          <Ionicons name="arrow-back" size={15} color="#059669" />
+          <Text style={styles.backBtnText}>Back to FarmsKing</Text>
+        </TouchableOpacity>
+
         <View style={styles.cardContainer}>
           {/* Top Brand Header */}
           <View style={styles.headerRow}>
-            <BrandLogo size={36} useHdQuality />
-            <View>
+            <BrandLogo size={40} useHdQuality />
+            <View style={{ marginLeft: 10 }}>
               <Text style={styles.brandName}>FarmsKing</Text>
-              <Text style={styles.brandSub}>Smart Farming Platform</Text>
+              <Text style={styles.brandSub}>Digital Agriculture &amp; Farm Intelligence</Text>
             </View>
           </View>
 
@@ -560,38 +570,87 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+
+  // Subtle Ambient Glowing Orbs
+  glowOrbBabyMint: {
+    position: 'absolute',
+    width: 500,
+    height: 500,
+    borderRadius: 250,
+    backgroundColor: 'rgba(167, 243, 208, 0.35)',
+    top: -100,
+    right: -100,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+  },
+  glowOrbBabyBlue: {
+    position: 'absolute',
+    width: 460,
+    height: 460,
+    borderRadius: 230,
+    backgroundColor: 'rgba(186, 230, 253, 0.35)',
+    bottom: -80,
+    left: -80,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+  },
+
   scroll: {
     paddingHorizontal: SPACING.sm,
-    paddingVertical: Platform.OS === 'web' ? 20 : 30,
+    paddingVertical: Platform.OS === 'web' ? 24 : 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Back button
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 14,
+    alignSelf: 'center',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    ...premiumShadow('rgba(0,0,0,0.05)', 'xs'),
+  },
+  backBtnText: { color: '#059669', fontSize: 12, fontFamily: FONT.bold },
+
   cardContainer: {
     width: '100%',
-    maxWidth: 440,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: SPACING.md,
+    maxWidth: 480,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderRadius: 24,
+    padding: 24,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
+    borderColor: 'rgba(16, 185, 129, 0.22)',
+    ...(Platform.OS === 'web'
+      ? ({
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 20px 45px -12px rgba(16, 185, 129, 0.14), 0 0 1px rgba(0,0,0,0.06)',
+        } as any)
+      : {
+          ...premiumShadow('rgba(16,185,129,0.15)', 'lg'),
+        }),
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  brandName: { fontSize: 17, fontFamily: FONT.extraBold, color: theme.primary, letterSpacing: -0.2 },
+  brandName: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.2 },
   brandSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
-  titleSection: { marginBottom: 12 },
-  title: { fontSize: 21, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
-  subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 1 },
+  titleSection: { marginBottom: 14 },
+  title: { fontSize: 23, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
+  subtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   accountTypeWrap: {
     flexDirection: 'row',
     gap: 8,
@@ -620,17 +679,17 @@ const styles = StyleSheet.create({
   rowTwoCols: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 10 },
   label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4 },
   inputWrap: {
-    height: 38,
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: RADIUS.md,
+    borderRadius: 12,
     backgroundColor: '#f8fafc',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
-  inputIcon: { marginRight: 6 },
-  input: { flex: 1, paddingVertical: 4, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, paddingVertical: 6, fontSize: 13.5, fontFamily: FONT.medium, color: '#0f172a' },
   statusBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   statusBadgeText: { fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' },
   kingIdBadge: {

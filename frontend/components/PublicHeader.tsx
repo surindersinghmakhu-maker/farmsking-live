@@ -1,22 +1,132 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  useWindowDimensions,
+  Platform,
+  Modal,
+  Linking,
+} from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import Animated, {
-  useSharedValue, useAnimatedStyle, withRepeat,
-  withSequence, withTiming,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-const NAV_LINKS = [
-  { label: 'Home',         path: '/',                  icon: 'home-outline',        image: null,                                                     color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', bgNight: 'rgba(59,130,246,0.22)' },
-  { label: 'Agri Store',   path: '/shop',              icon: 'storefront-outline',  image: require('@/assets/images/icon_agristore_3d_clean.png'),   color: '#f97316', bg: 'rgba(249,115,22,0.1)', bgNight: 'rgba(249,115,22,0.22)' },
-  { label: 'Farming',      path: '/topic/Farming',     icon: 'leaf-outline',        image: require('@/assets/images/icon_farming_3d_clean.png'),     color: '#10b981', bg: 'rgba(16,185,129,0.1)', bgNight: 'rgba(16,185,129,0.22)' },
-  { label: 'Gardening',    path: '/topic/Gardening',   icon: 'flower-outline',      image: require('@/assets/images/icon_gardening_3d_clean.png'),   color: '#e11d48', bg: 'rgba(225,29,72,0.1)', bgNight: 'rgba(225,29,72,0.22)' },
-  { label: 'Crop Doctors', path: '/topic/Crop-Doctors',icon: 'medkit-outline',      image: require('@/assets/images/icon_cropdoctors_3d_clean.png'), color: '#06b6d4', bg: 'rgba(6,182,212,0.1)', bgNight: 'rgba(6,182,212,0.22)' },
+// ── Streamlined Top Navigation: Exactly 4 Core Links ──
+const MAIN_NAV_LINKS = [
+  {
+    id: 'store',
+    label: 'Agri Store',
+    path: '/shop',
+    icon: 'storefront-outline',
+    image: require('@/assets/images/icon_agristore_3d_clean.png'),
+    color: '#f97316',
+    bg: 'rgba(249,115,22,0.1)',
+    bgNight: 'rgba(249,115,22,0.22)',
+  },
+  {
+    id: 'doctors',
+    label: 'Crop Doctors',
+    path: '/topic/Crop-Doctors',
+    icon: 'medkit-outline',
+    image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
+    color: '#06b6d4',
+    bg: 'rgba(6,182,212,0.1)',
+    bgNight: 'rgba(6,182,212,0.22)',
+  },
+  {
+    id: 'mandi',
+    label: 'Mandi Rates',
+    path: '/#mandi-rates',
+    icon: 'trending-up-outline',
+    image: null,
+    color: '#10b981',
+    bg: 'rgba(16,185,129,0.1)',
+    bgNight: 'rgba(16,185,129,0.22)',
+    isAction: 'mandi',
+  },
+  {
+    id: 'helpline',
+    label: 'Helpline',
+    path: '#helpline',
+    icon: 'call-outline',
+    image: null,
+    color: '#16a34a',
+    bg: 'rgba(22,163,74,0.1)',
+    bgNight: 'rgba(22,163,74,0.22)',
+    isAction: 'helpline',
+  },
+];
+
+// ── Secondary Links under "More ▾" ──
+const MORE_NAV_LINKS = [
+  {
+    id: 'farming',
+    label: 'Farming Advisory',
+    subtext: 'Scientific crop cultivation, soil health & advisory',
+    path: '/topic/Farming',
+    icon: 'leaf-outline',
+    image: require('@/assets/images/icon_farming_3d_clean.png'),
+    color: '#10b981',
+  },
+  {
+    id: 'gardening',
+    label: 'Gardening & Nursery',
+    subtext: 'Terrace garden kits, indoor plants & organic inputs',
+    path: '/topic/Gardening',
+    icon: 'flower-outline',
+    image: require('@/assets/images/icon_gardening_3d_clean.png'),
+    color: '#e11d48',
+  },
+  {
+    id: 'cropintel',
+    label: 'Crop Intelligence AI',
+    subtext: 'Live disease scanner, pest detection & yield forecast',
+    path: '/topic/Crop-Doctors',
+    icon: 'scan-outline',
+    image: null,
+    color: '#8b5cf6',
+  },
+  {
+    id: 'orders',
+    label: 'Track Orders & Delivery',
+    subtext: 'Check doorstep delivery, seed dispatch & invoices',
+    path: '/shop',
+    icon: 'cube-outline',
+    image: null,
+    color: '#3b82f6',
+  },
+  {
+    id: 'contact',
+    label: 'Contact & Support Hub',
+    subtext: 'Headquarters, regional centres & agronomist directory',
+    path: '/contact-us',
+    icon: 'mail-outline',
+    image: null,
+    color: '#0284c7',
+  },
+  {
+    id: 'terms',
+    label: 'Compliance & Legal',
+    subtext: 'Terms of service, privacy policy & farmer protection',
+    path: '/terms',
+    icon: 'shield-checkmark-outline',
+    image: null,
+    color: '#64748b',
+  },
 ];
 
 export default function PublicHeader({
@@ -30,15 +140,16 @@ export default function PublicHeader({
   themeMode?: 'day' | 'night';
   onThemeToggle?: (mode: 'day' | 'night') => void;
 } = {}) {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 1120;
-  const isTablet  = width > 768 && width <= 1120;
-  const isMobile  = width <= 768;
+  const isDesktop = width > 1160;
+  const isTablet = width > 768 && width <= 1160;
+  const isMobile = width <= 768;
   const { user } = useAuth();
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [helplineModalOpen, setHelplineModalOpen] = useState(false);
 
   // Synchronized Theme state
   const [internalTheme, setInternalTheme] = useState<'day' | 'night'>('day');
@@ -97,46 +208,111 @@ export default function PublicHeader({
     if (!user) {
       pulseScale.value = withRepeat(
         withSequence(withTiming(1.05, { duration: 1400 }), withTiming(1, { duration: 1400 })),
-        -1, true
+        -1,
+        true
       );
     }
   }, [user]);
   const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulseScale.value }] }));
 
+  // Live pulsing beacon animation for Sticky Helpline button
+  const beaconScale = useSharedValue(1);
+  const beaconOpacity = useSharedValue(0.7);
+  useEffect(() => {
+    beaconScale.value = withRepeat(
+      withSequence(withTiming(1.5, { duration: 900 }), withTiming(1, { duration: 900 })),
+      -1,
+      true
+    );
+    beaconOpacity.value = withRepeat(
+      withSequence(withTiming(0.2, { duration: 900 }), withTiming(0.85, { duration: 900 })),
+      -1,
+      true
+    );
+  }, []);
+  const beaconAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: beaconScale.value }],
+    opacity: beaconOpacity.value,
+  }));
+
   const isActive = (path: string) =>
     pathname === path || (path === '/' && (pathname === '/index' || pathname === ''));
 
   const goTo = (path: string) => {
-    setMenuOpen(false);
+    setMoreMenuOpen(false);
     router.push(path as any);
   };
 
   const goToDashboard = () => {
-    setMenuOpen(false);
-    if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+    setMoreMenuOpen(false);
+    if (
+      ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
+        user?.role || ''
+      )
+    ) {
       router.push('/(partner)/(tabs)' as any);
     } else {
       router.push('/(user)/(tabs)' as any);
     }
   };
 
+  const handleNavClick = (link: (typeof MAIN_NAV_LINKS)[0]) => {
+    setMoreMenuOpen(false);
+    if (link.isAction === 'helpline') {
+      setHelplineModalOpen(true);
+      return;
+    }
+    if (link.isAction === 'mandi') {
+      if (pathname === '/' || pathname === '/index' || pathname === '') {
+        if (Platform.OS === 'web' && typeof document !== 'undefined') {
+          const el = document.getElementById('mandi-rates') || document.querySelector('[data-mandi-rates="true"]');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+            return;
+          }
+        }
+      }
+      router.push('/#mandi-rates' as any);
+      return;
+    }
+    goTo(link.path);
+  };
+
+  const handleOpenWhatsApp = () => {
+    const text = encodeURIComponent(
+      'Hello FarmsKing Expert Team, I need immediate farming and crop guidance.'
+    );
+    const url = `https://wa.me/9195776220000?text=${text}`;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url);
+    }
+  };
+
+  const handleOpenCall = () => {
+    Linking.openURL('tel:95776220000');
+  };
+
   return (
     <>
       {/* ── Main Floating Capsule Header ── */}
-      <View style={[
-        styles.header,
-        isDay ? styles.headerDay : styles.headerNight,
-        isMobile && styles.headerMobile,
-      ]}>
+      <View
+        style={[
+          styles.header,
+          isDay ? styles.headerDay : styles.headerNight,
+          isMobile && styles.headerMobile,
+        ]}
+      >
         {Platform.OS === 'web' && (
           <BlurView
             intensity={45}
             tint={isDay ? 'light' : 'dark'}
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, { borderRadius: isMobile ? 20 : 28 }]}
           />
         )}
 
-        {/* Row 1: Logo & Right Controls */}
+        {/* Row 1: Logo, Streamlined Desktop Links & Right Controls */}
         <View style={styles.topRow}>
           {/* Logo */}
           <TouchableOpacity style={styles.logo} onPress={() => goTo('/')} activeOpacity={0.8}>
@@ -146,77 +322,303 @@ export default function PublicHeader({
               resizeMode="contain"
             />
             <View>
-              <Text style={[styles.logoName, isDay ? styles.logoNameDay : styles.logoNameNight, isMobile && { fontSize: 16 }]}>FarmsKing</Text>
-              {!isMobile && <Text style={[styles.logoTag, isDay ? styles.logoTagDay : styles.logoTagNight]}>SMART FARMING PLATFORM</Text>}
+              <Text
+                style={[
+                  styles.logoName,
+                  isDay ? styles.logoNameDay : styles.logoNameNight,
+                  isMobile && { fontSize: 16 },
+                ]}
+              >
+                FarmsKing
+              </Text>
+              {!isMobile && (
+                <Text style={[styles.logoTag, isDay ? styles.logoTagDay : styles.logoTagNight]}>
+                  SMART FARMING PLATFORM
+                </Text>
+              )}
             </View>
           </TouchableOpacity>
 
-          {/* Desktop Nav Links */}
+          {/* Desktop Nav: Exactly 4 Streamlined Links + "More ▾" */}
           {isDesktop && (
             <View style={styles.navLinks}>
-              {NAV_LINKS.map((link) => {
+              {MAIN_NAV_LINKS.map((link) => {
                 const active = isActive(link.path);
                 return (
-                  <TouchableOpacity key={link.path} onPress={() => goTo(link.path)} activeOpacity={0.7} style={styles.navLinkWrap}>
-                    <Text
+                  <TouchableOpacity
+                    key={link.id}
+                    onPress={() => handleNavClick(link)}
+                    activeOpacity={0.7}
+                    style={styles.navLinkWrap}
+                  >
+                    <View
                       style={[
                         styles.navLink,
                         isDay ? styles.navLinkDay : styles.navLinkNight,
                         active && (isDay ? styles.navLinkActiveDay : styles.navLinkActiveNight),
                         active && {
-                          color: link.color,
                           backgroundColor: isDay ? link.bg : link.bgNight,
-                          fontFamily: FONT.extraBold,
                         },
+                        styles.navLinkInner,
                       ]}
                     >
-                      {link.label}
-                    </Text>
+                      {link.image ? (
+                        <Image source={link.image} style={styles.navLinkIconImg} resizeMode="contain" />
+                      ) : (
+                        <Ionicons
+                          name={link.icon as any}
+                          size={14}
+                          color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.navLinkText,
+                          isDay ? styles.navLinkTextDay : styles.navLinkTextNight,
+                          active && { color: link.color, fontFamily: FONT.extraBold },
+                        ]}
+                      >
+                        {link.label}
+                      </Text>
+                    </View>
                     {active && <View style={[styles.navLinkBar, { backgroundColor: link.color }]} />}
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Desktop "More ▾" Dropdown Trigger */}
+              <View style={styles.moreBtnWrapper}>
+                <TouchableOpacity
+                  onPress={() => setMoreMenuOpen(!moreMenuOpen)}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.navLink,
+                    isDay ? styles.navLinkDay : styles.navLinkNight,
+                    moreMenuOpen && (isDay ? styles.navLinkActiveDay : styles.navLinkActiveNight),
+                    styles.moreBtnInner,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.navLinkText,
+                      isDay ? styles.navLinkTextDay : styles.navLinkTextNight,
+                      moreMenuOpen && { color: '#10b981', fontFamily: FONT.extraBold },
+                    ]}
+                  >
+                    More
+                  </Text>
+                  <Ionicons
+                    name={moreMenuOpen ? 'chevron-up' : 'chevron-down'}
+                    size={12}
+                    color={moreMenuOpen ? '#10b981' : isDay ? '#64748b' : '#94a3b8'}
+                  />
+                </TouchableOpacity>
+
+                {/* Floating "More" Dropdown Menu */}
+                {moreMenuOpen && (
+                  <View
+                    style={[
+                      styles.moreDropdownCard,
+                      isDay ? styles.moreDropdownCardDay : styles.moreDropdownCardNight,
+                    ]}
+                  >
+                    <View style={styles.moreDropdownHeader}>
+                      <Text
+                        style={[
+                          styles.moreDropdownHeaderTitle,
+                          isDay ? styles.moreDropdownHeaderTitleDay : styles.moreDropdownHeaderTitleNight,
+                        ]}
+                      >
+                        MORE SERVICES & TOOLS
+                      </Text>
+                      <TouchableOpacity onPress={() => setMoreMenuOpen(false)}>
+                        <Ionicons name="close" size={15} color={isDay ? '#64748b' : '#94a3b8'} />
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.moreDropdownGrid}>
+                      {MORE_NAV_LINKS.map((item) => (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={[
+                            styles.moreDropdownItem,
+                            isDay ? styles.moreDropdownItemDay : styles.moreDropdownItemNight,
+                          ]}
+                          onPress={() => {
+                            setMoreMenuOpen(false);
+                            goTo(item.path);
+                          }}
+                          activeOpacity={0.75}
+                        >
+                          <View
+                            style={[
+                              styles.moreDropdownItemIconWrap,
+                              { backgroundColor: `${item.color}18` },
+                            ]}
+                          >
+                            {item.image ? (
+                              <Image source={item.image} style={{ width: 20, height: 20 }} resizeMode="contain" />
+                            ) : (
+                              <Ionicons name={item.icon as any} size={16} color={item.color} />
+                            )}
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={[
+                                styles.moreDropdownItemLabel,
+                                isDay ? styles.moreDropdownItemLabelDay : styles.moreDropdownItemLabelNight,
+                              ]}
+                            >
+                              {item.label}
+                            </Text>
+                            <Text style={styles.moreDropdownItemSub} numberOfLines={1}>
+                              {item.subtext}
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward"
+                            size={13}
+                            color={isDay ? '#94a3b8' : '#64748b'}
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
             </View>
           )}
 
-          {/* Right Actions */}
+          {/* Right Actions: Sticky Helpline, Theme, Lang, Cart, Auth */}
           <View style={styles.rightActions}>
+            {/* ── Sticky Quick Helpline: WhatsApp / Call 95776-220000 ── */}
+            <TouchableOpacity
+              style={[
+                styles.stickyHelplineBtn,
+                isDay ? styles.stickyHelplineBtnDay : styles.stickyHelplineBtnNight,
+                isMobile && styles.stickyHelplineBtnMobile,
+              ]}
+              onPress={() => setHelplineModalOpen(true)}
+              activeOpacity={0.85}
+              accessibilityLabel="Farmer Quick Helpline 95776-220000"
+            >
+              <LinearGradient
+                colors={['#10b981', '#059669']}
+                style={[styles.stickyHelplineGradient, isMobile && { paddingHorizontal: 9, paddingVertical: 5 }]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                {/* Live Pulsing Beacon */}
+                <View style={styles.beaconWrap}>
+                  <Animated.View style={[styles.beaconAura, beaconAnimStyle]} />
+                  <View style={styles.beaconDot} />
+                </View>
+
+                {/* Dual Icons: WhatsApp & Call */}
+                <View style={styles.helplineIcons}>
+                  <Ionicons name="logo-whatsapp" size={isMobile ? 12 : 14} color="#ffffff" />
+                  <Ionicons name="call" size={isMobile ? 11 : 12} color="#ffffff" style={{ marginLeft: 2 }} />
+                </View>
+
+                {/* Phone & Kicker */}
+                {!isMobile ? (
+                  <View style={styles.helplineTextBox}>
+                    <Text style={styles.helplineKicker}>QUICK HELPLINE</Text>
+                    <Text style={styles.helplineNumber}>95776-220000</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.helplineMobileNumber}>95776-220000</Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
             {/* Day / Night Theme Toggle */}
-            <View style={[styles.themeToggleBox, isDay ? styles.themeToggleBoxDay : styles.themeToggleBoxNight]}>
+            <View
+              style={[
+                styles.themeToggleBox,
+                isDay ? styles.themeToggleBoxDay : styles.themeToggleBoxNight,
+              ]}
+            >
               <TouchableOpacity
                 style={[styles.themeSegment, isDay && styles.themeSegmentActiveDay]}
                 onPress={() => handleToggleTheme('day')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="sunny" size={12} color={isDay ? '#b45309' : '#94a3b8'} />
-                {!isMobile && <Text style={[styles.themeSegmentText, isDay && styles.themeSegmentTextActiveDay]}>Day</Text>}
+                <Ionicons name="sunny" size={11} color={isDay ? '#b45309' : '#94a3b8'} />
+                {!isMobile && (
+                  <Text style={[styles.themeSegmentText, isDay && styles.themeSegmentTextActiveDay]}>
+                    Day
+                  </Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.themeSegment, !isDay && styles.themeSegmentActiveNight]}
                 onPress={() => handleToggleTheme('night')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="moon" size={11} color={!isDay ? '#38bdf8' : '#94a3b8'} />
-                {!isMobile && <Text style={[styles.themeSegmentText, !isDay && styles.themeSegmentTextActiveNight]}>Night</Text>}
+                <Ionicons name="moon" size={10.5} color={!isDay ? '#38bdf8' : '#94a3b8'} />
+                {!isMobile && (
+                  <Text style={[styles.themeSegmentText, !isDay && styles.themeSegmentTextActiveNight]}>
+                    Night
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
 
-            {/* Language Selector (Always visible on mobile & desktop!) */}
-            <View style={[styles.langPicker, isDay ? styles.langPickerDay : styles.langPickerNight, isMobile && styles.langPickerMobile]}>
+            {/* Language Selector */}
+            <View
+              style={[
+                styles.langPicker,
+                isDay ? styles.langPickerDay : styles.langPickerNight,
+                isMobile && styles.langPickerMobile,
+              ]}
+            >
               <TouchableOpacity onPress={() => handleLanguageChange('EN')}>
-                <Text style={[styles.langOption, isDay ? styles.langOptionDay : styles.langOptionNight, lang === 'EN' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight)]}>
+                <Text
+                  style={[
+                    styles.langOption,
+                    isDay ? styles.langOptionDay : styles.langOptionNight,
+                    lang === 'EN' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                  ]}
+                >
                   {isMobile ? 'EN' : 'English'}
                 </Text>
               </TouchableOpacity>
-              <Text style={[styles.langDivider, isDay ? styles.langDividerDay : styles.langDividerNight]}>|</Text>
+              <Text
+                style={[
+                  styles.langDivider,
+                  isDay ? styles.langDividerDay : styles.langDividerNight,
+                ]}
+              >
+                |
+              </Text>
               <TouchableOpacity onPress={() => handleLanguageChange('PA')}>
-                <Text style={[styles.langOption, isDay ? styles.langOptionDay : styles.langOptionNight, lang === 'PA' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight)]}>
+                <Text
+                  style={[
+                    styles.langOption,
+                    isDay ? styles.langOptionDay : styles.langOptionNight,
+                    lang === 'PA' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                  ]}
+                >
                   {isMobile ? 'PA' : 'ਪੰਜਾਬੀ'}
                 </Text>
               </TouchableOpacity>
-              <Text style={[styles.langDivider, isDay ? styles.langDividerDay : styles.langDividerNight]}>|</Text>
+              <Text
+                style={[
+                  styles.langDivider,
+                  isDay ? styles.langDividerDay : styles.langDividerNight,
+                ]}
+              >
+                |
+              </Text>
               <TouchableOpacity onPress={() => handleLanguageChange('HI')}>
-                <Text style={[styles.langOption, isDay ? styles.langOptionDay : styles.langOptionNight, lang === 'HI' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight)]}>
+                <Text
+                  style={[
+                    styles.langOption,
+                    isDay ? styles.langOptionDay : styles.langOptionNight,
+                    lang === 'HI' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                  ]}
+                >
                   {isMobile ? 'HI' : 'हिंदी'}
                 </Text>
               </TouchableOpacity>
@@ -229,7 +631,7 @@ export default function PublicHeader({
                 onPress={onCartPress}
                 activeOpacity={0.8}
               >
-                <Ionicons name="cart-outline" size={18} color={isDay ? '#334155' : '#e2e8f0'} />
+                <Ionicons name="cart-outline" size={17} color={isDay ? '#334155' : '#e2e8f0'} />
                 {cartItemCount && cartItemCount > 0 ? (
                   <View style={styles.cartBadge}>
                     <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
@@ -238,14 +640,19 @@ export default function PublicHeader({
               </TouchableOpacity>
             )}
 
-            {/* Login / Go to App */}
+            {/* Login / Dashboard */}
             {user ? (
               <TouchableOpacity
                 style={[styles.userBtn, isDay ? styles.userBtnDay : styles.userBtnNight]}
                 onPress={goToDashboard}
                 activeOpacity={0.85}
               >
-                <LinearGradient colors={isDay ? ['#059669', '#047857'] : ['#10b981', '#059669']} style={styles.userBtnInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <LinearGradient
+                  colors={isDay ? ['#059669', '#047857'] : ['#10b981', '#059669']}
+                  style={styles.userBtnInner}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
                   <View style={styles.userAvatarCircle}>
                     <Text style={styles.userAvatarInitials}>
                       {(user.name || user.mobile || 'U').charAt(0).toUpperCase()}
@@ -265,23 +672,49 @@ export default function PublicHeader({
             ) : (
               <Animated.View style={pulseStyle}>
                 <TouchableOpacity
-                  style={[styles.loginBtn, isDay ? styles.loginBtnDay : styles.loginBtnNight, isMobile && { borderRadius: RADIUS.pill }]}
+                  style={[
+                    styles.loginBtn,
+                    isDay ? styles.loginBtnDay : styles.loginBtnNight,
+                    isMobile && { borderRadius: RADIUS.pill },
+                  ]}
                   onPress={() => goTo('/(auth)/login')}
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={isDay ? ['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.05)'] : ['rgba(16,185,129,0.22)', 'rgba(16,185,129,0.10)']}
-                    style={[styles.loginBtnInner, isMobile && { paddingHorizontal: 10, paddingVertical: 5 }]}
+                    colors={
+                      isDay
+                        ? ['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.05)']
+                        : ['rgba(16,185,129,0.22)', 'rgba(16,185,129,0.10)']
+                    }
+                    style={[
+                      styles.loginBtnInner,
+                      isMobile && { paddingHorizontal: 9, paddingVertical: 5 },
+                    ]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                   >
-                    <Ionicons name="person-circle-outline" size={isMobile ? 16 : 19} color={isDay ? '#059669' : '#34d399'} />
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={isMobile ? 15 : 18}
+                      color={isDay ? '#059669' : '#34d399'}
+                    />
                     <View style={styles.loginBtnTextBox}>
-                      <Text style={[styles.loginBtnText, isDay ? styles.loginBtnTextDay : styles.loginBtnTextNight, isMobile && { fontSize: 11 }]}>
+                      <Text
+                        style={[
+                          styles.loginBtnText,
+                          isDay ? styles.loginBtnTextDay : styles.loginBtnTextNight,
+                          isMobile && { fontSize: 11 },
+                        ]}
+                      >
                         {isMobile ? 'Login' : 'Login / Register'}
                       </Text>
                       {!isMobile && (
-                        <Text style={[styles.loginBtnSubText, isDay ? styles.loginBtnSubTextDay : styles.loginBtnSubTextNight]}>
+                        <Text
+                          style={[
+                            styles.loginBtnSubText,
+                            isDay ? styles.loginBtnSubTextDay : styles.loginBtnSubTextNight,
+                          ]}
+                        >
                           Farmer & Partner Portal
                         </Text>
                       )}
@@ -293,7 +726,7 @@ export default function PublicHeader({
           </View>
         </View>
 
-        {/* Row 2 on Mobile/Tablet: Persistent Top Navigation Bar directly on top! */}
+        {/* Row 2 on Mobile/Tablet: 4 Core Pills + More ▾ Pill */}
         {!isDesktop && (
           <View style={styles.mobileNavRow}>
             <ScrollView
@@ -301,23 +734,30 @@ export default function PublicHeader({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.mobileNavScroll}
             >
-              {NAV_LINKS.map((link) => {
+              {MAIN_NAV_LINKS.map((link) => {
                 const active = isActive(link.path);
                 return (
                   <TouchableOpacity
-                    key={link.path}
-                    onPress={() => goTo(link.path)}
+                    key={link.id}
+                    onPress={() => handleNavClick(link)}
                     activeOpacity={0.8}
                     style={[
                       styles.mobileNavPill,
                       isDay ? styles.mobileNavPillDay : styles.mobileNavPillNight,
-                      active && (isDay ? { backgroundColor: link.bg, borderColor: link.color } : { backgroundColor: link.bgNight, borderColor: link.color }),
+                      active &&
+                        (isDay
+                          ? { backgroundColor: link.bg, borderColor: link.color }
+                          : { backgroundColor: link.bgNight, borderColor: link.color }),
                     ]}
                   >
                     {link.image ? (
-                      <Image source={link.image} style={{ width: 16, height: 16 }} resizeMode="contain" />
+                      <Image source={link.image} style={{ width: 14, height: 14 }} resizeMode="contain" />
                     ) : (
-                      <Ionicons name={link.icon as any} size={13} color={active ? link.color : isDay ? '#475569' : '#94a3b8'} />
+                      <Ionicons
+                        name={link.icon as any}
+                        size={12}
+                        color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                      />
                     )}
                     <Text
                       style={[
@@ -331,10 +771,278 @@ export default function PublicHeader({
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Mobile "More ▾" Pill */}
+              <TouchableOpacity
+                onPress={() => setMoreMenuOpen(!moreMenuOpen)}
+                activeOpacity={0.8}
+                style={[
+                  styles.mobileNavPill,
+                  isDay ? styles.mobileNavPillDay : styles.mobileNavPillNight,
+                  moreMenuOpen &&
+                    (isDay
+                      ? { backgroundColor: 'rgba(16,185,129,0.1)', borderColor: '#10b981' }
+                      : { backgroundColor: 'rgba(16,185,129,0.2)', borderColor: '#10b981' }),
+                ]}
+              >
+                <Ionicons
+                  name="apps-outline"
+                  size={12}
+                  color={moreMenuOpen ? '#10b981' : isDay ? '#475569' : '#94a3b8'}
+                />
+                <Text
+                  style={[
+                    styles.mobileNavPillText,
+                    isDay ? styles.mobileNavPillTextDay : styles.mobileNavPillTextNight,
+                    moreMenuOpen && { color: '#10b981', fontFamily: FONT.extraBold },
+                  ]}
+                >
+                  More ▾
+                </Text>
+              </TouchableOpacity>
             </ScrollView>
+
+            {/* Mobile Expanded Secondary Links */}
+            {moreMenuOpen && (
+              <View
+                style={[
+                  styles.mobileMoreMenu,
+                  isDay ? styles.mobileMoreMenuDay : styles.mobileMoreMenuNight,
+                ]}
+              >
+                <View style={styles.mobileMoreMenuHeader}>
+                  <Text
+                    style={[
+                      styles.mobileMoreMenuTitle,
+                      isDay ? styles.mobileMoreMenuTitleDay : styles.mobileMoreMenuTitleNight,
+                    ]}
+                  >
+                    MORE SERVICES & TOOLS
+                  </Text>
+                  <TouchableOpacity onPress={() => setMoreMenuOpen(false)}>
+                    <Ionicons name="close" size={16} color={isDay ? '#64748b' : '#94a3b8'} />
+                  </TouchableOpacity>
+                </View>
+                {MORE_NAV_LINKS.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.mobileMoreMenuItem,
+                      isDay ? styles.mobileMoreMenuItemDay : styles.mobileMoreMenuItemNight,
+                    ]}
+                    onPress={() => {
+                      setMoreMenuOpen(false);
+                      goTo(item.path);
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <View
+                      style={[
+                        styles.mobileMoreIconWrap,
+                        { backgroundColor: `${item.color}18` },
+                      ]}
+                    >
+                      {item.image ? (
+                        <Image source={item.image} style={{ width: 18, height: 18 }} resizeMode="contain" />
+                      ) : (
+                        <Ionicons name={item.icon as any} size={15} color={item.color} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.mobileMoreLabel,
+                          isDay ? styles.mobileMoreLabelDay : styles.mobileMoreLabelNight,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text style={styles.mobileMoreSub} numberOfLines={1}>
+                        {item.subtext}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={13}
+                      color={isDay ? '#94a3b8' : '#64748b'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         )}
       </View>
+
+      {/* ── Farmer 1-Tap Emergency Helpline Modal ── */}
+      <Modal
+        visible={helplineModalOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setHelplineModalOpen(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => setHelplineModalOpen(false)}
+          />
+          <View
+            style={[
+              styles.helplineModalCard,
+              isDay ? styles.helplineModalCardDay : styles.helplineModalCardNight,
+            ]}
+          >
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderLeft}>
+                <LinearGradient
+                  colors={['#10b981', '#047857']}
+                  style={styles.modalHeaderIconBadge}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <Ionicons name="headset" size={20} color="#ffffff" />
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text
+                      style={[
+                        styles.modalTitle,
+                        isDay ? styles.modalTitleDay : styles.modalTitleNight,
+                      ]}
+                    >
+                      Farmer Quick Helpline
+                    </Text>
+                    <View style={styles.liveTagBadge}>
+                      <View style={styles.liveTagDot} />
+                      <Text style={styles.liveTagText}>24x7</Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.modalSub,
+                      isDay ? styles.modalSubDay : styles.modalSubNight,
+                    ]}
+                  >
+                    Instant 1-Tap Agronomy & Emergency Desk
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => setHelplineModalOpen(false)}
+                style={[
+                  styles.modalCloseBtn,
+                  isDay ? styles.modalCloseBtnDay : styles.modalCloseBtnNight,
+                ]}
+              >
+                <Ionicons name="close" size={17} color={isDay ? '#475569' : '#cbd5e1'} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Direct 1-Tap Action Cards */}
+            <View style={styles.modalActionsGrid}>
+              {/* Option 1: WhatsApp Support */}
+              <TouchableOpacity
+                style={styles.modalActionCardWhatsApp}
+                activeOpacity={0.88}
+                onPress={handleOpenWhatsApp}
+              >
+                <LinearGradient
+                  colors={['#25D366', '#128C7E']}
+                  style={styles.modalActionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.modalActionIconWrap}>
+                    <Ionicons name="logo-whatsapp" size={26} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalActionTitle}>WhatsApp Kisan Support</Text>
+                    <Text style={styles.modalActionDesc}>
+                      Send photo of diseased crop, get prescription & direct chat
+                    </Text>
+                    <View style={styles.modalActionPill}>
+                      <Text style={styles.modalActionPillText}>Chat +91 95776-220000</Text>
+                      <Ionicons name="paper-plane" size={10} color="#ffffff" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Option 2: Direct Call */}
+              <TouchableOpacity
+                style={styles.modalActionCardCall}
+                activeOpacity={0.88}
+                onPress={handleOpenCall}
+              >
+                <LinearGradient
+                  colors={['#059669', '#047857']}
+                  style={styles.modalActionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.modalActionIconWrap}>
+                    <Ionicons name="call" size={24} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalActionTitle}>Call Farmer Helpline</Text>
+                    <Text style={styles.modalActionDesc}>
+                      Speak directly with agronomists in Punjabi, Hindi or English
+                    </Text>
+                    <View style={styles.modalActionPill}>
+                      <Text style={styles.modalActionPillText}>Dial 95776-220000</Text>
+                      <Ionicons name="call" size={10} color="#ffffff" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Support Details Info Footer */}
+            <View
+              style={[
+                styles.modalInfoFooter,
+                isDay ? styles.modalInfoFooterDay : styles.modalInfoFooterNight,
+              ]}
+            >
+              <View style={styles.modalInfoItem}>
+                <Ionicons name="time-outline" size={14} color="#10b981" />
+                <Text
+                  style={[
+                    styles.modalInfoText,
+                    isDay ? styles.modalInfoTextDay : styles.modalInfoTextNight,
+                  ]}
+                >
+                  Daily Operating Hours: 6:00 AM – 10:00 PM IST
+                </Text>
+              </View>
+              <View style={styles.modalInfoItem}>
+                <Ionicons name="language-outline" size={14} color="#38bdf8" />
+                <Text
+                  style={[
+                    styles.modalInfoText,
+                    isDay ? styles.modalInfoTextDay : styles.modalInfoTextNight,
+                  ]}
+                >
+                  Languages Supported: Punjabi, Hindi, English
+                </Text>
+              </View>
+              <View style={styles.modalInfoItem}>
+                <Ionicons name="shield-checkmark-outline" size={14} color="#f59e0b" />
+                <Text
+                  style={[
+                    styles.modalInfoText,
+                    isDay ? styles.modalInfoTextDay : styles.modalInfoTextNight,
+                  ]}
+                >
+                  100% Free Consultation for Indian Farmers
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -351,11 +1059,11 @@ const styles = StyleSheet.create({
     width: '94%',
     maxWidth: 1320,
     flexDirection: 'column',
-    paddingHorizontal: 18,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     borderRadius: 28,
     zIndex: 250,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   headerDay: {
     backgroundColor: 'rgba(255,255,255,0.96)',
@@ -426,33 +1134,261 @@ const styles = StyleSheet.create({
     color: '#e2e8f0',
   },
 
+  // Mobile More Dropdown
+  mobileMoreMenu: {
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(150, 150, 150, 0.15)',
+    gap: 4,
+  },
+  mobileMoreMenuDay: {},
+  mobileMoreMenuNight: {},
+  mobileMoreMenuHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+  },
+  mobileMoreMenuTitle: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.5,
+  },
+  mobileMoreMenuTitleDay: { color: '#059669' },
+  mobileMoreMenuTitleNight: { color: '#34d399' },
+  mobileMoreMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderRadius: 8,
+  },
+  mobileMoreMenuItemDay: {
+    backgroundColor: '#f8fafc',
+  },
+  mobileMoreMenuItemNight: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  mobileMoreIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileMoreLabel: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  mobileMoreLabelDay: { color: '#1e293b' },
+  mobileMoreLabelNight: { color: '#f8fafc' },
+  mobileMoreSub: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+
   // Logo
   logo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoImg: { width: 36, height: 36 },
-  logoImgMobile: { width: 28, height: 28 },
-  logoName: { fontSize: 17, fontFamily: FONT.extraBold, letterSpacing: 0.3 },
+  logoImg: { width: 34, height: 34 },
+  logoImgMobile: { width: 26, height: 26 },
+  logoName: { fontSize: 16.5, fontFamily: FONT.extraBold, letterSpacing: 0.3 },
   logoNameDay: { color: '#0f172a' },
   logoNameNight: { color: '#ffffff' },
-  logoTag: { fontSize: 7.5, fontFamily: FONT.bold, letterSpacing: 1, marginTop: -2 },
+  logoTag: { fontSize: 7, fontFamily: FONT.bold, letterSpacing: 0.9, marginTop: -2 },
   logoTagDay: { color: '#059669' },
   logoTagNight: { color: '#34d399' },
 
-  // Desktop nav
+  // Desktop Nav Links
   navLinks: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   navLinkWrap: { alignItems: 'center', justifyContent: 'center' },
-  navLink: { fontSize: 13.5, fontFamily: FONT.semiBold, paddingHorizontal: 11, paddingVertical: 5.5, borderRadius: 8 },
-  navLinkDay: { color: '#64748b' },
-  navLinkNight: { color: '#94a3b8' },
-  navLinkActiveDay: { color: '#3b82f6' },
-  navLinkActiveNight: { color: '#60a5fa' },
-  navLinkBar: { height: 2, borderRadius: 1, marginTop: 2, width: 24 },
+  navLink: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  navLinkInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  navLinkIconImg: {
+    width: 15,
+    height: 15,
+  },
+  navLinkText: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+  },
+  navLinkTextDay: { color: '#64748b' },
+  navLinkTextNight: { color: '#94a3b8' },
+  navLinkDay: {},
+  navLinkNight: {},
+  navLinkActiveDay: {},
+  navLinkActiveNight: {},
+  navLinkBar: { height: 2, borderRadius: 1, marginTop: 2, width: 22 },
+
+  // More Dropdown Wrapper
+  moreBtnWrapper: {
+    position: 'relative',
+    zIndex: 300,
+  },
+  moreBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  moreDropdownCard: {
+    position: 'absolute',
+    top: 36,
+    right: 0,
+    width: 310,
+    borderRadius: 16,
+    padding: 10,
+    zIndex: 350,
+  },
+  moreDropdownCardDay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    ...premiumShadow('rgba(0,0,0,0.12)', 'lg'),
+  },
+  moreDropdownCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...premiumShadow('rgba(0,0,0,0.6)', 'lg'),
+  },
+  moreDropdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingBottom: 6,
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150, 150, 150, 0.15)',
+  },
+  moreDropdownHeaderTitle: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.8,
+  },
+  moreDropdownHeaderTitleDay: { color: '#059669' },
+  moreDropdownHeaderTitleNight: { color: '#34d399' },
+  moreDropdownGrid: { gap: 3 },
+  moreDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  moreDropdownItemDay: {
+    backgroundColor: 'transparent',
+  },
+  moreDropdownItemNight: {
+    backgroundColor: 'transparent',
+  },
+  moreDropdownItemIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreDropdownItemLabel: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  moreDropdownItemLabelDay: { color: '#0f172a' },
+  moreDropdownItemLabelNight: { color: '#f8fafc' },
+  moreDropdownItemSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
 
   // Right side
-  rightActions: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  langPickerMobile: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    gap: 4,
+  rightActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+
+  // Sticky Quick Helpline Button
+  stickyHelplineBtn: {
+    borderRadius: RADIUS.pill,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(16,185,129,0.3)', 'sm'),
+  },
+  stickyHelplineBtnDay: {
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.25)',
+  },
+  stickyHelplineBtnNight: {
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.4)',
+  },
+  stickyHelplineBtnMobile: {
+    borderRadius: RADIUS.pill,
+  },
+  stickyHelplineGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+  },
+  beaconWrap: {
+    width: 8,
+    height: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  beaconAura: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#a7f3d0',
+  },
+  beaconDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#ffffff',
+  },
+  helplineIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  helplineTextBox: {
+    flexDirection: 'column',
+  },
+  helplineKicker: {
+    color: '#d1fae5',
+    fontSize: 7.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.5,
+    lineHeight: 9,
+  },
+  helplineNumber: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.3,
+    lineHeight: 13,
+  },
+  helplineMobileNumber: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.2,
   },
 
   // Theme Toggle Switch
@@ -474,9 +1410,9 @@ const styles = StyleSheet.create({
   themeSegment: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
     borderRadius: RADIUS.pill,
   },
   themeSegmentActiveDay: {
@@ -488,7 +1424,7 @@ const styles = StyleSheet.create({
     ...premiumShadow('#000000', 'xs'),
   },
   themeSegmentText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
@@ -503,9 +1439,9 @@ const styles = StyleSheet.create({
   langPicker: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4.5,
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
@@ -518,8 +1454,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
+  langPickerMobile: {
+    paddingHorizontal: 5,
+    paddingVertical: 2.5,
+    gap: 3,
+  },
   langOption: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.medium,
   },
   langOptionDay: {
@@ -537,7 +1478,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   langDivider: {
-    fontSize: 10,
+    fontSize: 9.5,
   },
   langDividerDay: {
     color: '#cbd5e1',
@@ -548,9 +1489,9 @@ const styles = StyleSheet.create({
 
   // Icon Button
   iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -564,22 +1505,20 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.14)',
   },
-
-  // Cart badge
   cartBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: -3,
+    right: -3,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#ef4444',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#ffffff',
   },
-  cartBadgeText: { color: '#fff', fontSize: 9, fontFamily: FONT.extraBold },
+  cartBadgeText: { color: '#fff', fontSize: 8.5, fontFamily: FONT.extraBold },
 
   // Login CTA
   loginBtn: {
@@ -596,15 +1535,15 @@ const styles = StyleSheet.create({
   loginBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 7,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5.5,
   },
   loginBtnTextBox: { flexDirection: 'column' },
-  loginBtnText: { fontSize: 13, fontFamily: FONT.bold, lineHeight: 16 },
+  loginBtnText: { fontSize: 12, fontFamily: FONT.bold, lineHeight: 15 },
   loginBtnTextDay: { color: '#059669' },
   loginBtnTextNight: { color: '#34d399' },
-  loginBtnSubText: { fontSize: 9, fontFamily: FONT.semiBold, letterSpacing: 0.3 },
+  loginBtnSubText: { fontSize: 8.5, fontFamily: FONT.semiBold, letterSpacing: 0.3 },
   loginBtnSubTextDay: { color: '#16a34a' },
   loginBtnSubTextNight: { color: '#a7f3d0' },
 
@@ -624,71 +1563,199 @@ const styles = StyleSheet.create({
   userBtnInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    minWidth: 120,
-    maxWidth: 175,
+    gap: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    minWidth: 110,
+    maxWidth: 165,
   },
   userAvatarCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  userAvatarInitials: { color: '#047857', fontSize: 13, fontFamily: FONT.extraBold },
+  userAvatarInitials: { color: '#047857', fontSize: 12, fontFamily: FONT.extraBold },
   userBtnTextBox: { flex: 1, justifyContent: 'center' },
-  userBtnName: { color: '#ffffff', fontSize: 12, fontFamily: FONT.bold, lineHeight: 14 },
+  userBtnName: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold, lineHeight: 13 },
   dashboardCueRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  dashboardCueText: { color: '#a7f3d0', fontSize: 9.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
+  dashboardCueText: { color: '#a7f3d0', fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.3 },
 
-  // Mobile dropdown
-  mobileMenu: {
-    position: 'absolute',
-    top: 66,
-    left: 0,
-    right: 0,
-    marginHorizontal: 'auto',
-    alignSelf: 'center',
-    width: '96%',
+  // ── Farmer Helpline Modal ──
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    zIndex: 9999,
+  },
+  helplineModalCard: {
+    width: '100%',
+    maxWidth: 480,
+    borderRadius: 22,
+    padding: 20,
+    zIndex: 10000,
+  },
+  helplineModalCardDay: {
+    backgroundColor: '#ffffff',
+    ...premiumShadow('rgba(0,0,0,0.2)', 'xl'),
     borderWidth: 1,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    overflow: 'hidden',
-    zIndex: 249,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  mobileMenuDay: {
-    backgroundColor: 'rgba(255,255,255,0.98)',
     borderColor: 'rgba(0,0,0,0.06)',
-    ...premiumShadow('rgba(0,0,0,0.08)', 'lg'),
   },
-  mobileMenuNight: {
-    backgroundColor: 'rgba(15, 23, 42, 0.98)',
+  helplineModalCardNight: {
+    backgroundColor: '#0f172a',
+    ...premiumShadow('rgba(0,0,0,0.7)', 'xl'),
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-    ...premiumShadow('rgba(0,0,0,0.5)', 'lg'),
   },
-  mobileUtilityRow: {
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 12,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.06)',
+    gap: 10,
+    flex: 1,
   },
-  mobileItem: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
-  mobileItemBorderDay: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
-  mobileItemBorderNight: { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  mobileItemActiveDay: { backgroundColor: 'rgba(16,185,129,0.06)', marginHorizontal: -16, paddingHorizontal: 16, borderRadius: 12 },
-  mobileItemActiveNight: { backgroundColor: 'rgba(56, 189, 248, 0.12)', marginHorizontal: -16, paddingHorizontal: 16, borderRadius: 12 },
-  mobileItemIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.03)', alignItems: 'center', justifyContent: 'center' },
-  mobileItemText: { fontSize: 15, fontFamily: FONT.bold, flex: 1 },
-  mobileItemTextDay: { color: '#334155' },
-  mobileItemTextNight: { color: '#f1f5f9' },
+  modalHeaderIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontFamily: FONT.extraBold,
+  },
+  modalTitleDay: { color: '#0f172a' },
+  modalTitleNight: { color: '#f8fafc' },
+  liveTagBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16,185,129,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  liveTagDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#10b981',
+  },
+  liveTagText: {
+    color: '#059669',
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.5,
+  },
+  modalSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    marginTop: 2,
+  },
+  modalSubDay: { color: '#64748b' },
+  modalSubNight: { color: '#94a3b8' },
+  modalCloseBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseBtnDay: { backgroundColor: '#f1f5f9' },
+  modalCloseBtnNight: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  modalActionsGrid: {
+    gap: 10,
+    marginBottom: 14,
+  },
+  modalActionCardWhatsApp: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(37,211,102,0.25)', 'md'),
+  },
+  modalActionCardCall: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(5,150,105,0.25)', 'md'),
+  },
+  modalActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 13,
+  },
+  modalActionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActionTitle: {
+    fontSize: 14.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  modalActionDesc: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: 'rgba(255,255,255,0.88)',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  modalActionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    marginTop: 5,
+  },
+  modalActionPillText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.3,
+  },
+  modalInfoFooter: {
+    borderRadius: 12,
+    padding: 9,
+    gap: 5,
+    borderWidth: 1,
+  },
+  modalInfoFooterDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  modalInfoFooterNight: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  modalInfoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  modalInfoText: {
+    fontSize: 10.5,
+    fontFamily: FONT.semiBold,
+  },
+  modalInfoTextDay: { color: '#475569' },
+  modalInfoTextNight: { color: '#cbd5e1' },
 });

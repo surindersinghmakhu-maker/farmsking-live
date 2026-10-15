@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8085;
+const PORT = parseInt(process.env.PORT || '8081', 10);
 const DIR = path.resolve(__dirname, '../frontend/dist');
 
 const MIME = {

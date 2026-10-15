@@ -83,7 +83,7 @@ function killExistingPorts() {
 function startService(svc) {
   const child = spawn(svc.command, svc.args, {
     cwd: svc.cwd,
-    env: { ...process.env },
+    env: { ...process.env, PORT: String(svc.port) },
     shell: false,
   });
 

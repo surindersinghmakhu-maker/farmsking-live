@@ -26,6 +26,7 @@ import { useAuth } from '@/src/store/auth-context';
 import PublicHeader from '@/components/PublicHeader';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
 import { getSupportContact } from '@/src/api/appSettings.api';
+import { LIVE_FARMER_ACTIVITIES } from '@/constants/liveFarmerFeed';
 
 // ─── Public Ecosystem Nav Links ──────────────────────────────────────────────
 const PUBLIC_NAV_LINKS = [
@@ -380,79 +381,9 @@ TRANSLATIONS.PA = TRANSLATIONS.EN;
 TRANSLATIONS.HI = TRANSLATIONS.EN;
 
 
-// ── Real-Time Dynamic Social Proof Farmer Activity Feed ──
-const LIVE_FARMER_ACTIVITIES = [
-  {
-    id: 1,
-    emoji: '🌾',
-    name: 'Sardar Gurmukh Singh',
-    location: 'Sangrur',
-    action: 'Checked Basmati 1121 live APMC rate',
-    detail: '₹3,420/q • Best Local Mandi',
-    timeAgo: '1 min ago',
-    tagColor: '#10b981',
-  },
-  {
-    id: 2,
-    emoji: '🧪',
-    name: 'Harpreet Singh',
-    location: 'Moga',
-    action: 'Scanned wheat leaf with AI Crop Doctor',
-    detail: 'Yellow Rust detected & dose prescribed',
-    timeAgo: 'Just now',
-    tagColor: '#06b6d4',
-  },
-  {
-    id: 3,
-    emoji: '📦',
-    name: 'Kuldeep Singh',
-    location: 'Bathinda',
-    action: 'Ordered Certified Organic Seeds & Bio-Inputs',
-    detail: 'Fast Doorstep Delivery dispatched',
-    timeAgo: '3 mins ago',
-    tagColor: '#f97316',
-  },
-  {
-    id: 4,
-    emoji: '🛸',
-    name: 'Balwinder Singh',
-    location: 'Ludhiana',
-    action: 'Booked Precision Drone Spraying for 12 Acres',
-    detail: 'Verified GPS Fleet Assigned',
-    timeAgo: '4 mins ago',
-    tagColor: '#8b5cf6',
-  },
-  {
-    id: 5,
-    emoji: '🩺',
-    name: 'Dr. Jasvir Singh (Agronomist)',
-    location: 'PAU Specialist Desk',
-    action: 'Answered live farmer audio call on Helpline',
-    detail: 'Immediate crop nutrition prescribed',
-    timeAgo: '2 mins ago',
-    tagColor: '#10b981',
-  },
-  {
-    id: 6,
-    emoji: '🌾',
-    name: 'Jagtar Singh',
-    location: 'Amritsar',
-    action: 'Tracked Mandi APMC rates for Mustard & Wheat',
-    detail: 'eNAM Synchronized Auction',
-    timeAgo: 'Just now',
-    tagColor: '#10b981',
-  },
-  {
-    id: 7,
-    emoji: '🌿',
-    name: 'Manpreet Kaur',
-    location: 'Patiala',
-    action: 'Ordered Terrace Gardening & Nursery Kit',
-    detail: 'Organic Soil & Pots Pack',
-    timeAgo: '6 mins ago',
-    tagColor: '#e11d48',
-  },
-];
+// ── Real-Time Dynamic Pan-India Social Proof Farmer Activity Feed ──
+// Sourced from @/constants/liveFarmerFeed (240+ diverse Indian cultivators & 16 active seasonal crops)
+
 
 // ── 5-Second AI Doctor Interactive Crop Diagnosis Samples ──
 const AI_DOCTOR_SAMPLES = [
@@ -674,7 +605,7 @@ export default function PublicLandingPage() {
         tickerFadeAnim.value = withTiming(1, { duration: 380 });
         tickerSlideAnim.value = withTiming(0, { duration: 380 });
       }, 340);
-    }, 6000);
+    }, 18000); // 3x the previous 6s interval = 18s comfortable viewing cycle
 
     return () => clearInterval(interval);
   }, [tickerDismissed]);

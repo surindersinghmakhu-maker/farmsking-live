@@ -1524,23 +1524,23 @@ export default function PublicLandingPage() {
           <View style={[S.heroLeft, isDesktop ? { flex: 6 } : { width: '100%' }]}>
 
             {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP ══ */}
-            <View style={S.heroBadgesRow}>
-              <View style={[S.socialProofBadge, isDay ? S.socialProofBadgeDay : S.socialProofBadgeNight]}>
+            <View style={[S.heroBadgesRow, isMobile && { gap: 6, marginBottom: 10 }]}>
+              <View style={[S.socialProofBadge, isDay ? S.socialProofBadgeDay : S.socialProofBadgeNight, isMobile && { paddingHorizontal: 9, paddingVertical: 4.5, marginBottom: 8 }]}>
                 <View style={S.starsGroup}>
                   {[1, 2, 3, 4, 5].map((_, i) => (
-                    <Ionicons key={i} name="star" size={13} color="#f59e0b" style={{ marginRight: 1 }} />
+                    <Ionicons key={i} name="star" size={isMobile ? 11.5 : 13} color="#f59e0b" style={{ marginRight: 1 }} />
                   ))}
                 </View>
-                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight]}>
+                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight, isMobile && { fontSize: 11 }]}>
                   4.9/5
                 </Text>
-                <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight]}>
-                  (14,200+ Reviews)
+                <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight, isMobile && { fontSize: 9 }]}>
+                  {isMobile ? '(14.2k)' : '(14,200+ Reviews)'}
                 </Text>
                 <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight]} />
-                <Ionicons name="shield-checkmark" size={12} color={isDay ? '#059669' : '#34d399'} />
-                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight]}>
-                  Trusted by {userRegion.farmerCount} Cultivators in {userRegion.regionText}
+                <Ionicons name="shield-checkmark" size={isMobile ? 11 : 12} color={isDay ? '#059669' : '#34d399'} />
+                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, isMobile && { fontSize: 10 }]}>
+                  {isMobile ? `Trusted in ${userRegion.regionText}` : `Trusted by ${userRegion.farmerCount} Cultivators in ${userRegion.regionText}`}
                 </Text>
               </View>
 
@@ -1677,30 +1677,31 @@ export default function PublicLandingPage() {
                       // @ts-ignore
                       className="mandi-roller-row-item"
                     >
-                      {/* Left: High-Contrast Crop Badge with Clear Name & Punjabi Subtitle */}
+                      {/* Left: High-Contrast Crop Badge with Clear Name */}
                       <View
                         style={[
                           S.rollerCropBadge,
                           isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
+                          isMobile && { paddingHorizontal: 6, paddingVertical: 3, gap: 5 },
                         ]}
                       >
-                        <Text style={{ fontSize: isMobile ? 18 : 20 }}>{item.emoji}</Text>
+                        <Text style={{ fontSize: isMobile ? 16 : 20 }}>{item.emoji}</Text>
                         <View style={{ flexDirection: 'column' }}>
-                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight]}>
+                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight, isMobile && { fontSize: 12.5 }]}>
                             {item.crop}
                           </Text>
-                          <Text style={[S.rollerVarietyText, isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight]} numberOfLines={1}>
+                          <Text style={[S.rollerVarietyText, isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight, isMobile && { fontSize: 9 }]} numberOfLines={1}>
                             {item.variety}
                           </Text>
                         </View>
                       </View>
 
                       {/* Middle: Mandi & State */}
-                      <View style={S.rollerMandiInfo}>
-                        <Text style={[S.rollerMandiName, isDay && S.rollerMandiNameDay]} numberOfLines={1}>
+                      <View style={[S.rollerMandiInfo, isMobile && { marginHorizontal: 4 }]}>
+                        <Text style={[S.rollerMandiName, isDay && S.rollerMandiNameDay, isMobile && { fontSize: 11 }]} numberOfLines={1}>
                           📍 {item.mandi}
                         </Text>
-                        <Text style={[S.rollerStateSub, isDay && S.rollerStateSubDay]} numberOfLines={1}>
+                        <Text style={[S.rollerStateSub, isDay && S.rollerStateSubDay, isMobile && { fontSize: 9 }]} numberOfLines={1}>
                           {item.state} • {item.tag}
                         </Text>
                       </View>
@@ -1708,16 +1709,16 @@ export default function PublicLandingPage() {
                       {/* Right: Live Price & Up Trend (Moving Upwards) */}
                       <View style={S.rollerPriceGroup}>
                         <View style={S.rollerPriceValueRow}>
-                          <Text style={[S.rollerPriceVal, isDay ? S.rollerPriceValDay : S.rollerPriceValNight]}>
+                          <Text style={[S.rollerPriceVal, isDay ? S.rollerPriceValDay : S.rollerPriceValNight, isMobile && { fontSize: 13 }]}>
                             {item.price}
                           </Text>
-                          <Text style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay]}>
+                          <Text style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay, isMobile && { fontSize: 9 }]}>
                             /{item.unit}
                           </Text>
                         </View>
-                        <View style={[S.rollerTrendPill, isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight]}>
-                          <Ionicons name="caret-up" size={11} color={isDay ? '#047857' : '#34d399'} />
-                          <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay]}>{item.change}</Text>
+                        <View style={[S.rollerTrendPill, isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight, isMobile && { paddingHorizontal: 4, paddingVertical: 1 }]}>
+                          <Ionicons name="caret-up" size={isMobile ? 9 : 11} color={isDay ? '#047857' : '#34d399'} />
+                          <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay, isMobile && { fontSize: 9 }]}>{item.change}</Text>
                         </View>
                       </View>
                     </View>
@@ -1876,7 +1877,7 @@ export default function PublicLandingPage() {
             </Modal>
 
             {/* ══ HIGH-CONVERTING UNIFIED HERO CTA (MERGED WITH "LOGIN FOR LIVE PRICES") ══ */}
-            <View style={S.ctaRow}>
+            <View style={[S.ctaRow, isMobile && { gap: 10, marginBottom: 16 }]}>
               <TouchableOpacity
                 onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
                 activeOpacity={0.88}
@@ -1884,6 +1885,7 @@ export default function PublicLandingPage() {
                   S.primaryBtnContainer,
                   S.primaryBtnContainerWide,
                   isDay ? S.primaryBtnContainerDay : S.primaryBtnContainerNight,
+                  isMobile && { minWidth: '100%', width: '100%' },
                   Platform.OS === 'web' ? ({ className: 'wide-glowing-get-started-btn' } as any) : {},
                 ]}
               >
@@ -1891,27 +1893,27 @@ export default function PublicLandingPage() {
                   colors={['#10b981', '#059669', '#047857']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[S.btnPrimary, S.btnPrimaryWide]}
+                  style={[S.btnPrimary, S.btnPrimaryWide, isMobile && { paddingHorizontal: 14, paddingVertical: 11, gap: 8 }]}
                 >
-                  <View style={S.btnPrimarySparkleWrap}>
-                    <Ionicons name="sparkles" size={18} color="#fef08a" />
+                  <View style={[S.btnPrimarySparkleWrap, isMobile && { width: 32, height: 32, borderRadius: 16 }]}>
+                    <Ionicons name="sparkles" size={isMobile ? 15 : 18} color="#fef08a" />
                   </View>
                   <View style={S.btnPrimaryTextBox}>
-                    <Text style={S.btnPrimaryTextWide}>
-                      {user ? 'Open Farmer Dashboard →' : 'Get Started Free • Login for Your Own Crop Live Prices'}
+                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: width < 380 ? 12.5 : 13.5, lineHeight: 17 }]}>
+                      {user ? 'Open Farmer Dashboard →' : isMobile ? 'Get Started Free • Login for Rates' : 'Get Started Free • Login for Your Own Crop Live Prices'}
                     </Text>
-                    <Text style={S.btnPrimarySubWide}>
-                      Instant Live APMC Mandi Radar • 5-Sec AI Crop Doctor • Certified Agri Store
+                    <Text style={[S.btnPrimarySubWide, isMobile && { fontSize: 9.5, lineHeight: 13 }]}>
+                      {isMobile ? 'Live Mandi Radar • 5-Sec AI Scan • Agri Store' : 'Instant Live APMC Mandi Radar • 5-Sec AI Crop Doctor • Certified Agri Store'}
                     </Text>
                   </View>
-                  <View style={S.btnPrimaryArrowPill}>
-                    <Ionicons name="arrow-forward" size={15} color="#ffffff" />
+                  <View style={[S.btnPrimaryArrowPill, isMobile && { width: 28, height: 28, borderRadius: 14 }]}>
+                    <Ionicons name="arrow-forward" size={isMobile ? 13 : 15} color="#ffffff" />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[S.btnSecondary, isDay && S.btnSecondaryDay]}
+                style={[S.btnSecondary, isDay && S.btnSecondaryDay, isMobile && { width: '100%', justifyContent: 'center', paddingVertical: 10 }]}
                 onPress={() => router.push('/shop')}
                 activeOpacity={0.8}
               >
@@ -1921,20 +1923,20 @@ export default function PublicLandingPage() {
             </View>
 
             {/* Trust Stats Bar */}
-            <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay]}>
+            <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay, isMobile && { justifyContent: 'space-around', gap: 6, paddingTop: 10 }]}>
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }]}>50,000+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay]}>{t.cultivators}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#059669' : '#a7f3d0' }, isMobile && { fontSize: 15 }]}>50,000+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.cultivators}</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }]}>₹14.8 Cr+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay]}>{t.traded}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#0284c7' : '#bae6fd' }, isMobile && { fontSize: 15 }]}>₹14.8 Cr+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.traded}</Text>
               </View>
               <View style={[S.statDivider, isDay && S.statDividerDay]} />
               <View style={S.statItem}>
-                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }]}>1,200+</Text>
-                <Text style={[S.statLabel, isDay && S.statLabelDay]}>{t.agronomists}</Text>
+                <Text style={[S.statNum, { color: isDay ? '#d97706' : '#fde68a' }, isMobile && { fontSize: 15 }]}>1,200+</Text>
+                <Text style={[S.statLabel, isDay && S.statLabelDay, isMobile && { fontSize: 9.5 }]}>{t.agronomists}</Text>
               </View>
             </View>
           </View>
@@ -2200,19 +2202,19 @@ export default function PublicLandingPage() {
                 )}
 
                 {/* 3. Floating Holographic Crop Telemetry Pin (Near bottom wheat field) */}
-                <View style={[S.overlayTelemetryBadge, isDay && S.overlayTelemetryBadgeDay]}>
+                <View style={[S.overlayTelemetryBadge, isDay && S.overlayTelemetryBadgeDay, isMobile && { bottom: 6, left: 6, right: 6, paddingHorizontal: 8, paddingVertical: 5, gap: 6 }]}>
                   <View style={S.overlayPulseDot} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[S.overlayBadgeTitle, isDay && S.overlayBadgeTitleDay]}>
+                    <Text style={[S.overlayBadgeTitle, isDay && S.overlayBadgeTitleDay, isMobile && { fontSize: 10.5, lineHeight: 13 }]}>
                       Crop Health: 98.4% Optimal
                     </Text>
-                    <Text style={[S.overlayBadgeSub, isDay && S.overlayBadgeSubDay]}>
-                      Moisture: 42% • Soil Nitrogen: Balanced • GPS Live
+                    <Text style={[S.overlayBadgeSub, isDay && S.overlayBadgeSubDay, isMobile && { fontSize: 8.5, lineHeight: 11 }]}>
+                      {isMobile ? 'Moisture: 42% • Nitrogen: Balanced • GPS Live' : 'Moisture: 42% • Soil Nitrogen: Balanced • GPS Live'}
                     </Text>
                   </View>
-                  <View style={[S.telemetrySignalBadge, isDay && S.telemetrySignalBadgeDay]}>
-                    <Ionicons name="wifi" size={10} color={isDay ? '#047857' : '#a7f3d0'} />
-                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay]}>AI 60fps</Text>
+                  <View style={[S.telemetrySignalBadge, isDay && S.telemetrySignalBadgeDay, isMobile && { paddingHorizontal: 4, paddingVertical: 1 }]}>
+                    <Ionicons name="wifi" size={isMobile ? 8 : 10} color={isDay ? '#047857' : '#a7f3d0'} />
+                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay, isMobile && { fontSize: 8 }]}>AI 60fps</Text>
                   </View>
                 </View>
               </View>
@@ -2599,6 +2601,7 @@ export default function PublicLandingPage() {
                       isDay ? S.aiDoctorSampleTabDay : S.aiDoctorSampleTabNight,
                       isSelected && (isDay ? S.aiDoctorSampleTabActiveDay : S.aiDoctorSampleTabActiveNight),
                       isSelected && { borderColor: sample.color },
+                      isMobile && { minWidth: width < 480 ? '100%' : 160, padding: 10, borderRadius: 14 },
                     ]}
                     onPress={() => handleSelectAiSample(sample.id)}
                     activeOpacity={0.85}
@@ -2618,7 +2621,7 @@ export default function PublicLandingPage() {
                       {sample.disease}
                     </Text>
                     <Text style={[S.aiDoctorSamplePunjabi, isDay ? S.aiDoctorSamplePunjabiDay : S.aiDoctorSamplePunjabiNight]}>
-                      ({sample.punjabiName})
+                      {sample.severity}
                     </Text>
                     <View style={[S.aiDoctorTapPill, isSelected && { backgroundColor: sample.color }]}>
                       <Ionicons
@@ -2681,7 +2684,7 @@ export default function PublicLandingPage() {
                         {activeAiSample.disease}
                       </Text>
                       <Text style={[S.aiDiseaseSubline, isDay ? S.aiDiseaseSublineDay : S.aiDiseaseSublineNight]}>
-                        {activeAiSample.punjabiName} • Pathogen: <Text style={{ fontStyle: 'italic' }}>{activeAiSample.pathogen}</Text>
+                        Pathogen: <Text style={{ fontStyle: 'italic' }}>{activeAiSample.pathogen}</Text> • {activeAiSample.severity}
                       </Text>
                     </View>
                     <View style={S.aiCropEmojiBadge}>
@@ -2690,9 +2693,9 @@ export default function PublicLandingPage() {
                   </View>
 
                   {/* Prescription & Tank Dosage Grid */}
-                  <View style={S.aiPrescriptionGrid}>
+                  <View style={[S.aiPrescriptionGrid, isMobile && { flexDirection: 'column', gap: 8 }]}>
                     {/* Card A: Prescribed Medicine */}
-                    <View style={[S.aiPrescriptionCard, isDay ? S.aiPrescriptionCardDay : S.aiPrescriptionCardNight]}>
+                    <View style={[S.aiPrescriptionCard, isDay ? S.aiPrescriptionCardDay : S.aiPrescriptionCardNight, isMobile && { minWidth: '100%', padding: 10 }]}>
                       <View style={S.aiPrescriptionCardHeader}>
                         <Ionicons name="medkit" size={15} color="#059669" />
                         <Text style={S.aiPrescriptionCardHeaderLabel}>RECOMMENDED LAB MEDICINE</Text>
@@ -2706,7 +2709,7 @@ export default function PublicLandingPage() {
                     </View>
 
                     {/* Card B: Exact Dosage & Timing */}
-                    <View style={[S.aiPrescriptionCard, isDay ? S.aiPrescriptionCardDay : S.aiPrescriptionCardNight]}>
+                    <View style={[S.aiPrescriptionCard, isDay ? S.aiPrescriptionCardDay : S.aiPrescriptionCardNight, isMobile && { minWidth: '100%', padding: 10 }]}>
                       <View style={S.aiPrescriptionCardHeader}>
                         <Ionicons name="water" size={15} color="#0284c7" />
                         <Text style={[S.aiPrescriptionCardHeaderLabel, { color: '#0284c7' }]}>FIELD TANK DOSAGE RATIO</Text>
@@ -2721,15 +2724,15 @@ export default function PublicLandingPage() {
                   </View>
 
                   {/* High-Converting Action Buttons & Audio Readout */}
-                  <View style={S.aiDoctorActionButtonsRow}>
+                  <View style={[S.aiDoctorActionButtonsRow, isMobile && { flexDirection: 'column', width: '100%', gap: 8 }]}>
                     <TouchableOpacity
-                      style={S.aiDoctorOrderBtn}
+                      style={[S.aiDoctorOrderBtn, isMobile && { width: '100%' }]}
                       onPress={() => router.push(`/shop?q=${encodeURIComponent(activeAiSample.shopQuery)}` as any)}
                       activeOpacity={0.88}
                     >
                       <LinearGradient
                         colors={['#10b981', '#059669']}
-                        style={S.aiDoctorOrderGradient}
+                        style={[S.aiDoctorOrderGradient, isMobile && { width: '100%', justifyContent: 'center', paddingVertical: 12 }]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                       >
@@ -2747,6 +2750,7 @@ export default function PublicLandingPage() {
                         isSpeaking && currentSpeakingId === `ai-doc-${activeAiSample.id}`
                           ? S.aiDoctorAudioBtnPlaying
                           : (isDay ? S.aiDoctorAudioBtnDay : S.aiDoctorAudioBtnNight),
+                        isMobile && { width: '100%', justifyContent: 'center', paddingVertical: 11 },
                       ]}
                       onPress={() => {
                         speakText(activeAiSample.audioNarrationEnglish, `ai-doc-${activeAiSample.id}`);
@@ -2781,7 +2785,11 @@ export default function PublicLandingPage() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[S.aiDoctorScanOwnBtn, isDay ? S.aiDoctorScanOwnBtnDay : S.aiDoctorScanOwnBtnNight]}
+                      style={[
+                        S.aiDoctorScanOwnBtn,
+                        isDay ? S.aiDoctorScanOwnBtnDay : S.aiDoctorScanOwnBtnNight,
+                        isMobile && { width: '100%', justifyContent: 'center', paddingVertical: 10 },
+                      ]}
                       onPress={() => router.push('/topic/Crop-Doctors')}
                       activeOpacity={0.85}
                     >

@@ -527,7 +527,9 @@ export default function PublicHeader({
                     <Text style={styles.helplineNumber}>95776-220000</Text>
                   </View>
                 ) : (
-                  <Text style={styles.helplineMobileNumber}>95776-220000</Text>
+                  <Text style={styles.helplineMobileNumber}>
+                    {width < 380 ? 'Help' : width < 430 ? 'Helpline' : '95776-220000'}
+                  </Text>
                 )}
               </LinearGradient>
             </TouchableOpacity>

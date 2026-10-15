@@ -2,6 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Image,
   Linking,
   Modal,
@@ -430,11 +431,22 @@ export default function ShopScreen() {
   const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>('CATALOG');
   const [storeLayoutMode, setStoreLayoutMode] = useState<'GRID' | 'COMPACT_LIST'>('GRID');
 
+  // Animated sliding pill for Store Nav Tabs (Catalog, Cart, My Orders)
+  const storeSubTabSlideAnim = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    const targetIdx = activeSubTab === 'CATALOG' ? 0 : activeSubTab === 'CHECKOUT' ? 1 : 2;
+    Animated.spring(storeSubTabSlideAnim, {
+      toValue: targetIdx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [activeSubTab]);
 
   // 📸 AI Crop Doctor Diagnostic State
   const [diseasePhotoUri, setDiseasePhotoUri] = useState<string | null>(null);
-  const [selectedSymptom, setSelectedSymptom] = useState('Yellow Leaves (ਪੀਲੇ ਪੱਤੇ / ਈਲੋ ਰੱਸਟ)');
+  const [selectedSymptom, setSelectedSymptom] = useState('Yellow Leaves / Yellow Rust');
   const [diagnosedResult, setDiagnosedResult] = useState<any>(null);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
 
@@ -2321,15 +2333,27 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             </View>
           </LinearGradient>
 
-          {/* Sub Nav Bar (Catalog, Cart, My Orders) */}
+          {/* Sub Nav Bar (Catalog, Cart, My Orders) with Liquid Spring Sliding Pill */}
           <View style={styles.storeNavTabsBar}>
             <View style={styles.storeNavTabsContainer}>
+              <Animated.View
+                style={[
+                  styles.slidingStoreNavPill,
+                  {
+                    left: storeSubTabSlideAnim.interpolate({
+                      inputRange: [0, 1, 2],
+                      outputRange: ['0.8%', '34.1%', '67.4%'],
+                    }),
+                  },
+                ]}
+              />
               <TouchableOpacity
-                style={[styles.storeNavTab, activeSubTab === 'CATALOG' && styles.storeNavTabActive]}
+                style={styles.storeNavTab}
                 onPress={() => {
                   tap();
                   setActiveSubTab('CATALOG');
                 }}
+                activeOpacity={0.8}
               >
                 <Ionicons name="grid-outline" size={15} color={activeSubTab === 'CATALOG' ? '#047857' : '#64748b'} />
                 <Text style={[styles.storeNavTabText, activeSubTab === 'CATALOG' && styles.storeNavTabTextActive]}>
@@ -2343,11 +2367,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.storeNavTab, activeSubTab === 'CHECKOUT' && styles.storeNavTabActive]}
+                style={styles.storeNavTab}
                 onPress={() => {
                   tap();
                   setActiveSubTab('CHECKOUT');
                 }}
+                activeOpacity={0.8}
               >
                 <Ionicons name="bag-check-outline" size={15} color={activeSubTab === 'CHECKOUT' ? '#047857' : '#64748b'} />
                 <Text style={[styles.storeNavTabText, activeSubTab === 'CHECKOUT' && styles.storeNavTabTextActive]}>
@@ -2363,7 +2388,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.storeNavTab, activeSubTab === 'ORDERS' && styles.storeNavTabActive]}
+                style={styles.storeNavTab}
                 onPress={() => {
                   tap();
                   if (!user) {
@@ -2372,14 +2397,15 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     setActiveSubTab('ORDERS');
                   }
                 }}
+                activeOpacity={0.8}
               >
                 <Ionicons name="receipt-outline" size={15} color={activeSubTab === 'ORDERS' ? '#047857' : '#64748b'} />
                 <Text style={[styles.storeNavTabText, activeSubTab === 'ORDERS' && styles.storeNavTabTextActive]}>
                   My Orders
                 </Text>
                 {user && (myOrders?.length ?? 0) > 0 && (
-                  <View style={styles.storeTabBadge}>
-                    <Text style={styles.storeTabBadgeText}>
+                  <View style={[styles.storeTabBadge, activeSubTab === 'ORDERS' && styles.storeTabBadgeActive]}>
+                    <Text style={[styles.storeTabBadgeText, activeSubTab === 'ORDERS' && styles.storeTabBadgeTextActive]}>
                       {myOrders?.length}
                     </Text>
                   </View>
@@ -6003,15 +6029,55 @@ const styles = StyleSheet.create({
   storeSearchInput: { flex: 1, color: '#0f172a', fontSize: 13.5, fontFamily: FONT.medium },
 
   // Sub Nav Tabs Bar (Catalog, Cart, My Orders)
-  storeNavTabsBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  storeNavTabsContainer: { flexDirection: 'row', width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 8, gap: 10 },
-  storeNavTab: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' },
-  storeNavTabActive: { backgroundColor: '#ecfdf5', borderColor: '#059669' },
-  storeNavTabText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#64748b' },
+  storeNavTabsBar: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+    paddingVertical: 4,
+  },
+  storeNavTabsContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    flexDirection: 'row',
+    width: '100%',
+    maxWidth: 1240,
+    alignSelf: 'center',
+    padding: 4,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  slidingStoreNavPill: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    width: '31.8%',
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(5, 150, 105, 0.4)',
+    ...premiumShadow('rgba(16, 185, 129, 0.15)', 'sm'),
+    zIndex: 0,
+  },
+  storeNavTab: {
+    flex: 1,
+    paddingVertical: 9,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    position: 'relative',
+    zIndex: 1,
+  },
+  storeNavTabActive: {},
+  storeNavTabText: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
   storeNavTabTextActive: { color: '#047857', fontFamily: FONT.extraBold },
-  storeTabBadge: { backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: RADIUS.pill },
+  storeTabBadge: { backgroundColor: '#e2e8f0', paddingHorizontal: 7, paddingVertical: 1.5, borderRadius: RADIUS.pill },
   storeTabBadgeActive: { backgroundColor: '#10b981' },
-  storeTabBadgeText: { fontSize: 10, fontFamily: FONT.bold, color: '#475569' },
+  storeTabBadgeText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' },
   storeTabBadgeTextActive: { color: '#ffffff' },
 
   productCountPill: { backgroundColor: '#ecfdf5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#a7f3d0' },

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
@@ -71,6 +71,22 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
   const [showPillarsModal, setShowPillarsModal] = useState(false);
 
+  // Animated sliding pill for mobile theme switch
+  const themeAnim = useRef(new Animated.Value(themeMode === 'LIGHT' ? 0 : 1)).current;
+
+  useEffect(() => {
+    Animated.spring(themeAnim, {
+      toValue: themeMode === 'LIGHT' ? 0 : 1,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [themeMode]);
+
+  const handleToggleTheme = (mode: 'LIGHT' | 'DARK') => {
+    setThemeMode(mode);
+  };
+
   return (
     <View
       style={[
@@ -104,12 +120,21 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
                 isDarkTheme && styles.mobileThemePillWrapDark,
               ]}
             >
-              <TouchableOpacity
+              <Animated.View
                 style={[
-                  styles.mobileThemeSegmentBtn,
-                  themeMode === 'LIGHT' && styles.mobileThemeSegmentBtnActiveLight,
+                  styles.slidingMobileThemePill,
+                  isLight ? styles.slidingMobileThemePillLight : styles.slidingMobileThemePillDark,
+                  {
+                    left: themeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['2%', '52%'],
+                    }),
+                  },
                 ]}
-                onPress={() => setThemeMode('LIGHT')}
+              />
+              <TouchableOpacity
+                style={styles.mobileThemeSegmentBtn}
+                onPress={() => handleToggleTheme('LIGHT')}
                 activeOpacity={0.75}
                 accessibilityLabel="Switch to Light Theme"
               >
@@ -121,13 +146,10 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  styles.mobileThemeSegmentBtn,
-                  themeMode === 'DARK' && styles.mobileThemeSegmentBtnActiveMedium,
-                ]}
-                onPress={() => setThemeMode('DARK')}
+                style={styles.mobileThemeSegmentBtn}
+                onPress={() => handleToggleTheme('DARK')}
                 activeOpacity={0.75}
-                accessibilityLabel="Switch to Dark Theme (Parrot & Gold)"
+                accessibilityLabel="Switch to Dark Theme"
               >
                 <Ionicons
                   name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
@@ -340,6 +362,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   mobileThemePillWrap: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
@@ -347,7 +371,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: RADIUS.pill,
     padding: 2,
-    gap: 2,
+    width: 56,
   },
   mobileThemePillWrapLight: {
     backgroundColor: '#f1f5f9',
@@ -357,14 +381,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2, 6, 23, 0.75)',
     borderColor: 'rgba(56, 189, 248, 0.3)',
   },
-  mobileThemeSegmentBtn: {
+  slidingMobileThemePill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
     width: 24,
-    height: 24,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    zIndex: 0,
   },
-  mobileThemeSegmentBtnActiveLight: {
+  slidingMobileThemePillLight: {
     backgroundColor: '#ffffff',
     shadowColor: '#16a34a',
     shadowOffset: { width: 0, height: 1 },
@@ -372,7 +397,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  mobileThemeSegmentBtnActiveMedium: {
+  slidingMobileThemePillDark: {
     backgroundColor: 'rgba(34, 197, 94, 0.25)',
     borderWidth: 1.2,
     borderColor: '#fbbf24',
@@ -382,10 +407,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  mobileThemeSegmentBtnActiveDark: {
-    backgroundColor: 'rgba(56, 189, 248, 0.22)',
-    borderWidth: 1,
-    borderColor: '#38bdf8',
+  mobileThemeSegmentBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    zIndex: 1,
   },
   iconButton: {
     width: 36,

@@ -126,7 +126,7 @@ export default function TermsOfServiceScreen() {
             <Text style={[styles.officerTitle, { color: colors.primary }]}>Grievance Officer: Surinder Singh</Text>
             <Text style={[styles.officerDetail, { color: colors.text }]}>Designation: Legal & Agronomy Operations Desk</Text>
             <Text style={[styles.officerDetail, { color: colors.text }]}>E-mail: farmskingindia@gmail.com / grievance@farmsking.in</Text>
-            <Text style={[styles.officerDetail, { color: colors.text }]}>Farmer Helpline: 95776-220000 (6:00 AM – 10:00 PM IST)</Text>
+            <Text style={[styles.officerDetail, { color: colors.text }]}>Farmer Helpline: 95776-22000 (6:00 AM – 10:00 PM IST)</Text>
             <Text style={[styles.officerDetail, { color: colors.text }]}>Jurisdiction: Courts of Punjab, India</Text>
           </View>
         </View>

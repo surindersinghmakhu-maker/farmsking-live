@@ -120,7 +120,7 @@ export default function RefundPolicyScreen() {
             Our dedicated Farmer Support Desk is available 7 days a week:
           </Text>
           <Text style={[styles.bodyText, { color: colors.primary, fontFamily: FONT.bold, marginTop: 8 }]}>
-            📞 Farmer Helpline: 95776-220000 (6:00 AM – 10:00 PM IST)
+            📞 Farmer Helpline: 95776-22000 (6:00 AM – 10:00 PM IST)
           </Text>
           <Text style={[styles.bodyText, { color: colors.text, marginTop: 4 }]}>
             ✉️ E-mail: farmskingindia@gmail.com

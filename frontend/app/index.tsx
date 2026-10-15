@@ -695,7 +695,7 @@ export default function PublicLandingPage() {
 
   // Dynamic support contact fetched from Admin Settings backend
   const [supportContact, setSupportContact] = useState<{ helplinePhone: string; supportEmail: string }>({
-    helplinePhone: '95776-220000',
+    helplinePhone: '95776-22000',
     supportEmail: 'farmskingindia@gmail.com',
   });
 
@@ -704,7 +704,7 @@ export default function PublicLandingPage() {
       .then((contact) => {
         if (contact?.helplinePhone || contact?.supportEmail) {
           setSupportContact({
-            helplinePhone: contact.helplinePhone || '95776-220000',
+            helplinePhone: contact.helplinePhone || '95776-22000',
             supportEmail: contact.supportEmail || 'farmskingindia@gmail.com',
           });
         }
@@ -3656,7 +3656,7 @@ export default function PublicLandingPage() {
           const msg = encodeURIComponent(
             'Hello FarmsKing Expert Agronomist, I need agricultural guidance for my crops and farm management.'
           );
-          const url = `https://wa.me/9195776220000?text=${msg}`;
+          const url = `https://wa.me/919577622000?text=${msg}`;
           if (Platform.OS === 'web' && typeof window !== 'undefined') {
             window.open(url, '_blank');
           } else {

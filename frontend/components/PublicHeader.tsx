@@ -301,7 +301,7 @@ export default function PublicHeader({
     const text = encodeURIComponent(
       'Hello FarmsKing Expert Team, I need immediate farming and crop guidance.'
     );
-    const url = `https://wa.me/9195776220000?text=${text}`;
+    const url = `https://wa.me/919577622000?text=${text}`;
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.open(url, '_blank');
     } else {
@@ -310,7 +310,7 @@ export default function PublicHeader({
   };
 
   const handleOpenCall = () => {
-    Linking.openURL('tel:95776220000');
+    Linking.openURL('tel:9577622000');
   };
 
   return (
@@ -510,7 +510,7 @@ export default function PublicHeader({
 
           {/* Right Actions: Sticky Helpline, Theme, Lang, Cart, Auth */}
           <View style={[styles.rightActions, isMobile && { gap: width < 380 ? 3 : 4, flexShrink: 0 }]}>
-            {/* ── Sticky Quick Helpline: WhatsApp / Call 95776-220000 ── */}
+            {/* ── Sticky Quick Helpline: WhatsApp / Call 95776-22000 ── */}
             <TouchableOpacity
               style={[
                 styles.stickyHelplineBtn,
@@ -519,7 +519,7 @@ export default function PublicHeader({
               ]}
               onPress={() => setHelplineModalOpen(true)}
               activeOpacity={0.85}
-              accessibilityLabel="Farmer Quick Helpline 95776-220000"
+              accessibilityLabel="Farmer Quick Helpline 95776-22000"
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}
@@ -543,12 +543,12 @@ export default function PublicHeader({
                 {!isMobile ? (
                   <View style={styles.helplineTextBox}>
                     <Text style={styles.helplineKicker}>QUICK HELPLINE</Text>
-                    <Text style={styles.helplineNumber}>95776-220000</Text>
+                    <Text style={styles.helplineNumber}>95776-22000</Text>
                   </View>
                 ) : (
                   width >= 360 ? (
                     <Text style={styles.helplineMobileNumber}>
-                      {width < 380 ? 'Help' : width < 430 ? 'Helpline' : '95776-220000'}
+                      {width < 380 ? 'Help' : width < 430 ? 'Helpline' : '95776-22000'}
                     </Text>
                   ) : null
                 )}
@@ -986,7 +986,7 @@ export default function PublicHeader({
                       Send photo of diseased crop, get prescription & direct chat
                     </Text>
                     <View style={styles.modalActionPill}>
-                      <Text style={styles.modalActionPillText}>Chat +91 95776-220000</Text>
+                      <Text style={styles.modalActionPillText}>Chat +91 95776-22000</Text>
                       <Ionicons name="paper-plane" size={10} color="#ffffff" />
                     </View>
                   </View>
@@ -1014,7 +1014,7 @@ export default function PublicHeader({
                       Speak directly with agronomists in Punjabi, Hindi or English
                     </Text>
                     <View style={styles.modalActionPill}>
-                      <Text style={styles.modalActionPillText}>Dial 95776-220000</Text>
+                      <Text style={styles.modalActionPillText}>Dial 95776-22000</Text>
                       <Ionicons name="call" size={10} color="#ffffff" />
                     </View>
                   </View>

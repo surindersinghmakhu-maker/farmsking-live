@@ -373,87 +373,12 @@ const TRANSLATIONS = {
     mcaDisclosures: 'MCA & Statutory Disclosures',
     returnHome: 'Return to FarmsKing Homepage',
   },
-  PA: {
-    badge: 'ਫਾਰਮਸਕਿੰਗ (ਸਮਾਰਟ ਖੇਤੀਬਾੜੀ ਪਲੇਟਫਾਰਮ)',
-    heroTitle: 'ਭਾਰਤੀ ਖੇਤੀਬਾੜੀ ਵਿੱਚ ਨਵੀਂ ਕ੍ਰਾਂਤੀ',
-    heroSub: 'ਬੀਜ ਤੋਂ ਲੈ ਕੇ ਮੰਡੀ ਦੀ ਵਿਕਰੀ ਤੱਕ — ਸਾਰੀਆਂ ਫ਼ਸਲਾਂ ਲਈ ਤੁਹਾਡਾ ਸਮਾਰਟ ਪਲੇਟਫਾਰਮ।',
-    getStarted: 'ਮੁਫ਼ਤ ਸ਼ੁਰੂ ਕਰੋ',
-    exploreStore: 'ਐਗਰੀ ਸਟੋਰ ਦੇਖੋ',
-    cultivators: 'ਕਿਸਾਨ ਸਾਥੀ',
-    traded: 'ਕੁੱਲ ਵਪਾਰ',
-    agronomists: 'ਖੇਤੀ ਮਾਹਰ',
-    liveApmc: 'ਲਾਈਵ',
-    liveRates: 'ਲਾਈਵ ਰੇਟ',
-    instantMandi: 'ਆਲ ਇੰਡੀਆ ਮੰਡੀ ਰੇਟ',
-    cropLabel: 'ਫ਼ਸਲ',
-    mandiLabel: 'ਮੰਡੀ',
-    today: 'ਅੱਜ',
-    bestMandi: 'ਵਧੀਆ ਰੇਟ',
-    myRates: 'ਮੇਰੇ ਰੇਟ',
-    officialRates: 'ਸਰਕਾਰੀ ਰੇਟ',
-    officialRatesBtn: 'ਸਰਕਾਰੀ ਰੇਟ',
-    officialAccuracyNotice: 'ਸਰਕਾਰੀ ਰੇਟਾਂ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ',
-    officialRatesModalTitle: 'ਸਰਕਾਰੀ ਮੰਡੀ ਰੇਟ',
-    officialRatesModalSub: 'ਪ੍ਰਮਾਣਿਤ ਸਰਕਾਰੀ APMC ਨਿਲਾਮੀ ਭਾਵ ਦੇਖਣ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।',
-    officialRatesPerk1: 'ਲਾਈਵ APMC ਮੰਡੀ ਬੋਲੀ ਭਾਵ',
-    officialRatesPerk2: 'ਪ੍ਰਮਾਣਿਤ ਘੱਟੋ-ਘੱਟ, ਵੱਧ ਤੋਂ ਵੱਧ ਤੇ ਔਸਤ ਰੇਟ',
-    officialRatesPerk3: 'ਲਾਇਸੈਂਸਸ਼ੁਦਾ ਆੜ੍ਹਤੀਆਂ ਦੇ ਸੰਪਰਕ',
-    officialRatesPerk4: 'ਰੋਜ਼ਾਨਾ ਵਟਸਐਪ ਅਲਰਟ',
-    signInToUnlock: 'ਸਾਈਨ ਇਨ ਕਰੋ',
-    closePreview: 'ਬੰਦ ਕਰੋ',
-    fourPillarsTitle: 'ਫਾਰਮਸਕਿੰਗ ਦੇ ਚਾਰ ਮੁੱਖ ਥੰਮ੍ਹ',
-    fourPillarsSub: 'ਬੀਜ ਤੋਂ ਕਟਾਈ ਤੱਕ ਭਾਰਤੀ ਖੇਤੀਬਾੜੀ ਨੂੰ ਸਮਰੱਥ ਬਣਾਉਣ ਵਾਲਾ ਸੰਪੂਰਨ ਈਕੋਸਿਸਟਮ',
-    appDownloadTitle: 'ਮੋਬਾਈਲ ਅਤੇ ਵੈੱਬ \'ਤੇ ਫਾਰਮਸਕਿੰਗ ਦਾ ਅਨੁਭਵ ਕਰੋ',
-    appDownloadSub: 'ਆਪਣੇ ਫ਼ੋਨ ਵਿੱਚ www.farmsking.in ਤੁਰੰਤ ਖੋਲ੍ਹਣ ਲਈ ਕੈਮਰੇ ਨਾਲ ਸਕੈਨ ਕਰੋ।',
-    scanWithPhone: 'ਕੈਮਰੇ ਨਾਲ ਸਕੈਨ ਕਰੋ',
-    openFarmsKing: 'ਯੂਨੀਵਰਸਲ ਵੈੱਬ ਅਤੇ ਐਪ QR ਕੋਡ',
-    farmerHelpline: 'ਕਿਸਾਨ ਹੈਲਪਲਾਈਨ',
-    helplineHours: 'ਕਿਸਾਨ ਹੈਲਪਲਾਈਨ • ਸਵੇਰੇ 6:00 ਤੋਂ ਰਾਤ 10:00 ਵਜੇ ਤੱਕ',
-    legalHeading: 'ਕਾਨੂੰਨੀ ਅਤੇ ਪਾਲਣਾ',
-    mcaDisclosures: 'MCA ਅਤੇ ਵਿਧਾਨਕ ਖੁਲਾਸੇ',
-    returnHome: 'ਫਾਰਮਸਕਿੰਗ ਹੋਮਪੇਜ \'ਤੇ ਵਾਪਸ ਜਾਓ',
-  },
-  HI: {
-    badge: 'फार्म्सकिंग (स्मार्ट कृषि प्लेटफॉर्म)',
-    heroTitle: 'भारतीय कृषि में नई क्रांति',
-    heroSub: 'बीज से लेकर मंडी बिक्री तक — सभी फसलों के लिए आपका संपूर्ण स्मार्ट प्लेटफॉर्म।',
-    getStarted: 'मुफ्त शुरू करें',
-    exploreStore: 'एग्री स्टोर देखें',
-    cultivators: 'किसान साथी',
-    traded: 'कुल व्यापार',
-    agronomists: 'कृषि विशेषज्ञ',
-    liveApmc: 'लाइव',
-    liveRates: 'लाइव भाव',
-    instantMandi: 'ऑल इंडिया मंडी भाव',
-    cropLabel: 'फसल',
-    mandiLabel: 'मंडी',
-    today: 'आज',
-    bestMandi: 'सर्वश्रेष्ठ भाव',
-    myRates: 'मेरे भाव',
-    officialRates: 'सरकारी भाव',
-    officialRatesBtn: 'सरकारी भाव',
-    officialAccuracyNotice: 'सरकारी भाव के लिए साइन इन करें',
-    officialRatesModalTitle: 'सरकारी मंडी भाव',
-    officialRatesModalSub: 'प्रमाणित सरकारी APMC नीलामी भाव देखने के लिए साइन इन करें।',
-    officialRatesPerk1: 'लाइव APMC मंडी बोली भाव',
-    officialRatesPerk2: 'प्रमाणित न्यूनतम, अधिकतम व मॉडल भाव',
-    officialRatesPerk3: 'लाइसेंसधारी व्यापारियों के संपर्क',
-    officialRatesPerk4: 'दैनिक व्हाट्सऐप अलर्ट',
-    signInToUnlock: 'साइन इन करें',
-    closePreview: 'बंद करें',
-    fourPillarsTitle: 'फार्म्सकिंग के चार मुख्य स्तंभ',
-    fourPillarsSub: 'बीज से कटाई तक भारतीय कृषि को सशक्त बनाने वाला संपूर्ण इकोसिस्टम',
-    appDownloadTitle: 'मोबाइल और वेब पर फार्म्सकिंग का अनुभव करें',
-    appDownloadSub: 'अपने फोन में www.farmsking.in तुरंत खोलने के लिए कैमरे से स्कैन करें।',
-    scanWithPhone: 'कैमरे से स्कैन करें',
-    openFarmsKing: 'यूनिवर्सल वेब और ऐप QR कोड',
-    farmerHelpline: 'किसान हेल्पलाइन',
-    helplineHours: 'किसान हेल्पलाइन • सुबह 6:00 से रात 10:00 बजे तक',
-    legalHeading: 'कानूनी और अनुपालन',
-    mcaDisclosures: 'MCA और वैधानिक खुलासे',
-    returnHome: 'फार्म्सकिंग होमपेज पर लौटें',
-  },
+  PA: null as any,
+  HI: null as any,
 };
+TRANSLATIONS.PA = TRANSLATIONS.EN;
+TRANSLATIONS.HI = TRANSLATIONS.EN;
+
 
 // ── Real-Time Dynamic Social Proof Farmer Activity Feed ──
 const LIVE_FARMER_ACTIVITIES = [
@@ -872,6 +797,12 @@ export default function PublicLandingPage() {
         const style = document.createElement('style');
         style.id = styleId;
         style.innerHTML = `
+          /* ── Global Viewport Protection (Eliminate Mobile Side-Scrolling) ── */
+          html, body, #root {
+            overflow-x: hidden !important;
+            max-width: 100vw !important;
+            width: 100% !important;
+          }
           /* ── Suppress reCAPTCHA v3 badge ── */
           .grecaptcha-badge {
             display: none !important;
@@ -1463,6 +1394,11 @@ export default function PublicLandingPage() {
             align-items: center !important;
             transition: all 0.25s ease !important;
           }
+          @media (max-width: 768px) {
+            .mandi-single-card-window {
+              height: 70px !important;
+            }
+          }
           .mandi-single-card-window:hover {
             transform: translateY(-1.5px) !important;
           }
@@ -1477,6 +1413,12 @@ export default function PublicLandingPage() {
             box-sizing: border-box !important;
             animation: mandiSplashIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) both !important;
             will-change: transform, opacity !important;
+          }
+          @media (max-width: 768px) {
+            .mandi-splash-content {
+              padding: 6px 8px !important;
+              gap: 4px !important;
+            }
           }
           .mandi-splash-progressbar {
             position: absolute !important;
@@ -1555,23 +1497,35 @@ export default function PublicLandingPage() {
           <View style={[S.heroLeft, isDesktop ? { flex: 6 } : { width: '100%' }]}>
 
             {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP ══ */}
-            <View style={[S.heroBadgesRow, isMobile && { gap: 6, marginBottom: 10 }]}>
-              <View style={[S.socialProofBadge, isDay ? S.socialProofBadgeDay : S.socialProofBadgeNight, isMobile && { paddingHorizontal: 9, paddingVertical: 4.5, marginBottom: 8 }]}>
+            <View style={[S.heroBadgesRow, isMobile && { gap: 6, marginBottom: 8 }]}>
+              <View
+                style={[
+                  S.socialProofBadge,
+                  isDay ? S.socialProofBadgeDay : S.socialProofBadgeNight,
+                  isMobile && {
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    marginBottom: 4,
+                    flexWrap: 'nowrap',
+                    maxWidth: '100%',
+                  },
+                ]}
+              >
                 <View style={S.starsGroup}>
                   {[1, 2, 3, 4, 5].map((_, i) => (
-                    <Ionicons key={i} name="star" size={isMobile ? 11.5 : 13} color="#f59e0b" style={{ marginRight: 1 }} />
+                    <Ionicons key={i} name="star" size={isMobile ? 10.5 : 13} color="#f59e0b" style={{ marginRight: 1 }} />
                   ))}
                 </View>
-                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight, isMobile && { fontSize: 11 }]}>
+                <Text style={[S.ratingScoreText, isDay ? S.ratingScoreTextDay : S.ratingScoreTextNight, isMobile && { fontSize: 10.5 }]}>
                   4.9/5
                 </Text>
                 <Text style={[S.ratingReviewsCount, isDay ? S.ratingReviewsCountDay : S.ratingReviewsCountNight, isMobile && { fontSize: 9 }]}>
                   {isMobile ? '(14.2k)' : '(14,200+ Reviews)'}
                 </Text>
-                <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight]} />
+                <View style={[S.socialProofDivider, isDay ? S.socialProofDividerDay : S.socialProofDividerNight, isMobile && { marginHorizontal: 3 }]} />
                 <Ionicons name="shield-checkmark" size={isMobile ? 11 : 12} color={isDay ? '#059669' : '#34d399'} />
-                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, isMobile && { fontSize: 10 }]}>
-                  {isMobile ? `Trusted in ${userRegion.regionText}` : `Trusted by ${userRegion.farmerCount} Cultivators in ${userRegion.regionText}`}
+                <Text style={[S.socialProofText, isDay ? S.socialProofTextDay : S.socialProofTextNight, isMobile && { fontSize: 9.5 }]} numberOfLines={1}>
+                  {isMobile ? 'Verified Agri Platform' : `Trusted by ${userRegion.farmerCount} Cultivators in ${userRegion.regionText}`}
                 </Text>
               </View>
 
@@ -1582,12 +1536,11 @@ export default function PublicLandingPage() {
                   isSpeaking && currentSpeakingId === 'hero-advisory'
                     ? S.heroAudioReadoutBtnActive
                     : (isDay ? S.heroAudioReadoutBtnDay : S.heroAudioReadoutBtnNight),
+                  isMobile && { paddingHorizontal: 8, paddingVertical: 4, marginBottom: 4 },
                 ]}
                 onPress={() => {
                   const speech =
-                    lang === 'PA'
-                      ? 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ ਕਿਸਾਨ ਵੀਰੋ। ਫਾਰਮਸਕਿੰਗ ਪਲੇਟਫਾਰਮ ਵਿੱਚ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ। ਇੱਥੇ ਤੁਸੀਂ ਪੰਜ ਸਕਿੰਟਾਂ ਵਿੱਚ ਫਸਲ ਦੀ ਬਿਮਾਰੀ ਸਕੈਨ ਕਰ ਸਕਦੇ ਹੋ, ਲਾਈਵ ਮੰਡੀ ਭਾਅ ਦੇਖ ਸਕਦੇ ਹੋ ਅਤੇ ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਬੀਜ ਮੰਗਵਾ ਸਕਦੇ ਹੋ।'
-                      : 'Welcome to FarmsKing Agri Intelligence. Instant 5-second plant doctor diagnosis, live APMC mandi prices across India, and certified farm inputs delivered directly to your farm.';
+                    'Welcome to FarmsKing Agri Intelligence. Instant 5-second plant doctor diagnosis, live APMC mandi prices across India, and certified farm inputs delivered directly to your farm.';
                   speakText(speech, 'hero-advisory');
                 }}
                 activeOpacity={0.85}
@@ -1595,7 +1548,7 @@ export default function PublicLandingPage() {
               >
                 <Ionicons
                   name={isSpeaking && currentSpeakingId === 'hero-advisory' ? 'volume-high' : 'volume-medium-outline'}
-                  size={14}
+                  size={isMobile ? 12 : 14}
                   color={isSpeaking && currentSpeakingId === 'hero-advisory' ? '#ffffff' : (isDay ? '#059669' : '#34d399')}
                 />
                 <Text
@@ -1604,9 +1557,12 @@ export default function PublicLandingPage() {
                     isSpeaking && currentSpeakingId === 'hero-advisory'
                       ? { color: '#ffffff' }
                       : (isDay ? { color: '#047857' } : { color: '#34d399' }),
+                    isMobile && { fontSize: 10 },
                   ]}
                 >
-                  {isSpeaking && currentSpeakingId === 'hero-advisory' ? '🔊 Speaking... (Tap to Stop)' : '🔊 Listen (Audio Advisory)'}
+                  {isSpeaking && currentSpeakingId === 'hero-advisory'
+                    ? '🔊 Speaking...'
+                    : (isMobile ? '🔊 Listen' : '🔊 Listen (Audio Advisory)')}
                 </Text>
                 {isSpeaking && currentSpeakingId === 'hero-advisory' && (
                   <View style={S.audioWaveBarContainer}>
@@ -1730,7 +1686,8 @@ export default function PublicLandingPage() {
                         style={[
                           S.rollerCropBadge,
                           isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
-                          isMobile && { paddingHorizontal: 7, paddingVertical: 4, gap: 6 },
+                          { flexShrink: 0 },
+                          isMobile && { paddingHorizontal: 7, paddingVertical: 4, gap: 5 },
                         ]}
                       >
                         <Text style={{ fontSize: isMobile ? 18 : 22 }}>{item.emoji}</Text>
@@ -1741,6 +1698,7 @@ export default function PublicLandingPage() {
                               isDay ? S.rollerCropTextDay : S.rollerCropTextNight,
                               isMobile && { fontSize: 13 },
                             ]}
+                            numberOfLines={1}
                           >
                             {item.crop}
                           </Text>
@@ -1757,8 +1715,14 @@ export default function PublicLandingPage() {
                         </View>
                       </View>
 
-                      {/* Middle: Mandi & State */}
-                      <View style={[S.rollerMandiInfo, isMobile && { marginHorizontal: 6 }]}>
+                      {/* Middle: Mandi & State (flex: 1 with minWidth: 0 for reliable text clipping) */}
+                      <View
+                        style={[
+                          S.rollerMandiInfo,
+                          { flex: 1, minWidth: 0, flexShrink: 1, overflow: 'hidden' },
+                          isMobile && { marginHorizontal: 6 },
+                        ]}
+                      >
                         <Text
                           style={[
                             S.rollerMandiName,
@@ -1781,8 +1745,8 @@ export default function PublicLandingPage() {
                         </Text>
                       </View>
 
-                      {/* Right: Live Price & Up Trend */}
-                      <View style={S.rollerPriceGroup}>
+                      {/* Right: Live Price & Up Trend (flexShrink: 0) */}
+                      <View style={[S.rollerPriceGroup, { flexShrink: 0, alignItems: 'flex-end' }]}>
                         <View style={S.rollerPriceValueRow}>
                           <Text
                             style={[
@@ -1829,25 +1793,25 @@ export default function PublicLandingPage() {
               </TouchableOpacity>
 
               {/* ── Roller Micro Indicators (5-Sec Single Crop Splash Radar) ── */}
-              <View style={S.rollerIndicatorsRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="pulse" size={12} color={isDay ? '#059669' : '#34d399'} />
-                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay]}>
-                    Crop {activeMandiRollIdx + 1} of {ALL_INDIA_LIVE_MANDI_FEED.length} • 5-Sec Splash Cycle
+              <View style={[S.rollerIndicatorsRow, isMobile && { marginTop: 6, paddingHorizontal: 0 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Ionicons name="pulse" size={11} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay, isMobile && { fontSize: 9 }]}>
+                    {isMobile ? `Crop ${activeMandiRollIdx + 1}/9 • 5s` : `Crop ${activeMandiRollIdx + 1} of ${ALL_INDIA_LIVE_MANDI_FEED.length} • 5-Sec Splash Cycle`}
                   </Text>
                 </View>
 
                 {/* Interactive Crop Dot Indicators */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: isMobile ? 3 : 4 }}>
                   {ALL_INDIA_LIVE_MANDI_FEED.map((_, dotIdx) => (
                     <TouchableOpacity
                       key={`mandi-dot-${dotIdx}`}
                       onPress={() => setActiveMandiRollIdx(dotIdx)}
                       activeOpacity={0.7}
                       style={{
-                        width: dotIdx === activeMandiRollIdx ? 14 : 4.5,
-                        height: 4.5,
-                        borderRadius: 2.5,
+                        width: dotIdx === activeMandiRollIdx ? (isMobile ? 11 : 14) : (isMobile ? 3.5 : 4.5),
+                        height: isMobile ? 3.5 : 4.5,
+                        borderRadius: 2,
                         backgroundColor:
                           dotIdx === activeMandiRollIdx
                             ? (isDay ? '#059669' : '#34d399')
@@ -1857,25 +1821,25 @@ export default function PublicLandingPage() {
                   ))}
                 </View>
 
-                <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight]}>
-                  <Ionicons name="sparkles" size={10} color={isDay ? '#047857' : '#34d399'} />
-                  <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight]}>
+                <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight, isMobile && { paddingHorizontal: 5, paddingVertical: 1 }]}>
+                  <Ionicons name="sparkles" size={9} color={isDay ? '#047857' : '#34d399'} />
+                  <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight, isMobile && { fontSize: 8.5 }]}>
                     LIVE APMC
                   </Text>
                 </View>
               </View>
 
               {/* ── Transparency & Trust Footer Strip ── */}
-              <View style={[S.mandiVerifiedFooter, isDay && S.mandiVerifiedFooterDay]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <View style={[S.mandiVerifiedFooter, isDay && S.mandiVerifiedFooterDay, isMobile && { marginTop: 6, paddingTop: 6 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, minWidth: 0 }}>
                   <Ionicons name="shield-checkmark" size={11} color={isDay ? '#047857' : '#34d399'} />
-                  <Text style={[S.mandiVerifiedText, isDay && S.mandiVerifiedTextDay]}>
-                    AGMARKNET & eNAM Synchronized Real-Time Feeds
+                  <Text style={[S.mandiVerifiedText, isDay && S.mandiVerifiedTextDay, isMobile && { fontSize: 8.5 }]} numberOfLines={1}>
+                    {isMobile ? 'eNAM Verified Live Rates' : 'AGMARKNET & eNAM Synchronized Real-Time Feeds'}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setOfficialRatesModalVisible(true)} activeOpacity={0.8}>
-                  <Text style={[S.mandiVerifiedLink, isDay && S.mandiVerifiedLinkDay]}>
-                    Verify Accuracy →
+                  <Text style={[S.mandiVerifiedLink, isDay && S.mandiVerifiedLinkDay, isMobile && { fontSize: 8.5 }]}>
+                    {isMobile ? 'All 9 →' : 'Verify Accuracy →'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -2033,16 +1997,16 @@ export default function PublicLandingPage() {
               tiltMax={5}
             >
               {/* ── Top Micro-Telemetry HUD Strip ── */}
-              <View style={[S.showcaseTopBar, isDay && S.showcaseTopBarDay]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={[S.showcaseTopBar, isDay && S.showcaseTopBarDay, isMobile && { paddingHorizontal: 8, paddingVertical: 5 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={S.showcaseLiveDot} />
-                  <Text style={[S.showcaseTopText, isDay && S.showcaseTopTextDay]}>
-                    AI SMART FARM • LIVE TELEMETRY
+                  <Text style={[S.showcaseTopText, isDay && S.showcaseTopTextDay, isMobile && { fontSize: 9.5 }]}>
+                    {isMobile ? 'AI LIVE TELEMETRY' : 'AI SMART FARM • LIVE TELEMETRY'}
                   </Text>
                 </View>
-                <View style={[S.showcaseGpsBadge, isDay && S.showcaseGpsBadgeDay]}>
-                  <Text style={[S.showcaseGpsText, isDay && S.showcaseGpsTextDay]}>
-                    DRONE SPRAY: 3.2L/MIN
+                <View style={[S.showcaseGpsBadge, isDay && S.showcaseGpsBadgeDay, isMobile && { paddingHorizontal: 5, paddingVertical: 2 }]}>
+                  <Text style={[S.showcaseGpsText, isDay && S.showcaseGpsTextDay, isMobile && { fontSize: 8.5 }]}>
+                    {isMobile ? 'DRONE: 3.2L/M' : 'DRONE SPRAY: 3.2L/MIN'}
                   </Text>
                 </View>
               </View>
@@ -2288,17 +2252,17 @@ export default function PublicLandingPage() {
                 {/* 3. Floating Holographic Crop Telemetry Pin (Near bottom wheat field) */}
                 <View style={[S.overlayTelemetryBadge, isDay && S.overlayTelemetryBadgeDay, isMobile && { bottom: 6, left: 6, right: 6, paddingHorizontal: 8, paddingVertical: 5, gap: 6 }]}>
                   <View style={S.overlayPulseDot} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.overlayBadgeTitle, isDay && S.overlayBadgeTitleDay, isMobile && { fontSize: 10.5, lineHeight: 13 }]}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[S.overlayBadgeTitle, isDay && S.overlayBadgeTitleDay, isMobile && { fontSize: 10, lineHeight: 12 }]} numberOfLines={1}>
                       Crop Health: 98.4% Optimal
                     </Text>
-                    <Text style={[S.overlayBadgeSub, isDay && S.overlayBadgeSubDay, isMobile && { fontSize: 8.5, lineHeight: 11 }]}>
-                      {isMobile ? 'Moisture: 42% • Nitrogen: Balanced • GPS Live' : 'Moisture: 42% • Soil Nitrogen: Balanced • GPS Live'}
+                    <Text style={[S.overlayBadgeSub, isDay && S.overlayBadgeSubDay, isMobile && { fontSize: 8, lineHeight: 10 }]} numberOfLines={1}>
+                      {isMobile ? 'Moisture: 42% • Soil Nitrogen: Balanced' : 'Moisture: 42% • Soil Nitrogen: Balanced • GPS Live'}
                     </Text>
                   </View>
                   <View style={[S.telemetrySignalBadge, isDay && S.telemetrySignalBadgeDay, isMobile && { paddingHorizontal: 4, paddingVertical: 1 }]}>
                     <Ionicons name="wifi" size={isMobile ? 8 : 10} color={isDay ? '#047857' : '#a7f3d0'} />
-                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay, isMobile && { fontSize: 8 }]}>AI 60fps</Text>
+                    <Text style={[S.telemetrySignalText, isDay && S.telemetrySignalTextDay, isMobile && { fontSize: 7.5 }]}>AI Live</Text>
                   </View>
                 </View>
               </View>
@@ -3310,7 +3274,16 @@ export default function PublicLandingPage() {
           {/* Tab 2: Mandi */}
           <TouchableOpacity
             style={S.bottomTabItem}
-            onPress={() => router.push('/shop')}
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                const el = document.getElementById('mandi-rates');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                  return;
+                }
+              }
+              router.push('/shop');
+            }}
             activeOpacity={0.75}
           >
             <View style={S.tabIconWrapper}>
@@ -3606,12 +3579,11 @@ export default function PublicLandingPage() {
         </View>
       </Modal>
 
-      {/* ══ LIVE SOCIAL PROOF ACTIVITY TICKER (FLOATING BOTTOM-LEFT) ══ */}
-      {!tickerDismissed && (
+      {/* ══ LIVE SOCIAL PROOF ACTIVITY TICKER (FLOATING BOTTOM-LEFT - DESKTOP/TABLET ONLY) ══ */}
+      {!tickerDismissed && !isMobile && (
         <Animated.View
           style={[
             S.liveTickerFixedContainer,
-            isMobile && S.liveTickerFixedContainerMobile,
             tickerAnimatedStyle,
           ]}
         >

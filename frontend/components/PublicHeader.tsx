@@ -332,9 +332,9 @@ export default function PublicHeader({
         )}
 
         {/* Row 1: Logo, Streamlined Desktop Links & Right Controls */}
-        <View style={styles.topRow}>
+        <View style={[styles.topRow, isMobile && { flexWrap: 'nowrap' }]}>
           {/* Logo */}
-          <TouchableOpacity style={styles.logo} onPress={() => goTo('/')} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.logo, isMobile && { gap: width < 380 ? 4 : 6, flexShrink: 0 }]} onPress={() => goTo('/')} activeOpacity={0.8}>
             <Image
               source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
               style={isMobile ? styles.logoImgMobile : styles.logoImg}
@@ -345,7 +345,7 @@ export default function PublicHeader({
                 style={[
                   styles.logoName,
                   isDay ? styles.logoNameDay : styles.logoNameNight,
-                  isMobile && { fontSize: 16 },
+                  isMobile && { fontSize: width < 380 ? 14.5 : 16 },
                 ]}
               >
                 FarmsKing
@@ -509,7 +509,7 @@ export default function PublicHeader({
           )}
 
           {/* Right Actions: Sticky Helpline, Theme, Lang, Cart, Auth */}
-          <View style={styles.rightActions}>
+          <View style={[styles.rightActions, isMobile && { gap: width < 380 ? 3 : 4, flexShrink: 0 }]}>
             {/* ── Sticky Quick Helpline: WhatsApp / Call 95776-220000 ── */}
             <TouchableOpacity
               style={[
@@ -523,7 +523,7 @@ export default function PublicHeader({
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}
-                style={[styles.stickyHelplineGradient, isMobile && { paddingHorizontal: 9, paddingVertical: 5 }]}
+                style={[styles.stickyHelplineGradient, isMobile && { paddingHorizontal: width < 380 ? 6 : 8, paddingVertical: 4.5 }]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
@@ -546,9 +546,11 @@ export default function PublicHeader({
                     <Text style={styles.helplineNumber}>95776-220000</Text>
                   </View>
                 ) : (
-                  <Text style={styles.helplineMobileNumber}>
-                    {width < 380 ? 'Help' : width < 430 ? 'Helpline' : '95776-220000'}
-                  </Text>
+                  width >= 360 ? (
+                    <Text style={styles.helplineMobileNumber}>
+                      {width < 380 ? 'Help' : width < 430 ? 'Helpline' : '95776-220000'}
+                    </Text>
+                  ) : null
                 )}
               </LinearGradient>
             </TouchableOpacity>

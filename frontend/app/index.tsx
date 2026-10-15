@@ -2552,7 +2552,7 @@ export default function PublicLandingPage() {
           </View>
         </View>
 
-        {/* ══ UNIVERSAL ACCESS & APP CALLOUT BANNER ══ */}
+        {/* ══ UNIVERSAL ACCESS & APP CALLOUT BANNER (COMPACT EXECUTIVE) ══ */}
         <View style={S.appBannerWrapper}>
           <LinearGradient
             colors={isDay ? ['#e0f2fe', '#dcfce7'] : ['#0b1a30', '#062024']}
@@ -2561,102 +2561,66 @@ export default function PublicLandingPage() {
             style={[
               S.appBannerCard,
               isDay && S.appBannerCardDay,
-              isMobile && { flexDirection: 'column', alignItems: 'stretch', padding: 20 },
+              isMobile && { flexDirection: 'column', alignItems: 'stretch', padding: 14, gap: 10 },
             ]}
           >
-            <View style={[S.appBannerLeft, isDesktop ? { flex: 7 } : { width: '100%' }]}>
-              <View style={[S.bannerTag, isDay && S.bannerTagDay]}>
-                <Ionicons name="sparkles" size={13} color={isDay ? '#047857' : '#a7f3d0'} />
-                <Text style={[S.bannerTagText, isDay && { color: '#047857' }]}>MOBILE & WEB COMPATIBLE</Text>
+            <View style={[S.appBannerLeft, isDesktop ? { flex: 1, paddingRight: 16 } : { width: '100%' }]}>
+              <View style={[S.bannerTag, isDay && S.bannerTagDay, { marginBottom: 6, paddingVertical: 2.5, paddingHorizontal: 8 }]}>
+                <Ionicons name="sparkles" size={11} color={isDay ? '#047857' : '#a7f3d0'} />
+                <Text style={[S.bannerTagText, isDay && { color: '#047857' }, { fontSize: 9.5 }]}>MOBILE & WEB COMPATIBLE</Text>
               </View>
-              <Text style={[S.bannerHeadline, isDay && S.bannerHeadlineDay]}>
+
+              <Text style={[S.bannerHeadline, isDay && S.bannerHeadlineDay, { fontSize: 18, lineHeight: 23, marginBottom: 4 }]}>
                 {t.appDownloadTitle}
               </Text>
-              <Text style={[S.bannerSubhead, isDay && S.bannerSubheadDay]}>
+
+              <Text style={[S.bannerSubhead, isDay && S.bannerSubheadDay, { fontSize: 12, lineHeight: 17, marginBottom: 10, maxWidth: 540 }]}>
                 {t.appDownloadSub}
               </Text>
 
-              <View style={S.bannerCtasRow}>
+              <View style={[S.bannerCtasRow, { gap: 8 }]}>
                 <TouchableOpacity
-                  style={S.bannerBtnPrimary}
-                  onPress={() => router.push('/(auth)/login')}
+                  style={[S.bannerBtnPrimary, { paddingHorizontal: 14, paddingVertical: 8 }]}
+                  onPress={() => {
+                    if (typeof window !== 'undefined') {
+                      const deferredPrompt = (window as any).deferredPrompt;
+                      if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                      } else {
+                        window.open('/api/v1/app/download-apk', '_blank');
+                      }
+                    } else {
+                      router.push('/(auth)/login');
+                    }
+                  }}
                   activeOpacity={0.88}
                 >
-                  <Ionicons name="rocket-outline" size={17} color="#022c22" />
-                  <Text style={S.bannerBtnPrimaryText}>{t.getStarted}</Text>
+                  <Ionicons name="download-outline" size={15} color="#022c22" />
+                  <Text style={[S.bannerBtnPrimaryText, { fontSize: 12.5 }]}>Install App / PWA</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[S.bannerBtnSecondary, isDay && S.bannerBtnSecondaryDay]}
+                  style={[S.bannerBtnSecondary, isDay && S.bannerBtnSecondaryDay, { paddingHorizontal: 12, paddingVertical: 8 }]}
                   onPress={() => router.push('/contact-us')}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="call-outline" size={16} color={isDay ? '#0f172a' : '#ffffff'} />
-                  <Text style={[S.bannerBtnSecondaryText, isDay && { color: '#0f172a' }]}>
+                  <Ionicons name="call-outline" size={14} color={isDay ? '#0f172a' : '#ffffff'} />
+                  <Text style={[S.bannerBtnSecondaryText, isDay && { color: '#0f172a' }, { fontSize: 12 }]}>
                     {t.farmerHelpline}: {supportContact.helplinePhone}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            <View style={[S.bannerRight, isMobile && { marginTop: 18, width: '100%', alignItems: 'stretch' }]}>
-              {!isMobile ? (
-                <View style={[S.qrPreviewBox, isDay && S.qrPreviewBoxDay]}>
-                  <FarmsKingQRCode size={130} />
-                  <Text style={[S.qrScanText, isDay && { color: '#334155' }]}>{t.scanWithPhone}</Text>
-                  <Text style={S.qrSubText}>www.farmsking.in</Text>
+            {isDesktop && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: isDay ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: isDay ? 'rgba(16,185,129,0.2)' : 'rgba(167,243,208,0.2)' }}>
+                <FarmsKingQRCode size={68} />
+                <View>
+                  <Text style={[S.qrScanText, isDay && { color: '#0f172a' }, { marginTop: 0, fontSize: 11 }]}>{t.scanWithPhone}</Text>
+                  <Text style={[S.qrSubText, { fontSize: 9.5 }]}>www.farmsking.in</Text>
                 </View>
-              ) : (
-                <View style={[S.mobileAppInstallCard, isDay ? S.mobileAppInstallCardDay : S.mobileAppInstallCardNight]}>
-                  {/* Big Glowing 1-Click App Install Button */}
-                  <TouchableOpacity
-                    style={S.mobileInstallBigBtn}
-                    onPress={() => {
-                      if (typeof window !== 'undefined') {
-                        const deferredPrompt = (window as any).deferredPrompt;
-                        if (deferredPrompt) {
-                          deferredPrompt.prompt();
-                        } else {
-                          window.open('/api/v1/app/download-apk', '_blank');
-                        }
-                      } else {
-                        router.push('/(auth)/login');
-                      }
-                    }}
-                    activeOpacity={0.88}
-                  >
-                    <LinearGradient
-                      colors={['#10b981', '#059669', '#047857']}
-                      style={S.mobileInstallGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    >
-                      <View style={S.mobileInstallIconBadge}>
-                        <Ionicons name="phone-portrait" size={24} color="#ffffff" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={S.mobileInstallTitle}>📲 Install FarmsKing App</Text>
-                        <Text style={S.mobileInstallSub}>1-Click Fast APK / Universal Web App</Text>
-                        <Text style={S.mobileInstallPerks}>Zero lag • Offline Mandi • Free Crop Doctor</Text>
-                      </View>
-                      <Ionicons name="download-outline" size={22} color="#ffffff" />
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  {/* Direct Web Instant Access option */}
-                  <TouchableOpacity
-                    style={[S.mobileDirectWebBtn, isDay ? S.mobileDirectWebBtnDay : S.mobileDirectWebBtnNight]}
-                    onPress={() => router.push('/(auth)/login')}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="globe-outline" size={15} color={isDay ? '#0284c7' : '#38bdf8'} />
-                    <Text style={[S.mobileDirectWebText, isDay ? S.mobileDirectWebTextDay : S.mobileDirectWebTextNight]}>
-                      Or Continue Directly in Browser (No Download Required) →
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+              </View>
+            )}
           </LinearGradient>
         </View>
 
@@ -5800,24 +5764,25 @@ const S = StyleSheet.create({
   // APP CALLOUT BANNER
   // ══════════════════════════════════════════════════════════════════════════
   appBannerWrapper: {
-    paddingVertical: 24,
+    paddingVertical: 14,
     paddingHorizontal: '5%',
     maxWidth: 1360,
     alignSelf: 'center',
     width: '100%',
   },
   appBannerCard: {
-    borderRadius: RADIUS.xxl,
+    borderRadius: RADIUS.xl,
     borderWidth: 1.5,
     borderColor: 'rgba(167, 243, 208, 0.25)',
-    padding: 32,
+    paddingVertical: 18,
+    paddingHorizontal: 22,
     flexDirection: 'row',
     alignItems: 'center',
-    ...premiumShadow('#000000', 'lg'),
+    ...premiumShadow('#000000', 'md'),
   },
   appBannerCardDay: {
     borderColor: 'rgba(16, 185, 129, 0.25)',
-    ...premiumShadow('#0f172a', 'md'),
+    ...premiumShadow('#0f172a', 'xs'),
   },
   appBannerLeft: {
     zIndex: 10,

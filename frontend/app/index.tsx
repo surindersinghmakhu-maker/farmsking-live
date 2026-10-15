@@ -798,7 +798,7 @@ export default function PublicLandingPage() {
     if (isRollPaused) return;
     const interval = setInterval(() => {
       setActiveMandiRollIdx((prev) => (prev + 1) % ALL_INDIA_LIVE_MANDI_FEED.length);
-    }, 3200);
+    }, 5000);
     return () => clearInterval(interval);
   }, [isRollPaused]);
 
@@ -1428,38 +1428,69 @@ export default function PublicLandingPage() {
             z-index: 12 !important;
           }
 
-          /* ── Continuous Live Mandi Upward Scroll Animation (Prices Gliding Upwards) ── */
-          @keyframes mandiContinuousUpwardScroll {
+          /* ── 5-Second Single-Crop Mandi Splash Animation & Progress Pulse ── */
+          @keyframes mandiSplashIn {
             0% {
-              transform: translateY(0px);
+              opacity: 0;
+              transform: scale(0.93) translateY(9px);
+              filter: blur(4px);
+            }
+            45% {
+              opacity: 0.95;
+              transform: scale(1.018) translateY(-1px);
+              filter: blur(0px);
             }
             100% {
-              transform: translateY(-522px);
+              opacity: 1;
+              transform: scale(1) translateY(0);
+              filter: blur(0px);
             }
           }
-          .mandi-vertical-ticker-window {
-            height: 114px !important;
-            overflow: hidden !important;
+          @keyframes mandiProgressCountdown {
+            0% {
+              width: 0%;
+            }
+            100% {
+              width: 100%;
+            }
+          }
+          .mandi-single-card-window {
+            height: 78px !important;
             position: relative !important;
             border-radius: 14px !important;
-          }
-          .mandi-vertical-ticker-track {
+            overflow: hidden !important;
             display: flex !important;
-            flex-direction: column !important;
-            gap: 6px !important;
-            animation: mandiContinuousUpwardScroll 22s linear infinite !important;
-            will-change: transform !important;
+            align-items: center !important;
+            transition: all 0.25s ease !important;
           }
-          .mandi-vertical-ticker-window:hover .mandi-vertical-ticker-track {
-            animation-play-state: paused !important;
+          .mandi-single-card-window:hover {
+            transform: translateY(-1.5px) !important;
           }
-          .mandi-roller-row-item {
-            height: 52px !important;
+          .mandi-splash-content {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 8px 12px !important;
             box-sizing: border-box !important;
-            transition: transform 0.15s ease, background-color 0.15s ease !important;
+            animation: mandiSplashIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+            will-change: transform, opacity !important;
           }
-          .mandi-roller-row-item:hover {
-            transform: scale(1.008) !important;
+          .mandi-splash-progressbar {
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            height: 3px !important;
+            background: linear-gradient(90deg, #10b981, #38bdf8, #34d399) !important;
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.8) !important;
+            animation: mandiProgressCountdown 5s linear infinite !important;
+            pointer-events: none !important;
+            z-index: 5 !important;
+          }
+          .mandi-single-card-window:hover .mandi-splash-progressbar {
+            animation-play-state: paused !important;
           }
 
           /* ── Voice Audio Readout Equalizer ── */
@@ -1651,9 +1682,13 @@ export default function PublicLandingPage() {
                 </TouchableOpacity>
               </View>
 
-              {/* ── Continuous Upward Live APMC Mandi Rate Board (Prices Move Upwards) ── */}
+              {/* ── Single Crop 5-Second Splash APMC Mandi Rate Board ── */}
               <TouchableOpacity
-                style={[S.mandiRollerSlot, isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight]}
+                style={[
+                  S.mandiRollerSlot,
+                  isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight,
+                  { height: isMobile ? 74 : 78, paddingVertical: 0, paddingHorizontal: 0 },
+                ]}
                 activeOpacity={0.94}
                 onPress={() => {
                   if (user) {
@@ -1663,117 +1698,169 @@ export default function PublicLandingPage() {
                   }
                 }}
                 // @ts-ignore
-                className="mandi-vertical-ticker-window"
+                className="mandi-single-card-window"
+                // @ts-ignore
+                onMouseEnter={() => setIsRollPaused(true)}
+                // @ts-ignore
+                onMouseLeave={() => setIsRollPaused(false)}
               >
-                {/* Upward Scrolling Continuous Track */}
-                <View
-                  // @ts-ignore
-                  className="mandi-vertical-ticker-track"
-                >
-                  {[...ALL_INDIA_LIVE_MANDI_FEED, ...ALL_INDIA_LIVE_MANDI_FEED].map((item, idx) => (
+                {/* Single Active Crop with Key-driven Splash Animation */}
+                {(() => {
+                  const item = ALL_INDIA_LIVE_MANDI_FEED[activeMandiRollIdx] || ALL_INDIA_LIVE_MANDI_FEED[0];
+                  return (
                     <View
-                      key={`mandi-feed-${idx}`}
-                      style={[S.mandiRollerRowItem, isDay && S.mandiRollerRowItemDay]}
+                      key={`mandi-splash-${activeMandiRollIdx}`}
+                      style={[
+                        S.mandiRollerRowItem,
+                        isDay && S.mandiRollerRowItemDay,
+                        {
+                          height: '100%',
+                          width: '100%',
+                          borderWidth: 0,
+                          backgroundColor: 'transparent',
+                          borderRadius: 14,
+                          paddingHorizontal: isMobile ? 10 : 14,
+                        },
+                      ]}
                       // @ts-ignore
-                      className="mandi-roller-row-item"
+                      className="mandi-splash-content"
                     >
                       {/* Left: High-Contrast Crop Badge with Clear Name */}
                       <View
                         style={[
                           S.rollerCropBadge,
                           isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
-                          isMobile && { paddingHorizontal: 6, paddingVertical: 3, gap: 5 },
+                          isMobile && { paddingHorizontal: 7, paddingVertical: 4, gap: 6 },
                         ]}
                       >
-                        <Text style={{ fontSize: isMobile ? 16 : 20 }}>{item.emoji}</Text>
+                        <Text style={{ fontSize: isMobile ? 18 : 22 }}>{item.emoji}</Text>
                         <View style={{ flexDirection: 'column' }}>
-                          <Text style={[S.rollerCropText, isDay ? S.rollerCropTextDay : S.rollerCropTextNight, isMobile && { fontSize: 12.5 }]}>
+                          <Text
+                            style={[
+                              S.rollerCropText,
+                              isDay ? S.rollerCropTextDay : S.rollerCropTextNight,
+                              isMobile && { fontSize: 13 },
+                            ]}
+                          >
                             {item.crop}
                           </Text>
-                          <Text style={[S.rollerVarietyText, isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight, isMobile && { fontSize: 9 }]} numberOfLines={1}>
+                          <Text
+                            style={[
+                              S.rollerVarietyText,
+                              isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight,
+                              isMobile && { fontSize: 9.5 },
+                            ]}
+                            numberOfLines={1}
+                          >
                             {item.variety}
                           </Text>
                         </View>
                       </View>
 
                       {/* Middle: Mandi & State */}
-                      <View style={[S.rollerMandiInfo, isMobile && { marginHorizontal: 4 }]}>
-                        <Text style={[S.rollerMandiName, isDay && S.rollerMandiNameDay, isMobile && { fontSize: 11 }]} numberOfLines={1}>
+                      <View style={[S.rollerMandiInfo, isMobile && { marginHorizontal: 6 }]}>
+                        <Text
+                          style={[
+                            S.rollerMandiName,
+                            isDay && S.rollerMandiNameDay,
+                            isMobile && { fontSize: 11.5 },
+                          ]}
+                          numberOfLines={1}
+                        >
                           📍 {item.mandi}
                         </Text>
-                        <Text style={[S.rollerStateSub, isDay && S.rollerStateSubDay, isMobile && { fontSize: 9 }]} numberOfLines={1}>
+                        <Text
+                          style={[
+                            S.rollerStateSub,
+                            isDay && S.rollerStateSubDay,
+                            isMobile && { fontSize: 9.5 },
+                          ]}
+                          numberOfLines={1}
+                        >
                           {item.state} • {item.tag}
                         </Text>
                       </View>
 
-                      {/* Right: Live Price & Up Trend (Moving Upwards) */}
+                      {/* Right: Live Price & Up Trend */}
                       <View style={S.rollerPriceGroup}>
                         <View style={S.rollerPriceValueRow}>
-                          <Text style={[S.rollerPriceVal, isDay ? S.rollerPriceValDay : S.rollerPriceValNight, isMobile && { fontSize: 13 }]}>
+                          <Text
+                            style={[
+                              S.rollerPriceVal,
+                              isDay ? S.rollerPriceValDay : S.rollerPriceValNight,
+                              isMobile && { fontSize: 14.5 },
+                            ]}
+                          >
                             {item.price}
                           </Text>
-                          <Text style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay, isMobile && { fontSize: 9 }]}>
+                          <Text
+                            style={[
+                              S.rollerPriceUnit,
+                              isDay && S.rollerPriceUnitDay,
+                              isMobile && { fontSize: 9.5 },
+                            ]}
+                          >
                             /{item.unit}
                           </Text>
                         </View>
-                        <View style={[S.rollerTrendPill, isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight, isMobile && { paddingHorizontal: 4, paddingVertical: 1 }]}>
-                          <Ionicons name="caret-up" size={isMobile ? 9 : 11} color={isDay ? '#047857' : '#34d399'} />
-                          <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay, isMobile && { fontSize: 9 }]}>{item.change}</Text>
+                        <View
+                          style={[
+                            S.rollerTrendPill,
+                            isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight,
+                            isMobile && { paddingHorizontal: 5, paddingVertical: 1.5 },
+                          ]}
+                        >
+                          <Ionicons name="caret-up" size={isMobile ? 10 : 12} color={isDay ? '#047857' : '#34d399'} />
+                          <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay, isMobile && { fontSize: 9.5 }]}>
+                            {item.change}
+                          </Text>
                         </View>
                       </View>
                     </View>
+                  );
+                })()}
+
+                {/* 5-Second Splash Progress Countdown Bar */}
+                <View
+                  key={`prog-line-${activeMandiRollIdx}`}
+                  // @ts-ignore
+                  className="mandi-splash-progressbar"
+                />
+              </TouchableOpacity>
+
+              {/* ── Roller Micro Indicators (5-Sec Single Crop Splash Radar) ── */}
+              <View style={S.rollerIndicatorsRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="pulse" size={12} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay]}>
+                    Crop {activeMandiRollIdx + 1} of {ALL_INDIA_LIVE_MANDI_FEED.length} • 5-Sec Splash Cycle
+                  </Text>
+                </View>
+
+                {/* Interactive Crop Dot Indicators */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {ALL_INDIA_LIVE_MANDI_FEED.map((_, dotIdx) => (
+                    <TouchableOpacity
+                      key={`mandi-dot-${dotIdx}`}
+                      onPress={() => setActiveMandiRollIdx(dotIdx)}
+                      activeOpacity={0.7}
+                      style={{
+                        width: dotIdx === activeMandiRollIdx ? 14 : 4.5,
+                        height: 4.5,
+                        borderRadius: 2.5,
+                        backgroundColor:
+                          dotIdx === activeMandiRollIdx
+                            ? (isDay ? '#059669' : '#34d399')
+                            : (isDay ? '#cbd5e1' : 'rgba(255, 255, 255, 0.22)'),
+                      }}
+                    />
                   ))}
                 </View>
 
-                {/* Top and Bottom Edge Smooth Gradient Masks */}
-                {Platform.OS === 'web' && (
-                  <>
-                    <View
-                      // @ts-ignore
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: 12,
-                        pointerEvents: 'none',
-                        background: isDay
-                          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.95), transparent)'
-                          : 'linear-gradient(180deg, rgba(3, 20, 14, 0.95), transparent)',
-                        zIndex: 2,
-                      }}
-                    />
-                    <View
-                      // @ts-ignore
-                      style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: 12,
-                        pointerEvents: 'none',
-                        background: isDay
-                          ? 'linear-gradient(0deg, rgba(255, 255, 255, 0.95), transparent)'
-                          : 'linear-gradient(0deg, rgba(3, 20, 14, 0.95), transparent)',
-                        zIndex: 2,
-                      }}
-                    />
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* ── Roller Micro Indicators (Continuous Sync & Live Upward Status) ── */}
-              <View style={S.rollerIndicatorsRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="pulse" size={12} color={isDay ? '#059669' : '#34d399'} />
-                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay]}>
-                    Live APMC Auction Radar • 9 Regional Mandis
-                  </Text>
-                </View>
                 <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight]}>
-                  <Ionicons name="trending-up" size={11} color={isDay ? '#047857' : '#34d399'} />
+                  <Ionicons name="sparkles" size={10} color={isDay ? '#047857' : '#34d399'} />
                   <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight]}>
-                    Prices Rising ↑
+                    LIVE APMC
                   </Text>
                 </View>
               </View>
@@ -1899,11 +1986,8 @@ export default function PublicLandingPage() {
                     <Ionicons name="sparkles" size={isMobile ? 15 : 18} color="#fef08a" />
                   </View>
                   <View style={S.btnPrimaryTextBox}>
-                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 14.5, lineHeight: 18 }]}>
+                    <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 15, lineHeight: 20 }]}>
                       {user ? 'Open Farmer Dashboard →' : 'Get Started Free'}
-                    </Text>
-                    <Text style={[S.btnPrimarySubWide, isMobile && { fontSize: 9.5, lineHeight: 13 }]}>
-                      {isMobile ? 'Live Mandi Radar • 5-Sec AI Scan • Agri Store' : 'Instant Live APMC Mandi Radar • 5-Sec AI Crop Doctor • Certified Agri Store'}
                     </Text>
                   </View>
                   <View style={[S.btnPrimaryArrowPill, isMobile && { width: 28, height: 28, borderRadius: 14 }]}>

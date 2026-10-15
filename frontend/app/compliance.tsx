@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
+  Animated,
   View,
   Text,
   StyleSheet,
@@ -23,6 +24,19 @@ export default function ComplianceScreen() {
 
   const [activeTab, setActiveTab] = useState<ComplianceTab>('moa');
   const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
+
+  // Animated sliding pill for compliance tabs
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const idx = activeTab === 'moa' ? 0 : activeTab === 'roc' ? 1 : activeTab === 'regulatory' ? 2 : 3;
+    Animated.spring(tabSlideAnim, {
+      toValue: idx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [activeTab]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -99,8 +113,22 @@ export default function ComplianceScreen() {
               Incorporated under Ministry of Corporate Affairs (Govt. of India) • ROC Chandigarh
             </Text>
 
-            {/* Interactive Tab Selector */}
+            {/* Interactive Tab Selector with Liquid Spring Sliding Pill */}
             <View style={[styles.tabBar, isDay ? styles.tabBarDay : styles.tabBarNight]}>
+              {!isMobile && (
+                <Animated.View
+                  style={[
+                    styles.slidingCompliancePill,
+                    isDay ? styles.slidingCompliancePillDay : styles.slidingCompliancePillNight,
+                    {
+                      left: tabSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3],
+                        outputRange: ['0.8%', '25.6%', '50.4%', '75.2%'],
+                      }),
+                    },
+                  ]}
+                />
+              )}
               {[
                 { id: 'moa', label: 'SPICe+ MoA INC-33', icon: 'document-text-outline' },
                 { id: 'roc', label: 'ROC Master Data', icon: 'business-outline' },
@@ -111,7 +139,7 @@ export default function ComplianceScreen() {
                   key={t.id}
                   style={[
                     styles.tabItem,
-                    activeTab === t.id && (isDay ? styles.tabItemActiveDay : styles.tabItemActiveNight),
+                    isMobile && activeTab === t.id && (isDay ? styles.tabItemActiveDay : styles.tabItemActiveNight),
                   ]}
                   onPress={() => setActiveTab(t.id as ComplianceTab)}
                   activeOpacity={0.8}
@@ -690,10 +718,11 @@ const styles = StyleSheet.create({
 
   // Interactive Tab Bar
   tabBar: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 4,
     padding: 4,
     borderRadius: 14,
     borderWidth: 1,
@@ -707,21 +736,45 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
+  slidingCompliancePill: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    width: '24.2%',
+    borderRadius: 10,
+    zIndex: 0,
+  },
+  slidingCompliancePillDay: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'sm'),
+  },
+  slidingCompliancePillNight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    ...premiumShadow('rgba(0,0,0,0.3)', 'sm'),
+  },
   tabItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: 10,
+    position: 'relative',
+    zIndex: 1,
   },
   tabItemActiveDay: {
     backgroundColor: '#ffffff',
-    ...premiumShadow('rgba(0,0,0,0.06)', 'xs'),
+    ...premiumShadow('rgba(0,0,0,0.06)', 'sm'),
   },
   tabItemActiveNight: {
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    ...premiumShadow('rgba(0,0,0,0.2)', 'xs'),
+    ...premiumShadow('rgba(0,0,0,0.2)', 'sm'),
   },
   tabText: {
     fontSize: 12,

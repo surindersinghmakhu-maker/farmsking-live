@@ -1591,7 +1591,8 @@ export default function PublicLandingPage() {
             <Text
               style={[
                 S.heroMainTitle,
-                isMobile && { fontSize: 32, lineHeight: 40 },
+                isTablet && { fontSize: 36, lineHeight: 44 },
+                isMobile && { fontSize: width < 380 ? 21 : 24, lineHeight: width < 380 ? 27 : 31, marginBottom: 8 },
                 isDay && S.heroMainTitleDay,
                 Platform.OS === 'web' ? ({ className: isDay ? 'holo-day-title' : 'holo-night-title' } as any) : {},
               ]}
@@ -1600,7 +1601,13 @@ export default function PublicLandingPage() {
             </Text>
 
             {/* Sub-Headline */}
-            <Text style={[S.heroSubTitle, isMobile && { fontSize: 14, lineHeight: 22 }, isDay && S.heroSubTitleDay]}>
+            <Text
+              style={[
+                S.heroSubTitle,
+                isMobile && { fontSize: width < 380 ? 11.5 : 12.5, lineHeight: width < 380 ? 16 : 18, marginBottom: 14 },
+                isDay && S.heroSubTitleDay,
+              ]}
+            >
               {t.heroSub}
             </Text>
 

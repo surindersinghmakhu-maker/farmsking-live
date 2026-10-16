@@ -797,8 +797,8 @@ export default function TabLayout() {
               </View>
             </TouchableOpacity>
 
-            {/* Center: Domain Pillar Selector Button (Only on More tab in mobile view) */}
-            {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (pathname.includes('/more') || pathname.includes('/admin_more')) && (
+            {/* Center: Domain Pillar Selector Button (Global on mobile for admins) */}
+            {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
               <TouchableOpacity
                 style={[
                   mobileStyles.pillarSelectorPill,
@@ -1089,8 +1089,8 @@ export default function TabLayout() {
             animation: 'fade',
             sceneStyle: {
               flex: 1,
-              // Mobile: reserve space at bottom for the floating tab bar (height 64 + safe area)
-              paddingBottom: isDesktop ? 0 : 72,
+              // Mobile: reserve space at bottom for the floating tab bar (height 64-76 + safe area)
+              paddingBottom: isDesktop ? 0 : (Platform.OS === 'ios' ? 84 : 70),
             },
           }}
         >

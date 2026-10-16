@@ -42,6 +42,7 @@ export const AdminExecutiveOverview: React.FC = () => {
   const isTablet = width >= 768 && width < 1024;
 
   const [showTelemetry, setShowTelemetry] = useState(false);
+  const [selectedMobilePillar, setSelectedMobilePillar] = useState<string>('OPERATIONS');
 
   // Live Backend Queries
   const { data: products, isLoading: isLoadingProducts, refetch: refetchProducts } = useProducts(true);
@@ -116,93 +117,150 @@ export const AdminExecutiveOverview: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       {/* 👑 1. STREAMLINED EXECUTIVE HEADER */}
-      <View
-        style={[
-          styles.cockpitHeader,
-          isLight && styles.cockpitHeaderLight,
-          isDarkTheme && styles.cockpitHeaderDark,
-        ]}
-      >
-        <LinearGradient
-          colors={
-            isLight
-              ? ['#ffffff', '#f8fafc']
-              : isDarkTheme
-              ? ['rgba(2, 6, 23, 0.98)', 'rgba(15, 23, 42, 0.95)']
-              : ['rgba(4, 20, 10, 0.98)', 'rgba(2, 13, 6, 0.95)']
-          }
-          style={styles.cockpitGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+      {isDesktop ? (
+        <View
+          style={[
+            styles.cockpitHeader,
+            isLight && styles.cockpitHeaderLight,
+            isDarkTheme && styles.cockpitHeaderDark,
+          ]}
         >
-          <View style={styles.topInfoRow}>
-            <View style={styles.userInfoLeft}>
-              <View style={[styles.avatarBox, isLight && styles.avatarBoxLight]}>
-                <Ionicons
-                  name="shield-checkmark"
-                  size={18}
-                  color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
-                />
-              </View>
-              <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={[styles.greetingTitle, { color: textColor }]}>
-                    {user?.name || 'Administrator'}
-                  </Text>
-                  <View style={[styles.rolePill, isLight && styles.rolePillLight]}>
-                    <Text style={[styles.rolePillText, isLight && { color: '#16a34a' }]}>
-                      👑 {user?.role || role || 'SUPER_ADMIN'}
-                    </Text>
-                  </View>
+          <LinearGradient
+            colors={
+              isLight
+                ? ['#ffffff', '#f8fafc']
+                : isDarkTheme
+                ? ['rgba(2, 6, 23, 0.98)', 'rgba(15, 23, 42, 0.95)']
+                : ['rgba(4, 20, 10, 0.98)', 'rgba(2, 13, 6, 0.95)']
+            }
+            style={styles.cockpitGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.topInfoRow}>
+              <View style={styles.userInfoLeft}>
+                <View style={[styles.avatarBox, isLight && styles.avatarBoxLight]}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={18}
+                    color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+                  />
                 </View>
-                <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
-                  Executive Command HQ · 4 Master Hubs Synchronized
-                </Text>
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.greetingTitle, { color: textColor }]}>
+                      {user?.name || 'Administrator'}
+                    </Text>
+                    <View style={[styles.rolePill, isLight && styles.rolePillLight]}>
+                      <Text style={[styles.rolePillText, isLight && { color: '#16a34a' }]}>
+                        👑 {user?.role || role || 'SUPER_ADMIN'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
+                    Executive Command HQ · 4 Master Hubs Synchronized
+                  </Text>
+                </View>
+              </View>
+
+              {/* Quick Actions */}
+              <View style={styles.headerRightActions}>
+                <TouchableOpacity
+                  style={[styles.radarTriggerPill, isLight && styles.radarTriggerPillLight]}
+                  onPress={handleOpenRadar}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.livePulseDot} />
+                  <Text style={[styles.radarPillText, isLight && { color: '#16a34a' }]}>
+                    99.9% Uptime
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickSearchBtn, isLight && styles.quickSearchBtnLight]}
+                  onPress={handleOpenSearch}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Quick Search"
+                >
+                  <Ionicons name="search" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.quickRefreshBtn, isLight && styles.quickRefreshBtnLight]}
+                  onPress={handleRefreshAll}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Refresh Overview"
+                >
+                  <Ionicons name="refresh" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+                </TouchableOpacity>
               </View>
             </View>
-
-            {/* Quick Actions */}
-            <View style={styles.headerRightActions}>
-              <TouchableOpacity
-                style={[styles.radarTriggerPill, isLight && styles.radarTriggerPillLight]}
-                onPress={handleOpenRadar}
-                activeOpacity={0.7}
-              >
-                <View style={styles.livePulseDot} />
-                <Text style={[styles.radarPillText, isLight && { color: '#16a34a' }]}>
-                  99.9% Uptime
+          </LinearGradient>
+        </View>
+      ) : (
+        /* 📱 NATIVE APP MOBILE EXECUTIVE HEADER (Slim, non-redundant, app-like elevation) */
+        <View
+          style={[
+            styles.mobileCockpitBar,
+            isLight && styles.mobileCockpitBarLight,
+            isDarkTheme && styles.mobileCockpitBarDark,
+          ]}
+        >
+          <View style={styles.mobileUserIdentity}>
+            <View style={[styles.mobileAvatarBox, isLight && styles.mobileAvatarBoxLight]}>
+              <Ionicons
+                name="shield-checkmark"
+                size={14}
+                color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.mobileGreetingTitle, { color: textColor }]} numberOfLines={1}>
+                  {user?.name?.split(' ')[0] || 'Administrator'}
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickSearchBtn, isLight && styles.quickSearchBtnLight]}
-                onPress={handleOpenSearch}
-                activeOpacity={0.7}
-                accessibilityLabel="Quick Search"
-              >
-                <Ionicons name="search" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.quickRefreshBtn, isLight && styles.quickRefreshBtnLight]}
-                onPress={handleRefreshAll}
-                activeOpacity={0.7}
-                accessibilityLabel="Refresh Overview"
-              >
-                <Ionicons name="refresh" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
-              </TouchableOpacity>
+                <View style={[styles.mobileRoleBadge, isLight && styles.mobileRoleBadgeLight]}>
+                  <Text style={[styles.mobileRoleBadgeText, isLight && { color: '#16a34a' }]}>
+                    👑 {user?.role || role || 'SUPER_ADMIN'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.mobileSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                Command HQ · 4 Master Hubs Real-Time
+              </Text>
             </View>
           </View>
-        </LinearGradient>
-      </View>
+
+          <View style={styles.mobileRightActions}>
+            <TouchableOpacity
+              style={[styles.mobileRadarBadge, isLight && styles.mobileRadarBadgeLight]}
+              onPress={handleOpenRadar}
+              activeOpacity={0.75}
+            >
+              <View style={styles.livePulseDot} />
+              <Text style={[styles.mobileRadarBadgeText, isLight && { color: '#16a34a' }]}>99.9%</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.mobileRefreshBtn, isLight && styles.mobileRefreshBtnLight]}
+              onPress={handleRefreshAll}
+              activeOpacity={0.75}
+              accessibilityLabel="Refresh Overview"
+            >
+              <Ionicons name="refresh" size={14} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* 📊 2. TOP EXECUTIVE 4-METRIC STRIP */}
       <View style={styles.sectionWrap}>
-        <View style={styles.kpiGrid}>
+        <View style={[styles.kpiGrid, !isDesktop && styles.kpiGridMobile]}>
           {/* KPI 1: Catalog & Products */}
           <TouchableOpacity
             style={[
               styles.kpiCard,
+              !isDesktop && styles.kpiCardMobile,
               isLight && styles.kpiCardLight,
               isDarkTheme && styles.kpiCardDark,
             ]}
@@ -225,6 +283,7 @@ export const AdminExecutiveOverview: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.kpiCard,
+              !isDesktop && styles.kpiCardMobile,
               isLight && styles.kpiCardLight,
               isDarkTheme && styles.kpiCardDark,
             ]}
@@ -249,6 +308,7 @@ export const AdminExecutiveOverview: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.kpiCard,
+              !isDesktop && styles.kpiCardMobile,
               isLight && styles.kpiCardLight,
               isDarkTheme && styles.kpiCardDark,
             ]}
@@ -273,6 +333,7 @@ export const AdminExecutiveOverview: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.kpiCard,
+              !isDesktop && styles.kpiCardMobile,
               isLight && styles.kpiCardLight,
               isDarkTheme && styles.kpiCardDark,
             ]}
@@ -418,66 +479,219 @@ export const AdminExecutiveOverview: React.FC = () => {
             <Ionicons name="grid" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
             <Text style={[styles.sectionTitle, { color: textColor }]}>4 COMMAND HUBS</Text>
           </View>
-          <Text style={[styles.sectionSubtext, { color: subTextColor }]}>Core Workspaces</Text>
-        </View>
-
-        <View style={styles.hubsGrid}>
-          {ADMIN_PILLARS.map((hub) => (
-            <View
-              key={hub.id}
+          {!isDesktop && (
+            <TouchableOpacity
               style={[
-                styles.hubCard,
-                isLight && styles.hubCardLight,
-                isDarkTheme && styles.hubCardDark,
+                styles.mobileHubsToggleBtn,
+                isLight && styles.mobileHubsToggleBtnLight,
+                isDarkTheme && styles.mobileHubsToggleBtnDark,
               ]}
+              onPress={() => {
+                tap();
+                setSelectedMobilePillar(selectedMobilePillar === 'ALL' ? 'OPERATIONS' : 'ALL');
+              }}
+              activeOpacity={0.7}
             >
-              {/* Hub Card Header */}
-              <TouchableOpacity
-                style={styles.hubHeaderRow}
-                activeOpacity={0.7}
-                onPress={() => {
-                  if (hub.subTabs && hub.subTabs.length > 0) {
-                    handleNavigateTab(hub.subTabs[0]);
-                  }
-                }}
+              <Ionicons
+                name={selectedMobilePillar === 'ALL' ? 'layers' : 'grid'}
+                size={11}
+                color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+              />
+              <Text
+                style={[
+                  styles.mobileHubsToggleText,
+                  isLight && { color: '#16a34a' },
+                  isDarkTheme && { color: '#38bdf8' },
+                ]}
               >
-                <View style={[styles.hubIconCircle, { backgroundColor: `${hub.color}15`, borderColor: `${hub.color}30` }]}>
-                  <Ionicons name={hub.iconFilled || hub.icon} size={18} color={hub.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.hubTitle, { color: textColor }]}>{hub.title}</Text>
-                  <Text style={[styles.hubSubtitle, { color: subTextColor }]}>
-                    {hub.subTabs.length} Dedicated Tools · Tap to open
-                  </Text>
-                </View>
-                <View style={[styles.hubBadge, { borderColor: `${hub.color}40`, backgroundColor: `${hub.color}10` }]}>
-                  <Text style={[styles.hubBadgeText, { color: hub.color }]}>{hub.badge}</Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Hub Sub-Tools Chips */}
-              <View style={styles.hubChipsContainer}>
-                {hub.subTabs.slice(0, 6).map((tab) => (
-                  <TouchableOpacity
-                    key={tab.id}
-                    style={[
-                      styles.hubChip,
-                      isLight && styles.hubChipLight,
-                      isDarkTheme && styles.hubChipDark,
-                    ]}
-                    onPress={() => handleNavigateTab(tab)}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name={tab.icon} size={12} color={hub.color} />
-                    <Text style={[styles.hubChipText, { color: textColor }]} numberOfLines={1}>
-                      {tab.shortTitle || tab.title}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          ))}
+                {selectedMobilePillar === 'ALL' ? 'Tab View' : 'All Hubs'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {!isDesktop && selectedMobilePillar !== 'ALL' ? (
+          /* 📱 NATIVE APP MOBILE HUB WORKSPACE (Segmented Bar + 2-Column App Action Grid) */
+          <View style={styles.mobileHubsWrapper}>
+            {/* Horizontal Hub Switcher Pills */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.mobileHubSelectorScroll}
+            >
+              {ADMIN_PILLARS.map((hub) => {
+                const isSelected = selectedMobilePillar === hub.id;
+                return (
+                  <TouchableOpacity
+                    key={hub.id}
+                    style={[
+                      styles.mobileHubTabBtn,
+                      isSelected && [
+                        styles.mobileHubTabBtnActive,
+                        { borderColor: hub.color, backgroundColor: `${hub.color}18` },
+                      ],
+                      isLight && !isSelected && styles.mobileHubTabBtnLight,
+                    ]}
+                    onPress={() => {
+                      tap();
+                      setSelectedMobilePillar(hub.id);
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons
+                      name={isSelected ? (hub.iconFilled || hub.icon) : hub.icon}
+                      size={13}
+                      color={isSelected ? hub.color : isLight ? '#64748b' : '#94a3b8'}
+                    />
+                    <Text
+                      style={[
+                        styles.mobileHubTabText,
+                        isSelected && { color: hub.color, fontFamily: FONT.bold },
+                        isLight && !isSelected && { color: '#64748b' },
+                      ]}
+                    >
+                      {hub.shortTitle || hub.title}
+                    </Text>
+                    <View style={[styles.mobileHubCountBadge, isSelected && { backgroundColor: `${hub.color}25` }]}>
+                      <Text style={[styles.mobileHubCountText, isSelected && { color: hub.color }]}>
+                        {hub.subTabs.length}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Active Hub Card Summary */}
+            {(() => {
+              const currentHub = ADMIN_PILLARS.find((p) => p.id === selectedMobilePillar) || ADMIN_PILLARS[0];
+              return (
+                <View
+                  style={[
+                    styles.activeHubHeroCard,
+                    isLight && styles.activeHubHeroCardLight,
+                    isDarkTheme && styles.activeHubHeroCardDark,
+                    { borderLeftColor: currentHub.color },
+                  ]}
+                >
+                  <View style={styles.activeHubHeroTop}>
+                    <View style={[styles.hubHeroIconBox, { backgroundColor: `${currentHub.color}15`, borderColor: `${currentHub.color}35` }]}>
+                      <Ionicons name={currentHub.iconFilled || currentHub.icon} size={18} color={currentHub.color} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.activeHubHeroTitle, { color: textColor }]}>
+                        {currentHub.title}
+                      </Text>
+                      <Text style={[styles.activeHubHeroDesc, { color: subTextColor }]}>
+                        {currentHub.badge} · {currentHub.subTabs.length} Master Tools
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[styles.openHubWorkspaceBtn, { backgroundColor: `${currentHub.color}15`, borderColor: `${currentHub.color}40` }]}
+                      onPress={() => {
+                        if (currentHub.subTabs.length > 0) {
+                          handleNavigateTab(currentHub.subTabs[0]);
+                        }
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.openHubBtnText, { color: currentHub.color }]}>Launch</Text>
+                      <Ionicons name="arrow-forward" size={11} color={currentHub.color} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* 2-Column App Grid of Tools */}
+                  <View style={styles.mobileToolsGrid}>
+                    {currentHub.subTabs.map((tab) => (
+                      <TouchableOpacity
+                        key={tab.id}
+                        style={[
+                          styles.mobileToolCard,
+                          isLight && styles.mobileToolCardLight,
+                          isDarkTheme && styles.mobileToolCardDark,
+                        ]}
+                        onPress={() => handleNavigateTab(tab)}
+                        activeOpacity={0.75}
+                      >
+                        <View style={[styles.mobileToolIconSquircle, { backgroundColor: `${currentHub.color}12` }]}>
+                          <Ionicons name={tab.icon} size={15} color={currentHub.color} />
+                        </View>
+                        <View style={styles.mobileToolTextCol}>
+                          <Text style={[styles.mobileToolTitle, { color: textColor }]} numberOfLines={1}>
+                            {tab.shortTitle || tab.title}
+                          </Text>
+                          <Text style={[styles.mobileToolSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                            {tab.title}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={12} color={isLight ? '#94a3b8' : '#64748b'} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        ) : (
+          /* Desktop or All-Hubs Grid */
+          <View style={styles.hubsGrid}>
+            {ADMIN_PILLARS.map((hub) => (
+              <View
+                key={hub.id}
+                style={[
+                  styles.hubCard,
+                  isLight && styles.hubCardLight,
+                  isDarkTheme && styles.hubCardDark,
+                ]}
+              >
+                {/* Hub Card Header */}
+                <TouchableOpacity
+                  style={styles.hubHeaderRow}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (hub.subTabs && hub.subTabs.length > 0) {
+                      handleNavigateTab(hub.subTabs[0]);
+                    }
+                  }}
+                >
+                  <View style={[styles.hubIconCircle, { backgroundColor: `${hub.color}15`, borderColor: `${hub.color}30` }]}>
+                    <Ionicons name={hub.iconFilled || hub.icon} size={18} color={hub.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.hubTitle, { color: textColor }]}>{hub.title}</Text>
+                    <Text style={[styles.hubSubtitle, { color: subTextColor }]}>
+                      {hub.subTabs.length} Dedicated Tools · Tap to open
+                    </Text>
+                  </View>
+                  <View style={[styles.hubBadge, { borderColor: `${hub.color}40`, backgroundColor: `${hub.color}10` }]}>
+                    <Text style={[styles.hubBadgeText, { color: hub.color }]}>{hub.badge}</Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Hub Sub-Tools Chips */}
+                <View style={styles.hubChipsContainer}>
+                  {hub.subTabs.slice(0, 6).map((tab) => (
+                    <TouchableOpacity
+                      key={tab.id}
+                      style={[
+                        styles.hubChip,
+                        isLight && styles.hubChipLight,
+                        isDarkTheme && styles.hubChipDark,
+                      ]}
+                      onPress={() => handleNavigateTab(tab)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name={tab.icon} size={12} color={hub.color} />
+                      <Text style={[styles.hubChipText, { color: textColor }]} numberOfLines={1}>
+                        {tab.shortTitle || tab.title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* 📡 5. INFRASTRUCTURE TELEMETRY (CLEAN & EXPANDABLE) */}
@@ -990,5 +1204,285 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     fontFamily: FONT.bold,
     marginTop: 2,
+  },
+
+  /* 📱 Dedicated Mobile Executive Bar Styles */
+  mobileCockpitBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#03140a',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 135, 0.16)',
+  },
+  mobileCockpitBarLight: {
+    backgroundColor: '#ffffff',
+    borderBottomColor: '#e2e8f0',
+  },
+  mobileCockpitBarDark: {
+    backgroundColor: '#020617',
+    borderBottomColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  mobileUserIdentity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  mobileAvatarBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1.2,
+    borderColor: '#00ff87',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileAvatarBoxLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+  },
+  mobileGreetingTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
+  mobileRoleBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  mobileRoleBadgeLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(22, 163, 74, 0.25)',
+  },
+  mobileRoleBadgeText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  mobileSubtitle: {
+    fontSize: 9.5,
+    fontFamily: FONT.regular,
+    marginTop: 1,
+  },
+  mobileRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  mobileRadarBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+  },
+  mobileRadarBadgeLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(22, 163, 74, 0.25)',
+  },
+  mobileRadarBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  mobileRefreshBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileRefreshBtnLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(22, 163, 74, 0.2)',
+  },
+
+  /* 📱 2x2 Mobile KPI Grid Styles */
+  kpiGridMobile: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  kpiCardMobile: {
+    flex: undefined,
+    width: '48.5%',
+    minWidth: 0,
+    padding: 10,
+    borderRadius: RADIUS.md,
+  },
+
+  /* 📱 Mobile Hubs Switcher & Grid */
+  mobileHubsToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  mobileHubsToggleBtnLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: 'rgba(22, 163, 74, 0.25)',
+  },
+  mobileHubsToggleBtnDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  mobileHubsToggleText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  mobileHubsWrapper: {
+    gap: 10,
+  },
+  mobileHubSelectorScroll: {
+    gap: 6,
+    paddingVertical: 2,
+  },
+  mobileHubTabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  mobileHubTabBtnActive: {
+    borderWidth: 1.2,
+  },
+  mobileHubTabBtnLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  mobileHubTabText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+  },
+  mobileHubCountBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 5,
+    paddingVertical: 0.5,
+    borderRadius: 8,
+  },
+  mobileHubCountText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  activeHubHeroCard: {
+    backgroundColor: '#04150b',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.16)',
+    borderLeftWidth: 3.5,
+    padding: 12,
+  },
+  activeHubHeroCardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+  },
+  activeHubHeroCardDark: {
+    backgroundColor: '#020617',
+    borderColor: 'rgba(56, 189, 248, 0.2)',
+  },
+  activeHubHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  hubHeroIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeHubHeroTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
+  activeHubHeroDesc: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    marginTop: 1,
+  },
+  openHubWorkspaceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+  },
+  openHubBtnText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  mobileToolsGrid: {
+    gap: 6,
+  },
+  mobileToolCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  mobileToolCardLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  mobileToolCardDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderColor: 'rgba(56, 189, 248, 0.12)',
+  },
+  mobileToolIconSquircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileToolTextCol: {
+    flex: 1,
+  },
+  mobileToolTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  mobileToolSubtitle: {
+    fontSize: 9.5,
+    fontFamily: FONT.regular,
+    marginTop: 1,
   },
 });

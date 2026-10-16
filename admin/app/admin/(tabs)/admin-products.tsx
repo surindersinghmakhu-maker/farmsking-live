@@ -12,6 +12,7 @@ import {
   Image,
   Pressable,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -45,6 +46,8 @@ const CATEGORY_OPTIONS = [
 const UNIT_OPTIONS = ['piece', 'kg', 'litre', 'bag', 'packet', 'quintal', 'box'];
 
 export default function AdminProductsScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const { colors, isLight, isDarkTheme, textColor, subTextColor, cardBg, cardBorder } =
     useExecutiveTheme();
   const { data: products, isLoading: isLoadingProducts, refetch } = useProducts(true);
@@ -268,6 +271,7 @@ export default function AdminProductsScreen() {
           <TouchableOpacity
             style={[
               styles.metricCard,
+              !isDesktop && styles.metricCardMobile,
               isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
               isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.2)' },
               filter === 'ALL' && styles.metricCardSelected,
@@ -290,6 +294,7 @@ export default function AdminProductsScreen() {
           <TouchableOpacity
             style={[
               styles.metricCard,
+              !isDesktop && styles.metricCardMobile,
               isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.25)' },
               isDarkTheme && { backgroundColor: 'rgba(34, 197, 94, 0.05)', borderColor: 'rgba(34, 197, 94, 0.25)' },
               filter === 'ACTIVE' && styles.metricCardSelected,
@@ -314,6 +319,7 @@ export default function AdminProductsScreen() {
           <TouchableOpacity
             style={[
               styles.metricCard,
+              !isDesktop && styles.metricCardMobile,
               isLight && { backgroundColor: '#fefce8', borderColor: 'rgba(245, 158, 11, 0.25)' },
               isDarkTheme && { backgroundColor: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.25)' },
               filter === 'LOW_STOCK' && styles.metricCardSelected,
@@ -336,6 +342,7 @@ export default function AdminProductsScreen() {
           <TouchableOpacity
             style={[
               styles.metricCard,
+              !isDesktop && styles.metricCardMobile,
               isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.2)' },
               isDarkTheme && { backgroundColor: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.25)' },
               filter === 'DEACTIVATED' && styles.metricCardSelected,
@@ -1255,16 +1262,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    justifyContent: 'space-between',
   },
   metricCard: {
     flex: 1,
-    minWidth: '23%',
+    minWidth: '22%',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 7,
+  },
+  metricCardMobile: {
+    width: '48.5%',
+    flexBasis: '48.5%',
+    flex: undefined,
+    minWidth: 0,
+    marginBottom: 4,
   },
   metricCardSelected: {
     borderWidth: 1.5,

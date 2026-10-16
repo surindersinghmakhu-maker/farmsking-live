@@ -20,7 +20,7 @@ function run(command, cwd, allowFail = false, timeout = 0) {
 console.log('🚀 Starting Build and Deployment to GitHub and Hostinger...');
 
 // 1. Build Backend
-const backendOk = run('npm run build:local', './backend', true);
+const backendOk = run(process.platform === 'win32' ? 'npm.cmd run build:local' : 'npm run build:local', './backend', true);
 if (!backendOk) {
   console.log('⚡ Prisma query engine dll is locked by active process; building NestJS directly...');
   run('node ./node_modules/@nestjs/cli/bin/nest.js build', './backend');

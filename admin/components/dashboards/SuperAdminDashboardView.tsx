@@ -661,7 +661,7 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.pillText}>AI Doctor</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-orders' as never)}>
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/admin-orders' as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#eef2ff' }]}>
                 <Ionicons name="receipt" size={16} color="#4f46e5" />
               </View>

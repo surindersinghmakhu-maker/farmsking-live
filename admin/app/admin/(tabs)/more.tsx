@@ -57,7 +57,7 @@ const SHOP_ITEMS: { key: TranslationKey; label: string; icon: keyof typeof Ionic
 const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
   { key: 'agristoreHub', label: '👑 National AgriStore Hub', icon: 'storefront-outline', href: '/agristore' },
   { key: 'workspace', label: '💼 Workspace (Backup & Tools)', icon: 'briefcase-outline' },
-  { key: 'superSaleManagement', label: 'Sale / Order Management', icon: 'receipt-outline', href: '/(tabs)/super-orders' },
+  { key: 'superSaleManagement', label: 'Sale / Order Management', icon: 'receipt-outline', href: '/admin/(tabs)/admin-orders' },
   { key: 'superAuditLog', label: 'Audit Log', icon: 'time-outline', href: '/(tabs)/super-audit-log' },
   { key: 'superEditCrop', label: 'Edit Crop by Crop ID', icon: 'leaf-outline', href: '/(tabs)/super-crop-edit' },
 ];

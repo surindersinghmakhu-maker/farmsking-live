@@ -53,6 +53,7 @@ export default function AdminOrdersScreen() {
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { data: orders, isLoading } = useAllOrders(filter === 'ALL' ? undefined : filter);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const totalAmount = (orders ?? []).reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -63,10 +64,12 @@ export default function AdminOrdersScreen() {
           isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderBottomColor: 'rgba(34, 197, 94, 0.25)' },
         ]}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <View>
-            <Text style={[styles.heroTitle, { color: textColor }]}>Orders</Text>
-            <Text style={[styles.heroSubtitle, { color: subTextColor }]}>{orders?.length ?? 0} order(s)</Text>
+            <Text style={[styles.heroTitle, { color: textColor }]}>Trade Orders & Sales</Text>
+            <Text style={[styles.heroSubtitle, { color: subTextColor }]}>
+              {orders?.length ?? 0} order(s) · ₹{totalAmount.toLocaleString('en-IN')} gross sales
+            </Text>
           </View>
           <TouchableOpacity
             style={[

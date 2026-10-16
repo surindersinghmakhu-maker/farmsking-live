@@ -24,8 +24,8 @@ export interface NavigationPillar {
 
 /**
  * FarmsKing Executive Master Domain Pillars Architecture.
- * Organizes 100% of platform tools, portals, registries, and operational utilities
- * into 5 clear, high-performance domain hubs.
+ * User Directory is strictly consolidated into the dedicated "USER DIRECTORY & PLATFORM" Pillar.
+ * It is NOT duplicated or repeated across Commerce, Ecosystem, or other hubs.
  */
 export const ADMIN_PILLARS: NavigationPillar[] = [
   {
@@ -145,15 +145,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         path: '/admin/(tabs)/super-accounts',
       },
       {
-        id: 'trader-directory',
-        title: 'Mandi Traders',
-        shortTitle: 'Traders',
-        description: 'Wholesale grain dealers & commission agents',
-        icon: 'swap-horizontal',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'CLIENTS', filter: 'TRADER' },
-      },
-      {
         id: 'coupons',
         title: 'VIP Pass & Coupons',
         shortTitle: 'Coupons',
@@ -206,30 +197,12 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     color: '#16a34a',
     subTabs: [
       {
-        id: 'farmers',
-        title: 'Farmers Network',
-        shortTitle: 'Farmers',
-        description: 'Registered farmers, landholdings & crops',
-        icon: 'leaf',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'CLIENTS', filter: 'FARMER' },
-      },
-      {
         id: 'garden-system',
         title: 'Garden Care System',
         shortTitle: 'Garden Care',
         description: 'Urban gardening, plant stages & care schedules',
         icon: 'flower',
         path: '/admin/(tabs)/garden',
-      },
-      {
-        id: 'crop-doctors',
-        title: 'Crop Specialists & Doctors',
-        shortTitle: 'Doctors',
-        description: 'Certified agronomists & crop health advisors',
-        icon: 'medical',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' },
       },
       {
         id: 'satellite-map',
@@ -299,29 +272,20 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
   },
   {
     id: 'PLATFORM',
-    title: 'PLATFORM & DIRECTORY',
-    shortTitle: 'Platform',
-    icon: 'settings-outline',
-    iconFilled: 'settings',
-    badge: 'Control Center',
+    title: 'USER DIRECTORY & PLATFORM',
+    shortTitle: 'Users & Platform',
+    icon: 'people-outline',
+    iconFilled: 'people',
+    badge: 'User Hub',
     color: '#6366f1',
     subTabs: [
       {
         id: 'all-users',
-        title: 'Platform User Directory',
-        shortTitle: 'Directory',
-        description: 'Global user management, search & filters',
+        title: 'Master User Directory',
+        shortTitle: 'User Directory',
+        description: 'Search & manage farmers, traders, staff, doctors & partners',
         icon: 'people',
         path: '/admin/(tabs)/super-users',
-      },
-      {
-        id: 'staff-roster',
-        title: 'Staff Permissions & Roles',
-        shortTitle: 'Permissions',
-        description: 'Admin privileges, RBAC rules & operator roles',
-        icon: 'key',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'ADMINS' },
       },
       {
         id: 'trainer-dashboard',
@@ -354,15 +318,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         description: 'SMS gateways, WhatsApp APIs & cloud webhooks',
         icon: 'options',
         path: '/admin/(tabs)/cpanel',
-      },
-      {
-        id: 'labours',
-        title: 'Agricultural Workforce',
-        shortTitle: 'Workforce',
-        description: 'Farm labor directory, job wages & hiring',
-        icon: 'hammer',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'CLIENTS', filter: 'LABOUR' },
       },
       {
         id: 'staff-onboarding',
@@ -453,6 +408,7 @@ export function normalizePillarId(pillarId?: string): string {
     case 'STAFF_HUB':
     case 'SETTINGS':
     case 'PLATFORM':
+    case 'USERS':
       return 'PLATFORM';
     case 'UTILITIES':
     case 'TOOLS':
@@ -466,7 +422,8 @@ export function normalizePillarId(pillarId?: string): string {
 
 /**
  * Automatically detects the active pillar ID given the current URL pathname and query params.
- * Seamlessly maps all 45+ admin routes to one of the 5 Master Domain Hubs.
+ * Seamlessly maps all routes to one of the 5 Master Domain Hubs.
+ * User Directory (super-users) is strictly and exclusively routed to PLATFORM.
  */
 export function detectPillarFromRoute(
   pathname: string,
@@ -474,20 +431,6 @@ export function detectPillarFromRoute(
   currentPillarId?: string
 ): string {
   if (!pathname) return normalizePillarId(currentPillarId);
-
-  // Extract filter & group with web browser query string fallback
-  let activeFilter = searchParams?.filter;
-  let activeGroup = searchParams?.group;
-
-  if (typeof window !== 'undefined' && (!activeFilter || !activeGroup)) {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (!activeFilter) activeFilter = urlParams.get('filter') || undefined;
-      if (!activeGroup) activeGroup = urlParams.get('group') || undefined;
-    } catch {
-      // safe fallback
-    }
-  }
 
   // 1. Executive Command routes
   if (
@@ -503,7 +446,19 @@ export function detectPillarFromRoute(
     return 'EXECUTIVE';
   }
 
-  // 2. Commerce & Treasury routes
+  // 2. User Directory & Platform routes (super-users is EXCLUSIVELY here)
+  if (
+    pathname.includes('super-users') ||
+    pathname.includes('super-settings') ||
+    pathname.includes('cpanel') ||
+    pathname.includes('operator-orders') ||
+    pathname.includes('trainer-dashboard') ||
+    pathname.includes('staff-profile')
+  ) {
+    return 'PLATFORM';
+  }
+
+  // 3. Commerce & Treasury routes
   if (
     pathname.includes('admin-products') ||
     pathname.includes('admin-orders') ||
@@ -523,13 +478,12 @@ export function detectPillarFromRoute(
     pathname.endsWith('/orders') ||
     pathname.endsWith('/cart') ||
     pathname.endsWith('/categories') ||
-    pathname.endsWith('/shop') ||
-    (pathname.includes('super-users') && (activeGroup === 'ECOMMERCE' || activeFilter === 'SELLER' || activeFilter === 'TRADER'))
+    pathname.endsWith('/shop')
   ) {
     return 'COMMERCE';
   }
 
-  // 3. Agri-Ecosystem & Garden Care routes
+  // 4. Agri-Ecosystem & Garden Care routes
   let activeMode = searchParams?.mode;
   if (typeof window !== 'undefined' && !activeMode) {
     try {
@@ -551,23 +505,9 @@ export function detectPillarFromRoute(
     pathname.endsWith('/farm') ||
     pathname.endsWith('/schedule') ||
     pathname.endsWith('/records') ||
-    activeMode === 'GARDEN' ||
-    (pathname.includes('super-users') && (activeFilter === 'FARMER' || activeFilter === 'FARM_ADVISOR' || activeFilter === 'GARDENER'))
+    activeMode === 'GARDEN'
   ) {
     return 'ECOSYSTEM';
-  }
-
-  // 4. Platform & Directory routes
-  if (
-    pathname.includes('super-settings') ||
-    pathname.includes('cpanel') ||
-    pathname.includes('operator-orders') ||
-    pathname.includes('trainer-dashboard') ||
-    pathname.includes('staff-profile') ||
-    (pathname.includes('super-users') && (activeGroup === 'ADMINS' || activeFilter === 'SUPER_ADMIN' || activeFilter === 'MANAGER' || activeFilter === 'LABOUR')) ||
-    pathname.includes('super-users')
-  ) {
-    return 'PLATFORM';
   }
 
   // 5. Utilities, Operations & Compliance routes

@@ -11,7 +11,7 @@ import { BlurView } from 'expo-blur';
 export interface CommandItem {
   id: string;
   title: string;
-  category: 'ACTIONS' | 'FARMERS' | 'DOCTORS' | 'SELLERS' | 'ORDERS' | 'SETTINGS' | 'FINANCE' | 'STAFF';
+  category: 'ACTIONS' | 'USERS' | 'FARMERS' | 'DOCTORS' | 'SELLERS' | 'ORDERS' | 'SETTINGS' | 'FINANCE' | 'STAFF';
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   path?: string;
@@ -28,9 +28,7 @@ const SEARCH_DATABASE: CommandItem[] = [
   { id: 'act-5', title: '> 📊 Export Daily Operations Dossier (CSV)', category: 'ACTIONS', subtitle: 'Download executive summary of orders, farmers & wallets', icon: 'download', actionType: 'EXPORT_DIGEST' },
 
   // Standard Navigation Entries
-  { id: '1', title: 'Surinder Singh (Super Admin)', category: 'SETTINGS', subtitle: 'Platform Administrator · Makhu', icon: 'shield-checkmark', path: '/admin/(tabs)/super-users', params: { filter: 'SUPER_ADMIN' } },
-  { id: '2', title: 'Farmer Directory', category: 'FARMERS', subtitle: 'Manage all 1,240 registered farmers', icon: 'leaf', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'FARMER' } },
-  { id: '3', title: 'Crop Doctors & Advisory', category: 'DOCTORS', subtitle: 'Certified Agri Doctors (Farmers Only)', icon: 'medical', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' } },
+  { id: '1', title: 'Master User Directory', category: 'USERS', subtitle: 'Search all farmers, traders, crop doctors & staff', icon: 'people', path: '/admin/(tabs)/super-users' },
   { id: '4', title: 'Seller KYC Approvals', category: 'SELLERS', subtitle: '12 pending seller verifications', icon: 'shield-checkmark', path: '/admin/(tabs)/admin-sellers' },
   { id: '5', title: 'Seller Payouts Ledger', category: 'FINANCE', subtitle: 'UPI withdrawals & auto payouts', icon: 'cash', path: '/admin/(tabs)/seller-payouts' },
   { id: '6', title: 'Store Orders & Fulfillment', category: 'ORDERS', subtitle: 'View real-time customer purchases', icon: 'receipt', path: '/admin/(tabs)/admin-orders' },
@@ -50,7 +48,7 @@ const SEARCH_DATABASE: CommandItem[] = [
 ];
 
 const RECENT_BREADCRUMBS = [
-  { label: 'Farmer Directory', query: 'Farmer' },
+  { label: 'User Directory', query: 'Users' },
   { label: 'Seller KYC', query: 'Seller' },
   { label: 'Global Ledger', query: 'Wallet' },
   { label: 'Health Radar', query: 'Health' },

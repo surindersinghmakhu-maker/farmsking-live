@@ -54,11 +54,16 @@ Every AI assistant and developer working on FarmsKing MUST strictly uphold the f
 
 ---
 
-## 0. 🔤 100% Pure English Language Standard & Executive Copy
-- **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, mandi rate tickers, AI diagnostic demos, audio controls, and technical documentation MUST be written in **100% pure professional English language**.
+## 0. 🔤 100% Pure English Language Standard & Easy Executive Copy ("Always English & Wording Easy")
+> **ਸਖ਼ਤ 100% ਅੰਗਰੇਜ਼ੀ ਭਾਸ਼ਾ ਅਤੇ ਆਸਾਨ ਵਰਡਿੰਗ ਨਿਯਮ: "ਹਮੇਸ਼ਾ ਇੰਗਲਿਸ਼ ਵਰਤਣੀ ਹੈ ਅਤੇ ਵਰਡਿੰਗ ਹਰ ਕਿਸੇ ਲਈ ਆਸਾਨ, ਸਧਾਰਨ ਤੇ ਸਪਸ਼ਟ ਹੋਵੇ।"**
+
+- **Always English Everywhere (Strict 100% English UI)**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, mandi rate tickers, AI diagnostic demos, audio controls, tables, and technical documentation MUST be written in **100% pure professional English language**. Under no circumstances should Punjabi or Hindi vernacular text be hardcoded into the interface.
+- **Easy & Simple Wording ("Wording Easy Use Kiti Jave")**:
+  - Keep all copy, instructions, tooltips, action labels, and descriptions simple, clear, concise, and direct.
+  - Farmers, nursery managers, buyers, traders, and platform admins must understand every button, state, and message instantly without confusion.
+  - Avoid overly complex academic jargon or convoluted sentences. Prefer crisp, everyday English (e.g., use "Review Pending", "Verify Payment", "Add Product", "Stock Low", "Instant Approval", "Active Crops").
 - **No Vernacular Subtitles in Core Pages**: Do NOT hardcode Punjabi, Hindi, or mixed-language subtitles (e.g., no `(ਕਣਕ)`, no `ਬੋਲ ਕੇ ਸੁਣੋ`, no vernacular translations inline) in the primary interfaces or landing page.
-- **Sole Exception - Language Selector Box**: The ONLY UI component where regional scripts (Gurmukhi `ਪੰਜਾਬੀ` or Devanagari `हिंदी`) are permitted is inside the dedicated **Language Selector / Switcher Box** (`[ EN | PA | HI ]`). Outside this language selector, everything across the entire platform must be 100% pure English.
-- **Compact & Easily Understandable Copy**: Use concise, executive, high-clarity wording that is instantly understandable for farmers, nursery owners, corporate partners, and platform administrators. Avoid confusing jargon while maintaining a 5-star executive feel.
+- **Sole Exception - Language Selector Box**: The ONLY UI component where regional scripts (Gurmukhi `ਪੰਜਾਬੀ` or Devanagari `हिंदी`) are permitted is inside the dedicated **Language Selector / Switcher Box** (`[ EN | PA | HI ]` or `English / ਪੰਜਾਬੀ / हिंदी`). Outside this language selector, everything across the entire platform must be 100% pure English.
 
 ---
 
@@ -94,6 +99,10 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 
 ## 1. ⚛️ 100% Pure React & React Native Stateful Architecture ("Sabh React Mode Vich Bane")
 - **100% React Execution**: Every single feature, page, view, drawer, and portal already built or built in the future MUST be developed in **100% Pure React / React Native mode**.
+- **Concurrent Mobile View Detection & Real-Time Verification ("React Use Krke Naal Naal Mobile View Det Kita Jave")**:
+  - When building, updating, or styling any React / React Native component, the developer / AI assistant MUST **concurrently test, detect, and inspect the Mobile View (<768px)** alongside desktop.
+  - Never develop solely against desktop computer viewports and leave mobile as an afterthought.
+  - Every component, container, modal sheet, and KPI card must be actively verified on mobile viewports (360px–414px) simultaneously to guarantee zero layout breakage, no horizontal overflow, and immediate responsiveness.
 - **Permanent Reusable Components ("Var Var Change Na Krna Pave")**:
   - Build modular, reusable components and shared design tokens so features remain robust and permanent without requiring repetitive refactoring or visual fixes.
   - Encapsulate layout, cards, buttons, badges, tables, and modal sheets into high-standard reusable primitives.
@@ -107,10 +116,15 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 
 ---
 
-## 2. 📱💻 Tri-Tier Universal Responsive Viewport Standards
-> **ਸਾਰੇ ਸਕ੍ਰੀਨ ਸਾਈਜ਼ਾਂ ਲਈ ਪੂਰੀ ਤਰ੍ਹਾਂ ਰਿਸਪੌਂਸਿਵ (Mobile, Tablet, Computer View Proper Tiar Howe)**
+## 2. 📱💻 Tri-Tier Universal Responsive Viewport Standards & Mobile Compatibility Benchmark
+> **ਸਾਰੇ ਸਕ੍ਰੀਨ ਸਾਈਜ਼ਾਂ ਲਈ ਪੂਰੀ ਤਰ੍ਹਾਂ ਰਿਸਪੌਂਸਿਵ ਅਤੇ ਮੋਬਾਈਲ ਕੰਪੈਟੀਬਿਲਟੀ ਨਿਯਮ: "ਹਰ ਡਿਜ਼ਾਈਨ ਜਾਂ ਵਰਡਿੰਗ ਮੋਬਾਈਲ ਕੰਪੈਟੀਬਿਲਟੀ ਨੂੰ ਦੇਖਦੇ ਹੋਏ ਹੀ ਵਰਤੀ ਜਾਵੇ।"**
 
-Every page, portal, and dashboard MUST provide seamless, optimized layouts tailored for all three viewport tiers:
+Every page, portal, and dashboard MUST strictly uphold full mobile compatibility across all visual and textual elements:
+
+- **Mobile Compatibility First for All Designs & Wording ("Har Design Ya Wording Mobile Compatibility Nu Dekhde Hoye Use Kiti Jave")**:
+  - **Component & Grid Adaptation**: Cards, telemetry widgets, forms, and tables must smoothly wrap into mobile-friendly formats (e.g. 2x2 grid or single-column stack under 500px) with zero horizontal bleed.
+  - **Mobile Wording & Label Length**: All button titles, badge labels, and heading copy must be kept concise and compact so they fit standard mobile widths (360px–414px) without awkward line wrapping or text truncation.
+  - **Safe Area Insets & Touch Targets**: Always respect safe area margins (top status bar and bottom gesture bar/bottom tab bar) and enforce a minimum 44x44px touch target area for all interactive elements.
 
 1. **Mobile View (<768px) [MANDATORY NATIVE MOBILE APP ARCHITECTURE]**:
    - **Pinned Bottom Tab Bar Rule**: In mobile app view, navigation tabs MUST strictly be pinned at the **BOTTOM** (`bottom: 0`, standard 5-tab core navigation: **Home**, **Products**, **Users**, **Finance**, **More**). **NEVER place the main navigation tabs at the top of mobile screens.**

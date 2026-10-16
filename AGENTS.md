@@ -12,11 +12,14 @@
   - NEVER prompt the user repeatedly for "Yes", "Allow", or "Submit" confirmation ("var var yes allow this lye jaan submit v chala deo"). Proceed fully autonomously.
 - **Autonomous Execution**: Take full ownership, do not ask trivial confirmation questions, implement industry recommended best practices, and deliver completed results.
 
-## 1. 100% Pure English Language Standard (ਮੁਕੰਮਲ ਅੰਗਰੇਜ਼ੀ ਭਾਸ਼ਾ ਨਿਯਮ)
-- **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, telemetry cards, tickers, sample data, audio assistants, admin dashboards, and system messages MUST be in **100% pure professional English language**.
+## 1. 100% Pure English Standard & Easy Wording (ਸਿਰਫ਼ ਅੰਗਰੇਜ਼ੀ ਤੇ ਆਸਾਨ ਵਰਡਿੰਗ ਨਿਯਮ)
+- **Always English UI**: All user-facing UI text, buttons, modals, headings, badges, telemetry cards, tickers, sample data, audio assistants, admin dashboards, and system messages MUST be in **100% pure professional English language**.
+- **Easy & Simple Wording ("Wording Easy Use Kiti Jave")**: Copy must be simple, concise, clear, and direct so farmers, partners, and admins understand immediately without confusing or difficult jargon.
 - **No Vernacular Subtitles in Core UI**: Do NOT hardcode Punjabi, Hindi, or mixed-language subtitles (e.g. no `(ਕਣਕ)`, no `ਬੋਲ ਕੇ ਸੁਣੋ`, no Punjabi disease names) in the main interface.
 - **Sole Exception - Language Selection Box**: The ONLY component permitted to display regional language scripts is the dedicated **Language Selector / Switcher Box** (e.g., `[ EN | PA | HI ]` or `English / ਪੰਜਾਬੀ / हिंदी`). Everywhere else on every page, all text must be 100% English.
 
-## 2. Universal Architecture & Master Rules
-- 100% Pure React / React Native universal responsive architecture.
+## 2. 100% React Mode, Concurrent Mobile Verification & Mobile Compatibility
+- **100% Pure React / React Native Architecture**: Everything built in React/React Native mode ("sabh react mode vich bane").
+- **Concurrent Mobile View Detection ("React ਨਾਲ ਨਾਲ Mobile View Det Kita Jave")**: When developing with React, concurrently test and verify the mobile layout (<768px). Never build for desktop alone.
+- **Mobile Compatibility Benchmark ("Har Design Te Wording Mobile Compatibility Nu Dekhde Hoye")**: Every design element, card grid, touch target (>=44x44px), spacing, and wording must be optimized for mobile screens without clipping, horizontal bleed, or awkward wraps.
 - Follow `PROJECT_RULES.md` as master specification.

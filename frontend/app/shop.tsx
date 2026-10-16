@@ -484,6 +484,33 @@ export default function ShopScreen() {
   const [gstEnabled, setGstEnabled] = useState(true);
   const [codEnabled, setCodEnabled] = useState(true);
   const [onlinePayEnabled, setOnlinePayEnabled] = useState(true);
+
+  // Animated sliding pill for Checkout Payment Mode
+  const paymentMethodSlideAnim = useRef(new Animated.Value(0)).current;
+
+  const availablePaymentModes = useMemo(() => {
+    const list: Array<{ id: 'DIRECT_QR' | 'ONLINE' | 'COD'; label: string; icon: keyof typeof Ionicons.glyphMap; short: string }> = [
+      { id: 'DIRECT_QR', label: 'UPI QR Code', icon: 'qr-code-outline', short: 'UPI QR' },
+    ];
+    if (onlinePayEnabled) {
+      list.push({ id: 'ONLINE', label: 'Online Gateway', icon: 'card-outline', short: 'Online' });
+    }
+    if (codEnabled) {
+      list.push({ id: 'COD', label: 'Cash on Delivery', icon: 'cash-outline', short: 'Cash' });
+    }
+    return list;
+  }, [onlinePayEnabled, codEnabled]);
+
+  useEffect(() => {
+    const activeIdx = availablePaymentModes.findIndex((m) => m.id === paymentMethod);
+    Animated.spring(paymentMethodSlideAnim, {
+      toValue: activeIdx >= 0 ? activeIdx : 0,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [paymentMethod, availablePaymentModes]);
+
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [whatsappOrderBtn, setWhatsappOrderBtn] = useState(true);
   const [farmerFoodsEnabled, setFarmerFoodsEnabled] = useState(true);
@@ -2759,7 +2786,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="location" size={22} color="#ffffff" />
                         <View>
-                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>⚡ Checkout — Step 2 of 2</Text>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>⚡ Checkout — Step 2 of 2</Text>
                           <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#dcfce7' }}>Select Address & Payment Mode</Text>
                         </View>
                       </View>
@@ -2767,16 +2794,16 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         style={{ backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}
                         onPress={() => { tap(); setCheckoutStep(1); }}
                       >
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>← Edit Bill</Text>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>← Edit Bill</Text>
                       </TouchableOpacity>
                     </View>
 
                     {/* 📍 STEP 1 IN PAGE 2: DELIVERY ADDRESS SELECTION */}
-                    <View style={{ backgroundColor: '#0f172a', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 6 }}>
+                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingBottom: 6 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }}>1</Text>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
                           </View>
                           <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📍 Select Delivery Address</Text>
                         </View>
@@ -2824,7 +2851,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                                       </View>
                                     )}
                                   </View>
-                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#e2e8f0', marginTop: 2, lineHeight: 16 }}>
+                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', marginTop: 2, lineHeight: 16 }}>
                                     {composeAddress(addr)}
                                   </Text>
                                 </View>
@@ -2853,14 +2880,101 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     </View>
 
                     {/* 💳 STEP 2 IN PAGE 2: SELECT PAYMENT MODE */}
-                    <View style={{ backgroundColor: '#0f172a', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 10 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#4338ca', alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }}>2</Text>
+                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 10 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#4338ca', alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>2</Text>
+                          </View>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>💳 Select Payment Mode *</Text>
                         </View>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>💳 Select Payment Mode *</Text>
+                        <View style={{ backgroundColor: '#e0e7ff', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#4338ca' }}>
+                            {availablePaymentModes.length} AVAILABLE
+                          </Text>
+                        </View>
                       </View>
 
+                      {/* Liquid Sliding Segmented Tab Pill Selector */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          position: 'relative',
+                          backgroundColor: '#e2e8f0',
+                          borderRadius: RADIUS.pill,
+                          padding: 3,
+                          height: 40,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Animated.View
+                          style={{
+                            position: 'absolute',
+                            top: 3,
+                            bottom: 3,
+                            left: paymentMethodSlideAnim.interpolate({
+                              inputRange: availablePaymentModes.map((_, i) => i),
+                              outputRange: availablePaymentModes.map((_, i) => `${(100 / availablePaymentModes.length) * i}%`),
+                            }),
+                            width: `${100 / availablePaymentModes.length}%`,
+                            backgroundColor:
+                              paymentMethod === 'DIRECT_QR'
+                                ? '#0284c7'
+                                : paymentMethod === 'ONLINE'
+                                ? '#6366f1'
+                                : '#16a34a',
+                            borderRadius: RADIUS.pill,
+                            ...premiumShadow(
+                              paymentMethod === 'DIRECT_QR'
+                                ? '#0284c7'
+                                : paymentMethod === 'ONLINE'
+                                ? '#6366f1'
+                                : '#16a34a',
+                              'xs'
+                            ),
+                          }}
+                        />
+                        {availablePaymentModes.map((pm) => {
+                          const isActive = paymentMethod === pm.id;
+                          return (
+                            <TouchableOpacity
+                              key={pm.id}
+                              style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 6,
+                                zIndex: 1,
+                                height: '100%',
+                              }}
+                              onPress={() => {
+                                tap();
+                                setPaymentMethod(pm.id);
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              <Ionicons
+                                name={pm.icon}
+                                size={15}
+                                color={isActive ? '#ffffff' : '#64748b'}
+                              />
+                              <Text
+                                style={{
+                                  fontSize: 11.5,
+                                  fontFamily: isActive ? FONT.extraBold : FONT.semiBold,
+                                  color: isActive ? '#ffffff' : '#475569',
+                                }}
+                                numberOfLines={1}
+                              >
+                                {pm.short}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+
+                      {/* Payment Mode Detail Cards with interactive selection */}
                       <View style={{ flexDirection: 'column', gap: 8 }}>
                         <TouchableOpacity
                           style={{
@@ -2873,7 +2987,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             borderColor: paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#cbd5e1',
                             backgroundColor: paymentMethod === 'DIRECT_QR' ? '#f0f9ff' : '#ffffff',
                           }}
-                          onPress={() => setPaymentMethod('DIRECT_QR')}
+                          onPress={() => {
+                            tap();
+                            setPaymentMethod('DIRECT_QR');
+                          }}
                         >
                           <Ionicons name={paymentMethod === 'DIRECT_QR' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#94a3b8'} />
                           <View style={{ flex: 1 }}>
@@ -2896,9 +3013,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                               borderRadius: RADIUS.md,
                               borderWidth: 1.5,
                               borderColor: paymentMethod === 'ONLINE' ? '#6366f1' : '#cbd5e1',
-                              backgroundColor: paymentMethod === 'ONLINE' ? '#eeef2' : '#ffffff',
+                              backgroundColor: paymentMethod === 'ONLINE' ? '#eef2ff' : '#ffffff',
                             }}
-                            onPress={() => setPaymentMethod('ONLINE')}
+                            onPress={() => {
+                              tap();
+                              setPaymentMethod('ONLINE');
+                            }}
                           >
                             <Ionicons name={paymentMethod === 'ONLINE' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'ONLINE' ? '#6366f1' : '#94a3b8'} />
                             <View style={{ flex: 1 }}>
@@ -2924,7 +3044,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                               borderColor: paymentMethod === 'COD' ? '#16a34a' : '#cbd5e1',
                               backgroundColor: paymentMethod === 'COD' ? '#f0fdf4' : '#ffffff',
                             }}
-                            onPress={() => setPaymentMethod('COD')}
+                            onPress={() => {
+                              tap();
+                              setPaymentMethod('COD');
+                            }}
                           >
                             <Ionicons name={paymentMethod === 'COD' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'COD' ? '#16a34a' : '#94a3b8'} />
                             <View style={{ flex: 1 }}>

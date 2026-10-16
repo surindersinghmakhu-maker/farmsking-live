@@ -896,6 +896,21 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
   const summary = referralData?.summary;
   const myReferralInfo = referralData?.myReferralInfo;
   const referees = useMemo(() => referralData?.referees || [], [referralData]);
+  const paidCount = useMemo(() => referees.filter((ref) => ref.status === 'SUCCESS' || ref.planBonusIssued > 0).length, [referees]);
+  const pendingCount = useMemo(() => referees.filter((ref) => ref.status === 'PENDING' && ref.planBonusIssued === 0).length, [referees]);
+
+  // Animated sliding pill for referral ledger filter
+  const ledgerFilterSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const targetIdx = ledgerFilter === 'ALL' ? 0 : ledgerFilter === 'PAID' ? 1 : 2;
+    Animated.spring(ledgerFilterSlideAnim, {
+      toValue: targetIdx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [ledgerFilter]);
 
   const signupBonusDefault = appSettings?.referralSignupBonusAmount ?? 10;
   const planBonusDefault = appSettings?.referralPaidPlanBonusAmount ?? 50;
@@ -997,37 +1012,114 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
       {/* Referees Table Card (Collapsible) */}
       {isLedgerExpanded && (
         <View style={{ marginTop: 6 }}>
-          {/* Filter Chips inside View Ledger */}
-          <View style={styles.filterChipGroup}>
+          {/* Liquid Animated Segmented Filter Chips */}
+          <View
+            style={{
+              position: 'relative',
+              flexDirection: 'row',
+              backgroundColor: '#e2e8f0',
+              borderRadius: RADIUS.pill,
+              padding: 3,
+              height: 38,
+              alignItems: 'center',
+            }}
+          >
+            <Animated.View
+              style={{
+                position: 'absolute',
+                top: 3,
+                bottom: 3,
+                left: ledgerFilterSlideAnim.interpolate({
+                  inputRange: [0, 1, 2],
+                  outputRange: ['0%', '33.333%', '66.666%'],
+                }),
+                width: '33.333%',
+                backgroundColor:
+                  ledgerFilter === 'ALL'
+                    ? theme.primary
+                    : ledgerFilter === 'PAID'
+                    ? '#16a34a'
+                    : '#d97706',
+                borderRadius: RADIUS.pill,
+                ...premiumShadow('rgba(0,0,0,0.12)', 'xs'),
+              }}
+            />
             <TouchableOpacity
-              style={[styles.filterChip, ledgerFilter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+                height: '100%',
+              }}
               onPress={() => {
                 tap();
                 setLedgerFilter('ALL');
                 setCurrentPage(1);
               }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.filterChipText, ledgerFilter === 'ALL' && { color: '#fff' }]}>All ({referees.length})</Text>
+              <Text
+                style={{
+                  fontSize: 11.5,
+                  fontFamily: ledgerFilter === 'ALL' ? FONT.extraBold : FONT.semiBold,
+                  color: ledgerFilter === 'ALL' ? '#ffffff' : '#475569',
+                }}
+              >
+                All ({referees.length})
+              </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.filterChip, ledgerFilter === 'PAID' && { backgroundColor: '#16a34a', borderColor: '#16a34a' }]}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+                height: '100%',
+              }}
               onPress={() => {
                 tap();
                 setLedgerFilter('PAID');
                 setCurrentPage(1);
               }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.filterChipText, ledgerFilter === 'PAID' && { color: '#fff' }]}>Paid Bonus ✅</Text>
+              <Text
+                style={{
+                  fontSize: 11.5,
+                  fontFamily: ledgerFilter === 'PAID' ? FONT.extraBold : FONT.semiBold,
+                  color: ledgerFilter === 'PAID' ? '#ffffff' : '#475569',
+                }}
+              >
+                Paid ({paidCount}) ✅
+              </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.filterChip, ledgerFilter === 'PENDING' && { backgroundColor: '#d97706', borderColor: '#d97706' }]}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1,
+                height: '100%',
+              }}
               onPress={() => {
                 tap();
                 setLedgerFilter('PENDING');
                 setCurrentPage(1);
               }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.filterChipText, ledgerFilter === 'PENDING' && { color: '#fff' }]}>Pending ⏳</Text>
+              <Text
+                style={{
+                  fontSize: 11.5,
+                  fontFamily: ledgerFilter === 'PENDING' ? FONT.extraBold : FONT.semiBold,
+                  color: ledgerFilter === 'PENDING' ? '#ffffff' : '#475569',
+                }}
+              >
+                Pending ({pendingCount}) ⏳
+              </Text>
             </TouchableOpacity>
           </View>
 

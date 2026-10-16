@@ -1,12 +1,17 @@
-import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useCancelOrder, useMyOrders, useInitiateCashfreePayment } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderStatus } from '@/src/types/api';
 
 const theme = RoleThemes.CUSTOMER;
+
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
 
 const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: string }> = {
   PLACED: { label: 'Placed', bg: '#fef3c7', color: '#b45309' },
@@ -20,24 +25,123 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
 
 export default function OrdersScreen() {
   const { data: orders, isLoading } = useMyOrders();
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const allOrders = useMemo(() => orders || [], [orders]);
+  const activeOrders = useMemo(
+    () => allOrders.filter((o) => ['PLACED', 'CONFIRMED', 'PACKING', 'PACKED', 'DISPATCHED'].includes(o.status)),
+    [allOrders]
+  );
+  const deliveredOrders = useMemo(
+    () => allOrders.filter((o) => o.status === 'DELIVERED'),
+    [allOrders]
+  );
+  const cancelledOrders = useMemo(
+    () => allOrders.filter((o) => o.status === 'CANCELLED'),
+    [allOrders]
+  );
+
+  const displayedOrders = useMemo(() => {
+    if (filter === 'ACTIVE') return activeOrders;
+    if (filter === 'DELIVERED') return deliveredOrders;
+    if (filter === 'CANCELLED') return cancelledOrders;
+    return allOrders;
+  }, [filter, allOrders, activeOrders, deliveredOrders, cancelledOrders]);
+
+  const ORDER_TABS: Array<{ id: 'ALL' | 'ACTIVE' | 'DELIVERED' | 'CANCELLED'; label: string; count: number; color: string }> = [
+    { id: 'ALL', label: 'All', count: allOrders.length, color: theme.primary },
+    { id: 'ACTIVE', label: 'Active', count: activeOrders.length, color: '#0284c7' },
+    { id: 'DELIVERED', label: 'Delivered', count: deliveredOrders.length, color: '#16a34a' },
+    { id: 'CANCELLED', label: 'Cancelled', count: cancelledOrders.length, color: '#dc2626' },
+  ];
+
+  useEffect(() => {
+    const targetIdx = ORDER_TABS.findIndex((t) => t.id === filter);
+    Animated.spring(slideAnim, {
+      toValue: targetIdx >= 0 ? targetIdx : 0,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [filter]);
 
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>My Orders</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={styles.heroTitle}>My Orders</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
+              {allOrders.length} order{allOrders.length === 1 ? '' : 's'} recorded
+            </Text>
+          </View>
+          <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#bbf7d0' }}>
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>
+              Live Tracking Enabled
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 🏎️ Liquid Sliding Segmented Tab Filter Bar */}
+      <View style={styles.tabContainer}>
+        <View style={styles.tabTrack}>
+          <Animated.View
+            style={[
+              styles.slidingPill,
+              {
+                left: slideAnim.interpolate({
+                  inputRange: [0, 1, 2, 3],
+                  outputRange: ['0%', '25%', '50%', '75%'],
+                }),
+                backgroundColor: ORDER_TABS.find((t) => t.id === filter)?.color || theme.primary,
+                ...premiumShadow(ORDER_TABS.find((t) => t.id === filter)?.color || theme.primary, 'xs'),
+              },
+            ]}
+          />
+          {ORDER_TABS.map((t) => {
+            const isActive = filter === t.id;
+            return (
+              <TouchableOpacity
+                key={t.id}
+                style={styles.tabBtn}
+                onPress={() => {
+                  tap();
+                  setFilter(t.id);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.tabBtnText,
+                    isActive && styles.tabBtnTextActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {t.label} ({t.count})
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       {isLoading ? (
         <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {!orders || orders.length === 0 ? (
+          {displayedOrders.length === 0 ? (
             <View style={styles.emptyCenter}>
               <Ionicons name="receipt-outline" size={40} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No orders yet.</Text>
+              <Text style={styles.emptyText}>
+                {filter === 'ALL'
+                  ? 'No orders placed yet.'
+                  : `No ${filter.toLowerCase()} orders found.`}
+              </Text>
             </View>
           ) : (
-            orders.map((order) => <OrderCard key={order.id} order={order} />)
+            displayedOrders.map((order) => <OrderCard key={order.id} order={order} />)
           )}
         </ScrollView>
       )}
@@ -122,6 +226,46 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#0f172a' },
+  tabContainer: {
+    paddingHorizontal: SPACING.xxl,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  tabTrack: {
+    flexDirection: 'row',
+    position: 'relative',
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.pill,
+    padding: 3,
+    height: 38,
+    alignItems: 'center',
+  },
+  slidingPill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '25%',
+    borderRadius: RADIUS.pill,
+  },
+  tabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+    height: '100%',
+  },
+  tabBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#64748b',
+  },
+  tabBtnTextActive: {
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
   list: { padding: SPACING.xxl, gap: 12 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 60, gap: 8 },
   emptyText: { fontSize: 13.5, fontFamily: FONT.medium, color: '#94a3b8' },

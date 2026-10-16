@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 // Updated Records Screen with Sales tab label & syntax fix
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -228,6 +229,39 @@ export default function RecordsScreen() {
     : 'OVERVIEW';
 
   const [recordType, setRecordType] = useState<'EXPENSES' | 'SALES' | 'OVERVIEW' | 'LABOUR' | 'ANALYSIS' | 'PARTIES'>(initialRecordType);
+
+  // Liquid sliding indicator pill for Accounts subtabs
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+  const tabWidthAnim = useRef(new Animated.Value(0)).current;
+  const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
+
+  const handleTabLayout = (key: string, layout: { x: number; width: number }) => {
+    tabLayouts.current[key] = layout;
+    if (recordType === key) {
+      tabSlideAnim.setValue(layout.x);
+      tabWidthAnim.setValue(layout.width);
+    }
+  };
+
+  useEffect(() => {
+    const layout = tabLayouts.current[recordType];
+    if (layout) {
+      Animated.parallel([
+        Animated.spring(tabSlideAnim, {
+          toValue: layout.x,
+          friction: 9,
+          tension: 65,
+          useNativeDriver: false,
+        }),
+        Animated.spring(tabWidthAnim, {
+          toValue: layout.width,
+          friction: 9,
+          tension: 65,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    }
+  }, [recordType]);
 
   const { data: farms, isLoading: farmsLoading } = useFarms();
   const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>(undefined);
@@ -2309,9 +2343,22 @@ export default function RecordsScreen() {
         {/* Tab Switcher */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ marginTop: 16 }}>
           <View style={styles.subTabBar}>
+            <Animated.View
+              style={{
+                position: 'absolute',
+                top: 4,
+                bottom: 4,
+                left: tabSlideAnim,
+                width: tabWidthAnim,
+                backgroundColor: '#ffffff',
+                borderRadius: 6,
+                ...premiumShadow('rgba(0,0,0,0.18)', 'xs'),
+              }}
+            />
             {(!isSupervisor || !user?.employerFarmerId) && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'OVERVIEW' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('OVERVIEW', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('OVERVIEW'); }}
               >
@@ -2322,7 +2369,8 @@ export default function RecordsScreen() {
 
             {canViewSales && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'SALES' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('SALES', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('SALES'); }}
               >
@@ -2333,7 +2381,8 @@ export default function RecordsScreen() {
 
             {canViewExpenses && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'EXPENSES' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('EXPENSES', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('EXPENSES'); }}
               >
@@ -2344,7 +2393,8 @@ export default function RecordsScreen() {
 
             {(canViewSales || canViewExpenses) && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'ANALYSIS' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('ANALYSIS', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('ANALYSIS'); }}
               >
@@ -2355,7 +2405,8 @@ export default function RecordsScreen() {
 
             {canViewLabour && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'LABOUR' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('LABOUR', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('LABOUR'); }}
               >
@@ -2366,7 +2417,8 @@ export default function RecordsScreen() {
 
             {canViewParties && (
               <TouchableOpacity
-                style={[styles.subTabItem, recordType === 'PARTIES' && styles.subTabItemActive]}
+                onLayout={(e) => handleTabLayout('PARTIES', e.nativeEvent.layout)}
+                style={styles.subTabItem}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('PARTIES'); }}
               >
@@ -4558,6 +4610,7 @@ const styles = StyleSheet.create({
   tabRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   subTabBar: {
     flexDirection: 'row',
+    position: 'relative',
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 8,
     padding: 4,
@@ -4570,6 +4623,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 6,
     gap: 6,
+    zIndex: 1,
   },
   subTabItemActive: { backgroundColor: '#ffffff' },
   subTabText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#ffffff' },

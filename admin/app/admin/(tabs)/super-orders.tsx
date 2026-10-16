@@ -62,11 +62,13 @@ export default function SuperOrdersScreen() {
                 styles.filterChip,
                 { backgroundColor: innerBg, borderColor: cardBorder },
                 isSelected && (isLight ? styles.filterChipSelectedLight : styles.filterChipSelectedDark),
+                isSelected && premiumShadow(isLight ? '#16a34a' : '#00ff87', 'xs'),
               ]}
               onPress={() => {
                 tap();
                 setFilter(f.value);
               }}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
@@ -152,9 +154,9 @@ const styles = StyleSheet.create({
   heroTitle: { color: '#ffffff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
   filterRow: { marginTop: 10, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill, borderWidth: 1 },
-  filterChipSelectedLight: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-  filterChipSelectedDark: { backgroundColor: '#00ff87', borderColor: '#00ff87' },
+  filterChip: { paddingHorizontal: 13, paddingVertical: 6.5, borderRadius: RADIUS.pill, borderWidth: 1.5 },
+  filterChipSelectedLight: { backgroundColor: '#16a34a', borderColor: '#15803d' },
+  filterChipSelectedDark: { backgroundColor: '#00ff87', borderColor: '#00cc6a' },
   filterChipText: { fontSize: 11.5, fontFamily: FONT.bold },
   list: { padding: 12, gap: 10 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },

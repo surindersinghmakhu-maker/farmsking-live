@@ -465,7 +465,7 @@ export const AdminExecutiveOverview: React.FC = () => {
             <View style={[styles.allClearBanner, isLight && styles.allClearBannerLight]}>
               <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
               <Text style={[styles.allClearText, isLight && { color: '#16a34a' }]}>
-                All 4 Command Hubs Synchronized & Healthy · Zero Critical Escalations
+                All 5 Executive Hubs Synchronized & Healthy · Zero Critical Escalations
               </Text>
             </View>
           )}

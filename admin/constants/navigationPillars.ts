@@ -24,7 +24,7 @@ export interface NavigationPillar {
 
 /**
  * FarmsKing Executive Master Domain Pillars Architecture.
- * User Directory is strictly consolidated into the dedicated "USER DIRECTORY & PLATFORM" Pillar.
+ * User Directory is strictly consolidated into the dedicated "USER DIRECTORY" Pillar.
  * It is NOT duplicated or repeated across Commerce, Ecosystem, or other hubs.
  */
 export const ADMIN_PILLARS: NavigationPillar[] = [
@@ -34,73 +34,65 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'Executive',
     icon: 'pulse-outline',
     iconFilled: 'pulse',
-    badge: 'Command Hub',
+    badge: 'Command HQ',
     color: '#10b981',
     subTabs: [
       {
         id: 'overview',
-        title: 'Platform Overview',
+        title: 'Executive Dashboard',
         shortTitle: 'Overview',
-        description: 'Real-time KPIs, active orders & telemetry',
+        description: 'Real-time revenue, active orders & telemetry',
         icon: 'home',
         path: '/admin/(tabs)',
       },
       {
         id: 'support-chat',
-        title: 'Support Concierge Desk',
+        title: 'Live Help Desk',
         shortTitle: 'Help Desk',
-        description: 'Live helpdesk with farmers, doctors & sellers',
+        description: 'Concierge chat with farmers, doctors & sellers',
         icon: 'chatbubbles',
         path: '/admin/(tabs)/chat',
       },
       {
         id: 'audit-log',
-        title: 'System Audit Trail',
+        title: 'Security Audit Trail',
         shortTitle: 'Audit Trail',
-        description: 'Security events, login sessions & admin logs',
-        icon: 'time',
+        description: 'Admin activity trail, logins & security logs',
+        icon: 'shield-checkmark',
         path: '/admin/(tabs)/super-audit-log',
       },
       {
-        id: 'central-hub',
-        title: 'Central Hub & Guides',
-        shortTitle: 'Central Hub',
-        description: 'Knowledge base, manuals & workflow charts',
-        icon: 'grid',
-        path: '/admin/(tabs)/admin_more',
-      },
-      {
         id: 'notifications',
-        title: 'System Broadcasts & Alerts',
+        title: 'System Broadcasts',
         shortTitle: 'Alerts',
-        description: 'Real-time critical events & announcements',
+        description: 'Critical announcements & real-time alerts',
         icon: 'notifications',
         path: '/notifications',
       },
       {
         id: 'admin-profile',
-        title: 'Admin Security & Profile',
+        title: 'Admin Account & Security',
         shortTitle: 'Profile',
-        description: 'Executive credentials & session security',
-        icon: 'shield-checkmark',
+        description: 'Personal credentials & security settings',
+        icon: 'person-circle',
         path: '/profile',
       },
     ],
   },
   {
     id: 'COMMERCE',
-    title: 'COMMERCE & TREASURY',
+    title: 'COMMERCE & ORDERS',
     shortTitle: 'Commerce',
     icon: 'bag-handle-outline',
     iconFilled: 'bag-handle',
-    badge: 'Trade & Vault',
+    badge: 'Trade & Orders',
     color: '#0284c7',
     subTabs: [
       {
         id: 'products',
         title: 'Product Catalog',
-        shortTitle: 'Catalog',
-        description: 'Inventory management, pricing & stock status',
+        shortTitle: 'Products',
+        description: 'Manage store products, prices & inventory',
         icon: 'cube',
         path: '/admin/(tabs)/admin-products',
       },
@@ -108,80 +100,63 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         id: 'orders',
         title: 'Trade Orders',
         shortTitle: 'Orders',
-        description: 'Live purchases, dispatch tracking & receipts',
+        description: 'Customer purchases, packaging & delivery status',
         icon: 'receipt',
         path: '/admin/(tabs)/admin-orders',
+      },
+      {
+        id: 'operator-orders',
+        title: 'Warehouse Dispatch Desk',
+        shortTitle: 'Dispatch',
+        description: 'Order fulfillment, packing slips & dispatch queue',
+        icon: 'print',
+        path: '/admin/(tabs)/operator-orders',
       },
       {
         id: 'admin-shop',
         title: 'Store Operations Hub',
         shortTitle: 'Store Hub',
-        description: 'Merchant center summary & store health',
+        description: 'Merchant center health & categories overview',
         icon: 'storefront',
         path: '/admin/(tabs)/admin_shop',
       },
       {
         id: 'seller-directory',
-        title: 'Store Sellers & KYC',
-        shortTitle: 'Sellers',
-        description: 'Approve store licenses, GSTIN & bank KYC',
-        icon: 'shield-checkmark',
+        title: 'Seller Verification & KYC',
+        shortTitle: 'Seller KYC',
+        description: 'Review merchant licenses, GSTIN & store approval',
+        icon: 'ribbon',
         path: '/admin/(tabs)/admin-sellers',
       },
       {
         id: 'seller-payouts',
         title: 'Settlements & Payouts',
         shortTitle: 'Payouts',
-        description: 'UPI disbursements & automated ledger entries',
+        description: 'Vendor earnings, UPI transfers & ledger records',
         icon: 'card',
         path: '/admin/(tabs)/seller-payouts',
       },
       {
         id: 'global-ledger',
-        title: 'Global Balance Sheet',
-        shortTitle: 'Ledger',
-        description: 'Platform treasury, wallets & credit management',
+        title: 'Treasury & Wallets',
+        shortTitle: 'Treasury',
+        description: 'Financial ledger, balance sheets & wallet credits',
         icon: 'wallet',
         path: '/admin/(tabs)/super-accounts',
       },
       {
         id: 'coupons',
-        title: 'VIP Pass & Coupons',
+        title: 'Coupons & VIP Passes',
         shortTitle: 'Coupons',
-        description: 'Discount vouchers, promo keys & usage limits',
+        description: 'Discount vouchers, promo codes & memberships',
         icon: 'ticket',
         path: '/admin/(tabs)/super-coupons',
       },
       {
-        id: 'memberships',
-        title: 'VIP Verifications & Plans',
-        shortTitle: 'VIP Approvals',
-        description: 'Verify incoming plan payment proofs & UPI',
-        icon: 'ribbon',
-        path: '/admin/(tabs)/super-accounts',
-        params: { section: 'PARTNERS', sub: 'MEMBERSHIPS' },
-      },
-      {
-        id: 'memberships-catalog',
-        title: 'VIP Pass Scheme & Pricing',
-        shortTitle: 'VIP Plans',
-        description: 'Farmer subscription tiers & pricing packages',
-        icon: 'pricetags',
-        path: '/admin/(tabs)/memberships',
-      },
-      {
-        id: 'order-tracking',
-        title: 'Live Logistics & Shipments',
-        shortTitle: 'Logistics',
-        description: 'GPS courier dispatch & delivery status',
-        icon: 'navigate',
-        path: '/order-tracking',
-      },
-      {
         id: 'public-store',
-        title: 'Public Storefront Simulator',
+        title: 'Public Store Simulator',
         shortTitle: 'Storefront',
-        description: 'Preview customer shopping experience live',
+        description: 'Live interactive preview of customer storefront',
         icon: 'globe',
         path: '/public-store',
       },
@@ -193,25 +168,9 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'Agri-Hub',
     icon: 'leaf-outline',
     iconFilled: 'leaf',
-    badge: 'Farm & Garden',
+    badge: 'Farm & Care',
     color: '#16a34a',
     subTabs: [
-      {
-        id: 'garden-system',
-        title: 'Garden Care System',
-        shortTitle: 'Garden Care',
-        description: 'Urban gardening, plant stages & care schedules',
-        icon: 'flower',
-        path: '/admin/(tabs)/garden',
-      },
-      {
-        id: 'satellite-map',
-        title: 'Satellite Farm Radar',
-        shortTitle: 'Radar',
-        description: 'ISRO high-res NDVI heatmaps & soil moisture',
-        icon: 'planet',
-        path: '/admin/(tabs)/satellite-map',
-      },
       {
         id: 'ai-scanner',
         title: 'AI Plant Diagnostics',
@@ -221,43 +180,59 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         path: '/admin/(tabs)/crop-disease-scanner',
       },
       {
+        id: 'satellite-map',
+        title: 'Satellite Farm Radar',
+        shortTitle: 'Radar',
+        description: 'ISRO high-resolution vegetation & soil maps',
+        icon: 'planet',
+        path: '/admin/(tabs)/satellite-map',
+      },
+      {
         id: 'crop-intelligence',
         title: 'Crop Intelligence Engine',
-        shortTitle: 'Engine',
-        description: 'Yield forecasts, mandi rates & weather advice',
+        shortTitle: 'Intelligence',
+        description: 'Mandi prices, seasonal advice & yield forecasts',
         icon: 'trending-up',
         path: '/admin/(tabs)/crop-intelligence',
       },
       {
         id: 'plant-doses',
         title: 'Plant Nutrition & Doses',
-        shortTitle: 'Plant Care',
+        shortTitle: 'Plant Doses',
         description: 'Stage-wise fertilizer & pesticide schedules',
         icon: 'nutrition',
         path: '/admin/(tabs)/dose',
       },
       {
+        id: 'garden-system',
+        title: 'Urban Garden Care',
+        shortTitle: 'Garden Care',
+        description: 'Balcony plant stages, care logs & garden tools',
+        icon: 'flower',
+        path: '/admin/(tabs)/garden',
+      },
+      {
         id: 'crop-master',
         title: 'Crop Master Registry',
-        shortTitle: 'Registry',
-        description: 'Manage seed varieties, seasons & crop types',
+        shortTitle: 'Crop Registry',
+        description: 'Seed varieties, crop life cycles & agronomy data',
         icon: 'create',
         path: '/admin/(tabs)/super-crop-edit',
       },
       {
         id: 'market-consult',
-        title: 'Crop Clinic Consultation',
-        shortTitle: 'Clinic',
-        description: 'Doctor advisory desk & farmer cases',
+        title: 'Agri Clinic & Advice',
+        shortTitle: 'Agri Clinic',
+        description: 'Agronomist consultations & doctor advisory desk',
         icon: 'medkit',
         path: '/admin/(tabs)/market',
       },
     ],
   },
   {
-    id: 'PLATFORM',
-    title: 'USER DIRECTORY & PLATFORM',
-    shortTitle: 'Users & Platform',
+    id: 'USERS',
+    title: 'USER DIRECTORY',
+    shortTitle: 'Users',
     icon: 'people-outline',
     iconFilled: 'people',
     badge: 'User Hub',
@@ -267,88 +242,80 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         id: 'all-users',
         title: 'Master User Directory',
         shortTitle: 'User Directory',
-        description: 'Search & manage farmers, traders, staff, doctors & partners',
+        description: 'Search & manage farmers, traders, staff & doctors',
         icon: 'people',
         path: '/admin/(tabs)/super-users',
       },
       {
-        id: 'trainer-dashboard',
-        title: 'Field Operations & Trainers',
-        shortTitle: 'Trainers',
-        description: 'Field ops staff, training camps & trainers',
-        icon: 'school',
-        path: '/admin/(tabs)/trainer-dashboard',
-      },
-      {
-        id: 'operators',
-        title: 'Dispatch & Orders Desk',
-        shortTitle: 'Dispatch',
-        description: 'Warehouse fulfillment, packing & shipping',
-        icon: 'print',
-        path: '/admin/(tabs)/operator-orders',
-      },
-      {
-        id: 'infrastructure-settings',
-        title: 'Infrastructure Settings',
-        shortTitle: 'Settings',
-        description: 'System maintenance flags, cache & CDN toggles',
-        icon: 'settings',
-        path: '/admin/(tabs)/super-settings',
-      },
-      {
-        id: 'cpanel-integrations',
-        title: 'Service Integrations & C-Panel',
-        shortTitle: 'C-Panel',
-        description: 'SMS gateways, WhatsApp APIs & cloud webhooks',
-        icon: 'options',
-        path: '/admin/(tabs)/cpanel',
-      },
-      {
         id: 'staff-onboarding',
-        title: 'Staff Profile Onboarding',
+        title: 'Add Staff Member',
         shortTitle: 'Staff Setup',
-        description: 'Onboard platform managers & field operators',
+        description: 'Create accounts for platform operators & managers',
         icon: 'id-card',
         path: '/staff-profile-setup',
       },
       {
         id: 'farmer-onboarding',
-        title: 'Farmer Profile Onboarding',
+        title: 'Register Farmer',
         shortTitle: 'Farmer Setup',
-        description: 'Assist new farmers with profile & farm registration',
+        description: 'Assist farmers with farm profile & land registration',
         icon: 'person-add',
         path: '/farmer-profile-setup',
       },
       {
         id: 'advisor-onboarding',
-        title: 'Doctor Credentialing Setup',
+        title: 'Verify Crop Doctor',
         shortTitle: 'Doctor Setup',
-        description: 'Onboard and verify agri specialist credentials',
+        description: 'Credential agronomists, crop specialists & doctors',
         icon: 'school',
         path: '/advisor-profile',
       },
     ],
   },
   {
-    id: 'UTILITIES',
-    title: 'TOOLS & UTILITIES',
-    shortTitle: 'Utilities',
+    id: 'PLATFORM',
+    title: 'SYSTEM & SETTINGS',
+    shortTitle: 'System Ops',
     icon: 'construct-outline',
     iconFilled: 'construct',
-    badge: 'Ops & Tools',
+    badge: 'System Ops',
     color: '#8b5cf6',
     subTabs: [
       {
+        id: 'infrastructure-settings',
+        title: 'System Configuration',
+        shortTitle: 'Settings',
+        description: 'Maintenance flags, system caching & feature switches',
+        icon: 'settings',
+        path: '/admin/(tabs)/super-settings',
+      },
+      {
+        id: 'cpanel-integrations',
+        title: 'C-Panel & Integrations',
+        shortTitle: 'C-Panel',
+        description: 'SMS gateways, WhatsApp APIs & cloud webhooks',
+        icon: 'options',
+        path: '/admin/(tabs)/cpanel',
+      },
+      {
+        id: 'central-hub',
+        title: 'Operations Knowledge Base',
+        shortTitle: 'Operations Hub',
+        description: 'Platform documentation, manuals & team workspaces',
+        icon: 'grid',
+        path: '/admin/(tabs)/admin_more',
+      },
+      {
         id: 'notification-settings',
-        title: 'Notification Settings',
-        shortTitle: 'Alert Config',
-        description: 'Configure automated push, SMS & email rules',
+        title: 'Alerts & Messaging Rules',
+        shortTitle: 'Alert Rules',
+        description: 'Configure automated push, SMS & email notifications',
         icon: 'notifications-circle',
         path: '/notification-settings',
       },
       {
         id: 'seo-console',
-        title: 'SEO & Discovery Console',
+        title: 'SEO & Search Console',
         shortTitle: 'SEO Index',
         description: 'Meta tags, OpenGraph previews & search indexing',
         icon: 'search',
@@ -356,35 +323,19 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       },
       {
         id: 'support-desk',
-        title: 'Executive Support Desk',
+        title: 'Support Ticket Center',
         shortTitle: 'Support Desk',
-        description: 'Platform issue tickets & farmer helpdesk',
+        description: 'Platform issue tickets & farmer technical help desk',
         icon: 'headset',
         path: '/support',
-      },
-      {
-        id: 'contact-us',
-        title: 'Helpline & Communications',
-        shortTitle: 'Helpline',
-        description: 'Headquarters contact details & emergency lines',
-        icon: 'call',
-        path: '/contact-us',
       },
       {
         id: 'legal-compliance',
         title: 'Legal & Privacy Compliance',
         shortTitle: 'Compliance',
-        description: 'Privacy policy, terms of service & farmer rights',
+        description: 'Privacy policy, terms of service & data protection',
         icon: 'document-lock',
         path: '/privacy-policy',
-      },
-      {
-        id: 'seller-sandbox',
-        title: 'Storefront Seller Sandbox',
-        shortTitle: 'Seller Hub',
-        description: 'Simulate vendor merchant center & store view',
-        icon: 'storefront',
-        path: '/seller-dashboard',
       },
     ],
   },
@@ -406,14 +357,14 @@ export function normalizePillarId(pillarId?: string): string {
       return 'ECOSYSTEM';
     case 'DIRECTORY':
     case 'STAFF_HUB':
-    case 'SETTINGS':
-    case 'PLATFORM':
     case 'USERS':
-      return 'PLATFORM';
+      return 'USERS';
+    case 'SETTINGS':
     case 'UTILITIES':
     case 'TOOLS':
     case 'OTHER':
-      return 'UTILITIES';
+    case 'PLATFORM':
+      return 'PLATFORM';
     case 'EXECUTIVE':
     default:
       return 'EXECUTIVE';
@@ -422,8 +373,7 @@ export function normalizePillarId(pillarId?: string): string {
 
 /**
  * Automatically detects the active pillar ID given the current URL pathname and query params.
- * Seamlessly maps all routes to one of the 5 Master Domain Hubs.
- * User Directory (super-users) is strictly and exclusively routed to PLATFORM.
+ * User Directory (super-users) is strictly and exclusively routed to USERS.
  */
 export function detectPillarFromRoute(
   pathname: string,
@@ -439,31 +389,27 @@ export function detectPillarFromRoute(
     pathname === '/' ||
     pathname.includes('/chat') ||
     pathname.includes('super-audit-log') ||
-    pathname.includes('admin_more') ||
     (pathname === '/notifications' || pathname.endsWith('/notifications')) ||
     (pathname === '/profile' || pathname.endsWith('/profile'))
   ) {
     return 'EXECUTIVE';
   }
 
-  // 2. User Directory & Platform routes (super-users is EXCLUSIVELY here)
+  // 2. User Directory routes (super-users & onboarding EXCLUSIVELY here)
   if (
     pathname.includes('super-users') ||
-    pathname.includes('super-settings') ||
-    pathname.includes('cpanel') ||
-    pathname.includes('operator-orders') ||
-    pathname.includes('trainer-dashboard') ||
     pathname.includes('staff-profile') ||
     pathname.includes('farmer-profile') ||
     pathname.includes('advisor-profile')
   ) {
-    return 'PLATFORM';
+    return 'USERS';
   }
 
-  // 3. Commerce & Treasury routes
+  // 3. Commerce & Orders routes
   if (
     pathname.includes('admin-products') ||
     pathname.includes('admin-orders') ||
+    pathname.includes('operator-orders') ||
     pathname.includes('admin-sellers') ||
     pathname.includes('admin_shop') ||
     pathname.includes('super-coupons') ||
@@ -494,11 +440,11 @@ export function detectPillarFromRoute(
   }
 
   if (
-    pathname.includes('garden') ||
-    pathname.includes('dose') ||
     pathname.includes('crop-disease-scanner') ||
     pathname.includes('satellite-map') ||
     pathname.includes('crop-intelligence') ||
+    pathname.includes('dose') ||
+    pathname.includes('garden') ||
     pathname.includes('super-crop-edit') ||
     pathname.includes('market') ||
     pathname.endsWith('/farm') ||
@@ -509,8 +455,11 @@ export function detectPillarFromRoute(
     return 'ECOSYSTEM';
   }
 
-  // 5. Utilities, Operations & Compliance routes
+  // 5. System Operations & Settings routes
   if (
+    pathname.includes('super-settings') ||
+    pathname.includes('cpanel') ||
+    pathname.includes('admin_more') ||
     pathname.includes('notification-settings') ||
     pathname.includes('seo') ||
     pathname.includes('support') ||
@@ -518,7 +467,7 @@ export function detectPillarFromRoute(
     pathname.includes('privacy-policy') ||
     pathname.includes('seller-dashboard')
   ) {
-    return 'UTILITIES';
+    return 'PLATFORM';
   }
 
   return normalizePillarId(currentPillarId);

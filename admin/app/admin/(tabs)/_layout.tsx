@@ -106,7 +106,7 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-users', 'super-accounts', 'admin_more'] },
   ADMIN: { tabs: ['index', 'admin-products', 'super-users', 'super-accounts', 'admin_more'] },
   OPERATOR: { tabs: ['index', 'operator-orders', 'admin_more'] },
-  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'super-users', 'admin_more'] },
+  TECHNICAL_TRAINER: { tabs: ['index', 'super-users', 'admin_more'] },
   MARKET_MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
 };
 

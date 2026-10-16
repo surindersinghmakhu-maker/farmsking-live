@@ -738,12 +738,15 @@ export default function TabLayout() {
         </View>
       )}
 
-      {/* 📱 MAIN CONTENT CANVAS CONTAINER — flex:1 + overflow:hidden ensures the content
-           column fills all remaining space after the sidebar without horizontal bleed. */}
       <View style={[
-        { flex: 1, backgroundColor: colors.bg, overflow: 'hidden' as any },
-        // On mobile add bottom padding so content is not hidden under the floating tab bar
-        !isDesktop && { paddingBottom: 0 },
+        {
+          flex: 1,
+          backgroundColor: colors.bg,
+          overflow: 'hidden' as any,
+          width: '100%',
+          height: '100%',
+          ...(Platform.OS === 'web' ? { height: '100dvh' as any, maxHeight: '100dvh' as any } : {}),
+        },
       ]}>
         {/* 📱 DEDICATED MOBILE EXECUTIVE APP HEADER (Visible on Mobile < 768px) */}
         {!isDesktop && (
@@ -1745,17 +1748,18 @@ const desktopStyles = StyleSheet.create({
   },
 });
 
-// ─── Root layout styles (separate from desktopStyles for clarity) ─────────────
 const layoutStyles = StyleSheet.create({
-  /**
-   * The outermost View of the entire admin layout.
-   *  • flex: 1          — fills 100% of the available window height on every platform.
-   *  • overflow hidden  — prevents any child from causing horizontal/vertical page scroll
-   *                       on web (React Native Web maps this to CSS overflow:hidden).
-   */
   rootContainer: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     overflow: 'hidden' as any,
+    ...(Platform.OS === 'web'
+      ? {
+          height: '100dvh' as any,
+          maxHeight: '100dvh' as any,
+        }
+      : {}),
   },
 });
 

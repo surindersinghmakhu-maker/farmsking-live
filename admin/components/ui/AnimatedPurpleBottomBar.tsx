@@ -286,12 +286,12 @@ function TabItemButton({
 
 const styles = StyleSheet.create({
   barOuterWrapper: {
-    position: 'absolute',
+    position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any,
     bottom: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 9999,
     backgroundColor: 'transparent',
     pointerEvents: 'box-none',
   },

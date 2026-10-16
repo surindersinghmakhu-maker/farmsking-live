@@ -275,17 +275,7 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
 
   return (
     <>
-      {/* Floating Spotlight Launcher Button (Desktop only; hidden on mobile <768px to prevent overlapping More tab) */}
-      {isDesktop && (
-        <TouchableOpacity
-          style={styles.floatingTrigger}
-          activeOpacity={0.85}
-          onPress={() => setOpen(true)}
-        >
-          <Ionicons name="flash" size={14} color="#10b981" />
-          <Text style={styles.floatingTriggerText}>Ctrl + K</Text>
-        </TouchableOpacity>
-      )}
+      {/* Spotlight Modal (Opens via keyboard shortcut Ctrl+K/Cmd+K or global event) */}
 
       {/* Spotlight Modal */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -421,27 +411,6 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
 }
 
 const styles = StyleSheet.create({
-  floatingTrigger: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#091322',
-    paddingHorizontal: 13,
-    paddingVertical: 8,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
-    borderColor: '#1e293b',
-    zIndex: 9999,
-    ...premiumShadow('#000000', 'md'),
-  },
-  floatingTriggerText: {
-    color: '#f8fafc',
-    fontSize: 11,
-    fontFamily: FONT.bold,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(3, 7, 18, 0.82)',

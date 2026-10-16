@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
@@ -46,11 +46,18 @@ export function PortalGuard({ portalId, children }: PortalGuardProps) {
   }
 
   const isSuperAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(user.role);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   return (
-    <View style={styles.container}>
-      {/* Super Admin Global Portal Switcher Bar */}
-      {isSuperAdmin && (
+    <View
+      style={[
+        styles.container,
+        Platform.OS === 'web' && ({ height: '100dvh', maxHeight: '100dvh' } as any),
+      ]}
+    >
+      {/* Super Admin Global Portal Switcher Bar (Desktop only) */}
+      {isSuperAdmin && isDesktop && (
         <PortalSwitcherBar currentPortalId={portalId} />
       )}
       <View style={styles.contentWrap}>
@@ -148,9 +155,15 @@ export function PortalSwitcherBar({ currentPortalId }: { currentPortalId: Portal
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
   },
   contentWrap: {
     flex: 1,
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden',
   },
   centerLoading: {
     flex: 1,

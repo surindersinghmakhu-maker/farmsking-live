@@ -158,7 +158,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                     </View>
                   </View>
                   <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
-                    Executive Command HQ · 4 Master Hubs Synchronized
+                    Executive Command HQ · 5 Executive Hubs Synchronized
                   </Text>
                 </View>
               </View>
@@ -226,7 +226,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                 </View>
               </View>
               <Text style={[styles.mobileSubtitle, { color: subTextColor }]} numberOfLines={1}>
-                Command HQ · 4 Master Hubs Real-Time
+                Command HQ · 5 Executive Hubs Real-Time
               </Text>
             </View>
           </View>
@@ -756,7 +756,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#020d06',
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 88,
   },
 
   /* Cockpit Header */

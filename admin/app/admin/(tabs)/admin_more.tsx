@@ -10,7 +10,7 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
-import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from './more';
+import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from '@/components/AdminMoreModals';
 import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 

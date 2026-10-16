@@ -549,6 +549,12 @@ export default function SuperSettingsScreen() {
               </View>
             </View>
 
+            <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.08)', borderWidth: 1, borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)', padding: 10, borderRadius: 8, marginHorizontal: 12, marginTop: 8, marginBottom: 4 }}>
+              <Text style={{ fontSize: 11, fontFamily: 'Manrope_500Medium', color: isLight ? '#15803d' : '#00ff87' }}>
+                💡 API Tokens Note: For Meta Cloud WhatsApp tokens, webhooks, and SMS gateway credentials, configure them directly in C-Panel ➔ Service Integrations.
+              </Text>
+            </View>
+
             <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.toggleTitle, { color: textColor }]}>🎙️ Group Voice Call Feature</Text>

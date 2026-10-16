@@ -847,8 +847,9 @@ export default function TabLayout() {
                 ]}
                 onPress={() => setIsSearchOpen(true)}
                 activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <Ionicons name="search" size={14} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+                <Ionicons name="search" size={15} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -859,6 +860,7 @@ export default function TabLayout() {
                 ]}
                 onPress={() => setIsHealthRadarOpen(true)}
                 activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <View
                   style={[
@@ -877,10 +879,11 @@ export default function TabLayout() {
                 ]}
                 onPress={() => setThemeMode(isLight ? 'DARK' : 'LIGHT')}
                 activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Ionicons
                   name={isLight ? 'sunny' : 'moon'}
-                  size={14}
+                  size={15}
                   color={isLight ? '#d97706' : isDarkTheme ? '#38bdf8' : '#00ff87'}
                 />
               </TouchableOpacity>
@@ -1828,9 +1831,9 @@ const mobileStyles = StyleSheet.create({
     gap: 6,
   },
   actionBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
@@ -1838,9 +1841,9 @@ const mobileStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   radarDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: '#00ff87',
   },
 });

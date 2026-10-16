@@ -109,7 +109,7 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
             <View style={styles.headerTitleBlock}>
               <View style={[styles.headerBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
                 <View style={[styles.badgePulseDot, isLight && { backgroundColor: '#16a34a' }]} />
-                <Text style={[styles.headerBadgeText, isLight && { color: '#16a34a' }]}>4 COMMAND HUBS</Text>
+                <Text style={[styles.headerBadgeText, isLight && { color: '#16a34a' }]}>{ADMIN_PILLARS.length} EXECUTIVE HUBS</Text>
               </View>
               <Text style={[styles.sheetTitle, isLight && { color: '#0f172a' }]}>Command Navigation</Text>
             </View>
@@ -118,6 +118,7 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
               style={styles.closeBtn}
               onPress={onClose}
               activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Ionicons name="close" size={20} color={isLight ? '#64748b' : '#94a3b8'} />
             </TouchableOpacity>
@@ -190,7 +191,7 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
             <Ionicons name="search" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
             <TextInput
               style={[styles.searchInput, isLight && { color: '#0f172a' }]}
-              placeholder="Search 25+ tools (e.g. Products, Ledger, Doctors)..."
+              placeholder="Search 35+ tools (e.g. Products, Users, Radar, Settings)..."
               placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -467,9 +468,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -580,9 +581,10 @@ const styles = StyleSheet.create({
   pillarCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 48,
+    gap: 10,
   },
   pillarCardHeaderActive: {
     backgroundColor: 'rgba(0, 255, 135, 0.06)',
@@ -636,17 +638,18 @@ const styles = StyleSheet.create({
   subTabPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    minHeight: 44,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.12)',
   },
   subTabTitleText: {
-    fontSize: 11.5,
-    fontFamily: FONT.medium,
+    fontSize: 12,
+    fontFamily: FONT.bold,
     color: '#e2e8f0',
     flex: 1,
   },

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
@@ -44,6 +46,24 @@ export default function LoginScreen() {
   const otpInputRef = useRef<TextInput>(null);
 
   const [activeTab, setActiveTab] = useState<LoginTab>('password');
+  const [tabRowWidth, setTabRowWidth] = useState(0);
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabSwitch = (tab: LoginTab) => {
+    if (tab === activeTab) return;
+    setError(null);
+    setActiveTab(tab);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Animated.spring(tabSlideAnim, {
+      toValue: tab === 'password' ? 0 : 1,
+      tension: 90,
+      friction: 9.5,
+      useNativeDriver: false,
+    }).start();
+  };
+
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -308,23 +328,42 @@ export default function LoginScreen() {
             <div id="recaptcha-container"></div>
 
             {/* Tabs */}
-            <View style={styles.tabRow}>
+            <View
+              style={styles.tabRow}
+              onLayout={(e) => setTabRowWidth(e.nativeEvent.layout.width)}
+            >
+              {tabRowWidth > 0 && (
+                <Animated.View
+                  style={[
+                    styles.slidingActivePill,
+                    {
+                      width: (tabRowWidth - 8) / 2,
+                      transform: [
+                        {
+                          translateX: tabSlideAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, (tabRowWidth - 8) / 2],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              )}
               <TouchableOpacity
-                style={[styles.tab, activeTab === 'password' && styles.tabActive]}
-                onPress={() => setActiveTab('password')}
+                style={styles.tab}
+                onPress={() => handleTabSwitch('password')}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={activeTab === 'password' ? ['rgba(16,185,129,0.2)', 'rgba(16,185,129,0.05)'] : ['transparent', 'transparent']} style={StyleSheet.absoluteFill} />
-                <Ionicons name="lock-closed" size={15} color={activeTab === 'password' ? '#10b981' : '#64748b'} />
+                <Ionicons name="lock-closed" size={15} color={activeTab === 'password' ? '#00ff87' : '#94a3b8'} />
                 <Text style={[styles.tabText, activeTab === 'password' && styles.tabTextActive]}>Password</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.tab, activeTab === 'otp' && styles.tabActive]}
-                onPress={() => setActiveTab('otp')}
+                style={styles.tab}
+                onPress={() => handleTabSwitch('otp')}
                 activeOpacity={0.8}
               >
-                <LinearGradient colors={activeTab === 'otp' ? ['rgba(16,185,129,0.2)', 'rgba(16,185,129,0.05)'] : ['transparent', 'transparent']} style={StyleSheet.absoluteFill} />
-                <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#10b981' : '#64748b'} />
+                <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#00ff87' : '#94a3b8'} />
                 <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>OTP</Text>
               </TouchableOpacity>
             </View>
@@ -527,15 +566,40 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: -0.3, marginBottom: 4 },
   subtitle: { fontSize: 13, color: '#94a3b8', fontFamily: FONT.medium, marginBottom: 24 },
 
-  tabRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  tab: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(255,255,255,0.03)', overflow: 'hidden'
+  tabRow: {
+    position: 'relative',
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  tabActive: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+  slidingActivePill: {
+    position: 'absolute',
+    left: 4,
+    top: 4,
+    bottom: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#10b981',
+    ...premiumShadow('#10b981', 'xs'),
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    zIndex: 1,
+  },
+  tabActive: {},
   tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#94a3b8' },
-  tabTextActive: { color: '#10b981' },
+  tabTextActive: { color: '#00ff87' },
 
   label: { fontSize: 12, color: '#cbd5e1', fontFamily: FONT.bold, marginBottom: 6, marginTop: 12 },
   inputWrap: {

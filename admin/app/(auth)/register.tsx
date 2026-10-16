@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -14,9 +15,10 @@ import {
 } from 'react-native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { lookupPincode } from '@/src/api/pincode.api';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
@@ -55,6 +57,24 @@ export default function RegisterScreen() {
   ).trim();
   const referredViaLink = incomingRefCode.length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
+
+  // Animated sliding pill for account type
+  const accountTypeSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const targetIdx = accountType === 'CUSTOMER' ? 0 : accountType === 'FARMER' ? 1 : 2;
+    Animated.spring(accountTypeSlideAnim, {
+      toValue: targetIdx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [accountType]);
+
+  const tap = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(20);
   const [farmName, setFarmName] = useState('');
   const [farmAddress, setFarmAddress] = useState('');
@@ -215,15 +235,29 @@ export default function RegisterScreen() {
             <Text style={styles.subtitle}>Enter details to get started</Text>
           </View>
 
-          {/* Account Type Selector (Customer / Farmer) */}
+          {/* Account Type Selector (Customer / Farmer / Gardener) */}
           <View style={styles.accountTypeWrap}>
+            <Animated.View
+              style={[
+                styles.slidingActivePill,
+                {
+                  left: accountTypeSlideAnim.interpolate({
+                    inputRange: [0, 1, 2],
+                    outputRange: ['0%', '33.333%', '66.666%'],
+                  }),
+                },
+              ]}
+            />
             {ACCOUNT_TYPES.map((type) => {
               const isSelected = accountType === type.value;
               return (
                 <TouchableOpacity
                   key={type.value}
-                  style={[styles.accountTypeChip, isSelected && styles.accountTypeChipActive]}
-                  onPress={() => setAccountType(type.value)}
+                  style={styles.accountTypeChip}
+                  onPress={() => {
+                    tap();
+                    setAccountType(type.value);
+                  }}
                   activeOpacity={0.8}
                 >
                   <Ionicons name={type.icon} size={16} color={isSelected ? '#ffffff' : '#64748b'} />
@@ -578,10 +612,24 @@ const styles = StyleSheet.create({
   title: { fontSize: 21, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
   subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 1 },
   accountTypeWrap: {
+    position: 'relative',
     flexDirection: 'row',
-    gap: 8,
     width: '100%',
     marginBottom: 10,
+    backgroundColor: '#e2e8f0',
+    borderRadius: RADIUS.pill,
+    padding: 3,
+    height: 38,
+    alignItems: 'center',
+  },
+  slidingActivePill: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    width: '33.333%',
+    backgroundColor: theme.primary,
+    borderRadius: RADIUS.pill,
+    ...premiumShadow(theme.primary, 'xs'),
   },
   accountTypeChip: {
     flex: 1,
@@ -589,18 +637,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    height: '100%',
+    borderRadius: RADIUS.pill,
+    zIndex: 1,
   },
-  accountTypeChipActive: {
-    backgroundColor: theme.primary,
-    borderColor: theme.primary,
-  },
-  accountTypeChipText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#475569' },
-  accountTypeChipTextActive: { color: '#ffffff' },
+  accountTypeChipActive: {},
+  accountTypeChipText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#475569' },
+  accountTypeChipTextActive: { fontFamily: FONT.extraBold, color: '#ffffff' },
   fieldBlock: { width: '100%', marginBottom: 10 },
   rowTwoCols: { flexDirection: 'row', gap: 8, width: '100%', marginBottom: 10 },
   label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4 },

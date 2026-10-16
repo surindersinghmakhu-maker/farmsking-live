@@ -1,23 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
-  StatusBar,
-  TextInput,
+  Animated,
   Image,
   Modal,
   Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { apiClient } from '@/src/api/client';
 import * as ImagePicker from 'expo-image-picker';
+import { premiumShadow } from '@/constants/theme';
 
 type AgriStoreSubTab = 'OVERVIEW' | 'SELLERS' | 'CATALOG' | 'ORDERS' | 'DELIVERY' | 'PAYMENTS' | 'GSTR8_TAX' | 'FLASH_SALES';
 
@@ -25,6 +28,43 @@ export default function AgriStoreEnterpriseHub() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AgriStoreSubTab>('OVERVIEW');
   const [loading, setLoading] = useState(true);
+
+  // Liquid sliding indicator pill for AgriStore subtabs
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+  const tabWidthAnim = useRef(new Animated.Value(0)).current;
+  const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
+
+  const handleTabLayout = (key: string, layout: { x: number; width: number }) => {
+    tabLayouts.current[key] = layout;
+    if (activeTab === key) {
+      tabSlideAnim.setValue(layout.x);
+      tabWidthAnim.setValue(layout.width);
+    }
+  };
+
+  useEffect(() => {
+    const layout = tabLayouts.current[activeTab];
+    if (layout) {
+      Animated.parallel([
+        Animated.spring(tabSlideAnim, {
+          toValue: layout.x,
+          friction: 9,
+          tension: 65,
+          useNativeDriver: false,
+        }),
+        Animated.spring(tabWidthAnim, {
+          toValue: layout.width,
+          friction: 9,
+          tension: 65,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    }
+  }, [activeTab]);
+
+  const tap = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   // Core Data States
   const [stores, setStores] = useState<any[]>([]);
@@ -336,6 +376,18 @@ export default function AgriStoreEnterpriseHub() {
       {/* Navigation Sub-Tabs Bar */}
       <View style={styles.subTabBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.subTabScroll}>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: tabSlideAnim,
+              width: tabWidthAnim,
+              backgroundColor: '#059669',
+              borderRadius: 20,
+              ...premiumShadow('#059669', 'xs'),
+            }}
+          />
           {[
             { id: 'OVERVIEW', label: '📊 Overview', icon: 'speedometer-outline' },
             { id: 'SELLERS', label: '🏪 Sellers & KYC', icon: 'people-outline' },
@@ -349,8 +401,13 @@ export default function AgriStoreEnterpriseHub() {
             return (
               <TouchableOpacity
                 key={tab.id}
-                style={[styles.subTabChip, isActive && styles.activeSubTabChip]}
-                onPress={() => setActiveTab(tab.id as any)}
+                onLayout={(e) => handleTabLayout(tab.id, e.nativeEvent.layout)}
+                style={styles.subTabChip}
+                onPress={() => {
+                  tap();
+                  setActiveTab(tab.id as any);
+                }}
+                activeOpacity={0.8}
               >
                 <Ionicons name={tab.icon as any} size={15} color={isActive ? '#FFF' : '#9CA3AF'} />
                 <Text style={[styles.subTabChipText, isActive && styles.activeSubTabChipText]}>{tab.label}</Text>
@@ -955,9 +1012,9 @@ const styles = StyleSheet.create({
   flashSaleText: { color: '#FDE68A', fontSize: 11.5, fontWeight: '700', flex: 1 },
 
   subTabBar: { backgroundColor: '#111827', paddingVertical: 6 },
-  subTabScroll: { paddingHorizontal: 12, gap: 6 },
-  subTabChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#1F2937' },
-  activeSubTabChip: { backgroundColor: '#059669' },
+  subTabScroll: { paddingHorizontal: 12, gap: 6, position: 'relative' },
+  subTabChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, zIndex: 1 },
+  activeSubTabChip: {},
   subTabChipText: { color: '#9CA3AF', fontSize: 12, fontWeight: '600' },
   activeSubTabChipText: { color: '#FFF', fontWeight: '800' },
 

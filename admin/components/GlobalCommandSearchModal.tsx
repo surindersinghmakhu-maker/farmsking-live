@@ -39,8 +39,14 @@ const SEARCH_DATABASE: CommandItem[] = [
   { id: '9', title: 'Global Ledger & Accounts', category: 'FINANCE', subtitle: 'Platform financial balance & ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
   { id: '10', title: 'Technical Trainers Dashboard', category: 'STAFF', subtitle: 'Staff trainers & field ops', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
   { id: '11', title: 'Coupons & VIP Passes', category: 'ORDERS', subtitle: 'Manage discount vouchers & passes', icon: 'ticket', path: '/admin/(tabs)/super-coupons' },
-  { id: '12', title: 'C-Panel Integrations Console', category: 'SETTINGS', subtitle: 'SMS, Gateways & WhatsApp APIs', icon: 'options', path: '/admin/(tabs)/cpanel' },
-  { id: '13', title: 'Infrastructure Toggles & Settings', category: 'SETTINGS', subtitle: 'Maintenance modes & system flags', icon: 'settings', path: '/admin/(tabs)/super-settings' },
+  { id: '12', title: 'VIP Verifications Ledger', category: 'FINANCE', subtitle: 'Approve pending VIP membership claims', icon: 'ribbon', path: '/admin/(tabs)/super-accounts', params: { section: 'PARTNERS', sub: 'MEMBERSHIPS' } },
+  { id: '13', title: 'Store Operations Hub', category: 'ORDERS', subtitle: 'Merchant center summary & store health', icon: 'storefront', path: '/admin/(tabs)/admin_shop' },
+  { id: '14', title: 'Live Shipment Tracking', category: 'ORDERS', subtitle: 'GPS courier dispatch & delivery tracking', icon: 'navigate', path: '/order-tracking' },
+  { id: '15', title: 'SEO & Discovery Console', category: 'SETTINGS', subtitle: 'Search indexing, OpenGraph & meta tags', icon: 'search', path: '/seo' },
+  { id: '16', title: 'Notification Settings', category: 'SETTINGS', subtitle: 'Push alerts & SMS gateway rules', icon: 'notifications-circle', path: '/notification-settings' },
+  { id: '17', title: 'Executive Support Desk', category: 'SETTINGS', subtitle: 'Platform issue tickets & farmer helpdesk', icon: 'headset', path: '/support' },
+  { id: '18', title: 'C-Panel Integrations Console', category: 'SETTINGS', subtitle: 'SMS, Gateways & WhatsApp APIs', icon: 'options', path: '/admin/(tabs)/cpanel' },
+  { id: '19', title: 'Infrastructure Toggles & Settings', category: 'SETTINGS', subtitle: 'Maintenance modes & system flags', icon: 'settings', path: '/admin/(tabs)/super-settings' },
 ];
 
 const RECENT_BREADCRUMBS = [

@@ -42,7 +42,7 @@ export const AdminExecutiveOverview: React.FC = () => {
   const isTablet = width >= 768 && width < 1024;
 
   const [showTelemetry, setShowTelemetry] = useState(false);
-  const [selectedMobilePillar, setSelectedMobilePillar] = useState<string>('OPERATIONS');
+  const [selectedMobilePillar, setSelectedMobilePillar] = useState<string>('EXECUTIVE');
 
   // Live Backend Queries
   const { data: products, isLoading: isLoadingProducts, refetch: refetchProducts } = useProducts(true);
@@ -477,7 +477,7 @@ export const AdminExecutiveOverview: React.FC = () => {
         <View style={styles.sectionTitleRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="grid" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>4 COMMAND HUBS</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>5 COMMAND HUBS</Text>
           </View>
           {!isDesktop && (
             <TouchableOpacity
@@ -488,7 +488,7 @@ export const AdminExecutiveOverview: React.FC = () => {
               ]}
               onPress={() => {
                 tap();
-                setSelectedMobilePillar(selectedMobilePillar === 'ALL' ? 'OPERATIONS' : 'ALL');
+                setSelectedMobilePillar(selectedMobilePillar === 'ALL' ? 'EXECUTIVE' : 'ALL');
               }}
               activeOpacity={0.7}
             >
@@ -621,7 +621,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                             {tab.shortTitle || tab.title}
                           </Text>
                           <Text style={[styles.mobileToolSubtitle, { color: subTextColor }]} numberOfLines={1}>
-                            {tab.title}
+                            {tab.description || tab.title}
                           </Text>
                         </View>
                         <Ionicons name="chevron-forward" size={12} color={isLight ? '#94a3b8' : '#64748b'} />
@@ -670,7 +670,7 @@ export const AdminExecutiveOverview: React.FC = () => {
 
                 {/* Hub Sub-Tools Chips */}
                 <View style={styles.hubChipsContainer}>
-                  {hub.subTabs.slice(0, 6).map((tab) => (
+                  {hub.subTabs.map((tab) => (
                     <TouchableOpacity
                       key={tab.id}
                       style={[

@@ -303,23 +303,38 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
                         >
                           <Ionicons
                             name={subTab.icon}
-                            size={14}
-                            color={isLight ? '#16a34a' : '#00ff87'}
+                            size={15}
+                            color={pillar.color}
                           />
-                          <Text
-                            style={[
-                              styles.subTabTitleText,
-                              isLight && { color: '#1e293b' },
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {subTab.title}
-                          </Text>
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={[
+                                styles.subTabTitleText,
+                                isLight && { color: '#1e293b' },
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {subTab.title}
+                            </Text>
+                            {subTab.description ? (
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  fontFamily: FONT.medium,
+                                  color: isLight ? '#64748b' : '#94a3b8',
+                                  marginTop: 1,
+                                }}
+                                numberOfLines={1}
+                              >
+                                {subTab.description}
+                              </Text>
+                            ) : null}
+                          </View>
                           <Ionicons
                             name="arrow-forward"
                             size={12}
                             color={isLight ? '#94a3b8' : '#64748b'}
-                            style={{ marginLeft: 'auto' }}
+                            style={{ marginLeft: 6 }}
                           />
                         </TouchableOpacity>
                       ))}

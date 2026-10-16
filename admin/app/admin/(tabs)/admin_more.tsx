@@ -220,7 +220,7 @@ export default function AdminMoreScreen() {
                           <View style={{ flex: 1 }}>
                             <Text style={styles.rowLabel}>{tab.title}</Text>
                             <Text style={styles.rowSubLabel}>
-                              {tab.shortTitle ? `Access ${tab.shortTitle} tools` : 'Configure & monitor'}
+                              {tab.description || (tab.shortTitle ? `Access ${tab.shortTitle} tools` : 'Configure & monitor')}
                             </Text>
                           </View>
                           <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />

@@ -234,22 +234,26 @@ export default function AdminShopScreen() {
 
       {/* Navigation Sub-Tabs */}
       <View style={styles.navTabs}>
-        {[
-          { key: 'OVERVIEW', label: '📊 Overview', icon: 'grid-outline' },
-          { key: 'INVENTORY', label: '📦 Catalog', icon: 'cube-outline' },
-          { key: 'ORDERS', label: '🧾 Orders', icon: 'receipt-outline' },
-        ].map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.navTabBtn, isActive && styles.navTabBtnActive]}
-              onPress={() => setActiveTab(tab.key as any)}
-            >
-              <Text style={[styles.navTabText, isActive && styles.navTabTextActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        <TouchableOpacity
+          style={[styles.navTabBtn, activeTab === 'OVERVIEW' && styles.navTabBtnActive]}
+          onPress={() => setActiveTab('OVERVIEW')}
+        >
+          <Text style={[styles.navTabText, activeTab === 'OVERVIEW' && styles.navTabTextActive]}>📊 Store Overview</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navTabBtn}
+          onPress={() => router.push('/admin/(tabs)/admin-products' as any)}
+        >
+          <Text style={styles.navTabText}>📦 Product Catalog →</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navTabBtn}
+          onPress={() => router.push('/admin/(tabs)/admin-orders' as any)}
+        >
+          <Text style={styles.navTabText}>🧾 Trade Orders →</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -468,73 +472,7 @@ export default function AdminShopScreen() {
               )}
             </View>
           </View>
-        ) : activeTab === 'INVENTORY' ? (
-          <View style={{ gap: 10 }}>
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={18} color="#94a3b8" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search catalog products..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
-              <Ionicons name="storefront-outline" size={20} color="#ffffff" />
-              <Text style={styles.addProductFullBtnText}>Open Market Catalog Manager</Text>
-            </TouchableOpacity>
-
-            {isLoadingProducts ? (
-              <ActivityIndicator size="large" color="#d97706" style={{ marginVertical: 20 }} />
-            ) : filteredProducts.length === 0 ? (
-              <Text style={styles.emptyText}>No products found matching search.</Text>
-            ) : (
-              filteredProducts.map((p) => {
-                const displayImg = resolveMediaUrl(p.imageUrl);
-                return (
-                  <View key={p.id} style={styles.productRow}>
-                    <View style={styles.prodImgBox}>
-                      {displayImg ? (
-                        <Image source={{ uri: displayImg }} style={{ width: 44, height: 44, borderRadius: 8 }} />
-                      ) : (
-                        <Ionicons name="cube-outline" size={22} color="#64748b" />
-                      )}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.prodName}>{p.name}</Text>
-                      <Text style={styles.prodSub}>
-                        Cat: {p.category ?? 'General'} · Price: ₹{p.price}
-                      </Text>
-                    </View>
-                    <View style={[styles.stockTag, p.stockQty < 5 && { backgroundColor: '#fef2f2' }]}>
-                      <Text style={[styles.stockTagText, p.stockQty < 5 && { color: '#dc2626' }]}>
-                        Stock: {p.stockQty}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })
-            )}
-          </View>
-        ) : activeTab === 'ORDERS' ? (
-          <View style={{ gap: 10 }}>
-            {allOrders.map((ord: any) => (
-              <View key={ord.id} style={styles.orderRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.orderIdText}>Order #{ord.id.slice(-8).toUpperCase()}</Text>
-                  <Text style={styles.orderSubText}>
-                    Date: {new Date(ord.createdAt).toLocaleDateString()} · Items: {ord.items?.length || 1}
-                  </Text>
-                  <Text style={styles.orderSubText}>Total: ₹{ord.totalAmount}</Text>
-                </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusBadgeText}>{ord.status}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : null}
+        )}
       </ScrollView>
 
       {/* 📢 Mass Broadcast Announcement Modal */}

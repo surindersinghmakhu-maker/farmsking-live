@@ -257,7 +257,7 @@ export default function AdminShopScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === 'OVERVIEW' ? (
+        {activeTab === 'OVERVIEW' && (
           <View style={{ gap: 14 }}>
             {/* Quick Actions */}
             <View style={styles.card}>
@@ -268,12 +268,12 @@ export default function AdminShopScreen() {
                   <Text style={styles.actionPillText}>Market Catalog</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin-sellers')}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}>
                   <Ionicons name="shield-checkmark-outline" size={18} color="#ea580c" />
                   <Text style={styles.actionPillText}>Seller Store Approvals</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/seller-payouts')}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/seller-payouts' as any)}>
                   <Ionicons name="wallet-outline" size={18} color="#059669" />
                   <Text style={styles.actionPillText}>Seller Payouts</Text>
                 </TouchableOpacity>
@@ -309,7 +309,7 @@ export default function AdminShopScreen() {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => router.push('/admin-sellers')} style={styles.viewAllSellersBtn}>
+                <TouchableOpacity onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)} style={styles.viewAllSellersBtn}>
                   <Text style={styles.viewAllSellersBtnText}>All Stores →</Text>
                 </TouchableOpacity>
               </View>
@@ -434,7 +434,7 @@ export default function AdminShopScreen() {
               <TouchableOpacity
                 style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: sellerStats.pending > 0 ? '#ea580c' : '#16a34a', paddingVertical: 12, borderRadius: 10, marginTop: 12 }}
                 activeOpacity={0.85}
-                onPress={() => router.push('/admin-sellers')}
+                onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}
               >
                 <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
                 <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>

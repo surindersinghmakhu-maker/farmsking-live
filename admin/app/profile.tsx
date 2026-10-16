@@ -594,7 +594,7 @@ export default function ProfileScreen() {
                     borderRadius: RADIUS.md,
                     marginBottom: 12,
                   }}
-                  onPress={() => router.push('/admin-sellers')}
+                  onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="shield-checkmark" size={18} color="#10b981" />

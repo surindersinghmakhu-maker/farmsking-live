@@ -543,7 +543,7 @@ export const SuperAdminDashboardView: React.FC = () => {
               <View style={{ width: '100%', gap: 12, paddingVertical: 4 }}>
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff7ed', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#ffedd5', gap: 12 }}
-                  onPress={() => router.push('/admin-sellers' as never)}
+                  onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}
                   activeOpacity={0.8}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ea580c', alignItems: 'center', justifyContent: 'center' }}>

@@ -308,7 +308,7 @@ export default function SuperAccountsScreen() {
                     justifyContent: 'space-between',
                   }}
                   activeOpacity={0.8}
-                  onPress={() => router.push('/admin-sellers' as any)}
+                  onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#064e3b', alignItems: 'center', justifyContent: 'center' }}>

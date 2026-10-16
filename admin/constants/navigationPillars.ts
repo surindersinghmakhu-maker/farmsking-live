@@ -252,22 +252,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         icon: 'medkit',
         path: '/admin/(tabs)/market',
       },
-      {
-        id: 'farmer-onboarding',
-        title: 'Farmer Onboarding Portal',
-        shortTitle: 'Farmer Setup',
-        description: 'Assist new farmers with profile & farm setup',
-        icon: 'person-add',
-        path: '/farmer-profile-setup',
-      },
-      {
-        id: 'advisor-onboarding',
-        title: 'Doctor Credentialing Setup',
-        shortTitle: 'Doctor Setup',
-        description: 'Onboard and verify agri specialist credentials',
-        icon: 'school',
-        path: '/advisor-profile',
-      },
     ],
   },
   {
@@ -326,6 +310,22 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         description: 'Onboard platform managers & field operators',
         icon: 'id-card',
         path: '/staff-profile-setup',
+      },
+      {
+        id: 'farmer-onboarding',
+        title: 'Farmer Profile Onboarding',
+        shortTitle: 'Farmer Setup',
+        description: 'Assist new farmers with profile & farm registration',
+        icon: 'person-add',
+        path: '/farmer-profile-setup',
+      },
+      {
+        id: 'advisor-onboarding',
+        title: 'Doctor Credentialing Setup',
+        shortTitle: 'Doctor Setup',
+        description: 'Onboard and verify agri specialist credentials',
+        icon: 'school',
+        path: '/advisor-profile',
       },
     ],
   },
@@ -453,7 +453,9 @@ export function detectPillarFromRoute(
     pathname.includes('cpanel') ||
     pathname.includes('operator-orders') ||
     pathname.includes('trainer-dashboard') ||
-    pathname.includes('staff-profile')
+    pathname.includes('staff-profile') ||
+    pathname.includes('farmer-profile') ||
+    pathname.includes('advisor-profile')
   ) {
     return 'PLATFORM';
   }
@@ -499,9 +501,6 @@ export function detectPillarFromRoute(
     pathname.includes('crop-intelligence') ||
     pathname.includes('super-crop-edit') ||
     pathname.includes('market') ||
-    pathname.includes('farmer-profile') ||
-    pathname.includes('advisor-profile') ||
-    pathname.endsWith('/farmers') ||
     pathname.endsWith('/farm') ||
     pathname.endsWith('/schedule') ||
     pathname.endsWith('/records') ||

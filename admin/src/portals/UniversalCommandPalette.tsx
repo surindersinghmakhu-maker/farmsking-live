@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,6 +85,8 @@ const SCOPES: { id: PortalId | 'ALL'; label: string }[] = [
 
 export function UniversalCommandPalette({ activePortalId }: { activePortalId?: PortalId }) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedScope, setSelectedScope] = useState<PortalId | 'ALL'>(activePortalId || 'ALL');
@@ -272,15 +275,17 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
 
   return (
     <>
-      {/* Floating Spotlight Launcher Button */}
-      <TouchableOpacity
-        style={styles.floatingTrigger}
-        activeOpacity={0.85}
-        onPress={() => setOpen(true)}
-      >
-        <Ionicons name="flash" size={14} color="#10b981" />
-        <Text style={styles.floatingTriggerText}>Ctrl + K</Text>
-      </TouchableOpacity>
+      {/* Floating Spotlight Launcher Button (Desktop only; hidden on mobile <768px to prevent overlapping More tab) */}
+      {isDesktop && (
+        <TouchableOpacity
+          style={styles.floatingTrigger}
+          activeOpacity={0.85}
+          onPress={() => setOpen(true)}
+        >
+          <Ionicons name="flash" size={14} color="#10b981" />
+          <Text style={styles.floatingTriggerText}>Ctrl + K</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Spotlight Modal */}
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>

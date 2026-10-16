@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAllWithdrawals, useApproveWithdrawal, useRejectWithdrawal } from '@/src/hooks/useWithdrawals';
 import { WithdrawalRequest, WithdrawalStatus } from '@/src/types/api';
@@ -94,6 +94,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 
 export default function SuperAccountsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ section?: SectionKey; sub?: PartnerSubTab }>();
   const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const { data: withdrawals, isLoading } = useAllWithdrawals();
   const { data: planPayments, isLoading: isLoadingPlanPayments } = usePendingPlanPayments();
@@ -107,6 +108,15 @@ export default function SuperAccountsScreen() {
   const [userSearch, setUserSearch] = useState('');
   const [section, setSection] = useState<SectionKey>('REQUESTS');
   const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTab>('VENDORS');
+
+  useEffect(() => {
+    if (params.section && (['REQUESTS', 'WALLETS', 'PARTNERS', 'SEARCH'] as SectionKey[]).includes(params.section)) {
+      setSection(params.section);
+    }
+    if (params.sub && (['VENDORS', 'ADVISORS', 'STAFF', 'MEMBERSHIPS'] as PartnerSubTab[]).includes(params.sub)) {
+      setPartnerSubTab(params.sub);
+    }
+  }, [params.section, params.sub]);
 
   // Animated sliding pill for section tabs
   const sectionSlideAnim = useRef(new Animated.Value(0)).current;

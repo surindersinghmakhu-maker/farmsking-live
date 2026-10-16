@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View,
   Text,
   StyleSheet,
@@ -182,6 +182,33 @@ export default function MembershipsScreen() {
         {/* 1. FARMER MEMBERSHIPS PART */}
         {activeTab === 'FARMER_SOFTWARE' ? (
           <View style={{ gap: 14 }}>
+            {/* Super Admin Quick Link Banner */}
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                borderWidth: 1,
+                borderColor: 'rgba(16, 185, 129, 0.35)',
+                borderRadius: RADIUS.lg,
+                padding: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+              activeOpacity={0.8}
+              onPress={() => router.push({ pathname: '/admin/(tabs)/super-accounts', params: { section: 'PARTNERS', sub: 'MEMBERSHIPS' } } as any)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="shield-checkmark" size={18} color="#ffffff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Admin VIP Verification Desk 👑</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#6ee7b7' }}>Review pending VIP membership payments & UPI claims</Text>
+                </View>
+              </View>
+              <Ionicons name="arrow-forward" size={16} color="#34d399" />
+            </TouchableOpacity>
+
             {/* Current Active Plan Status */}
             <View style={[styles.statusCard, premiumShadow('#0f172a', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -205,19 +205,15 @@ export default function AdminProductsScreen() {
         ]}
       >
         <View style={styles.headerTitleCol}>
-          <View style={styles.headerBadgeRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+            <Text style={[styles.headerTitle, { color: textColor }]}>Market Products</Text>
             <View
               style={[
                 styles.marketBadge,
-                isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.25)' },
                 isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.35)' },
               ]}
             >
-              <Ionicons
-                name="storefront"
-                size={11}
-                color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
-              />
               <Text
                 style={[
                   styles.marketBadgeText,
@@ -225,18 +221,14 @@ export default function AdminProductsScreen() {
                   isDarkTheme && { color: '#38bdf8' },
                 ]}
               >
-                MARKETPLACE HUB
+                {totalCount} Items
               </Text>
             </View>
             <View style={styles.livePulse}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>Live Catalog</Text>
+              <Text style={styles.liveText}>Live</Text>
             </View>
           </View>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Market Products</Text>
-          <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-            Catalog moderation, real-time inventory & multi-vendor seller listings.
-          </Text>
         </View>
 
         {/* Top Action Buttons */}
@@ -247,7 +239,7 @@ export default function AdminProductsScreen() {
             activeOpacity={0.7}
             accessibilityLabel="Refresh Products"
           >
-            <Ionicons name="refresh-outline" size={17} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Ionicons name="refresh-outline" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -258,112 +250,113 @@ export default function AdminProductsScreen() {
             }}
             activeOpacity={0.8}
           >
-            <Ionicons name="add" size={18} color="#ffffff" />
+            <Ionicons name="add" size={16} color="#ffffff" />
             <Text style={styles.addListingBtnText}>New Product</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 📊 Responsive 4-Card Analytics Ribbon (2x2 on Mobile, 4x1 on Tablet/Desktop) */}
+      {/* 📊 Compact Interactive Filter Ribbon */}
       <View style={styles.analyticsSection}>
-        <View style={styles.metricsGrid}>
-          {/* Card 1: Total */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.metricsGrid}
+        >
+          {/* Total */}
           <TouchableOpacity
             style={[
-              styles.metricCard,
-              !isDesktop && styles.metricCardMobile,
+              styles.metricPill,
               isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
               isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.05)', borderColor: 'rgba(56, 189, 248, 0.2)' },
-              filter === 'ALL' && styles.metricCardSelected,
+              filter === 'ALL' && (isLight ? styles.metricPillSelectedLight : styles.metricPillSelected),
             ]}
             onPress={() => {
               tap();
               setFilter('ALL');
             }}
           >
-            <View style={styles.metricTop}>
-              <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.12)' }]}>
-                <Ionicons name="cube-outline" size={15} color="#38bdf8" />
-              </View>
-              <Text style={[styles.metricCount, { color: textColor }]}>{totalCount}</Text>
-            </View>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Total Catalog</Text>
+            <Ionicons name="cube-outline" size={13} color="#38bdf8" />
+            <Text style={[styles.metricPillLabel, { color: subTextColor }]}>Total</Text>
+            <Text style={[styles.metricPillCount, { color: textColor }]}>{totalCount}</Text>
           </TouchableOpacity>
 
-          {/* Card 2: Active */}
+          {/* Active */}
           <TouchableOpacity
             style={[
-              styles.metricCard,
-              !isDesktop && styles.metricCardMobile,
+              styles.metricPill,
               isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.25)' },
               isDarkTheme && { backgroundColor: 'rgba(34, 197, 94, 0.05)', borderColor: 'rgba(34, 197, 94, 0.25)' },
-              filter === 'ACTIVE' && styles.metricCardSelected,
+              filter === 'ACTIVE' && (isLight ? styles.metricPillSelectedLight : styles.metricPillSelected),
             ]}
             onPress={() => {
               tap();
               setFilter('ACTIVE');
             }}
           >
-            <View style={styles.metricTop}>
-              <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(34, 197, 94, 0.12)' }]}>
-                <Ionicons name="checkmark-circle-outline" size={15} color="#22c55e" />
-              </View>
-              <Text style={[styles.metricCount, { color: isLight ? '#16a34a' : '#00ff87' }]}>
-                {activeCount}
-              </Text>
-            </View>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Active Live</Text>
+            <Ionicons name="checkmark-circle-outline" size={13} color="#22c55e" />
+            <Text style={[styles.metricPillLabel, { color: subTextColor }]}>Active</Text>
+            <Text style={[styles.metricPillCount, { color: isLight ? '#16a34a' : '#00ff87' }]}>
+              {activeCount}
+            </Text>
           </TouchableOpacity>
 
-          {/* Card 3: Low/Out Stock */}
+          {/* Low Stock */}
           <TouchableOpacity
             style={[
-              styles.metricCard,
-              !isDesktop && styles.metricCardMobile,
+              styles.metricPill,
               isLight && { backgroundColor: '#fefce8', borderColor: 'rgba(245, 158, 11, 0.25)' },
               isDarkTheme && { backgroundColor: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.25)' },
-              filter === 'LOW_STOCK' && styles.metricCardSelected,
+              filter === 'LOW_STOCK' && (isLight ? styles.metricPillSelectedLight : styles.metricPillSelected),
             ]}
             onPress={() => {
               tap();
               setFilter('LOW_STOCK');
             }}
           >
-            <View style={styles.metricTop}>
-              <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
-                <Ionicons name="alert-circle-outline" size={15} color="#f59e0b" />
-              </View>
-              <Text style={[styles.metricCount, { color: '#f59e0b' }]}>{lowStockCount}</Text>
-            </View>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Stock Alerts</Text>
+            <Ionicons name="alert-circle-outline" size={13} color="#f59e0b" />
+            <Text style={[styles.metricPillLabel, { color: subTextColor }]}>Stock Alerts</Text>
+            <Text style={[styles.metricPillCount, { color: '#f59e0b' }]}>{lowStockCount}</Text>
           </TouchableOpacity>
 
-          {/* Card 4: Deactivated */}
+          {/* Out of Stock */}
           <TouchableOpacity
             style={[
-              styles.metricCard,
-              !isDesktop && styles.metricCardMobile,
+              styles.metricPill,
               isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.2)' },
               isDarkTheme && { backgroundColor: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.25)' },
-              filter === 'DEACTIVATED' && styles.metricCardSelected,
+              filter === 'OUT_OF_STOCK' && (isLight ? styles.metricPillSelectedLight : styles.metricPillSelected),
+            ]}
+            onPress={() => {
+              tap();
+              setFilter('OUT_OF_STOCK');
+            }}
+          >
+            <Ionicons name="close-circle-outline" size={13} color="#f87171" />
+            <Text style={[styles.metricPillLabel, { color: subTextColor }]}>Out of Stock</Text>
+          </TouchableOpacity>
+
+          {/* Deactivated */}
+          <TouchableOpacity
+            style={[
+              styles.metricPill,
+              isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.2)' },
+              isDarkTheme && { backgroundColor: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.25)' },
+              filter === 'DEACTIVATED' && (isLight ? styles.metricPillSelectedLight : styles.metricPillSelected),
             ]}
             onPress={() => {
               tap();
               setFilter('DEACTIVATED');
             }}
           >
-            <View style={styles.metricTop}>
-              <View style={[styles.metricIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
-                <Ionicons name="pause-circle-outline" size={15} color="#ef4444" />
-              </View>
-              <Text style={[styles.metricCount, { color: '#ef4444' }]}>{deactivatedCount}</Text>
-            </View>
-            <Text style={[styles.metricLabel, { color: subTextColor }]}>Deactivated</Text>
+            <Ionicons name="pause-circle-outline" size={13} color="#ef4444" />
+            <Text style={[styles.metricPillLabel, { color: subTextColor }]}>Deactivated</Text>
+            <Text style={[styles.metricPillCount, { color: '#ef4444' }]}>{deactivatedCount}</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
 
-      {/* 🔍 Search and Status Filter Row */}
+      {/* 🔍 Compact Search & Category Row */}
       <View style={styles.searchSection}>
         <View
           style={[
@@ -372,7 +365,7 @@ export default function AdminProductsScreen() {
             isDarkTheme && { backgroundColor: '#05180c', borderColor: 'rgba(0, 255, 135, 0.25)' },
           ]}
         >
-          <Ionicons name="search" size={16} color={isLight ? '#64748b' : '#00ff87'} />
+          <Ionicons name="search" size={14} color={isLight ? '#64748b' : '#00ff87'} />
           <TextInput
             style={[styles.searchInput, { color: textColor }]}
             placeholder="Search products by name, seller or category..."
@@ -382,64 +375,10 @@ export default function AdminProductsScreen() {
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color="#94a3b8" />
+              <Ionicons name="close-circle" size={15} color="#94a3b8" />
             </TouchableOpacity>
           ) : null}
         </View>
-
-        {/* Status Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterChipsScroll}
-        >
-          {[
-            { id: 'ALL', label: `All (${totalCount})` },
-            { id: 'ACTIVE', label: `Active (${activeCount})` },
-            { id: 'LOW_STOCK', label: `Low Stock (≤5)` },
-            { id: 'OUT_OF_STOCK', label: `Out of Stock` },
-            { id: 'DEACTIVATED', label: `Deactivated (${deactivatedCount})` },
-          ].map((chip) => {
-            const isSel = filter === chip.id;
-            return (
-              <TouchableOpacity
-                key={chip.id}
-                style={[
-                  styles.filterChip,
-                  isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
-                  isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.1)' },
-                  isSel && (
-                    isLight
-                      ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
-                      : isDarkTheme
-                      ? { backgroundColor: 'rgba(56, 189, 248, 0.18)', borderColor: '#38bdf8' }
-                      : styles.filterChipActive
-                  ),
-                ]}
-                onPress={() => {
-                  tap();
-                  setFilter(chip.id as any);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    isLight && { color: '#64748b' },
-                    isSel && (
-                      isLight
-                        ? { color: '#16a34a', fontFamily: FONT.bold }
-                        : isDarkTheme
-                        ? { color: '#38bdf8', fontFamily: FONT.bold }
-                        : styles.filterChipTextActive
-                    ),
-                  ]}
-                >
-                  {chip.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
 
         {/* Category Pills */}
         <ScrollView
@@ -540,78 +479,9 @@ export default function AdminProductsScreen() {
                   premiumShadow('#000000', 'sm') as any,
                 ]}
               >
-                {/* Card Header: Category & Stock Status */}
-                <View style={styles.cardHeader}>
-                  <View style={styles.categoryBadgeRow}>
-                    <View style={[styles.categoryTag, isLight && styles.categoryTagLight]}>
-                      <Ionicons
-                        name="leaf-outline"
-                        size={11}
-                        color={isLight ? '#16a34a' : '#00ff87'}
-                      />
-                      <Text style={[styles.categoryTagText, isLight && { color: '#16a34a' }]}>
-                        {p.category || 'General'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Stock Status Badge */}
-                  <View
-                    style={[
-                      styles.stockStatusBadge,
-                      !p.isActive
-                        ? styles.stockBadgeDeactivated
-                        : isOutOfStock
-                        ? styles.stockBadgeOut
-                        : isLowStock
-                        ? styles.stockBadgeLow
-                        : styles.stockBadgeIn,
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.statusDot,
-                        {
-                          backgroundColor: !p.isActive
-                            ? '#ef4444'
-                            : isOutOfStock
-                            ? '#ef4444'
-                            : isLowStock
-                            ? '#f59e0b'
-                            : '#22c55e',
-                        },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.stockStatusText,
-                        {
-                          color: !p.isActive
-                            ? '#ef4444'
-                            : isOutOfStock
-                            ? '#ef4444'
-                            : isLowStock
-                            ? '#f59e0b'
-                            : isLight
-                            ? '#16a34a'
-                            : '#00ff87',
-                        },
-                      ]}
-                    >
-                      {!p.isActive
-                        ? 'Deactivated'
-                        : isOutOfStock
-                        ? 'Out of Stock'
-                        : isLowStock
-                        ? `Low Stock (${p.stockQty})`
-                        : `In Stock (${p.stockQty})`}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Card Body: Thumbnail, Name, Seller & Price */}
-                <View style={styles.cardBody}>
-                  {/* Thumbnail */}
+                {/* Main Card Body Row */}
+                <View style={styles.cardMainRow}>
+                  {/* Thumbnail 40x40 */}
                   <View
                     style={[
                       styles.thumbnailBox,
@@ -628,7 +498,7 @@ export default function AdminProductsScreen() {
                     ) : (
                       <Ionicons
                         name="cube"
-                        size={24}
+                        size={20}
                         color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
                       />
                     )}
@@ -636,44 +506,108 @@ export default function AdminProductsScreen() {
 
                   {/* Info Column */}
                   <View style={styles.productDetailsCol}>
-                    <Text
-                      style={[styles.productName, { color: textColor }]}
-                      numberOfLines={2}
-                    >
-                      {p.name}
-                    </Text>
-
-                    <View style={styles.sellerMetaRow}>
-                      <Ionicons
-                        name="storefront-outline"
-                        size={12}
-                        color={isLight ? '#64748b' : '#94a3b8'}
-                      />
+                    <View style={styles.productTopRow}>
                       <Text
-                        style={[styles.sellerNameText, { color: subTextColor }]}
+                        style={[styles.productName, { color: textColor }]}
                         numberOfLines={1}
                       >
-                        {seller.name}
+                        {p.name}
                       </Text>
-                      {seller.verified && (
-                        <Ionicons name="checkmark-circle" size={12} color="#0284c7" />
-                      )}
+
+                      {/* Price on right */}
+                      <View style={styles.priceContainer}>
+                        <Text
+                          style={[
+                            styles.priceValue,
+                            isLight && { color: '#16a34a' },
+                            isDarkTheme && { color: '#38bdf8' },
+                          ]}
+                        >
+                          ₹{p.price}
+                        </Text>
+                        <Text style={[styles.unitValue, { color: subTextColor }]}>
+                          /{p.unit || 'piece'}
+                        </Text>
+                      </View>
                     </View>
 
-                    {/* Price and Unit */}
-                    <View style={styles.priceContainer}>
-                      <Text
+                    {/* Metadata: Category, Seller & Stock Badges */}
+                    <View style={styles.metaBadgesRow}>
+                      <View style={[styles.categoryTag, isLight && styles.categoryTagLight]}>
+                        <Text style={[styles.categoryTagText, isLight && { color: '#16a34a' }]}>
+                          {p.category || 'General'}
+                        </Text>
+                      </View>
+
+                      <View style={styles.sellerMetaRow}>
+                        <Ionicons
+                          name="storefront-outline"
+                          size={11}
+                          color={isLight ? '#64748b' : '#94a3b8'}
+                        />
+                        <Text
+                          style={[styles.sellerNameText, { color: subTextColor }]}
+                          numberOfLines={1}
+                        >
+                          {seller.name}
+                        </Text>
+                        {seller.verified && (
+                          <Ionicons name="checkmark-circle" size={11} color="#0284c7" />
+                        )}
+                      </View>
+
+                      {/* Stock Status Badge */}
+                      <View
                         style={[
-                          styles.priceValue,
-                          isLight && { color: '#16a34a' },
-                          isDarkTheme && { color: '#38bdf8' },
+                          styles.stockStatusBadge,
+                          !p.isActive
+                            ? styles.stockBadgeDeactivated
+                            : isOutOfStock
+                            ? styles.stockBadgeOut
+                            : isLowStock
+                            ? styles.stockBadgeLow
+                            : styles.stockBadgeIn,
                         ]}
                       >
-                        ₹{p.price}
-                      </Text>
-                      <Text style={[styles.unitValue, { color: subTextColor }]}>
-                        / {p.unit || 'piece'}
-                      </Text>
+                        <View
+                          style={[
+                            styles.statusDot,
+                            {
+                              backgroundColor: !p.isActive
+                                ? '#ef4444'
+                                : isOutOfStock
+                                ? '#ef4444'
+                                : isLowStock
+                                ? '#f59e0b'
+                                : '#22c55e',
+                            },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.stockStatusText,
+                            {
+                              color: !p.isActive
+                                ? '#ef4444'
+                                : isOutOfStock
+                                ? '#ef4444'
+                                : isLowStock
+                                ? '#f59e0b'
+                                : isLight
+                                ? '#16a34a'
+                                : '#00ff87',
+                            },
+                          ]}
+                        >
+                          {!p.isActive
+                            ? 'Deactivated'
+                            : isOutOfStock
+                            ? 'Out of Stock'
+                            : isLowStock
+                            ? `Low (${p.stockQty})`
+                            : `In Stock (${p.stockQty})`}
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -686,7 +620,6 @@ export default function AdminProductsScreen() {
                     isDarkTheme && { borderTopColor: 'rgba(255, 255, 255, 0.06)' },
                   ]}
                 >
-                  {/* Status Toggle Switch Button */}
                   <TouchableOpacity
                     style={[
                       styles.statusToggleBtn,
@@ -701,7 +634,7 @@ export default function AdminProductsScreen() {
                   >
                     <Ionicons
                       name={p.isActive ? 'checkmark-circle' : 'pause-circle'}
-                      size={14}
+                      size={12}
                       color={p.isActive ? (isLight ? '#16a34a' : '#00ff87') : '#ef4444'}
                     />
                     <Text
@@ -716,11 +649,10 @@ export default function AdminProductsScreen() {
                         },
                       ]}
                     >
-                      {p.isActive ? 'Active Listing' : 'Hold / Deactivated'}
+                      {p.isActive ? 'Active Listing' : 'Hold / Inactive'}
                     </Text>
                   </TouchableOpacity>
 
-                  {/* Actions (Edit & Delete) */}
                   <View style={styles.actionIconsRow}>
                     <TouchableOpacity
                       style={[styles.editBtn, isLight && styles.editBtnLight]}
@@ -730,7 +662,7 @@ export default function AdminProductsScreen() {
                     >
                       <Ionicons
                         name="create-outline"
-                        size={15}
+                        size={13}
                         color={isLight ? '#0284c7' : '#38bdf8'}
                       />
                       <Text
@@ -745,7 +677,7 @@ export default function AdminProductsScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.deleteIconButton}
+                      style={[styles.deleteIconButton, isLight && styles.deleteIconButtonLight]}
                       onPress={() => {
                         tap();
                         setDeletingProduct(p);
@@ -753,7 +685,7 @@ export default function AdminProductsScreen() {
                       activeOpacity={0.7}
                       accessibilityLabel="Delete Product"
                     >
-                      <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                      <Ionicons name="trash-outline" size={13} color="#ef4444" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -1147,82 +1079,66 @@ const styles = StyleSheet.create({
 
   /* Header Bar */
   headerBar: {
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: '#03140a',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 135, 0.15)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
-    flexWrap: 'wrap',
+    gap: 8,
   },
   headerTitleCol: {
     flex: 1,
-    minWidth: 200,
-  },
-  headerBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  marketBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0, 255, 135, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
-  },
-  marketBadgeText: {
-    fontSize: 9.5,
-    fontFamily: FONT.extraBold,
-    color: '#00ff87',
-    letterSpacing: 0.4,
-  },
-  livePulse: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22c55e',
-  },
-  liveText: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
-    color: '#22c55e',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.3,
   },
-  headerSubtitle: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    color: '#94a3b8',
-    marginTop: 2,
+  marketBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  marketBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  livePulse: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#22c55e',
+  },
+  liveText: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#22c55e',
   },
   headerActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   refreshIconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.25)',
@@ -1236,18 +1152,18 @@ const styles = StyleSheet.create({
   addListingBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: '#059669',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+    borderRadius: 8,
     ...premiumShadow('#059669', 'sm') as any,
   },
   addListingBtnLight: {
     backgroundColor: '#16a34a',
   },
   addListingBtnText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
@@ -1255,124 +1171,84 @@ const styles = StyleSheet.create({
   /* Metrics Ribbon */
   analyticsSection: {
     paddingHorizontal: 10,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 6,
+    paddingBottom: 2,
   },
   metricsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 6,
-    justifyContent: 'space-between',
   },
-  metricCard: {
-    flex: 1,
-    minWidth: '22%',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 7,
-  },
-  metricCardMobile: {
-    width: '48.5%',
-    flexBasis: '48.5%',
-    flex: undefined,
-    minWidth: 0,
-    marginBottom: 4,
-  },
-  metricCardSelected: {
-    borderWidth: 1.5,
-    borderColor: '#00ff87',
-  },
-  metricTop: {
+  metricPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.12)',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
   },
-  metricIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+  metricPillSelected: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderColor: '#00ff87',
   },
-  metricCount: {
-    fontSize: 14,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
+  metricPillSelectedLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
   },
-  metricLabel: {
-    fontSize: 9.5,
+  metricPillLabel: {
+    fontSize: 10.5,
     fontFamily: FONT.medium,
     color: '#94a3b8',
-    marginTop: 3,
+  },
+  metricPillCount: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
   },
 
   /* Search & Filter Area */
   searchSection: {
     paddingHorizontal: 10,
     paddingTop: 4,
-    paddingBottom: 4,
-    gap: 6,
+    paddingBottom: 2,
+    gap: 5,
   },
   searchBarBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    gap: 6,
+    height: 32,
   },
   searchInput: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#ffffff',
     padding: 0,
   },
-  filterChipsScroll: {
-    gap: 6,
-    paddingVertical: 2,
-  },
-  filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4.5,
-    borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  filterChipActive: {
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-    borderColor: '#00ff87',
-  },
-  filterChipText: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-  },
-  filterChipTextActive: {
-    color: '#00ff87',
-    fontFamily: FONT.bold,
-  },
   categoryChipsScroll: {
-    gap: 5,
+    gap: 4,
     paddingVertical: 1,
   },
   catChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
     borderRadius: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   catChipText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#94a3b8',
   },
@@ -1381,8 +1257,8 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 10,
     paddingTop: 4,
-    paddingBottom: 36,
-    gap: 8,
+    paddingBottom: 30,
+    gap: 6,
   },
   loadingBox: {
     alignItems: 'center',
@@ -1448,52 +1324,96 @@ const styles = StyleSheet.create({
   /* Product Card */
   productCard: {
     backgroundColor: '#04140a',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.18)',
-    padding: 10,
-    gap: 8,
+    padding: 8,
+    gap: 6,
   },
   productCardInactive: {
     opacity: 0.72,
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
-  cardHeader: {
+  cardMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  thumbnailBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnailBoxLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+  },
+  productDetailsCol: {
+    flex: 1,
+    gap: 2,
+  },
+  productTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  categoryBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 6,
   },
-  categoryTag: {
+  productName: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+    flex: 1,
+  },
+  metaBadgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  categoryTag: {
     backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
   categoryTagLight: {
     backgroundColor: '#f0fdf4',
     borderColor: 'rgba(22, 163, 74, 0.2)',
   },
   categoryTagText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.bold,
     color: '#00ff87',
+  },
+  sellerMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  sellerNameText: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    maxWidth: 120,
   },
   stockStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    gap: 3.5,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: RADIUS.pill,
   },
   stockBadgeIn: {
@@ -1517,73 +1437,26 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(239, 68, 68, 0.35)',
   },
   statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 4.5,
+    height: 4.5,
+    borderRadius: 2.25,
   },
   stockStatusText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.bold,
-  },
-
-  /* Card Body */
-  cardBody: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  thumbnailBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  thumbnailBoxLight: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  productDetailsCol: {
-    flex: 1,
-    gap: 2,
-  },
-  productName: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#ffffff',
-    lineHeight: 17,
-  },
-  sellerMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  sellerNameText: {
-    fontSize: 10,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
-    marginTop: 1,
+    gap: 2,
   },
   priceValue: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
   },
   unitValue: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.regular,
     color: '#94a3b8',
   },
@@ -1593,17 +1466,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 7,
+    paddingTop: 5,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.06)',
   },
   statusToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 6,
+    gap: 3.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
     borderWidth: 1,
   },
   statusToggleBtnActive: {
@@ -1619,13 +1492,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   statusToggleText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
   },
   actionIconsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   editBtn: {
     flexDirection: 'row',
@@ -1634,25 +1507,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(56, 189, 248, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(56, 189, 248, 0.25)',
-    paddingHorizontal: 7,
-    paddingVertical: 3.5,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
   },
   editBtnLight: {
     backgroundColor: '#f0f9ff',
     borderColor: 'rgba(2, 132, 199, 0.25)',
   },
   editBtnText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#38bdf8',
   },
   deleteIconButton: {
     padding: 4,
-    borderRadius: 6,
+    borderRadius: 5,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  deleteIconButtonLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
   },
 
   /* Modals */

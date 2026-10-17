@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -93,7 +93,11 @@ export default function SuperUsersScreen() {
     if (initialFilter) setFilter(initialFilter);
   }, [initialGroup, initialFilter]);
 
+  const router = useRouter();
   const [search, setSearch] = useState('');
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [addStaffKind, setAddStaffKind] = useState<'ADMIN' | 'OPERATOR' | 'TECHNICAL_TRAINER'>('ADMIN');
+  const [addAdvisorType, setAddAdvisorType] = useState<AdvisorType>('FARM');
   const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isAddTrainerOpen, setIsAddTrainerOpen] = useState(false);
@@ -245,6 +249,17 @@ export default function SuperUsersScreen() {
               <View style={[styles.compactCountBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
                 <Text style={[styles.compactCountBadgeText, isLight && { color: '#16a34a' }]}>{items.length}</Text>
               </View>
+              <TouchableOpacity
+                style={styles.topAddUserBtn}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setIsAddUserModalOpen(true);
+                }}
+              >
+                <Ionicons name="person-add" size={12} color="#ffffff" />
+                <Text style={styles.topAddUserBtnText}>+ Add User</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Quick Stats Pill Strip & 1-Click Exports */}
@@ -615,15 +630,34 @@ export default function SuperUsersScreen() {
         onClose={() => setIsPageSizePickerOpen(false)}
       />
 
+      <AddUserTypePickerModal
+        visible={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
+        onSelectType={(type) => {
+          setIsAddUserModalOpen(false);
+          if (type === 'FARMER') {
+            router.push('/admin/(tabs)/farmer-profile-setup');
+          } else if (type === 'DOCTOR') {
+            setAddAdvisorType('FARM');
+            setIsAddAdvisorOpen(true);
+          } else if (type === 'STAFF') {
+            setAddStaffKind('ADMIN');
+            setIsAddStaffOpen(true);
+          } else if (type === 'TRAINER') {
+            setIsAddTrainerOpen(true);
+          }
+        }}
+      />
+
       <AddAdvisorModal
         visible={isAddAdvisorOpen}
-        advisorType={filter === 'GARDEN_ADVISOR' ? 'GARDEN' : 'FARM'}
+        advisorType={addAdvisorType}
         onClose={() => setIsAddAdvisorOpen(false)}
       />
 
       <AddStaffModal
         visible={isAddStaffOpen}
-        kind={filter === 'OPERATOR' ? 'OPERATOR' : filter === 'TECHNICAL_TRAINER' ? 'TECHNICAL_TRAINER' : 'ADMIN'}
+        kind={addStaffKind}
         onClose={() => setIsAddStaffOpen(false)}
       />
 
@@ -634,6 +668,116 @@ export default function SuperUsersScreen() {
       <AddTrainerModal visible={isAddTrainerOpen} onClose={() => setIsAddTrainerOpen(false)} />
       <TrainerReportsModal visible={isTrainerReportsOpen} onClose={() => setIsTrainerReportsOpen(false)} />
     </View>
+  );
+}
+
+function AddUserTypePickerModal({
+  visible,
+  onClose,
+  onSelectType,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelectType: (type: 'FARMER' | 'DOCTOR' | 'STAFF' | 'TRAINER') => void;
+}) {
+  const options = [
+    {
+      id: 'FARMER' as const,
+      title: 'Farmer / Client Profile',
+      subtitle: 'Register new farm client, grower or landholder',
+      icon: 'leaf' as const,
+      color: '#16a34a',
+      bgColor: 'rgba(22, 163, 74, 0.12)',
+    },
+    {
+      id: 'DOCTOR' as const,
+      title: 'Crop Doctor / Plant Advisor',
+      subtitle: 'Onboard certified agronomy expert or consultant',
+      icon: 'medical' as const,
+      color: '#0284c7',
+      bgColor: 'rgba(2, 132, 199, 0.12)',
+    },
+    {
+      id: 'STAFF' as const,
+      title: 'Platform Staff / Operator',
+      subtitle: 'Create operator, platform manager or admin account',
+      icon: 'shield-half' as const,
+      color: '#8b5cf6',
+      bgColor: 'rgba(139, 92, 246, 0.12)',
+    },
+    {
+      id: 'TRAINER' as const,
+      title: 'Field Trainer Coordinator',
+      subtitle: 'Assign regional agricultural trainer & reports',
+      icon: 'school' as const,
+      color: '#f59e0b',
+      bgColor: 'rgba(245, 158, 11, 0.12)',
+    },
+  ];
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { maxWidth: 440 }]}>
+          <View style={styles.modalHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ backgroundColor: 'rgba(22, 163, 74, 0.15)', padding: 6, borderRadius: RADIUS.md }}>
+                <Ionicons name="person-add" size={18} color="#16a34a" />
+              </View>
+              <View>
+                <Text style={styles.modalTitle}>Add New User</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 }}>
+                  Select account role to onboard
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ gap: 8, marginTop: 4 }}>
+            {options.map((opt) => (
+              <TouchableOpacity
+                key={opt.id}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 12,
+                  backgroundColor: '#071f12',
+                  borderRadius: RADIUS.lg,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                }}
+                activeOpacity={0.75}
+                onPress={() => onSelectType(opt.id)}
+              >
+                <View
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    backgroundColor: opt.bgColor,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Ionicons name={opt.icon} size={20} color={opt.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#f8fafc' }}>{opt.title}</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: '#94a3b8', marginTop: 2 }} numberOfLines={1}>
+                    {opt.subtitle}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#64748b" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -1987,6 +2131,25 @@ const styles = StyleSheet.create({
   compactCountBadgeText: {
     color: '#00ff87',
     fontSize: 11,
+    fontFamily: FONT.bold,
+  },
+  topAddUserBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topAddUserBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
     fontFamily: FONT.bold,
   },
   heroStatsContainer: {

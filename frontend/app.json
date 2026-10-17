@@ -2,7 +2,7 @@
   "expo": {
     "name": "FarmsKing",
     "slug": "farmsking",
-    "version": "2.0.28",
+    "version": "2.0.29",
     "platforms": [
       "ios",
       "android",

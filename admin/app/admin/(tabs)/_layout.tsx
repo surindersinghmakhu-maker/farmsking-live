@@ -271,8 +271,10 @@ export default function TabLayout() {
     const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
     const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
     const currentFilter = localParams?.filter || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('filter') : undefined);
+    const currentGroup = localParams?.group || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('group') : undefined);
     const isFilterMatch = !tab.params?.filter || (currentFilter === tab.params.filter);
-    return (isIndexActive || isOtherActive) && isFilterMatch;
+    const isGroupMatch = !tab.params?.group || (currentGroup === tab.params.group);
+    return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch;
   }) || activePillar.subTabs[0];
 
   useEffect(() => {

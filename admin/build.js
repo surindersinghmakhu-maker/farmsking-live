@@ -6,16 +6,8 @@ const path = require('path');
 const targetDir = __dirname;
 const currentDir = path.resolve(__dirname, '..');
 
-// Trigger automatic version bump
-try {
-  const bumpScriptPath = path.join(currentDir, 'scripts', 'bump-version.js');
-  if (fs.existsSync(bumpScriptPath)) {
-    const { runVersionBump } = require(bumpScriptPath);
-    runVersionBump();
-  }
-} catch (bumpErr) {
-  console.warn('⚠️ Auto version bump skipped:', bumpErr.message);
-}
+// Auto version bump for admin is isolated to admin directory if needed
+
 
 console.log(`🚀 Starting Expo Web build in resolved directory: ${targetDir}`);
 

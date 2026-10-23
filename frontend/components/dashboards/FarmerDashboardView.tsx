@@ -379,6 +379,23 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               activeOpacity={0.8}
               onPress={() => {
                 tap();
+                router.push('/crop-disease-scanner' as any);
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#e0f2fe' }]}>
+                <Ionicons name="scan" size={16} color="#0284c7" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>AI Crop Doctor</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Scan Leaf Photo</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
                 setShowLocationProfileModal(true);
               }}
             >

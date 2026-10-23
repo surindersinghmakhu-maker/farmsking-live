@@ -7,7 +7,9 @@ import { View,
   SafeAreaView,
   Modal,
   Alert,
-  Image, Pressable } from 'react-native';
+  Image,
+  Pressable,
+  Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
@@ -688,36 +690,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
   backBtn: {
-    padding: 6,
+    padding: 4,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0f172a',
   },
   roleTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: 7,
   },
   roleTagText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '800',
   },
   scrollContent: {
-    padding: 16,
+    padding: 10,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
   },
   bannerCard: {
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 14,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
   },
   bannerBadge: {
     alignSelf: 'flex-start',

@@ -98,13 +98,14 @@ type TabName =
   | 'farmers' | 'schedule' | 'chat'
   | 'referrals' | 'wallet'
   | 'admin-orders' | 'admin-products'
+  | 'crop-disease-scanner'
   | 'super-users' | 'super-coupons' | 'super-accounts' | 'cpanel' | 'super-settings'
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
   | 'operator-orders' | 'trainer-dashboard' | 'garden';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-users', 'super-accounts', 'admin_more'] },
-  ADMIN: { tabs: ['index', 'admin-products', 'super-users', 'super-accounts', 'admin_more'] },
+  SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-accounts', 'super-users', 'super-settings'] },
+  ADMIN: { tabs: ['index', 'admin-products', 'super-accounts', 'super-users', 'super-settings'] },
   OPERATOR: { tabs: ['index', 'operator-orders', 'admin_more'] },
   TECHNICAL_TRAINER: { tabs: ['index', 'super-users', 'admin_more'] },
   MARKET_MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
@@ -126,11 +127,12 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
   'admin-products': { key: 'tabMarket' as any, title: 'Market', icon: 'storefront-outline', iconFilled: 'storefront' },
+  'crop-disease-scanner': { key: 'tabCrops' as any, title: 'Agri-Hub', icon: 'leaf-outline', iconFilled: 'leaf' },
   'super-users': { key: 'tabUsers', title: 'Users', icon: 'people-outline', iconFilled: 'people' },
   'super-coupons': { key: 'tabCoupons', title: 'Coupons', icon: 'ticket-outline', iconFilled: 'ticket' },
   'super-accounts': { key: 'tabAccounts', title: 'Finance', icon: 'cash-outline', iconFilled: 'cash' },
   cpanel: { key: 'tabFeatures', title: 'C-Panel', icon: 'options-outline', iconFilled: 'options' },
-  'super-settings': { key: 'tabSettings' as any, title: 'Settings', icon: 'settings-outline', iconFilled: 'settings' },
+  'super-settings': { key: 'tabSettings' as any, title: 'Setting', icon: 'settings-outline', iconFilled: 'settings' },
   'super-orders': { key: 'superSaleManagement', title: 'Sale / Order Management', icon: 'receipt-outline', iconFilled: 'receipt' },
   'super-audit-log': { key: 'superAuditLog', title: 'Audit Log', icon: 'time-outline', iconFilled: 'time' },
   'super-crop-edit': { key: 'tabCrops', title: 'Edit Crop', icon: 'leaf-outline', iconFilled: 'leaf' },
@@ -145,6 +147,7 @@ const ALL_TABS: TabName[] = [
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',
   'admin-orders', 'admin-products',
+  'crop-disease-scanner',
   'super-users', 'super-coupons', 'super-accounts', 'cpanel', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
   'operator-orders', 'trainer-dashboard', 'garden',
@@ -156,7 +159,7 @@ export default function TabLayout() {
   const pathname = usePathname();
   const localParams = useLocalSearchParams();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 768; // Desktop breakpoint
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768)); // Desktop breakpoint
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHealthRadarOpen, setIsHealthRadarOpen] = useState(false);
@@ -241,6 +244,9 @@ export default function TabLayout() {
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
     if (name === 'admin-products') return 'Market';
+    if (name === 'super-accounts') return 'Finance';
+    if (name === 'crop-disease-scanner') return 'Agri-Hub';
+    if (name === 'super-settings') return 'Setting';
     const meta = TAB_META[name as Exclude<TabName, 'index' | 'more' | 'admin_more'>];
     return meta ? t(meta.key, meta.title) : name;
   };
@@ -253,6 +259,9 @@ export default function TabLayout() {
     if (name === 'more' || name === 'admin_more') return focused ? 'grid' : 'grid-outline';
     if (name === 'farmers') return focused ? 'leaf' : 'leaf-outline';
     if (name === 'admin-products') return focused ? 'storefront' : 'storefront-outline';
+    if (name === 'super-accounts') return focused ? 'cash' : 'cash-outline';
+    if (name === 'crop-disease-scanner') return focused ? 'leaf' : 'leaf-outline';
+    if (name === 'super-settings') return focused ? 'settings' : 'settings-outline';
     const meta = TAB_META[name as Exclude<TabName, 'index' | 'more' | 'admin_more'>];
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
   };
@@ -272,9 +281,11 @@ export default function TabLayout() {
     const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
     const currentFilter = localParams?.filter || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('filter') : undefined);
     const currentGroup = localParams?.group || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('group') : undefined);
+    const currentSection = localParams?.section || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('section') : undefined);
     const isFilterMatch = !tab.params?.filter || (currentFilter === tab.params.filter);
     const isGroupMatch = !tab.params?.group || (currentGroup === tab.params.group);
-    return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch;
+    const isSectionMatch = !tab.params?.section || (currentSection === tab.params.section) || (!currentSection && tab.params.section === 'API');
+    return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch && isSectionMatch;
   }) || activePillar.subTabs[0];
 
   useEffect(() => {
@@ -818,6 +829,7 @@ export default function TabLayout() {
                 ]}
                 onPress={() => setIsPillarsMenuOpen(true)}
                 activeOpacity={0.75}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
               >
                 <Ionicons
                   name={activePillar.iconFilled || activePillar.icon}
@@ -901,7 +913,7 @@ export default function TabLayout() {
           <View
             style={[
               desktopStyles.topTabsHeaderBar,
-              !isDesktop && { height: 42, paddingVertical: 2, paddingHorizontal: 6 },
+              !isDesktop && { height: 36, paddingVertical: 2, paddingHorizontal: 4 },
               {
                 backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#03140a',
                 borderBottomColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.2)',
@@ -915,7 +927,7 @@ export default function TabLayout() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={[desktopStyles.topTabsScrollContent, !isDesktop && { paddingHorizontal: 4, gap: 4 }]}
+                  contentContainerStyle={[desktopStyles.topTabsScrollContent, !isDesktop && { paddingHorizontal: 3, gap: 4 }]}
                 >
                   <View
                     style={[
@@ -939,7 +951,7 @@ export default function TabLayout() {
                           onPress={() => handleSelectSubTab(tab)}
                           style={({ hovered, pressed }: any) => [
                             desktopStyles.segmentedTabItem,
-                            !isDesktop && { paddingHorizontal: 10, paddingVertical: 5 },
+                            !isDesktop && { paddingHorizontal: 9, paddingVertical: 3.5, minHeight: 28 },
                             isActive && (
                               isLight
                                 ? {
@@ -971,7 +983,7 @@ export default function TabLayout() {
                         >
                           <Ionicons
                             name={tab.icon}
-                            size={isDesktop ? 14.5 : 13}
+                            size={isDesktop ? 13.5 : 12}
                             color={
                               isActive
                                 ? (isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06')
@@ -981,7 +993,7 @@ export default function TabLayout() {
                           <Text
                             style={[
                               desktopStyles.segmentedTabText,
-                              !isDesktop && { fontSize: 11 },
+                              !isDesktop && { fontSize: 10.5 },
                               isActive
                                 ? (isLight ? { color: '#ffffff', fontFamily: FONT.bold } : isDarkTheme ? { color: '#020617', fontFamily: FONT.bold } : desktopStyles.segmentedTabTextActive)
                                 : (isLight ? { color: '#64748b', fontFamily: FONT.medium } : desktopStyles.segmentedTabTextInactive),
@@ -1097,8 +1109,8 @@ export default function TabLayout() {
             animation: 'fade',
             sceneStyle: {
               flex: 1,
-              // Mobile: reserve space at bottom for the floating tab bar (height 64-76 + safe area)
-              paddingBottom: isDesktop ? 0 : (Platform.OS === 'ios' ? 84 : 70),
+              // Mobile: reserve space at bottom for the floating tab bar (height 54-66 + safe area)
+              paddingBottom: isDesktop ? 0 : (Platform.OS === 'ios' ? 70 : 58),
             },
           }}
         >
@@ -1208,6 +1220,54 @@ export default function TabLayout() {
                 />
               );
             }
+            if (name === 'super-accounts') {
+              return (
+                <Tabs.Screen
+                  key={name}
+                  name="super-accounts"
+                  options={{
+                    title: 'Finance',
+                    tabBarLabel: 'Finance',
+                    href: isShown ? undefined : null,
+                    tabBarIcon: ({ color, focused }) => (
+                      <Ionicons size={23} name={focused ? 'cash' : 'cash-outline'} color={color} />
+                    ),
+                  }}
+                />
+              );
+            }
+            if (name === 'crop-disease-scanner') {
+              return (
+                <Tabs.Screen
+                  key={name}
+                  name="crop-disease-scanner"
+                  options={{
+                    title: 'Agri-Hub',
+                    tabBarLabel: 'Agri-Hub',
+                    href: isShown ? undefined : null,
+                    tabBarIcon: ({ color, focused }) => (
+                      <Ionicons size={23} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
+                    ),
+                  }}
+                />
+              );
+            }
+            if (name === 'super-settings') {
+              return (
+                <Tabs.Screen
+                  key={name}
+                  name="super-settings"
+                  options={{
+                    title: 'Setting',
+                    tabBarLabel: 'Setting',
+                    href: isShown ? undefined : null,
+                    tabBarIcon: ({ color, focused }) => (
+                      <Ionicons size={23} name={focused ? 'settings' : 'settings-outline'} color={color} />
+                    ),
+                  }}
+                />
+              );
+            }
             return (
               <Tabs.Screen
                 key={name}
@@ -1226,12 +1286,6 @@ export default function TabLayout() {
           })}
 
           {/* Hidden tool screens — accessed via More tab, navigation shortcuts, and direct links */}
-          <Tabs.Screen
-            name="crop-disease-scanner"
-            options={{
-              href: null,
-            }}
-          />
           <Tabs.Screen
             name="satellite-map"
             options={{
@@ -1286,6 +1340,12 @@ export default function TabLayout() {
               href: null,
             }}
           />
+          <Tabs.Screen
+            name="admin-offers"
+            options={{
+              href: null,
+            }}
+          />
         </Tabs>
 
         {/* 🌟 SUPER PREMIUM MODALS & TOAST NOTIFICATIONS */}
@@ -1314,11 +1374,11 @@ export default function TabLayout() {
 
 const desktopStyles = StyleSheet.create({
   sidebar: {
-    width: 260,
+    width: 236,
     backgroundColor: '#020b06',
     borderRightWidth: 1,
     borderRightColor: 'rgba(0, 255, 135, 0.18)',
-    paddingVertical: 18,
+    paddingVertical: 12,
     shadowColor: '#00ff87',
     shadowOffset: { width: 3, height: 0 },
     shadowOpacity: 0.08,
@@ -1330,56 +1390,56 @@ const desktopStyles = StyleSheet.create({
   brandLogoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 20,
-    gap: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    gap: 8,
   },
   brandTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.3,
   },
   brandSubtitle: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#6ee7b7',
     marginTop: 1,
   },
   brandBadgeText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.4)',
-    paddingHorizontal: 5,
+    paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 4,
   },
   sidebarSectionTitle: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
-    letterSpacing: 1.2,
-    marginLeft: 16,
-    marginBottom: 8,
+    letterSpacing: 1.1,
+    marginLeft: 14,
+    marginBottom: 6,
   },
   menuNavCol: {
-    paddingHorizontal: 8,
-    gap: 3,
-    paddingBottom: 10,
+    paddingHorizontal: 6,
+    gap: 2,
+    paddingBottom: 6,
   },
   pillarCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 5.5,
     borderRadius: RADIUS.md,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    marginBottom: 2,
+    marginBottom: 1.5,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -1399,17 +1459,17 @@ const desktopStyles = StyleSheet.create({
   pillarActiveBar: {
     position: 'absolute',
     left: 0,
-    top: 5,
-    bottom: 5,
+    top: 4,
+    bottom: 4,
     width: 3,
     backgroundColor: '#00ff87',
     borderTopRightRadius: 2,
     borderBottomRightRadius: 2,
   },
   pillarIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 7,
     backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
@@ -1422,10 +1482,10 @@ const desktopStyles = StyleSheet.create({
   },
   pillarContentCol: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 7,
   },
   pillarTitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#cbd5e1',
     letterSpacing: 0.1,
@@ -1436,8 +1496,8 @@ const desktopStyles = StyleSheet.create({
   },
   pillarBadge: {
     backgroundColor: 'rgba(0, 255, 135, 0.12)',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 4,
+    paddingVertical: 0.5,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.25)',
@@ -1447,7 +1507,7 @@ const desktopStyles = StyleSheet.create({
     borderColor: '#00ff87',
   },
   pillarBadgeText: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
@@ -1458,18 +1518,18 @@ const desktopStyles = StyleSheet.create({
   settingsBottomBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    gap: 7,
+    paddingHorizontal: 8,
+    paddingVertical: 5.5,
     borderRadius: RADIUS.md,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   settingsBottomBtnText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#cbd5e1',
   },
@@ -1629,29 +1689,36 @@ const desktopStyles = StyleSheet.create({
     backgroundColor: '#03140a',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 135, 0.2)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
     zIndex: 90,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 3,
-    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)', maxWidth: '100vw', overflowX: 'hidden' } as any) : {}),
   },
   topTabsHeaderInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   topTabsAnimatedContainer: {
     flex: 1,
     minWidth: 0,
+    maxWidth: '100%',
+    overflow: 'hidden',
   },
   topTabsScrollContent: {
     alignItems: 'center',
-    paddingRight: 16,
+    paddingRight: 12,
   },
   segmentedTabContainer: {
     flexDirection: 'row',
@@ -1660,15 +1727,15 @@ const desktopStyles = StyleSheet.create({
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    padding: 3,
-    gap: 3,
+    padding: 2.5,
+    gap: 2.5,
   },
   segmentedTabItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
     borderRadius: RADIUS.sm,
     backgroundColor: 'transparent',
   },
@@ -1684,7 +1751,7 @@ const desktopStyles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   segmentedTabText: {
-    fontSize: 12,
+    fontSize: 11.5,
     letterSpacing: 0.1,
   },
   segmentedTabTextInactive: {
@@ -1754,12 +1821,15 @@ const layoutStyles = StyleSheet.create({
   rootContainer: {
     flex: 1,
     width: '100%',
+    maxWidth: '100%',
     height: '100%',
     overflow: 'hidden' as any,
     ...(Platform.OS === 'web'
       ? {
           height: '100dvh' as any,
           maxHeight: '100dvh' as any,
+          maxWidth: '100vw' as any,
+          overflowX: 'hidden' as any,
         }
       : {}),
   },
@@ -1767,11 +1837,14 @@ const layoutStyles = StyleSheet.create({
 
 const mobileStyles = StyleSheet.create({
   mobileTopBar: {
-    height: 50,
+    height: 44,
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 135, 0.18)',
     zIndex: 95,
@@ -1779,16 +1852,16 @@ const mobileStyles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 4,
-    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)', maxWidth: '100vw', overflowX: 'hidden' } as any) : {}),
   },
   brandBox: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logoSquircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 1 },
@@ -1797,7 +1870,7 @@ const mobileStyles = StyleSheet.create({
     elevation: 2,
   },
   brandTitle: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.3,
@@ -1809,8 +1882,8 @@ const mobileStyles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.4)',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
     borderRadius: 3,
   },
   pillarSelectorPill: {
@@ -1818,12 +1891,13 @@ const mobileStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 4.5,
+    paddingVertical: 3.5,
+    minHeight: 28,
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.35)',
-    maxWidth: 135,
+    maxWidth: 140,
   },
   pillarSelectorText: {
     fontSize: 10.5,
@@ -1834,7 +1908,7 @@ const mobileStyles = StyleSheet.create({
   actionsGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   actionBtn: {
     width: 32,
@@ -1847,9 +1921,9 @@ const mobileStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   radarDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#00ff87',
   },
 });

@@ -25,6 +25,7 @@ import {
   useCreateProduct,
 } from '@/src/hooks/useProducts';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { showAdminToast } from '@/components/AdminLiveToastNotification';
 
 const tap = () => {
   if (Platform.OS !== 'web') {
@@ -129,9 +130,18 @@ export default function AdminProductsScreen() {
   // Toggle Status Handler
   const handleToggleStatus = (p: Product) => {
     tap();
+    const willBeActive = !p.isActive;
     updateProduct.mutate({
       id: p.id,
-      payload: { isActive: !p.isActive },
+      payload: { isActive: willBeActive },
+    }, {
+      onSuccess: () => {
+        showAdminToast(
+          'INFO',
+          'Product Status Updated',
+          `${p.name} is now ${willBeActive ? 'Active' : 'Deactivated'}`
+        );
+      },
     });
   };
 
@@ -159,6 +169,11 @@ export default function AdminProductsScreen() {
       },
     });
 
+    showAdminToast(
+      'SUCCESS',
+      'Product Updated',
+      `${editingProduct.name} saved successfully.`
+    );
     setEditingProduct(null);
   };
 
@@ -167,9 +182,10 @@ export default function AdminProductsScreen() {
     if (!newName.trim()) return;
     const priceNum = parseFloat(newPrice) || 100;
     const stockNum = parseInt(newStock, 10) || 10;
+    const createdName = newName.trim();
 
     await createProduct.mutateAsync({
-      name: newName.trim(),
+      name: createdName,
       category: newCategory,
       price: priceNum,
       stockQty: stockNum,
@@ -177,6 +193,12 @@ export default function AdminProductsScreen() {
       description: newDescription.trim() || undefined,
       imageUrl: newImageUrl.trim() || undefined,
     });
+
+    showAdminToast(
+      'SUCCESS',
+      'Product Listed',
+      `${createdName} has been published to the store.`
+    );
 
     // Reset Form
     setNewName('');
@@ -190,7 +212,13 @@ export default function AdminProductsScreen() {
   // Confirm Delete
   const handleConfirmDelete = async () => {
     if (!deletingProduct) return;
+    const deletedName = deletingProduct.name;
     await removeProduct.mutateAsync(deletingProduct.id);
+    showAdminToast(
+      'WARNING',
+      'Product Removed',
+      `${deletedName} was deleted from catalog.`
+    );
     setDeletingProduct(null);
   };
 
@@ -1257,7 +1285,7 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 10,
     paddingTop: 4,
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
     gap: 6,
   },
   loadingBox: {

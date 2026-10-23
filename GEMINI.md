@@ -30,5 +30,11 @@
 - Fully responsive across Mobile (<768px), Tablet (768px - 1024px), and Desktop (>1024px).
 - Reusable modular tokens so components never require repetitive redesigns ("var var change na krna pave").
 
-## 3. Master Guidelines
+## 3. Statutory Confidentiality, Web App Synchronization & Proactive Legal Guidance
+- **Strict Legal Confidentiality**: Internal legal discussions, personal KYC (Aadhaar, Passports, PAN cards, Bank Statements), share transfer instruments (SH-4), and board resolutions must NEVER be committed to public code repositories or client-facing web bundles. All statutory records remain isolated in `Govt/docs` and guarded by `.gitignore`.
+- **100% Web App & Legal Entity Alignment**: The web application (Terms of Service, Privacy Policy, Footer, Contact info, E-commerce billing) must 100% match the registered entity: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`, Regd. Office: `VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422`, and operate strictly within approved e-MoA objects (AI Crop Doctor, Live Mandi, E-commerce, Satellite Telemetry).
+- **Proactive Guidance in Discussions**: In all future tasks, proactively guide and remind according to statutory requirements and company rules.
+
+## 4. Master Guidelines
 - Strictly adhere to `PROJECT_RULES.md`.
+

@@ -17,8 +17,10 @@ import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings
 import type { AppSettings, UpdateAppSettingsPayload } from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import * as AppStorage from '@/src/lib/storage';
+import { useLocalSearchParams } from 'expo-router';
+import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
 
-type SectionKey = 'ALL' | 'THEME' | 'SPRAY_TANKS' | 'MAINTENANCE' | 'TRIAL' | 'VOICE_SYNC' | 'REFERRALS' | 'FEES' | 'RELEASES';
+type SectionKey = 'ALL' | 'API' | 'THEME' | 'SPRAY_TANKS' | 'MAINTENANCE' | 'TRIAL' | 'REFERRALS' | 'FEES' | 'RELEASES';
 
 interface SectionTab {
   key: SectionKey;
@@ -33,7 +35,6 @@ const SECTION_TABS: SectionTab[] = [
   { key: 'SPRAY_TANKS', label: 'Spray Tanks', icon: 'beaker-outline', badge: 'Farm Specs' },
   { key: 'MAINTENANCE', label: 'Maintenance Modes', icon: 'construct-outline', badge: '7 Modes' },
   { key: 'TRIAL', label: 'Trial & Memberships', icon: 'gift-outline' },
-  { key: 'VOICE_SYNC', label: 'Voice & WhatsApp', icon: 'mic-outline' },
   { key: 'REFERRALS', label: 'Referral Schemes', icon: 'people-outline' },
   { key: 'FEES', label: 'Gardener & Fees', icon: 'leaf-outline' },
   { key: 'RELEASES', label: 'App Releases', icon: 'cloud-download-outline' },
@@ -43,13 +44,28 @@ const SPRAY_TANK_STORAGE_KEY = 'farmsking_spray_tank_sizes';
 const DEFAULT_SPRAY_TANKS = [15, 16, 20, 25, 50, 100, 200, 500];
 
 export default function SuperSettingsScreen() {
+  const params = useLocalSearchParams<{ section?: string; tab?: string }>();
   const { colors, themeMode, setThemeMode, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: remoteSettings, isLoading, refetch } = useAppSettings();
   const updateMutation = useUpdateAppSettings();
 
-  const [activeSection, setActiveSection] = useState<SectionKey>('ALL');
+  const [activeSection, setActiveSection] = useState<SectionKey>('API');
   const [formData, setFormData] = useState<Partial<AppSettings> | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Automatically select section if navigated with query params
+  useEffect(() => {
+    const target = params.section || params.tab;
+    if (target === 'API' || target === 'THIRD_PARTY') {
+      setActiveSection('API');
+    } else if (target && SECTION_TABS.some((t) => t.key === target)) {
+      setActiveSection(target as SectionKey);
+    } else if (target === 'ALL') {
+      setActiveSection('ALL');
+    } else if (!target) {
+      setActiveSection('API');
+    }
+  }, [params.section, params.tab]);
 
   const [sprayTankSizes, setSprayTankSizes] = useState<number[]>(DEFAULT_SPRAY_TANKS);
   const [newTankInput, setNewTankInput] = useState('');
@@ -139,6 +155,16 @@ export default function SuperSettingsScreen() {
       <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
         <ActivityIndicator size="large" color={isLight ? '#16a34a' : '#00ff87'} />
         <Text style={[styles.loadingText, { color: subTextColor }]}>Loading Infrastructure Settings...</Text>
+      </View>
+    );
+  }
+
+  if (activeSection === 'API') {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.bg }]}>
+        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+          <ThirdPartyServicesSection />
+        </ScrollView>
       </View>
     );
   }
@@ -534,95 +560,7 @@ export default function SuperSettingsScreen() {
           </View>
         )}
 
-        {/* 3. VOICE CALL & WHATSAPP GROUP SYNC */}
-        {(activeSection === 'ALL' || activeSection === 'VOICE_SYNC') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-                <Ionicons name="mic" size={20} color="#38bdf8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Voice Call & WhatsApp Group Member Sync</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  WebRTC live audio conference rooms and automated WhatsApp community member sync.
-                </Text>
-              </View>
-            </View>
 
-            <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.08)', borderWidth: 1, borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)', padding: 10, borderRadius: 8, marginHorizontal: 12, marginTop: 8, marginBottom: 4 }}>
-              <Text style={{ fontSize: 11, fontFamily: 'Manrope_500Medium', color: isLight ? '#15803d' : '#00ff87' }}>
-                💡 API Tokens Note: For Meta Cloud WhatsApp tokens, webhooks, and SMS gateway credentials, configure them directly in C-Panel ➔ Service Integrations.
-              </Text>
-            </View>
-
-            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.toggleTitle, { color: textColor }]}>🎙️ Group Voice Call Feature</Text>
-                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Allow Crop Advisors & Admins to host live audio conferences with farmers</Text>
-              </View>
-              <Switch
-                value={Boolean(formData.groupVoiceCallEnabled)}
-                onValueChange={(val) => handleToggle('groupVoiceCallEnabled', val)}
-                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-
-            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.toggleTitle, { color: textColor }]}>💬 WhatsApp Group Auto-Sync Engine</Text>
-                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Master toggle for automatic farmer sync into WhatsApp groups</Text>
-              </View>
-              <Switch
-                value={Boolean(formData.whatsappGroupSyncEnabled)}
-                onValueChange={(val) => handleToggle('whatsappGroupSyncEnabled', val)}
-                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-
-            {formData.whatsappGroupSyncEnabled && (
-              <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.toggleTitle, { color: textColor }]}>🟢 Auto-Add Eligible Farmers</Text>
-                    <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Automatically add farmers with active advisor plans</Text>
-                  </View>
-                  <Switch
-                    value={Boolean(formData.whatsappAutoAddEnabled)}
-                    onValueChange={(val) => handleToggle('whatsappAutoAddEnabled', val)}
-                    trackColor={{ false: '#94a3b8', true: '#22c55e' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.toggleTitle, { color: textColor }]}>🔴 Auto-Remove Expired Members</Text>
-                    <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Automatically remove members whose advisor plan has expired</Text>
-                  </View>
-                  <Switch
-                    value={Boolean(formData.whatsappAutoRemoveEnabled)}
-                    onValueChange={(val) => handleToggle('whatsappAutoRemoveEnabled', val)}
-                    trackColor={{ false: '#94a3b8', true: '#ef4444' }}
-                    thumbColor="#ffffff"
-                  />
-                </View>
-
-                <View style={{ marginTop: 8 }}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>WhatsApp Group JID or Invite Link</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={formData.whatsappGroupJid || ''}
-                    onChangeText={(val) => handleFieldChange('whatsappGroupJid', val)}
-                    placeholder="https://chat.whatsapp.com/... or 1203630...@g.us"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-              </View>
-            )}
-          </View>
-        )}
 
         {/* 4. REFERRAL & BUSINESS PARTNER SCHEMES */}
         {(activeSection === 'ALL' || activeSection === 'REFERRALS') && (
@@ -1182,21 +1120,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 12,
-    gap: 14,
+    padding: 10,
+    gap: 10,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
   },
   sectionCard: {
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    padding: 14,
-    gap: 12,
+    padding: 11,
+    gap: 9,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     borderBottomWidth: 1,
-    paddingBottom: 10,
+    paddingBottom: 8,
     flexWrap: 'wrap',
   },
   sectionIconWrap: {

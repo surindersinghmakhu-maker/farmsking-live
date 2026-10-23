@@ -56,3 +56,8 @@ reports/
 videos/
 billings/
 backups/
+
+# Statutory Private Legal & KYC Dossier (Never commit or upload to public repos)
+Govt/
+data/statutory_promoters_master_data.json
+

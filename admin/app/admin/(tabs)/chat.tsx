@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   TextInput,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -435,8 +436,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   list: {
-    paddingVertical: 12,
-    gap: 8,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
+    gap: 6,
   },
   loadingBox: {
     alignItems: 'center',

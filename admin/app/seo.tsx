@@ -23,16 +23,20 @@ export default function SeoManagementScreen() {
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const [seoTitle, setSeoTitle] = useState("FarmsKing - Direct Farmer Marketplace for All India | Makhu, Punjab (ਮੱਖੂ)");
+  const [seoTitle, setSeoTitle] = useState(
+    "FarmsKing - National Agritech Platform | AI Crop Doctor, Live Mandi, Organic Fertilizers & Floriculture"
+  );
   const [metaDescription, setMetaDescription] = useState(
-    "FarmsKing (farmsking.in) is operated from Makhu town (Ferozepur, Punjab). Farmers from ALL INDIA can list and sell their authentic handmade, organic, and direct farm products, access live mandi rates, Agri AI doctor advice, and genuine seeds & fertilizers."
+    "FarmsKing Technologies Private Limited is a national agritech ecosystem revolutionizing Indian agriculture. Supporting farmers, home gardeners, nature lovers, and organic food consumers with multimodal AI Crop Doctor diagnostics, live mandi rates, pure organic vermicompost, marigold floriculture, and direct farmer-to-consumer commerce. Registered Office: Goindwal Sahib, Tarn Taran; Operational Headquarters: Makhu, Ferozepur, Punjab."
   );
   const [metaKeywords, setMetaKeywords] = useState(
-    "FarmsKing, Makhu, Makhu Punjab, farmsking.in, www.farmsking.in, all india farmers marketplace, list farmer products India, handmade farmer products, organic jaggery gud, natural seeds, live mandi rates, crop doctor ai, buy genuine seeds fertilizers, farmer marketplace, kheti mitra, Surinder Agro Farm"
+    "FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India"
   );
-  const [locationHeadquarters, setLocationHeadquarters] = useState("Makhu Town, District Ferozepur, Punjab, India");
+  const [locationHeadquarters, setLocationHeadquarters] = useState(
+    "Registered Office: Goindwal Sahib (Tarn Taran) | Operational Office: Makhu (Ferozepur), Punjab, India"
+  );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    `🌾 FarmsKing (ਫਾਰਮਸਕਿੰਗ) - Direct Farmer Marketplace for All India | Headquartered in Makhu (Punjab). All India farmers can list crops, natural seeds, handmade products, organic jaggery, pure ghee. Includes Live Mandi Rates, Crop Records, Crop Doctors, and upcoming Gardener System with Plant Care Dose!`
+    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier digital agritech ecosystem. Dedicated to empowering farmers, home and terrace gardeners, nature lovers, and organic lifestyle advocates across India. Features include multimodal AI Crop Doctor disease diagnostics, real-time national mandi commodity rates, pure organic vermicompost fertilizers, commercial marigold floriculture consultancy, and direct farmer-to-consumer commerce. Leadership: Directors Bakshish Singh and Gagandeep Kaur; General Manager Gurnam Singh; Technical Support Lead Engg. Gurdit Singh; Testing Advisors Gurnam Singh and Sudhir Kumar Mahato; Marigold Expert Sudhir Kumar Mahato; Organic Products & Marketing Manager Manjeet Sra. Registered Office: Goindwal Sahib, Tarn Taran, Punjab; Operational Headquarters: Makhu, Ferozepur, Punjab."
   );
 
   useEffect(() => {

@@ -1,6 +1,33 @@
+export type SupportedPaymentGateway =
+  | 'PHONEPE'
+  | 'CASHFREE'
+  | 'RAZORPAY'
+  | 'PAYU'
+  | 'STRIPE'
+  | 'UPI_DIRECT'
+  | 'PAYTM'
+  | 'CCAVENUE'
+  | 'INSTAMOJO'
+  | 'EASEBUZZ';
+
+export interface ModulePaymentFeatureConfig {
+  gateway: SupportedPaymentGateway;
+  checkoutMode: 'UPI_ONLY' | 'UPI_AND_NETBANKING' | 'ALL_METHODS' | 'CUSTOM';
+  bypassPlayBilling: boolean; // Bypass 15-30% Google Play cut via UPI Intent / Direct Web
+  allowedMethods: {
+    upi: boolean;
+    cards: boolean;
+    netbanking: boolean;
+    wallets: boolean;
+    cod: boolean;
+    emi: boolean;
+  };
+  customNote?: string;
+}
+
 export interface SystemIntegrationsConfig {
   sms: {
-    activeProvider: 'FAST2SMS' | 'MSG91' | 'TWILIO' | 'TEXTLOCAL' | 'GUPSHUP' | 'FIREBASE' | 'CUSTOM_HTTP';
+    activeProvider: 'FAST2SMS' | 'MSG91' | 'TWILIO' | 'TEXTLOCAL' | 'GUPSHUP' | 'FIREBASE' | 'CUSTOM_HTTP' | 'KALEYRA';
     isEnabled: boolean;
     providers: {
       fast2sms: { apiKey: string; route: string; senderId: string; entityId: string };
@@ -8,6 +35,7 @@ export interface SystemIntegrationsConfig {
       twilio: { accountSid: string; authToken: string; fromNumber: string };
       textlocal: { apiKey: string; senderName: string };
       gupshup: { userId: string; password: string; senderMask: string };
+      kaleyra?: { apiKey: string; sid: string; senderId: string };
       firebase: {
         apiKey: string;
         authDomain: string;
@@ -22,8 +50,20 @@ export interface SystemIntegrationsConfig {
     };
   };
   gateway: {
-    activeGateway: 'PHONEPE' | 'CASHFREE' | 'RAZORPAY' | 'PAYU' | 'STRIPE' | 'UPI_DIRECT';
+    activeGateway: SupportedPaymentGateway;
     isSandbox: boolean;
+    routing?: {
+      farmerPlanGateway: SupportedPaymentGateway;
+      advisorBookingGateway: SupportedPaymentGateway;
+      gardenStoreGateway: SupportedPaymentGateway;
+      ecommerceStoreGateway: SupportedPaymentGateway;
+    };
+    moduleRules?: {
+      farmerPlans: ModulePaymentFeatureConfig;
+      advisorBookings: ModulePaymentFeatureConfig;
+      gardenStore: ModulePaymentFeatureConfig;
+      ecommerceStore: ModulePaymentFeatureConfig;
+    };
     providers: {
       phonepe: { merchantId: string; clientId: string; clientSecret: string; saltKey: string; saltIndex: string; webhookUsername: string; webhookPassword: string };
       cashfree: { appId: string; secretKey: string; webhookSecret: string };
@@ -31,10 +71,14 @@ export interface SystemIntegrationsConfig {
       payu: { merchantKey: string; merchantSalt: string };
       stripe: { publishableKey: string; secretKey: string; webhookSecret: string };
       upiDirect: { upiId: string; payeeName: string; merchantCode: string };
+      paytm?: { mid: string; merchantKey: string; website: string };
+      ccavenue?: { merchantId: string; accessCode: string; workingKey: string };
+      instamojo?: { apiKey: string; authToken: string; clientSecret: string };
+      easebuzz?: { merchantKey: string; salt: string; env: string };
     };
   };
   whatsapp: {
-    activeProvider: 'META_CLOUD' | 'BAILEYS_QR' | 'GUPSHUP' | 'WATI' | 'INTERAKT';
+    activeProvider: 'META_CLOUD' | 'BAILEYS_QR' | 'GUPSHUP' | 'WATI' | 'INTERAKT' | 'AISENSY' | 'TWILIO_WHATSAPP';
     isEnabled: boolean;
     providers: {
       metaCloud: { phoneNumberId: string; wabaId: string; accessToken: string; verifyToken: string; templateNamespace: string };
@@ -42,6 +86,79 @@ export interface SystemIntegrationsConfig {
       gupshup: { appName: string; appToken: string; sourceNumber: string };
       wati: { endpointUrl: string; accessToken: string };
       interakt: { apiKey: string };
+      aisensy?: { apiKey: string; campaignName: string };
+      twilioWhatsapp?: { accountSid: string; authToken: string; fromNumber: string };
+    };
+  };
+  ai: {
+    activeProvider: 'GEMINI' | 'OPENAI' | 'CLAUDE' | 'LLAMA' | 'MISTRAL' | 'GROQ' | 'HUGGINGFACE';
+    isEnabled: boolean;
+    providers: {
+      gemini: { apiKey: string; model: string; dailyQuota: number };
+      openai: { apiKey: string; model: string };
+      claude: { apiKey: string; model: string };
+      llama: { endpointUrl: string; apiKey: string };
+      mistral?: { apiKey: string; model: string };
+      groq?: { apiKey: string; model: string };
+      huggingface?: { apiKey: string; modelEndpoint: string };
+    };
+  };
+  telecom: {
+    activeProvider: 'AGORA' | 'LIVEKIT' | 'HUNDRED_MS' | 'TWILIO_VIDEO' | 'DAILY_CO' | 'JITSI';
+    isEnabled: boolean;
+    providers: {
+      agora: { appId: string; appCertificate: string; customerId: string; freeMinutesQuota: number };
+      livekit: { host: string; apiKey: string; apiSecret: string };
+      hundredMs?: { appId: string; appSecret: string; tokenEndpoint: string };
+      twilioVideo?: { accountSid: string; apiKey: string; apiSecret: string };
+      dailyCo?: { apiKey: string; domain: string };
+      jitsi?: { domain: string; appId: string; appSecret: string };
+    };
+  };
+  weather: {
+    activeProvider: 'OPEN_METEO' | 'OPEN_WEATHER_MAP' | 'WEATHER_API' | 'IMD' | 'ACCUWEATHER' | 'TOMORROW_IO';
+    isEnabled: boolean;
+    providers: {
+      openMeteo: { endpointUrl: string; autoSprayAlerts: boolean };
+      openWeatherMap: { apiKey: string };
+      weatherApi: { apiKey: string };
+      imd?: { apiKey: string; endpointUrl: string };
+      accuweather?: { apiKey: string };
+      tomorrowIo?: { apiKey: string };
+    };
+  };
+  logistics: {
+    activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO';
+    isEnabled: boolean;
+    providers: {
+      shiprocket: { email: string; password: string; token: string; autoAssignCourier: boolean };
+      delhivery: { apiKey: string; clientName: string };
+      nimbuspost?: { email: string; password: string };
+      shadowfax?: { apiKey: string; clientCode: string };
+      bluedart?: { loginId: string; licenceKey: string; customerCode: string };
+      dtdc?: { customerId: string; apiKey: string };
+      borzo?: { authKey: string };
+    };
+  };
+  push: {
+    activeProvider: 'FIREBASE_FCM' | 'ONE_SIGNAL' | 'PUSHER' | 'EXPO_PUSH';
+    isEnabled: boolean;
+    providers: {
+      firebaseFcm: { serverKey: string; vapidKey: string; topicWeatherSiren: string; topicMandiAlerts: string };
+      oneSignal: { appId: string; apiKey: string };
+      pusher?: { appId: string; secret: string; instanceId: string };
+      expoPush?: { accessToken: string };
+    };
+  };
+  storage: {
+    activeProvider: 'CLOUDFLARE_R2' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+    providers: {
+      cloudflareR2: { accountId: string; accessKeyId: string; secretAccessKey: string; bucketName: string; publicUrl: string };
+      supabase: { projectUrl: string; anonKey: string; bucketName: string };
+      awsS3: { region: string; accessKeyId: string; secretAccessKey: string; bucketName: string };
+      googleGcs?: { bucketName: string; clientEmail: string; privateKey: string };
+      minio?: { endpoint: string; accessKey: string; secretKey: string; bucketName: string };
+      bunnyCdn?: { storageZoneName: string; accessKey: string; pullZoneUrl: string };
     };
   };
   product: {
@@ -116,12 +233,77 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       twilio: { accountSid: '', authToken: '', fromNumber: '' },
       textlocal: { apiKey: '', senderName: 'FRMKNG' },
       gupshup: { userId: '', password: '', senderMask: 'FRMKNG' },
+      kaleyra: { apiKey: '', sid: '', senderId: 'FRMKNG' },
       customHttp: { endpointUrl: '', method: 'POST', authHeaderKey: 'Authorization', authHeaderValue: '', payloadTemplate: '{"to":"{{mobile}}","text":"{{message}}"}' },
     },
   },
   gateway: {
     activeGateway: 'PHONEPE',
     isSandbox: true,
+    routing: {
+      farmerPlanGateway: 'UPI_DIRECT',
+      advisorBookingGateway: 'RAZORPAY',
+      gardenStoreGateway: 'PHONEPE',
+      ecommerceStoreGateway: 'CASHFREE',
+    },
+    moduleRules: {
+      farmerPlans: {
+        gateway: 'UPI_DIRECT',
+        checkoutMode: 'UPI_ONLY',
+        bypassPlayBilling: true,
+        allowedMethods: {
+          upi: true,
+          cards: false,
+          netbanking: false,
+          wallets: false,
+          cod: false,
+          emi: false,
+        },
+        customNote: 'Direct NPCI UPI (0% Fee, Zero Google Play Cut)',
+      },
+      advisorBookings: {
+        gateway: 'RAZORPAY',
+        checkoutMode: 'ALL_METHODS',
+        bypassPlayBilling: true,
+        allowedMethods: {
+          upi: true,
+          cards: true,
+          netbanking: true,
+          wallets: true,
+          cod: false,
+          emi: false,
+        },
+        customNote: 'Agronomist & Doctor Video Session Bookings',
+      },
+      gardenStore: {
+        gateway: 'PHONEPE',
+        checkoutMode: 'ALL_METHODS',
+        bypassPlayBilling: false,
+        allowedMethods: {
+          upi: true,
+          cards: true,
+          netbanking: true,
+          wallets: true,
+          cod: true,
+          emi: false,
+        },
+        customNote: 'Urban Plants, Seeds & Potting Soil Kits',
+      },
+      ecommerceStore: {
+        gateway: 'CASHFREE',
+        checkoutMode: 'ALL_METHODS',
+        bypassPlayBilling: false,
+        allowedMethods: {
+          upi: true,
+          cards: true,
+          netbanking: true,
+          wallets: true,
+          cod: true,
+          emi: true,
+        },
+        customNote: 'AgriStore Multi-Vendor Marketplace (Automated Splits)',
+      },
+    },
     providers: {
       phonepe: {
         merchantId: process.env.PHONEPE_MERCHANT_ID || 'M22KMYD10AWD8_2607081836',
@@ -141,6 +323,10 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       payu: { merchantKey: '', merchantSalt: '' },
       stripe: { publishableKey: '', secretKey: '', webhookSecret: '' },
       upiDirect: { upiId: 'surindersinghmakhu-8@okicici', payeeName: 'FarmsKing India', merchantCode: '0000' },
+      paytm: { mid: '', merchantKey: '', website: 'DEFAULT' },
+      ccavenue: { merchantId: '', accessCode: '', workingKey: '' },
+      instamojo: { apiKey: '', authToken: '', clientSecret: '' },
+      easebuzz: { merchantKey: '', salt: '', env: 'test' },
     },
   },
   whatsapp: {
@@ -158,6 +344,204 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       gupshup: { appName: '', appToken: '', sourceNumber: '' },
       wati: { endpointUrl: '', accessToken: '' },
       interakt: { apiKey: '' },
+      aisensy: { apiKey: '', campaignName: 'farmsking_advisory' },
+      twilioWhatsapp: { accountSid: '', authToken: '', fromNumber: 'whatsapp:+14155238886' },
+    },
+  },
+  ai: {
+    activeProvider: 'GEMINI',
+    isEnabled: true,
+    providers: {
+      gemini: {
+        apiKey: process.env.GEMINI_API_KEY || '',
+        model: 'gemini-1.5-flash',
+        dailyQuota: 1500,
+      },
+      openai: {
+        apiKey: process.env.OPENAI_API_KEY || '',
+        model: 'gpt-4o-mini',
+      },
+      claude: {
+        apiKey: process.env.ANTHROPIC_API_KEY || '',
+        model: 'claude-3-5-sonnet-20241022',
+      },
+      llama: {
+        endpointUrl: 'https://api.groq.com/openai/v1',
+        apiKey: '',
+      },
+      mistral: {
+        apiKey: '',
+        model: 'pixtral-12b-2409',
+      },
+      groq: {
+        apiKey: '',
+        model: 'llama-3.2-11b-vision-preview',
+      },
+      huggingface: {
+        apiKey: '',
+        modelEndpoint: 'https://api-inference.huggingface.co/models/crop-disease-detection',
+      },
+    },
+  },
+  telecom: {
+    activeProvider: 'AGORA',
+    isEnabled: true,
+    providers: {
+      agora: {
+        appId: process.env.AGORA_APP_ID || '',
+        appCertificate: process.env.AGORA_APP_CERTIFICATE || '',
+        customerId: '',
+        freeMinutesQuota: 10000,
+      },
+      livekit: {
+        host: '',
+        apiKey: '',
+        apiSecret: '',
+      },
+      hundredMs: {
+        appId: '',
+        appSecret: '',
+        tokenEndpoint: '',
+      },
+      twilioVideo: {
+        accountSid: '',
+        apiKey: '',
+        apiSecret: '',
+      },
+      dailyCo: {
+        apiKey: '',
+        domain: '',
+      },
+      jitsi: {
+        domain: 'meet.jit.si',
+        appId: '',
+        appSecret: '',
+      },
+    },
+  },
+  weather: {
+    activeProvider: 'OPEN_METEO',
+    isEnabled: true,
+    providers: {
+      openMeteo: {
+        endpointUrl: 'https://api.open-meteo.com/v1/forecast',
+        autoSprayAlerts: true,
+      },
+      openWeatherMap: {
+        apiKey: process.env.OPENWEATHER_API_KEY || '',
+      },
+      weatherApi: {
+        apiKey: '',
+      },
+      imd: {
+        apiKey: '',
+        endpointUrl: 'https://internal.imd.gov.in/agrimet',
+      },
+      accuweather: {
+        apiKey: '',
+      },
+      tomorrowIo: {
+        apiKey: '',
+      },
+    },
+  },
+  logistics: {
+    activeProvider: 'SHIPROCKET',
+    isEnabled: true,
+    providers: {
+      shiprocket: {
+        email: process.env.SHIPROCKET_EMAIL || '',
+        password: process.env.SHIPROCKET_PASSWORD || '',
+        token: '',
+        autoAssignCourier: true,
+      },
+      delhivery: {
+        apiKey: '',
+        clientName: '',
+      },
+      nimbuspost: {
+        email: '',
+        password: '',
+      },
+      shadowfax: {
+        apiKey: '',
+        clientCode: '',
+      },
+      bluedart: {
+        loginId: '',
+        licenceKey: '',
+        customerCode: '',
+      },
+      dtdc: {
+        customerId: '',
+        apiKey: '',
+      },
+      borzo: {
+        authKey: '',
+      },
+    },
+  },
+  push: {
+    activeProvider: 'FIREBASE_FCM',
+    isEnabled: true,
+    providers: {
+      firebaseFcm: {
+        serverKey: '',
+        vapidKey: '',
+        topicWeatherSiren: 'farmsking_weather_siren',
+        topicMandiAlerts: 'farmsking_mandi_alerts',
+      },
+      oneSignal: {
+        appId: '',
+        apiKey: '',
+      },
+      pusher: {
+        appId: '',
+        secret: '',
+        instanceId: '',
+      },
+      expoPush: {
+        accessToken: '',
+      },
+    },
+  },
+  storage: {
+    activeProvider: 'CLOUDFLARE_R2',
+    providers: {
+      cloudflareR2: {
+        accountId: process.env.R2_ACCOUNT_ID || '',
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+        bucketName: process.env.R2_BUCKET_NAME || 'farmsking-media',
+        publicUrl: 'https://media.farmsking.in',
+      },
+      supabase: {
+        projectUrl: '',
+        anonKey: '',
+        bucketName: 'farmsking-docs',
+      },
+      awsS3: {
+        region: 'ap-south-1',
+        accessKeyId: '',
+        secretAccessKey: '',
+        bucketName: '',
+      },
+      googleGcs: {
+        bucketName: 'farmsking-cloud-storage',
+        clientEmail: '',
+        privateKey: '',
+      },
+      minio: {
+        endpoint: 'http://localhost:9000',
+        accessKey: '',
+        secretKey: '',
+        bucketName: 'farmsking',
+      },
+      bunnyCdn: {
+        storageZoneName: '',
+        accessKey: '',
+        pullZoneUrl: '',
+      },
     },
   },
   product: {
@@ -191,23 +575,23 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     enableRateLimiting: true,
   },
   about: {
-    companyName: 'FarmsKing India Pvt Ltd',
+    companyName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
     brandName: 'FarmsKing',
-    tagline: 'Direct Farmer Marketplace for All India | Headquartered in Makhu, Punjab',
+    tagline: 'National Agritech Platform | AI Crop Doctor, Live Mandi, Organic Fertilizers & Floriculture',
     logoUrl: 'https://farmsking.in/assets/logo.png',
     faviconUrl: 'https://farmsking.in/favicon.ico',
-    registeredAddress: 'Near Bus Stand, Makhu, Tehsil Zira, District Ferozepur, Punjab 142044',
-    headquarters: 'Makhu Town, District Ferozepur, Punjab, India',
+    registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India',
+    headquarters: 'Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India',
     gstin: '03AAAAF0000A1Z5',
     cin: 'U01100PB2026PTC000000',
     pan: 'AAAAF0000A',
     fssaiLicense: '10023064000123',
     supportEmail: 'support@farmsking.in',
-    supportPhone: '+91 98888 12345',
-    whatsappHelpline: '+91 98888 12345',
+    supportPhone: '+91 95776 22000',
+    whatsappHelpline: '+91 95776 22000',
     grievanceOfficerName: 'Surinder Singh',
     grievanceOfficerEmail: 'grievance@farmsking.in',
-    workingHours: 'Monday - Saturday: 9:00 AM - 6:00 PM IST',
-    appVersion: '2.0.6',
+    workingHours: 'Monday - Saturday: 9:00 AM - 7:00 PM IST',
+    appVersion: '2.1.0',
   },
 };

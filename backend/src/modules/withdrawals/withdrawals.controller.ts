@@ -14,13 +14,33 @@ import { ApproveWithdrawalDto } from './dto/approve-withdrawal.dto';
 export class WithdrawalsController {
   constructor(private readonly withdrawalsService: WithdrawalsService) {}
 
-  @Roles(Role.BUSINESS_PARTNER, Role.ADVISOR)
+  @Roles(
+    Role.BUSINESS_PARTNER,
+    Role.ADVISOR,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.MANAGER,
+    Role.OPERATOR,
+    Role.SUPERVISOR,
+    Role.LABOUR,
+    Role.TECHNICAL_TRAINER,
+  )
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateWithdrawalDto) {
     return this.withdrawalsService.create(user, dto);
   }
 
-  @Roles(Role.BUSINESS_PARTNER, Role.ADVISOR)
+  @Roles(
+    Role.BUSINESS_PARTNER,
+    Role.ADVISOR,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.MANAGER,
+    Role.OPERATOR,
+    Role.SUPERVISOR,
+    Role.LABOUR,
+    Role.TECHNICAL_TRAINER,
+  )
   @Get('mine')
   listMine(@CurrentUser() user: AuthUser) {
     return this.withdrawalsService.listMine(user);

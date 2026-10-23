@@ -35,7 +35,7 @@ def create_english_document():
     # Header / Title Banner
     p_head = doc.add_paragraph()
     p_head.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_title = p_head.add_run("FARMSKING INDIA PRIVATE LIMITED\n")
+    r_title = p_head.add_run("FARMSKING TECHNOLOGIES PRIVATE LIMITED\n")
     r_title.font.name = font_name
     r_title.font.size = Pt(22)
     r_title.font.bold = True
@@ -66,7 +66,7 @@ def create_english_document():
     cp_run1.font.color.rgb = primary_color
 
     cp_run2 = cp.add_run(
-        "This statutory dossier defines the incorporation blueprint for 'FARMSKING INDIA PRIVATE LIMITED' "
+        "This statutory dossier defines the incorporation blueprint for 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' "
         "as a Private Limited Company limited by shares under the Companies Act, 2013:\n\n"
         "• SHAREHOLDING & OWNERSHIP:\n"
         "  1. Surinder Singh: 87.00% Majority Equity (Founder, Pure Passive Shareholder / Investor — Holds NO Directorship, draws 0% salary, strictly compliant with Punjab Civil Services Conduct Rules Rule 16; retains 100% Absolute Veto Authority).\n"
@@ -96,7 +96,7 @@ def create_english_document():
     p.add_run("Proposed Corporate Names (In Order of Preference for MCA RUN / SPICe+ Part A):").font.bold = True
     
     names = [
-        "1. FARMSKING INDIA PRIVATE LIMITED (First Preference / Primary Choice)",
+        "1. FARMSKING TECHNOLOGIES PRIVATE LIMITED (First Preference / Primary Choice)",
         "2. FARMSKING TECHNOLOGIES PRIVATE LIMITED (Second Preference / Alternative)",
         "3. FARMSKING AGRI SOLUTIONS PRIVATE LIMITED (Third Preference)",
         "4. FARMSKING DIGITAL AGRO PRIVATE LIMITED (Fourth Preference)"
@@ -437,10 +437,10 @@ def create_english_document():
     dir2_text_bakshish = (
         "To,\n"
         "The Board of Directors / Promoters,\n"
-        "FARMSKING INDIA PRIVATE LIMITED\n"
+        "FARMSKING TECHNOLOGIES PRIVATE LIMITED\n"
         "[Proposed Registered Office: Punjab, India]\n\n"
-        "Subject: Consent to act as Director of FARMSKING INDIA PRIVATE LIMITED\n\n"
-        "I, BAKSHISH SINGH, son of [Father's Name], resident of [Residential Address, Punjab], hereby give my consent to act as Director of FARMSKING INDIA PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.\n\n"
+        "Subject: Consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED\n\n"
+        "I, BAKSHISH SINGH, son of [Father's Name], resident of [Residential Address, Punjab], hereby give my consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.\n\n"
         "1. Director Identification Number (DIN): [Applied in SPICe+ / Allotted]\n"
         "2. Full Name: BAKSHISH SINGH\n"
         "3. Father's Name: [Father's Name]\n"
@@ -471,10 +471,10 @@ def create_english_document():
     dir2_text_gagan = (
         "To,\n"
         "The Board of Directors / Promoters,\n"
-        "FARMSKING INDIA PRIVATE LIMITED\n"
+        "FARMSKING TECHNOLOGIES PRIVATE LIMITED\n"
         "[Proposed Registered Office: Punjab, India]\n\n"
-        "Subject: Consent to act as Director of FARMSKING INDIA PRIVATE LIMITED\n\n"
-        "I, GAGANDEEP KAUR, daughter/wife of [Father's/Husband's Name], resident of [Residential Address, Punjab], hereby give my consent to act as Director of FARMSKING INDIA PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.\n\n"
+        "Subject: Consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED\n\n"
+        "I, GAGANDEEP KAUR, daughter/wife of [Father's/Husband's Name], resident of [Residential Address, Punjab], hereby give my consent to act as Director of FARMSKING TECHNOLOGIES PRIVATE LIMITED pursuant to sub-section (5) of Section 152 of the Companies Act, 2013 and certify that I am not disqualified to become a Director under the Companies Act, 2013.\n\n"
         "1. Director Identification Number (DIN): [Applied in SPICe+ / Allotted]\n"
         "2. Full Name: GAGANDEEP KAUR\n"
         "3. Father's / Husband's Name: [Father's / Husband's Name]\n"
@@ -504,14 +504,14 @@ def create_english_document():
 
     inc9_text_en = (
         "MEMORANDUM OF STATUTORY DECLARATION\n\n"
-        "We, the undersigned Subscribers and First Directors of FARMSKING INDIA PRIVATE LIMITED:\n"
+        "We, the undersigned Subscribers and First Directors of FARMSKING TECHNOLOGIES PRIVATE LIMITED:\n"
         "1. SURINDER SINGH (Subscriber & Majority Shareholder - 87%)\n"
         "2. BAKSHISH SINGH (Subscriber & First Working Director - 10%)\n"
         "3. GAGANDEEP KAUR (Subscriber & First Working Director - 3%)\n\n"
         "do hereby solemnly declare and state as follows:\n\n"
         "1. That we have not been convicted of any offence in connection with the promotion, formation, or management of any company;\n"
         "2. That we have not been found guilty of any fraud or misfeasance or breach of duty under the Companies Act, 2013 during the preceding five years;\n"
-        "3. That all documents filed with the Registrar for registration of FARMSKING INDIA PRIVATE LIMITED contain information that is correct, complete, and true to the best of our knowledge and belief;\n"
+        "3. That all documents filed with the Registrar for registration of FARMSKING TECHNOLOGIES PRIVATE LIMITED contain information that is correct, complete, and true to the best of our knowledge and belief;\n"
         "4. That the company shall carry out genuine and lawful activities in accordance with the Main Objects of the MoA, including digital farming development, farmer education & skilling, community welfare ('Lok Bhalai'), and agricultural e-commerce services.\n\n"
         "Verified at Punjab on this _____ day of ____________ 2026.\n\n"
         "1. Signature: __________________________  Name: SURINDER SINGH (87% Shareholder)\n"
@@ -540,7 +540,7 @@ def create_english_document():
         "I, [Name of Property Owner], S/o [Father's Name], resident of [Owner's Address, Punjab], do hereby solemnly affirm and state as under:\n\n"
         "1. That I am the absolute legal owner and in lawful possession of the premises situated at:\n"
         "   [Full Address of Registered Office with Pin Code, District, Punjab, India].\n\n"
-        "2. That I have NO OBJECTION whatsoever if the proposed company named \"FARMSKING INDIA PRIVATE LIMITED\" (or any other name approved by the Ministry of Corporate Affairs) uses the aforesaid premises as its REGISTERED OFFICE for the purpose of carrying on its corporate, administrative, digital platform, training, and commercial operations and for maintaining its statutory books and records under the Companies Act, 2013.\n\n"
+        "2. That I have NO OBJECTION whatsoever if the proposed company named \"FARMSKING TECHNOLOGIES PRIVATE LIMITED\" (or any other name approved by the Ministry of Corporate Affairs) uses the aforesaid premises as its REGISTERED OFFICE for the purpose of carrying on its corporate, administrative, digital platform, training, and commercial operations and for maintaining its statutory books and records under the Companies Act, 2013.\n\n"
         "3. That I have no objection to the said company obtaining GSTIN, MSME, Professional Tax, Startup India recognition, and opening an ICICI Bank Current Account using this address.\n\n"
         "Attached herewith:\n"
         "- Copy of Electricity Bill / Utility Bill (not older than 2 months)\n"
@@ -568,7 +568,7 @@ def create_english_document():
     r.font.bold = True
 
     steps_en = [
-        ("Step 1: Name Reservation (SPICe+ Part A)", "Apply for 'FARMSKING INDIA PRIVATE LIMITED' under primary NIC Code 62013 on MCA V3 Portal and attach the Name Significance description from Section 1."),
+        ("Step 1: Name Reservation (SPICe+ Part A)", "Apply for 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' under primary NIC Code 62013 on MCA V3 Portal and attach the Name Significance description from Section 1."),
         ("Step 2: Class-3 Digital Signatures (DSC)", "Obtain Class-3 DSC for the two active working directors: Bakshish Singh and Gagandeep Kaur via 1-minute mobile video KYC."),
         ("Step 3: SPICe+ Part B & e-MoA (INC-33) Filing", "Input the 6 Main Objects from Section 2 into e-MoA INC-33 web-form. Insert the 17 Incidental Objects into Clause III(B)."),
         ("Step 4: e-AoA (INC-34) Filing", "Adopt Table F with ROFR pre-emption rights and private company share transfer restrictions from Section 4 to safeguard Surinder Singh's 87% absolute veto control."),
@@ -595,7 +595,7 @@ def create_english_document():
     # Footer note
     footer_p = doc.add_paragraph()
     footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    footer_run = footer_p.add_run("FARMSKING INDIA PRIVATE LIMITED — Empowering Farmers, Greenery & Rural India")
+    footer_run = footer_p.add_run("FARMSKING TECHNOLOGIES PRIVATE LIMITED — Empowering Farmers, Greenery & Rural India")
     footer_run.font.name = font_name
     footer_run.font.size = Pt(10)
     footer_run.font.bold = True

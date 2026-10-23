@@ -1,5 +1,5 @@
-﻿import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
@@ -136,9 +136,9 @@ function LogRow({ entry, isExpanded, onToggle }: { entry: AuditLogEntry; isExpan
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
-  hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 12 },
+  heroTitle: { color: '#fff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -146,29 +146,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginTop: 14,
+    paddingVertical: 7,
+    marginTop: 8,
   },
-  searchInput: { flex: 1, color: '#fff', fontSize: 13.5, fontFamily: FONT.medium },
-  list: { padding: SPACING.lg, gap: 8, paddingBottom: SPACING.xxl },
+  searchInput: { flex: 1, color: '#fff', fontSize: 13, fontFamily: FONT.medium },
+  list: { padding: 8, gap: 6, paddingBottom: Platform.OS === 'web' ? 16 : 24 },
   refreshBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-end', marginBottom: 4 },
-  refreshBtnText: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8 },
+  refreshBtnText: { fontSize: 11.5, fontFamily: FONT.bold, color: theme.primary },
+  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 30, gap: 8 },
   showMoreBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 9,
     marginTop: 4,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0,255,135,0.3)',
     backgroundColor: 'rgba(0,255,135,0.03)',
   },
-  showMoreBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: theme.primary },
+  showMoreBtnText: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary },
   emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
-  logCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 4 },
+  logCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 8, gap: 3 },
   methodBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.xs },
   methodBadgeText: { fontSize: 10.5, fontFamily: FONT.extraBold },
   actionText: { flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },

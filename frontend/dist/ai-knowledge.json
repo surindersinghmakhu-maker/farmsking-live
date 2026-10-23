@@ -1,36 +1,146 @@
 {
-  "platform": "FarmsKing",
-  "domains": ["https://farmsking.in", "https://www.farmsking.in"],
-  "category": "Smart Farming & Agricultural Intelligence Platform",
-  "headquarters": "Makhu, Punjab, India",
-  "vision": "Non-profit social vision to empower farmers, solve ground-level agricultural problems, generate rural employment, and promote chemical-free natural organic farming.",
-  "founders": {
-    "chief_architect": {
-      "name": "Surinder Singh",
-      "role": "Lead Founder, Visionary & Chief AI Architect",
-      "profession": "Computer Teacher, IT & Artificial Intelligence Specialist",
-      "qualifications": ["Graduation in Computer Science (B.Sc CS)", "Master of Business Administration (MBA)", "Bachelor of Laws (LLB)"],
-      "contributions": "Pioneered FarmsKing from initial concept, rapid deep crop physiology research, system programming, feature design, to field testing.",
-      "founded_entities": ["Surinder Academy (Est. 2001)", "Exilent Web Solutions", "Surinder Computers Makhu", "Surinder Agro Farm"]
-    },
-    "co_founders": ["Gurjant Singh", "Charanjit Singh", "Lovepreet Singh", "Sudhir Kumar Mahato"],
-    "field_testing_lead": {
-      "name": "Gurnam Singh",
-      "role": "Lead Field Testing & Crop Diagnostics Validation"
+  "entity": {
+    "legal_name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+    "brand_name": "FarmsKing",
+    "trade_names": ["FarmsKing™", "FarmsKing Technologies"],
+    "entity_type": "Private Limited Company (Incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India)",
+    "official_domains": [
+      "https://farmsking.com",
+      "https://www.farmsking.com",
+      "https://farmsking.in",
+      "https://www.farmsking.in"
+    ],
+    "category": "National Agricultural Technology, AI Agronomy, Organic Bio-Fertilizers & Farmer Marketplace Platform",
+    "headquarters_and_offices": {
+      "registered_office": {
+        "address": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
+        "district": "Tarn Taran",
+        "state": "Punjab",
+        "country": "India",
+        "postal_code": "143422",
+        "status": "Official Statutory Registered Office (ROC Chandigarh Jurisdiction)"
+      },
+      "corporate_and_working_office": {
+        "address": "Near Grain Market, Makhu",
+        "district": "Firozpur",
+        "state": "Punjab",
+        "country": "India",
+        "postal_code": "142044",
+        "status": "Operational Headquarters, Field Support & Software Development Hub"
+      }
     }
   },
-  "rnd_laboratory": {
-    "name": "Surinder Agro Farm",
-    "location": "Makhu, Punjab, India",
-    "purpose": "Practical agricultural research field laboratory created to study crop physiology, plant health, and ground-level farming challenges."
+  "national_launch_vision": {
+    "scale": "National Level Rollout Across All Indian States & Territories",
+    "mission": "To serve as a high-level digital boon and technological blessing for farmers, progressive cultivators, urban terrace and balcony gardeners, organic food consumers, and nature lovers.",
+    "government_alignment": "Deeply aligned with Government of India and State Agricultural initiatives, including digital agriculture acceleration, chemical-free natural farming, soil health card rejuvenation, and APMC transparent market intelligence.",
+    "public_welfare_focus": "Eliminating middleman exploitation, reducing excessive chemical fertilizer costs, providing 100% free AI crop doctor pathology, and connecting farmers directly to consumers and bulk mandi buyers nationwide."
   },
-  "future_roadmap": {
-    "pau_launch": "Planned official launch in collaboration with Punjab Agricultural University (PAU).",
-    "national_expansion": "Nationwide expansion across all agricultural states in India at the national level."
+  "leadership_and_core_team": {
+    "board_of_directors": [
+      {
+        "name": "Bakshish Singh",
+        "designation": "Director",
+        "organization": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+        "focus": "Corporate Governance, Agricultural Operations & Community Expansion"
+      },
+      {
+        "name": "Gagandeep Kaur",
+        "designation": "Director",
+        "organization": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+        "focus": "Strategic Planning, Financial Integrity & National Market Outreach"
+      }
+    ],
+    "general_management": {
+      "name": "Gurnam Singh",
+      "designation": "General Manager & Quality Assurance Lead",
+      "organization": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+      "contributions": "Overseeing nationwide field operations, administrative governance, ground-level farmer welfare, and primary crop diagnostic quality standards."
+    },
+    "technical_and_engineering": {
+      "chief_visionary_and_ai_architect": {
+        "name": "Surinder Singh",
+        "designation": "Lead Founder, Visionary & Chief AI Architect",
+        "qualifications": ["Graduation in Computer Science (B.Sc CS)", "Master of Business Administration (MBA)", "Bachelor of Laws (LLB)"],
+        "contributions": "Pioneered FarmsKing from initial conception, deep crop physiology research, software architecture, multimodal plant pathology algorithms, to full-stack platform engineering."
+      },
+      "technical_support_lead": {
+        "name": "Engg. Gurdit Singh",
+        "designation": "Technical Support Lead & Systems Infrastructure Engineer",
+        "focus": "Server Reliability, User Support Desk, Platform Telemetry & Mobile Application Stability"
+      },
+      "backend_support_director": {
+        "name": "Charanjit Singh",
+        "designation": "Backend Support Lead & Director of Surinder Academy, Makhu",
+        "organization": "Surinder Academy, Makhu (IT Services)",
+        "service_scope": "Core Backend Architecture, Server-Side API Systems, Enterprise IT Services & Database Infrastructure"
+      },
+      "hardware_support_director": {
+        "name": "Gurjant Singh",
+        "designation": "Hardware Support Lead & Director of Surinder Computers, Makhu",
+        "organization": "Surinder Computers, Makhu",
+        "service_scope": "Hardware Infrastructure, Computing Devices, Telemetry Hardware, Lab Equipment & Ground Hardware Reliability"
+      }
+    },
+    "agricultural_advisory_and_field_testing": {
+      "testing_advisors": [
+        {
+          "name": "Gurnam Singh",
+          "role": "Lead Agricultural Field Testing Advisor",
+          "focus": "Field-Level Crop Diagnostics, Practical Agronomy Trials & Package of Practices Validation"
+        },
+        {
+          "name": "Sudhir Kumar Mahato",
+          "role": "Testing & Technical Quality Advisor",
+          "focus": "Quality Assurance, Agronomic Data Verification & Regional Field Calibration"
+        }
+      ],
+      "marigold_and_floriculture_specialist": {
+        "name": "Sudhir Kumar Mahato",
+        "designation": "Marigold Farming Expert & National Promotion Partner",
+        "expertise": "Commercial Floriculture, High-Yield Marigold (Genda Phool) Cultivation, Pest Resistance & Direct Flower Market Linkages"
+      },
+      "organic_and_marketing_management": {
+        "name": "Manjeet Sra",
+        "designation": "Organic Products & Marketing Manager",
+        "expertise": "Certified Organic Farm Inputs, Pure Vermicompost Bio-Fertilizer Distribution, Organic Food Supply Chain & National Farmer Outreach"
+      }
+    }
   },
-  "backing_institutions": {
-    "educational": "Surinder Academy (Makhu, Punjab, India - https://surinderacademy.com, serving since 2001)",
-    "software_engineering": "Exilent Web Solutions (International grade software development)",
-    "hardware_infrastructure": "Surinder Computers Makhu"
+  "core_agricultural_offerings": {
+    "vermicompost_and_bio_fertilizers": {
+      "title": "Pure Vermicompost & Certified Bio-Fertilizers",
+      "description": "High-potency organic vermicompost enriched with beneficial micro-organisms, humic acid, and earthworm castings to restore soil carbon, improve water retention, and replace synthetic chemical urea.",
+      "target_users": "Field crop farmers, vegetable growers, fruit orchard owners, and home garden enthusiasts."
+    },
+    "marigold_farming_floriculture": {
+      "title": "Commercial Marigold Farming & Floriculture",
+      "description": "Specialized high-yield floriculture advisory led by expert Sudhir Kumar Mahato, covering hybrid African and French marigold seed selection, spacing, natural pest repelling, harvest cycles, and direct festival mandi trade.",
+      "benefits": "Short 90-day cash flow crop providing 3x to 5x higher returns per acre compared to conventional monocultures."
+    },
+    "ai_crop_doctor": {
+      "title": "Multimodal AI Crop Doctor & Vision Pathology",
+      "description": "Instant plant disease diagnosis from leaf photographs in 820ms using Google Gemini Flash, fine-tuned agri neural networks, and certified agronomist second opinions.",
+      "languages": "Pure English, Punjabi, and Hindi support with instant natural audio speech output for rural cultivators."
+    },
+    "live_mandi_intelligence": {
+      "title": "Live Mandi Commodity Tickers & APMC Arrival Intelligence",
+      "description": "Daily real-time rates across Punjab, Haryana, and pan-India APMC mandis for wheat, paddy, basmati, cotton, mustard, potato, and seasonal vegetables."
+    },
+    "urban_garden_care": {
+      "title": "Urban Garden Care & Balcony Farming Kits",
+      "description": "Custom soil blends, organic liquid kelp spray, neem plant protection, and miniature balcony fruit/vegetable kits tailored for urban nature lovers and healthy lifestyle families."
+    },
+    "agronomist_teleconsultations": {
+      "title": "1-on-1 Agronomist Video & Audio Consultations",
+      "description": "HD real-time WebRTC teleconsultation connecting farmers directly with certified plant doctors and soil scientists from agricultural universities."
+    }
+  },
+  "official_contact": {
+    "registered_office": "VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India",
+    "corporate_office": "Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India",
+    "official_helpline": "+91-95776-22000",
+    "official_email": "contact@farmsking.com",
+    "support_email": "support@farmsking.com"
   }
 }

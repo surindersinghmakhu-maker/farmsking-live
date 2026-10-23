@@ -1,0 +1,43 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+# Search Engine Crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# AI Search & LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Canonical Sitemaps & LLM Knowledge Endpoints
+Sitemap: https://farmsking.in/sitemap.xml
+Sitemap: https://farmsking.com/sitemap.xml
+# LLM Knowledge Standard: https://farmsking.in/llms.txt
+# LLM Comprehensive Profile: https://farmsking.in/llms-full.txt
+# AI Knowledge Graph JSON: https://farmsking.in/ai-knowledge.json

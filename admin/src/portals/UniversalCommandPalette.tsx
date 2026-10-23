@@ -86,7 +86,7 @@ const SCOPES: { id: PortalId | 'ALL'; label: string }[] = [
 export function UniversalCommandPalette({ activePortalId }: { activePortalId?: PortalId }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedScope, setSelectedScope] = useState<PortalId | 'ALL'>(activePortalId || 'ALL');
@@ -400,7 +400,13 @@ export function UniversalCommandPalette({ activePortalId }: { activePortalId?: P
             {/* Footer with tips */}
             <View style={styles.modalFooter}>
               <Text style={styles.footerTip}>
-                Tip: Press <Text style={styles.footerKbd}>Ctrl+K</Text> anywhere to open • <Text style={styles.footerKbd}>ESC</Text> to exit
+                {isDesktop ? (
+                  <>
+                    Tip: Press <Text style={styles.footerKbd}>Ctrl+K</Text> anywhere to open • <Text style={styles.footerKbd}>ESC</Text> to exit
+                  </>
+                ) : (
+                  'Tap anywhere outside to close search'
+                )}
               </Text>
             </View>
           </View>

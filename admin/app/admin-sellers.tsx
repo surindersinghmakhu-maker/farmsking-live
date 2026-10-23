@@ -20,6 +20,7 @@ import { apiClient } from '@/src/api/client';
 import { exportSellersToExcel } from '@/src/utils/excelExport';
 import { playKycAlertChime } from '@/src/utils/audioAlert';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { showAdminToast } from '@/components/AdminLiveToastNotification';
 
 export default function AdminSellersScreen() {
   const router = useRouter();
@@ -88,12 +89,8 @@ export default function AdminSellersScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const showAlert = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n\n${message}`);
-    } else {
-      Alert.alert(title, message);
-    }
+  const showAlert = (title: string, message: string, type: 'SUCCESS' | 'WARNING' | 'ALERT' | 'INFO' = 'SUCCESS') => {
+    showAdminToast(type, title, message);
   };
 
   const fetchStores = async () => {
@@ -274,6 +271,15 @@ export default function AdminSellersScreen() {
           >
             <Ionicons name="download-outline" size={16} color={isLight ? '#16a34a' : '#34D399'} />
             <Text style={[styles.headerActionText, { color: isLight ? '#16a34a' : '#34D399', fontWeight: '800' }]}>Excel</Text>
+          </TouchableOpacity>
+
+          {/* Direct Link to Seller Payments */}
+          <TouchableOpacity
+            style={[styles.headerActionBtn, { backgroundColor: isLight ? 'rgba(2, 132, 199, 0.12)' : 'rgba(56, 189, 248, 0.15)', borderColor: isLight ? '#0284c7' : '#38bdf8', borderWidth: 1 }]}
+            onPress={() => router.push('/admin/(tabs)/seller-payouts')}
+          >
+            <Ionicons name="card-outline" size={16} color={isLight ? '#0284c7' : '#38bdf8'} />
+            <Text style={[styles.headerActionText, { color: isLight ? '#0284c7' : '#38bdf8', fontWeight: '800' }]}>Payments</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -977,7 +983,7 @@ export default function AdminSellersScreen() {
                   ) : (
                     <>
                       <Ionicons name="checkmark-done" size={16} color="#FFF" />
-                      <Text style={styles.btnText}> ਕਮਿਸ਼ਨ ਸੇਵ ਕਰੋ (Save)</Text>
+                      <Text style={styles.btnText}>Save Commission Rates</Text>
                     </>
                   )}
                 </TouchableOpacity>

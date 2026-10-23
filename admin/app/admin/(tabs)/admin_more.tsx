@@ -30,7 +30,6 @@ export default function AdminMoreScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [collapsedPillars, setCollapsedPillars] = useState<Record<string, boolean>>({
-    ECOSYSTEM: true,
     PLATFORM: true,
   });
 
@@ -364,7 +363,7 @@ export default function AdminMoreScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
-  body: { padding: 10, paddingBottom: Platform.OS === 'ios' ? 120 : 100 },
+  body: { padding: 8, paddingBottom: Platform.OS === 'web' ? 16 : 24 },
   compactUserCard: {
     borderRadius: 14,
     borderWidth: 1,

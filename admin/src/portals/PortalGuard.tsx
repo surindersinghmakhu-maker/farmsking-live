@@ -47,16 +47,16 @@ export function PortalGuard({ portalId, children }: PortalGuardProps) {
 
   const isSuperAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(user.role);
   const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
 
   return (
     <View
       style={[
         styles.container,
-        Platform.OS === 'web' && ({ height: '100dvh', maxHeight: '100dvh' } as any),
+        Platform.OS === 'web' && ({ height: '100dvh', maxHeight: '100dvh', maxWidth: '100vw', overflowX: 'hidden' } as any),
       ]}
     >
-      {/* Super Admin Global Portal Switcher Bar (Desktop only) */}
+      {/* Super Admin Global Portal Switcher Bar (Desktop only, never render on mobile <768px) */}
       {isSuperAdmin && isDesktop && (
         <PortalSwitcherBar currentPortalId={portalId} />
       )}
@@ -72,8 +72,13 @@ export function PortalGuard({ portalId, children }: PortalGuardProps) {
  */
 export function PortalSwitcherBar({ currentPortalId }: { currentPortalId: PortalId }) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
   const [menuOpen, setMenuOpen] = useState(false);
   const currentPortal = PORTALS[currentPortalId];
+
+  // Strictly enforce desktop-only: never render on mobile viewports
+  if (!isDesktop) return null;
 
   const handleSwitch = (id: PortalId) => {
     setMenuOpen(false);
@@ -89,7 +94,7 @@ export function PortalSwitcherBar({ currentPortalId }: { currentPortalId: Portal
           <Ionicons name={currentPortal.icon as any} size={13} color="#ffffff" />
           <Text style={styles.portalBadgeText}>{currentPortal.badge}</Text>
         </View>
-        <Text style={styles.portalTitleText}>
+        <Text style={styles.portalTitleText} numberOfLines={1}>
           {currentPortal.name}
           <Text style={styles.portalTaglineText}> — {currentPortal.tagline}</Text>
         </Text>
@@ -156,14 +161,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: '100%',
+    maxWidth: '100%',
     height: '100%',
     overflow: 'hidden',
+    ...(Platform.OS === 'web' ? ({ maxWidth: '100vw', overflowX: 'hidden' } as any) : {}),
   },
   contentWrap: {
     flex: 1,
     width: '100%',
+    maxWidth: '100%',
     height: '100%',
     overflow: 'hidden',
+    ...(Platform.OS === 'web' ? ({ maxWidth: '100vw', overflowX: 'hidden' } as any) : {}),
   },
   centerLoading: {
     flex: 1,
@@ -177,6 +186,7 @@ const styles = StyleSheet.create({
   },
   switcherBar: {
     height: 42,
+    maxWidth: '100%',
     backgroundColor: '#070f1e',
     borderBottomWidth: 1,
     flexDirection: 'row',
@@ -184,11 +194,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     zIndex: 99,
+    overflow: 'hidden',
+    flexShrink: 0,
   },
   switcherLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
   },
   portalBadge: {
     flexDirection: 'row',
@@ -197,6 +212,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: RADIUS.xs,
+    flexShrink: 0,
   },
   portalBadgeText: {
     fontSize: 9.5,
@@ -208,6 +224,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#f8fafc',
+    flexShrink: 1,
   },
   portalTaglineText: {
     fontSize: 11,
@@ -223,6 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderWidth: 1,
+    flexShrink: 0,
   },
   switchBtnText: {
     fontSize: 11,

@@ -93,7 +93,7 @@ export default function RefundPolicyScreen() {
               Transparent, Farmer-First Guidelines for Certified Seeds, Bio-Nutrients, and Equipment Purchases
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              FarmsKing India Private Limited • Customer Trust Desk • 100% Genuine Agri Guarantee
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • Customer Trust Desk • 100% Genuine Agri Guarantee
             </Text>
           </View>
 

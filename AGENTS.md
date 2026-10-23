@@ -22,4 +22,9 @@
 - **100% Pure React / React Native Architecture**: Everything built in React/React Native mode ("sabh react mode vich bane").
 - **Concurrent Mobile View Detection ("React ਨਾਲ ਨਾਲ Mobile View Det Kita Jave")**: When developing with React, concurrently test and verify the mobile layout (<768px). Never build for desktop alone.
 - **Mobile Compatibility Benchmark ("Har Design Te Wording Mobile Compatibility Nu Dekhde Hoye")**: Every design element, card grid, touch target (>=44x44px), spacing, and wording must be optimized for mobile screens without clipping, horizontal bleed, or awkward wraps.
+## 3. Statutory Confidentiality, Web App Synchronization & Proactive Legal Guidance
+- **Zero Public Leakage of Legal Data**: Internal company legal discussions, personal KYC (Aadhaar, Passports, PAN cards, Bank Statements), share transfer instruments (SH-4), and board resolutions must NEVER be committed to public code repositories or client-facing web bundles. All statutory records remain isolated in `Govt/docs` and guarded by `.gitignore`.
+- **100% Web App & Legal Entity Alignment**: The web application (Terms of Service, Privacy Policy, Footer, Contact info, E-commerce billing) must 100% match the registered entity: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`, Regd. Office: `VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422`, and operate strictly within approved e-MoA objects (AI Crop Doctor, Live Mandi, E-commerce, Satellite Telemetry).
+- **Proactive Guidance in Discussions**: In all future tasks, proactively guide and remind according to statutory requirements and company rules.
 - Follow `PROJECT_RULES.md` as master specification.
+

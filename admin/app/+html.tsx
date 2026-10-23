@@ -259,10 +259,13 @@ export default function Root({ children }: PropsWithChildren) {
             /* Make html & body fill the full viewport */
             html, body {
               width: 100%;
+              max-width: 100vw !important;
               height: 100%;
               margin: 0;
               padding: 0;
-              overflow: hidden;
+              overflow-x: hidden !important;
+              overflow-y: hidden;
+              position: relative;
             }
 
             /* Expo Web root mounts into #root — it must be a full-height flex column */
@@ -270,8 +273,11 @@ export default function Root({ children }: PropsWithChildren) {
               display: flex;
               flex-direction: column;
               width: 100%;
+              max-width: 100vw !important;
               height: 100%;
-              overflow: hidden;
+              overflow-x: hidden !important;
+              overflow-y: hidden;
+              position: relative;
             }
 
             /* All top-level Expo RN View divs should stretch */
@@ -280,7 +286,8 @@ export default function Root({ children }: PropsWithChildren) {
               display: flex;
               flex-direction: column;
               min-height: 0;
-              overflow: hidden;
+              max-width: 100vw !important;
+              overflow-x: hidden !important;
             }
 
             /* Scrollable areas inside pages should scroll, not the page itself */
@@ -291,9 +298,9 @@ export default function Root({ children }: PropsWithChildren) {
             }
 
             /* Prevent any stray element from causing horizontal page scroll */
-            body > div {
-              max-width: 100vw;
-              overflow-x: hidden;
+            body > div, #root > div {
+              max-width: 100vw !important;
+              overflow-x: hidden !important;
             }
 
             /* Typography baseline */

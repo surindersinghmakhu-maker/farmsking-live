@@ -918,34 +918,77 @@ function UpiUpgradeFlow({
         } catch {
           setError('Could not open payment page.');
         }
+      } else if (request.upiLink) {
+        handleOpenUpiApp();
       } else {
         setError('Payment session could not be initialized.');
       }
     };
 
     return (
-      <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, alignItems: 'center', paddingBottom: 20 }}>
+      <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, alignItems: 'center', paddingBottom: 20 }}>
         <Text style={[styles.label, { alignSelf: 'flex-start', color: '#0f172a', fontWeight: '700' }]}>
           {planName} Plan Price: ₹{request.amount}
         </Text>
 
-        <View style={{ backgroundColor: '#f8fafc', padding: 20, borderRadius: RADIUS.lg, alignItems: 'center', gap: 10, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-          <Ionicons name="card-outline" size={48} color="#475569" />
-          <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-            Complete your VIP Pass purchase securely via Cashfree.
-          </Text>
-          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
-            Payment Ref: {paymentRefCode}
-          </Text>
-        </View>
+        {request.cashfreeSessionId ? (
+          <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
+            <Ionicons name="card-outline" size={36} color="#475569" />
+            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
+              Complete your VIP Pass purchase securely via Online Gateway.
+            </Text>
+            <TouchableOpacity 
+              style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+              onPress={handlePayOnline}
+            >
+              <Ionicons name="lock-closed" size={16} color="#ffffff" />
+              <Text style={styles.submitBtnText}>Pay Online Now (Cashfree)</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
-        <TouchableOpacity 
-          style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 10, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-          onPress={handlePayOnline}
-        >
-          <Ionicons name="lock-closed" size={16} color="#ffffff" />
-          <Text style={styles.submitBtnText}>Pay Online Now (Cashfree)</Text>
-        </TouchableOpacity>
+        {request.upiLink ? (
+          <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#e2e8f0' }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+              Direct UPI / Scan QR (0% Surcharge)
+            </Text>
+            <View style={styles.qrBox}>
+              <QRCode value={request.upiLink} size={140} />
+            </View>
+            <TouchableOpacity 
+              style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+              onPress={handleOpenUpiApp}
+            >
+              <Ionicons name="phone-portrait-outline" size={16} color="#ffffff" />
+              <Text style={styles.submitBtnText}>Open UPI App (GPay / PhonePe / Paytm)</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={{ width: '100%', marginTop: 6, gap: 6 }}>
+          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+            Enter UPI UTR / Transaction Reference No.:
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 426189012345 (12-digit UTR)"
+            placeholderTextColor="#94a3b8"
+            value={utr}
+            onChangeText={setUtr}
+            keyboardType="number-pad"
+          />
+          <TouchableOpacity
+            style={[styles.submitBtn, { backgroundColor: '#15803d' }]}
+            onPress={handleSubmit}
+            disabled={submit.isPending}
+          >
+            {submit.isPending ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Text style={styles.submitBtnText}>Submit Payment & Request Activation</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>

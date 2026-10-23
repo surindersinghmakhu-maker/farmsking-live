@@ -93,7 +93,7 @@ export default function TermsOfServiceScreen() {
               Official Legal Agreement for Cultivators, Agronomists, Store Vendors, and Platform Members
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              Last Updated: October 2026 • FarmsKing India Private Limited • Registered in Punjab, India
+              Last Updated: October 2026 • FARMSKING TECHNOLOGIES PRIVATE LIMITED • Registered in Punjab, India
             </Text>
           </View>
 
@@ -108,7 +108,7 @@ export default function TermsOfServiceScreen() {
               </Text>
             </View>
             <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
-              These Terms of Service ("Terms") govern your access to and use of the FarmsKing digital platform, mobile applications, APMC mandi price telemetry, AI Crop Doctor tools, and e-commerce services operated by <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>FarmsKing India Private Limited</Text> (incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India).
+              These Terms of Service ("Terms") govern your access to and use of the FarmsKing digital platform, mobile applications, APMC mandi price telemetry, AI Crop Doctor tools, and e-commerce services operated by <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> (incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India).
             </Text>
             <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
               By downloading, registering, browsing, or placing orders on farmsking.in or associated mobile apps, you enter into a legally binding contract in accordance with the Information Technology Act, 2000 and applicable digital commerce regulations.
@@ -235,7 +235,7 @@ export default function TermsOfServiceScreen() {
                 Helpline: 95776-22000 (Farmer Support Desk • 6:00 AM – 10:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Registered Office: Makhu, District Ferozepur, Punjab - 142044 • Jurisdiction: Courts of Punjab, India
+                Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 • Corporate Office: Makhu, Ferozepur • Jurisdiction: Courts of Punjab, India
               </Text>
             </View>
           </View>

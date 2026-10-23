@@ -272,9 +272,9 @@ Every screen and feature in FarmsKing MUST achieve a **5-Star Quality Rating**:
 
 ---
 
-## 11. 🏢 FarmsKing India Private Limited — Corporate Governance & Company Rules
+## 11. 🏢 FARMSKING TECHNOLOGIES PRIVATE LIMITED — Corporate Governance & Company Rules
 
-> **Corporate Legal Identity**: All platform features, business workflows, admin controls, and operational policies must align with the official charter of **FarmsKing India Private Limited** (under the Companies Act, 2013 and MCA guidelines).
+> **Corporate Legal Identity**: All platform features, business workflows, admin controls, and operational policies must align with the official charter of **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (under the Companies Act, 2013 and MCA guidelines).
 
 ### 🏛️ The 6 Corporate MoA Mandates (Company Objects):
 1. **Digital Farming & Precision Agri Platform**:
@@ -295,4 +295,25 @@ Every screen and feature in FarmsKing MUST achieve a **5-Star Quality Rating**:
 - **Farmer Data Privacy & Security (Digital Personal Data Protection)**: Strict protection of farmer KYC, mobile numbers, land records, and payment credentials. Zero unauthorized third-party sharing.
 - **Financial Audit & Ledger Integrity**: Every wallet credit, withdrawal request, cashback incentive, referral reward, and vendor payout must maintain an immutable, auditable double-entry transaction record.
 - **Fair Trade & Anti-Exploitation Policy**: Transparent commission rates, zero hidden deductions for farmers, verified seller certifications, and instant dispute resolution mechanisms.
-- **Corporate Brand Consistency**: Maintain the royal executive branding (`FarmsKing India Private Limited`) across all invoice PDFs, receipts, admin audit logs, and external communications.
+- **Corporate Brand Consistency**: Maintain the royal executive branding (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`) across all invoice PDFs, receipts, admin audit logs, and external communications.
+
+---
+
+## 12. 🛡️ Statutory Confidentiality, Legal Isolation & Web Application Synchronization Rules
+> **ਕੰਪਨੀ ਦੇ ਲੀਗਲ ਕਾਗ਼ਜ਼ਾਤ ਦੀ ਗੁਪਤਤਾ, ਵੈੱਬ ਐਪਲੀਕੇਸ਼ਨ ਨਾਲ 100% ਮੇਲ ਅਤੇ ਨਿਰੰਤਰ ਕਾਨੂੰਨੀ ਅਗਵਾਈ ਨਿਯਮ**
+
+1. **Strict Legal Confidentiality & Zero Public Leakage ("ਕੰਪਨੀ ਦੇ ਲੀਗਲ ਕਾਗ਼ਜ਼ਾਤ ਪ੍ਰੋਜੈਕਟ ਕੋਡ ਵਿੱਚ ਅਪਲੋਡ ਨਾ ਕਰਨ ਦਾ ਨਿਯਮ")**:
+   - Internal corporate legal discussions, personal promoter KYC (Aadhaar cards, Passports, PAN cards, Bank Statements), shareholder transfer instruments (Form SH-4), undated director resignation letters, and secretarial board resolutions MUST NEVER be committed to public Git repositories or bundled into client-facing web application bundles.
+   - All statutory government files must remain strictly quarantined in the designated offline repository (`d:\FarmsKing\Govt\docs`) and guarded by `.gitignore`.
+
+2. **Proactive Legal Guidance in Ongoing Discussions ("ਅਗਲੀ ਹਰ ਚਰਚਾ ਵਿੱਚ ਰੂਲਜ਼ ਅਨੁਸਾਰ ਦੱਸਦੇ ਰਹਿਣਾ")**:
+   - In all upcoming architectural, operational, and feature discussions, the assistant must proactively analyze and inform the user regarding legal boundaries, secretarial compliances (Companies Act 2013, DPIIT Startup India, MSMED Act, DPDP Act 2023, IT Act 2000), tax exemptions, and statutory deadlines (e.g. INC-20A within 180 days, DIR-12 within 30 days).
+
+3. **100% Web Application & Legal Identity Harmonization ("ਵੈੱਬ ਐਪਲੀਕੇਸ਼ਨ ਅਤੇ ਲੀਗਲ ਦਾ ਆਪਸ ਵਿੱਚ ਪੂਰਾ ਮੇਲ")**:
+   - The web application (Terms of Service, Privacy Policy, Footer Disclosures, Company About Us, Contact & Support, Invoices, Mandi Disclaimers, and Agri-Store Seller Policies) MUST ALWAYS match and harmonize 100% with the legal entity:
+     - **Legal Corporate Name**: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`
+     - **Registered Office**: `VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India`
+     - **Official Support Email**: `surindersinghmakhu@gmail.com`
+     - **Official Helpline / Phone**: `+91 98720-66901`
+     - **MoA Objects Synchronization**: All web application features (AI Crop Doctor, Live APMC Mandi Ticker, Agri-Input E-Commerce, Drone & Telemetry Services, Kisan Vidya) must directly reflect and operate within the official approved MCA e-MoA objects (Main Object Clause III).
+

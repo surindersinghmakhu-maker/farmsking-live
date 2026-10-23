@@ -33,7 +33,7 @@ def create_full_details_doc():
     # Header
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p.add_run("👑 ਫਾਰਮਜ਼ਕਿੰਗ ਇੰਡੀਆ ਪ੍ਰਾਈਵੇਟ ਲਿਮਟਿਡ\nFARMSKING INDIA PRIVATE LIMITED\n")
+    r = p.add_run("👑 ਫਾਰਮਜ਼ਕਿੰਗ ਟੈਕਨੋਲੋਜੀਜ਼ ਪ੍ਰਾਈਵੇਟ ਲਿਮਟਿਡ\nFARMSKING TECHNOLOGIES PRIVATE LIMITED\n")
     r.font.name = font_name
     r.font.size = Pt(20)
     r.font.bold = True
@@ -288,7 +288,7 @@ def create_full_details_doc():
     # Footer note
     footer_p = doc.add_paragraph()
     footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    footer_run = footer_p.add_run("👑 ਫਾਰਮਜ਼ਕਿੰਗ ਇੰਡੀਆ ਪ੍ਰਾਈਵੇਟ ਲਿਮਟਿਡ — ਸਫਲਤਾ, ਏਕਤਾ ਅਤੇ ਪਾਰਦਰਸ਼ਤਾ ਦਾ ਪ੍ਰਤੀਕ")
+    footer_run = footer_p.add_run("👑 ਫਾਰਮਜ਼ਕਿੰਗ ਟੈਕਨੋਲੋਜੀਜ਼ ਪ੍ਰਾਈਵੇਟ ਲਿਮਟਿਡ — ਸਫਲਤਾ, ਏਕਤਾ ਅਤੇ ਪਾਰਦਰਸ਼ਤਾ ਦਾ ਪ੍ਰਤੀਕ")
     footer_run.font.name = font_name
     footer_run.font.size = Pt(10.5)
     footer_run.font.bold = True

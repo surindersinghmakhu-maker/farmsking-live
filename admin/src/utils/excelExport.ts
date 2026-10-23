@@ -183,3 +183,45 @@ export function exportSellersToExcel(stores: any[], customFilename?: string) {
 
   exportToExcel(filename, headers, rows);
 }
+
+/** Export Seller Settlement Payouts & Store Accounts to Excel */
+export function exportSellerPayoutsToExcel(payouts: any[], customFilename?: string) {
+  const filename = customFilename || `FarmsKing_Seller_Settlements_${new Date().toISOString().slice(0, 10)}.csv`;
+  const headers = [
+    'Settlement Ref No',
+    'Store Name',
+    'Merchant Name',
+    'Mobile Number',
+    'GSTIN',
+    'Bank Name',
+    'Bank A/c No',
+    'IFSC Code',
+    'Gross Sales (₹)',
+    'FarmsKing Fee (₹)',
+    '1% GST TCS (₹)',
+    'Net Transferred (₹)',
+    'Bank UTR Number',
+    'Settlement Date',
+    'Status',
+  ];
+
+  const rows = payouts.map((p) => [
+    p.payoutRefNo || p.id || '',
+    p.storeName || p.sellerStore?.storeName || 'Merchant Store',
+    p.sellerName || p.sellerStore?.seller?.name || '',
+    p.mobile || p.sellerStore?.seller?.mobile || '',
+    p.gstin || p.sellerStore?.gstin || '',
+    p.bankName || p.sellerStore?.bankName || 'Nodal Bank',
+    p.bankAccountNo || p.sellerStore?.bankAccountNo || '',
+    p.bankIfsc || p.sellerStore?.bankIfsc || '',
+    Number(p.totalGrossAmount || p.grossSales || 0).toFixed(2),
+    Number(p.totalCommissionAmount || p.commissionAmount || 0).toFixed(2),
+    Number(p.totalTcsAmount || p.tcsAmount || 0).toFixed(2),
+    Number(p.netPayoutAmount || p.netDisbursed || 0).toFixed(2),
+    p.cashfreeUtrNo || p.utrNo || 'PENDING',
+    p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : '',
+    p.status || 'SETTLED',
+  ]);
+
+  exportToExcel(filename, headers, rows);
+}

@@ -10,28 +10,34 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         {/* Primary Page Title & Canonical SEO Tags */}
-        <title>FarmsKing - India's #1 Smart Farming & Crop Intelligence Platform | Surinder Agro Farm</title>
+        <title>FarmsKing Technologies - India's National Smart Agriculture &amp; Organic Platform</title>
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
-        <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform founded by Surinder Singh (Surinder Academy / Surinder Agro Farm). AI crop intelligence, disease diagnosis, PAU advisory & farmer rewards." />
-        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Surinder Singh, Surinder Agro Farm, Surinder Academy, Surinder Computers, Exilent Web Solutions, Gurnam Singh FarmsKing, PAU Punjab Agricultural University FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, ਝੋਨੇ ਦੀ ਸਪਰੇਅ, ਕਣਕ ਦੀ ਬੀਜਾਈ, ਫਸਲ ਇਲਾਜ, ਗੋਭੀ ਸਪਰੇਅ, ਖੇਤੀਬਾੜੀ ਸਲਾਹ, ਕਿਸਾਨ ਮਦਦ, Crop Disease Scan, Reverse Sowing Engine" />
+        <meta name="description" content="FARMSKING TECHNOLOGIES PRIVATE LIMITED (farmsking.com / farmsking.in) is India's premier national agriculture platform. Directors: Bakshish Singh, Gagandeep Kaur. General Manager: Gurnam Singh. Certified vermicompost, marigold floriculture, AI crop doctor, and live mandi intelligence." />
+        <meta name="keywords" content="FarmsKing, FARMSKING TECHNOLOGIES PRIVATE LIMITED, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Surinder Singh, Gurdit Singh, Sudhir Kumar Mahato, Manjeet Sra, Vermicompost Bio-Fertilizers, Marigold Farming, Commercial Floriculture, AI Crop Doctor, Live Mandi Rates, Goindwal Sahib, Makhu, Smart Farming India, Balcony Gardening, Urban Agriculture" />
         
+        {/* Geospatial Indexing for Local & National Search */}
+        <meta name="geo.region" content="IN-PB" />
+        <meta name="geo.placename" content="Goindwal Sahib, Makhu, Punjab, India" />
+        <meta name="geo.position" content="31.1400;75.3400" />
+        <meta name="ICBM" content="31.1400, 75.3400" />
+
         {/* OpenGraph & Social Cards */}
-        <meta property="og:site_name" content="FarmsKing Smart Agriculture Platform" />
+        <meta property="og:site_name" content="FARMSKING TECHNOLOGIES PRIVATE LIMITED" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
-        <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
+        <meta property="og:title" content="FarmsKing Technologies - National Smart Agriculture &amp; Organic Platform" />
+        <meta property="og:description" content="India's national agricultural technology platform. Directors: Bakshish Singh, Gagandeep Kaur. General Manager: Gurnam Singh. Vermicompost bio-fertilizers, marigold floriculture, AI crop doctor, and live mandi intelligence." />
         <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
-        <meta name="twitter:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
+        <meta name="twitter:title" content="FarmsKing Technologies - National Smart Agriculture Platform" />
+        <meta name="twitter:description" content="National agricultural technology platform delivering AI crop diagnostics, vermicompost bio-fertilizers, and live mandi intelligence." />
         <meta name="twitter:image" content="https://farmsking.in/farmsking_logo.png" />
 
-        {/* WebSite Sitelinks SearchBox Schema for Google #1 Ranking */}
+        {/* WebSite Sitelinks SearchBox Schema for Google Ranking */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -39,7 +45,7 @@ export default function Root({ children }: PropsWithChildren) {
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "FarmsKing",
-              "alternateName": ["FarmsKing Platform", "www.farmsking.in"],
+              "alternateName": ["FarmsKing Technologies", "FARMSKING TECHNOLOGIES PRIVATE LIMITED", "www.farmsking.in"],
               "url": "https://farmsking.in",
               "potentialAction": {
                 "@type": "SearchAction",
@@ -60,15 +66,110 @@ export default function Root({ children }: PropsWithChildren) {
               "itemListElement": [
                 { "@type": "ListItem", "position": 1, "name": "FarmsKing Home", "item": "https://farmsking.in/" },
                 { "@type": "ListItem", "position": 2, "name": "About FarmsKing", "item": "https://farmsking.in/about-farmsking.html" },
-                { "@type": "ListItem", "position": 3, "name": "Surinder Agro Farm", "item": "https://farmsking.in/surinder-agro-farm.html" },
-                { "@type": "ListItem", "position": 4, "name": "Punjab Kheti Advisory", "item": "https://farmsking.in/punjab-kheti-advisory.html" },
+                { "@type": "ListItem", "position": 3, "name": "Statutory Compliance", "item": "https://farmsking.in/compliance" },
+                { "@type": "ListItem", "position": 4, "name": "Contact Support", "item": "https://farmsking.in/contact-us" },
                 { "@type": "ListItem", "position": 5, "name": "Kisan Crop Intelligence", "item": "https://farmsking.in/kisan-crop-intelligence-engine.html" }
               ]
             })
           }}
         />
 
-        {/* Google Rich Snippets & FAQ Schema for Search Engine Indexing */}
+        {/* Google Rich Snippets & Corporation Schema for Search Engine Indexing */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Corporation",
+              "name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+              "alternateName": "FarmsKing",
+              "url": "https://farmsking.in",
+              "logo": "https://farmsking.in/farmsking_logo.png",
+              "description": "National agricultural technology platform delivering multimodal AI crop pathology, certified vermicompost bio-fertilizers, commercial marigold floriculture advisory, live mandi commodity intelligence, and urban balcony gardening kits across India.",
+              "address": [
+                {
+                  "@type": "PostalAddress",
+                  "streetAddress": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
+                  "addressLocality": "Tarn Taran",
+                  "addressRegion": "Punjab",
+                  "postalCode": "143422",
+                  "addressCountry": "IN",
+                  "description": "Statutory Registered Office (ROC Chandigarh Jurisdiction)"
+                },
+                {
+                  "@type": "PostalAddress",
+                  "streetAddress": "Near Grain Market, Makhu",
+                  "addressLocality": "Makhu, District Ferozepur",
+                  "addressRegion": "Punjab",
+                  "postalCode": "142044",
+                  "addressCountry": "IN",
+                  "description": "Operational Working Office & Software Development Hub"
+                }
+              ],
+              "director": [
+                {
+                  "@type": "Person",
+                  "name": "Bakshish Singh",
+                  "jobTitle": "Director",
+                  "description": "Director of FarmsKing Technologies Private Limited leading corporate governance and agricultural operations."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Gagandeep Kaur",
+                  "jobTitle": "Director",
+                  "description": "Director of FarmsKing Technologies Private Limited overseeing financial management and national distribution partnerships."
+                }
+              ],
+              "employee": [
+                {
+                  "@type": "Person",
+                  "name": "Gurnam Singh",
+                  "jobTitle": "General Manager & Quality Assurance Lead",
+                  "description": "Oversees nationwide field operations, administrative governance, and agricultural testing quality standards."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Surinder Singh",
+                  "jobTitle": "Lead Founder, Visionary & Chief AI Architect",
+                  "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
+                  "description": "Computer Teacher, IT & AI Specialist who spearheaded FarmsKing end-to-end from conceptualization, deep crop physiology research, software architecture, and features to field validation."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Engg. Gurdit Singh",
+                  "jobTitle": "Technical Support Lead",
+                  "description": "Leads software platform reliability, server telemetry, and technical customer support."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Sudhir Kumar Mahato",
+                  "jobTitle": "Marigold Farming Expert, Promotion Partner & Testing Advisor",
+                  "description": "Commercial floriculture specialist guiding high-yield marigold cultivation and agricultural quality assurance."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Manjeet Sra",
+                  "jobTitle": "Organic Products & Marketing Manager",
+                  "description": "Directs the national marketing and distribution of certified vermicompost, bio-fertilizers, and organic farm inputs."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Charanjit Singh",
+                  "jobTitle": "Backend Support Lead & Director of Surinder Academy, Makhu",
+                  "description": "IT services expert leading high-performance backend infrastructure, API gateways, database optimization, and cloud architecture for FarmsKing."
+                },
+                {
+                  "@type": "Person",
+                  "name": "Gurjant Singh",
+                  "jobTitle": "Hardware Support Lead & Director of Surinder Computers, Makhu",
+                  "description": "Hardware and edge telemetry expert managing server equipment, diagnostic hardware, rural kiosk devices, and networking infrastructure for FarmsKing."
+                }
+              ]
+            })
+          }}
+        />
+
+        {/* Google SoftwareApplication Schema for Web & Mobile App */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -76,52 +177,19 @@ export default function Root({ children }: PropsWithChildren) {
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
               "name": "FarmsKing",
-              "operatingSystem": "ANDROID, IOS, WEB",
+              "operatingSystem": "Web, Android, iOS",
               "applicationCategory": "BusinessApplication",
-              "ratingValue": "4.9",
-              "ratingCount": "1250",
               "offers": {
                 "@type": "Offer",
                 "price": "0",
                 "priceCurrency": "INR"
               },
-              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform created by Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato.",
-              "author": {
-                "@type": "Organization",
-                "name": "FarmsKing Platform",
-                "url": "https://farmsking.in",
-                "founder": [
-                  {
-                    "@type": "Person",
-                    "name": "Surinder Singh",
-                    "jobTitle": "Lead Founder, Chief Architect & AI Expert",
-                    "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
-                    "description": "Computer Teacher, IT & AI Expert, vision founder of Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Led FarmsKing end-to-end from ideation, deep crop physiology research, programming, features development to field testing."
-                  },
-                  { "@type": "Person", "name": "Gurjant Singh" },
-                  { "@type": "Person", "name": "Charanjit Singh" },
-                  { "@type": "Person", "name": "Lovepreet Singh" },
-                  { "@type": "Person", "name": "Sudhir Kumar Mahato" }
-                ],
-                "contributor": [
-                  { "@type": "Person", "name": "Gurnam Singh", "description": "Field Testing & Practical Validation Lead" }
-                ],
-                "parentOrganization": {
-                  "@type": "EducationalOrganization",
-                  "name": "Surinder Academy Makhu Punjab India",
-                  "url": "https://surinderacademy.com",
-                  "foundingDate": "2001"
-                },
-                "subOrganization": [
-                  { "@type": "Organization", "name": "Exilent Web Solutions", "description": "International level Web & Software Engineering" },
-                  { "@type": "Organization", "name": "Surinder Computers Makhu", "description": "Hardware & Infrastructure Provider" },
-                  { "@type": "Organization", "name": "Surinder Agro Farm", "description": "Practical Agricultural R&D Laboratory for studying crop physiology, plant health, and ground-level farming challenges" }
-                ]
-              }
+              "description": "India's premier national agriculture platform featuring multimodal AI Crop Doctor diagnostics, real-time live mandi rates, certified organic vermicompost, and direct farmer-to-consumer marketplace."
             })
           }}
         />
 
+        {/* FAQ Schema for AI Search & Knowledge Graph */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -131,80 +199,56 @@ export default function Root({ children }: PropsWithChildren) {
               "mainEntity": [
                 {
                   "@type": "Question",
-                  "name": "What is FarmsKing Smart Farming Platform?",
+                  "name": "What is FARMSKING TECHNOLOGIES PRIVATE LIMITED?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing is India's leading agricultural intelligence platform providing AI crop advisory, disease diagnosis, weather alerts, and expert doctor consultation for farmers."
+                    "text": "FARMSKING TECHNOLOGIES PRIVATE LIMITED is India's premier national smart agriculture, vermicompost bio-fertilizer, and crop advisory company. It empowers farmers, urban gardeners, and organic food consumers with AI plant pathology, live mandi price intelligence, and verified farm inputs."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Who is Surinder Singh and what is his contribution to FarmsKing?",
+                  "name": "Who are the Directors and General Manager of FarmsKing?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Surinder Singh is the primary visionary, Lead Founder, and Chief AI Architect of FarmsKing. A Computer Teacher with degrees in Computer Science Graduation, MBA, and LLB, he is an IT/AI expert, avid reader of general knowledge, and follower of motivational speakers. He single-handedly founded Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Surinder Singh spearheaded FarmsKing from conceptualization, deep agricultural research, software programming, feature architecture to testing, driven by a progressive mindset and commitment to public welfare."
+                    "text": "The Board of Directors comprises Bakshish Singh and Gagandeep Kaur. The General Manager is Gurnam Singh, who also leads nationwide agricultural testing and quality assurance. The platform was architected by Lead Founder and Chief AI Architect Surinder Singh (B.Sc CS, MBA, LLB)."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Who created FarmsKing and what is its mission?",
+                  "name": "Where are the official Registered and Operational Offices of FarmsKing located?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing was founded by Surinder Singh, alongside core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato, with extensive practical field testing conducted by Gurnam Singh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
+                    "text": "The Statutory Registered Office is located at VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India. The Corporate and Operational Working Office is located near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Which organizations engineered FarmsKing software, hardware, and field R&D?",
+                  "name": "What is FarmsKing's National Launch mission?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing is backed by Surinder Academy (Makhu, Punjab, India - surinderacademy.com, operating since 2001). Web software engineered by Exilent Web Solutions, hardware infrastructure by Surinder Computers Makhu, and practical crop R&D conducted at Surinder Agro Farm with field testing by Gurnam Singh."
+                    "text": "FarmsKing is launching at the national level across India to serve as a technological blessing for farmers, terrace and balcony gardeners, organic consumers, and nature lovers. It is strongly aligned with Government of India and state university policies for natural farming and rural economic growth."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "What is Surinder Agro Farm's role in FarmsKing?",
+                  "name": "What are FarmsKing's core offerings in Vermicompost and Marigold Farming?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Surinder Agro Farm was established to practically study ground-level farming problems, deeply understand plant health and crop physiology, and test organic farming solutions directly in the field with testing supported by Gurnam Singh."
+                    "text": "FarmsKing provides pure, microbially-enriched vermicompost to restore soil organic carbon and replace chemical urea, led by Organic Marketing Manager Manjeet Sra. In floriculture, expert Sudhir Kumar Mahato guides farmers on commercial high-yield Marigold cultivation (ਗੈਂਦਾ ਫਸਲ) for 3x to 5x higher seasonal profitability."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "What are the future launch and expansion plans for FarmsKing?",
+                  "name": "Who manages Technical, Backend and Hardware Support at FarmsKing?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing is currently undergoing field validation and is planned for official launch in collaboration with Punjab Agricultural University (PAU), followed by a nationwide launch at the national level across India."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "How to claim FarmsKing Welcome Cash Bonus?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Register on FarmsKing using a valid referral code or link, open your Wallet screen, and click 'Claim Bonus' to receive instant wallet cashback."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "How to consult an Agriculture Doctor on FarmsKing?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Open FarmsKing app, navigate to Advisor Consultation, select your crop problem or upload a crop photo, and connect with certified Agriculture Experts."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "What is Reverse Sowing Engine?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "FarmsKing's Reverse Sowing Engine calculates festival demand dates (Diwali, Chhath, Baisakhi) to advise farmers on the exact sowing date for 3x market prices."
+                    "text": "Technical Support is led by Engg. Gurdit Singh. Backend Support is provided by Charanjit Singh, Director of Surinder Academy Makhu (IT Services). Hardware Support is provided by Gurjant Singh, Director of Surinder Computers Makhu. Agricultural Testing Advisors are Gurnam Singh and Sudhir Kumar Mahato, who calibrate field diagnostic accuracy and package of practices."
                   }
                 }
               ]
             })
           }}
-        />
+
 
         {/* App Favicon & Official FarmsKing Logo Icons */}
         <link rel="icon" type="image/png" href="/favicon.png" />

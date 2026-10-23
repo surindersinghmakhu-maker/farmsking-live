@@ -329,6 +329,21 @@ export default function MoreScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
+                      style={styles.row}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/(tabs)/crop-disease-scanner' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+                        <Ionicons name="scan-outline" size={18} color="#0284c7" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🔬 AI Crop Doctor & Scanner</Text>
+                        <Text style={styles.rowSubLabel}>Scan Leaf Photo for Instant Disease & Dosage</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
                       style={[styles.row, { borderBottomWidth: 0 }]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}

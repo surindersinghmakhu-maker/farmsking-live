@@ -7,13 +7,15 @@
     "start": "node scripts/start.js",
     "build:web": "node frontend/build.js",
     "deploy": "node scripts/deploy.js",
-    "deploye": "node scripts/deploy.js"
+    "deploye": "node scripts/deploy.js",
+    "eploye": "node scripts/deploy.js"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",
     "firebase": "^12.19.0"
   },
   "devDependencies": {
+    "docx": "^9.13.0",
     "kill-port": "^2.0.1"
   }
 }

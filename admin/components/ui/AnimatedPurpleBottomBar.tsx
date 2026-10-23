@@ -16,7 +16,7 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any) {
   const { width: windowWidth } = useWindowDimensions();
-  const isDesktop = windowWidth >= 768;
+  const isDesktop = windowWidth >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
   const { themeMode, colors } = useExecutiveTheme();
   const isLight = themeMode === 'LIGHT';
   const isDark = themeMode === 'DARK';
@@ -85,7 +85,7 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
     <View style={styles.barOuterWrapper}>
       <View
         style={[
-          styles.barContainer,
+          styles.barContainer as any,
           isLight && {
             backgroundColor: 'rgba(255, 255, 255, 0.96)',
             borderTopColor: 'rgba(22, 163, 74, 0.22)',
@@ -100,14 +100,14 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
             borderRightColor: 'rgba(56, 189, 248, 0.22)',
             shadowColor: '#38bdf8',
           },
-        ]}
+        ] as any}
         onLayout={handleContainerLayout}
       >
         {/* Continuous Smooth-Moving Active Highlight / Pill Indicator */}
         {tabItemWidth > 0 && (
           <Animated.View
             style={[
-              styles.activeIndicator,
+              styles.activeIndicator as any,
               {
                 width: pillWidth,
                 transform: [{ translateX: indicatorTranslateX }],
@@ -124,13 +124,13 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
                 borderColor: 'rgba(251, 191, 36, 0.55)',
                 shadowColor: '#22c55e',
               },
-            ]}
+            ] as any}
             pointerEvents="none"
           >
             {/* Ambient Glass Glow */}
             <LinearGradient
               colors={indicatorGradientColors}
-              style={styles.indicatorGradient}
+              style={styles.indicatorGradient as any}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
             />
@@ -140,11 +140,11 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[
-                styles.indicatorTopGlow,
+                styles.indicatorTopGlow as any,
                 isLight && { shadowColor: '#16a34a' },
                 isDark && { shadowColor: '#38bdf8' },
                 !isLight && !isDark && { shadowColor: '#22c55e' },
-              ]}
+              ] as any}
             />
           </Animated.View>
         )}
@@ -246,10 +246,10 @@ function TabItemButton({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.tabItem,
+      style={({ pressed }: any) => [
+        styles.tabItem as any,
         pressed && { transform: [{ scale: 0.94 }] },
-      ]}
+      ] as any}
     >
       {/* Icon with smooth spring scale & subtle lift */}
       <Animated.View
@@ -269,13 +269,13 @@ function TabItemButton({
       {/* Label with smooth scale & opacity */}
       <Animated.Text
         style={[
-          styles.tabLabel,
+          styles.tabLabel as any,
           {
             color: isFocused ? labelActiveColor : inactiveColor,
             opacity: labelOpacity,
             transform: [{ scale: labelScale }],
           },
-        ]}
+        ] as any}
         numberOfLines={1}
       >
         {label}
@@ -294,12 +294,15 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     backgroundColor: 'transparent',
     pointerEvents: 'box-none',
+    maxWidth: '100vw' as any,
+    overflow: 'hidden',
   },
   barContainer: {
     flexDirection: 'row',
     height: Platform.OS === 'ios' ? 76 : 64,
     maxWidth: 540,
     width: '100%',
+    overflow: 'hidden',
     backgroundColor: 'rgba(3, 15, 20, 0.96)',
     borderTopWidth: 1.5,
     borderTopColor: 'rgba(34, 197, 94, 0.35)',

@@ -14,7 +14,7 @@ export const MobileAppShell: React.FC<MobileAppShellProps> = ({ children }) => {
       style={[
         styles.fullScreenContainer,
         { backgroundColor: colors.bg },
-        Platform.OS === 'web' && ({ minHeight: '100vh', height: '100dvh', overflow: 'hidden' } as any),
+        Platform.OS === 'web' && ({ minHeight: '100vh', height: '100dvh', maxWidth: '100vw', overflowX: 'hidden' } as any),
       ]}
     >
       {children}
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
   fullScreenContainer: {
     flex: 1,
     width: '100%',
+    maxWidth: '100%',
     height: '100%',
     backgroundColor: '#ffffff',
     overflow: 'hidden',

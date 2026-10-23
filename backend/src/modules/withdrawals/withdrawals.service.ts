@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Role, WithdrawalStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -36,26 +36,49 @@ export class WithdrawalsService {
     return { platformFee, gstAmount, netPayable };
   }
 
-  /** Blocks withdrawal until the caller's payout profile (UPI/bank/PAN/alt mobile/email — plus display fields for Advisors) is complete. */
+  /** Blocks withdrawal until the caller's payout profile is complete. */
   private async assertPayoutProfileComplete(user: AuthUser) {
     const isAdvisor = user.role === Role.ADVISOR;
-    const fields = isAdvisor ? ADVISOR_PROFILE_FIELDS : BUSINESS_PARTNER_PROFILE_FIELDS;
-    const record = await this.prisma.user.findUnique({
-      where: { id: user.id },
-      select: Object.fromEntries(fields.map((f) => [f, true])) as Record<(typeof fields)[number], true>,
-    });
-    if (!record) {
-      throw new NotFoundException('User not found.');
-    }
-    const status = isAdvisor ? getAdvisorPayoutProfileStatus(record) : getPartnerProfileStatus(record);
-    if (!status.profileComplete) {
-      throw new BadRequestException(
-        `Complete your profile before withdrawing — missing: ${status.missingFields.join(', ')}.`,
-      );
+    const isPartner = user.role === Role.BUSINESS_PARTNER;
+
+    if (isAdvisor || isPartner) {
+      const fields = isAdvisor ? ADVISOR_PROFILE_FIELDS : BUSINESS_PARTNER_PROFILE_FIELDS;
+      const record = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: Object.fromEntries(fields.map((f) => [f, true])) as Record<(typeof fields)[number], true>,
+      });
+      if (!record) {
+        throw new NotFoundException('User not found.');
+      }
+      const status = isAdvisor ? getAdvisorPayoutProfileStatus(record) : getPartnerProfileStatus(record);
+      if (!status.profileComplete) {
+        throw new BadRequestException(
+          `Complete your profile before withdrawing — missing: ${status.missingFields.join(', ')}.`,
+        );
+      }
+    } else {
+      // For Admins and Employees (Manager, Operator, Supervisor, Labour, Trainer)
+      const record = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { upiId: true, bankAccountNumber: true, bankIfsc: true },
+      });
+      if (!record || (!record.upiId && (!record.bankAccountNumber || !record.bankIfsc))) {
+        throw new BadRequestException(
+          'Please configure your UPI ID or Bank Account details in your profile before requesting a withdrawal.',
+        );
+      }
     }
   }
 
   async create(user: AuthUser, dto: CreateWithdrawalDto) {
+    // 0. Strict Technical Policy: Clients cannot make cash withdrawals.
+    // Client wallet balances are strictly reserved for billing adjustments and order checkout discounts.
+    const CLIENT_ROLES: Role[] = [Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.TRADER];
+    if (CLIENT_ROLES.includes(user.role)) {
+      throw new ForbiddenException(
+        'Client wallet balance cannot be withdrawn in cash. It is strictly reserved for billing adjustments and order discounts.',
+      );
+    }
     if (dto.requestedAmount < 50) {
       throw new BadRequestException('Minimum withdrawal limit is ₹50.');
     }

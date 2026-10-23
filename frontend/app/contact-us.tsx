@@ -27,8 +27,9 @@ export default function ContactUsPage() {
 
   const phone = '9577622000';
   const displayPhone = '95776-22000';
-  const email = support?.email || 'farmskingindia@gmail.com';
-  const corporateAddress = 'FarmsKing India Private Limited\nNear Grain Market, Makhu, District Ferozepur\nPunjab, India - 142044';
+  const email = support?.email || 'surindersinghmakhu@gmail.com';
+  const registeredAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nVPO Goindwal Sahib, Tehsil Khadur Sahib\nDistrict Tarn Taran, Punjab, India - 143422';
+  const corporateAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nNear Grain Market, Makhu, District Ferozepur\nPunjab, India - 142044';
 
   const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
   const [senderName, setSenderName] = useState('');
@@ -196,27 +197,185 @@ export default function ContactUsPage() {
               </View>
             </TouchableOpacity>
 
-            {/* Corporate Registered Office */}
+            {/* Registered Corporate Office */}
             <TouchableOpacity
               style={[styles.touchCard, isDay ? styles.touchCardDay : styles.touchCardNight]}
-              onPress={handleMaps}
+              onPress={() => Linking.openURL('https://maps.google.com/?q=Goindwal+Sahib,Tarn+Taran,Punjab,143422')}
               activeOpacity={0.88}
             >
               <View style={[styles.iconCircle, { backgroundColor: isDay ? '#fef3c7' : 'rgba(245,158,11,0.18)' }]}>
-                <Ionicons name="location" size={24} color="#d97706" />
+                <Ionicons name="business" size={24} color="#d97706" />
               </View>
               <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Registered Corporate Office</Text>
-              <Text style={[styles.cardHighlight, { color: '#d97706', fontSize: 13 }]}>
-                Makhu, Punjab - 142044
+              <Text style={[styles.cardHighlight, { color: '#d97706', fontSize: 13.5 }]}>
+                Goindwal Sahib, Tarn Taran
               </Text>
               <Text style={[styles.cardSubText, isDay ? styles.cardSubDay : styles.cardSubNight]}>
-                ROC Chandigarh • Ferozepur District
+                VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422
               </Text>
               <View style={[styles.actionPill, { borderColor: 'rgba(245,158,11,0.3)', backgroundColor: 'rgba(245,158,11,0.08)' }]}>
                 <Ionicons name="map-outline" size={13} color="#d97706" />
                 <Text style={[styles.actionPillText, { color: '#d97706' }]}>Open in Google Maps →</Text>
               </View>
             </TouchableOpacity>
+
+            {/* Operational Working Headquarters */}
+            <TouchableOpacity
+              style={[styles.touchCard, isDay ? styles.touchCardDay : styles.touchCardNight]}
+              onPress={handleMaps}
+              activeOpacity={0.88}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: isDay ? '#ecfdf5' : 'rgba(16,185,129,0.18)' }]}>
+                <Ionicons name="location" size={24} color="#059669" />
+              </View>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Operational Working Office</Text>
+              <Text style={[styles.cardHighlight, { color: '#059669', fontSize: 13.5 }]}>
+                Makhu, District Ferozepur
+              </Text>
+              <Text style={[styles.cardSubText, isDay ? styles.cardSubDay : styles.cardSubNight]}>
+                Near Grain Market, Makhu, District Ferozepur, Punjab - 142044
+              </Text>
+              <View style={[styles.actionPill, { borderColor: 'rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.08)' }]}>
+                <Ionicons name="navigate-outline" size={13} color="#059669" />
+                <Text style={[styles.actionPillText, { color: '#059669' }]}>Navigate to Makhu Office →</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Official Leadership & Operational Team Section */}
+          <View style={[styles.leadershipCard, isDay ? styles.leadershipCardDay : styles.leadershipCardNight]}>
+            <View style={styles.leadershipHeader}>
+              <View style={styles.leadershipHeaderIcon}>
+                <Ionicons name="people" size={20} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.leadershipTitle, isDay ? styles.leadershipTitleDay : styles.leadershipTitleNight]}>
+                  Official Leadership &amp; Operational Team
+                </Text>
+                <Text style={[styles.leadershipSub, isDay ? styles.leadershipSubDay : styles.leadershipSubNight]}>
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED — Serving farmers, gardeners, organic consumers &amp; nature lovers nationwide.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.leadershipGrid}>
+              {/* Director 1 */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={styles.leaderRolePill}>
+                  <Text style={styles.leaderRoleText}>DIRECTOR</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Bakshish Singh
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Board of Directors • Corporate Governance &amp; Strategy
+                </Text>
+              </View>
+
+              {/* Director 2 */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={styles.leaderRolePill}>
+                  <Text style={styles.leaderRoleText}>DIRECTOR</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Gagandeep Kaur
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Board of Directors • Operations &amp; Commercial Partnerships
+                </Text>
+              </View>
+
+              {/* General Manager */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#0369a1' }]}>GENERAL MANAGER</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Gurnam Singh Ji
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  General Manager • Mandi Networks, Operations &amp; Quality
+                </Text>
+              </View>
+
+              {/* Technical Support Lead */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#f5f3ff', borderColor: '#ddd6fe' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#6d28d9' }]}>TECHNICAL SUPPORT</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Engg. Gurdit Singh
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Lead Technical Support Engineer • Hardware, Telemetry &amp; Field Systems
+                </Text>
+              </View>
+
+              {/* Backend Support (IT Services) */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#1d4ed8' }]}>BACKEND IT SUPPORT</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Charanjit Singh
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Backend Support Lead • Director of Surinder Academy, Makhu (IT Services)
+                </Text>
+              </View>
+
+              {/* Hardware Support */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#15803d' }]}>HARDWARE SUPPORT</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Gurjant Singh
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Hardware Support Lead • Director of Surinder Computers, Makhu
+                </Text>
+              </View>
+
+              {/* Testing Advisors */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#b45309' }]}>TESTING ADVISORS</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Gurnam Singh &amp; Sudhir Kumar Mahato
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Platform Testing, Field Agronomy &amp; Crop Diagnostic Validation
+                </Text>
+              </View>
+
+              {/* Marigold Floriculture Expert */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#fff7ed', borderColor: '#fed7aa' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#c2410c' }]}>FLORICULTURE &amp; PROMOTION</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Sudhir Kumar Mahato
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Marigold Farming Expert &amp; Commercial Promotion Partner
+                </Text>
+              </View>
+
+              {/* Organic Products & Marketing Manager */}
+              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
+                <View style={[styles.leaderRolePill, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}>
+                  <Text style={[styles.leaderRoleText, { color: '#047857' }]}>ORGANIC &amp; MARKETING</Text>
+                </View>
+                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
+                  Manjeet Sra
+                </Text>
+                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
+                  Organic Products &amp; Marketing Manager • Pure Vermicompost &amp; Bio-Fertilizers
+                </Text>
+              </View>
+            </View>
           </View>
 
           {/* Quick Message / Advisory Request Form */}
@@ -538,4 +697,77 @@ const styles = StyleSheet.create({
   },
   successTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#065f46' },
   successSub: { fontSize: 12.5, fontFamily: FONT.medium, color: '#047857', marginTop: 2 },
+
+  // Leadership & Team Section
+  leadershipCard: {
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    marginBottom: 20,
+    ...premiumShadow('rgba(0,0,0,0.05)', 'sm'),
+  },
+  leadershipCardDay: { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+  leadershipCardNight: { backgroundColor: '#111e19', borderColor: 'rgba(16,185,129,0.2)' },
+
+  leadershipHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  leadershipHeaderIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leadershipTitle: { fontSize: 18, fontFamily: FONT.extraBold },
+  leadershipTitleDay: { color: '#0f172a' },
+  leadershipTitleNight: { color: '#ffffff' },
+  leadershipSub: { fontSize: 12.5, fontFamily: FONT.medium, marginTop: 2 },
+  leadershipSubDay: { color: '#64748b' },
+  leadershipSubNight: { color: '#94a3b8' },
+
+  leadershipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  leaderTile: {
+    flex: 1,
+    minWidth: 260,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+  },
+  leaderTileDay: { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+  leaderTileNight: { backgroundColor: '#091310', borderColor: 'rgba(255,255,255,0.1)' },
+
+  leaderRolePill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    marginBottom: 8,
+  },
+  leaderRoleText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#047857',
+    letterSpacing: 0.5,
+  },
+  leaderName: { fontSize: 14.5, fontFamily: FONT.bold, marginBottom: 3 },
+  leaderNameDay: { color: '#0f172a' },
+  leaderNameNight: { color: '#f8fafc' },
+  leaderDesc: { fontSize: 12, fontFamily: FONT.medium, lineHeight: 17 },
+  leaderDescDay: { color: '#64748b' },
+  leaderDescNight: { color: '#94a3b8' },
 });

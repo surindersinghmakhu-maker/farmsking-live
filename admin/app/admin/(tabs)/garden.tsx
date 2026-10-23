@@ -536,8 +536,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scrollContent: {
-    padding: 14,
-    gap: 14,
+    padding: 10,
+    gap: 10,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
   },
   metricsRow: {
     flexDirection: 'row',

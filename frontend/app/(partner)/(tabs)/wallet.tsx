@@ -30,6 +30,7 @@ import { apiClient } from '@/src/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+import { BillingAdjustmentInfoModal } from '@/src/components/BillingAdjustmentInfoModal';
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
 
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
@@ -262,6 +263,7 @@ export default function WalletScreen() {
   const { data: referralData } = useReferralStatement();
   const { data: withdrawals } = useMyWithdrawals();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [showBillingInfoModal, setShowBillingInfoModal] = useState(false);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -310,6 +312,24 @@ export default function WalletScreen() {
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR';
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
   const isAdvisorOrPartner = isAdvisor || isPartner;
+
+  // Strict Policy: Only Partners, Admin, and Employees can withdraw funds.
+  // Clients (Farmers, Customers, Gardeners, Traders) have billing-only wallet credits.
+  const WITHDRAWAL_ELIGIBLE_ROLES = [
+    'ADMIN',
+    'SUPER_ADMIN',
+    'BUSINESS_PARTNER',
+    'ADVISOR',
+    'FARM_ADVISOR',
+    'GARDEN_ADVISOR',
+    'MANAGER',
+    'OPERATOR',
+    'SUPERVISOR',
+    'LABOUR',
+    'TECHNICAL_TRAINER',
+  ];
+  const canWithdraw = WITHDRAWAL_ELIGIBLE_ROLES.some((r) => userRoles.includes(r) || currentRole === r);
+  const isClient = !canWithdraw;
 
   const isWelcomeClaimed = (wallet?.transactions ?? []).some(
     (t) => t.type === 'CREDIT' && t.reason?.toLowerCase().includes('welcome')
@@ -386,14 +406,21 @@ export default function WalletScreen() {
                     </View>
                   )}
 
-                  {pendingWithdrawals.length > 0 ? (
+                  {isClient ? (
+                    <View style={styles.billingPolicyPill}>
+                      <Ionicons name="receipt-outline" size={13} color="#7dd3fc" />
+                      <Text style={styles.billingPolicyText}>
+                        Billing Credit: Applied on orders &amp; services
+                      </Text>
+                    </View>
+                  ) : pendingWithdrawals.length > 0 ? (
                     <Text style={styles.royalPendingNote}>
                       ⏳ ₹{pendingWithdrawals.reduce((sum, w) => sum + Number(w.requestedAmount), 0).toLocaleString('en-IN')} pending
                     </Text>
                   ) : null}
                 </View>
 
-                {/* Right Action Column: Claim Bonus + Withdraw */}
+                {/* Right Action Column: Claim Bonus + Adjust in Billing / Withdraw */}
                 <View style={{ gap: 8, alignItems: 'flex-end' }}>
                   {showClaimBonusButton && (
                     <TouchableOpacity
@@ -411,26 +438,35 @@ export default function WalletScreen() {
                     </TouchableOpacity>
                   )}
 
-                  <TouchableOpacity
-                    style={styles.royalWithdrawBtn}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      if (Platform.OS === 'web') {
-                        alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
-                      } else {
-                        Alert.alert(
-                          'Coming Soon 🚀',
-                          'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
-                        );
-                      }
-                    }}
-                  >
-                    <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
-                      <Ionicons name="cash-outline" size={15} color="#0f172a" />
-                      <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                  {isClient ? (
+                    <TouchableOpacity
+                      style={styles.royalWithdrawBtn}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        setShowBillingInfoModal(true);
+                      }}
+                    >
+                      <LinearGradient colors={['#0284c7', '#0369a1', '#075985']} style={styles.royalWithdrawGradient}>
+                        <Ionicons name="receipt-outline" size={15} color="#ffffff" />
+                        <Text style={[styles.royalWithdrawBtnText, { color: '#ffffff' }]}>Adjust in Billing</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.royalWithdrawBtn}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        setIsWithdrawOpen(true);
+                      }}
+                    >
+                      <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
+                        <Ionicons name="cash-outline" size={15} color="#0f172a" />
+                        <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
 
@@ -543,6 +579,11 @@ export default function WalletScreen() {
       />
 
       <WithdrawModal visible={isWithdrawOpen} balance={wallet?.balance ?? 0} onClose={() => setIsWithdrawOpen(false)} />
+      <BillingAdjustmentInfoModal
+        visible={showBillingInfoModal}
+        balance={wallet?.balance ?? 0}
+        onClose={() => setShowBillingInfoModal(false)}
+      />
       <RedeemForFarmerModal visible={isRedeemForFarmerOpen} onClose={() => setIsRedeemForFarmerOpen(false)} theme={theme} />
     </View>
   );
@@ -2235,6 +2276,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.semiBold,
     marginTop: 4,
+  },
+  billingPolicyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(2, 132, 199, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+  },
+  billingPolicyText: {
+    color: '#bae6fd',
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    flexShrink: 1,
   },
   royalWithdrawBtn: {
     borderRadius: RADIUS.pill,

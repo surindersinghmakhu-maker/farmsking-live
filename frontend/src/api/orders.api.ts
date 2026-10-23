@@ -6,6 +6,7 @@ export interface CreateOrderPayload {
   deliveryAddress?: string;
   couponCode?: string;
   paymentMode?: 'COD' | 'ONLINE';
+  useWalletBalance?: boolean;
 }
 
 export async function createOrder(payload: CreateOrderPayload): Promise<CustomerOrder> {

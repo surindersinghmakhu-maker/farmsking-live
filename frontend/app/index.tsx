@@ -2709,7 +2709,7 @@ export default function PublicLandingPage() {
           {/* Footer Bottom Bar */}
           <View style={[S.footerBottomRow, isDay && S.footerBottomRowDay]}>
             <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay]}>
-              © 2026 FarmsKing India Private Limited. All rights reserved.
+              © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
             </Text>
             <View style={S.securityBadgesRow}>
               <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🔒 256-Bit SSL</Text>

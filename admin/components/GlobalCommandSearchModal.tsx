@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Modal, View, Text, TextInput, TouchableOpacity,
-  ScrollView, StyleSheet, Platform, Pressable
+  ScrollView, StyleSheet, Platform, Pressable, useWindowDimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -68,6 +68,8 @@ export function GlobalCommandSearchModal({
   onStartImpersonation,
 }: Props) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
 
@@ -196,7 +198,7 @@ export function GlobalCommandSearchModal({
             <Ionicons name="search" size={20} color="#059669" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search or type > for Action Commands (Ctrl+K)..."
+              placeholder={isDesktop ? "Search or type > for Action Commands (Ctrl+K)..." : "Search commands and actions..."}
               placeholderTextColor="#64748b"
               value={query}
               onChangeText={setQuery}

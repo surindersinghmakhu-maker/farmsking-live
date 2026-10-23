@@ -3,7 +3,17 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 
-# AI Search Crawlers (ChatGPT, Gemini, Perplexity, Claude)
+# Search Engine Crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# AI Search & LLM Crawlers
 User-agent: GPTBot
 Allow: /
 
@@ -19,9 +29,15 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
-Sitemap: https://farmsking.in/sitemap.xml
-# AI Knowledge References
-# LLM Standard: https://farmsking.in/llms.txt
-# LLM Full: https://farmsking.in/llms-full.txt
-# AI Knowledge JSON: https://farmsking.in/ai-knowledge.json
+User-agent: Bytespider
+Allow: /
 
+User-agent: cohere-ai
+Allow: /
+
+# Canonical Sitemaps & LLM Knowledge Endpoints
+Sitemap: https://farmsking.in/sitemap.xml
+Sitemap: https://farmsking.com/sitemap.xml
+# LLM Knowledge Standard: https://farmsking.in/llms.txt
+# LLM Comprehensive Profile: https://farmsking.in/llms-full.txt
+# AI Knowledge Graph JSON: https://farmsking.in/ai-knowledge.json

@@ -8,7 +8,9 @@ import { View,
   ActivityIndicator,
   Alert,
   SafeAreaView,
-  Linking, Pressable } from 'react-native';
+  Linking,
+  Pressable,
+  Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -57,17 +59,17 @@ const SAMPLE_PHOTOS = [
 
 const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
   Wheat: {
-    cropName: 'Wheat (ਕਣਕ)',
+    cropName: 'Wheat',
     diseaseName: 'Yellow Rust / Stripe Rust',
-    punjabiName: 'ਪੀਲੀ ਕੁੰਗੀ (Yellow Rust)',
-    hindiName: 'पीला रतुआ (Yellow Rust)',
+    punjabiName: 'Yellow Rust (Stripe Rust)',
+    hindiName: 'Yellow Rust Disease',
     latinName: 'Puccinia striiformis f. sp. tritici',
     confidenceScore: 96.8,
     category: 'FUNGAL',
     severity: 'HIGH',
     firstAidSpray: 'Propiconazole 25% EC (Tilt / FarmsKing CropProtect)',
     dosageInstructions: 'Mix 200 ml per acre in 200 Liters of water. Spray evenly on leaves during calm morning or evening hours.',
-    organicRemedy: 'Spray 5% Neem Seed Kernel Extract (NSKE) or sour buttermilk (Lassi) solution 5L in 200L water as preventive.',
+    organicRemedy: 'Spray 5% Neem Seed Kernel Extract (NSKE) or sour buttermilk solution 5L in 200L water as preventive.',
     precautions: [
       'Avoid excess Nitrogen (Urea) application during cloudy humid weather.',
       'Maintain field drainage to prevent standing water buildup.',
@@ -77,10 +79,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 380,
   },
   Paddy: {
-    cropName: 'Paddy / Rice (ਝੋਨਾ / ਬਾਸਮਤੀ)',
+    cropName: 'Paddy / Rice',
     diseaseName: 'Paddy Leaf Blast & Sheath Blight',
-    punjabiName: 'ਝੋਨੇ ਦਾ ਬਲਾਸਟ ਤੇ ਝੁਲਸ ਰੋਗ (Paddy Blast)',
-    hindiName: 'धान का झुलसा रोग (Paddy Leaf Blast)',
+    punjabiName: 'Paddy Leaf Blast & Blight',
+    hindiName: 'Paddy Leaf Blast',
     latinName: 'Magnaporthe oryzae / Rhizoctonia solani',
     confidenceScore: 94.5,
     category: 'FUNGAL',
@@ -97,10 +99,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 420,
   },
   Cotton: {
-    cropName: 'Cotton (ਨਰਮਾ / ਕਪਾਹ)',
+    cropName: 'Cotton',
     diseaseName: 'Pink Bollworm & Leaf Curl Virus',
-    punjabiName: 'ਗੁਲਾਬੀ ਸੁੰਡੀ ਤੇ ਪੱਤਾ ਮਰੋੜ ਰੋਗ (Pink Bollworm & CLCuV)',
-    hindiName: 'गुलाबी सुंडी और लीफ कर्ल वायरस',
+    punjabiName: 'Pink Bollworm & Leaf Curl Virus (CLCuV)',
+    hindiName: 'Pink Bollworm & Leaf Curl',
     latinName: 'Pectinophora gossypiella / Begomovirus',
     confidenceScore: 95.2,
     category: 'PEST_ATTACK',
@@ -117,10 +119,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 495,
   },
   Sugarcane: {
-    cropName: 'Sugarcane (ਕਮਾਦ / ਗੰਨਾ)',
+    cropName: 'Sugarcane',
     diseaseName: 'Sugarcane Red Rot Disease',
-    punjabiName: 'ਗੰਨੇ ਦਾ ਰੱਤਾ ਰੋਗ (Red Rot)',
-    hindiName: 'गन्ने का लाल सड़न रोग (Red Rot)',
+    punjabiName: 'Sugarcane Red Rot',
+    hindiName: 'Sugarcane Red Rot Disease',
     latinName: 'Colletotrichum falcatum',
     confidenceScore: 92.4,
     category: 'FUNGAL',
@@ -137,10 +139,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 340,
   },
   Tomato: {
-    cropName: 'Tomato / Vegetables (ਟਮਾਟਰ ਤੇ ਸਬਜ਼ੀਆਂ)',
+    cropName: 'Tomato & Vegetables',
     diseaseName: 'Late Blight & Leaf Curl',
-    punjabiName: 'ਟਮਾਟਰ ਦਾ ਅਗੇਤਾ/ਪਛੇਤਾ ਝੁਲਸ ਰੋਗ (Late Blight)',
-    hindiName: 'टमाटर का पछेता अगेता झुलसा रोग',
+    punjabiName: 'Early & Late Blight',
+    hindiName: 'Tomato Late Blight',
     latinName: 'Phytophthora infestans',
     confidenceScore: 97.1,
     category: 'FUNGAL',
@@ -157,10 +159,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 650,
   },
   Potato: {
-    cropName: 'Potato (ਆਲੂ)',
+    cropName: 'Potato',
     diseaseName: 'Potato Early & Late Blight',
-    punjabiName: 'ਆਲੂਆਂ ਦਾ ਝੁਲਸ ਰੋਗ (Potato Blight)',
-    hindiName: 'आलू का झुलसा रोग',
+    punjabiName: 'Potato Early & Late Blight',
+    hindiName: 'Potato Blight Disease',
     latinName: 'Alternaria solani / Phytophthora infestans',
     confidenceScore: 96.0,
     category: 'FUNGAL',
@@ -177,10 +179,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 430,
   },
   Mustard: {
-    cropName: 'Mustard / Oilseeds (ਸਰ੍ਹੋਂ / ਰਾਇਆ)',
+    cropName: 'Mustard & Oilseeds',
     diseaseName: 'White Rust & Alternaria Blight',
-    punjabiName: 'ਸਰ੍ਹੋਂ ਦੀ ਚਿੱਟੀ ਕੁੰਗੀ ਤੇ ਚੇਪਾ (White Rust & Aphids)',
-    hindiName: 'सरसों का सफेद रोगाणु और माहो',
+    punjabiName: 'White Rust & Aphids',
+    hindiName: 'Mustard White Rust Disease',
     latinName: 'Albugo candida / Lipaphis erysimi',
     confidenceScore: 93.8,
     category: 'PEST_ATTACK',
@@ -196,10 +198,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 280,
   },
   Citrus: {
-    cropName: 'Citrus & Fruits (ਕਿੰਨੂ / ਫਲਦਾਰ ਪੌਦੇ)',
+    cropName: 'Citrus & Fruits',
     diseaseName: 'Citrus Canker & Dieback',
-    punjabiName: 'ਕਿੰਨੂ ਦਾ ਕੈਂਕਰ ਤੇ ਸੁੱਕੜ ਰੋਗ (Citrus Canker)',
-    hindiName: 'नींबू वर्गीय फल का कैंकर रोग',
+    punjabiName: 'Citrus Canker & Dieback',
+    hindiName: 'Citrus Canker Disease',
     latinName: 'Xanthomonas citri subsp. citri',
     confidenceScore: 95.0,
     category: 'BACTERIAL',
@@ -353,7 +355,7 @@ export default function CropDiseaseScannerScreen() {
 
   const handleShareReportWhatsApp = () => {
     if (!scanResult) return;
-    const msg = `🤖 *FarmsKing AI Universal Crop Disease Report*\n\n🌾 *Detected Crop:* ${scanResult.cropName}\n⚠️ *Disease Identified:* ${scanResult.diseaseName} (${scanResult.punjabiName})\n🔬 *Pathogen:* ${scanResult.latinName}\n📊 *AI Confidence Match:* ${scanResult.confidenceScore}%\n🚨 *Severity:* ${scanResult.severity}\n\n💊 *Recommended Spray:* ${scanResult.firstAidSpray}\n⚙️ *Dosage:* ${scanResult.dosageInstructions}\n🌱 *Organic Remedy:* ${scanResult.organicRemedy}\n\n🛒 Order genuine medicine from FarmsKing Store.`;
+    const msg = `🤖 *FarmsKing AI Universal Crop Disease Report*\n\n🌾 *Detected Crop:* ${scanResult.cropName}\n⚠️ *Disease Identified:* ${scanResult.diseaseName}\n🔬 *Pathogen:* ${scanResult.latinName}\n📊 *AI Confidence Match:* ${scanResult.confidenceScore}%\n🚨 *Severity:* ${scanResult.severity}\n\n💊 *Recommended Spray:* ${scanResult.firstAidSpray}\n⚙️ *Dosage:* ${scanResult.dosageInstructions}\n🌱 *Organic Remedy:* ${scanResult.organicRemedy}\n\n🛒 Order genuine medicine from FarmsKing Store.`;
     const encoded = encodeURIComponent(msg);
     const whatsappUrl = `whatsapp://send?text=${encoded}`;
 
@@ -492,7 +494,6 @@ export default function CropDiseaseScannerScreen() {
                 </View>
 
                 <Text style={styles.diseaseName}>{scanResult.diseaseName}</Text>
-                <Text style={styles.punjabiDiseaseName}>{scanResult.punjabiName}</Text>
                 <Text style={styles.latinName}>Pathogen: {scanResult.latinName}</Text>
               </View>
 
@@ -577,13 +578,13 @@ export default function CropDiseaseScannerScreen() {
           </View>
         )}
 
-        {/* 🤖 FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
+        {/* 🤖 FarmsKing Agri AI Doctor Chatbot */}
         <View style={{ marginTop: 10 }}>
           <Text style={{ fontSize: 15, fontWeight: '800', color: '#0f172a', marginBottom: 4 }}>
-            💬 Ask FarmsKing Kheti Mitra AI Doctor
+            💬 FarmsKing AI Farm Doctor Assistant
           </Text>
           <Text style={{ fontSize: 11.5, color: '#64748b', marginBottom: 6 }}>
-            Ask any question about crops, fertilizers, sprays, disease remedies, or mandi rates in Punjabi, Hindi & English.
+            Ask any farming question about crops, fertilizers, sprays, disease remedies, or market rates.
           </Text>
           <AgriAiChatbot />
         </View>
@@ -601,14 +602,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
   backBtn: {
-    padding: 6,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 16,
@@ -616,13 +617,14 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   scrollContent: {
-    padding: 14,
-    gap: 12,
+    padding: 10,
+    gap: 8,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
   },
   bannerCard: {
     backgroundColor: '#14532d',
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 12,
+    padding: 12,
   },
   bannerBadge: {
     alignSelf: 'flex-start',

@@ -256,7 +256,7 @@ export default function AdminShopScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {activeTab === 'OVERVIEW' && (
           <View style={{ gap: 14 }}>
             {/* Quick Actions */}
@@ -628,9 +628,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
   header: {
     backgroundColor: 'rgba(0,255,135,0.03)',
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f1f5f9',
     ...premiumShadow('#cbd5e1', 'sm') as any,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   headerSub: { fontSize: 10.5, fontFamily: FONT.bold, color: '#d97706', marginTop: 2 },
   viewStoreBtn: {
@@ -648,27 +648,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#fffbeb',
     borderWidth: 1,
     borderColor: '#fde68a',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
     borderRadius: RADIUS.pill,
   },
   viewStoreBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#d97706' },
-  kpiRow: { flexDirection: 'row', gap: 8, padding: 12 },
+  kpiRow: { flexDirection: 'row', gap: 6, padding: 8 },
   kpiCard: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
+    padding: 8,
+    borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
   },
-  kpiVal: { fontSize: 17, fontFamily: FONT.extraBold, color: '#ffffff' },
+  kpiVal: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   kpiLabel: { fontSize: 10, fontFamily: FONT.bold, color: '#475569' },
-  navTabs: { flexDirection: 'row', paddingHorizontal: 12, gap: 6, marginBottom: 10 },
+  navTabs: { flexDirection: 'row', paddingHorizontal: 8, gap: 6, marginBottom: 8 },
   navTabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(0,255,135,0.03)',
     alignItems: 'center',
@@ -678,8 +678,9 @@ const styles = StyleSheet.create({
   navTabBtnActive: { backgroundColor: '#d97706', borderColor: '#d97706' },
   navTabText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
   navTabTextActive: { color: '#ffffff' },
-  content: { flex: 1, paddingHorizontal: 12 },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
+  content: { flex: 1, paddingHorizontal: 8 },
+  scrollContent: { paddingBottom: Platform.OS === 'web' ? 16 : 24 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 12, padding: 10, marginBottom: 8, ...premiumShadow('#0f172a', 'sm') as any },
   cardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginBottom: 10 },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionPill: {

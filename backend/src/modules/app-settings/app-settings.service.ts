@@ -20,25 +20,36 @@ export class AppSettingsService {
 
   async getSeo() {
     const settings = await this.get();
+    const flags = ((settings as any).featureFlags as Record<string, any>) || {};
+    const seo = flags.seoSettings || {};
     return {
-      seoTitle: (settings as any).seoTitle || "FarmsKing - Direct Farmer Marketplace for All India | Makhu, Punjab (ਮੱਖੂ)",
-      metaDescription: (settings as any).metaDescription || "FarmsKing (farmsking.in) is operated from Makhu town (Ferozepur, Punjab). Farmers from ALL INDIA can list and sell their authentic handmade, organic, and direct farm products, access live mandi rates, Agri AI doctor advice, and genuine seeds & fertilizers.",
-      metaKeywords: (settings as any).metaKeywords || "FarmsKing, Makhu, Makhu Punjab, farmsking.in, www.farmsking.in, all india farmers marketplace, list farmer products India, handmade farmer products, organic jaggery gud, natural seeds, live mandi rates, crop doctor ai, buy genuine seeds fertilizers, farmer marketplace, kheti mitra, Surinder Agro Farm",
-      locationHeadquarters: (settings as any).locationHeadquarters || "Makhu Town, District Ferozepur, Punjab, India",
-      noscriptHtmlContent: (settings as any).noscriptHtmlContent || "🌾 FarmsKing (ਫਾਰਮਸਕਿੰਗ) - Direct Farmer Marketplace for All India | Headquartered in Makhu (Punjab). All India farmers can list crops, natural seeds, handmade products, organic jaggery, pure ghee. Includes Live Mandi Rates, Crop Records, Crop Doctors, and upcoming Gardener System with Plant Care Dose!",
+      seoTitle: seo.seoTitle || (settings as any).seoTitle || "FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform",
+      metaDescription: seo.metaDescription || (settings as any).metaDescription || "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
+      metaKeywords: seo.metaKeywords || (settings as any).metaKeywords || "FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India",
+      locationHeadquarters: seo.locationHeadquarters || (settings as any).locationHeadquarters || "Registered Office: Goindwal Sahib, Tarn Taran | Operational Office: Makhu, Ferozepur, Punjab, India",
+      noscriptHtmlContent: seo.noscriptHtmlContent || (settings as any).noscriptHtmlContent || "FarmsKing Technologies Private Limited (farmsking.in) is India's premier digital agritech ecosystem. Dedicated to empowering farmers, home and terrace gardeners, nature lovers, and organic lifestyle advocates across India. Features include multimodal AI Crop Doctor disease diagnostics, real-time national mandi commodity rates, pure organic vermicompost fertilizers, commercial marigold floriculture consultancy, and direct farmer-to-consumer commerce. Leadership: Directors Bakshish Singh and Gagandeep Kaur; General Manager Gurnam Singh; Technical Support Lead Engg. Gurdit Singh; Backend Support Charanjit Singh (Director, Surinder Academy Makhu - IT Services); Hardware Support Gurjant Singh (Director, Surinder Computers Makhu); Testing Advisors Gurnam Singh and Sudhir Kumar Mahato; Marigold Expert Sudhir Kumar Mahato; Organic Products & Marketing Manager Manjeet Sra. Registered Office: Goindwal Sahib, Tarn Taran, Punjab; Operational Headquarters: Makhu, Ferozepur, Punjab.",
     };
   }
 
   async updateSeo(dto: { seoTitle?: string; metaDescription?: string; metaKeywords?: string; locationHeadquarters?: string; noscriptHtmlContent?: string }) {
     this.clearCache();
+    const settings = await this.get();
+    const flags = ((settings as any).featureFlags as Record<string, any>) || {};
+    const updatedFlags = {
+      ...flags,
+      seoSettings: {
+        ...(flags.seoSettings || {}),
+        ...dto,
+      },
+    };
     return this.prisma.appSetting.upsert({
       where: { id: SINGLETON_ID },
       create: {
         id: SINGLETON_ID,
-        ...(dto as any),
+        featureFlags: updatedFlags as any,
       },
       update: {
-        ...(dto as any),
+        featureFlags: updatedFlags as any,
       },
     });
   }
@@ -368,6 +379,46 @@ export class AppSettingsService {
       gateway: {
         ...DEFAULT_INTEGRATIONS_CONFIG.gateway,
         ...stored.gateway,
+        routing: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.gateway.routing,
+          ...(stored.gateway?.routing || {}),
+        } as any,
+        moduleRules: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules,
+          ...(stored.gateway?.moduleRules || {}),
+          farmerPlans: {
+            ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.farmerPlans,
+            ...(stored.gateway?.moduleRules?.farmerPlans || {}),
+            allowedMethods: {
+              ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.farmerPlans.allowedMethods,
+              ...(stored.gateway?.moduleRules?.farmerPlans?.allowedMethods || {}),
+            } as any,
+          } as any,
+          advisorBookings: {
+            ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.advisorBookings,
+            ...(stored.gateway?.moduleRules?.advisorBookings || {}),
+            allowedMethods: {
+              ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.advisorBookings.allowedMethods,
+              ...(stored.gateway?.moduleRules?.advisorBookings?.allowedMethods || {}),
+            } as any,
+          } as any,
+          gardenStore: {
+            ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.gardenStore,
+            ...(stored.gateway?.moduleRules?.gardenStore || {}),
+            allowedMethods: {
+              ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.gardenStore.allowedMethods,
+              ...(stored.gateway?.moduleRules?.gardenStore?.allowedMethods || {}),
+            } as any,
+          } as any,
+          ecommerceStore: {
+            ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.ecommerceStore,
+            ...(stored.gateway?.moduleRules?.ecommerceStore || {}),
+            allowedMethods: {
+              ...DEFAULT_INTEGRATIONS_CONFIG.gateway.moduleRules!.ecommerceStore.allowedMethods,
+              ...(stored.gateway?.moduleRules?.ecommerceStore?.allowedMethods || {}),
+            } as any,
+          } as any,
+        } as any,
         providers: {
           ...DEFAULT_INTEGRATIONS_CONFIG.gateway.providers,
           ...(stored.gateway?.providers || {}),
@@ -379,6 +430,54 @@ export class AppSettingsService {
         providers: {
           ...DEFAULT_INTEGRATIONS_CONFIG.whatsapp.providers,
           ...(stored.whatsapp?.providers || {}),
+        },
+      },
+      ai: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.ai,
+        ...stored.ai,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.ai.providers,
+          ...(stored.ai?.providers || {}),
+        },
+      },
+      telecom: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.telecom,
+        ...stored.telecom,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.telecom.providers,
+          ...(stored.telecom?.providers || {}),
+        },
+      },
+      weather: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.weather,
+        ...stored.weather,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.weather.providers,
+          ...(stored.weather?.providers || {}),
+        },
+      },
+      logistics: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.logistics,
+        ...stored.logistics,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.logistics.providers,
+          ...(stored.logistics?.providers || {}),
+        },
+      },
+      push: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.push,
+        ...stored.push,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.push.providers,
+          ...(stored.push?.providers || {}),
+        },
+      },
+      storage: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.storage,
+        ...stored.storage,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.storage.providers,
+          ...(stored.storage?.providers || {}),
         },
       },
       product: {
@@ -423,6 +522,46 @@ export class AppSettingsService {
       gateway: {
         ...current.gateway,
         ...(payload.gateway || {}),
+        routing: {
+          ...current.gateway.routing,
+          ...(payload.gateway?.routing || {}),
+        } as any,
+        moduleRules: {
+          ...current.gateway.moduleRules,
+          ...(payload.gateway?.moduleRules || {}),
+          farmerPlans: {
+            ...current.gateway.moduleRules?.farmerPlans,
+            ...(payload.gateway?.moduleRules?.farmerPlans || {}),
+            allowedMethods: {
+              ...current.gateway.moduleRules?.farmerPlans?.allowedMethods,
+              ...(payload.gateway?.moduleRules?.farmerPlans?.allowedMethods || {}),
+            } as any,
+          } as any,
+          advisorBookings: {
+            ...current.gateway.moduleRules?.advisorBookings,
+            ...(payload.gateway?.moduleRules?.advisorBookings || {}),
+            allowedMethods: {
+              ...current.gateway.moduleRules?.advisorBookings?.allowedMethods,
+              ...(payload.gateway?.moduleRules?.advisorBookings?.allowedMethods || {}),
+            } as any,
+          } as any,
+          gardenStore: {
+            ...current.gateway.moduleRules?.gardenStore,
+            ...(payload.gateway?.moduleRules?.gardenStore || {}),
+            allowedMethods: {
+              ...current.gateway.moduleRules?.gardenStore?.allowedMethods,
+              ...(payload.gateway?.moduleRules?.gardenStore?.allowedMethods || {}),
+            } as any,
+          } as any,
+          ecommerceStore: {
+            ...current.gateway.moduleRules?.ecommerceStore,
+            ...(payload.gateway?.moduleRules?.ecommerceStore || {}),
+            allowedMethods: {
+              ...current.gateway.moduleRules?.ecommerceStore?.allowedMethods,
+              ...(payload.gateway?.moduleRules?.ecommerceStore?.allowedMethods || {}),
+            } as any,
+          } as any,
+        } as any,
         providers: {
           ...current.gateway.providers,
           ...(payload.gateway?.providers || {}),
@@ -434,6 +573,54 @@ export class AppSettingsService {
         providers: {
           ...current.whatsapp.providers,
           ...(payload.whatsapp?.providers || {}),
+        },
+      },
+      ai: {
+        ...current.ai,
+        ...(payload.ai || {}),
+        providers: {
+          ...current.ai.providers,
+          ...(payload.ai?.providers || {}),
+        },
+      },
+      telecom: {
+        ...current.telecom,
+        ...(payload.telecom || {}),
+        providers: {
+          ...current.telecom.providers,
+          ...(payload.telecom?.providers || {}),
+        },
+      },
+      weather: {
+        ...current.weather,
+        ...(payload.weather || {}),
+        providers: {
+          ...current.weather.providers,
+          ...(payload.weather?.providers || {}),
+        },
+      },
+      logistics: {
+        ...current.logistics,
+        ...(payload.logistics || {}),
+        providers: {
+          ...current.logistics.providers,
+          ...(payload.logistics?.providers || {}),
+        },
+      },
+      push: {
+        ...current.push,
+        ...(payload.push || {}),
+        providers: {
+          ...current.push.providers,
+          ...(payload.push?.providers || {}),
+        },
+      },
+      storage: {
+        ...current.storage,
+        ...(payload.storage || {}),
+        providers: {
+          ...current.storage.providers,
+          ...(payload.storage?.providers || {}),
         },
       },
       product: {

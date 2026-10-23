@@ -8,6 +8,7 @@ import { useAllOrders, useCancelOrder, useConfirmOrder } from '@/src/hooks/useOr
 import { CustomerOrder, OrderPaymentMode, OrderPaymentStatus, OrderStatus } from '@/src/types/api';
 import { exportOrdersToExcel } from '@/src/utils/excelExport';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { showAdminToast } from '@/components/AdminLiveToastNotification';
 
 const theme = RoleThemes.ADMIN;
 
@@ -79,6 +80,7 @@ export default function AdminOrdersScreen() {
             onPress={() => {
               tap();
               exportOrdersToExcel(orders || []);
+              showAdminToast('INFO', 'Export Generated', 'Orders report downloaded successfully.');
             }}
           >
             <Ionicons name="download-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
@@ -274,14 +276,26 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
           <TouchableOpacity
             style={styles.confirmBtn}
             disabled={confirmOrder.isPending}
-            onPress={() => confirmOrder.mutate(order.id)}
+            onPress={() => {
+              confirmOrder.mutate(order.id, {
+                onSuccess: () => {
+                  showAdminToast('SUCCESS', 'Order Confirmed', `Order ${order.orderNumber} confirmed for fulfillment.`);
+                },
+              });
+            }}
           >
             <Text style={styles.confirmBtnText}>Confirm Order</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelBtn}
             disabled={cancelOrder.isPending}
-            onPress={() => cancelOrder.mutate(order.id)}
+            onPress={() => {
+              cancelOrder.mutate(order.id, {
+                onSuccess: () => {
+                  showAdminToast('WARNING', 'Order Cancelled', `Order ${order.orderNumber} has been cancelled.`);
+                },
+              });
+            }}
           >
             <Text style={styles.cancelBtnText}>Cancel</Text>
           </TouchableOpacity>
@@ -299,22 +313,22 @@ const styles = StyleSheet.create({
     ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}),
   },
   hero: {
-    paddingTop: 14,
-    paddingBottom: 12,
-    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 12,
     backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
   heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  filterRow: { marginTop: 8, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
+  filterRow: { marginTop: 6, flexGrow: 0 },
+  filterChip: { paddingHorizontal: 9, paddingVertical: 4.5, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
   filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0' },
-  list: { padding: 10, gap: 8 },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
+  list: { padding: 8, gap: 6, paddingBottom: Platform.OS === 'web' ? 16 : 24 },
+  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 10, gap: 8 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },

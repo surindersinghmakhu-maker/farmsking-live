@@ -85,15 +85,42 @@ export class FarmerPlanPaymentsService {
       include: DETAIL_INCLUDE,
     });
 
-    const cashfreeRes = await this.cashfreeService.createStandardOrder({
-      orderId: `PLAN-${request.id}`,
+    const integrations = await this.appSettingsService.getIntegrations();
+    const appSettings = await this.appSettingsService.get();
+    const activeGateway = integrations.gateway.routing?.farmerPlanGateway || 'UPI_DIRECT';
+    const upiPayeeVpa = integrations.gateway.providers.upiDirect?.upiId || appSettings.upiId || 'surindersinghmakhu-5@oksbi';
+    const upiPayeeName = integrations.gateway.providers.upiDirect?.payeeName || appSettings.upiPayeeName || 'FarmsKing Technologies';
+
+    const upiLink = buildUpiPaymentLink({
       amount,
-      customerId: farmer.id,
-      customerPhone: farmer.mobile,
-      customerName: farmer.name,
+      note: `FK-${dto.targetPlan}-${(farmer.kingId || farmer.id).slice(0, 8)}`,
+      transactionRef: `PLAN-${request.id.slice(0, 12)}`,
+      payeeVpa: upiPayeeVpa,
+      payeeName: upiPayeeName,
     });
 
-    return { ...request, cashfreeSessionId: cashfreeRes.paymentSessionId };
+    let cashfreeSessionId: string | null = null;
+    if (activeGateway === 'CASHFREE') {
+      try {
+        const cashfreeRes = await this.cashfreeService.createStandardOrder({
+          orderId: `PLAN-${request.id}`,
+          amount,
+          customerId: farmer.id,
+          customerPhone: farmer.mobile,
+          customerName: farmer.name,
+        });
+        cashfreeSessionId = cashfreeRes.paymentSessionId;
+      } catch (err) {
+        // Fallback gracefully so farmer can always pay via direct UPI
+      }
+    }
+
+    return {
+      ...request,
+      activeGateway,
+      upiLink,
+      cashfreeSessionId,
+    };
   }
 
   listMine(user: AuthUser) {

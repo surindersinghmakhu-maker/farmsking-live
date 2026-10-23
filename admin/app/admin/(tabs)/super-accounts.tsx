@@ -19,6 +19,7 @@ import { AdminUser } from '@/src/types/api';
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
 import { exportAccountsToExcel } from '@/src/utils/excelExport';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { showAdminToast } from '@/components/AdminLiveToastNotification';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -95,7 +96,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 export default function SuperAccountsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ section?: SectionKey; sub?: PartnerSubTab }>();
-  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
+  const { colors, isLight, cardBg, textColor, subTextColor } = useExecutiveTheme();
   const { data: withdrawals, isLoading } = useAllWithdrawals();
   const { data: planPayments, isLoading: isLoadingPlanPayments } = usePendingPlanPayments();
   const { data: farmerPlanPayments, isLoading: isLoadingFarmerPlanPayments } = usePendingFarmerPlanPayments();
@@ -167,6 +168,7 @@ export default function SuperAccountsScreen() {
             onPress={() => {
               tap();
               exportAccountsToExcel(withdrawals || []);
+              showAdminToast('INFO', 'Export Generated', 'Treasury & Accounts ledger downloaded as CSV successfully.');
             }}
           >
             <Ionicons name="download-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
@@ -306,10 +308,37 @@ export default function SuperAccountsScreen() {
             {/* Sub-Tab 1: Vendors / Business Partners */}
             {partnerSubTab === 'VENDORS' ? (
               <View style={{ gap: 8 }}>
+                {/* Direct Gateway to Market Seller Payments */}
                 <TouchableOpacity
                   style={{
-                    backgroundColor: '#022c22',
-                    borderColor: '#059669',
+                    backgroundColor: isLight ? '#f0fdf4' : '#022c22',
+                    borderColor: isLight ? '#16a34a' : '#059669',
+                    borderWidth: 1.5,
+                    borderRadius: RADIUS.md,
+                    padding: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                  activeOpacity={0.8}
+                  onPress={() => router.push('/admin/(tabs)/seller-payouts' as any)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isLight ? '#dcfce7' : '#064e3b', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="card" size={18} color={isLight ? '#16a34a' : '#34d399'} />
+                    </View>
+                    <View>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>Seller Payments & Settlements 💰</Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#15803d' : '#6ee7b7' }}>Merchant store sales, 1% GST TCS & bank payouts in Market hub</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={isLight ? '#16a34a' : '#34d399'} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: isLight ? '#f8fafc' : '#022c22',
+                    borderColor: isLight ? '#cbd5e1' : '#059669',
                     borderWidth: 1.5,
                     borderRadius: RADIUS.md,
                     padding: 12,
@@ -321,15 +350,15 @@ export default function SuperAccountsScreen() {
                   onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#064e3b', alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="shield-checkmark" size={18} color="#34d399" />
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isLight ? '#f1f5f9' : '#064e3b', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="shield-checkmark" size={18} color={isLight ? '#0284c7' : '#34d399'} />
                     </View>
                     <View>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Seller Verification & KYC Control 🏪</Text>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#6ee7b7' }}>Approve or reject seller store applications, GSTIN & bank KYC</Text>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>Seller Verification & KYC Control 🏪</Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>Approve or reject seller store applications, GSTIN & bank KYC</Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#34d399" />
+                  <Ionicons name="chevron-forward" size={18} color={isLight ? '#0284c7' : '#34d399'} />
                 </TouchableOpacity>
 
                 {isLoadingVendors ? (
@@ -1071,8 +1100,8 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: 'rgba(0,255,135,0.25)',
-    padding: 3,
-    marginTop: 14,
+    padding: 2.5,
+    marginTop: 8,
   },
   sectionTabRowLight: {
     backgroundColor: '#f1f5f9',
@@ -1080,8 +1109,8 @@ const styles = StyleSheet.create({
   },
   slidingSectionPill: {
     position: 'absolute',
-    top: 3,
-    bottom: 3,
+    top: 2.5,
+    bottom: 2.5,
     width: '24%',
     borderRadius: RADIUS.pill,
     backgroundColor: '#10b981',
@@ -1097,24 +1126,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 9,
+    gap: 4,
+    paddingVertical: 6,
     borderRadius: RADIUS.pill,
     position: 'relative',
     zIndex: 1,
   },
   sectionTabActive: {},
-  sectionTabText: { color: '#475569', fontSize: 11.5, fontFamily: FONT.bold },
+  sectionTabText: { color: '#475569', fontSize: 11, fontFamily: FONT.bold },
   sectionTabTextActive: { color: '#ffffff', fontFamily: FONT.extraBold },
-  tabBadge: { minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
-  tabBadgeText: { color: '#fff', fontSize: 9.5, fontFamily: FONT.extraBold },
+  tabBadge: { minWidth: 15, height: 15, borderRadius: 7.5, paddingHorizontal: 3.5, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
+  tabBadgeText: { color: '#fff', fontSize: 9, fontFamily: FONT.extraBold },
 
   subTabChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1.5,
@@ -1125,7 +1154,7 @@ const styles = StyleSheet.create({
     borderColor: theme.primary,
   },
   subTabChipText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#64748b',
   },
@@ -1133,21 +1162,21 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
-  list: { padding: SPACING.lg, paddingBottom: SPACING.xxl },
+  list: { padding: 10, paddingBottom: Platform.OS === 'web' ? 16 : 24 },
 
-  sectionHeaderRow: { marginBottom: 10, marginTop: 2 },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' },
-  sectionSubtitle: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
-  countPill: { backgroundColor: theme.primaryLight, borderRadius: RADIUS.pill, paddingHorizontal: 7, paddingVertical: 1.5 },
-  countPillText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: theme.primary },
+  sectionHeaderRow: { marginBottom: 8, marginTop: 2 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sectionTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
+  sectionSubtitle: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  countPill: { backgroundColor: theme.primaryLight, borderRadius: RADIUS.pill, paddingHorizontal: 6, paddingVertical: 1 },
+  countPillText: { fontSize: 10, fontFamily: FONT.extraBold, color: theme.primary },
 
-  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 36, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
-  emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 24, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
+  emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
 
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 10 },
-  identityRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, padding: 9, gap: 8 },
+  identityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+  avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontSize: 12.5, fontFamily: FONT.extraBold, color: theme.primary },
   partnerName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   requestDate: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },

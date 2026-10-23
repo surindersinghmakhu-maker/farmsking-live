@@ -2404,20 +2404,20 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
   },
   premiumList: {
-    padding: 16,
-    paddingBottom: 110,
-    gap: 12,
+    padding: 10,
+    paddingBottom: Platform.OS === 'web' ? 16 : 24,
+    gap: 8,
     backgroundColor: '#020d06',
   },
   usersGridContainer: {
     flexDirection: 'column',
-    gap: 12,
+    gap: 8,
     width: '100%',
   },
   usersGridContainerDesktop: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 14,
+    gap: 8,
     justifyContent: 'space-between',
   },
   userGridItem: {

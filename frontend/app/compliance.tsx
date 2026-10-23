@@ -107,7 +107,7 @@ export default function ComplianceScreen() {
               Corporate Statutory Compliance & Regulatory Disclosures
             </Text>
             <Text style={[styles.heroSubtitle, isDay ? styles.heroSubtitleDay : styles.heroSubtitleNight]}>
-              FarmsKing India Private Limited • Registered Jurisdiction: Punjab, India • Official Web Touchpoints: farmsking.in & www.farmsking.in
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • Registered Jurisdiction: Punjab, India • Official Web Touchpoints: farmsking.in & www.farmsking.in
             </Text>
             <Text style={[styles.cinNotice, isDay ? styles.cinNoticeDay : styles.cinNoticeNight]}>
               Incorporated under Ministry of Corporate Affairs (Govt. of India) • ROC Chandigarh
@@ -186,7 +186,7 @@ export default function ComplianceScreen() {
                     Table A • Regulations for Management of a Company Limited by Shares
                   </Text>
                   <Text style={[styles.highlightDesc, isDay ? styles.highlightDescDay : styles.highlightDescNight]}>
-                    MEMORANDUM OF ASSOCIATION OF FARMSKING INDIA PRIVATE LIMITED
+                    MEMORANDUM OF ASSOCIATION OF FARMSKING TECHNOLOGIES PRIVATE LIMITED
                   </Text>
                 </View>
               </View>
@@ -197,7 +197,7 @@ export default function ComplianceScreen() {
                   Clause I — Corporate Name
                 </Text>
                 <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
-                  The name of the company is <Text style={{ fontFamily: FONT.extraBold, color: isDay ? '#059669' : '#34d399' }}>FARMSKING INDIA PRIVATE LIMITED</Text>.
+                  The name of the company is <Text style={{ fontFamily: FONT.extraBold, color: isDay ? '#059669' : '#34d399' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>.
                 </Text>
 
                 <View style={[styles.divider, isDay ? styles.dividerDay : styles.dividerNight]} />
@@ -319,16 +319,28 @@ export default function ComplianceScreen() {
                 <View style={[styles.divider, isDay ? styles.dividerDay : styles.dividerNight]} />
 
                 <Text style={[styles.clauseHeading, isDay ? styles.clauseHeadingDay : styles.clauseHeadingNight]}>
-                  Founding Subscribers & Management
+                  Board of Directors &amp; Management
                 </Text>
                 <View style={styles.subscriberList}>
                   <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Surinder Singh</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Founder & Managing Director • Makhu, Punjab</Text>
+                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Bakshish Singh</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Director • FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
                   </View>
                   <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Core Founding Team</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Gurjant Singh • Charanjit Singh • Lovepreet Singh • Sudhir Kumar Mahato • Gurnam Singh</Text>
+                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Gagandeep Kaur</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Director • FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
+                  </View>
+                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
+                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Gurnam Singh</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>General Manager &amp; Quality Assurance Lead</Text>
+                  </View>
+                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
+                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Surinder Singh</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Lead Founder, Visionary &amp; Chief AI Architect (B.Sc CS, MBA, LLB)</Text>
+                  </View>
+                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
+                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Executive &amp; Advisory Team</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Engg. Gurdit Singh (Tech Support Lead) • Charanjit Singh (Backend Support - Surinder Academy Makhu) • Gurjant Singh (Hardware Support - Surinder Computers Makhu) • Sudhir Kumar Mahato (Marigold Expert &amp; Testing Advisor) • Manjeet Sra (Organic Products &amp; Marketing Manager)</Text>
                   </View>
                 </View>
               </View>
@@ -352,7 +364,7 @@ export default function ComplianceScreen() {
               <View style={styles.tableContainer}>
                 {[
                   { k: 'Corporate Identification Number (CIN)', v: 'U62013PB2026PTC060000' },
-                  { k: 'Company Name', v: 'FARMSKING INDIA PRIVATE LIMITED' },
+                  { k: 'Company Name', v: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' },
                   { k: 'ROC Office', v: 'RoC - Chandigarh (Punjab)' },
                   { k: 'Company Category', v: 'Company limited by Shares' },
                   { k: 'Company Sub Category', v: 'Non-government company' },
@@ -361,8 +373,9 @@ export default function ComplianceScreen() {
                   { k: 'Paid up Capital', v: '₹1,00,000 INR' },
                   { k: 'National Industry Classification (NIC)', v: '62013, 01611, 47912' },
                   { k: 'Principal Activities', v: 'Agri-Tech Platforms, E-Commerce, Crop Advisory & AI Pathology' },
-                  { k: 'Registered Office Address', v: 'Makhu, District Ferozepur, Punjab, India - 142044' },
-                  { k: 'Official Email ID', v: 'farmskingindia@gmail.com' },
+                  { k: 'Registered Office Address', v: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab, India - 143422' },
+                  { k: 'Corporate / Operations Office', v: 'Near Grain Market, Makhu, District Ferozepur, Punjab, India - 142044' },
+                  { k: 'Official Email ID', v: 'surindersinghmakhu@gmail.com' },
                   { k: 'Company Status', v: 'Active (Incorporated under Companies Act 2013)' },
                 ].map((row, idx) => (
                   <View

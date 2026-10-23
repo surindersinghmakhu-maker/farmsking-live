@@ -415,13 +415,13 @@ function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode:
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 14, paddingBottom: 12, paddingHorizontal: 14, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 12, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  list: { padding: 10, gap: 8 },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
+  list: { padding: 8, paddingBottom: Platform.OS === 'web' ? 16 : 24, gap: 6 },
+  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 10, gap: 8 },
   cardTopRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },

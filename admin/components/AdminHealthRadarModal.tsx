@@ -76,7 +76,7 @@ const INITIAL_SERVICES: ServiceHealthItem[] = [
     status: 'OPERATIONAL',
     latencyMs: 5,
     uptimePct: '100%',
-    description: 'FarmsKing India Pvt Ltd · Clause III (A & B) audit rules enforced',
+    description: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED · Clause III (A & B) audit rules enforced',
     icon: 'shield-checkmark',
   },
 ];

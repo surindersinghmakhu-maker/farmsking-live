@@ -248,6 +248,7 @@ export default function Root({ children }: PropsWithChildren) {
               ]
             })
           }}
+        />
 
 
         {/* App Favicon & Official FarmsKing Logo Icons */}

@@ -210,14 +210,18 @@ try {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>FarmsKing - Direct Farmer Marketplace for All India | Makhu, Punjab (ਮੱਖੂ)</title>
-    <meta name="description" content="FarmsKing (farmsking.in) is operated from Makhu town (Ferozepur, Punjab). Farmers from ALL INDIA can list and sell their authentic handmade, organic, and direct farm products, access live mandi rates, Agri AI doctor advice, and genuine seeds & fertilizers." />
-    <meta name="keywords" content="FarmsKing, Makhu, Makhu Punjab, farmsking.in, www.farmsking.in, all india farmers marketplace, list farmer products India, handmade farmer products, organic jaggery gud, natural seeds, ਖੇਤੀਬਾੜੀ, kheti app, agriculture app India, mandi rates today, punjab mandi bhav, crop doctor ai, buy genuine seeds fertilizers, farmer marketplace, kheti mitra, Surinder Agro Farm" />
-    <meta property="og:title" content="FarmsKing - Direct Farmer Marketplace for All India | Makhu, Punjab" />
-    <meta property="og:description" content="Operated from Makhu (Punjab). Farmers across All India can list their products directly. Buy authentic handmade farmer products, get live mandi rates, direct crop sales, and Agri AI advisory on FarmsKing." />
+    <title>FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform</title>
+    <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
+    <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India" />
+    <meta property="og:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
+    <meta property="og:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
     <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
     <meta property="og:url" content="https://farmsking.in" />
     <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
+    <meta name="twitter:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
+    <meta name="twitter:image" content="https://farmsking.in/farmsking_logo.png" />
     ${vectorIconStyles}
     `;
 

@@ -16,27 +16,63 @@ import { getDefaultApiUrl } from '../src/constants/config';
 import { useAuth } from '../src/store/auth-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../constants/theme';
 
+interface SeoPreset {
+  name: string;
+  badge: string;
+  title: string;
+  desc: string;
+  keywords: string;
+}
+
+const SEO_PRESETS: SeoPreset[] = [
+  {
+    name: 'National Agritech (Balanced)',
+    badge: 'Recommended 60/160',
+    title: 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform',
+    desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
+    keywords:
+      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
+  },
+  {
+    name: 'AI Crop Doctor & Live Mandi',
+    badge: 'Diagnostics Focus',
+    title: 'FarmsKing: AI Crop Doctor & Daily Live Mandi Rates India',
+    desc: 'Instant crop leaf disease detection by AI Crop Doctor, real-time APMC mandi prices across Punjab & India, expert spray advice, and direct farmer-to-consumer trade.',
+    keywords:
+      'AI Crop Doctor, Crop Disease Scanner, Live Mandi Rates, APMC Punjab Mandi, Khanna Mandi Rates, Wheat Price, Paddy Price, Agricultural Advisory, Kisan App India, FarmsKing Makhu, Punjab Agri',
+  },
+  {
+    name: 'Organic Fertilizers & Floriculture',
+    badge: 'Soil & Growth',
+    title: 'FarmsKing Organic: Certified Vermicompost & Marigold Farming',
+    desc: 'Pure microbial vermicompost bio-fertilizer and high-yield commercial marigold floriculture consultancy. Boost soil organic carbon and maximize seasonal crop profit.',
+    keywords:
+      'Organic Vermicompost, Bio Fertilizers, Marigold Farming India, Gainda Kheti, Floriculture Consultancy, Soil Carbon, Manjeet Sra, Sudhir Kumar Mahato, FarmsKing Organic Store, Makhu Punjab',
+  },
+];
+
 export default function SeoManagementScreen() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [seoTitle, setSeoTitle] = useState(
-    "FarmsKing - National Agritech Platform | AI Crop Doctor, Live Mandi, Organic Fertilizers & Floriculture"
+    'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform'
   );
   const [metaDescription, setMetaDescription] = useState(
-    "FarmsKing Technologies Private Limited is a national agritech ecosystem revolutionizing Indian agriculture. Supporting farmers, home gardeners, nature lovers, and organic food consumers with multimodal AI Crop Doctor diagnostics, live mandi rates, pure organic vermicompost, marigold floriculture, and direct farmer-to-consumer commerce. Registered Office: Goindwal Sahib, Tarn Taran; Operational Headquarters: Makhu, Ferozepur, Punjab."
+    "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu."
   );
   const [metaKeywords, setMetaKeywords] = useState(
-    "FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India"
+    'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India'
   );
   const [locationHeadquarters, setLocationHeadquarters] = useState(
-    "Registered Office: Goindwal Sahib (Tarn Taran) | Operational Office: Makhu (Ferozepur), Punjab, India"
+    'Registered Office: Goindwal Sahib (Tarn Taran) | Operational Office: Makhu (Ferozepur), Punjab, India'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier digital agritech ecosystem. Dedicated to empowering farmers, home and terrace gardeners, nature lovers, and organic lifestyle advocates across India. Features include multimodal AI Crop Doctor disease diagnostics, real-time national mandi commodity rates, pure organic vermicompost fertilizers, commercial marigold floriculture consultancy, and direct farmer-to-consumer commerce. Leadership: Directors Bakshish Singh and Gagandeep Kaur; General Manager Gurnam Singh; Technical Support Lead Engg. Gurdit Singh; Testing Advisors Gurnam Singh and Sudhir Kumar Mahato; Marigold Expert Sudhir Kumar Mahato; Organic Products & Marketing Manager Manjeet Sra. Registered Office: Goindwal Sahib, Tarn Taran, Punjab; Operational Headquarters: Makhu, Ferozepur, Punjab."
+    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier digital agritech ecosystem. Dedicated to empowering farmers, home and terrace gardeners, nature lovers, and organic lifestyle advocates across India. Features include multimodal AI Crop Doctor disease diagnostics, real-time national mandi commodity rates, pure organic vermicompost fertilizers, commercial marigold floriculture consultancy, and direct farmer-to-consumer commerce. Leadership: Directors Bakshish Singh and Gagandeep Kaur; General Manager Gurnam Singh; Technical Support Lead Engg. Gurdit Singh; Backend Support Charanjit Singh (Director, Surinder Academy Makhu - IT Services); Hardware Support Gurjant Singh (Director, Surinder Computers Makhu); Testing Advisors Gurnam Singh and Sudhir Kumar Mahato; Marigold Expert Sudhir Kumar Mahato; Organic Products & Marketing Manager Manjeet Sra. Registered Office: Goindwal Sahib, Tarn Taran, Punjab; Operational Headquarters: Makhu, Ferozepur, Punjab."
   );
 
   useEffect(() => {
@@ -62,6 +98,14 @@ export default function SeoManagementScreen() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyPreset = (preset: SeoPreset) => {
+    setSeoTitle(preset.title);
+    setMetaDescription(preset.desc);
+    setMetaKeywords(preset.keywords);
+    setSuccessMessage(`Applied preset: "${preset.name}"`);
+    setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   const handleSaveSeo = async () => {
@@ -146,11 +190,14 @@ export default function SeoManagementScreen() {
     );
   }
 
+  const titleLength = seoTitle.length;
+  const descLength = metaDescription.length;
+
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Live Online SEO Manager',
+          title: 'Live Online SEO & Metadata Hub',
           headerStyle: { backgroundColor: '#166534' },
           headerTintColor: '#ffffff',
           headerTitleStyle: { fontWeight: 'bold' },
@@ -158,7 +205,7 @@ export default function SeoManagementScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Badge */}
+        {/* Header Banner */}
         <View style={styles.banner}>
           <View style={styles.bannerIconCircle}>
             <Ionicons name="globe-outline" size={24} color="#166534" />
@@ -166,7 +213,7 @@ export default function SeoManagementScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.bannerTitle}>FarmsKing Live SEO & Metadata Manager</Text>
             <Text style={styles.bannerSubtitle}>
-              Update Google Search Titles, Meta Descriptions, Keywords, Makhu Location, and All-India Farmer Marketplace details live online!
+              Real-time Google Search tags, Meta Descriptions, AI Search (ChatGPT, Perplexity, Gemini) indexing, and SERP optimization.
             </Text>
           </View>
         </View>
@@ -178,41 +225,181 @@ export default function SeoManagementScreen() {
           </View>
         ) : null}
 
+        {/* ── GOOGLE SERP LIVE PREVIEW BOX ─────────────────────────────── */}
+        <View style={styles.previewCard}>
+          <View style={styles.previewHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="logo-google" size={16} color="#4285F4" />
+              <Text style={styles.previewHeaderTitle}>Google Search Result Live Preview (SERP)</Text>
+            </View>
+            <View style={styles.previewLivePill}>
+              <View style={styles.previewPulseDot} />
+              <Text style={styles.previewLivePillText}>LIVE RENDER</Text>
+            </View>
+          </View>
+
+          <View style={styles.googleSnippetBox}>
+            <View style={styles.googleUrlRow}>
+              <View style={styles.googleFaviconCircle}>
+                <Ionicons name="leaf" size={12} color="#166534" />
+              </View>
+              <View>
+                <Text style={styles.googleBrandText}>FarmsKing Technologies</Text>
+                <Text style={styles.googleBreadcrumbText}>https://farmsking.in › organic-agri</Text>
+              </View>
+            </View>
+
+            <Text style={styles.googleTitleText} numberOfLines={2}>
+              {seoTitle || 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform'}
+            </Text>
+
+            <Text style={styles.googleDescText} numberOfLines={3}>
+              <Text style={styles.googleDateText}>Today — </Text>
+              {metaDescription ||
+                "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu."}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── 1-CLICK SEO OPTIMIZATION PRESETS ─────────────────────────── */}
+        <View style={styles.presetsCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="sparkles" size={16} color="#166534" />
+            <Text style={styles.presetsCardTitle}>Recommended 1-Click SEO Presets</Text>
+          </View>
+          <Text style={styles.presetsCardSubtitle}>
+            Pre-optimized for Google character limits (50–60 char Title, 150–160 char Description) to prevent truncation.
+          </Text>
+
+          <View style={styles.presetButtonsGrid}>
+            {SEO_PRESETS.map((p, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.presetTile}
+                onPress={() => handleApplyPreset(p)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.presetTileHeader}>
+                  <Text style={styles.presetTileName}>{p.name}</Text>
+                  <View style={styles.presetTileBadge}>
+                    <Text style={styles.presetTileBadgeText}>{p.badge}</Text>
+                  </View>
+                </View>
+                <Text style={styles.presetTileSnippet} numberOfLines={2}>
+                  {p.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {loading ? (
           <ActivityIndicator size="large" color="#166534" style={{ marginVertical: 30 }} />
         ) : (
           <View style={styles.card}>
-            {/* SEO Title */}
+            {/* 1. SEO Title */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>1. Google Search Title Tag (Title)</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>1. Google Search Title Tag (Title)</Text>
+                <View
+                  style={[
+                    styles.charBadge,
+                    { backgroundColor: titleLength >= 40 && titleLength <= 65 ? '#dcfce7' : '#fee2e2' },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.charBadgeText,
+                      { color: titleLength >= 40 && titleLength <= 65 ? '#15803d' : '#b91c1c' },
+                    ]}
+                  >
+                    {titleLength} / 60 chars {titleLength <= 65 ? '✓ Optimal' : '⚠️ Truncates on Google'}
+                  </Text>
+                </View>
+              </View>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  focusedField === 'title' && styles.inputFocused,
+                  Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
+                ]}
                 value={seoTitle}
                 onChangeText={setSeoTitle}
+                onFocus={() => setFocusedField('title')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="Enter page title for Google search"
                 placeholderTextColor="#94a3b8"
               />
             </View>
 
-            {/* Location / HQ */}
+            {/* 2. Location / HQ */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>2. Headquarters & Operating Location</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  focusedField === 'hq' && styles.inputFocused,
+                  Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
+                ]}
                 value={locationHeadquarters}
                 onChangeText={setLocationHeadquarters}
+                onFocus={() => setFocusedField('hq')}
+                onBlur={() => setFocusedField(null)}
                 placeholder="e.g. Makhu Town, District Ferozepur, Punjab"
                 placeholderTextColor="#94a3b8"
               />
             </View>
 
-            {/* Meta Description */}
+            {/* 3. Meta Description */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>3. Google Meta Description</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>3. Google Meta Description</Text>
+                <View
+                  style={[
+                    styles.charBadge,
+                    {
+                      backgroundColor:
+                        descLength >= 120 && descLength <= 160
+                          ? '#dcfce7'
+                          : descLength > 160
+                          ? '#fee2e2'
+                          : '#fef3c7',
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.charBadgeText,
+                      {
+                        color:
+                          descLength >= 120 && descLength <= 160
+                            ? '#15803d'
+                            : descLength > 160
+                            ? '#b91c1c'
+                            : '#b45309',
+                      },
+                    ]}
+                  >
+                    {descLength} / 160 chars{' '}
+                    {descLength >= 120 && descLength <= 160
+                      ? '✓ Optimal'
+                      : descLength > 160
+                      ? '⚠️ Truncates on Google'
+                      : 'Short'}
+                  </Text>
+                </View>
+              </View>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  focusedField === 'desc' && styles.inputFocused,
+                  Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
+                ]}
                 value={metaDescription}
                 onChangeText={setMetaDescription}
+                onFocus={() => setFocusedField('desc')}
+                onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={3}
                 placeholder="Enter Meta Description for Google Search results"
@@ -220,40 +407,58 @@ export default function SeoManagementScreen() {
               />
             </View>
 
-            {/* Keywords */}
+            {/* 4. Keywords */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>4. Google Search Keywords (Comma Separated)</Text>
+              <Text style={styles.label}>4. Google & AI Search Keywords (Comma Separated)</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  focusedField === 'keywords' && styles.inputFocused,
+                  Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
+                ]}
                 value={metaKeywords}
                 onChangeText={setMetaKeywords}
+                onFocus={() => setFocusedField('keywords')}
+                onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={3}
-                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, handmade farmer products..."
+                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, Charanjit Singh, Gurjant Singh..."
                 placeholderTextColor="#94a3b8"
               />
             </View>
 
-            {/* NoScript / Googlebot Description */}
+            {/* 5. NoScript / Googlebot Description */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>5. Rich NoScript / Googlebot Fallback Info</Text>
+              <Text style={styles.label}>5. Rich NoScript / Googlebot & LLM Crawler Fallback Info</Text>
               <TextInput
-                style={[styles.input, styles.textAreaLarge]}
+                style={[
+                  styles.input,
+                  styles.textAreaLarge,
+                  focusedField === 'noscript' && styles.inputFocused,
+                  Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
+                ]}
                 value={noscriptHtmlContent}
                 onChangeText={setNoscriptHtmlContent}
+                onFocus={() => setFocusedField('noscript')}
+                onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={5}
-                placeholder="Detailed text about FarmsKing features, live mandi rates, crop doctors, handmade farmer products, upcoming gardener system..."
+                placeholder="Comprehensive text including Directors Bakshish Singh and Gagandeep Kaur, General Manager Gurnam Singh, Technical Support Engg. Gurdit Singh, Backend Support Charanjit Singh, Hardware Support Gurjant Singh..."
                 placeholderTextColor="#94a3b8"
               />
             </View>
 
             {/* Save Button */}
             <TouchableOpacity
-              style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+              style={[
+                styles.saveBtn,
+                saving && { opacity: 0.7 },
+                Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+              ]}
               onPress={handleSaveSeo}
               disabled={saving}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {saving ? (
                 <ActivityIndicator size="small" color="#ffffff" />
@@ -308,6 +513,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#475569',
     marginTop: 2,
+    lineHeight: 17,
   },
   successBanner: {
     flexDirection: 'row',
@@ -323,6 +529,167 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
   },
+
+  // Google SERP Preview Card
+  previewCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: SPACING.md,
+    ...premiumShadow,
+  },
+  previewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  previewHeaderTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  previewLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: 12,
+  },
+  previewPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16a34a',
+  },
+  previewLivePillText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#15803d',
+    letterSpacing: 0.5,
+  },
+  googleSnippetBox: {
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    gap: 4,
+  },
+  googleUrlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  googleFaviconCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleBrandText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#202124',
+  },
+  googleBreadcrumbText: {
+    fontSize: 11,
+    color: '#5f6368',
+  },
+  googleTitleText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1a0dab',
+    lineHeight: 22,
+  },
+  googleDescText: {
+    fontSize: 12.5,
+    color: '#4d5156',
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  googleDateText: {
+    color: '#70757a',
+    fontSize: 11.5,
+  },
+
+  // Presets Card
+  presetsCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: SPACING.md,
+    ...premiumShadow,
+  },
+  presetsCardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  presetsCardSubtitle: {
+    fontSize: 11.5,
+    color: '#64748b',
+    marginBottom: 10,
+  },
+  presetButtonsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  presetTile: {
+    flex: 1,
+    minWidth: 200,
+    padding: 10,
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 4,
+  },
+  presetTileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  presetTileName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  presetTileBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: '#dcfce7',
+  },
+  presetTileBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  presetTileSnippet: {
+    fontSize: 11,
+    color: '#64748b',
+  },
+
+  // Main Form Card
   card: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
@@ -334,11 +701,27 @@ const styles = StyleSheet.create({
   inputGroup: {
     marginBottom: SPACING.lg,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 6,
+  },
   label: {
     fontSize: 13,
     fontWeight: '700',
     color: '#334155',
-    marginBottom: 6,
+  },
+  charBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 6,
+  },
+  charBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '700',
   },
   input: {
     backgroundColor: '#f8fafc',
@@ -347,11 +730,17 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#0f172a',
+    minHeight: 44,
+  },
+  inputFocused: {
+    borderColor: '#166534',
+    borderWidth: 1.5,
+    backgroundColor: '#f0fdf4',
   },
   textArea: {
-    minHeight: 70,
+    minHeight: 74,
     textAlignVertical: 'top',
   },
   textAreaLarge: {
@@ -367,6 +756,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     gap: 8,
     marginTop: 10,
+    minHeight: 46,
+    shadowColor: '#166534',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
   },
   saveBtnText: {
     color: '#ffffff',

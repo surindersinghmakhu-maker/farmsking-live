@@ -512,6 +512,53 @@ export class AppSettingsService {
         logoUrl: stored.about?.logoUrl || settings.logoUrl || DEFAULT_INTEGRATIONS_CONFIG.about.logoUrl,
         tagline: stored.about?.tagline || settings.tagline || DEFAULT_INTEGRATIONS_CONFIG.about.tagline,
       },
+      projectMasterData: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!,
+        ...(stored.projectMasterData || {}),
+        companyLegalName: stored.projectMasterData?.companyLegalName || stored.about?.companyName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.companyLegalName,
+        brandDisplayName: stored.projectMasterData?.brandDisplayName || stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.brandDisplayName,
+        tagline: stored.projectMasterData?.tagline || stored.about?.tagline || settings.tagline || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.tagline,
+        logoUrl: stored.projectMasterData?.logoUrl || stored.about?.logoUrl || settings.logoUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.logoUrl,
+        themeColors: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.themeColors,
+          ...(stored.projectMasterData?.themeColors || {}),
+        },
+        socialMedia: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia,
+          ...(stored.projectMasterData?.socialMedia || {}),
+          facebookUrl: stored.projectMasterData?.socialMedia?.facebookUrl || stored.socialMedia?.facebookUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia.facebookUrl,
+          instagramUrl: stored.projectMasterData?.socialMedia?.instagramUrl || stored.socialMedia?.instagramUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia.instagramUrl,
+          youtubeUrl: stored.projectMasterData?.socialMedia?.youtubeUrl || stored.socialMedia?.youtubeUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia.youtubeUrl,
+          twitterUrl: stored.projectMasterData?.socialMedia?.twitterUrl || stored.socialMedia?.twitterUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia.twitterUrl,
+          linkedinUrl: stored.projectMasterData?.socialMedia?.linkedinUrl || stored.socialMedia?.linkedinUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia.linkedinUrl,
+        },
+        smtp: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.smtp,
+          ...(stored.projectMasterData?.smtp || {}),
+        },
+        emailTemplates: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.emailTemplates,
+          ...(stored.projectMasterData?.emailTemplates || {}),
+        },
+        otpLogin: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.otpLogin,
+          ...(stored.projectMasterData?.otpLogin || {}),
+          channels: {
+            ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.otpLogin.channels,
+            ...(stored.projectMasterData?.otpLogin?.channels || {}),
+          },
+        },
+        maintenance: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.maintenance,
+          ...(stored.projectMasterData?.maintenance || {}),
+        },
+        taxGst: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.taxGst,
+          ...(stored.projectMasterData?.taxGst || {}),
+          gstNumber: stored.projectMasterData?.taxGst?.gstNumber || stored.about?.gstin || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.taxGst.gstNumber,
+          taxPercentage: stored.projectMasterData?.taxGst?.taxPercentage ?? stored.product?.defaultGstPercent ?? DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.taxGst.taxPercentage,
+        },
+      },
     };
   }
 
@@ -659,6 +706,42 @@ export class AppSettingsService {
         ...current.about,
         ...(payload.about || {}),
       },
+      projectMasterData: {
+        ...(current.projectMasterData || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!),
+        ...(payload.projectMasterData || {}),
+        themeColors: {
+          ...(current.projectMasterData?.themeColors || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.themeColors),
+          ...(payload.projectMasterData?.themeColors || {}),
+        },
+        socialMedia: {
+          ...(current.projectMasterData?.socialMedia || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia),
+          ...(payload.projectMasterData?.socialMedia || {}),
+        },
+        smtp: {
+          ...(current.projectMasterData?.smtp || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.smtp),
+          ...(payload.projectMasterData?.smtp || {}),
+        },
+        emailTemplates: {
+          ...(current.projectMasterData?.emailTemplates || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.emailTemplates),
+          ...(payload.projectMasterData?.emailTemplates || {}),
+        },
+        otpLogin: {
+          ...(current.projectMasterData?.otpLogin || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.otpLogin),
+          ...(payload.projectMasterData?.otpLogin || {}),
+          channels: {
+            ...(current.projectMasterData?.otpLogin?.channels || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.otpLogin.channels),
+            ...(payload.projectMasterData?.otpLogin?.channels || {}),
+          },
+        },
+        maintenance: {
+          ...(current.projectMasterData?.maintenance || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.maintenance),
+          ...(payload.projectMasterData?.maintenance || {}),
+        },
+        taxGst: {
+          ...(current.projectMasterData?.taxGst || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.taxGst),
+          ...(payload.projectMasterData?.taxGst || {}),
+        },
+      },
     };
 
     const currentSettings = await this.get();
@@ -669,13 +752,23 @@ export class AppSettingsService {
     };
 
     const topLevelUpdates: Record<string, any> = {};
-    if (merged.about?.brandName || merged.about?.companyName) {
+    if (merged.projectMasterData?.brandDisplayName || merged.projectMasterData?.companyLegalName) {
+      topLevelUpdates.appName = merged.projectMasterData.brandDisplayName || merged.projectMasterData.companyLegalName;
+    } else if (merged.about?.brandName || merged.about?.companyName) {
       topLevelUpdates.appName = merged.about.brandName || merged.about.companyName;
     }
-    if (merged.about?.logoUrl) topLevelUpdates.logoUrl = merged.about.logoUrl;
-    if (merged.about?.tagline) topLevelUpdates.tagline = merged.about.tagline;
-    if (merged.about?.supportEmail) topLevelUpdates.adminEmail = merged.about.supportEmail;
-    if (merged.about?.supportPhone) topLevelUpdates.adminMobile = merged.about.supportPhone;
+    if (merged.projectMasterData?.logoUrl || merged.about?.logoUrl) {
+      topLevelUpdates.logoUrl = merged.projectMasterData?.logoUrl || merged.about?.logoUrl;
+    }
+    if (merged.projectMasterData?.tagline || merged.about?.tagline) {
+      topLevelUpdates.tagline = merged.projectMasterData?.tagline || merged.about?.tagline;
+    }
+    if (merged.projectMasterData?.supportEmail || merged.about?.supportEmail) {
+      topLevelUpdates.adminEmail = merged.projectMasterData?.supportEmail || merged.about?.supportEmail;
+    }
+    if (merged.projectMasterData?.primaryMobile || merged.about?.supportPhone) {
+      topLevelUpdates.adminMobile = merged.projectMasterData?.primaryMobile || merged.about?.supportPhone;
+    }
     if (merged.gateway?.providers?.upiDirect?.upiId) {
       topLevelUpdates.upiId = merged.gateway.providers.upiDirect.upiId;
     }

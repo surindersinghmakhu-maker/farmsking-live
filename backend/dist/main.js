@@ -3520,6 +3520,53 @@ let AppSettingsService = class AppSettingsService {
                 logoUrl: stored.about?.logoUrl || settings.logoUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.about.logoUrl,
                 tagline: stored.about?.tagline || settings.tagline || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.about.tagline,
             },
+            projectMasterData: {
+                ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData,
+                ...(stored.projectMasterData || {}),
+                companyLegalName: stored.projectMasterData?.companyLegalName || stored.about?.companyName || settings.appName || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.companyLegalName,
+                brandDisplayName: stored.projectMasterData?.brandDisplayName || stored.about?.brandName || settings.appName || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.brandDisplayName,
+                tagline: stored.projectMasterData?.tagline || stored.about?.tagline || settings.tagline || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.tagline,
+                logoUrl: stored.projectMasterData?.logoUrl || stored.about?.logoUrl || settings.logoUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.logoUrl,
+                themeColors: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.themeColors,
+                    ...(stored.projectMasterData?.themeColors || {}),
+                },
+                socialMedia: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia,
+                    ...(stored.projectMasterData?.socialMedia || {}),
+                    facebookUrl: stored.projectMasterData?.socialMedia?.facebookUrl || stored.socialMedia?.facebookUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia.facebookUrl,
+                    instagramUrl: stored.projectMasterData?.socialMedia?.instagramUrl || stored.socialMedia?.instagramUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia.instagramUrl,
+                    youtubeUrl: stored.projectMasterData?.socialMedia?.youtubeUrl || stored.socialMedia?.youtubeUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia.youtubeUrl,
+                    twitterUrl: stored.projectMasterData?.socialMedia?.twitterUrl || stored.socialMedia?.twitterUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia.twitterUrl,
+                    linkedinUrl: stored.projectMasterData?.socialMedia?.linkedinUrl || stored.socialMedia?.linkedinUrl || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia.linkedinUrl,
+                },
+                smtp: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.smtp,
+                    ...(stored.projectMasterData?.smtp || {}),
+                },
+                emailTemplates: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.emailTemplates,
+                    ...(stored.projectMasterData?.emailTemplates || {}),
+                },
+                otpLogin: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.otpLogin,
+                    ...(stored.projectMasterData?.otpLogin || {}),
+                    channels: {
+                        ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.otpLogin.channels,
+                        ...(stored.projectMasterData?.otpLogin?.channels || {}),
+                    },
+                },
+                maintenance: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.maintenance,
+                    ...(stored.projectMasterData?.maintenance || {}),
+                },
+                taxGst: {
+                    ...system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.taxGst,
+                    ...(stored.projectMasterData?.taxGst || {}),
+                    gstNumber: stored.projectMasterData?.taxGst?.gstNumber || stored.about?.gstin || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.taxGst.gstNumber,
+                    taxPercentage: stored.projectMasterData?.taxGst?.taxPercentage ?? stored.product?.defaultGstPercent ?? system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.taxGst.taxPercentage,
+                },
+            },
         };
     }
     async updateIntegrations(admin, payload) {
@@ -3666,6 +3713,42 @@ let AppSettingsService = class AppSettingsService {
                 ...current.about,
                 ...(payload.about || {}),
             },
+            projectMasterData: {
+                ...(current.projectMasterData || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData),
+                ...(payload.projectMasterData || {}),
+                themeColors: {
+                    ...(current.projectMasterData?.themeColors || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.themeColors),
+                    ...(payload.projectMasterData?.themeColors || {}),
+                },
+                socialMedia: {
+                    ...(current.projectMasterData?.socialMedia || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.socialMedia),
+                    ...(payload.projectMasterData?.socialMedia || {}),
+                },
+                smtp: {
+                    ...(current.projectMasterData?.smtp || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.smtp),
+                    ...(payload.projectMasterData?.smtp || {}),
+                },
+                emailTemplates: {
+                    ...(current.projectMasterData?.emailTemplates || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.emailTemplates),
+                    ...(payload.projectMasterData?.emailTemplates || {}),
+                },
+                otpLogin: {
+                    ...(current.projectMasterData?.otpLogin || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.otpLogin),
+                    ...(payload.projectMasterData?.otpLogin || {}),
+                    channels: {
+                        ...(current.projectMasterData?.otpLogin?.channels || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.otpLogin.channels),
+                        ...(payload.projectMasterData?.otpLogin?.channels || {}),
+                    },
+                },
+                maintenance: {
+                    ...(current.projectMasterData?.maintenance || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.maintenance),
+                    ...(payload.projectMasterData?.maintenance || {}),
+                },
+                taxGst: {
+                    ...(current.projectMasterData?.taxGst || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData.taxGst),
+                    ...(payload.projectMasterData?.taxGst || {}),
+                },
+            },
         };
         const currentSettings = await this.get();
         const currentFlags = currentSettings.featureFlags || {};
@@ -3674,17 +3757,24 @@ let AppSettingsService = class AppSettingsService {
             systemIntegrations: merged,
         };
         const topLevelUpdates = {};
-        if (merged.about?.brandName || merged.about?.companyName) {
+        if (merged.projectMasterData?.brandDisplayName || merged.projectMasterData?.companyLegalName) {
+            topLevelUpdates.appName = merged.projectMasterData.brandDisplayName || merged.projectMasterData.companyLegalName;
+        }
+        else if (merged.about?.brandName || merged.about?.companyName) {
             topLevelUpdates.appName = merged.about.brandName || merged.about.companyName;
         }
-        if (merged.about?.logoUrl)
-            topLevelUpdates.logoUrl = merged.about.logoUrl;
-        if (merged.about?.tagline)
-            topLevelUpdates.tagline = merged.about.tagline;
-        if (merged.about?.supportEmail)
-            topLevelUpdates.adminEmail = merged.about.supportEmail;
-        if (merged.about?.supportPhone)
-            topLevelUpdates.adminMobile = merged.about.supportPhone;
+        if (merged.projectMasterData?.logoUrl || merged.about?.logoUrl) {
+            topLevelUpdates.logoUrl = merged.projectMasterData?.logoUrl || merged.about?.logoUrl;
+        }
+        if (merged.projectMasterData?.tagline || merged.about?.tagline) {
+            topLevelUpdates.tagline = merged.projectMasterData?.tagline || merged.about?.tagline;
+        }
+        if (merged.projectMasterData?.supportEmail || merged.about?.supportEmail) {
+            topLevelUpdates.adminEmail = merged.projectMasterData?.supportEmail || merged.about?.supportEmail;
+        }
+        if (merged.projectMasterData?.primaryMobile || merged.about?.supportPhone) {
+            topLevelUpdates.adminMobile = merged.projectMasterData?.primaryMobile || merged.about?.supportPhone;
+        }
         if (merged.gateway?.providers?.upiDirect?.upiId) {
             topLevelUpdates.upiId = merged.gateway.providers.upiDirect.upiId;
         }
@@ -3827,7 +3917,112 @@ exports.DEFAULT_FEATURE_FLAGS = {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DEFAULT_INTEGRATIONS_CONFIG = void 0;
+exports.DEFAULT_INTEGRATIONS_CONFIG = exports.DEFAULT_PROJECT_MASTER_DATA = void 0;
+exports.DEFAULT_PROJECT_MASTER_DATA = {
+    companyLegalName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+    brandDisplayName: 'FarmsKing™',
+    shortName: 'FarmsKing',
+    tagline: 'Farming Easy, Farming Smart | National Smart Farming Platform',
+    mcaSrn: 'AC6979718',
+    crcApprovalStatus: 'OFFICIALLY APPROVED BY CRC MANESAR',
+    crcApprovalDate: '22/10/2026',
+    approvingAuthority: 'Assistant Registrar of Companies, CRC Manesar',
+    nicCodes: '62013, 01619',
+    activityDescription: 'Providing software support and maintenance to clients, supporting activities for crop production & smart farming',
+    logoUrl: 'https://farmsking.in/assets/logo.png',
+    faviconUrl: 'https://farmsking.in/favicon.ico',
+    premisesName: 'M/s GURU NANAK COMPUTER ACADEMY',
+    landmark: 'Near Co-operative Bank',
+    registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India',
+    operationalHq: 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
+    city: 'Goindwal Sahib / Makhu',
+    state: 'Punjab',
+    country: 'India',
+    pincode: '143422',
+    rocJurisdiction: 'ROC Punjab and Chandigarh',
+    primaryMobile: '+91 95776 22000',
+    alternateMobile: '+91 98720 66901',
+    contactEmail: 'farmskingindia@gmail.com',
+    govtEmail: 'surindersinghmakhu@gmail.com',
+    supportEmail: 'support@farmsking.in',
+    grievanceOfficerName: 'Surinder Singh',
+    grievanceOfficerEmail: 'grievance@farmsking.in',
+    websiteUrl: 'https://farmsking.in',
+    dateFormat: 'DD/MM/YYYY',
+    timeFormat: '12',
+    timezone: 'Asia/Kolkata',
+    currency: 'INR',
+    currencySymbol: '₹',
+    themeColors: {
+        primaryColor: '#16a34a',
+        secondaryColor: '#0284c7',
+        buttonColor: '#10b981',
+    },
+    socialMedia: {
+        facebookUrl: 'https://facebook.com/farmsking.india',
+        instagramUrl: 'https://instagram.com/farmsking.india',
+        youtubeUrl: 'https://youtube.com/@farmsking',
+        googleBusinessUrl: 'https://maps.google.com/?q=FarmsKing+Technologies',
+        twitterUrl: 'https://twitter.com/farmsking',
+        linkedinUrl: 'https://linkedin.com/company/farmsking',
+    },
+    smtp: {
+        host: 'smtp.hostinger.com',
+        port: 465,
+        encryption: 'ssl',
+        fromEmail: 'noreply@farmsking.in',
+        fromName: 'FarmsKing Agritech',
+        username: 'noreply@farmsking.in',
+        password: '',
+    },
+    emailTemplates: {
+        registration: {
+            subject: 'Welcome to FarmsKing — Smart Farming Platform',
+            body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#16a34a;margin-bottom:8px;">Welcome to FarmsKing, {{farmer_name}}! 🌾</h2>\\n<p style="font-size:15px;line-height:1.6;">Your smart farming account has been successfully created. You now have direct access to AI Crop Doctor pathology, real-time APMC wholesale mandi rates, satellite field telemetry, and certified inputs.</p>\\n<div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;margin:20px 0;border-radius:4px;">\\n<p style="margin:0;font-weight:bold;color:#166534;">Motto: Farming Easy, Farming Smart</p>\\n</div>\\n<p style="font-size:13px;color:#64748b;">If you need assistance, contact our 24/7 helpline at +91 95776 22000 or email support@farmsking.in.</p>\\n</div>',
+        },
+        otp: {
+            subject: 'Your FarmsKing Security Verification Code',
+            body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#0284c7;margin-bottom:8px;">FarmsKing Security Verification 🔐</h2>\\n<p style="font-size:15px;">Your one-time authentication code is:</p>\\n<div style="background:#f8fafc;padding:16px;text-align:center;border-radius:8px;margin:20px 0;border:1px dashed #cbd5e1;">\\n<span style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#16a34a;">{{otp_code}}</span>\\n</div>\\n<p style="font-size:13px;color:#64748b;">This OTP expires in {{expiry_minutes}} minutes. For your security, never share this code with anyone.</p>\\n</div>',
+        },
+        feeReceipt: {
+            subject: 'Payment & Order Confirmation #{{order_id}} — FarmsKing',
+            body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#16a34a;margin-bottom:8px;">Payment Received Successfully ✅</h2>\\n<p style="font-size:15px;">Dear {{farmer_name}}, we have received your payment of <strong>₹{{amount}}</strong> for Order <strong>#{{order_id}}</strong>.</p>\\n<p style="font-size:14px;color:#475569;">Your agricultural supplies are being packed and dispatched directly to your village destination.</p>\\n<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>\\n<p style="font-size:12px;color:#94a3b8;">Issued by FARMSKING TECHNOLOGIES PRIVATE LIMITED | GSTIN: 03AAAAF0000A1Z5</p>\\n</div>',
+        },
+        resultPublished: {
+            subject: 'AI Crop Doctor Diagnostic Report: {{crop_name}}',
+            body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#16a34a;margin-bottom:8px;">Crop Health Diagnostic Analysis 🩺</h2>\\n<p style="font-size:15px;">Dear Grower, our neural computer-vision engine has analyzed your {{crop_name}} sample.</p>\\n<div style="background:#fef2f2;border:1px solid #fecaca;padding:14px;border-radius:8px;margin:16px 0;">\\n<p style="margin:0 0 6px 0;color:#991b1b;font-weight:bold;">Detected: {{disease_name}}</p>\\n<p style="margin:0;color:#7f1d1d;font-size:14px;">Severity Level: {{severity}}</p>\\n</div>\\n<p style="font-size:14px;line-height:1.6;"><strong>Recommended Treatment / Spray Dose:</strong><br/>{{remedy}}</p>\\n</div>',
+        },
+        certificateIssued: {
+            subject: 'Official Certificate Issued: {{cert_number}} — FarmsKing',
+            body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">\\n<h2 style="color:#16a34a;margin-bottom:6px;">Certificate of Verification 📜</h2>\\n<p style="font-size:16px;color:#0f172a;font-weight:bold;">This certifies that</p>\\n<h3 style="font-size:22px;color:#1e293b;margin:12px 0;">{{member_name}}</h3>\\n<p style="font-size:14px;color:#475569;">has fulfilled the official verification standards of FarmsKing Agritech Network.</p>\\n<p style="font-size:13px;font-family:monospace;color:#16a34a;margin-top:16px;">Certificate ID: {{cert_number}}</p>\\n<p style="font-size:12px;color:#94a3b8;margin-top:20px;">FARMSKING TECHNOLOGIES PRIVATE LIMITED</p>\\n</div>',
+        },
+    },
+    otpLogin: {
+        enabled: true,
+        expiryMinutes: 5,
+        attemptsLimit: 3,
+        channels: {
+            sms: true,
+            whatsapp: true,
+            email: true,
+        },
+    },
+    maintenance: {
+        enabled: false,
+        message: "We'll be back soon. Performing scheduled agritech platform maintenance and enhancements...",
+        storefrontMaintenance: false,
+        scannerMaintenance: false,
+        walletMaintenance: false,
+    },
+    taxGst: {
+        enabled: true,
+        gstNumber: '03AAAAF0000A1Z5',
+        taxPercentage: 5.0,
+        invoicePrefix: 'FK-INV-',
+        panNumber: 'AAAAF0000A',
+        hsnSacCode: '998314',
+    },
+};
 exports.DEFAULT_INTEGRATIONS_CONFIG = {
     sms: {
         activeProvider: 'FIREBASE',
@@ -4241,6 +4436,7 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
         workingHours: 'Monday - Saturday: 9:00 AM - 7:00 PM IST',
         appVersion: '2.1.0',
     },
+    projectMasterData: exports.DEFAULT_PROJECT_MASTER_DATA,
 };
 
 

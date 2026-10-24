@@ -306,6 +306,15 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     color: '#8b5cf6',
     subTabs: [
       {
+        id: 'master-data',
+        title: 'Project Master Data',
+        shortTitle: 'Master Data',
+        description: 'Company identity, statutory address, tax/GST, contact & system rules',
+        icon: 'business',
+        path: '/admin/(tabs)/super-settings',
+        params: { section: 'MASTER_DATA' },
+      },
+      {
         id: 'api-integrations',
         title: 'API & 3rd-Party Services',
         shortTitle: 'API',
@@ -318,7 +327,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         id: 'infrastructure-settings',
         title: 'System Configuration',
         shortTitle: 'Settings',
-        description: 'Maintenance flags, system caching & feature switches',
+        description: 'Project master data, maintenance flags & feature switches',
         icon: 'settings',
         path: '/admin/(tabs)/super-settings',
         params: { section: 'ALL' },

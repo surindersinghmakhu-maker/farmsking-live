@@ -348,6 +348,108 @@ export interface SystemIntegrationsConfig {
     workingHours: string;
     appVersion: string;
   };
+  projectMasterData?: ProjectMasterDataConfig;
+}
+
+export interface ProjectMasterDataConfig {
+  companyLegalName: string;
+  brandDisplayName: string;
+  shortName: string;
+  tagline: string;
+  mcaSrn: string;
+  crcApprovalStatus: string;
+  crcApprovalDate: string;
+  approvingAuthority: string;
+  nicCodes: string;
+  activityDescription: string;
+  logoUrl: string;
+  faviconUrl: string;
+
+  premisesName: string;
+  landmark: string;
+  registeredAddress: string;
+  operationalHq: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+  rocJurisdiction: string;
+
+  primaryMobile: string;
+  alternateMobile: string;
+  contactEmail: string;
+  govtEmail: string;
+  supportEmail: string;
+  grievanceOfficerName: string;
+  grievanceOfficerEmail: string;
+  websiteUrl: string;
+
+  dateFormat: string;
+  timeFormat: string;
+  timezone: string;
+  currency: string;
+  currencySymbol: string;
+
+  themeColors: {
+    primaryColor: string;
+    secondaryColor: string;
+    buttonColor: string;
+  };
+
+  socialMedia: {
+    facebookUrl: string;
+    instagramUrl: string;
+    youtubeUrl: string;
+    googleBusinessUrl: string;
+    twitterUrl: string;
+    linkedinUrl: string;
+  };
+
+  smtp: {
+    host: string;
+    port: number;
+    encryption: 'ssl' | 'tls' | 'none';
+    fromEmail: string;
+    fromName: string;
+    username: string;
+    password: string;
+  };
+
+  emailTemplates: {
+    registration: { subject: string; body: string };
+    otp: { subject: string; body: string };
+    feeReceipt: { subject: string; body: string };
+    resultPublished: { subject: string; body: string };
+    certificateIssued: { subject: string; body: string };
+  };
+
+  otpLogin: {
+    enabled: boolean;
+    expiryMinutes: number;
+    attemptsLimit: number;
+    channels: {
+      sms: boolean;
+      whatsapp: boolean;
+      email: boolean;
+    };
+  };
+
+  maintenance: {
+    enabled: boolean;
+    message: string;
+    storefrontMaintenance: boolean;
+    scannerMaintenance: boolean;
+    walletMaintenance: boolean;
+  };
+
+  taxGst: {
+    enabled: boolean;
+    gstNumber: string;
+    taxPercentage: number;
+    invoicePrefix: string;
+    panNumber: string;
+    hsnSacCode: string;
+  };
 }
 
 export async function getSystemIntegrations(): Promise<SystemIntegrationsConfig> {
@@ -359,6 +461,122 @@ export async function updateSystemIntegrations(payload: Partial<SystemIntegratio
   const { data } = await apiClient.patch<SystemIntegrationsConfig>('/app-settings/integrations', payload);
   return data;
 }
+
+export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
+  companyLegalName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+  brandDisplayName: 'FarmsKing™',
+  shortName: 'FarmsKing',
+  tagline: 'Farming Easy, Farming Smart | National Smart Farming Platform',
+  mcaSrn: 'AC6979718',
+  crcApprovalStatus: 'OFFICIALLY APPROVED BY CRC MANESAR',
+  crcApprovalDate: '22/10/2026',
+  approvingAuthority: 'Assistant Registrar of Companies, CRC Manesar',
+  nicCodes: '62013, 01619',
+  activityDescription: 'Providing software support and maintenance to clients, supporting activities for crop production & smart farming',
+  logoUrl: 'https://farmsking.in/assets/logo.png',
+  faviconUrl: 'https://farmsking.in/favicon.ico',
+
+  premisesName: 'M/s GURU NANAK COMPUTER ACADEMY',
+  landmark: 'Near Co-operative Bank',
+  registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India',
+  operationalHq: 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
+  city: 'Goindwal Sahib / Makhu',
+  state: 'Punjab',
+  country: 'India',
+  pincode: '143422',
+  rocJurisdiction: 'ROC Punjab and Chandigarh',
+
+  primaryMobile: '+91 95776 22000',
+  alternateMobile: '+91 98720 66901',
+  contactEmail: 'farmskingindia@gmail.com',
+  govtEmail: 'surindersinghmakhu@gmail.com',
+  supportEmail: 'support@farmsking.in',
+  grievanceOfficerName: 'Surinder Singh',
+  grievanceOfficerEmail: 'grievance@farmsking.in',
+  websiteUrl: 'https://farmsking.in',
+
+  dateFormat: 'DD/MM/YYYY',
+  timeFormat: '12',
+  timezone: 'Asia/Kolkata',
+  currency: 'INR',
+  currencySymbol: '₹',
+
+  themeColors: {
+    primaryColor: '#16a34a',
+    secondaryColor: '#0284c7',
+    buttonColor: '#10b981',
+  },
+
+  socialMedia: {
+    facebookUrl: 'https://facebook.com/farmsking.india',
+    instagramUrl: 'https://instagram.com/farmsking.india',
+    youtubeUrl: 'https://youtube.com/@farmsking',
+    googleBusinessUrl: 'https://maps.google.com/?q=FarmsKing+Technologies',
+    twitterUrl: 'https://twitter.com/farmsking',
+    linkedinUrl: 'https://linkedin.com/company/farmsking',
+  },
+
+  smtp: {
+    host: 'smtp.hostinger.com',
+    port: 465,
+    encryption: 'ssl',
+    fromEmail: 'noreply@farmsking.in',
+    fromName: 'FarmsKing Agritech',
+    username: 'noreply@farmsking.in',
+    password: '',
+  },
+
+  emailTemplates: {
+    registration: {
+      subject: 'Welcome to FarmsKing — Smart Farming Platform',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#16a34a;margin-bottom:8px;">Welcome to FarmsKing, {{farmer_name}}! 🌾</h2>\n<p style="font-size:15px;line-height:1.6;">Your smart farming account has been successfully created. You now have direct access to AI Crop Doctor pathology, real-time APMC wholesale mandi rates, satellite field telemetry, and certified inputs.</p>\n<div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;margin:20px 0;border-radius:4px;">\n<p style="margin:0;font-weight:bold;color:#166534;">Motto: Farming Easy, Farming Smart</p>\n</div>\n<p style="font-size:13px;color:#64748b;">If you need assistance, contact our 24/7 helpline at +91 95776 22000 or email support@farmsking.in.</p>\n</div>',
+    },
+    otp: {
+      subject: 'Your FarmsKing Security Verification Code',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#0284c7;margin-bottom:8px;">FarmsKing Security Verification 🔐</h2>\n<p style="font-size:15px;">Your one-time authentication code is:</p>\n<div style="background:#f8fafc;padding:16px;text-align:center;border-radius:8px;margin:20px 0;border:1px dashed #cbd5e1;">\n<span style="font-size:32px;font-weight:bold;letter-spacing:6px;color:#16a34a;">{{otp_code}}</span>\n</div>\n<p style="font-size:13px;color:#64748b;">This OTP expires in {{expiry_minutes}} minutes. For your security, never share this code with anyone.</p>\n</div>',
+    },
+    feeReceipt: {
+      subject: 'Payment & Order Confirmation #{{order_id}} — FarmsKing',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#16a34a;margin-bottom:8px;">Payment Received Successfully ✅</h2>\n<p style="font-size:15px;">Dear {{farmer_name}}, we have received your payment of <strong>₹{{amount}}</strong> for Order <strong>#{{order_id}}</strong>.</p>\n<p style="font-size:14px;color:#475569;">Your agricultural supplies are being packed and dispatched directly to your village destination.</p>\n<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>\n<p style="font-size:12px;color:#94a3b8;">Issued by FARMSKING TECHNOLOGIES PRIVATE LIMITED | GSTIN: 03AAAAF0000A1Z5</p>\n</div>',
+    },
+    resultPublished: {
+      subject: 'AI Crop Doctor Diagnostic Report: {{crop_name}}',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\n<h2 style="color:#16a34a;margin-bottom:8px;">Crop Health Diagnostic Analysis 🩺</h2>\n<p style="font-size:15px;">Dear Grower, our neural computer-vision engine has analyzed your {{crop_name}} sample.</p>\n<div style="background:#fef2f2;border:1px solid #fecaca;padding:14px;border-radius:8px;margin:16px 0;">\n<p style="margin:0 0 6px 0;color:#991b1b;font-weight:bold;">Detected: {{disease_name}}</p>\n<p style="margin:0;color:#7f1d1d;font-size:14px;">Severity Level: {{severity}}</p>\n</div>\n<p style="font-size:14px;line-height:1.6;"><strong>Recommended Treatment / Spray Dose:</strong><br/>{{remedy}}</p>\n</div>',
+    },
+    certificateIssued: {
+      subject: 'Official Certificate Issued: {{cert_number}} — FarmsKing',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">\n<h2 style="color:#16a34a;margin-bottom:6px;">Certificate of Verification 📜</h2>\n<p style="font-size:16px;color:#0f172a;font-weight:bold;">This certifies that</p>\n<h3 style="font-size:22px;color:#1e293b;margin:12px 0;">{{member_name}}</h3>\n<p style="font-size:14px;color:#475569;">has fulfilled the official verification standards of FarmsKing Agritech Network.</p>\n<p style="font-size:13px;font-family:monospace;color:#16a34a;margin-top:16px;">Certificate ID: {{cert_number}}</p>\n<p style="font-size:12px;color:#94a3b8;margin-top:20px;">FARMSKING TECHNOLOGIES PRIVATE LIMITED</p>\n</div>',
+    },
+  },
+
+  otpLogin: {
+    enabled: true,
+    expiryMinutes: 5,
+    attemptsLimit: 3,
+    channels: {
+      sms: true,
+      whatsapp: true,
+      email: true,
+    },
+  },
+
+  maintenance: {
+    enabled: false,
+    message: "We'll be back soon. Performing scheduled agritech platform maintenance and enhancements...",
+    storefrontMaintenance: false,
+    scannerMaintenance: false,
+    walletMaintenance: false,
+  },
+
+  taxGst: {
+    enabled: true,
+    gstNumber: '03AAAAF0000A1Z5',
+    taxPercentage: 5.0,
+    invoicePrefix: 'FK-INV-',
+    panNumber: 'AAAAF0000A',
+    hsnSacCode: '998314',
+  },
+};
 
 export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
   sms: {
@@ -625,6 +843,7 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     workingHours: 'Monday - Saturday: 9:00 AM - 7:00 PM IST',
     appVersion: '2.1.0',
   },
+  projectMasterData: DEFAULT_PROJECT_MASTER_DATA,
 };
 
 export function mergeSystemIntegrationsWithDefaults(
@@ -784,6 +1003,42 @@ export function mergeSystemIntegrationsWithDefaults(
     about: {
       ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.about,
       ...(remote.about || {}),
+    },
+    projectMasterData: {
+      ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.projectMasterData!,
+      ...(remote.projectMasterData || {}),
+      themeColors: {
+        ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.projectMasterData!.themeColors,
+        ...(remote.projectMasterData?.themeColors || {}),
+      },
+      socialMedia: {
+        ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.projectMasterData!.socialMedia,
+        ...(remote.projectMasterData?.socialMedia || {}),
+      },
+      smtp: {
+        ...DEFAULT_PROJECT_MASTER_DATA.smtp,
+        ...(remote.projectMasterData?.smtp || {}),
+      },
+      emailTemplates: {
+        ...DEFAULT_PROJECT_MASTER_DATA.emailTemplates,
+        ...(remote.projectMasterData?.emailTemplates || {}),
+      },
+      otpLogin: {
+        ...DEFAULT_PROJECT_MASTER_DATA.otpLogin,
+        ...(remote.projectMasterData?.otpLogin || {}),
+        channels: {
+          ...DEFAULT_PROJECT_MASTER_DATA.otpLogin.channels,
+          ...(remote.projectMasterData?.otpLogin?.channels || {}),
+        },
+      },
+      maintenance: {
+        ...DEFAULT_PROJECT_MASTER_DATA.maintenance,
+        ...(remote.projectMasterData?.maintenance || {}),
+      },
+      taxGst: {
+        ...DEFAULT_PROJECT_MASTER_DATA.taxGst,
+        ...(remote.projectMasterData?.taxGst || {}),
+      },
     },
   };
 }

@@ -2664,7 +2664,7 @@ export default function RecordsScreen() {
                         {/* Mini Calendar Date Picker Overlay */}
                         {showSaleDatePicker && (
                           <View style={{ position: 'relative', zIndex: 999 }}>
-                            <TouchableOpacity style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }} onPress={() => setShowSaleDatePicker(false)} activeOpacity={1} />
+                            <TouchableOpacity style={{ position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }} onPress={() => setShowSaleDatePicker(false)} activeOpacity={1} />
                             <View style={{ position: 'absolute', top: 0, right: 0, zIndex: 1000, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', padding: 12, width: 260, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
                               {/* Month/Year Navigation */}
                               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>

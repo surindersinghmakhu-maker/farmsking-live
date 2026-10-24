@@ -284,7 +284,11 @@ export default function TabLayout() {
     const currentSection = localParams?.section || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('section') : undefined);
     const isFilterMatch = !tab.params?.filter || (currentFilter === tab.params.filter);
     const isGroupMatch = !tab.params?.group || (currentGroup === tab.params.group);
-    const isSectionMatch = !tab.params?.section || (currentSection === tab.params.section) || (!currentSection && tab.params.section === 'API');
+    const isSectionMatch =
+      !tab.params?.section ||
+      (currentSection === tab.params.section) ||
+      ((currentSection === 'TOOLS' || currentSection === 'API') && (tab.params.section === 'TOOLS' || tab.params.section === 'API')) ||
+      (!currentSection && tab.params.section === 'MASTER_DATA');
     return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch && isSectionMatch;
   }) || activePillar.subTabs[0];
 

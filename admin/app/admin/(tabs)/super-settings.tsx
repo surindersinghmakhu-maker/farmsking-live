@@ -66,8 +66,9 @@ interface CategoryFilter {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-const CATEGORY_FILTERS: CategoryFilter[] = [
-  { key: 'MASTER_DATA', label: 'Project Master Data & Entity Setup', icon: 'business-outline' },
+type SectionTab = 'MASTER_DATA' | 'TOOLS';
+
+const TOOL_SERVICES_FILTERS: CategoryFilter[] = [
   { key: 'AI', label: 'AI Intelligence & Crop Doctor', icon: 'sparkles-outline' },
   { key: 'PAYMENTS', label: 'Payment Gateway & Checkout', icon: 'card-outline' },
   { key: 'SMS', label: 'SMS & OTP Service', icon: 'chatbox-ellipses-outline' },
@@ -76,6 +77,11 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
   { key: 'WEATHER', label: 'Weather & Spray Forecast', icon: 'partly-sunny-outline' },
   { key: 'LOGISTICS', label: 'Courier & Logistics', icon: 'cube-outline' },
   { key: 'PUSH', label: 'Push Notifications (FCM)', icon: 'notifications-outline' },
+];
+
+const CATEGORY_FILTERS: CategoryFilter[] = [
+  { key: 'MASTER_DATA', label: 'Project Master Data & Entity Setup', icon: 'business-outline' },
+  ...TOOL_SERVICES_FILTERS,
 ];
 
 const MASTER_DATA_TABS: MasterDataTabItem[] = [
@@ -127,10 +133,21 @@ export default function SuperSettingsScreen() {
   const [localConfig, setLocalConfig] = useState<SystemIntegrationsConfig>(() =>
     mergeSystemIntegrationsWithDefaults(remoteConfig)
   );
-  const [activeFilter, setActiveFilter] = useState<ToolCategory>(() => {
-    if (params?.section === 'API') return 'AI';
-    return 'MASTER_DATA';
+  const isToolsSection = params?.section === 'TOOLS' || params?.section === 'API';
+  const [activeSectionTab, setActiveSectionTab] = useState<SectionTab>(() => {
+    return isToolsSection ? 'TOOLS' : 'MASTER_DATA';
   });
+  const [activeFilter, setActiveFilter] = useState<ToolCategory>(() => {
+    return 'AI';
+  });
+
+  useEffect(() => {
+    if (params?.section === 'TOOLS' || params?.section === 'API') {
+      setActiveSectionTab('TOOLS');
+    } else if (params?.section === 'MASTER_DATA') {
+      setActiveSectionTab('MASTER_DATA');
+    }
+  }, [params?.section]);
   const [masterSubTab, setMasterSubTab] = useState<MasterDataSubTab>('basic-details');
   const [activeEmailTmpl, setActiveEmailTmpl] = useState<EmailTemplateKey>('registration');
   const [masterSearchQuery, setMasterSearchQuery] = useState('');
@@ -415,7 +432,7 @@ export default function SuperSettingsScreen() {
     );
   }
 
-  const selectedCategory = CATEGORY_FILTERS.find((c) => c.key === activeFilter) || CATEGORY_FILTERS[0];
+  const selectedCategory = TOOL_SERVICES_FILTERS.find((c) => c.key === activeFilter) || TOOL_SERVICES_FILTERS[0];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
@@ -423,13 +440,76 @@ export default function SuperSettingsScreen() {
       <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderBottomColor: cardBorder }]}>
         <View style={styles.headerInfo}>
           <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
-            <Ionicons name="hardware-chip-outline" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>TOOL & API ACTIVATOR</Text>
+            <Ionicons
+              name={activeSectionTab === 'MASTER_DATA' ? 'business-outline' : 'hardware-chip-outline'}
+              size={15}
+              color={isLight ? '#16a34a' : '#00ff87'}
+            />
+            <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
+              {activeSectionTab === 'MASTER_DATA' ? 'CENTRAL REGISTRY' : 'TOOL & API ACTIVATOR'}
+            </Text>
           </View>
-          <Text style={[styles.headerTitle, { color: textColor }]}>Platform Tools & Services</Text>
-          <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-            Select a tool from the dropdown to configure credentials and toggle activation.
+          <Text style={[styles.headerTitle, { color: textColor }]}>
+            {activeSectionTab === 'MASTER_DATA' ? 'Project Master Data' : 'Platform Tools & Services'}
           </Text>
+          <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
+            {activeSectionTab === 'MASTER_DATA'
+              ? 'Company identity, statutory address, tax/GST, contact & platform configuration.'
+              : 'Select a tool from the dropdown to configure credentials and toggle activation.'}
+          </Text>
+        </View>
+
+        {/* ── Primary Settings Section Switcher ── */}
+        <View style={[styles.sectionTabsWrapper, !isDesktop && { width: '100%', marginTop: 8 }, { backgroundColor: isLight ? '#f1f5f9' : '#03180c', borderColor: cardBorder }]}>
+          <TouchableOpacity
+            style={[
+              styles.sectionTabBtn,
+              !isDesktop && { flex: 1, justifyContent: 'center' },
+              activeSectionTab === 'MASTER_DATA' && (isLight ? styles.sectionTabBtnActiveLight : styles.sectionTabBtnActiveDark),
+            ]}
+            onPress={() => setActiveSectionTab('MASTER_DATA')}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="business"
+              size={15}
+              color={activeSectionTab === 'MASTER_DATA' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor}
+            />
+            <Text
+              style={[
+                styles.sectionTabText,
+                { color: activeSectionTab === 'MASTER_DATA' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor },
+                activeSectionTab === 'MASTER_DATA' && { fontWeight: '700' },
+              ]}
+            >
+              Project Master Data
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.sectionTabBtn,
+              !isDesktop && { flex: 1, justifyContent: 'center' },
+              activeSectionTab === 'TOOLS' && (isLight ? styles.sectionTabBtnActiveLight : styles.sectionTabBtnActiveDark),
+            ]}
+            onPress={() => setActiveSectionTab('TOOLS')}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="hardware-chip"
+              size={15}
+              color={activeSectionTab === 'TOOLS' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor}
+            />
+            <Text
+              style={[
+                styles.sectionTabText,
+                { color: activeSectionTab === 'TOOLS' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor },
+                activeSectionTab === 'TOOLS' && { fontWeight: '700' },
+              ]}
+            >
+              Platform Tools & Services
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -441,79 +521,81 @@ export default function SuperSettingsScreen() {
         </View>
       )}
 
-      {/* ── Category Dropdown Selector (Without "All Tools" Option) ── */}
-      <View style={[styles.filterBar, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder, zIndex: 100 }]}>
-        <View style={styles.dropdownContainer}>
-          <Text style={[styles.filterLabel, { color: subTextColor }]}>Select Tool:</Text>
-          <View style={styles.dropdownRelativeBox}>
-            <TouchableOpacity
-              style={[styles.dropdownTrigger, { backgroundColor: isLight ? '#ffffff' : '#04170c', borderColor: cardBorder }]}
-              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.dropdownLeft}>
-                <Ionicons name={selectedCategory.icon} size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                <Text style={[styles.dropdownSelectedText, { color: textColor }]}>
-                  {selectedCategory.label}
-                </Text>
-              </View>
-              <Ionicons
-                name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color={subTextColor}
-              />
-            </TouchableOpacity>
+      {/* ── Category Dropdown Selector (Only rendered when in TOOLS tab) ── */}
+      {activeSectionTab === 'TOOLS' && (
+        <View style={[styles.filterBar, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder, zIndex: 100 }]}>
+          <View style={styles.dropdownContainer}>
+            <Text style={[styles.filterLabel, { color: subTextColor }]}>Select Service / Tool:</Text>
+            <View style={styles.dropdownRelativeBox}>
+              <TouchableOpacity
+                style={[styles.dropdownTrigger, { backgroundColor: isLight ? '#ffffff' : '#04170c', borderColor: cardBorder }]}
+                onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.dropdownLeft}>
+                  <Ionicons name={selectedCategory.icon} size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                  <Text style={[styles.dropdownSelectedText, { color: textColor }]}>
+                    {selectedCategory.label}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={subTextColor}
+                />
+              </TouchableOpacity>
 
-            {isDropdownOpen && (
-              <View style={[styles.dropdownMenu, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                {CATEGORY_FILTERS.map((cat) => {
-                  const isSelected = activeFilter === cat.key;
-                  return (
-                    <TouchableOpacity
-                      key={cat.key}
-                      style={[
-                        styles.dropdownItem,
-                        isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
-                      ]}
-                      onPress={() => {
-                        setActiveFilter(cat.key);
-                        setIsDropdownOpen(false);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.dropdownItemLeft}>
-                        <Ionicons
-                          name={cat.icon}
-                          size={16}
-                          color={isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
-                        />
-                        <Text
-                          style={[
-                            styles.dropdownItemText,
-                            { color: isSelected ? (isLight ? '#16a34a' : '#00ff87') : textColor },
-                            isSelected && { fontWeight: '700' },
-                          ]}
-                        >
-                          {cat.label}
-                        </Text>
-                      </View>
-                      {isSelected && (
-                        <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
+              {isDropdownOpen && (
+                <View style={[styles.dropdownMenu, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  {TOOL_SERVICES_FILTERS.map((cat) => {
+                    const isSelected = activeFilter === cat.key;
+                    return (
+                      <TouchableOpacity
+                        key={cat.key}
+                        style={[
+                          styles.dropdownItem,
+                          isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
+                        ]}
+                        onPress={() => {
+                          setActiveFilter(cat.key);
+                          setIsDropdownOpen(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.dropdownItemLeft}>
+                          <Ionicons
+                            name={cat.icon}
+                            size={16}
+                            color={isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
+                          />
+                          <Text
+                            style={[
+                              styles.dropdownItemText,
+                              { color: isSelected ? (isLight ? '#16a34a' : '#00ff87') : textColor },
+                              isSelected && { fontWeight: '700' },
+                            ]}
+                          >
+                            {cat.label}
+                          </Text>
+                        </View>
+                        {isSelected && (
+                          <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* ── Single Active Tool Card Workspace ──────────────────── */}
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         <View style={[styles.cardsGrid, isDesktop && styles.cardsGridDesktop]}>
           {/* 0. Project Master Data & Entity Setup */}
-          {activeFilter === 'MASTER_DATA' && (
+          {activeSectionTab === 'MASTER_DATA' && (
             <View style={[styles.masterContainer, isDesktop && styles.masterContainerDesktop]}>
               {/* Header Banner */}
               <View style={[styles.masterHeaderBanner, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -2331,8 +2413,11 @@ export default function SuperSettingsScreen() {
             </View>
           )}
 
-          {/* 1. AI Vision & Crop Doctor */}
-          {activeFilter === 'AI' && (
+          {/* ── TAB 2: Platform Tools & Services ────────────────── */}
+          {activeSectionTab === 'TOOLS' && (
+            <>
+              {/* 1. AI Vision & Crop Doctor */}
+              {activeFilter === 'AI' && (
             <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
@@ -3354,6 +3439,8 @@ export default function SuperSettingsScreen() {
               </View>
             </View>
           )}
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -3408,6 +3495,39 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONT.bold,
     marginBottom: 2,
+  },
+  sectionTabsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 4,
+    gap: 4,
+  },
+  sectionTabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 9,
+  },
+  sectionTabBtnActiveLight: {
+    backgroundColor: '#16a34a',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTabBtnActiveDark: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+  },
+  sectionTabText: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
   },
   headerSubtitle: {
     fontSize: 13,

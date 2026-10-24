@@ -315,13 +315,13 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         params: { section: 'MASTER_DATA' },
       },
       {
-        id: 'api-integrations',
-        title: 'API & 3rd-Party Services',
-        shortTitle: 'API',
+        id: 'platform-tools',
+        title: 'Platform Tools & Services',
+        shortTitle: 'Tools & Services',
         description: 'Gateways, AI, Telecom, Weather, SMS, WhatsApp & Logistics',
-        icon: 'git-network',
+        icon: 'hardware-chip',
         path: '/admin/(tabs)/super-settings',
-        params: { section: 'API' },
+        params: { section: 'TOOLS' },
       },
       {
         id: 'infrastructure-settings',

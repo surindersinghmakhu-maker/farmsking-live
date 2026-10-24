@@ -13,9 +13,9 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, usePathname } from 'expo-router';
-import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+import { useRouter } from 'expo-router';
+import { FONT, RADIUS } from '@/constants/theme';
+import { ADMIN_PILLARS, NavigationPillar } from '@/constants/navigationPillars';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
@@ -33,20 +33,12 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
   activePillarId,
 }) => {
   const router = useRouter();
-  const pathname = usePathname();
   const { width } = useWindowDimensions();
   const { user } = useAuth();
   const { role } = useRole();
   const { themeMode, setThemeMode, isLight, isDarkTheme } = useExecutiveTheme();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedPillars, setExpandedPillars] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    ADMIN_PILLARS.forEach((p) => {
-      initial[p.id] = p.id === activePillarId;
-    });
-    return initial;
-  });
 
   const drawerWidth = Math.min(340, Math.floor(width * 0.88));
   const slideAnim = useRef(new Animated.Value(-drawerWidth)).current;
@@ -83,60 +75,35 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
     }
   }, [visible, drawerWidth]);
 
-  // Keep expanded pillar updated when activePillarId changes
-  useEffect(() => {
-    if (activePillarId) {
-      setExpandedPillars((prev) => ({
-        ...prev,
-        [activePillarId]: true,
-      }));
-    }
-  }, [activePillarId]);
-
-  const toggleExpand = (pillarId: string) => {
-    setExpandedPillars((prev) => ({
-      ...prev,
-      [pillarId]: !prev[pillarId],
-    }));
-  };
-
   const handleSelectPillar = (pillar: NavigationPillar) => {
+    onClose();
     if (pillar.subTabs && pillar.subTabs.length > 0) {
       const firstTab = pillar.subTabs[0];
-      handleSelectSubTab(firstTab);
-    }
-  };
-
-  const handleSelectSubTab = (subTab: SubTabItem) => {
-    onClose();
-    if (subTab.params) {
-      const queryString = new URLSearchParams(subTab.params as Record<string, string>).toString();
-      router.push(`${subTab.path}?${queryString}` as any);
-    } else {
-      router.push(subTab.path as any);
+      if (firstTab.params) {
+        const queryString = new URLSearchParams(firstTab.params as Record<string, string>).toString();
+        router.push(`${firstTab.path}?${queryString}` as any);
+      } else {
+        router.push(firstTab.path as any);
+      }
     }
   };
 
   const filteredPillars = useMemo(() => {
     if (!searchQuery.trim()) return ADMIN_PILLARS;
     const q = searchQuery.toLowerCase();
-    return ADMIN_PILLARS.map((pillar) => {
+    return ADMIN_PILLARS.filter((pillar) => {
       const matchPillar =
         pillar.title.toLowerCase().includes(q) ||
-        pillar.shortTitle.toLowerCase().includes(q);
-      const matchTabs = pillar.subTabs.filter(
+        pillar.shortTitle.toLowerCase().includes(q) ||
+        pillar.badge.toLowerCase().includes(q);
+      const matchTabs = pillar.subTabs.some(
         (t) =>
           t.title.toLowerCase().includes(q) ||
-          (t.shortTitle && t.shortTitle.toLowerCase().includes(q))
+          (t.shortTitle && t.shortTitle.toLowerCase().includes(q)) ||
+          (t.description && t.description.toLowerCase().includes(q))
       );
-      if (matchPillar || matchTabs.length > 0) {
-        return {
-          ...pillar,
-          subTabs: matchTabs.length > 0 ? matchTabs : pillar.subTabs,
-        };
-      }
-      return null;
-    }).filter(Boolean) as NavigationPillar[];
+      return matchPillar || matchTabs;
+    });
   }, [searchQuery]);
 
   const isSellerRole =
@@ -246,7 +213,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               <Ionicons name="search" size={15} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
               <TextInput
                 style={[styles.searchInput, isLight && { color: '#0f172a' }]}
-                placeholder="Search tools & hubs..."
+                placeholder="Search command hubs..."
                 placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -291,18 +258,17 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
             </View>
           </View>
 
-          {/* Navigation Hubs ScrollView */}
+          {/* Navigation Hubs ScrollView (Main Menu Only - Sub-items shown in top tabs) */}
           <ScrollView
             style={styles.drawerScroll}
             contentContainerStyle={styles.drawerScrollContent}
             showsVerticalScrollIndicator={false}
           >
             {filteredPillars.map((pillar) => {
-              const isExpanded = searchQuery.trim().length > 0 ? true : !!expandedPillars[pillar.id];
               const isActivePillar = pillar.id === activePillarId;
 
               return (
-                <View
+                <TouchableOpacity
                   key={pillar.id}
                   style={[
                     styles.pillarWrapper,
@@ -314,179 +280,93 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                       backgroundColor: 'rgba(255, 255, 255, 0.03)',
                       borderColor: 'rgba(56, 189, 248, 0.16)',
                     },
+                    isActivePillar && (
+                      isLight
+                        ? {
+                            backgroundColor: '#f0fdf4',
+                            borderColor: '#16a34a',
+                            shadowColor: '#16a34a',
+                            shadowOffset: { width: 0, height: 1.5 },
+                            shadowOpacity: 0.12,
+                            shadowRadius: 5,
+                            elevation: 2,
+                          }
+                        : isDarkTheme
+                        ? {
+                            backgroundColor: 'rgba(56, 189, 248, 0.14)',
+                            borderColor: '#38bdf8',
+                          }
+                        : {
+                            backgroundColor: 'rgba(0, 255, 135, 0.14)',
+                            borderColor: '#00ff87',
+                          }
+                    ),
                   ]}
+                  activeOpacity={0.75}
+                  onPress={() => handleSelectPillar(pillar)}
                 >
-                  {/* Pillar Main Row */}
-                  <TouchableOpacity
+                  <View
                     style={[
-                      styles.pillarHeaderBtn,
-                      isActivePillar && (
-                        isLight
-                          ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
-                          : isDarkTheme
-                          ? { backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: '#38bdf8' }
-                          : { backgroundColor: 'rgba(0, 255, 135, 0.12)', borderColor: '#00ff87' }
-                      ),
+                      styles.pillarIconSquircle,
+                      { borderColor: `${pillar.color}50` },
+                      isActivePillar && { backgroundColor: `${pillar.color}25` },
+                      isLight && { backgroundColor: 'rgba(241, 245, 249, 0.95)' },
                     ]}
-                    activeOpacity={0.8}
-                    onPress={() => toggleExpand(pillar.id)}
                   >
+                    <Ionicons
+                      name={isActivePillar ? pillar.iconFilled : pillar.icon}
+                      size={18}
+                      color={pillar.color}
+                    />
+                  </View>
+
+                  <View style={styles.pillarInfoCol}>
+                    <Text
+                      style={[
+                        styles.pillarTitleText,
+                        isLight && { color: '#0f172a' },
+                        isActivePillar && {
+                          color: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
+                          fontFamily: FONT.bold,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {pillar.title}
+                    </Text>
+                  </View>
+
+                  <View style={styles.pillarRightCol}>
                     <View
                       style={[
-                        styles.pillarIconSquircle,
-                        { borderColor: `${pillar.color}50` },
-                        isActivePillar && { backgroundColor: `${pillar.color}25` },
-                        isLight && { backgroundColor: 'rgba(241, 245, 249, 0.95)' },
+                        styles.badgePill,
+                        {
+                          borderColor: `${pillar.color}40`,
+                          backgroundColor: `${pillar.color}15`,
+                        },
                       ]}
                     >
-                      <Ionicons
-                        name={isExpanded ? pillar.iconFilled : pillar.icon}
-                        size={17}
-                        color={pillar.color}
-                      />
-                    </View>
-
-                    <View style={styles.pillarInfoCol}>
-                      <Text
-                        style={[
-                          styles.pillarTitleText,
-                          isLight && { color: '#0f172a' },
-                          isActivePillar && { color: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87' },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {pillar.title}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.pillarSubText,
-                          isLight && { color: '#64748b' },
-                          isDarkTheme && { color: '#94a3b8' },
-                        ]}
-                      >
-                        {pillar.subTabs.length} Options
+                      <Text style={[styles.badgePillText, { color: pillar.color }]}>
+                        {pillar.badge}
                       </Text>
                     </View>
-
-                    <View style={styles.pillarRightCol}>
-                      <View
-                        style={[
-                          styles.badgePill,
-                          {
-                            borderColor: `${pillar.color}40`,
-                            backgroundColor: `${pillar.color}15`,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.badgePillText, { color: pillar.color }]}>
-                          {pillar.badge}
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name={isExpanded ? 'chevron-down' : 'chevron-forward-outline'}
-                        size={15}
-                        color={isLight ? '#94a3b8' : '#64748b'}
-                      />
-                    </View>
-                  </TouchableOpacity>
-
-                  {/* Sub-Tabs Direct Links */}
-                  {isExpanded && pillar.subTabs && (
-                    <View
-                      style={[
-                        styles.subTabsContainer,
-                        isLight && { borderTopColor: 'rgba(22, 163, 74, 0.15)', backgroundColor: '#ffffff' },
-                        isDarkTheme && { borderTopColor: 'rgba(56, 189, 248, 0.15)' },
-                      ]}
-                    >
-                      {pillar.subTabs.map((subTab) => {
-                        const isIndexActive =
-                          subTab.path === '/admin/(tabs)' &&
-                          (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-                        const isOtherActive =
-                          subTab.path !== '/admin/(tabs)' &&
-                          pathname.includes(subTab.path.split('/').pop() || '');
-                        const isSubActive = isIndexActive || isOtherActive;
-
-                        return (
-                          <TouchableOpacity
-                            key={subTab.id}
-                            style={[
-                              styles.subTabOptionItem,
-                              isLight && { backgroundColor: '#ffffff', borderColor: '#f1f5f9' },
-                              isSubActive && (
-                                isLight
-                                  ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
-                                  : isDarkTheme
-                                  ? { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38bdf8' }
-                                  : { backgroundColor: 'rgba(0, 255, 135, 0.12)', borderColor: '#00ff87' }
-                              ),
-                            ]}
-                            activeOpacity={0.75}
-                            onPress={() => handleSelectSubTab(subTab)}
-                          >
-                            <View
-                              style={[
-                                styles.subTabBullet,
-                                isLight && { backgroundColor: '#cbd5e1' },
-                                isSubActive && {
-                                  backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
-                                },
-                              ]}
-                            />
-                            <Ionicons
-                              name={subTab.icon}
-                              size={14}
-                              color={
-                                isSubActive
-                                  ? isLight
-                                    ? '#16a34a'
-                                    : isDarkTheme
-                                    ? '#38bdf8'
-                                    : '#00ff87'
-                                  : isLight
-                                  ? '#64748b'
-                                  : '#94a3b8'
-                              }
-                            />
-                            <View style={{ flex: 1 }}>
-                              <Text
-                                style={[
-                                  styles.subTabTitle,
-                                  isLight && { color: '#334155' },
-                                  isSubActive && {
-                                    color: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
-                                    fontFamily: FONT.bold,
-                                  },
-                                ]}
-                                numberOfLines={1}
-                              >
-                                {subTab.title}
-                              </Text>
-                              {subTab.description ? (
-                                <Text
-                                  style={[
-                                    styles.subTabDesc,
-                                    isLight && { color: '#64748b' },
-                                    isDarkTheme && { color: '#94a3b8' },
-                                  ]}
-                                  numberOfLines={1}
-                                >
-                                  {subTab.description}
-                                </Text>
-                              ) : null}
-                            </View>
-                            <Ionicons
-                              name="chevron-forward"
-                              size={12}
-                              color={isLight ? '#cbd5e1' : '#64748b'}
-                            />
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-                </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={15}
+                      color={
+                        isActivePillar
+                          ? isLight
+                            ? '#16a34a'
+                            : isDarkTheme
+                            ? '#38bdf8'
+                            : '#00ff87'
+                          : isLight
+                          ? '#94a3b8'
+                          : '#64748b'
+                      }
+                    />
+                  </View>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>
@@ -739,7 +619,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 6,
+    paddingBottom: 8,
   },
   sectionHeadingText: {
     fontSize: 10,
@@ -769,23 +649,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   pillarWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    overflow: 'hidden',
-  },
-  pillarHeaderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 9,
     gap: 8,
   },
   pillarIconSquircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 9,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -795,15 +672,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pillarTitleText: {
-    fontSize: 11.5,
-    fontFamily: FONT.bold,
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
     color: '#e2e8f0',
-  },
-  pillarSubText: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-    marginTop: 1,
   },
   pillarRightCol: {
     flexDirection: 'row',
@@ -811,49 +682,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   badgePill: {
-    paddingHorizontal: 5,
-    paddingVertical: 1.5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
   badgePillText: {
-    fontSize: 8,
+    fontSize: 8.5,
     fontFamily: FONT.bold,
-  },
-  subTabsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 255, 135, 0.15)',
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    gap: 2,
-    backgroundColor: 'rgba(0, 0, 0, 0.15)',
-  },
-  subTabOptionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  subTabBullet: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#64748b',
-  },
-  subTabTitle: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#cbd5e1',
-  },
-  subTabDesc: {
-    fontSize: 9,
-    fontFamily: FONT.regular,
-    color: '#64748b',
-    marginTop: 1,
   },
   drawerFooter: {
     paddingHorizontal: 14,

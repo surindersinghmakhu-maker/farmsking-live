@@ -2,13 +2,9 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "types": ["jest"],
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@backend-types": [
-        "../backend/node_modules/.prisma/client/index.d.ts"
       ]
     }
   },
@@ -22,6 +18,9 @@
     "node_modules",
     "dist",
     ".expo",
-    "web-build"
+    "web-build",
+    "__tests__/**",
+    "src/api/__tests__/**",
+    "**/*.test.ts"
   ]
 }

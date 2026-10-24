@@ -1,4 +1,27 @@
-import type { PartyLedgerEntry, SaleBill, PaymentReceipt } from '@backend-types';
+export interface PartyLedgerEntry {
+  id: string;
+  partyId?: string;
+  type?: string;
+  amount?: number;
+  reason?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  saleBillId?: string | null;
+  paymentReceiptId?: string | null;
+  [key: string]: any;
+}
+
+export interface SaleBill {
+  id?: string;
+  billNo?: string;
+  [key: string]: any;
+}
+
+export interface PaymentReceipt {
+  id?: string;
+  receiptNo?: string;
+  [key: string]: any;
+}
 
 // We create a composite type for the populated entry that comes from the backend API.
 export type PopulatedLedgerEntry = PartyLedgerEntry & {
@@ -87,7 +110,7 @@ export function buildPartyLedgerRows(entries: PopulatedLedgerEntry[]): GroupedLe
 
   // Sort entries chronologically (oldest first) for accurate running balance & sequential Sr No.
   const sorted = [...entries].sort(
-    (a, b) => new Date(a.createdAt || a.date).getTime() - new Date(b.createdAt || b.date).getTime()
+    (a, b) => new Date(a.createdAt || a.date || 0).getTime() - new Date(b.createdAt || b.date || 0).getTime()
   );
 
   // Group entries by reference/bill number, saleBillId, or paymentReceiptId

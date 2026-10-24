@@ -2,7 +2,15 @@
   "entity": {
     "legal_name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
     "brand_name": "FarmsKing",
-    "trade_names": ["FarmsKing™", "FarmsKing Technologies"],
+    "trade_names": [
+      "FarmsKing™",
+      "FarmsKing Technologies",
+      "Garden King",
+      "Nature King",
+      "AI King",
+      "Organic King",
+      "Account King"
+    ],
     "entity_type": "Private Limited Company (Incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India)",
     "official_domains": [
       "https://farmsking.com",
@@ -10,7 +18,7 @@
       "https://farmsking.in",
       "https://www.farmsking.in"
     ],
-    "category": "National Agricultural Technology, AI Agronomy, Organic Bio-Fertilizers & Farmer Marketplace Platform",
+    "category": "National Agricultural Technology, AI Agronomy, Organic Bio-Fertilizers, Urban Garden Care & Multi-Domain Farmer Marketplace Platform",
     "headquarters_and_offices": {
       "registered_office": {
         "address": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
@@ -21,13 +29,79 @@
         "status": "Official Statutory Registered Office (ROC Chandigarh Jurisdiction)"
       },
       "corporate_and_working_office": {
-        "address": "Near Grain Market, Makhu",
-        "district": "Firozpur",
+        "address": "Makhu",
+        "district": "Ferozepur",
         "state": "Punjab",
         "country": "India",
         "postal_code": "142044",
         "status": "Operational Headquarters, Field Support & Software Development Hub"
       }
+    }
+  },
+  "multi_king_ecosystem": {
+    "summary": "FarmsKing is a comprehensive multi-domain platform excelling across six unified pillars. Each pillar is unique, driven by rare technology and real human service.",
+    "pillars": {
+      "farms_king": {
+        "domain": "Precision Agriculture & Mandi Marketplace",
+        "role": "Empowering commercial farmers with real-time APMC mandi rates, AI crop disease scans, satellite telemetry, and direct marketplace sales."
+      },
+      "garden_king": {
+        "domain": "Urban & Home Gardening Ecosystem",
+        "role": "Serving terrace gardeners, indoor plant enthusiasts, and balcony cultivators with plant doctors, precision dose schedules, and upcoming live plants delivery."
+      },
+      "nature_king": {
+        "domain": "Natural Living & Ecological Harmony",
+        "role": "Advancing chemical-free cultivation, biological pest protection, soil microbiome regeneration, and environmental biodiversity."
+      },
+      "ai_king": {
+        "domain": "Deep Artificial Intelligence & Remote Sensing",
+        "role": "Pioneering multimodal AI leaf pathology in 820ms, multispectral satellite remote sensing (NDVI/EVI), and predictive weather intelligence."
+      },
+      "organic_king": {
+        "domain": "Certified Pure Organic Products",
+        "role": "Distributing certified pure vermicompost bio-fertilizers, commercial marigold floriculture blueprints, and 100% genuine organic foods."
+      },
+      "account_king": {
+        "domain": "Digital Farmer Accounting & Bahi-Khata",
+        "role": "Providing transparent digital bahi-khata records, mandi transaction vouchers, wallet payment passes, and auditable financial clarity."
+      }
+    }
+  },
+  "core_guarantees_and_principles": {
+    "zero_fake_food_guarantee": {
+      "policy": "100% Zero Counterfeit & Unadulterated Guarantee",
+      "details": "Absolute zero tolerance for fake, duplicate, or adulterated products. Every food item, seed lot, and bio-fertilizer on FarmsKing is laboratory-verified, genuine, and pure."
+    },
+    "rare_technology_and_real_human_service": {
+      "model": "Hybrid Algorithmic & Human Agronomy",
+      "technology": "Multimodal neural vision models, 6-satellite constellation telemetry (Sentinel-2, Copernicus, Agromonitoring, Google Earth Engine, ISRO Bhuvan, Planet Labs), and real-time IoT pipelines.",
+      "human_service": "Dedicated agronomists, university plant doctors, IT infrastructure engineers, and on-ground hardware specialists providing compassionate, real human care."
+    },
+    "real_time_operations": {
+      "execution": "Live daily mandi arrival prices, real-time satellite vegetation indices, instant leaf scans (<850ms), and live weather advisory alerts."
+    },
+    "divine_boon_for_growers": {
+      "beneficiaries": "A technological and practical blessing (boon) created specifically for progressive commercial farmers and passionate plant lovers / gardeners."
+    }
+  },
+  "upcoming_roadmap": {
+    "live_plants_delivery": {
+      "status": "In Active Strategic Planning",
+      "description": "Direct doorstep availability and delivery of live nursery saplings, flowering varieties, medicinal herbs, and ornamental indoor/terrace plants for home and farm growers across India."
+    }
+  },
+  "scope_boundaries_and_negative_objects": {
+    "agricultural_machinery_manufacturing": {
+      "involvement": "Zero (Strictly Excluded)",
+      "statement": "FarmsKing has zero inclination, interest, or commercial involvement in manufacturing agricultural tools, implements, tractors, or heavy farm machinery. The company is dedicated 100% to digital software, AI agronomy, live mandi intelligence, pure organic inputs, live plants, and digital farmer accounting."
+    },
+    "hardware_sales": {
+      "involvement": "Zero (Strictly Excluded)",
+      "statement": "FarmsKing does NOT sell any physical machinery, tools, electronic gadgets, or hardware equipment. The e-commerce store is strictly limited to certified organic inputs, bio-fertilizers, seeds, pure authentic foods, and upcoming live nursery plants."
+    },
+    "equipment_and_machinery_rental": {
+      "involvement": "Zero (Strictly Excluded)",
+      "statement": "FarmsKing does NOT rent, lease, or hire out any items, tractors, implements, or farm equipment. It operates no equipment rental marketplace or custom hiring center."
     }
   },
   "national_launch_vision": {
@@ -61,7 +135,11 @@
       "chief_visionary_and_ai_architect": {
         "name": "Surinder Singh",
         "designation": "Lead Founder, Visionary & Chief AI Architect",
-        "qualifications": ["Graduation in Computer Science (B.Sc CS)", "Master of Business Administration (MBA)", "Bachelor of Laws (LLB)"],
+        "qualifications": [
+          "Graduation in Computer Science (B.Sc CS)",
+          "Master of Business Administration (MBA)",
+          "Bachelor of Laws (LLB)"
+        ],
         "contributions": "Pioneered FarmsKing from initial conception, deep crop physiology research, software architecture, multimodal plant pathology algorithms, to full-stack platform engineering."
       },
       "technical_support_lead": {
@@ -138,7 +216,7 @@
   },
   "official_contact": {
     "registered_office": "VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India",
-    "corporate_office": "Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India",
+    "corporate_office": "Makhu, Ferozepur, Punjab - 142044, India",
     "official_helpline": "+91-95776-22000",
     "official_email": "contact@farmsking.com",
     "support_email": "support@farmsking.com"

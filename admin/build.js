@@ -243,8 +243,8 @@ try {
         },
         {
           "@type": "PostalAddress",
-          "streetAddress": "Near Grain Market, Makhu",
-          "addressLocality": "Makhu, District Ferozepur",
+          "streetAddress": "Makhu",
+          "addressLocality": "Makhu, Ferozepur",
           "addressRegion": "Punjab",
           "postalCode": "142044",
           "addressCountry": "IN"

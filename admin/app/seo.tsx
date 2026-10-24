@@ -26,8 +26,16 @@ interface SeoPreset {
 
 const SEO_PRESETS: SeoPreset[] = [
   {
+    name: 'Multi-King Ecosystem (Farms, Garden, Nature, AI, Organic, Account)',
+    badge: 'Supreme Master 60/157',
+    title: 'FarmsKing: Garden King, Nature King, AI King & Organic Portal',
+    desc: 'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.',
+    keywords:
+      'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Goindwal Sahib, Punjab, National Agri Ecosystem',
+  },
+  {
     name: 'National Agritech (Balanced)',
-    badge: 'Recommended 60/160',
+    badge: 'Comprehensive 60/160',
     title: 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform',
     desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
     keywords:
@@ -60,19 +68,19 @@ export default function SeoManagementScreen() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [seoTitle, setSeoTitle] = useState(
-    'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform'
+    'FarmsKing: Garden King, Nature King, AI King & Organic Portal'
   );
   const [metaDescription, setMetaDescription] = useState(
-    "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu."
+    'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.'
   );
   const [metaKeywords, setMetaKeywords] = useState(
-    'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India'
+    'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Goindwal Sahib, Punjab, National Agri Ecosystem'
   );
   const [locationHeadquarters, setLocationHeadquarters] = useState(
-    'Registered Office: Goindwal Sahib (Tarn Taran) | Operational Office: Makhu (Ferozepur), Punjab, India'
+    'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier digital agritech ecosystem. Dedicated to empowering farmers, home and terrace gardeners, nature lovers, and organic lifestyle advocates across India. Features include multimodal AI Crop Doctor disease diagnostics, real-time national mandi commodity rates, pure organic vermicompost fertilizers, commercial marigold floriculture consultancy, and direct farmer-to-consumer commerce. Leadership: Directors Bakshish Singh and Gagandeep Kaur; General Manager Gurnam Singh; Technical Support Lead Engg. Gurdit Singh; Backend Support Charanjit Singh (Director, Surinder Academy Makhu - IT Services); Hardware Support Gurjant Singh (Director, Surinder Computers Makhu); Testing Advisors Gurnam Singh and Sudhir Kumar Mahato; Marigold Expert Sudhir Kumar Mahato; Organic Products & Marketing Manager Manjeet Sra. Registered Office: Goindwal Sahib, Tarn Taran, Punjab; Operational Headquarters: Makhu, Ferozepur, Punjab."
+    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Board of Directors: Bakshish Singh and Gagandeep Kaur; General Manager: Gurnam Singh; Chief AI Architect: Surinder Singh; Registered Office: Goindwal Sahib, Tarn Taran - 143422; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
   );
 
   useEffect(() => {
@@ -345,7 +353,7 @@ export default function SeoManagementScreen() {
                 onChangeText={setLocationHeadquarters}
                 onFocus={() => setFocusedField('hq')}
                 onBlur={() => setFocusedField(null)}
-                placeholder="e.g. Makhu Town, District Ferozepur, Punjab"
+                placeholder="e.g. Makhu, Ferozepur, Punjab - 142044"
                 placeholderTextColor="#94a3b8"
               />
             </View>
@@ -650,17 +658,17 @@ const styles = StyleSheet.create({
   presetButtonsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 12,
   },
   presetTile: {
     flex: 1,
     minWidth: 200,
-    padding: 10,
+    padding: 14,
     backgroundColor: '#f8fafc',
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    gap: 4,
+    gap: 6,
   },
   presetTileHeader: {
     flexDirection: 'row',
@@ -699,7 +707,7 @@ const styles = StyleSheet.create({
     ...premiumShadow,
   },
   inputGroup: {
-    marginBottom: SPACING.lg,
+    marginBottom: 22,
   },
   labelRow: {
     flexDirection: 'row',

@@ -1205,18 +1205,18 @@ const styles = StyleSheet.create({
   metricsGrid: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   metricPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.12)',
-    paddingHorizontal: 9,
-    paddingVertical: 4.5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   metricPillSelected: {
     backgroundColor: 'rgba(0, 255, 135, 0.12)',
@@ -1251,10 +1251,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    gap: 6,
-    height: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 8,
+    height: 38,
   },
   searchInput: {
     flex: 1,
@@ -1283,10 +1283,10 @@ const styles = StyleSheet.create({
 
   /* List & Cards */
   listContainer: {
-    paddingHorizontal: 10,
-    paddingTop: 4,
-    paddingBottom: Platform.OS === 'web' ? 16 : 24,
-    gap: 6,
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'web' ? 24 : 32,
+    gap: 12,
   },
   loadingBox: {
     alignItems: 'center',
@@ -1352,11 +1352,11 @@ const styles = StyleSheet.create({
   /* Product Card */
   productCard: {
     backgroundColor: '#04140a',
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.18)',
-    padding: 8,
-    gap: 6,
+    padding: 14,
+    gap: 10,
   },
   productCardInactive: {
     opacity: 0.72,
@@ -1365,12 +1365,12 @@ const styles = StyleSheet.create({
   cardMainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   thumbnailBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
+    width: 46,
+    height: 46,
+    borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
@@ -1501,10 +1501,10 @@ const styles = StyleSheet.create({
   statusToggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3.5,
-    paddingHorizontal: 6,
-    paddingVertical: 2.5,
-    borderRadius: 5,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+    borderRadius: 6,
     borderWidth: 1,
   },
   statusToggleBtnActive: {
@@ -1526,18 +1526,18 @@ const styles = StyleSheet.create({
   actionIconsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 8,
   },
   editBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
     backgroundColor: 'rgba(56, 189, 248, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(56, 189, 248, 0.25)',
-    paddingHorizontal: 6,
-    paddingVertical: 2.5,
-    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+    borderRadius: 6,
   },
   editBtnLight: {
     backgroundColor: '#f0f9ff',

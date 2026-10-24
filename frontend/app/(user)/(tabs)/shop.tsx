@@ -233,7 +233,7 @@ const CATEGORY_TREE: Record<string, string[]> = {
   Seeds: ['Grain Seeds', 'Vegetable Seeds', 'Hybrid Cotton', 'Oilseeds', 'Fodder Seeds'],
   Fertilizers: ['Urea & Nitrogen', 'DAP & Phosphatic', 'NPK Complex', 'Micronutrients', 'Organic Bio-Fertilizer'],
   'Crop Protection': ['Insecticide', 'Fungicide', 'Herbicide / Weedicide', 'Plant Growth Regulator (PGR)'],
-  'Farm Machinery & Tools': ['Battery Sprayers', 'Tarpaulins & Covers', 'Pruning Tools', 'Solar Pumps', 'Drip Accessories'],
+  'Live Plants & Nursery': ['Indoor Air-Purifying Plants', 'Flowering Varieties & Marigolds', 'Herbal & Medicinal Saplings', 'Balcony & Terrace Greens', 'Ornamental Foliage'],
   'Bio & Organics': ['Neem Oil & Extracts', 'Vermicompost', 'Bio-Stimulants', 'Soil Conditioners'],
   'Farmer Made Foods': [
     'Pure Organic Jaggery & Shakkar',
@@ -258,7 +258,7 @@ const CATEGORY_TREE: Record<string, string[]> = {
     'Crop Advisory Voucher',
     'Agri Store Flat ₹500 Discount Pass',
     'Soil Testing & Drone Spray Voucher',
-    'Machinery Rental Subsidy Coupon',
+    'Live Plant Nursery & Potting Voucher',
   ],
 };
 
@@ -695,9 +695,9 @@ export default function ShopScreen() {
   const filteredBuilderUnits = ALL_MEASUREMENT_UNITS.filter((u: string) =>
     u.toLowerCase().includes(unitSearchQuery.trim().toLowerCase())
   );
-  const [machineryPowerSource, setMachineryPowerSource] = useState('12V 12Ah Battery & Manual Dual');
-  const [machineryWarranty, setMachineryWarranty] = useState('1 Year Manufacturer Warranty');
-  const [machineryMotorSpecs, setMachineryMotorSpecs] = useState('Heavy Duty Brass Nozzle & Copper Motor Winding');
+  const [plantBotanicalName, setPlantBotanicalName] = useState('Sansevieria Trifasciata / Marigold Hybrid');
+  const [plantPotSize, setPlantPotSize] = useState('6 Inch Nursery Pot / Root-Ball Pack');
+  const [plantSunlightCare, setPlantSunlightCare] = useState('Moderate Indirect Sunlight & Low Water Care');
 
   const [chemicalActiveIngredient, setChemicalActiveIngredient] = useState('');
   const [chemicalFormulation, setChemicalFormulation] = useState('Liquid EC (Emulsifiable Concentrate)');
@@ -809,7 +809,7 @@ export default function ShopScreen() {
   }, [allOrders]);
 
   const categoriesList = useMemo(() => {
-    const defaults = ['All', '🔥 Deals & VIP Coupons', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'];
+    const defaults = ['All', '🔥 Deals & VIP Coupons', 'Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics'];
     if (farmerFoodsEnabled) defaults.push('Farmer Made Foods');
     if (isAdminOrSuperAdmin) defaults.push('🔴 Hidden / Off Products');
     const mappedDistinct = (products ?? [])
@@ -818,7 +818,7 @@ export default function ShopScreen() {
         const c = p.category.trim();
         if (c.toLowerCase().startsWith('fertiliz')) return 'Fertilizers';
         if (c.toLowerCase().startsWith('seed')) return 'Seeds';
-        if (c.toLowerCase().startsWith('farm mach') || c.toLowerCase().startsWith('machin')) return 'Farm Machinery & Tools';
+        if (c.toLowerCase().startsWith('plant') || c.toLowerCase().startsWith('live plant') || c.toLowerCase().startsWith('nursery')) return 'Live Plants & Nursery';
         if (c.toLowerCase().startsWith('crop prot') || c.toLowerCase().startsWith('insect') || c.toLowerCase().startsWith('pestic')) return 'Crop Protection';
         if (c.toLowerCase().includes('farmer made') || c.toLowerCase().startsWith('natural farmer') || c.toLowerCase().includes('jaggery') || c.toLowerCase().includes('ghee') || c.toLowerCase().includes('honey')) return 'Farmer Made Foods';
         if (c.toLowerCase().includes('coupon') || c.toLowerCase().includes('plan') || c.toLowerCase().includes('deal')) return '🔥 Deals & VIP Coupons';
@@ -1670,7 +1670,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                 {/* Crop Filter Bar */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-                  {['All', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((cropCat) => {
+                  {['All', 'Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics'].map((cropCat) => {
                     const isActive = activeCropFilter === cropCat;
                     return (
                       <TouchableOpacity
@@ -2050,12 +2050,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     </View>
                   </View>
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: -4 }}>
-                    Manage Farmer VIP Pass plans, Store discount vouchers & Machinery rental subsidies under Deals. Delivered via WhatsApp or optional Hard-Copy card (+₹100 courier fee).
+                    Manage Farmer VIP Pass plans, Store discount vouchers & Organic Live Plant vouchers under Deals. Delivered via WhatsApp or optional Hard-Copy card (+₹100 courier fee).
                   </Text>
 
                   {[
                     { title: '🥇 VIP Gold Farmer VIP Pass', type: 'Annual Pass', price: '₹999', original: '₹1,999', desc: '10% Extra Store Discount + Priority Agronomist Call Support' },
-                    { title: '🚜 Machinery Rental Subsidy Voucher', type: 'Rental Coupon', price: '₹499', original: '₹800', desc: 'Flat ₹500 discount voucher on Tractor/Harvester rentals' },
+                    { title: '🌱 Organic Bio-Inputs & Live Plant Voucher', type: 'Plant Voucher', price: '₹499', original: '₹800', desc: 'Flat ₹500 voucher on Organic Vermicompost & Nursery Live Plants' },
                     { title: '🧪 Soil Testing & Drone Spray Voucher', type: 'Service Pass', price: '₹299', original: '₹500', desc: 'Free 1 Acre Soil NPK Test + 20% Off Drone Spraying' },
                     { title: '🎟️ Agri Store Flat ₹500 Discount Coupon', type: 'Store Discount', price: '₹350', original: '₹500', desc: 'Redeemable on any Fertilizers or Seeds order above ₹2,000' },
                   ].map((plan, idx) => (
@@ -2255,7 +2255,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         <Text style={styles.verifiedTagText}>Verified Official</Text>
                       </View>
                     </View>
-                    <Text style={styles.heroSubtitle}>100% Factory Genuine Seeds, Fertilizers & Machinery</Text>
+                    <Text style={styles.heroSubtitle}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
                   </View>
                 </View>
 
@@ -3169,7 +3169,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     const catList = [
                       { key: 'Seeds', icon: '🌾', label: 'Seeds' },
                       { key: 'Fertilizers', icon: '🧪', label: 'Fertilizers & Chemicals' },
-                      { key: 'Farm Machinery & Tools', icon: '🚜', label: 'Machinery & Tools' },
+                      { key: 'Live Plants & Nursery', icon: '🪴', label: 'Live Plants & Nursery' },
                       { key: 'Bio & Organics', icon: '🌿', label: 'Bio & Organics' },
                       { key: 'Farmer Made Foods', icon: '👨‍🌾', label: 'Farmer Made Foods' },
                       { key: 'Farmer Plan & Coupons', icon: '🎟️', label: 'Deals & VIP Coupons' },
@@ -3689,50 +3689,50 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 )}
               </View>
 
-              {/* 🚜 2. FARM MACHINERY & TOOLS FORM */}
-              {newCategory === 'Farm Machinery & Tools' && (
-                <View style={{ backgroundColor: '#f0f9ff', padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#7dd3fc', gap: 10, marginVertical: 6 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#bae6fd', paddingBottom: 6 }}>
-                    <Text style={{ fontSize: 16 }}>🚜</Text>
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0369a1' }}>
-                      Farm Machinery & Tool Required Details
+              {/* 🪴 2. LIVE PLANTS & NURSERY FORM */}
+              {newCategory === 'Live Plants & Nursery' && (
+                <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#86efac', gap: 10, marginVertical: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#bbf7d0', paddingBottom: 6 }}>
+                    <Text style={{ fontSize: 16 }}>🪴</Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#166534' }}>
+                      Live Plants & Nursery Botanical Details
                     </Text>
-                    <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 'auto' }}>
-                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>TOOL FORM</Text>
+                    <View style={{ backgroundColor: '#15803d', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 'auto' }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>PLANT FORM</Text>
                     </View>
                   </View>
 
                   <View style={{ gap: 4 }}>
-                    <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Power Source / Fuel Type *</Text>
+                    <Text style={[styles.inputLabel, { color: '#166534' }]}>Botanical / Variety Name *</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
-                      placeholder="e.g. 12V 12Ah Battery / Solar Powered / Manual Hand Operated"
+                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                      placeholder="e.g. Sansevieria Trifasciata / Marigold Hybrid / Tulsi"
                       placeholderTextColor="#94a3b8"
-                      value={machineryPowerSource}
-                      onChangeText={setMachineryPowerSource}
+                      value={plantBotanicalName}
+                      onChangeText={setPlantBotanicalName}
                     />
                   </View>
 
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Warranty Period</Text>
+                      <Text style={[styles.inputLabel, { color: '#166534' }]}>Pot / Root-Ball Size</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
-                        placeholder="e.g. 1 Year Warranty"
+                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                        placeholder="e.g. 6 Inch Pot / Root Ball"
                         placeholderTextColor="#94a3b8"
-                        value={machineryWarranty}
-                        onChangeText={setMachineryWarranty}
+                        value={plantPotSize}
+                        onChangeText={setPlantPotSize}
                       />
                     </View>
 
                     <View style={{ flex: 1, gap: 4 }}>
-                      <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Motor / Material Specs</Text>
+                      <Text style={[styles.inputLabel, { color: '#166534' }]}>Sunlight & Care Instructions</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
-                        placeholder="e.g. Brass Nozzle & Copper Motor"
+                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                        placeholder="e.g. Moderate Sunlight, Water Twice Weekly"
                         placeholderTextColor="#94a3b8"
-                        value={machineryMotorSpecs}
-                        onChangeText={setMachineryMotorSpecs}
+                        value={plantSunlightCare}
+                        onChangeText={setPlantSunlightCare}
                       />
                     </View>
                   </View>

@@ -38,12 +38,12 @@ const TOPIC_CONFIG: Record<
     tint: 'rgba(16,185,129,0.08)',
     image: require('@/assets/images/icon_farming_3d_clean.png'),
     badge: '🌾 SMART DIGITAL FARMING',
-    subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
+    subtitle: 'Empowering farmers with modern high-yield seeds, live plants, and expert advisory.',
     details:
       'FarmsKing provides a complete end-to-end ecosystem for farmers. From advanced crop intelligence to the highest quality natural seeds and fertilizers, we aim to maximize your yield and profit. Join thousands of progressive farmers revolutionizing Indian agriculture.',
     features: [
       'High-Yield Certified Seeds',
-      'Modern Farm Machinery & Tools',
+      'Live Plants & Nursery',
       'Expert Agronomist Advisory',
       'Digital Soil Health Mapping',
       'Real-Time APMC Mandi Rates',
@@ -58,10 +58,10 @@ const TOPIC_CONFIG: Record<
     badge: '🌸 URBAN & HOME GARDENING',
     subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
     details:
-      'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest tools, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
+      'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest live plants, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
     features: [
       'Organic Composts & Nutrients',
-      'Premium Ergonomic Garden Tools',
+      'Live Plants & Ornamental Saplings',
       'Exotic & Flower Plant Seeds',
       'Potting Soil & Cocopeat Blocks',
       'Home Garden Plant Care Guides',
@@ -112,7 +112,7 @@ const TOPIC_CONFIG: Record<
     badge: '🏪 CERTIFIED DIRECT STORE',
     subtitle: 'Your one-stop destination for genuine, lab-tested agricultural products.',
     details:
-      'Shop from a wide range of verified crop protection chemicals, fertilizers, and farm equipment. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
+      'Shop from a wide range of verified crop protection chemicals, fertilizers, organic inputs, and live plants. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
     features: [
       '100% Genuine Lab-Tested Products',
       'Direct Farm Doorstep Delivery',

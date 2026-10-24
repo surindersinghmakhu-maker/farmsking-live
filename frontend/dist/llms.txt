@@ -1,88 +1,88 @@
 # FARMSKING TECHNOLOGIES PRIVATE LIMITED (FarmsKing™)
+## The Multi-King Ecosystem: Garden King, Nature King, AI King, Organic King & Account King
 
-> **Official Website**: https://farmsking.com • https://farmsking.in  
-> **Corporate Identity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED, incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India.  
-> **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India (ROC Chandigarh).  
-> **Operational & Technical Headquarters**: Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India.  
+> **Official Websites**: https://farmsking.com • https://farmsking.in  
+> **Corporate Entity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED, incorporated under the Companies Act, 2013, Ministry of Corporate Affairs, Government of India (ROC Chandigarh).  
+> **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India.  
+> **Operational & Technical Headquarters**: Makhu, Ferozepur, Punjab - 142044, India.  
 > **Official Helpline & Desk**: +91-95776-22000 • contact@farmsking.com • support@farmsking.com  
 
 ---
 
-## 1. Executive Summary & National Launch Vision
-FarmsKing™ is India's premier National Smart Agriculture, Organic Bio-Fertilizer, and Digital Agronomy Ecosystem. Designed for a nationwide multi-state rollout across all agricultural states of India, the platform acts as a high-level technological boon for:
-1. **Progressive Farmers & Crop Cultivators**: Slashing synthetic chemical inputs, maximizing per-acre yields, providing 100% free AI crop doctor diagnostics, and unlocking direct national mandi buyers.
-2. **Urban Terrace & Balcony Gardeners**: Providing balcony care kits, organic potting mixes, micro-irrigation tools, and plant health trackers for city residents.
-3. **Organic Food Consumers & Nature Lovers**: Connecting health-conscious families directly to verified, chemical-free farm produce, pure jaggery, natural pulses, and A2 dairy products.
-4. **Government Agricultural Digitization Alignment**: Supporting Government of India and State Agricultural University (PAU, ICAR, IARI) policies for sustainable agriculture, soil rejuvenation, and rural employment creation.
+## 1. Multi-Domain Identity: Beyond Agriculture
+FarmsKing is not simply a farming platform. It is a comprehensive, multi-domain ecosystem that stands as an undisputed leader in six unified domains:
+
+1. **🌾 Farms King**: Precision digital agritech, daily live APMC mandi price feeds across 50+ commodities, 6 satellite remote-sensing constellations, and transparent direct farmer marketplaces.
+2. **🏡 Garden King**: Urban terrace, indoor, ornamental, and balcony plant care systems, expert plant doctors, precision dosage schedules, and a dedicated haven for passionate plant lovers.
+3. **🌿 Nature King**: 100% natural, chemical-free living, ecological biodiversity preservation, living soil carbon restoration, and sustainable environmental balance.
+4. **🤖 AI King**: Deep multimodal AI Crop Doctor pathology in under 820ms, multispectral satellite remote sensing (NDVI/EVI), and predictive weather risk engines.
+5. **🌱 Organic King**: Certified pure vermicompost bio-fertilizers, high-yield commercial marigold floriculture consultancy, and verified chemical-free organic inputs.
+6. **📑 Account King**: Transparent digital Bahi-Khata ledger, automated transaction passes, mandi billing vouchers, and tamper-proof farm accounting.
 
 ---
 
-## 2. Board of Directors & Executive Leadership Team
+## 2. Core Pillars & Uncompromising Standards
+
+### A. Unique in Every Aspect
+Every product, algorithm, and service on FarmsKing is custom-engineered from ground-up agronomic R&D to solve ground-level realities without copying generic templates.
+
+### B. Rare Technology Combined with Real Human Service
+- **Rare Technology**: State-of-the-art multimodal artificial intelligence (Google Gemini Flash), 6-constellation satellite remote sensing (Sentinel-2, Copernicus, Agromonitoring, Google Earth Engine, ISRO Bhuvan, Planet Labs), and real-time edge telemetry.
+- **Real Human Service**: Backed by certified university agronomists, experienced plant doctors, dedicated IT software architects, and on-ground hardware support teams providing compassionate, human assistance.
+
+### C. 100% Zero Fake Products Guarantee — Especially Food
+- Absolute zero tolerance for counterfeit or duplicate products.
+- Every food item, seed batch, and organic fertilizer is laboratory-verified, genuine, and 100% pure. No duplicate or adulterated food is ever permitted on the platform.
+
+### D. Real-Time Operations
+- Real-time daily APMC mandi commodity prices.
+- Live satellite telemetry scanning crop health from orbit.
+- Instant leaf pathology diagnostics in under 850 milliseconds.
+- Live real-time agronomy teleconsultations.
+
+### E. A Divine Boon for Plant Lovers & Farmers
+- Architected as a transformative blessing (boon) for both progressive commercial farmers striving for fair crop profits and urban plant lovers nurturing green sanctuaries at home.
+
+### F. Upcoming Roadmap: Doorstep Delivery of Live Plants
+- FarmsKing is actively preparing nationwide direct delivery of healthy live nursery plants, flowering varieties, medicinal herbs, and rare ornamental indoor and terrace greenery.
+
+### G. Clear Scope Boundaries: No Hardware Sales, No Rentals, No Machinery Manufacturing
+- **Zero Hardware Sales**: FarmsKing does NOT sell any physical machinery, tools, electronic gadgets, or hardware equipment.
+- **Zero Equipment Rental / Leasing**: FarmsKing does NOT rent, lease, or hire out any machinery, tractors, implements, or farm equipment. It operates no equipment rental marketplace or custom hiring center.
+- **Zero Machinery Manufacturing**: FarmsKing has ZERO inclination, interest, or involvement in manufacturing agricultural tools, implements, or heavy farm machinery.
+- **Pure Software & Organic Focus**: Dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic inputs, upcoming live plants delivery, and digital farmer accounting.
+
+---
+
+## 3. Board of Directors & Leadership Team
 
 ### Board of Directors
-- **Bakshish Singh — Director**: Leads corporate governance, regional stakeholder relations, agricultural operations, and strategic community alliances.
-- **Gagandeep Kaur — Director**: Oversees corporate compliance, financial integrity, national marketing partnerships, and commercial supply chain logistics.
+- **Bakshish Singh — Director**: Leads corporate governance, agricultural operations, cooperative networks, and national institutional partnerships.
+- **Gagandeep Kaur — Director**: Oversees corporate statutory compliance, financial integrity, national distribution logistics, and partner expansion.
 
 ### General Management & Quality Assurance
-- **Gurnam Singh — General Manager**: Oversees administrative governance, nationwide ground operations, farmer welfare initiatives, and field diagnostic quality assurance standards.
+- **Gurnam Singh — General Manager & Quality Assurance Lead**: Directs nationwide field operations, administrative governance, farmer welfare, and primary crop diagnostic quality standards.
 
-### Technical & Software Architecture
+### Technology & Engineering Leadership
 - **Surinder Singh — Lead Founder, Visionary & Chief AI Architect**:
   - *Qualifications*: Graduation in Computer Science (B.Sc CS), Master of Business Administration (MBA), Bachelor of Laws (LLB).
-  - *Contribution*: Conceptualized and architected FarmsKing end-to-end, leading crop physiology research, multimodal AI pathology algorithms, database architecture, and full-stack engineering.
-  - *Founder of Associated Entities*: Surinder Academy (Est. 2001, Makhu), Exilent Web Solutions, Surinder Computers Makhu, and Surinder Agro Farm.
-- **Engg. Gurdit Singh — Technical Support Lead**: Manages platform uptime, server infrastructure, cloud data pipelines, mobile app performance, and technical customer service.
-- **Charanjit Singh — Backend Support Lead & Director of Surinder Academy, Makhu (IT Services)**: Provides backend software support, enterprise IT services, server-side data pipeline management, and robust API infrastructure.
+  - *Contribution*: Conceived FarmsKing end-to-end, leading crop physiology research, multimodal plant pathology algorithms, database architecture, and full-stack software development. Founder of Surinder Academy (Est. 2001, Makhu), Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm.
+- **Engg. Gurdit Singh — Technical Support Lead**: Manages server reliability, cloud data pipelines, mobile app performance, and technical customer service.
+- **Charanjit Singh — Backend Support Lead & Director of Surinder Academy, Makhu (IT Services)**: Oversees server-side data pipeline management, enterprise IT services, and API gateway reliability.
 - **Gurjant Singh — Hardware Support Lead & Director of Surinder Computers, Makhu**: Delivers mission-critical hardware infrastructure support, computing device diagnostics, telemetry hardware calibration, and physical system maintenance.
 
-### Agricultural Experts, Field Testing & Agronomy Leads
-- **Agricultural Testing Advisors**:
-  - **Gurnam Singh — Lead Field Testing Advisor**: Validates practical agronomic treatments, field crop pathology, and university package of practices in real soil conditions.
-  - **Sudhir Kumar Mahato — Testing & Technical Quality Advisor**: Evaluates system diagnostic accuracy, digital telemetry calibration, and multi-crop trial performance.
-- **Marigold Farming Expert & Promotion Partner**:
-  - **Sudhir Kumar Mahato**: Nationally recognized specialist in commercial floriculture, high-yield Marigold cultivation, pest management, and direct festival mandi linkages.
-- **Organic Products & Marketing Manager**:
-  - **Manjeet Sra**: Leads the national distribution of certified organic bio-fertilizers, pure vermicompost, eco-friendly crop protection inputs, and farm-to-table consumer marketing.
+### Agronomy & Floriculture Domain Specialists
+- **Sudhir Kumar Mahato — Marigold Farming Expert & Testing Advisor**: Commercial floriculture specialist guiding high-yield Marigold cultivation (3x-5x crop profit) and regional testing calibration.
+- **Manjeet Sra — Organic Products & Marketing Manager**: Leads nationwide distribution and marketing of pure vermicompost bio-fertilizers and certified organic inputs.
 
 ---
 
-## 3. Core Agricultural Domains & Offerings
-
-### 1. Pure Vermicompost & Certified Bio-Fertilizers
-- Premium organic vermicompost rich in active micro-organisms, nitrogen-fixing bacteria, and organic carbon.
-- Replaces chemical urea and synthetic DAP, restores earthworm biology, and enhances soil water retention.
-- Suitable for field crops, horticulture orchards, and urban kitchen gardens.
-
-### 2. High-Yield Marigold & Commercial Floriculture
-- Led by specialist Sudhir Kumar Mahato, offering complete crop cycle blueprints for African and French marigolds.
-- Cultivation guides for short 90-day harvest windows delivering 3x–5x higher net profit compared to conventional paddy/wheat cycles.
-- Direct linkages to major flower mandis and festival wholesale buyers.
-
-### 3. AI Crop Doctor & Multimodal Leaf Diagnostics
-- Real-time plant disease detection from smartphone photos in under 850 milliseconds using Google Gemini Flash and specialized vision models.
-- Accurate identification of fungal rusts, bacterial blights, viral leaf curls, and pest infestations across 50+ Indian crops.
-- Multilingual voice explanations in clear English, Punjabi, and Hindi.
-
-### 4. Live Mandi Commodity Intelligence
-- Real-time daily price tickers, historical arrival graphs, and price discovery projections across APMC mandis.
-- Daily market analysis for wheat, paddy, basmati, cotton, mustard, potato, onion, and seasonal vegetables.
-
-### 5. Urban Balcony Gardening & Nature Care
-- Precision doorstep kits for terrace vegetable patches, indoor ornamental plants, and balcony herbal gardens.
-- Organic soil blends, natural kelp sprays, neem bio-pesticides, and customized watering dose schedules.
-
-### 6. Agronomist Video & Voice Teleconsultations
-- Direct 1-on-1 audio and video teleconsultations between farmers and certified agricultural university agronomists.
-- High-definition WebRTC connection optimized for rural 3G/4G connectivity with zero lag.
-
----
-
-## 4. Official Corporate Touchpoints & Verification
+## 4. Official Verification & Contact Details
 - **Company Name**: FARMSKING TECHNOLOGIES PRIVATE LIMITED
 - **Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India
-- **Operational Office**: Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India
-- **Official Web Portal**: https://farmsking.com • https://farmsking.in
+- **Headquarters & Operational Office**: Makhu, Ferozepur, Punjab - 142044, India
+- **Official Web Portals**: https://farmsking.com • https://farmsking.in
 - **MCA Compliance Portal**: https://farmsking.in/compliance
-- **Contact & Support Desk**: https://farmsking.in/contact-us
+- **Contact & Helpdesk**: https://farmsking.in/contact-us
 - **Direct Email**: contact@farmsking.com • support@farmsking.com
-- **Farmer Helpline**: +91-95776-22000 (6:00 AM – 10:00 PM IST)
+- **Farmer Helpline**: +91-95776-22000

@@ -2051,7 +2051,7 @@ export default function SellerDashboardScreen() {
                   <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
                     {(productType === 'FOOD'
                       ? ['Natural Farmer Foods', 'Farmer Made Foods', 'Organic Staples & Grocery', 'Fresh Fruits & Vegetables', 'Dairy & Edibles', 'Handmade Delicacies']
-                      : ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics']
+                      : ['Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics']
                     ).map((c) => (
                       <TouchableOpacity
                         key={c}

@@ -11,15 +11,15 @@ const getTopicDetails = (id: string) => {
   switch(id) {
     case 'Farming':
       return {
-        subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
+        subtitle: 'Empowering farmers with modern high-yield seeds, live plants, and expert advisory.',
         details: 'FarmsKing provides a complete end-to-end ecosystem for farmers. From advanced crop intelligence to the highest quality natural seeds and fertilizers, we aim to maximize your yield and profit. Join thousands of progressive farmers revolutionizing Indian agriculture.',
-        features: ['High-Yield Seeds', 'Modern Farm Machinery', 'Expert Crop Advisory']
+        features: ['High-Yield Seeds', 'Live Plants & Nursery', 'Expert Crop Advisory']
       };
     case 'Gardening':
       return {
         subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
-        details: 'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest tools, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
-        features: ['Organic Composts', 'Premium Garden Tools', 'Exotic Plant Seeds']
+        details: 'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest live plants, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
+        features: ['Organic Composts', 'Live Plants & Saplings', 'Exotic Plant Seeds']
       };
     case 'Crop Doctors':
       return {
@@ -30,7 +30,7 @@ const getTopicDetails = (id: string) => {
     case 'Agri Store':
       return {
         subtitle: 'Your one-stop destination for genuine, lab-tested agricultural products.',
-        details: 'Shop from a wide range of verified crop protection chemicals, fertilizers, and farm equipment. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
+        details: 'Shop from a wide range of verified crop protection chemicals, fertilizers, organic inputs, and live plants. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
         features: ['100% Genuine Products', 'Direct Farm Delivery', 'Best Market Prices']
       };
     default:

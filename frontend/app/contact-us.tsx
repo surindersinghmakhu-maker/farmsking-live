@@ -29,7 +29,7 @@ export default function ContactUsPage() {
   const displayPhone = '95776-22000';
   const email = support?.email || 'surindersinghmakhu@gmail.com';
   const registeredAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nVPO Goindwal Sahib, Tehsil Khadur Sahib\nDistrict Tarn Taran, Punjab, India - 143422';
-  const corporateAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nNear Grain Market, Makhu, District Ferozepur\nPunjab, India - 142044';
+  const corporateAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nMakhu, Ferozepur\nPunjab, India - 142044';
 
   const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
   const [senderName, setSenderName] = useState('');
@@ -228,12 +228,12 @@ export default function ContactUsPage() {
               <View style={[styles.iconCircle, { backgroundColor: isDay ? '#ecfdf5' : 'rgba(16,185,129,0.18)' }]}>
                 <Ionicons name="location" size={24} color="#059669" />
               </View>
-              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Operational Working Office</Text>
+              <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Headquarters & Operational Office</Text>
               <Text style={[styles.cardHighlight, { color: '#059669', fontSize: 13.5 }]}>
-                Makhu, District Ferozepur
+                Makhu, Ferozepur
               </Text>
               <Text style={[styles.cardSubText, isDay ? styles.cardSubDay : styles.cardSubNight]}>
-                Near Grain Market, Makhu, District Ferozepur, Punjab - 142044
+                Makhu, Ferozepur, Punjab - 142044
               </Text>
               <View style={[styles.actionPill, { borderColor: 'rgba(5,150,105,0.3)', backgroundColor: 'rgba(5,150,105,0.08)' }]}>
                 <Ionicons name="navigate-outline" size={13} color="#059669" />

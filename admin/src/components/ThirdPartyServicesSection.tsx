@@ -18,6 +18,7 @@ import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings
 import {
   SystemIntegrationsConfig,
   AppSettings,
+  UpdateAppSettingsPayload,
   mergeSystemIntegrationsWithDefaults,
   DEFAULT_SYSTEM_INTEGRATIONS_CONFIG,
   SupportedPaymentGateway,
@@ -31,6 +32,7 @@ type ServiceCategory =
   | 'AI'
   | 'TELECOM'
   | 'WEATHER'
+  | 'SATELLITE'
   | 'SMS'
   | 'WHATSAPP'
   | 'LOGISTICS'
@@ -44,11 +46,12 @@ interface CategoryPill {
 }
 
 const CATEGORY_PILLS: CategoryPill[] = [
-  { key: 'ALL', label: 'All Services', icon: 'grid-outline', badge: '8 Connected' },
+  { key: 'ALL', label: 'All Services', icon: 'grid-outline', badge: '9 Connected' },
   { key: 'GATEWAY', label: 'Payment Gateways', icon: 'card-outline', badge: '10 Market Options' },
   { key: 'AI', label: 'AI Crop Doctor', icon: 'sparkles-outline', badge: '7 Vision Engines' },
   { key: 'TELECOM', label: 'Video Calling', icon: 'videocam-outline', badge: '6 WebRTC Engines' },
   { key: 'WEATHER', label: 'Weather Telemetry', icon: 'cloud-outline', badge: '6 Forecast APIs' },
+  { key: 'SATELLITE', label: 'Satellite Telemetry', icon: 'planet-outline', badge: '6 Remote Sensing APIs' },
   { key: 'SMS', label: 'SMS & OTP', icon: 'chatbox-ellipses-outline', badge: '8 Gateways' },
   { key: 'WHATSAPP', label: 'WhatsApp Bot', icon: 'logo-whatsapp', badge: '7 Providers' },
   { key: 'LOGISTICS', label: 'Logistics & Shipping', icon: 'cube-outline', badge: '7 Couriers' },
@@ -395,6 +398,129 @@ export const ALL_WEATHER_PROVIDERS: WeatherProviderDetail[] = [
     summary: 'Computes proprietary agricultural indices including Spray Window Index (0-100), Delta-T, and Evapotranspiration to guide precision drone and tractor spraying.',
     dailyFreeRequests: 500,
     simulatedUsedRequests: 195,
+  },
+];
+
+export interface SatelliteProviderDetail {
+  key: 'AGROMONITORING' | 'SENTINEL_HUB' | 'COPERNICUS' | 'GOOGLE_EARTH_ENGINE' | 'ISRO_BHUVAN' | 'PLANET_LABS';
+  name: string;
+  tag: string;
+  planBadge: string;
+  freeTier: string;
+  paidRate: string;
+  constellation: string;
+  indices: string;
+  revisit: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  recommendation: string;
+  summary: string;
+  dailyFreeRequests: number;
+  simulatedUsedRequests: number;
+}
+
+export const ALL_SATELLITE_PROVIDERS: SatelliteProviderDetail[] = [
+  {
+    key: 'AGROMONITORING',
+    name: 'OpenWeather Agro (Agromonitoring API)',
+    tag: 'EASIEST REST API',
+    planBadge: '10 Hectares Free Forever (~25 Acres)',
+    freeTier: 'Polygons up to 10 Hectares Free, Unlimited Scans',
+    paidRate: '$0.05 / hectare / month for high-volume farmland',
+    constellation: 'Sentinel-2 & Landsat-8 (10m Resolution)',
+    indices: 'NDVI, EVI, Soil Surface Temp & Moisture (0-10cm, 10-40cm)',
+    revisit: 'Every 2 - 4 Days Revisit',
+    icon: 'planet',
+    color: '#16a34a',
+    recommendation: '⭐ Recommended for Startup (Ready-made REST API, Pre-calculated NDVI & Deep Soil Moisture)',
+    summary: 'Turn-key digital farming API by OpenWeather. Sends GeoJSON field coordinates and instantly returns vegetation indices, satellite image tiles, and root-zone soil hydration.',
+    dailyFreeRequests: 1000,
+    simulatedUsedRequests: 184,
+  },
+  {
+    key: 'SENTINEL_HUB',
+    name: 'Sentinel Hub (Sinergise / ESA Sentinel-2)',
+    tag: 'GLOBAL AGRITECH STANDARD',
+    planBadge: '30-Day Full Trial • €29/mo Basic',
+    freeTier: 'Free Copernicus Trial & Research Access',
+    paidRate: '€29 - €99 / month (Up to 50,000 requests)',
+    constellation: 'Sentinel-2A & 2B (10m Multispectral 13-Band)',
+    indices: 'NDVI, NDRE (Nitrogen Deficit), NDMI (Moisture Deficit), True Color',
+    revisit: 'Every 5 Days Worldwide',
+    icon: 'globe',
+    color: '#0284c7',
+    recommendation: '🌐 Global Industry Standard for Agritech Enterprise Platforms (High-Speed Map Tile Server)',
+    summary: 'Direct cloud processing of European Space Agency 10m multispectral bands. Generates custom map overlay tiles on the fly using custom Evalscript algorithms.',
+    dailyFreeRequests: 500,
+    simulatedUsedRequests: 120,
+  },
+  {
+    key: 'COPERNICUS',
+    name: 'Copernicus Data Space (ESA Open Access)',
+    tag: '100% FREE GOVT OPEN DATA',
+    planBadge: '100% Free Public Space Data',
+    freeTier: 'Unlimited Free Access via ESA Copernicus Data Space',
+    paidRate: '€0.00 (Public Service Space Exploration)',
+    constellation: 'Sentinel-1 (Radar SAR) & Sentinel-2 (Multispectral)',
+    indices: 'SAR Radar (Cloud-Penetrating), NDVI, Surface Reflectance',
+    revisit: 'Every 5 Days (Radar penetrates monsoon cloud cover)',
+    icon: 'shield-checkmark',
+    color: '#7c3aed',
+    recommendation: '🛰️ 100% Free Government Data + Cloud-Penetrating Radar for Monsoon Paddy Farming',
+    summary: 'Direct open access to the European Union Copernicus constellation. Includes Sentinel-1 synthetic aperture radar which pierces heavy monsoon clouds where optical satellites fail.',
+    dailyFreeRequests: 999999,
+    simulatedUsedRequests: 420,
+  },
+  {
+    key: 'GOOGLE_EARTH_ENGINE',
+    name: 'Google Earth Engine (GEE Platform)',
+    tag: 'BIG DATA & HISTORICAL AI',
+    planBadge: 'Free Non-Commercial • Cloud API',
+    freeTier: 'Free for Educational / Non-Commercial Analysis',
+    paidRate: 'Google Cloud Project Pay-As-You-Go Billing',
+    constellation: 'Sentinel-2, Landsat 4-9, MODIS, Terra Fusion',
+    indices: '20+ Year Historical Crop Yields, Drought Severity, Evapotranspiration',
+    revisit: 'Daily to 5-Day Multi-Satellite Fusion',
+    icon: 'analytics',
+    color: '#ea580c',
+    recommendation: '📊 Best for Multi-Year Crop History & Machine Learning Yield Forecasting',
+    summary: 'Petabyte-scale geospatial analysis platform combining 40+ years of satellite earth observation. Ideal for training predictive AI models on historical crop performance.',
+    dailyFreeRequests: 2500,
+    simulatedUsedRequests: 610,
+  },
+  {
+    key: 'ISRO_BHUVAN',
+    name: 'ISRO Bhuvan & VEDAS Geo-Platform',
+    tag: 'NATIONAL SPACE DATA (INDIA)',
+    planBadge: 'National Agrispace Portal',
+    freeTier: 'Open Government GIS Web Services (WMS/WFS)',
+    paidRate: '₹0.00 (National Remote Sensing Centre)',
+    constellation: 'Resourcesat-2, Cartosat, RISAT-1A, LISS-III',
+    indices: 'Indian Crop Sowing Acreage, Soil Texture, Ground Water Depth',
+    revisit: 'Weekly / Monthly Satellite Passes',
+    icon: 'flag',
+    color: '#d97706',
+    recommendation: '🏛️ Indian National Remote Sensing Centre (Official Sowing Acreage & Soil Texture)',
+    summary: 'Developed by ISRO NRSC Hyderabad. Provides official Indian agro-ecological zone mapping, ground water prospective zones, and kharif/rabi sowing verification.',
+    dailyFreeRequests: 999999,
+    simulatedUsedRequests: 195,
+  },
+  {
+    key: 'PLANET_LABS',
+    name: 'Planet Labs PlanetScope Daily Constellation',
+    tag: 'ULTRA-HD 3M DAILY REVISIT',
+    planBadge: 'Daily 3m Commercial Satellite',
+    freeTier: '14-Day Free Evaluation Access',
+    paidRate: 'Custom Enterprise Contract (~$1.50 - $3.00/hectare/yr)',
+    constellation: '200+ Dove CubeSats (3m True Optical Resolution)',
+    indices: 'Ultra-HD 3m NDVI, Daily Revisit, Individual Tree / Furrow Health',
+    revisit: 'Every Single Day (Daily Global Scan)',
+    icon: 'telescope',
+    color: '#059669',
+    recommendation: '💎 Ultra-HD 3-Meter Daily Imagery for High-Value Horticulture & Nurseries',
+    summary: 'The world largest commercial earth imaging fleet. Captures 3-meter resolution images of every acre on earth every single day, detecting pest attacks within 24 hours.',
+    dailyFreeRequests: 100,
+    simulatedUsedRequests: 12,
   },
 ];
 
@@ -1049,7 +1175,7 @@ export const ALL_LOGISTICS_PROVIDERS: LogisticsProviderDetail[] = [
     walletBalance: '₹12,400.00',
     icon: 'car',
     color: '#0284c7',
-    recommendation: '🚚 Direct Fleet Carrier for High Volume and Heavy Farm Machinery Tools',
+    recommendation: '🚚 Direct Fleet Carrier for High Volume Seeds, Organic Inputs & Live Plants Nursery',
     summary: 'Direct integrated courier fleet with large vehicle transit hubs and automated doorstep reverse pickups.',
   },
   {
@@ -1344,6 +1470,18 @@ export function ThirdPartyServicesSection() {
     }, 900);
   };
 
+  const [isTestingSatellite, setIsTestingSatellite] = useState(false);
+
+  const handleTestSatelliteHandshake = () => {
+    setIsTestingSatellite(true);
+    const activeKey = localConfig.satellite?.activeProvider || 'AGROMONITORING';
+    const meta = ALL_SATELLITE_PROVIDERS.find((p) => p.key === activeKey) || ALL_SATELLITE_PROVIDERS[0];
+    setTimeout(() => {
+      setIsTestingSatellite(false);
+      showToast(`🛰️ ${meta.name} Satellite Handshake Passed: 52ms Latency · Sentinel-2 Orbit Locked · Mean NDVI: 0.76 (Healthy Crop)`);
+    }, 1000);
+  };
+
   // Multi-gateway checkout choices state (Customer checkout options)
   const [multiGateways, setMultiGateways] = useState<Record<string, boolean>>({
     UPI_DIRECT: true,
@@ -1583,7 +1721,7 @@ export function ThirdPartyServicesSection() {
             </View>
             <View>
               <Text style={[styles.cockpitTitle, { color: textColor }]}>
-                🎛️ Master Services Telemetry Cockpit (All 8 Engines Meter)
+                🎛️ Master Services Telemetry Cockpit (All 9 Engines Meter)
               </Text>
               <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
                 Live quota trackers, volume processed & active engines.
@@ -1593,12 +1731,12 @@ export function ThirdPartyServicesSection() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12, borderWidth: 1, borderColor: isLight ? '#86efac' : '#00ff87' }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLight ? '#16a34a' : '#00ff87' }} />
             <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#15803d' : '#00ff87' }}>
-              ALL 8 ACTIVE
+              ALL 9 ACTIVE
             </Text>
           </View>
         </View>
 
-        {/* 8-Service Mini Meter Grid */}
+        {/* 9-Service Mini Meter Grid */}
         <View style={styles.cockpitGrid}>
           {/* 1. Gateway */}
           <TouchableOpacity
@@ -1821,6 +1959,34 @@ export function ThirdPartyServicesSection() {
             </View>
             <Text style={[styles.cockpitSubText, { color: '#e11d48' }]}>
               ₹0 Egress · Sirens Free
+            </Text>
+          </TouchableOpacity>
+
+          {/* 9. Satellite Telemetry */}
+          <TouchableOpacity
+            style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'SATELLITE' ? '#16a34a' : cardBorder }]}
+            onPress={() => setActiveCategory('SATELLITE')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cockpitItemTop}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="planet" size={13.5} color="#16a34a" />
+                <Text style={[styles.cockpitItemTitle, { color: textColor }]}>9. Satellite</Text>
+              </View>
+              <View style={[styles.cockpitPill, { backgroundColor: 'rgba(22, 163, 74, 0.12)' }]}>
+                <Text style={[styles.cockpitPillText, { color: '#16a34a' }]}>
+                  {localConfig.satellite?.activeProvider || 'AGROMONITORING'}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.cockpitMetricText, { color: textColor }]}>
+              184 <Text style={{ fontSize: 9.5, color: subTextColor }}>/ 1,000 Polygons</Text>
+            </Text>
+            <View style={[styles.cockpitMiniBarWrap, { backgroundColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
+              <View style={[styles.cockpitMiniBarFill, { width: '18%', backgroundColor: '#16a34a' }]} />
+            </View>
+            <Text style={[styles.cockpitSubText, { color: '#16a34a' }]}>
+              10m Sentinel-2 · NDVI
             </Text>
           </TouchableOpacity>
         </View>
@@ -7848,6 +8014,646 @@ export function ThirdPartyServicesSection() {
           </View>
         </View>
       )}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* 9. SATELLITE TELEMETRY & CROP REMOTE SENSING                     */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {(activeCategory === 'ALL' || activeCategory === 'SATELLITE') && (() => {
+        const activeSatelliteKey = localConfig.satellite?.activeProvider || 'AGROMONITORING';
+        const activeSatelliteMeta = ALL_SATELLITE_PROVIDERS.find((p) => p.key === activeSatelliteKey) || ALL_SATELLITE_PROVIDERS[0];
+        const progressPct = Math.min(100, Math.round((activeSatelliteMeta.simulatedUsedRequests / activeSatelliteMeta.dailyFreeRequests) * 100));
+        const remainingRequests = Math.max(0, activeSatelliteMeta.dailyFreeRequests - activeSatelliteMeta.simulatedUsedRequests);
+
+        return (
+          <View style={[styles.serviceCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.cardHeader, { borderBottomColor: cardBorder }]}>
+              <View style={styles.cardHeaderLeft}>
+                <View style={[styles.iconBox, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(0, 255, 135, 0.15)' }]}>
+                  <Ionicons name="planet" size={22} color={isLight ? '#16a34a' : '#00ff87'} />
+                </View>
+                <View>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>9. Satellite Telemetry & Crop Remote Sensing</Text>
+                  <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
+                    Orbit multispectral scanning, NDVI vegetative health, moisture deficit & crop stress monitoring.
+                  </Text>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={[styles.tierBadge, { backgroundColor: isLight ? '#d1fae5' : 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981' }]}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#047857' : '#6ee7b7' }}>
+                    {activeSatelliteMeta.planBadge}
+                  </Text>
+                </View>
+                <Switch
+                  value={localConfig.satellite?.isEnabled ?? true}
+                  onValueChange={(val) =>
+                    setLocalConfig({
+                      ...localConfig,
+                      satellite: { ...localConfig.satellite, isEnabled: val },
+                    })
+                  }
+                  trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+            </View>
+
+            {/* Satellite Strategy & Comparison Guide */}
+            <TouchableOpacity
+              style={[styles.strategyGuideBar, { backgroundColor: isLight ? '#f0fdf4' : '#03190d', borderColor: isLight ? '#bbf7d0' : '#0f3822' }]}
+              onPress={() => toggleGuide('satellite')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="telescope" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
+              <Text style={[styles.strategyGuideText, { color: textColor }]}>
+                💡 Satellite Strategy: <Text style={{ fontWeight: '800', color: isLight ? '#16a34a' : '#00ff87' }}>Agromonitoring</Text> provides 10 hectares free with pre-computed NDVI & soil moisture, while <Text style={{ fontWeight: '800' }}>Sentinel Hub</Text> & <Text style={{ fontWeight: '800' }}>Copernicus</Text> deliver 10m ESA space bands.
+              </Text>
+              <Ionicons
+                name={expandedGuides['satellite'] ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={subTextColor}
+              />
+            </TouchableOpacity>
+
+            {expandedGuides['satellite'] && (
+              <View style={[styles.guideDetailsBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <Text style={[styles.guideHeading, { color: textColor }]}>🛰️ Precision Remote Sensing & Satellite Comparison:</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>OpenWeather Agro (Active):</Text> Turn-key REST API. 10 Hectares (~25 Acres) free forever. Returns NDVI, EVI, and deep soil moisture (0-10cm, 10-40cm) from Sentinel-2 & Landsat-8.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Sentinel Hub (Sinergise / Planet):</Text> Global agritech standard. 10m resolution Sentinel-2 cloud processing with custom Evalscripts for NDVI, NDRE, and NDMI.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Copernicus Data Space (ESA):</Text> 100% Free European Space Agency Open Data. Includes Sentinel-1 synthetic aperture radar (SAR) that penetrates monsoon rain clouds.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Google Earth Engine (GEE):</Text> Petabyte-scale multi-decadal archive. 20+ years of historical vegetation trends for AI yield prediction and crop modeling.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>ISRO Bhuvan & VEDAS:</Text> Government of India National Remote Sensing Centre. Official agro-climatic zoning, sowing acreage, and Indian soil database.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Planet Labs (PlanetScope):</Text> Commercial 3-meter ultra-HD imagery with daily global revisit. Pinpoints micro-stress spots down to individual tree rows.</Text>
+              </View>
+            )}
+
+            {/* Active Satellite Dropdown */}
+            <Text style={[styles.fieldHeading, { color: isLight ? '#16a34a' : '#00ff87' }]}>
+              SELECT ACTIVE SATELLITE REMOTE SENSING ENGINE:
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.dropdownTrigger,
+                { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: isLight ? '#16a34a' : '#00ff87' },
+              ]}
+              onPress={() => toggleDropdown('satellite')}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dropdownTriggerLeft}>
+                <Ionicons name={activeSatelliteMeta.icon} size={18} color={isLight ? '#16a34a' : '#00ff87'} />
+                <Text style={[styles.dropdownTriggerText, { color: textColor }]}>
+                  Active Satellite Engine: <Text style={{ fontWeight: '900', color: isLight ? '#16a34a' : '#00ff87' }}>{activeSatelliteMeta.name}</Text>
+                </Text>
+              </View>
+              <Ionicons
+                name={openDropdowns['satellite'] ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={isLight ? '#16a34a' : '#00ff87'}
+              />
+            </TouchableOpacity>
+
+            {openDropdowns['satellite'] && (
+              <View style={[styles.dropdownMenu, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                {ALL_SATELLITE_PROVIDERS.map((item) => {
+                  const isSelected = activeSatelliteKey === item.key;
+                  return (
+                    <TouchableOpacity
+                      key={item.key}
+                      style={[
+                        styles.dropdownItem,
+                        isSelected && { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.1)' : 'rgba(0, 255, 135, 0.15)' },
+                      ]}
+                      onPress={() => {
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: { ...localConfig.satellite, activeProvider: item.key as any },
+                        });
+                        toggleDropdown('satellite');
+                        showToast(`🛰️ Switched Satellite Telemetry Provider to ${item.name}`);
+                      }}
+                    >
+                      <Ionicons
+                        name={item.icon}
+                        size={18}
+                        color={isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.dropdownItemTitle, { color: textColor }, isSelected && { fontWeight: '800' }]}>
+                          {item.name}
+                        </Text>
+                        <Text style={[styles.dropdownItemTag, { color: isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor }]}>
+                          {item.tag}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* 🌟 Dynamic Features & Plan Info Card for Selected Satellite Provider */}
+            <View style={[styles.telecomFeatureCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              <View style={styles.telecomCardHeaderRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Ionicons name={activeSatelliteMeta.icon} size={20} color={activeSatelliteMeta.color} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13.5, fontWeight: '800', color: textColor }}>
+                      {activeSatelliteMeta.name}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: activeSatelliteMeta.color, fontWeight: '700', marginTop: 1 }}>
+                      {activeSatelliteMeta.recommendation}
+                    </Text>
+                  </View>
+                </View>
+                <View style={{ backgroundColor: isLight ? '#d1fae5' : 'rgba(16, 185, 129, 0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: isLight ? '#065f46' : '#6ee7b7' }}>
+                    {activeSatelliteMeta.tag}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Technical Specifications Grid */}
+              <View style={styles.telecomFeatureGrid}>
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>🎁 Free Quota Tier</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: '#16a34a' }]}>{activeSatelliteMeta.freeTier}</Text>
+                </View>
+
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>💰 Overage / Scale Rate</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: textColor }]}>{activeSatelliteMeta.paidRate}</Text>
+                </View>
+
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>🛰️ Constellation & Resolution</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: '#0284c7' }]}>{activeSatelliteMeta.constellation}</Text>
+                </View>
+
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>📊 Indices & Telemetry</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: '#10b981' }]}>{activeSatelliteMeta.indices}</Text>
+                </View>
+
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>⏱️ Revisit Frequency</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: '#d97706' }]}>{activeSatelliteMeta.revisit}</Text>
+                </View>
+
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>🛡️ Security & Access</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: textColor }]}>End-to-End Encrypted Telemetry</Text>
+                </View>
+              </View>
+
+              <Text style={{ fontSize: 11, color: subTextColor, lineHeight: 16, marginTop: 4 }}>
+                {activeSatelliteMeta.summary}
+              </Text>
+            </View>
+
+            {/* 📊 Live Daily Satellite Quota & Telemetry Monitor Widget */}
+            <View style={[styles.telecomUsageBox, { backgroundColor: isLight ? '#f8fafc' : '#04160c', borderColor: cardBorder }]}>
+              <View style={styles.telecomUsageHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="analytics" size={17} color={isLight ? '#16a34a' : '#00ff87'} />
+                  <Text style={{ fontSize: 12.5, fontWeight: '800', color: textColor }}>
+                    📊 Satellite Orbit Telemetry & Polygon Quota Monitor
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 6 }}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#16a34a' }} />
+                  <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#15803d' : '#00ff87' }}>
+                    ORBIT ONLINE
+                  </Text>
+                </View>
+              </View>
+
+              {/* Quota Progress Bar */}
+              <View style={styles.telecomProgressBarWrap}>
+                <View
+                  style={[
+                    styles.telecomProgressBarFill,
+                    {
+                      width: `${progressPct}%`,
+                      backgroundColor: progressPct > 85 ? '#ef4444' : isLight ? '#16a34a' : '#00ff87',
+                    },
+                  ]}
+                />
+              </View>
+
+              {/* Progress Labels */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: textColor }}>
+                  {activeSatelliteMeta.simulatedUsedRequests.toLocaleString()} / {activeSatelliteMeta.dailyFreeRequests.toLocaleString()} Farm Polygons Monitored
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#16a34a' : '#00ff87' }}>
+                  {progressPct}% Used
+                </Text>
+              </View>
+
+              {/* Detailed Metrics & Ping Action */}
+              <View style={styles.telecomUsageStatsRow}>
+                <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                  <View style={{ backgroundColor: isLight ? '#d1fae5' : 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: isLight ? '#065f46' : '#6ee7b7' }}>
+                      🌱 {remainingRequests.toLocaleString()} Farm Scans Left
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#072414', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: subTextColor }}>
+                      💳 Free Quota Protected
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: isLight ? '#f0fdf4' : '#03190d', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: 6 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: isLight ? '#16a34a' : '#00ff87' }}>
+                      🛰️ 10m Sentinel-2 Active
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 1-Click Satellite Ping Button */}
+                <TouchableOpacity
+                  style={[styles.testPingBtn, { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]}
+                  onPress={handleTestSatelliteHandshake}
+                  disabled={isTestingSatellite}
+                  activeOpacity={0.8}
+                >
+                  {isTestingSatellite ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="flash" size={13} color="#ffffff" />
+                  )}
+                  <Text style={[styles.testPingBtnText, !isLight && { color: '#03140a' }]}>
+                    {isTestingSatellite ? 'Connecting Orbit...' : '⚡ Test Satellite Handshake & Ping'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Provider Specific Credentials Form */}
+            <View style={[styles.credentialsBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              {activeSatelliteKey === 'AGROMONITORING' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>🌱 OpenWeather Agro (Agromonitoring) Configuration</Text>
+                  <InputField
+                    label="Agromonitoring App ID / API Key"
+                    value={localConfig.satellite?.providers?.agromonitoring?.apiKey || ''}
+                    onChangeText={(val) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        satellite: {
+                          ...localConfig.satellite,
+                          providers: {
+                            ...localConfig.satellite.providers,
+                            agromonitoring: {
+                              ...localConfig.satellite.providers.agromonitoring,
+                              apiKey: val,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    placeholder="e.g. 5f4dcc3b5aa765d61d8327deb882cf99"
+                    isSecret={!showSecrets['agro_key']}
+                    onToggleSecret={() => toggleSecret('agro_key')}
+                    isLight={isLight}
+                  />
+                  <View style={styles.twoColRow}>
+                    <View style={[styles.toggleInlineBox, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.toggleInlineTitle, { color: textColor }]}>Auto-Sync Plot Polygons</Text>
+                        <Text style={[styles.toggleInlineDesc, { color: subTextColor }]}>Auto-register 4-corner GPS boundary polygons with Agro API</Text>
+                      </View>
+                      <Switch
+                        value={localConfig.satellite?.providers?.agromonitoring?.autoSyncPolygons ?? true}
+                        onValueChange={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                agromonitoring: {
+                                  ...localConfig.satellite.providers.agromonitoring,
+                                  autoSyncPolygons: val,
+                                },
+                              },
+                            },
+                          })
+                        }
+                        trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+                  </View>
+                </>
+              )}
+
+              {activeSatelliteKey === 'SENTINEL_HUB' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>🛰️ Sentinel Hub (Sinergise / Planet) Configuration</Text>
+                  <View style={styles.twoColRow}>
+                    <InputField
+                      label="OAuth Client ID"
+                      value={localConfig.satellite?.providers?.sentinelHub?.clientId || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              sentinelHub: {
+                                ...(localConfig.satellite.providers.sentinelHub || { clientId: '', clientSecret: '', instanceId: '' }),
+                                clientId: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="e.g. 4d283897-4279-4d92-936b-..."
+                      isLight={isLight}
+                    />
+                    <InputField
+                      label="OAuth Client Secret"
+                      value={localConfig.satellite?.providers?.sentinelHub?.clientSecret || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              sentinelHub: {
+                                ...(localConfig.satellite.providers.sentinelHub || { clientId: '', clientSecret: '', instanceId: '' }),
+                                clientSecret: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="Secret Key"
+                      isSecret={!showSecrets['sentinel_secret']}
+                      onToggleSecret={() => toggleSecret('sentinel_secret')}
+                      isLight={isLight}
+                    />
+                  </View>
+                  <InputField
+                    label="Sentinel Hub Configuration / Instance ID"
+                    value={localConfig.satellite?.providers?.sentinelHub?.instanceId || ''}
+                    onChangeText={(val) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        satellite: {
+                          ...localConfig.satellite,
+                          providers: {
+                            ...localConfig.satellite.providers,
+                            sentinelHub: {
+                              ...(localConfig.satellite.providers.sentinelHub || { clientId: '', clientSecret: '', instanceId: '' }),
+                              instanceId: val,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    placeholder="e.g. 8f9b1c2d-..."
+                    isLight={isLight}
+                  />
+                </>
+              )}
+
+              {activeSatelliteKey === 'COPERNICUS' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>🏛️ Copernicus Data Space Ecosystem (ESA Open Access)</Text>
+                  <View style={styles.twoColRow}>
+                    <InputField
+                      label="Copernicus Account Username / Email"
+                      value={localConfig.satellite?.providers?.copernicus?.username || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              copernicus: {
+                                ...(localConfig.satellite.providers.copernicus || { username: '', password: '', clientId: '' }),
+                                username: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="user@farmsking.in"
+                      isLight={isLight}
+                    />
+                    <InputField
+                      label="Copernicus Password"
+                      value={localConfig.satellite?.providers?.copernicus?.password || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              copernicus: {
+                                ...(localConfig.satellite.providers.copernicus || { username: '', password: '', clientId: '' }),
+                                password: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="Password"
+                      isSecret={!showSecrets['copernicus_pass']}
+                      onToggleSecret={() => toggleSecret('copernicus_pass')}
+                      isLight={isLight}
+                    />
+                  </View>
+                  <InputField
+                    label="Copernicus Data Space Client ID"
+                    value={localConfig.satellite?.providers?.copernicus?.clientId || ''}
+                    onChangeText={(val) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        satellite: {
+                          ...localConfig.satellite,
+                          providers: {
+                            ...localConfig.satellite.providers,
+                            copernicus: {
+                              ...(localConfig.satellite.providers.copernicus || { username: '', password: '', clientId: '' }),
+                              clientId: val,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    placeholder="cdse-public-client"
+                    isLight={isLight}
+                  />
+                </>
+              )}
+
+              {activeSatelliteKey === 'GOOGLE_EARTH_ENGINE' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>📊 Google Earth Engine (GEE Platform)</Text>
+                  <View style={styles.twoColRow}>
+                    <InputField
+                      label="GCP Project ID"
+                      value={localConfig.satellite?.providers?.googleEarthEngine?.projectId || 'farmsking-geospatial'}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              googleEarthEngine: {
+                                ...(localConfig.satellite.providers.googleEarthEngine || { serviceAccountEmail: '', privateKey: '', projectId: '' }),
+                                projectId: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="farmsking-geospatial"
+                      isLight={isLight}
+                    />
+                    <InputField
+                      label="Service Account Email"
+                      value={localConfig.satellite?.providers?.googleEarthEngine?.serviceAccountEmail || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              googleEarthEngine: {
+                                ...(localConfig.satellite.providers.googleEarthEngine || { serviceAccountEmail: '', privateKey: '', projectId: '' }),
+                                serviceAccountEmail: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="gee-service@farmsking.iam.gserviceaccount.com"
+                      isLight={isLight}
+                    />
+                  </View>
+                  <InputField
+                    label="GEE Private Key (JSON / PEM)"
+                    value={localConfig.satellite?.providers?.googleEarthEngine?.privateKey || ''}
+                    onChangeText={(val) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        satellite: {
+                          ...localConfig.satellite,
+                          providers: {
+                            ...localConfig.satellite.providers,
+                            googleEarthEngine: {
+                              ...(localConfig.satellite.providers.googleEarthEngine || { serviceAccountEmail: '', privateKey: '', projectId: '' }),
+                              privateKey: val,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    placeholder="-----BEGIN PRIVATE KEY-----..."
+                    isSecret={!showSecrets['gee_key']}
+                    onToggleSecret={() => toggleSecret('gee_key')}
+                    multiline
+                    isLight={isLight}
+                  />
+                </>
+              )}
+
+              {activeSatelliteKey === 'ISRO_BHUVAN' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>🇮🇳 ISRO Bhuvan & VEDAS National Agri Portal</Text>
+                  <View style={styles.twoColRow}>
+                    <InputField
+                      label="Bhuvan WMS / Geo-API Endpoint"
+                      value={localConfig.satellite?.providers?.isroBhuvan?.endpointUrl || 'https://bhuvan-app1.nrsc.gov.in/agri'}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              isroBhuvan: {
+                                ...(localConfig.satellite.providers.isroBhuvan || { token: '', endpointUrl: '' }),
+                                endpointUrl: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="https://bhuvan-app1.nrsc.gov.in/agri"
+                      isLight={isLight}
+                    />
+                    <InputField
+                      label="Bhuvan / NRSC API Access Token"
+                      value={localConfig.satellite?.providers?.isroBhuvan?.token || ''}
+                      onChangeText={(val) =>
+                        setLocalConfig({
+                          ...localConfig,
+                          satellite: {
+                            ...localConfig.satellite,
+                            providers: {
+                              ...localConfig.satellite.providers,
+                              isroBhuvan: {
+                                ...(localConfig.satellite.providers.isroBhuvan || { token: '', endpointUrl: '' }),
+                                token: val,
+                              },
+                            },
+                          },
+                        })
+                      }
+                      placeholder="NRSC Access Token"
+                      isSecret={!showSecrets['isro_token']}
+                      onToggleSecret={() => toggleSecret('isro_token')}
+                      isLight={isLight}
+                    />
+                  </View>
+                </>
+              )}
+
+              {activeSatelliteKey === 'PLANET_LABS' && (
+                <>
+                  <Text style={[styles.credTitle, { color: textColor }]}>💎 Planet Labs PlanetScope (3m Daily Revisit)</Text>
+                  <InputField
+                    label="Planet API Key"
+                    value={localConfig.satellite?.providers?.planetLabs?.apiKey || ''}
+                    onChangeText={(val) =>
+                      setLocalConfig({
+                        ...localConfig,
+                        satellite: {
+                          ...localConfig.satellite,
+                          providers: {
+                            ...localConfig.satellite.providers,
+                            planetLabs: {
+                              apiKey: val,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    placeholder="PLAK..."
+                    isSecret={!showSecrets['planet_key']}
+                    onToggleSecret={() => toggleSecret('planet_key')}
+                    isLight={isLight}
+                  />
+                </>
+              )}
+            </View>
+          </View>
+        );
+      })()}
     </View>
   );
 }
@@ -8108,10 +8914,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   serviceCard: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: 18,
+    marginBottom: 20,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -8122,11 +8928,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 14,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    marginBottom: 14,
+    marginBottom: 16,
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   cardHeaderLeft: {
     flexDirection: 'row',
@@ -8210,11 +9016,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 9,
     borderWidth: 1,
-    minHeight: 44,
+    minHeight: 46,
   },
   dropdownTriggerLeft: {
     flexDirection: 'row',
@@ -8234,12 +9040,12 @@ const styles = StyleSheet.create({
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.06)',
-    minHeight: 44,
+    minHeight: 48,
   },
   dropdownItemTitle: {
     fontSize: 13,
@@ -8251,10 +9057,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   multiChoiceBox: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   multiChoiceHeader: {
     flexDirection: 'row',
@@ -8303,13 +9109,13 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   credentialsBox: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 15,
+    borderRadius: 10,
     borderWidth: 1,
   },
   subCard: {
-    padding: 10,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
   },
   credTitle: {
@@ -8320,7 +9126,7 @@ const styles = StyleSheet.create({
   twoColRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 14,
   },
   toggleInlineBox: {
     flex: 1,
@@ -8328,8 +9134,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 10,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
   },
   toggleInlineTitle: {
@@ -8523,10 +9329,10 @@ const styles = StyleSheet.create({
   },
   
   moduleCardBox: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1.5,
-    padding: 14,
-    gap: 14,
+    padding: 18,
+    gap: 16,
   },
   moduleCardHeader: {
     flexDirection: 'row',

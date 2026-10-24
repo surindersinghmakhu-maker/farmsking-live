@@ -29,17 +29,17 @@ export interface NavigationPillar {
 export const ADMIN_PILLARS: NavigationPillar[] = [
   {
     id: 'EXECUTIVE',
-    title: 'Overview',
-    shortTitle: 'Overview',
-    icon: 'pulse-outline',
-    iconFilled: 'pulse',
-    badge: 'Overview HQ',
+    title: 'Dashboard',
+    shortTitle: 'Dashboard',
+    icon: 'speedometer-outline',
+    iconFilled: 'speedometer',
+    badge: 'Dashboard HQ',
     color: '#10b981',
     subTabs: [
       {
         id: 'overview',
         title: 'Executive Dashboard',
-        shortTitle: 'Overview',
+        shortTitle: 'Dashboard',
         description: 'Real-time revenue, active orders & telemetry',
         icon: 'home',
         path: '/admin/(tabs)',

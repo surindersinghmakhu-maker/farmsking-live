@@ -10,12 +10,19 @@ export const RADIUS = {
 };
 
 export const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 28,
+  xs: 6,
+  sm: 10,
+  md: 16,
+  lg: 20,
+  xl: 26,
+  xxl: 36,
+  cardGap: 16,
+  cardPadding: 16,
+  tableRowPadding: 14,
+  buttonPaddingY: 10,
+  buttonPaddingX: 16,
+  buttonGap: 10,
+  sectionGap: 22,
 };
 
 export const FONT = {

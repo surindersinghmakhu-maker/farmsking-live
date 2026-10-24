@@ -40,7 +40,7 @@ export default function AdminSellersScreen() {
     fertilizer: '2.0',
     seeds: '5.0',
     spray: '4.0',
-    machinery: '3.0',
+    livePlants: '3.0',
     feed: '2.0',
     general: '5.0',
   });
@@ -129,7 +129,7 @@ export default function AdminSellersScreen() {
       fertilizer: existing.fertilizer !== undefined ? String(existing.fertilizer) : '2.0',
       seeds: existing.seeds !== undefined ? String(existing.seeds) : '5.0',
       spray: existing.spray !== undefined ? String(existing.spray) : '4.0',
-      machinery: existing.machinery !== undefined ? String(existing.machinery) : '3.0',
+      machinery: existing.livePlants !== undefined ? String(existing.livePlants) : (existing.machinery !== undefined ? String(existing.machinery) : '3.0'),
       feed: existing.feed !== undefined ? String(existing.feed) : '2.0',
       general: store.commissionRate !== undefined ? String(store.commissionRate) : '5.0',
     });
@@ -144,7 +144,7 @@ export default function AdminSellersScreen() {
         fertilizer: parseFloat(categoryCommissions.fertilizer || '2.0'),
         seeds: parseFloat(categoryCommissions.seeds || '5.0'),
         spray: parseFloat(categoryCommissions.spray || '4.0'),
-        machinery: parseFloat(categoryCommissions.machinery || '3.0'),
+        livePlants: parseFloat(categoryCommissions.livePlants || '3.0'),
         feed: parseFloat(categoryCommissions.feed || '2.0'),
       };
       const generalRate = parseFloat(categoryCommissions.general || '5.0');
@@ -527,9 +527,9 @@ export default function AdminSellersScreen() {
                                 <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🧪 Pesticides & Spray: {store.categoryCommissions.spray}%</Text>
                               </View>
                             )}
-                            {store.categoryCommissions.machinery !== undefined && (
+                            {(store.categoryCommissions.livePlants !== undefined || store.categoryCommissions.machinery !== undefined) && (
                               <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
-                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🚜 Machinery: {store.categoryCommissions.machinery}%</Text>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🪴 Live Plants: {store.categoryCommissions.livePlants || store.categoryCommissions.machinery}%</Text>
                               </View>
                             )}
                             {store.categoryCommissions.feed !== undefined && (
@@ -861,7 +861,7 @@ export default function AdminSellersScreen() {
                       fertilizer: '2.0',
                       seeds: '5.0',
                       spray: '4.0',
-                      machinery: '3.0',
+                      livePlants: '3.0',
                     }))
                   }
                 >
@@ -875,7 +875,7 @@ export default function AdminSellersScreen() {
                       fertilizer: '1.5',
                       seeds: '4.0',
                       spray: '3.0',
-                      machinery: '2.5',
+                      livePlants: '2.5',
                     }))
                   }
                 >
@@ -924,14 +924,14 @@ export default function AdminSellersScreen() {
                     />
                   </View>
 
-                  {/* Machinery */}
+                  {/* Live Plants */}
                   <View style={styles.catInputItem}>
-                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🚜 Machinery (%)</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🪴 Live Plants (%)</Text>
                     <TextInput
                       style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
-                      value={categoryCommissions.machinery}
-                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, machinery: val }))}
+                      value={categoryCommissions.livePlants}
+                      onChangeText={(val) => setCategoryCommissions((c: any) => ({ ...c, livePlants: val }))}
                       placeholder="3.0"
                       placeholderTextColor="#64748B"
                     />
@@ -1158,8 +1158,8 @@ const styles = StyleSheet.create({
   // Store Card
   storeCard: {
     backgroundColor: '#0F172A',
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 14,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#1E293B',
     overflow: 'hidden',
@@ -1168,8 +1168,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: '#0F172A',
   },
   storeHeaderMain: {
@@ -1280,8 +1280,8 @@ const styles = StyleSheet.create({
 
   // Expanded Content
   expandedContent: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderTopWidth: 1,
     borderTopColor: '#1E293B',
     backgroundColor: '#090D16',
@@ -1307,12 +1307,12 @@ const styles = StyleSheet.create({
   // Details Grid
   detailsGrid: {
     backgroundColor: '#0F172A',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 8,
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 12,
     borderWidth: 1,
     borderColor: '#1E293B',
-    gap: 6,
+    gap: 10,
   },
   detailRow: {
     flexDirection: 'row',
@@ -1354,9 +1354,9 @@ const styles = StyleSheet.create({
   // Doc Panel
   docPanel: {
     backgroundColor: '#0F172A',
-    borderRadius: 8,
-    padding: 8,
-    marginTop: 8,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
     borderWidth: 1,
     borderColor: '#1E293B',
   },
@@ -1368,7 +1368,7 @@ const styles = StyleSheet.create({
   },
   docRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   docThumbBox: {
     flex: 1,
@@ -1400,19 +1400,21 @@ const styles = StyleSheet.create({
 
   // Actions
   actionRow: {
-    marginTop: 8,
+    marginTop: 14,
   },
   mainBtnGroup: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
     justifyContent: 'flex-end',
+    flexWrap: 'wrap',
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    minHeight: 40,
   },
   btnVerify: {
     backgroundColor: '#059669',

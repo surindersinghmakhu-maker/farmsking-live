@@ -1141,9 +1141,9 @@ const styles = StyleSheet.create({
   subTabChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 6,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1.5,
@@ -1162,9 +1162,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
-  list: { padding: 10, paddingBottom: Platform.OS === 'web' ? 16 : 24 },
+  list: { padding: 16, paddingBottom: Platform.OS === 'web' ? 24 : 32 },
 
-  sectionHeaderRow: { marginBottom: 8, marginTop: 2 },
+  sectionHeaderRow: { marginBottom: 12, marginTop: 8 },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   sectionTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   sectionSubtitle: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
@@ -1174,7 +1174,7 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 24, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
   emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
 
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, padding: 9, gap: 8 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 12, padding: 14, gap: 12 },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
   avatarCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontSize: 12.5, fontFamily: FONT.extraBold, color: theme.primary },
@@ -1188,9 +1188,9 @@ const styles = StyleSheet.create({
   statusDot: { width: 5, height: 5, borderRadius: 2.5 },
   statusBadgeText: { fontSize: 10, fontFamily: FONT.bold },
 
-  reviewBtn: { backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill },
+  reviewBtn: { backgroundColor: theme.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.pill },
   reviewBtnText: { color: '#ffffff', fontSize: 11, fontFamily: FONT.bold },
-  ledgerBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: theme.primaryLight, paddingHorizontal: 11, paddingVertical: 7, borderRadius: RADIUS.pill },
+  ledgerBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: theme.primaryLight, paddingHorizontal: 13, paddingVertical: 8, borderRadius: RADIUS.pill },
   ledgerBtnText: { color: theme.primary, fontSize: 11, fontFamily: FONT.bold },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },

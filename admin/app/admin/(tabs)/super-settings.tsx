@@ -10,940 +10,1315 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
-import type { AppSettings, UpdateAppSettingsPayload } from '@/src/api/appSettings.api';
+import { useSystemIntegrations, useUpdateSystemIntegrations } from '@/src/hooks/useSystemIntegrations';
+import {
+  SystemIntegrationsConfig,
+  mergeSystemIntegrationsWithDefaults,
+  SupportedPaymentGateway,
+} from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
-import * as AppStorage from '@/src/lib/storage';
-import { useLocalSearchParams } from 'expo-router';
-import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
+import { FONT, RADIUS, SPACING } from '@/constants/theme';
 
-type SectionKey = 'ALL' | 'API' | 'THEME' | 'SPRAY_TANKS' | 'MAINTENANCE' | 'TRIAL' | 'REFERRALS' | 'FEES' | 'RELEASES';
+type ToolCategory =
+  | 'AI'
+  | 'PAYMENTS'
+  | 'SMS'
+  | 'WHATSAPP'
+  | 'SATELLITE'
+  | 'WEATHER'
+  | 'LOGISTICS'
+  | 'PUSH';
 
-interface SectionTab {
-  key: SectionKey;
+interface CategoryFilter {
+  key: ToolCategory;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  badge?: string;
 }
 
-const SECTION_TABS: SectionTab[] = [
-  { key: 'ALL', label: 'All Settings', icon: 'grid-outline' },
-  { key: 'THEME', label: 'Theme & Colors', icon: 'color-palette-outline', badge: 'Light / Dark' },
-  { key: 'SPRAY_TANKS', label: 'Spray Tanks', icon: 'beaker-outline', badge: 'Farm Specs' },
-  { key: 'MAINTENANCE', label: 'Maintenance Modes', icon: 'construct-outline', badge: '7 Modes' },
-  { key: 'TRIAL', label: 'Trial & Memberships', icon: 'gift-outline' },
-  { key: 'REFERRALS', label: 'Referral Schemes', icon: 'people-outline' },
-  { key: 'FEES', label: 'Gardener & Fees', icon: 'leaf-outline' },
-  { key: 'RELEASES', label: 'App Releases', icon: 'cloud-download-outline' },
+const CATEGORY_FILTERS: CategoryFilter[] = [
+  { key: 'AI', label: 'AI Intelligence & Crop Doctor', icon: 'sparkles-outline' },
+  { key: 'PAYMENTS', label: 'Payment Gateway & Checkout', icon: 'card-outline' },
+  { key: 'SMS', label: 'SMS & OTP Service', icon: 'chatbox-ellipses-outline' },
+  { key: 'WHATSAPP', label: 'WhatsApp Business Bot', icon: 'logo-whatsapp' },
+  { key: 'SATELLITE', label: 'Satellite Farm Radar', icon: 'planet-outline' },
+  { key: 'WEATHER', label: 'Weather & Spray Forecast', icon: 'partly-sunny-outline' },
+  { key: 'LOGISTICS', label: 'Courier & Logistics', icon: 'cube-outline' },
+  { key: 'PUSH', label: 'Push Notifications (FCM)', icon: 'notifications-outline' },
 ];
 
-const SPRAY_TANK_STORAGE_KEY = 'farmsking_spray_tank_sizes';
-const DEFAULT_SPRAY_TANKS = [15, 16, 20, 25, 50, 100, 200, 500];
-
 export default function SuperSettingsScreen() {
-  const params = useLocalSearchParams<{ section?: string; tab?: string }>();
-  const { colors, themeMode, setThemeMode, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
-  const { data: remoteSettings, isLoading, refetch } = useAppSettings();
-  const updateMutation = useUpdateAppSettings();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 768));
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
 
-  const [activeSection, setActiveSection] = useState<SectionKey>('API');
-  const [formData, setFormData] = useState<Partial<AppSettings> | null>(null);
+  const { data: remoteConfig, isLoading, refetch } = useSystemIntegrations();
+  const updateMutation = useUpdateSystemIntegrations();
+
+  const [localConfig, setLocalConfig] = useState<SystemIntegrationsConfig>(() =>
+    mergeSystemIntegrationsWithDefaults(remoteConfig)
+  );
+  const [activeFilter, setActiveFilter] = useState<ToolCategory>('AI');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Automatically select section if navigated with query params
   useEffect(() => {
-    const target = params.section || params.tab;
-    if (target === 'API' || target === 'THIRD_PARTY') {
-      setActiveSection('API');
-    } else if (target && SECTION_TABS.some((t) => t.key === target)) {
-      setActiveSection(target as SectionKey);
-    } else if (target === 'ALL') {
-      setActiveSection('ALL');
-    } else if (!target) {
-      setActiveSection('API');
+    if (remoteConfig) {
+      setLocalConfig(mergeSystemIntegrationsWithDefaults(remoteConfig));
     }
-  }, [params.section, params.tab]);
-
-  const [sprayTankSizes, setSprayTankSizes] = useState<number[]>(DEFAULT_SPRAY_TANKS);
-  const [newTankInput, setNewTankInput] = useState('');
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const saved = await AppStorage.getItemAsync(SPRAY_TANK_STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setSprayTankSizes(parsed);
-          }
-        }
-      } catch {}
-    })();
-  }, []);
-
-  const handleAddTankSize = async () => {
-    const val = parseInt(newTankInput.trim(), 10);
-    if (!val || val <= 0) {
-      showToast('⚠️ Please enter a valid tank capacity in liters');
-      return;
-    }
-    if (sprayTankSizes.includes(val)) {
-      showToast(`⚠️ ${val}L tank size already exists`);
-      return;
-    }
-    const updated = [...sprayTankSizes, val].sort((a, b) => a - b);
-    setSprayTankSizes(updated);
-    setNewTankInput('');
-    await AppStorage.setItemAsync(SPRAY_TANK_STORAGE_KEY, JSON.stringify(updated));
-    showToast(`✅ Added ${val} Liters spray tank option`);
-  };
-
-  const handleRemoveTankSize = async (sizeToRemove: number) => {
-    if (sprayTankSizes.length <= 1) {
-      showToast('⚠️ At least one tank size must remain configured');
-      return;
-    }
-    const updated = sprayTankSizes.filter((s) => s !== sizeToRemove);
-    setSprayTankSizes(updated);
-    await AppStorage.setItemAsync(SPRAY_TANK_STORAGE_KEY, JSON.stringify(updated));
-    showToast(`🗑️ Removed ${sizeToRemove}L tank option`);
-  };
-
-  useEffect(() => {
-    if (remoteSettings) {
-      setFormData({ ...remoteSettings });
-    }
-  }, [remoteSettings]);
+  }, [remoteConfig]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleToggle = async (key: keyof UpdateAppSettingsPayload, val: boolean) => {
-    if (!formData) return;
-    setFormData((prev) => ({ ...(prev || {}), [key]: val }));
+  const toggleShowSecret = (fieldKey: string) => {
+    setShowSecrets((prev) => ({ ...prev, [fieldKey]: !prev[fieldKey] }));
+  };
+
+  const handleToggleTool = async (category: keyof SystemIntegrationsConfig, toolName: string) => {
+    const currentVal = (localConfig[category] as any)?.isEnabled ?? true;
+    const newVal = !currentVal;
+
+    const updated = {
+      ...localConfig,
+      [category]: {
+        ...(localConfig[category] as any),
+        isEnabled: newVal,
+      },
+    };
+    setLocalConfig(updated);
+
     try {
-      await updateMutation.mutateAsync({ [key]: val });
-      showToast(`⚡ ${String(key)} updated to ${val ? 'ON' : 'OFF'}`);
+      await updateMutation.mutateAsync({
+        [category]: {
+          ...(localConfig[category] as any),
+          isEnabled: newVal,
+        },
+      });
+      showToast(`⚡ ${toolName} is now ${newVal ? 'ACTIVE' : 'INACTIVE'}`);
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to update toggle');
+      Alert.alert('Error', err?.message || 'Failed to update tool state');
       refetch();
     }
   };
 
-  const handleFieldChange = (key: keyof UpdateAppSettingsPayload, val: any) => {
-    if (!formData) return;
-    setFormData((prev) => ({ ...(prev || {}), [key]: val }));
+  const handleUpdateField = (category: keyof SystemIntegrationsConfig, providerKey: string, field: string, value: string) => {
+    setLocalConfig((prev) => {
+      const cat = (prev[category] as any) || {};
+      const providers = cat.providers || {};
+      const target = providers[providerKey] || {};
+      return {
+        ...prev,
+        [category]: {
+          ...cat,
+          providers: {
+            ...providers,
+            [providerKey]: {
+              ...target,
+              [field]: value,
+            },
+          },
+        },
+      };
+    });
   };
 
-  const handleSaveAll = async () => {
-    if (!formData) return;
+  const handleSetProvider = (category: keyof SystemIntegrationsConfig, providerKey: string) => {
+    setLocalConfig((prev) => {
+      const cat = (prev[category] as any) || {};
+      return {
+        ...prev,
+        [category]: {
+          ...cat,
+          activeProvider: providerKey,
+        },
+      };
+    });
+  };
+
+  const handleSetGateway = (gateway: SupportedPaymentGateway) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      gateway: {
+        ...prev.gateway,
+        activeGateway: gateway,
+      },
+    }));
+  };
+
+  const handleToggleSandbox = async (isSandbox: boolean) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      gateway: {
+        ...prev.gateway,
+        isSandbox,
+      },
+    }));
     try {
-      await updateMutation.mutateAsync(formData as UpdateAppSettingsPayload);
-      showToast('✅ All infrastructure settings saved successfully!');
+      await updateMutation.mutateAsync({
+        gateway: {
+          ...localConfig.gateway,
+          isSandbox,
+        },
+      });
+      showToast(`⚡ Payment mode switched to ${isSandbox ? 'SANDBOX TEST' : 'LIVE PRODUCTION'}`);
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to save settings');
+      Alert.alert('Error', err?.message || 'Failed to switch payment mode');
     }
   };
 
-  if (isLoading || !formData) {
+  const handleSaveTool = async (category: keyof SystemIntegrationsConfig, toolName: string) => {
+    try {
+      await updateMutation.mutateAsync({
+        [category]: localConfig[category],
+      });
+      showToast(`✅ ${toolName} settings saved successfully!`);
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || `Failed to save ${toolName} settings`);
+    }
+  };
+
+  if (isLoading || !localConfig) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
         <ActivityIndicator size="large" color={isLight ? '#16a34a' : '#00ff87'} />
-        <Text style={[styles.loadingText, { color: subTextColor }]}>Loading Infrastructure Settings...</Text>
+        <Text style={[styles.loadingText, { color: subTextColor }]}>Loading API Tools & Services...</Text>
       </View>
     );
   }
 
-  if (activeSection === 'API') {
-    return (
-      <View style={[styles.root, { backgroundColor: colors.bg }]}>
-        <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
-          <ThirdPartyServicesSection />
-        </ScrollView>
-      </View>
-    );
-  }
+  const selectedCategory = CATEGORY_FILTERS.find((c) => c.key === activeFilter) || CATEGORY_FILTERS[0];
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
-      {/* ── Header ────────────────────────────────────────────── */}
+      {/* ── Top Header ─────────────────────────────────────────── */}
       <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderBottomColor: cardBorder }]}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.crownBadge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(0, 255, 135, 0.25)' }]}>
-            <Ionicons name="hardware-chip-outline" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.crownText, { color: isLight ? '#16a34a' : '#00ff87' }]}>SYSTEM CONTROLS & THEME</Text>
+        <View style={styles.headerInfo}>
+          <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
+            <Ionicons name="hardware-chip-outline" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>TOOL & API ACTIVATOR</Text>
           </View>
-          <Text style={[styles.headerTitle, { color: textColor }]}>System Settings & Infrastructure Controls</Text>
+          <Text style={[styles.headerTitle, { color: textColor }]}>Platform Tools & Services</Text>
           <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-            Global theme identity, platform maintenance circuit-breakers, free trial policies, voice call, auto-sync, and release parameters.
+            Select a tool from the dropdown to configure credentials and toggle activation.
           </Text>
-        </View>
-
-        <View style={styles.headerRight}>
-          {/* Quick 2-Button Global Theme Controller */}
-          <View style={[styles.quickThemeSwitch, { backgroundColor: isLight ? '#f1f5f9' : '#020d06', borderColor: cardBorder }]}>
-            <TouchableOpacity
-              style={[styles.quickThemeBtn, themeMode === 'LIGHT' && styles.quickThemeBtnActiveLight]}
-              onPress={() => {
-                setThemeMode('LIGHT');
-                showToast('☀️ Switched to Crisp Light Theme across entire Admin system');
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="sunny" size={14} color={themeMode === 'LIGHT' ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')} />
-              <Text style={[styles.quickThemeBtnText, themeMode === 'LIGHT' && { color: '#ffffff', fontWeight: '800' }]}>Light</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.quickThemeBtn, themeMode === 'DARK' && styles.quickThemeBtnActiveDark]}
-              onPress={() => {
-                setThemeMode('DARK');
-                showToast('🌿 Switched to Parrot & Gold Dark Theme across entire Admin system');
-              }}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="leaf" size={14} color={themeMode === 'DARK' ? '#020d06' : (isLight ? '#64748b' : '#94a3b8')} />
-              <Text style={[styles.quickThemeBtnText, themeMode === 'DARK' && { color: '#020d06', fontWeight: '800' }]}>Dark</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.saveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-            onPress={handleSaveAll}
-            disabled={updateMutation.isPending}
-          >
-            <LinearGradient
-              colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.saveGradient}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-done" size={17} color={isLight ? '#ffffff' : '#020d06'} />
-                  <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>Save All Changes</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── Toast Alert ───────────────────────────────────────── */}
+      {/* ── Toast Alert ─────────────────────────────────────────── */}
       {toastMessage && (
-        <View style={[styles.toast, isLight && styles.toastLight]}>
+        <View style={[styles.toast, { backgroundColor: isLight ? '#f0fdf4' : '#062814', borderColor: isLight ? '#bbf7d0' : '#00ff87' }]}>
           <Ionicons name="sparkles" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-          <Text style={[styles.toastText, isLight && { color: '#0f172a' }]}>{toastMessage}</Text>
+          <Text style={[styles.toastText, { color: textColor }]}>{toastMessage}</Text>
         </View>
       )}
 
-      {/* ── Section Pills Tab Bar ──────────────────────────────── */}
-      <View style={[styles.tabsWrapper, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
-          {SECTION_TABS.map((tab) => {
-            const isSelected = activeSection === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.tabChip,
-                  { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder },
-                  isSelected && (isLight ? styles.tabChipSelectedLight : styles.tabChipSelectedDark),
-                ]}
-                onPress={() => setActiveSection(tab.key)}
-              >
-                <Ionicons
-                  name={tab.icon}
-                  size={16}
-                  color={isSelected ? (isLight ? '#ffffff' : '#020d06') : (isLight ? '#64748b' : '#94a3b8')}
-                />
-                <Text
-                  style={[
-                    styles.tabChipText,
-                    { color: isLight ? '#64748b' : '#94a3b8' },
-                    isSelected && { color: isLight ? '#ffffff' : '#020d06', fontWeight: '800' },
-                  ]}
-                >
-                  {tab.label}
+      {/* ── Category Dropdown Selector (Without "All Tools" Option) ── */}
+      <View style={[styles.filterBar, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder, zIndex: 100 }]}>
+        <View style={styles.dropdownContainer}>
+          <Text style={[styles.filterLabel, { color: subTextColor }]}>Select Tool:</Text>
+          <View style={styles.dropdownRelativeBox}>
+            <TouchableOpacity
+              style={[styles.dropdownTrigger, { backgroundColor: isLight ? '#ffffff' : '#04170c', borderColor: cardBorder }]}
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dropdownLeft}>
+                <Ionicons name={selectedCategory.icon} size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                <Text style={[styles.dropdownSelectedText, { color: textColor }]}>
+                  {selectedCategory.label}
                 </Text>
-                {tab.badge && (
-                  <View
-                    style={[
-                      styles.tabBadge,
-                      { backgroundColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.08)' },
-                      isSelected && { backgroundColor: isLight ? 'rgba(255,255,255,0.25)' : 'rgba(2, 13, 6, 0.2)' },
-                    ]}
-                  >
-                    <Text
+              </View>
+              <Ionicons
+                name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={subTextColor}
+              />
+            </TouchableOpacity>
+
+            {isDropdownOpen && (
+              <View style={[styles.dropdownMenu, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                {CATEGORY_FILTERS.map((cat) => {
+                  const isSelected = activeFilter === cat.key;
+                  return (
+                    <TouchableOpacity
+                      key={cat.key}
                       style={[
-                        styles.tabBadgeText,
-                        { color: isLight ? '#475569' : '#94a3b8' },
-                        isSelected && { color: isLight ? '#ffffff' : '#020d06' },
+                        styles.dropdownItem,
+                        isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
                       ]}
+                      onPress={() => {
+                        setActiveFilter(cat.key);
+                        setIsDropdownOpen(false);
+                      }}
+                      activeOpacity={0.7}
                     >
-                      {tab.badge}
-                    </Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* ── Main Content ──────────────────────────────────────── */}
-      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
-
-        {/* 0. SYSTEM THEME & VISUAL IDENTITY (LIGHT / DARK 2-BUTTON SYSTEM) */}
-        {(activeSection === 'ALL' || activeSection === 'THEME') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
-                <Ionicons name="color-palette" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Admin System Theme & Visual Identity</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Central platform-wide theme controller. Switch the entire FarmsKing Admin cockpit between Crisp Light and Parrot & Gold Dark mode.
-                </Text>
-              </View>
-              <View style={{ backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.18)', borderWidth: 1, borderColor: isLight ? '#16a34a' : '#fbbf24', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
-                <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#16a34a' : '#fbbf24' }}>
-                  {isLight ? 'Active: ☀️ Crisp Light' : 'Active: 🌿 Parrot & Gold Dark'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
-              {/* ☀️ Light Theme Button */}
-              <TouchableOpacity
-                style={[
-                  styles.themeSelectCard,
-                  { backgroundColor: isLight ? '#ffffff' : '#04180d', borderColor: isLight ? '#16a34a' : cardBorder },
-                  themeMode === 'LIGHT' && styles.themeSelectCardActiveLight,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  setThemeMode('LIGHT');
-                  showToast('☀️ Switched to Crisp Light Theme across entire Admin system');
-                }}
-              >
-                {themeMode === 'LIGHT' && (
-                  <View style={styles.themeActiveBadgeLight}>
-                    <Ionicons name="checkmark-circle" size={13} color="#ffffff" />
-                    <Text style={styles.themeActiveBadgeText}>ACTIVE DEFAULT</Text>
-                  </View>
-                )}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={[styles.themeIconCircle, { backgroundColor: 'rgba(22, 163, 74, 0.12)' }]}>
-                    <Ionicons name="sunny" size={24} color="#16a34a" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.themeCardTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>☀️ Light Mode</Text>
-                    <Text style={[styles.themeCardSubtitle, { color: isLight ? '#475569' : '#94a3b8' }]}>
-                      Crisp porcelain white with emerald accents, high daytime contrast.
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              {/* 🌿 Dark Theme Button */}
-              <TouchableOpacity
-                style={[
-                  styles.themeSelectCard,
-                  { backgroundColor: isLight ? '#f8fafc' : 'rgba(6, 26, 30, 0.82)', borderColor: !isLight ? '#00ff87' : cardBorder },
-                  themeMode === 'DARK' && styles.themeSelectCardActiveDark,
-                ]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  setThemeMode('DARK');
-                  showToast('🌿 Switched to Parrot & Gold Dark Theme across entire Admin system');
-                }}
-              >
-                {themeMode === 'DARK' && (
-                  <View style={styles.themeActiveBadgeDark}>
-                    <Ionicons name="checkmark-circle" size={13} color="#020d06" />
-                    <Text style={[styles.themeActiveBadgeText, { color: '#020d06' }]}>ACTIVE</Text>
-                  </View>
-                )}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={[styles.themeIconCircle, { backgroundColor: 'rgba(34, 197, 94, 0.18)' }]}>
-                    <Ionicons name="leaf" size={24} color="#22c55e" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.themeCardTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>🌿 Dark Mode (Parrot & Gold)</Text>
-                    <Text style={[styles.themeCardSubtitle, { color: isLight ? '#475569' : '#94a3b8' }]}>
-                      Deep cyber obsidian with vivid parrot green & shaded radiant gold.
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* 1. PLATFORM MAINTENANCE MODES */}
-        {(activeSection === 'ALL' || activeSection === 'MAINTENANCE') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
-                <Ionicons name="construct" size={20} color="#ef4444" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Platform Maintenance Modes (Circuit Breakers)</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Pause specific microservices or portals for scheduled updates while keeping the rest of FarmsKing operational.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.togglesGrid}>
-              <MaintenanceToggleRow
-                title="🛍️ Storefront & AgriStore"
-                subtitle="Pause shopping cart & order checkout during catalog updates"
-                value={Boolean(formData.storefrontMaintenanceMode)}
-                onToggle={(val) => handleToggle('storefrontMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="🌾 Agri & Farmer Hub"
-                subtitle="Pause farmer bookkeeping & crop intelligence module"
-                value={Boolean(formData.agriMaintenanceMode)}
-                onToggle={(val) => handleToggle('agriMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="🌸 Garden Care System"
-                subtitle="Pause garden advisory & plant nutrition consultations"
-                value={Boolean(formData.gardenMaintenanceMode)}
-                onToggle={(val) => handleToggle('gardenMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="💳 Wallet & Treasury Payouts"
-                subtitle="Pause withdrawal requests & payouts during ledger reconciliation"
-                value={Boolean(formData.walletMaintenanceMode)}
-                onToggle={(val) => handleToggle('walletMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="🩺 Crop Doctor Consultations"
-                subtitle="Pause crop doctor appointment booking & chat scheduling"
-                value={Boolean(formData.doctorMaintenanceMode)}
-                onToggle={(val) => handleToggle('doctorMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="🌿 Garden Advisor Hub"
-                subtitle="Pause garden specialist assignment & profile onboarding"
-                value={Boolean(formData.gardenAdvisorMaintenanceMode)}
-                onToggle={(val) => handleToggle('gardenAdvisorMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-              <MaintenanceToggleRow
-                title="📊 Financial Accounts & Balance Sheet"
-                subtitle="Temporarily restrict accounts exports & tax report generation"
-                value={Boolean(formData.accountsMaintenanceMode)}
-                onToggle={(val) => handleToggle('accountsMaintenanceMode', val)}
-                innerBg={innerBg}
-                cardBorder={cardBorder}
-                textColor={textColor}
-                subTextColor={subTextColor}
-                isLight={isLight}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* 2. FREE TRIAL & MEMBERSHIP SCHEMES */}
-        {(activeSection === 'ALL' || activeSection === 'TRIAL') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
-                <Ionicons name="gift" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Free Membership Demo Trial Scheme</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Configure automated free demo pass duration and tier granted to newly registered farmers.
-                </Text>
-              </View>
-            </View>
-
-            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.toggleTitle, { color: textColor }]}>Enable Free Membership Demo Trial</Text>
-                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Allow farmers to activate a complimentary demo without payment</Text>
-              </View>
-              <Switch
-                value={Boolean(formData.freeTrialEnabled)}
-                onValueChange={(val) => handleToggle('freeTrialEnabled', val)}
-                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
-                thumbColor="#ffffff"
-              />
-            </View>
-
-            <View style={styles.twoColRow}>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Demo Trial Duration (Days)</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={String(formData.freeTrialDays ?? 10)}
-                  onChangeText={(val) => handleFieldChange('freeTrialDays', parseInt(val, 10) || 0)}
-                  keyboardType="numeric"
-                  placeholder="e.g. 10"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Complimentary Plan Tier</Text>
-                <View style={styles.planSelectorRow}>
-                  {(['PRO', 'SMART', 'SUPER'] as const).map((tier) => {
-                    const isSelected = (formData.freeTrialPlan || 'SUPER') === tier;
-                    return (
-                      <TouchableOpacity
-                        key={tier}
-                        style={[
-                          styles.planChip,
-                          { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder },
-                          isSelected && (isLight ? styles.planChipSelectedLight : styles.planChipSelectedDark),
-                        ]}
-                        onPress={() => handleFieldChange('freeTrialPlan', tier)}
-                      >
+                      <View style={styles.dropdownItemLeft}>
+                        <Ionicons
+                          name={cat.icon}
+                          size={16}
+                          color={isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
+                        />
                         <Text
                           style={[
-                            styles.planChipText,
-                            { color: subTextColor },
-                            isSelected && { color: isLight ? '#16a34a' : '#00ff87', fontWeight: '800' },
+                            styles.dropdownItemText,
+                            { color: isSelected ? (isLight ? '#16a34a' : '#00ff87') : textColor },
+                            isSelected && { fontWeight: '700' },
                           ]}
                         >
-                          {tier}
+                          {cat.label}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* ── Single Active Tool Card Workspace ──────────────────── */}
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+        <View style={[styles.cardsGrid, isDesktop && styles.cardsGridDesktop]}>
+          {/* 1. AI Vision & Crop Doctor */}
+          {activeFilter === 'AI' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                    <Ionicons name="sparkles" size={22} color="#10b981" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>AI Crop Doctor & Vision</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.ai?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.ai?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.ai?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Multimodal neural leaf pathology and smart agronomy chat.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.ai?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('ai', 'AI Crop Doctor')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Active AI Engine:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'GEMINI', label: 'Google Gemini' },
+                    { key: 'OPENAI', label: 'OpenAI GPT-4' },
+                    { key: 'CLAUDE', label: 'Anthropic Claude' },
+                  ].map((p) => {
+                    const isSelected = localConfig.ai?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelected,
+                        ]}
+                        onPress={() => handleSetProvider('ai', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#10b981' : textColor }]}>
+                          {p.label}
                         </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
               </View>
-            </View>
-          </View>
-        )}
 
-
-
-        {/* 4. REFERRAL & BUSINESS PARTNER SCHEMES */}
-        {(activeSection === 'ALL' || activeSection === 'REFERRALS') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                <Ionicons name="people" size={20} color="#f59e0b" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Referral & Business Partner Schemes</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Set cash bonus amounts for farmer referrals, welcome signup bonuses, and business partner commissions.
-                </Text>
-              </View>
-            </View>
-
-            {/* Farmer Referral Scheme */}
-            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-              <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleTitle, { color: textColor }]}>🌾 Farmer Referral Program Active</Text>
-                  <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Reward farmers when they invite neighbors to FarmsKing</Text>
-                </View>
-                <Switch
-                  value={Boolean(formData.referralOfferSchemeEnabled)}
-                  onValueChange={(val) => handleToggle('referralOfferSchemeEnabled', val)}
-                  trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
-                  thumbColor="#ffffff"
-                />
-              </View>
-
-              <View style={styles.twoColRow}>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Referrer Bonus on Signup (₹)</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={String(formData.referralOfferReferrerBonus ?? formData.referralSignupBonusAmount ?? 10)}
-                    onChangeText={(val) => {
-                      const num = parseFloat(val) || 0;
-                      handleFieldChange('referralOfferReferrerBonus', num);
-                      handleFieldChange('referralSignupBonusAmount', num);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="10"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>New Farmer Welcome Bonus (₹)</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={String(formData.referralOfferNewUserBonus ?? formData.newUserSignupBonusAmount ?? 10)}
-                    onChangeText={(val) => {
-                      const num = parseFloat(val) || 0;
-                      handleFieldChange('referralOfferNewUserBonus', num);
-                      handleFieldChange('newUserSignupBonusAmount', num);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="10"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.twoColRow}>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Bonus on First VIP Pass Purchase (₹)</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={String(formData.referralOfferPaidPlanBonus ?? formData.referralPaidPlanBonusAmount ?? 50)}
-                    onChangeText={(val) => {
-                      const num = parseFloat(val) || 0;
-                      handleFieldChange('referralOfferPaidPlanBonus', num);
-                      handleFieldChange('referralPaidPlanBonusAmount', num);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="50"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Referral Scheme Name</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={formData.referralOfferSchemeName || 'Kisan Bhaichara Offer'}
-                    onChangeText={(val) => handleFieldChange('referralOfferSchemeName', val)}
-                    placeholder="Kisan Bhaichara Offer"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* Business Partner Program */}
-            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder, marginTop: 14 }]}>
-              <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleTitle, { color: textColor }]}>💼 Business Partner Commission Active</Text>
-                  <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Distributor & franchise commission structure</Text>
-                </View>
-                <Switch
-                  value={Boolean(formData.partnerOfferSchemeEnabled)}
-                  onValueChange={(val) => handleToggle('partnerOfferSchemeEnabled', val)}
-                  trackColor={{ false: '#94a3b8', true: '#f59e0b' }}
-                  thumbColor="#ffffff"
-                />
-              </View>
-
-              <View style={styles.twoColRow}>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Partner Commission per Registration (₹)</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={String(formData.partnerOfferReferrerBonus ?? formData.partnerReferralCommissionAmount ?? 100)}
-                    onChangeText={(val) => {
-                      const num = parseFloat(val) || 0;
-                      handleFieldChange('partnerOfferReferrerBonus', num);
-                      handleFieldChange('partnerReferralCommissionAmount', num);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="100"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-                <View style={styles.colHalf}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Partner Commission on Paid Plan (₹)</Text>
-                  <TextInput
-                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                    value={String(formData.partnerOfferPaidPlanBonus ?? formData.partnerReferralPaidPlanBonusAmount ?? 100)}
-                    onChangeText={(val) => {
-                      const num = parseFloat(val) || 0;
-                      handleFieldChange('partnerOfferPaidPlanBonus', num);
-                      handleFieldChange('partnerReferralPaidPlanBonusAmount', num);
-                    }}
-                    keyboardType="numeric"
-                    placeholder="100"
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 5. GARDENER & CERTIFICATION FEES */}
-        {(activeSection === 'ALL' || activeSection === 'FEES') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(236, 72, 153, 0.15)' }]}>
-                <Ionicons name="leaf" size={20} color="#ec4899" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Gardener & Specialist Certification Pricing</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Set exam certification fees and card prices for home garden care & landscape management.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.twoColRow}>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Advisor Certification Fee (₹)</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={String(formData.advisorCertificationFee ?? 500)}
-                  onChangeText={(val) => handleFieldChange('advisorCertificationFee', parseFloat(val) || 0)}
-                  keyboardType="numeric"
-                  placeholder="500"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Garden Platform Commission (%)</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={String(formData.gardenExpertPlatformFeePercent ?? 20)}
-                  onChangeText={(val) => handleFieldChange('gardenExpertPlatformFeePercent', parseFloat(val) || 0)}
-                  keyboardType="numeric"
-                  placeholder="20"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-            </View>
-
-            <View style={styles.twoColRow}>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Gardener Pro Card Price (₹)</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={String(formData.gardenerProCardPrice ?? 299)}
-                  onChangeText={(val) => handleFieldChange('gardenerProCardPrice', parseFloat(val) || 0)}
-                  keyboardType="numeric"
-                  placeholder="299"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Gardener VIP Card Price (₹)</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={String(formData.gardenerVipCardPrice ?? 999)}
-                  onChangeText={(val) => handleFieldChange('gardenerVipCardPrice', parseFloat(val) || 0)}
-                  keyboardType="numeric"
-                  placeholder="999"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 6. APP RELEASES & APK DELIVERY */}
-        {(activeSection === 'ALL' || activeSection === 'RELEASES') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
-                <Ionicons name="cloud-download" size={20} color="#818cf8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>App Releases & Direct APK Distribution</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Provide the live APK direct download link and version number shown to mobile users.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.twoColRow}>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Latest App Version</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={formData.latestAppVersion || '2.0.6'}
-                  onChangeText={(val) => handleFieldChange('latestAppVersion', val)}
-                  placeholder="e.g. 2.0.6"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-              <View style={styles.colHalf}>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Direct APK Download URL</Text>
-                <TextInput
-                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
-                  value={formData.appDownloadUrl || ''}
-                  onChangeText={(val) => handleFieldChange('appDownloadUrl', val)}
-                  placeholder="https://farmsking.in/downloads/farmsking.apk"
-                  placeholderTextColor={subTextColor}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 7. FARM SPRAY TANK CAPACITY MASTER (ADD & REMOVE OPTIONS) */}
-        {(activeSection === 'ALL' || activeSection === 'SPRAY_TANKS') && (
-          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
-              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
-                <Ionicons name="beaker" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.sectionTitle, { color: textColor }]}>Farm Spray Tank Capacity Master</Text>
-                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
-                  Configure standard spray tank sizes (in Liters) available to farmers for accurate medicine & fertilizer dose calculations.
-                </Text>
-              </View>
-            </View>
-
-            {/* Configured Tank Sizes List */}
-            <View style={{ gap: 8 }}>
-              <Text style={[styles.inputLabel, { color: textColor }]}>Active Spray Tank Capacities</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {sprayTankSizes.map((size) => (
-                  <View
-                    key={size}
-                    style={[
-                      styles.tankSizeChip,
-                      { backgroundColor: innerBg, borderColor: cardBorder },
-                    ]}
-                  >
-                    <Ionicons name="water-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
-                    <Text style={[styles.tankSizeChipText, { color: textColor }]}>{size} Liters</Text>
-                    <TouchableOpacity
-                      onPress={() => handleRemoveTankSize(size)}
-                      style={styles.tankRemoveBtn}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Ionicons name="close-circle" size={16} color="#ef4444" />
+              {/* Key Inputs */}
+              {localConfig.ai?.activeProvider === 'GEMINI' && (
+                <View style={styles.fieldsContainer}>
+                  <Text style={[styles.inputLabel, { color: subTextColor }]}>Gemini API Key</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="Enter Google AI Studio API Key..."
+                      placeholderTextColor={subTextColor}
+                      secureTextEntry={!showSecrets['gemini_key']}
+                      value={localConfig.ai?.providers?.gemini?.apiKey || ''}
+                      onChangeText={(val) => handleUpdateField('ai', 'gemini', 'apiKey', val)}
+                    />
+                    <TouchableOpacity onPress={() => toggleShowSecret('gemini_key')}>
+                      <Ionicons
+                        name={showSecrets['gemini_key'] ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color={subTextColor}
+                      />
                     </TouchableOpacity>
                   </View>
-                ))}
-              </View>
-            </View>
+                  <Text style={[styles.fieldHint, { color: subTextColor }]}>
+                    Model: {localConfig.ai?.providers?.gemini?.model || 'gemini-1.5-flash'}
+                  </Text>
+                </View>
+              )}
 
-            {/* Add New Tank Size Form */}
-            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder, marginTop: 6 }]}>
-              <Text style={[styles.inputLabel, { color: textColor }]}>Add New Spray Tank Capacity (Liters)</Text>
-              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <TextInput
-                  style={[
-                    styles.inputField,
-                    { flex: 1, minWidth: 160, backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor },
-                  ]}
-                  placeholder="Enter capacity in liters (e.g. 30, 40, 150)"
-                  placeholderTextColor={subTextColor}
-                  keyboardType="numeric"
-                  value={newTankInput}
-                  onChangeText={setNewTankInput}
-                />
+              {localConfig.ai?.activeProvider === 'OPENAI' && (
+                <View style={styles.fieldsContainer}>
+                  <Text style={[styles.inputLabel, { color: subTextColor }]}>OpenAI API Secret Key</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="sk-..."
+                      placeholderTextColor={subTextColor}
+                      secureTextEntry={!showSecrets['openai_key']}
+                      value={localConfig.ai?.providers?.openai?.apiKey || ''}
+                      onChangeText={(val) => handleUpdateField('ai', 'openai', 'apiKey', val)}
+                    />
+                    <TouchableOpacity onPress={() => toggleShowSecret('openai_key')}>
+                      <Ionicons
+                        name={showSecrets['openai_key'] ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color={subTextColor}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {localConfig.ai?.activeProvider === 'CLAUDE' && (
+                <View style={styles.fieldsContainer}>
+                  <Text style={[styles.inputLabel, { color: subTextColor }]}>Anthropic Claude API Key</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      placeholder="sk-ant-..."
+                      placeholderTextColor={subTextColor}
+                      secureTextEntry={!showSecrets['claude_key']}
+                      value={localConfig.ai?.providers?.claude?.apiKey || ''}
+                      onChangeText={(val) => handleUpdateField('ai', 'claude', 'apiKey', val)}
+                    />
+                    <TouchableOpacity onPress={() => toggleShowSecret('claude_key')}>
+                      <Ionicons
+                        name={showSecrets['claude_key'] ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color={subTextColor}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
                 <TouchableOpacity
-                  style={[styles.addTankBtn, { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]}
-                  onPress={handleAddTankSize}
-                  activeOpacity={0.8}
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('ai', 'AI Vision & Crop Doctor')}
+                  disabled={updateMutation.isPending}
                 >
-                  <Ionicons name="add" size={18} color={isLight ? '#ffffff' : '#020d06'} />
-                  <Text style={[styles.addTankBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>Add Tank Option</Text>
+                  <LinearGradient
+                    colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
+                    <Text style={[styles.toolSaveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                      Save AI Settings
+                    </Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-        )}
+          )}
 
-        <View style={{ height: 60 }} />
+          {/* 2. Payment Gateway */}
+          {activeFilter === 'PAYMENTS' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
+                    <Ionicons name="card" size={22} color="#0284c7" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Payment Gateway</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.gateway?.isSandbox ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.gateway?.isSandbox ? '#f59e0b' : '#10b981' }]}>
+                          {localConfig.gateway?.isSandbox ? 'SANDBOX TEST' : 'LIVE PRODUCTION'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Customer checkout, UPI direct QR, and automated settlements.
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.sandboxToggleRow}>
+                  <Text style={[styles.modeLabel, { color: subTextColor }]}>Sandbox</Text>
+                  <Switch
+                    value={localConfig.gateway?.isSandbox ?? true}
+                    onValueChange={handleToggleSandbox}
+                    trackColor={{ false: '#10b981', true: '#f59e0b' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+              </View>
+
+              {/* Gateway Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Active Gateway:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'RAZORPAY', label: 'Razorpay' },
+                    { key: 'CASHFREE', label: 'Cashfree' },
+                    { key: 'PHONEPE', label: 'PhonePe' },
+                    { key: 'UPI_DIRECT', label: 'Direct UPI (0% Fee)' },
+                  ].map((g) => {
+                    const isSelected = localConfig.gateway?.activeGateway === g.key;
+                    return (
+                      <TouchableOpacity
+                        key={g.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelectedBlue,
+                        ]}
+                        onPress={() => handleSetGateway(g.key as SupportedPaymentGateway)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#0284c7' : textColor }]}>
+                          {g.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Gateway Inputs */}
+              {localConfig.gateway?.activeGateway === 'RAZORPAY' && (
+                <View style={styles.fieldsContainer}>
+                  <View style={styles.twoCol}>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Razorpay Key ID</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="rzp_live_..."
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.gateway?.providers?.razorpay?.keyId || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'razorpay', 'keyId', val)}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Razorpay Key Secret</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Key Secret..."
+                          placeholderTextColor={subTextColor}
+                          secureTextEntry={!showSecrets['rzp_sec']}
+                          value={localConfig.gateway?.providers?.razorpay?.keySecret || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'razorpay', 'keySecret', val)}
+                        />
+                        <TouchableOpacity onPress={() => toggleShowSecret('rzp_sec')}>
+                          <Ionicons
+                            name={showSecrets['rzp_sec'] ? 'eye-off-outline' : 'eye-outline'}
+                            size={18}
+                            color={subTextColor}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {localConfig.gateway?.activeGateway === 'CASHFREE' && (
+                <View style={styles.fieldsContainer}>
+                  <View style={styles.twoCol}>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Cashfree App ID</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="App ID..."
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.gateway?.providers?.cashfree?.appId || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'cashfree', 'appId', val)}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Secret Key</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Secret Key..."
+                          placeholderTextColor={subTextColor}
+                          secureTextEntry={!showSecrets['cf_sec']}
+                          value={localConfig.gateway?.providers?.cashfree?.secretKey || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'cashfree', 'secretKey', val)}
+                        />
+                        <TouchableOpacity onPress={() => toggleShowSecret('cf_sec')}>
+                          <Ionicons
+                            name={showSecrets['cf_sec'] ? 'eye-off-outline' : 'eye-outline'}
+                            size={18}
+                            color={subTextColor}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {localConfig.gateway?.activeGateway === 'PHONEPE' && (
+                <View style={styles.fieldsContainer}>
+                  <View style={styles.twoCol}>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Merchant ID</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="M22KMYD10AWD8..."
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.gateway?.providers?.phonepe?.merchantId || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'phonepe', 'merchantId', val)}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Salt Key</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Salt key..."
+                          placeholderTextColor={subTextColor}
+                          secureTextEntry={!showSecrets['pp_salt']}
+                          value={localConfig.gateway?.providers?.phonepe?.saltKey || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'phonepe', 'saltKey', val)}
+                        />
+                        <TouchableOpacity onPress={() => toggleShowSecret('pp_salt')}>
+                          <Ionicons
+                            name={showSecrets['pp_salt'] ? 'eye-off-outline' : 'eye-outline'}
+                            size={18}
+                            color={subTextColor}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {localConfig.gateway?.activeGateway === 'UPI_DIRECT' && (
+                <View style={styles.fieldsContainer}>
+                  <View style={styles.twoCol}>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>UPI ID (VPA)</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="username@okaxis..."
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.gateway?.providers?.upiDirect?.upiId || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'upiDirect', 'upiId', val)}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Payee Business Name</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="FarmsKing Technologies Pvt Ltd"
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.gateway?.providers?.upiDirect?.payeeName || ''}
+                          onChangeText={(val) => handleUpdateField('gateway', 'upiDirect', 'payeeName', val)}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('gateway', 'Payment Gateway')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#0284c7', '#0369a1']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save Payment Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 3. SMS & OTP */}
+          {activeFilter === 'SMS' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(99, 102, 241, 0.12)' }]}>
+                    <Ionicons name="chatbox-ellipses" size={22} color="#6366f1" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>SMS & Phone OTP</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.sms?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.sms?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.sms?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Login verification codes and transaction SMS alerts.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.sms?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('sms', 'SMS Gateway')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Active SMS Gateway:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'FIREBASE', label: 'Firebase Phone' },
+                    { key: 'FAST2SMS', label: 'Fast2SMS' },
+                    { key: 'MSG91', label: 'MSG91' },
+                    { key: 'TWILIO', label: 'Twilio' },
+                  ].map((p) => {
+                    const isSelected = localConfig.sms?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelectedIndigo,
+                        ]}
+                        onPress={() => handleSetProvider('sms', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#6366f1' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Fields */}
+              {localConfig.sms?.activeProvider === 'FAST2SMS' && (
+                <View style={styles.fieldsContainer}>
+                  <View style={styles.twoCol}>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Fast2SMS API Key</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="Fast2SMS Key..."
+                          placeholderTextColor={subTextColor}
+                          secureTextEntry={!showSecrets['fast2sms_key']}
+                          value={localConfig.sms?.providers?.fast2sms?.apiKey || ''}
+                          onChangeText={(val) => handleUpdateField('sms', 'fast2sms', 'apiKey', val)}
+                        />
+                        <TouchableOpacity onPress={() => toggleShowSecret('fast2sms_key')}>
+                          <Ionicons
+                            name={showSecrets['fast2sms_key'] ? 'eye-off-outline' : 'eye-outline'}
+                            size={18}
+                            color={subTextColor}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.col}>
+                      <Text style={[styles.inputLabel, { color: subTextColor }]}>Sender ID</Text>
+                      <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <TextInput
+                          style={[styles.input, { color: textColor }]}
+                          placeholder="FRMKNG"
+                          placeholderTextColor={subTextColor}
+                          value={localConfig.sms?.providers?.fast2sms?.senderId || 'FRMKNG'}
+                          onChangeText={(val) => handleUpdateField('sms', 'fast2sms', 'senderId', val)}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {localConfig.sms?.activeProvider === 'FIREBASE' && (
+                <View style={styles.fieldsContainer}>
+                  <Text style={[styles.fieldHint, { color: subTextColor }]}>
+                    Firebase Phone Auth is active and integrated with Google Play Services.
+                  </Text>
+                </View>
+              )}
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('sms', 'SMS & OTP Service')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#6366f1', '#4f46e5']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save SMS Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 4. WhatsApp Business */}
+          {activeFilter === 'WHATSAPP' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(37, 211, 102, 0.12)' }]}>
+                    <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>WhatsApp Business Bot</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.whatsapp?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.whatsapp?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.whatsapp?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Automated order receipts, PDF reports, and village broadcasts.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.whatsapp?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('whatsapp', 'WhatsApp Bot')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Provider:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'META_CLOUD', label: 'Meta Cloud API' },
+                    { key: 'GUPSHUP', label: 'Gupshup' },
+                    { key: 'WATI', label: 'WATI' },
+                  ].map((p) => {
+                    const isSelected = localConfig.whatsapp?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelectedGreen,
+                        ]}
+                        onPress={() => handleSetProvider('whatsapp', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#25D366' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Fields */}
+              <View style={styles.fieldsContainer}>
+                <View style={styles.twoCol}>
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Phone Number ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="109823471..."
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.whatsapp?.providers?.metaCloud?.phoneNumberId || ''}
+                        onChangeText={(val) => handleUpdateField('whatsapp', 'metaCloud', 'phoneNumberId', val)}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Access Token</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="EAAB..."
+                        placeholderTextColor={subTextColor}
+                        secureTextEntry={!showSecrets['wa_token']}
+                        value={localConfig.whatsapp?.providers?.metaCloud?.accessToken || ''}
+                        onChangeText={(val) => handleUpdateField('whatsapp', 'metaCloud', 'accessToken', val)}
+                      />
+                      <TouchableOpacity onPress={() => toggleShowSecret('wa_token')}>
+                        <Ionicons
+                          name={showSecrets['wa_token'] ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('whatsapp', 'WhatsApp Business Bot')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#16a34a', '#15803d']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save WhatsApp Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 5. Satellite & Farm Radar */}
+          {activeFilter === 'SATELLITE' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                    <Ionicons name="planet" size={22} color="#10b981" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Satellite Farm Radar</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.satellite?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.satellite?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.satellite?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Sentinel-2 & ISRO NDVI crop vigor, moisture, and soil health maps.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.satellite?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('satellite', 'Satellite Radar')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Satellite Provider:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'AGROMONITORING', label: 'Agromonitoring' },
+                    { key: 'SENTINEL_HUB', label: 'Sentinel Hub' },
+                    { key: 'ISRO_BHUVAN', label: 'ISRO Bhuvan' },
+                  ].map((p) => {
+                    const isSelected = localConfig.satellite?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelected,
+                        ]}
+                        onPress={() => handleSetProvider('satellite', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#10b981' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.fieldsContainer}>
+                <Text style={[styles.inputLabel, { color: subTextColor }]}>Agromonitoring / Satellite API Key</Text>
+                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                  <TextInput
+                    style={[styles.input, { color: textColor }]}
+                    placeholder="API Key..."
+                    placeholderTextColor={subTextColor}
+                    secureTextEntry={!showSecrets['sat_key']}
+                    value={localConfig.satellite?.providers?.agromonitoring?.apiKey || ''}
+                    onChangeText={(val) => handleUpdateField('satellite', 'agromonitoring', 'apiKey', val)}
+                  />
+                  <TouchableOpacity onPress={() => toggleShowSecret('sat_key')}>
+                    <Ionicons
+                      name={showSecrets['sat_key'] ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color={subTextColor}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('satellite', 'Satellite Farm Radar')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
+                    <Text style={[styles.toolSaveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                      Save Satellite Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 6. Weather Telemetry */}
+          {activeFilter === 'WEATHER' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(5, 150, 105, 0.12)' }]}>
+                    <Ionicons name="partly-sunny" size={22} color="#059669" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Weather & Spray Forecast</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.weather?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.weather?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.weather?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Hyperlocal rainfall, wind speed spray advisories, and weather warnings.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.weather?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('weather', 'Weather Telemetry')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Weather Source:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'OPEN_METEO', label: 'Open-Meteo (Free No-Key)' },
+                    { key: 'OPEN_WEATHER_MAP', label: 'OpenWeather' },
+                    { key: 'IMD', label: 'IMD Agromet' },
+                  ].map((p) => {
+                    const isSelected = localConfig.weather?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelected,
+                        ]}
+                        onPress={() => handleSetProvider('weather', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#059669' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.fieldsContainer}>
+                {localConfig.weather?.activeProvider === 'OPEN_METEO' ? (
+                  <Text style={[styles.fieldHint, { color: subTextColor }]}>
+                    ✅ Open-Meteo is active with zero cost and no API key required (10,000 daily free calls).
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Weather API Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="API Key..."
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.weather?.providers?.openWeatherMap?.apiKey || ''}
+                        onChangeText={(val) => handleUpdateField('weather', 'openWeatherMap', 'apiKey', val)}
+                      />
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('weather', 'Weather Telemetry')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#059669', '#047857']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save Weather Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 7. Logistics & Couriers */}
+          {activeFilter === 'LOGISTICS' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(217, 119, 6, 0.12)' }]}>
+                    <Ionicons name="cube" size={22} color="#d97706" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Courier & Logistics</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.logistics?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.logistics?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.logistics?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Automated courier dispatch, AWB label generation, and live tracking.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.logistics?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('logistics', 'Logistics Courier')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.sectionRow}>
+                <Text style={[styles.fieldLabel, { color: subTextColor }]}>Courier Engine:</Text>
+                <View style={styles.optionsGroup}>
+                  {[
+                    { key: 'SHIPROCKET', label: 'Shiprocket (Recommended)' },
+                    { key: 'DELHIVERY', label: 'Delhivery' },
+                    { key: 'BORZO', label: 'Borzo Hyperlocal' },
+                  ].map((p) => {
+                    const isSelected = localConfig.logistics?.activeProvider === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.optionPill,
+                          { backgroundColor: innerBg, borderColor: cardBorder },
+                          isSelected && styles.optionPillSelectedAmber,
+                        ]}
+                        onPress={() => handleSetProvider('logistics', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#d97706' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.fieldsContainer}>
+                <Text style={[styles.inputLabel, { color: subTextColor }]}>Shiprocket / Courier Auth Token</Text>
+                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                  <TextInput
+                    style={[styles.input, { color: textColor }]}
+                    placeholder="Courier API Token..."
+                    placeholderTextColor={subTextColor}
+                    secureTextEntry={!showSecrets['ship_token']}
+                    value={localConfig.logistics?.providers?.shiprocket?.token || ''}
+                    onChangeText={(val) => handleUpdateField('logistics', 'shiprocket', 'token', val)}
+                  />
+                  <TouchableOpacity onPress={() => toggleShowSecret('ship_token')}>
+                    <Ionicons
+                      name={showSecrets['ship_token'] ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color={subTextColor}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('logistics', 'Logistics & Couriers')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#d97706', '#b45309']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save Logistics Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* 8. Push Notifications */}
+          {activeFilter === 'PUSH' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
+                    <Ionicons name="notifications" size={22} color="#ef4444" />
+                  </View>
+                  <View>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Push Notifications</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: localConfig.push?.isEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: localConfig.push?.isEnabled ? '#10b981' : subTextColor }]}>
+                          {localConfig.push?.isEnabled ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      Firebase Cloud Messaging for order alerts, mandi rates, and rain sirens.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.push?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('push', 'Push Notifications')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              <View style={styles.fieldsContainer}>
+                <Text style={[styles.inputLabel, { color: subTextColor }]}>FCM Server Key / Web Push VAPID Key</Text>
+                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                  <TextInput
+                    style={[styles.input, { color: textColor }]}
+                    placeholder="Firebase Cloud Messaging Server Key..."
+                    placeholderTextColor={subTextColor}
+                    secureTextEntry={!showSecrets['push_key']}
+                    value={localConfig.push?.providers?.firebaseFcm?.serverKey || ''}
+                    onChangeText={(val) => handleUpdateField('push', 'firebaseFcm', 'serverKey', val)}
+                  />
+                  <TouchableOpacity onPress={() => toggleShowSecret('push_key')}>
+                    <Ionicons
+                      name={showSecrets['push_key'] ? 'eye-off-outline' : 'eye-outline'}
+                      size={18}
+                      color={subTextColor}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Dedicated Save Button */}
+              <View style={styles.cardFooter}>
+                <TouchableOpacity
+                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+                  onPress={() => handleSaveTool('push', 'Push Notifications')}
+                  disabled={updateMutation.isPending}
+                >
+                  <LinearGradient
+                    colors={['#ef4444', '#dc2626']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toolSaveGradient}
+                  >
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
+                      Save Push Settings
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REUSABLE SUB-COMPONENTS
-// ─────────────────────────────────────────────────────────────────────────────
-function MaintenanceToggleRow({
-  title,
-  subtitle,
-  value,
-  onToggle,
-  innerBg,
-  cardBorder,
-  textColor,
-  subTextColor,
-  isLight,
-}: {
-  title: string;
-  subtitle: string;
-  value: boolean;
-  onToggle: (val: boolean) => void;
-  innerBg: string;
-  cardBorder: string;
-  textColor: string;
-  subTextColor: string;
-  isLight: boolean;
-}) {
-  return (
-    <View
-      style={[
-        styles.maintenanceCard,
-        { backgroundColor: innerBg, borderColor: cardBorder },
-        value && styles.maintenanceCardActive,
-      ]}
-    >
-      <View style={{ flex: 1, paddingRight: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <Text style={[styles.maintenanceTitle, { color: textColor }]}>{title}</Text>
-          <View style={[styles.statusBadge, value ? styles.statusBadgeUnderMaintenance : (isLight ? styles.statusBadgeLiveLight : styles.statusBadgeLive)]}>
-            <View style={[styles.statusDot, value ? { backgroundColor: '#ef4444' } : { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]} />
-            <Text style={[styles.statusBadgeText, value ? { color: '#ef4444' } : { color: isLight ? '#16a34a' : '#00ff87' }]}>
-              {value ? 'UNDER MAINTENANCE' : 'OPERATIONAL'}
-            </Text>
-          </View>
-        </View>
-        <Text style={[styles.maintenanceSubtitle, { color: subTextColor }]}>{subtitle}</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: '#94a3b8', true: '#ef4444' }}
-        thumbColor="#ffffff"
-      />
-    </View>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STYLES
-// ─────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -952,416 +1327,330 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
   loadingText: {
-    marginTop: 14,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONT.medium,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
     flexWrap: 'wrap',
     gap: 12,
   },
-  headerLeft: {
+  headerInfo: {
     flex: 1,
-    minWidth: 220,
+    minWidth: 260,
   },
-  crownBadge: {
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     marginBottom: 6,
   },
-  crownText: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+  badgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.5,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: -0.3,
+    fontSize: 20,
+    fontFamily: FONT.bold,
+    marginBottom: 2,
   },
   headerSubtitle: {
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: 13,
+    fontFamily: FONT.regular,
   },
-  headerRight: {
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  toastText: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+  },
+  filterBar: {
+    borderBottomWidth: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  dropdownContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     flexWrap: 'wrap',
+    flex: 1,
   },
-  quickThemeSwitch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 3,
+  filterLabel: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+  },
+  dropdownRelativeBox: {
+    position: 'relative',
+    minWidth: 260,
+    flex: 1,
+    maxWidth: 380,
+    zIndex: 110,
+  },
+  dropdownTrigger: {
+    height: 42,
     borderRadius: 9,
     borderWidth: 1,
-    gap: 4,
-  },
-  quickThemeBtn: {
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  quickThemeBtnActiveLight: {
-    backgroundColor: '#16a34a',
-  },
-  quickThemeBtnActiveDark: {
-    backgroundColor: '#00ff87',
-  },
-  quickThemeBtnText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-  },
-  saveBtn: {
-    borderRadius: 9,
-    overflow: 'hidden',
-  },
-  saveBtnDisabled: {
-    opacity: 0.6,
-  },
-  saveGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  saveBtnText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  toast: {
-    position: 'absolute',
-    top: 90,
-    right: 24,
-    zIndex: 9999,
+  dropdownLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#052e16',
-    borderWidth: 1,
-    borderColor: '#00ff87',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    shadowColor: '#00ff87',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 8,
+    flex: 1,
   },
-  toastLight: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#16a34a',
-    shadowColor: '#16a34a',
-  },
-  toastText: {
-    color: '#f8fafc',
+  dropdownSelectedText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT.semiBold,
   },
-  tabsWrapper: {
-    borderBottomWidth: 1,
+  dropdownMenu: {
+    position: 'absolute',
+    top: 46,
+    left: 0,
+    right: 0,
+    minWidth: 260,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 5,
+    zIndex: 999,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
-  tabsContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  dropdownItem: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 40,
+    gap: 10,
   },
-  tabChip: {
+  dropdownItemActiveLight: {
+    backgroundColor: 'rgba(22, 163, 74, 0.08)',
+  },
+  dropdownItemActiveDark: {
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+  },
+  dropdownItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    flex: 1,
   },
-  tabChipSelectedLight: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
-  },
-  tabChipSelectedDark: {
-    backgroundColor: '#00ff87',
-    borderColor: '#00ff87',
-  },
-  tabChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  tabBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  tabBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '700',
+  dropdownItemText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
   },
   scrollArea: {
     flex: 1,
   },
   scrollContent: {
-    padding: 10,
-    gap: 10,
-    paddingBottom: Platform.OS === 'web' ? 16 : 24,
+    padding: 16,
+    paddingBottom: 40,
   },
-  sectionCard: {
-    borderRadius: 10,
+  cardsGrid: {
+    gap: 16,
+  },
+  cardsGridDesktop: {
+    display: 'flex',
+  },
+  toolCard: {
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 11,
-    gap: 9,
+    padding: 18,
+    gap: 14,
   },
-  sectionHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderBottomWidth: 1,
-    paddingBottom: 8,
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
   },
-  sectionIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+  cardHeaderLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionTitle: {
-    fontSize: 14.5,
-    fontWeight: '800',
-  },
-  sectionSubtitle: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  themeSelectCard: {
+    gap: 12,
     flex: 1,
-    minWidth: 260,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    padding: 14,
-    position: 'relative',
   },
-  themeSelectCardActiveLight: {
-    borderColor: '#16a34a',
-    shadowColor: '#16a34a',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  themeSelectCardActiveDark: {
-    borderColor: '#00ff87',
-    shadowColor: '#00ff87',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-  },
-  themeActiveBadgeLight: {
-    position: 'absolute',
-    top: -8,
-    right: 10,
-    backgroundColor: '#16a34a',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    zIndex: 5,
-  },
-  themeActiveBadgeDark: {
-    position: 'absolute',
-    top: -8,
-    right: 10,
-    backgroundColor: '#00ff87',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    zIndex: 5,
-  },
-  themeActiveBadgeText: {
-    color: '#ffffff',
-    fontSize: 8.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  themeIconCircle: {
+  iconBox: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  themeCardTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  themeCardSubtitle: {
-    fontSize: 11,
-    marginTop: 2,
-  },
-  togglesGrid: {
-    gap: 8,
-  },
-  maintenanceCard: {
+  titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 9,
-    borderWidth: 1,
-    padding: 10,
+    gap: 8,
+    flexWrap: 'wrap',
   },
-  maintenanceCardActive: {
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-    backgroundColor: 'rgba(239, 68, 68, 0.04)',
-  },
-  maintenanceTitle: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
-  maintenanceSubtitle: {
-    fontSize: 10.5,
-    marginTop: 2,
+  toolTitle: {
+    fontSize: 16,
+    fontFamily: FONT.bold,
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
-    borderRadius: 12,
+    borderRadius: 6,
   },
-  statusBadgeLive: {
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
-  },
-  statusBadgeLiveLight: {
-    backgroundColor: 'rgba(22, 163, 74, 0.12)',
-  },
-  statusBadgeUnderMaintenance: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '800',
+  statusText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
     letterSpacing: 0.5,
   },
-  toggleRowInline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 9,
-    borderWidth: 1,
-    padding: 10,
-  },
-  toggleTitle: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
-  toggleSubtitle: {
-    fontSize: 10.5,
+  toolDesc: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
     marginTop: 2,
   },
-  subCard: {
-    borderRadius: 9,
-    borderWidth: 1,
-    padding: 10,
-    gap: 10,
-  },
-  twoColRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  colHalf: {
-    flex: 1,
-    minWidth: 200,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  inputField: {
-    borderRadius: 8,
-    borderWidth: 1,
-    fontSize: 13,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  planSelectorRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  planChip: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  planChipSelectedLight: {
-    borderColor: '#16a34a',
-    backgroundColor: 'rgba(22, 163, 74, 0.12)',
-  },
-  planChipSelectedDark: {
-    borderColor: '#00ff87',
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-  },
-  planChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  tankSizeChip: {
+  sandboxToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  modeLabel: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+  },
+  sectionRow: {
+    gap: 8,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+  },
+  optionsGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  optionPill: {
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
   },
-  tankSizeChipText: {
-    fontSize: 12.5,
-    fontWeight: '700',
+  optionPillSelected: {
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
   },
-  tankRemoveBtn: {
-    marginLeft: 2,
+  optionPillSelectedBlue: {
+    borderColor: '#0284c7',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
   },
-  addTankBtn: {
+  optionPillSelectedIndigo: {
+    borderColor: '#6366f1',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  optionPillSelectedGreen: {
+    borderColor: '#25D366',
+    backgroundColor: 'rgba(37, 211, 102, 0.1)',
+  },
+  optionPillSelectedAmber: {
+    borderColor: '#d97706',
+    backgroundColor: 'rgba(217, 119, 6, 0.1)',
+  },
+  optionPillText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+  },
+  fieldsContainer: {
+    gap: 8,
+    marginTop: 4,
+  },
+  twoCol: {
+    flexDirection: 'row',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  col: {
+    flex: 1,
+    minWidth: 200,
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+  },
+  inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 9,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    height: 42,
   },
-  addTankBtnText: {
+  input: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    paddingVertical: 0,
+  },
+  fieldHint: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: FONT.regular,
+    marginTop: 2,
+  },
+  cardFooter: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(148, 163, 184, 0.15)',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  toolSaveBtn: {
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
+  toolSaveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  toolSaveBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
   },
 });

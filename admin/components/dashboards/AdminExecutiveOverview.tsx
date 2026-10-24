@@ -896,14 +896,14 @@ const styles = StyleSheet.create({
 
   /* Sections */
   sectionWrap: {
-    paddingHorizontal: 10,
-    marginTop: 10,
+    paddingHorizontal: 14,
+    marginTop: 18,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 10,
     paddingHorizontal: 2,
   },
   sectionTitle: {
@@ -933,16 +933,16 @@ const styles = StyleSheet.create({
   kpiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 12,
   },
   kpiCard: {
     flex: 1,
-    minWidth: 120,
+    minWidth: 140,
     backgroundColor: '#04150b',
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    padding: 9,
+    padding: 13,
   },
   kpiCardLight: {
     backgroundColor: '#ffffff',
@@ -987,19 +987,19 @@ const styles = StyleSheet.create({
 
   /* Alerts */
   alertsContainer: {
-    gap: 5,
+    gap: 10,
   },
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
     backgroundColor: '#03140a',
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    borderLeftWidth: 3,
-    paddingHorizontal: 10,
-    paddingVertical: 6.5,
+    borderLeftWidth: 3.5,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
   alertIconWrap: {
     width: 26,
@@ -1058,14 +1058,14 @@ const styles = StyleSheet.create({
 
   /* 4 Command Hubs Grid */
   hubsGrid: {
-    gap: 8,
+    gap: 12,
   },
   hubCard: {
     backgroundColor: '#04150b',
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    padding: 10,
+    padding: 14,
   },
   hubCardLight: {
     backgroundColor: '#ffffff',
@@ -1083,8 +1083,8 @@ const styles = StyleSheet.create({
   hubHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 7,
+    gap: 10,
+    marginBottom: 10,
   },
   hubIconCircle: {
     width: 30,
@@ -1117,18 +1117,18 @@ const styles = StyleSheet.create({
   hubChipsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
   },
   hubChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.15)',
     borderRadius: RADIUS.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
   },
   hubChipLight: {
     backgroundColor: '#f8fafc',
@@ -1174,17 +1174,17 @@ const styles = StyleSheet.create({
   telemetryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
+    gap: 10,
+    marginTop: 10,
   },
   telemetryCard: {
     flex: 1,
-    minWidth: 130,
+    minWidth: 140,
     backgroundColor: '#020b06',
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.12)',
-    padding: 8,
+    padding: 12,
   },
   telemetryCardLight: {
     backgroundColor: '#f8fafc',
@@ -1316,14 +1316,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 6,
+    gap: 10,
   },
   kpiCardMobile: {
     flex: undefined,
     width: '48.5%',
     minWidth: 0,
-    padding: 8,
-    borderRadius: RADIUS.md,
+    padding: 12,
+    borderRadius: RADIUS.lg,
   },
 
   /* 📱 Mobile Hubs Switcher & Grid */
@@ -1398,7 +1398,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
     borderLeftWidth: 3.5,
-    padding: 12,
+    padding: 15,
   },
   activeHubHeroCardLight: {
     backgroundColor: '#ffffff',
@@ -1445,7 +1445,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   mobileToolsGrid: {
-    gap: 6,
+    gap: 10,
   },
   mobileToolCard: {
     flexDirection: 'row',

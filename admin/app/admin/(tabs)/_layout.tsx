@@ -23,7 +23,7 @@ import { GlobalCommandSearchModal } from '@/components/GlobalCommandSearchModal'
 import { AdminLiveToastNotification } from '@/components/AdminLiveToastNotification';
 import { AdminHealthRadarModal } from '@/components/AdminHealthRadarModal';
 import { AdminImpersonationBanner, ImpersonationTarget } from '@/components/AdminImpersonationBanner';
-import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
+import { AppMenuDrawer } from '@/components/AppMenuDrawer';
 import { ADMIN_PILLARS, detectPillarFromRoute, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -234,7 +234,7 @@ export default function TabLayout() {
   const { itemCount: cartItemCount } = useCart();
 
   const getHomeTitle = (userRole: UserRole): string => {
-    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return 'Overview';
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return 'Dashboard';
     return t('tabHome', 'Home');
   };
 
@@ -365,403 +365,8 @@ export default function TabLayout() {
 
   return (
     <PortalGuard portalId="ADMIN_HQ">
-      <View style={[layoutStyles.rootContainer, { backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }]}>
-      {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
-      {isDesktop && (
-        <View
-          style={[
-            desktopStyles.sidebar,
-            {
-              backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#020b06',
-              borderRightColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.18)',
-              shadowColor: colors.shadowColor,
-            },
-          ]}
-        >
-          {/* Brand Logo & Platform Title */}
-          <View style={desktopStyles.brandLogoBox}>
-            <View
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: colors.shadowColor,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-              }}
-            >
-              <BrandLogo size={22} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={[desktopStyles.brandTitle, isLight && { color: '#0f172a' }]}>
-                FarmsKing{' '}
-                <Text
-                  style={[
-                    desktopStyles.brandBadgeText,
-                    isLight && {
-                      color: '#16a34a',
-                      backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                      borderColor: 'rgba(234, 179, 8, 0.4)',
-                    },
-                    isDarkTheme && {
-                      color: '#38bdf8',
-                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                      borderColor: 'rgba(56, 189, 248, 0.4)',
-                    },
-                  ]}
-                >
-                  4D
-                </Text>
-              </Text>
-              <Text
-                style={[
-                  desktopStyles.brandSubtitle,
-                  isLight && { color: '#d97706' },
-                  isDarkTheme && { color: '#94a3b8' },
-                ]}
-              >
-                Executive Hub
-              </Text>
-            </View>
-          </View>
-
-          {/* Section Heading */}
-          <Text
-            style={[
-              desktopStyles.sidebarSectionTitle,
-              isLight && { color: '#16a34a' },
-              isDarkTheme && { color: '#38bdf8' },
-            ]}
-          >
-            COMMAND HUBS
-          </Text>
-
-          {/* Navigation Pillars List (Effective Prominent Buttons) */}
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavCol}>
-            {(() => {
-              if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
-                return (
-                  <>
-                    {ADMIN_PILLARS.map((pillar) => {
-                  const isActive = selectedPillarId === pillar.id;
-                  return (
-                    <Pressable
-                      key={pillar.id}
-                      onPress={() => handleSelectPillar(pillar)}
-                      style={({ hovered, pressed }: any) => [
-                        desktopStyles.pillarCard,
-                        isLight && {
-                          backgroundColor: '#f8fafc',
-                          borderColor: 'rgba(22, 163, 74, 0.12)',
-                        },
-                        isDarkTheme && {
-                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                          borderColor: 'rgba(56, 189, 248, 0.15)',
-                        },
-                        isActive && (
-                          isLight
-                            ? {
-                                backgroundColor: '#f0fdf4',
-                                borderColor: '#16a34a',
-                                shadowColor: '#16a34a',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.15,
-                                shadowRadius: 8,
-                                elevation: 3,
-                              }
-                            : isDarkTheme
-                            ? {
-                                backgroundColor: 'rgba(56, 189, 248, 0.16)',
-                                borderColor: '#38bdf8',
-                                shadowColor: '#38bdf8',
-                                shadowOffset: { width: 0, height: 2 },
-                                shadowOpacity: 0.25,
-                                shadowRadius: 10,
-                                elevation: 3,
-                              }
-                            : desktopStyles.pillarCardActive
-                        ),
-                        hovered && !isActive && (
-                          isLight
-                            ? { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }
-                            : desktopStyles.pillarCardHover
-                        ),
-                        pressed && { transform: [{ scale: 0.98 }] },
-                      ]}
-                    >
-                      {/* Active Left Indicator Bar */}
-                      {isActive && (
-                        <View
-                          style={[
-                            desktopStyles.pillarActiveBar,
-                            isLight && { backgroundColor: '#16a34a' },
-                            isDarkTheme && { backgroundColor: '#38bdf8' },
-                          ]}
-                        />
-                      )}
-
-                      <View
-                        style={[
-                          desktopStyles.pillarIconWrap,
-                          isActive && desktopStyles.pillarIconWrapActive,
-                          isLight && !isActive && {
-                            backgroundColor: 'rgba(22, 163, 74, 0.08)',
-                            borderColor: 'rgba(22, 163, 74, 0.15)',
-                          },
-                          isLight && isActive && {
-                            backgroundColor: '#16a34a',
-                            borderColor: '#16a34a',
-                          },
-                          isDarkTheme && isActive && {
-                            backgroundColor: '#38bdf8',
-                            borderColor: '#38bdf8',
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={isActive ? pillar.iconFilled : pillar.icon}
-                          size={18}
-                          color={
-                            isActive
-                              ? (isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#ffffff')
-                              : (pillar.color || (isLight ? '#16a34a' : '#059669'))
-                          }
-                        />
-                      </View>
-
-                      <View style={desktopStyles.pillarContentCol}>
-                        <Text
-                          style={[
-                            desktopStyles.pillarTitle,
-                            isLight && { color: '#334155' },
-                            isActive && desktopStyles.pillarTitleActive,
-                            isLight && isActive && { color: '#16a34a' },
-                            isDarkTheme && isActive && { color: '#38bdf8' },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {pillar.title}
-                        </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <View
-                            style={[
-                              desktopStyles.pillarBadge,
-                              isLight && {
-                                backgroundColor: 'rgba(22, 163, 74, 0.08)',
-                                borderColor: 'rgba(234, 179, 8, 0.25)',
-                              },
-                              isActive && desktopStyles.pillarBadgeActive,
-                              isLight && isActive && {
-                                backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                                borderColor: 'rgba(234, 179, 8, 0.5)',
-                              },
-                              isDarkTheme && isActive && {
-                                backgroundColor: 'rgba(56, 189, 248, 0.25)',
-                                borderColor: '#38bdf8',
-                              },
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                desktopStyles.pillarBadgeText,
-                                isLight && { color: '#64748b' },
-                                isActive && desktopStyles.pillarBadgeTextActive,
-                                isLight && isActive && { color: '#16a34a' },
-                                isDarkTheme && isActive && { color: '#38bdf8' },
-                              ]}
-                            >
-                              {pillar.badge}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      <Ionicons
-                        name={isActive ? 'chevron-forward' : 'chevron-forward-outline'}
-                        size={15}
-                        color={isActive ? (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#10b981') : (isLight ? '#94a3b8' : '#64748b')}
-                      />
-                    </Pressable>
-                  );
-                })}
-              </>
-            );
-          }
-
-              // Default standard tabs mapping for non-admin roles
-              return config.tabs.map((tabName) => {
-                const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-                const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
-                const isActive = isIndexActive || isOtherActive;
-                const title = getTabTitle(tabName);
-                const iconName = getTabIcon(tabName, isActive);
-
-                return (
-                  <TouchableOpacity
-                    key={tabName}
-                    style={[
-                      desktopStyles.navMenuItem,
-                      isLight && {
-                        backgroundColor: '#f8fafc',
-                        borderColor: 'rgba(22, 163, 74, 0.12)',
-                      },
-                      isDarkTheme && {
-                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                        borderColor: 'rgba(56, 189, 248, 0.15)',
-                      },
-                      isActive && (
-                        isLight
-                          ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
-                          : isDarkTheme
-                          ? { backgroundColor: 'rgba(56, 189, 248, 0.16)', borderColor: '#38bdf8' }
-                          : desktopStyles.navMenuItemActive
-                      ),
-                    ]}
-                    onPress={() => handleNavigate(tabName)}
-                  >
-                    <View
-                      style={[
-                        desktopStyles.navIconWrap,
-                        isActive && desktopStyles.navIconWrapActive,
-                        isLight && isActive && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-                        isDarkTheme && isActive && { backgroundColor: '#38bdf8', borderColor: '#38bdf8' },
-                      ]}
-                    >
-                      <Ionicons
-                        name={iconName}
-                        size={18}
-                        color={isActive ? '#ffffff' : (isLight ? '#64748b' : '#64748b')}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        desktopStyles.navMenuItemText,
-                        isLight && { color: '#334155' },
-                        isActive && desktopStyles.navMenuItemTextActive,
-                        isLight && isActive && { color: '#16a34a' },
-                        isDarkTheme && isActive && { color: '#38bdf8' },
-                      ]}
-                    >
-                      {title}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              });
-            })()}
-          </ScrollView>
-
-          {/* Bottom Actions in Sidebar */}
-          <View
-            style={[
-              desktopStyles.sidebarBottom,
-              isLight && { borderTopColor: 'rgba(22, 163, 74, 0.15)' },
-              isDarkTheme && { borderTopColor: 'rgba(56, 189, 248, 0.15)' },
-            ]}
-          >
-            {(() => {
-              const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || Boolean((user as any)?.isSeller);
-              if (!isSellerRole) return null;
-              return (
-                <TouchableOpacity
-                  style={[
-                    desktopStyles.headerActionBtn,
-                    { marginBottom: 12 },
-                    isLight && {
-                      backgroundColor: '#f0fdf4',
-                      borderColor: 'rgba(22, 163, 74, 0.3)',
-                    },
-                    isDarkTheme && {
-                      backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                      borderColor: 'rgba(56, 189, 248, 0.3)',
-                    },
-                  ]}
-                  onPress={() => router.push('/seller-dashboard')}
-                >
-                  <Ionicons name="storefront-outline" size={16} color={isDarkTheme ? '#38bdf8' : '#16a34a'} />
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDarkTheme ? '#38bdf8' : '#16a34a' }}>
-                    🏪 Seller Hub
-                  </Text>
-                </TouchableOpacity>
-              );
-            })()}
-
-
-
-            {/* 🎨 2-WAY THEME SELECTOR: Light (Default) · Dark (Parrot & Gold) */}
-            <View
-              style={[
-                desktopStyles.themeSwitcherBox,
-                isLight && desktopStyles.themeSwitcherBoxLight,
-                isDarkTheme && desktopStyles.themeSwitcherBoxDark,
-              ]}
-            >
-              <TouchableOpacity
-                style={[
-                  desktopStyles.themeBtn,
-                  themeMode === 'LIGHT' && desktopStyles.themeBtnActiveLight,
-                ]}
-                onPress={() => setThemeMode('LIGHT')}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={themeMode === 'LIGHT' ? 'sunny' : 'sunny-outline'}
-                  size={12}
-                  color={themeMode === 'LIGHT' ? '#16a34a' : isLight ? '#64748b' : '#94a3b8'}
-                />
-                <Text
-                  style={[
-                    desktopStyles.themeBtnText,
-                    isLight && { color: '#64748b' },
-                    themeMode === 'LIGHT' && desktopStyles.themeBtnTextActiveLight,
-                  ]}
-                >
-                  Light
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  desktopStyles.themeBtn,
-                  themeMode === 'DARK' && desktopStyles.themeBtnActiveMedium,
-                ]}
-                onPress={() => setThemeMode('DARK')}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
-                  size={12}
-                  color={themeMode === 'DARK' ? '#22c55e' : isLight ? '#64748b' : '#94a3b8'}
-                />
-                <Text
-                  style={[
-                    desktopStyles.themeBtnText,
-                    isLight && { color: '#64748b' },
-                    themeMode === 'DARK' && desktopStyles.themeBtnTextActiveMedium,
-                  ]}
-                >
-                  Dark
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
-      <View style={[
-        {
-          flex: 1,
-          backgroundColor: colors.bg,
-          overflow: 'hidden' as any,
-          width: '100%',
-          height: '100%',
-          ...(Platform.OS === 'web' ? { height: '100dvh' as any, maxHeight: '100dvh' as any } : {}),
-        },
-      ]}>
-        {/* 📱 DEDICATED MOBILE EXECUTIVE APP HEADER (Visible on Mobile < 768px) */}
+      <View style={[layoutStyles.rootContainer, { backgroundColor: colors.bg, flexDirection: 'column' }]}>
+      {/* 📱 DEDICATED MOBILE EXECUTIVE APP HEADER (Visible on Mobile < 768px) */}
         {!isDesktop && (
           <View
             style={[
@@ -774,6 +379,20 @@ export default function TabLayout() {
             ]}
           >
             {/* Left: FarmsKing Logo + Title */}
+                        {/* ☰ Mobile App Menu Hamburger Button */}
+            <TouchableOpacity
+              style={[
+                mobileStyles.menuButton,
+                isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.06)', borderColor: 'rgba(56, 189, 248, 0.25)' },
+              ]}
+              onPress={() => setIsPillarsMenuOpen(true)}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="menu" size={20} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={mobileStyles.brandBox}
               onPress={() => router.push('/admin/(tabs)')}
@@ -922,6 +541,67 @@ export default function TabLayout() {
             ]}
           >
             <View style={desktopStyles.topTabsHeaderInner}>
+              {/* ☰ Desktop App Menu Button + FarmsKing Brand */}
+              {isDesktop && (
+                <View style={desktopStyles.desktopMenuBrandGroup}>
+                  <TouchableOpacity
+                    style={[
+                      desktopStyles.menuTriggerBtn,
+                      isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                      isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.35)' },
+                    ]}
+                    onPress={() => setIsPillarsMenuOpen(true)}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons name="menu" size={17} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+                    <Text
+                      style={[
+                        desktopStyles.menuTriggerBtnText,
+                        isLight && { color: '#16a34a' },
+                        isDarkTheme && { color: '#38bdf8' },
+                      ]}
+                    >
+                      Menu
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={desktopStyles.desktopBrandBlock}
+                    onPress={() => router.push('/admin/(tabs)')}
+                    activeOpacity={0.8}
+                  >
+                    <View
+                      style={[
+                        desktopStyles.desktopLogoBox,
+                        { backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87' },
+                      ]}
+                    >
+                      <BrandLogo size={18} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
+                    </View>
+                    <Text style={[desktopStyles.desktopBrandText, isLight && { color: '#0f172a' }]}>
+                      FarmsKing{' '}
+                      <Text
+                        style={[
+                          desktopStyles.desktopBrandBadge,
+                          isLight && {
+                            color: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                            borderColor: 'rgba(234, 179, 8, 0.4)',
+                          },
+                          isDarkTheme && {
+                            color: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                            borderColor: 'rgba(56, 189, 248, 0.4)',
+                          },
+                        ]}
+                      >
+                        4D
+                      </Text>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Clean Segmented Sub-Tabs Navigation */}
               <View style={desktopStyles.topTabsAnimatedContainer}>
                 <ScrollView
@@ -1084,6 +764,63 @@ export default function TabLayout() {
                     </Text>
                   </View>
                 </TouchableOpacity>
+              )}
+
+              {/* 🎨 Global Theme Switcher Pill (Visible on Desktop Header) */}
+              {isDesktop && (
+                <View
+                  style={[
+                    desktopStyles.topThemeBox,
+                    isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.25)' },
+                    isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.08)', borderColor: 'rgba(56, 189, 248, 0.3)' },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={[
+                      desktopStyles.topThemeBtn,
+                      themeMode === 'LIGHT' && desktopStyles.topThemeBtnActiveLight,
+                    ]}
+                    onPress={() => setThemeMode('LIGHT')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="sunny"
+                      size={13}
+                      color={themeMode === 'LIGHT' ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')}
+                    />
+                    <Text
+                      style={[
+                        desktopStyles.topThemeBtnText,
+                        themeMode === 'LIGHT' && { color: '#ffffff', fontWeight: '800' },
+                      ]}
+                    >
+                      Light
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      desktopStyles.topThemeBtn,
+                      themeMode === 'DARK' && desktopStyles.topThemeBtnActiveDark,
+                    ]}
+                    onPress={() => setThemeMode('DARK')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name="moon"
+                      size={13}
+                      color={themeMode === 'DARK' ? '#020d06' : (isLight ? '#64748b' : '#94a3b8')}
+                    />
+                    <Text
+                      style={[
+                        desktopStyles.topThemeBtnText,
+                        themeMode === 'DARK' && { color: '#020d06', fontWeight: '800' },
+                      ]}
+                    >
+                      Dark
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           </View>
@@ -1359,22 +1096,131 @@ export default function TabLayout() {
           visible={isHealthRadarOpen}
           onClose={() => setIsHealthRadarOpen(false)}
         />
-        <MobilePillarsMenuModal
+        <AppMenuDrawer
           visible={isPillarsMenuOpen}
           onClose={() => setIsPillarsMenuOpen(false)}
           activePillarId={selectedPillarId}
         />
         <AdminLiveToastNotification />
       </View>
-    </View>
     <UniversalCommandPalette activePortalId="ADMIN_HQ" />
   </PortalGuard>
 );
 }
 
 const desktopStyles = StyleSheet.create({
+  desktopMenuBrandGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginRight: 6,
+  },
+  menuTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+  },
+  menuTriggerBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  desktopBrandBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  desktopLogoBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  desktopBrandText: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+  desktopBrandBadge: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+    paddingHorizontal: 3.5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  subTabsMenuBox: {
+    marginLeft: 16,
+    paddingLeft: 10,
+    borderLeftWidth: 1.5,
+    borderLeftColor: 'rgba(0, 255, 135, 0.25)',
+    marginVertical: 4,
+    gap: 3,
+  },
+  subTabMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  subTabBullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#64748b',
+  },
+  subTabMenuText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    flex: 1,
+  },
+  topThemeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 2.5,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  topThemeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
+  },
+  topThemeBtnActiveLight: {
+    backgroundColor: '#16a34a',
+  },
+  topThemeBtnActiveDark: {
+    backgroundColor: '#00ff87',
+  },
+  topThemeBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#94a3b8',
+  },
+
   sidebar: {
-    width: 236,
+    width: 256,
     backgroundColor: '#020b06',
     borderRightWidth: 1,
     borderRightColor: 'rgba(0, 255, 135, 0.18)',
@@ -1426,20 +1272,20 @@ const desktopStyles = StyleSheet.create({
     marginBottom: 6,
   },
   menuNavCol: {
-    paddingHorizontal: 6,
-    gap: 2,
-    paddingBottom: 6,
+    paddingHorizontal: 8,
+    gap: 6,
+    paddingBottom: 10,
   },
   pillarCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 5.5,
+    paddingHorizontal: 10,
+    paddingVertical: 8.5,
     borderRadius: RADIUS.md,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    marginBottom: 1.5,
+    marginBottom: 4,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -1689,8 +1535,8 @@ const desktopStyles = StyleSheet.create({
     backgroundColor: '#03140a',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 135, 0.2)',
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     zIndex: 90,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
@@ -1727,15 +1573,16 @@ const desktopStyles = StyleSheet.create({
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
-    padding: 2.5,
-    gap: 2.5,
+    padding: 3.5,
+    gap: 4,
   },
   segmentedTabItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 4.5,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6.5,
+    minHeight: 32,
     borderRadius: RADIUS.sm,
     backgroundColor: 'transparent',
   },
@@ -1836,15 +1683,26 @@ const layoutStyles = StyleSheet.create({
 });
 
 const mobileStyles = StyleSheet.create({
+  menuButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
   mobileTopBar: {
-    height: 44,
+    height: 48,
     width: '100%',
     maxWidth: '100%',
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 255, 135, 0.18)',
     zIndex: 95,

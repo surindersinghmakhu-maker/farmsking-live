@@ -252,6 +252,18 @@ export interface SystemIntegrationsConfig {
       tomorrowIo?: { apiKey: string };
     };
   };
+  satellite: {
+    activeProvider: 'AGROMONITORING' | 'SENTINEL_HUB' | 'COPERNICUS' | 'GOOGLE_EARTH_ENGINE' | 'ISRO_BHUVAN' | 'PLANET_LABS';
+    isEnabled: boolean;
+    providers: {
+      agromonitoring: { apiKey: string; autoSyncPolygons: boolean };
+      sentinelHub: { clientId: string; clientSecret: string; instanceId: string };
+      copernicus: { username: string; password: string; clientId: string };
+      googleEarthEngine: { serviceAccountEmail: string; privateKey: string; projectId: string };
+      isroBhuvan: { token: string; endpointUrl: string };
+      planetLabs: { apiKey: string };
+    };
+  };
   logistics: {
     activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO';
     isEnabled: boolean;
@@ -516,6 +528,18 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       tomorrowIo: { apiKey: '' },
     },
   },
+  satellite: {
+    activeProvider: 'AGROMONITORING',
+    isEnabled: true,
+    providers: {
+      agromonitoring: { apiKey: '', autoSyncPolygons: true },
+      sentinelHub: { clientId: '', clientSecret: '', instanceId: '' },
+      copernicus: { username: '', password: '', clientId: '' },
+      googleEarthEngine: { serviceAccountEmail: '', privateKey: '', projectId: 'farmsking-geospatial' },
+      isroBhuvan: { token: '', endpointUrl: 'https://bhuvan-app1.nrsc.gov.in/agri' },
+      planetLabs: { apiKey: '' },
+    },
+  },
   logistics: {
     activeProvider: 'SHIPROCKET',
     isEnabled: true,
@@ -704,6 +728,15 @@ export function mergeSystemIntegrationsWithDefaults(
       providers: {
         ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.weather.providers,
         ...(remote.weather?.providers || {}),
+      },
+    },
+    satellite: {
+      ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.satellite,
+      ...(remote.satellite || {}),
+      isEnabled: remote.satellite?.isEnabled ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.satellite.isEnabled,
+      providers: {
+        ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.satellite.providers,
+        ...(remote.satellite?.providers || {}),
       },
     },
     logistics: {

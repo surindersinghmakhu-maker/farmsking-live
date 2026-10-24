@@ -127,6 +127,18 @@ export interface SystemIntegrationsConfig {
       tomorrowIo?: { apiKey: string };
     };
   };
+  satellite: {
+    activeProvider: 'AGROMONITORING' | 'SENTINEL_HUB' | 'COPERNICUS' | 'GOOGLE_EARTH_ENGINE' | 'ISRO_BHUVAN' | 'PLANET_LABS';
+    isEnabled: boolean;
+    providers: {
+      agromonitoring: { apiKey: string; autoSyncPolygons: boolean };
+      sentinelHub: { clientId: string; clientSecret: string; instanceId: string };
+      copernicus: { username: string; password: string; clientId: string };
+      googleEarthEngine: { serviceAccountEmail: string; privateKey: string; projectId: string };
+      isroBhuvan: { token: string; endpointUrl: string };
+      planetLabs: { apiKey: string };
+    };
+  };
   logistics: {
     activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO';
     isEnabled: boolean;
@@ -441,6 +453,38 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
         apiKey: '',
       },
       tomorrowIo: {
+        apiKey: '',
+      },
+    },
+  },
+  satellite: {
+    activeProvider: 'AGROMONITORING',
+    isEnabled: true,
+    providers: {
+      agromonitoring: {
+        apiKey: process.env.AGROMONITORING_API_KEY || '',
+        autoSyncPolygons: true,
+      },
+      sentinelHub: {
+        clientId: process.env.SENTINEL_HUB_CLIENT_ID || '',
+        clientSecret: process.env.SENTINEL_HUB_CLIENT_SECRET || '',
+        instanceId: process.env.SENTINEL_HUB_INSTANCE_ID || '',
+      },
+      copernicus: {
+        username: '',
+        password: '',
+        clientId: '',
+      },
+      googleEarthEngine: {
+        serviceAccountEmail: '',
+        privateKey: '',
+        projectId: 'farmsking-geospatial',
+      },
+      isroBhuvan: {
+        token: '',
+        endpointUrl: 'https://bhuvan-app1.nrsc.gov.in/agri',
+      },
+      planetLabs: {
         apiKey: '',
       },
     },

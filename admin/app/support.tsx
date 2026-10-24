@@ -27,7 +27,7 @@ export default function SupportPage() {
                 <Ionicons name="cart" size={20} color="#10b981" style={{ marginRight: 8 }} />
                 <Text style={styles.faqQuestion}>How do I track my agricultural orders?</Text>
               </View>
-              <Text style={styles.faqAnswer}>You can track your seeds, fertilizers, and machinery orders by logging into your account and visiting the 'My Orders' section. You will also receive WhatsApp updates.</Text>
+              <Text style={styles.faqAnswer}>You can track your seeds, fertilizers, organic inputs, and live plants orders by logging into your account and visiting the 'My Orders' section. You will also receive WhatsApp updates.</Text>
             </View>
 
             <View style={styles.faqCard}>

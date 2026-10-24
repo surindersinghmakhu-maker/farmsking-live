@@ -252,6 +252,7 @@ try {
     ${vectorIconStyles}
     `;
 
+    indexHtml = indexHtml.replace(/<title>[\s\S]*?<\/title>/gi, '');
     indexHtml = indexHtml.replace('<head>', `<head>${metaCacheHeaders}`);
 
     const richNoscript = `

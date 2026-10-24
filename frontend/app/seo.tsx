@@ -26,8 +26,16 @@ interface SeoPreset {
 
 const SEO_PRESETS: SeoPreset[] = [
   {
+    name: 'Smart Farming Platform & Agriculture App India (farmsking.in)',
+    badge: 'Supreme Master 60/160',
+    title: 'FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in)',
+    desc: "FarmsKing (farmsking.in) is India's premier Smart Farming Platform & Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India.",
+    keywords:
+      'FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab',
+  },
+  {
     name: 'Multi-King Ecosystem (Farms, Garden, Nature, AI, Organic, Account)',
-    badge: 'Supreme Master 60/157',
+    badge: 'Multi-Domain 60/157',
     title: 'FarmsKing: Garden King, Nature King, AI King & Organic Portal',
     desc: 'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.',
     keywords:
@@ -68,19 +76,19 @@ export default function SeoManagementScreen() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [seoTitle, setSeoTitle] = useState(
-    'FarmsKing: Garden King, Nature King, AI King & Organic Portal'
+    'FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in)'
   );
   const [metaDescription, setMetaDescription] = useState(
-    'FarmsKing is Garden King, Nature King, AI King, Organic King & Account King. Zero fake food, no hardware sales, no rentals, live plants roadmap. HQ: Makhu.'
+    "FarmsKing (farmsking.in) is India's premier Smart Farming Platform & Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India."
   );
   const [metaKeywords, setMetaKeywords] = useState(
-    'FarmsKing, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Plant Lovers Boon, Farmer Blessing, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Marigold Floriculture, Digital Bahi Khata, No Farm Machinery, Makhu, Goindwal Sahib, Punjab, National Agri Ecosystem'
+    'FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab'
   );
   const [locationHeadquarters, setLocationHeadquarters] = useState(
     'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Board of Directors: Bakshish Singh and Gagandeep Kaur; General Manager: Gurnam Singh; Chief AI Architect: Surinder Singh; Registered Office: Goindwal Sahib, Tarn Taran - 143422; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
+    "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Board of Directors: Bakshish Singh and Gagandeep Kaur; General Manager: Gurnam Singh; Chief AI Architect: Surinder Singh; Tech Support: Engg. Gurdit Singh; Backend Lead: Charanjit Singh; Hardware Lead: Gurjant Singh; Agronomy Advisors: Sudhir Kumar Mahato, Manjeet Sra."
   );
 
   useEffect(() => {

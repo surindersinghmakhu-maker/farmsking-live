@@ -46,7 +46,7 @@ jobs:
       - name: ⚙️ Test Build Production
         run: |
           cd backend
-          npm run build
+          npx nest build
 
   frontend-ci:
     name: Frontend Type-Check & Verification

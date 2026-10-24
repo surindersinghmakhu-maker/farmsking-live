@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Modal,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -38,9 +37,8 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
   const { role } = useRole();
   const { themeMode, setThemeMode, isLight, isDarkTheme } = useExecutiveTheme();
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const drawerWidth = Math.min(340, Math.floor(width * 0.88));
+  // Compact width: 250px max (or 75% on narrow mobile)
+  const drawerWidth = Math.min(250, Math.floor(width * 0.75));
   const slideAnim = useRef(new Animated.Value(-drawerWidth)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -49,12 +47,12 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 220,
+          duration: 180,
           useNativeDriver: true,
         }),
         Animated.spring(slideAnim, {
           toValue: 0,
-          tension: 65,
+          tension: 75,
           friction: 9,
           useNativeDriver: true,
         }),
@@ -63,12 +61,12 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 180,
+          duration: 150,
           useNativeDriver: true,
         }),
         Animated.timing(slideAnim, {
           toValue: -drawerWidth,
-          duration: 200,
+          duration: 170,
           useNativeDriver: true,
         }),
       ]).start();
@@ -87,24 +85,6 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
       }
     }
   };
-
-  const filteredPillars = useMemo(() => {
-    if (!searchQuery.trim()) return ADMIN_PILLARS;
-    const q = searchQuery.toLowerCase();
-    return ADMIN_PILLARS.filter((pillar) => {
-      const matchPillar =
-        pillar.title.toLowerCase().includes(q) ||
-        pillar.shortTitle.toLowerCase().includes(q) ||
-        pillar.badge.toLowerCase().includes(q);
-      const matchTabs = pillar.subTabs.some(
-        (t) =>
-          t.title.toLowerCase().includes(q) ||
-          (t.shortTitle && t.shortTitle.toLowerCase().includes(q)) ||
-          (t.description && t.description.toLowerCase().includes(q))
-      );
-      return matchPillar || matchTabs;
-    });
-  }, [searchQuery]);
 
   const isSellerRole =
     (role as string) === 'SELLER' ||
@@ -126,7 +106,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
           <Pressable style={styles.backdropPressable} onPress={onClose} />
         </Animated.View>
 
-        {/* Slide-out Left Drawer Panel */}
+        {/* Compact Slide-out Left Drawer Panel */}
         <Animated.View
           style={[
             styles.drawerPanel,
@@ -135,7 +115,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
             { transform: [{ translateX: slideAnim }] },
           ]}
         >
-          {/* Drawer Top Header Row */}
+          {/* Drawer Top Header Row - Compact */}
           <View
             style={[
               styles.drawerHeader,
@@ -152,7 +132,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                   },
                 ]}
               >
-                <BrandLogo size={20} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
+                <BrandLogo size={16} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
               </View>
               <View style={styles.brandTextCol}>
                 <Text style={[styles.brandTitleText, isLight && { color: '#0f172a' }]}>
@@ -182,7 +162,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                     isDarkTheme && { color: '#94a3b8' },
                   ]}
                 >
-                  Executive App Menu
+                  Command Menu
                 </Text>
               </View>
             </View>
@@ -195,40 +175,13 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               ]}
               onPress={onClose}
               activeOpacity={0.7}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="close" size={19} color={isLight ? '#475569' : '#94a3b8'} />
+              <Ionicons name="close" size={16} color={isLight ? '#475569' : '#94a3b8'} />
             </TouchableOpacity>
           </View>
 
-          {/* Quick Search Tool Filter */}
-          <View style={styles.searchSection}>
-            <View
-              style={[
-                styles.searchBox,
-                isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
-                isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(56, 189, 248, 0.2)' },
-              ]}
-            >
-              <Ionicons name="search" size={15} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
-              <TextInput
-                style={[styles.searchInput, isLight && { color: '#0f172a' }]}
-                placeholder="Search command hubs..."
-                placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoCapitalize="none"
-                clearButtonMode="while-editing"
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                  <Ionicons name="close-circle" size={15} color="#94a3b8" />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-
-          {/* Hubs Section Title */}
+          {/* Hubs Section Title - Compact */}
           <View style={styles.sectionHeadingRow}>
             <Text
               style={[
@@ -253,18 +206,18 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                   isDarkTheme && { color: '#38bdf8' },
                 ]}
               >
-                {ADMIN_PILLARS.length} HUBS
+                {ADMIN_PILLARS.length}
               </Text>
             </View>
           </View>
 
-          {/* Navigation Hubs ScrollView (Main Menu Only - Sub-items shown in top tabs) */}
+          {/* Navigation Hubs ScrollView (Compact 6 Main Menu items) */}
           <ScrollView
             style={styles.drawerScroll}
             contentContainerStyle={styles.drawerScrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {filteredPillars.map((pillar) => {
+            {ADMIN_PILLARS.map((pillar) => {
               const isActivePillar = pillar.id === activePillarId;
 
               return (
@@ -274,11 +227,11 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                     styles.pillarWrapper,
                     isLight && {
                       backgroundColor: '#f8fafc',
-                      borderColor: 'rgba(22, 163, 74, 0.15)',
+                      borderColor: 'rgba(22, 163, 74, 0.12)',
                     },
                     isDarkTheme && {
                       backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      borderColor: 'rgba(56, 189, 248, 0.16)',
+                      borderColor: 'rgba(56, 189, 248, 0.14)',
                     },
                     isActivePillar && (
                       isLight
@@ -286,9 +239,9 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                             backgroundColor: '#f0fdf4',
                             borderColor: '#16a34a',
                             shadowColor: '#16a34a',
-                            shadowOffset: { width: 0, height: 1.5 },
+                            shadowOffset: { width: 0, height: 1 },
                             shadowOpacity: 0.12,
-                            shadowRadius: 5,
+                            shadowRadius: 4,
                             elevation: 2,
                           }
                         : isDarkTheme
@@ -308,14 +261,14 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                   <View
                     style={[
                       styles.pillarIconSquircle,
-                      { borderColor: `${pillar.color}50` },
+                      { borderColor: `${pillar.color}45` },
                       isActivePillar && { backgroundColor: `${pillar.color}25` },
                       isLight && { backgroundColor: 'rgba(241, 245, 249, 0.95)' },
                     ]}
                   >
                     <Ionicons
                       name={isActivePillar ? pillar.iconFilled : pillar.icon}
-                      size={18}
+                      size={15}
                       color={pillar.color}
                     />
                   </View>
@@ -341,8 +294,8 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                       style={[
                         styles.badgePill,
                         {
-                          borderColor: `${pillar.color}40`,
-                          backgroundColor: `${pillar.color}15`,
+                          borderColor: `${pillar.color}35`,
+                          backgroundColor: `${pillar.color}12`,
                         },
                       ]}
                     >
@@ -352,7 +305,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                     </View>
                     <Ionicons
                       name="chevron-forward"
-                      size={15}
+                      size={13}
                       color={
                         isActivePillar
                           ? isLight
@@ -371,7 +324,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
             })}
           </ScrollView>
 
-          {/* Drawer Footer: Global Theme Switcher & Quick Navigation */}
+          {/* Drawer Footer: Global Theme Switcher - Compact */}
           <View
             style={[
               styles.drawerFooter,
@@ -383,8 +336,8 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               <TouchableOpacity
                 style={[
                   styles.sellerHubBtn,
-                  isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' },
-                  isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.3)' },
+                  isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.25)' },
+                  isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.25)' },
                 ]}
                 onPress={() => {
                   onClose();
@@ -392,14 +345,14 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                 }}
                 activeOpacity={0.8}
               >
-                <Ionicons name="storefront-outline" size={15} color={isDarkTheme ? '#38bdf8' : '#16a34a'} />
+                <Ionicons name="storefront-outline" size={13} color={isDarkTheme ? '#38bdf8' : '#16a34a'} />
                 <Text
                   style={[
                     styles.sellerHubText,
                     isDarkTheme && { color: '#38bdf8' },
                   ]}
                 >
-                  🏪 Open Seller Hub
+                  🏪 Seller Hub
                 </Text>
               </TouchableOpacity>
             )}
@@ -422,7 +375,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               >
                 <Ionicons
                   name={themeMode === 'LIGHT' ? 'sunny' : 'sunny-outline'}
-                  size={13}
+                  size={12}
                   color={themeMode === 'LIGHT' ? '#16a34a' : isLight ? '#64748b' : '#94a3b8'}
                 />
                 <Text
@@ -432,7 +385,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                     themeMode === 'LIGHT' && styles.themeBtnTextActiveLight,
                   ]}
                 >
-                  Light Mode
+                  Light
                 </Text>
               </TouchableOpacity>
 
@@ -446,7 +399,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               >
                 <Ionicons
                   name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
-                  size={13}
+                  size={12}
                   color={themeMode === 'DARK' ? '#22c55e' : isLight ? '#64748b' : '#94a3b8'}
                 />
                 <Text
@@ -456,19 +409,19 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                     themeMode === 'DARK' && styles.themeBtnTextActiveDark,
                   ]}
                 >
-                  Dark Mode
+                  Dark
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Quick Dismiss / Status */}
+            {/* Quick Dismiss Link */}
             <TouchableOpacity
               style={styles.closeBottomBtn}
               onPress={onClose}
               activeOpacity={0.7}
             >
               <Text style={[styles.closeBottomText, isLight && { color: '#64748b' }]}>
-                ✕ Close Menu
+                ✕ Close
               </Text>
             </TouchableOpacity>
           </View>
@@ -489,8 +442,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(8px)' } as any) : {}),
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(6px)' } as any) : {}),
   },
   backdropPressable: {
     flex: 1,
@@ -501,10 +454,10 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     shadowColor: '#000000',
-    shadowOffset: { width: 5, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 18,
-    elevation: 10,
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 8,
     ...(Platform.OS === 'web'
       ? ({
           height: '100dvh',
@@ -515,44 +468,44 @@ const styles = StyleSheet.create({
   drawerPanelLight: {
     backgroundColor: '#ffffff',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(22, 163, 74, 0.2)',
+    borderRightColor: 'rgba(22, 163, 74, 0.18)',
   },
   drawerPanelDark: {
     backgroundColor: '#0b1329',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(56, 189, 248, 0.25)',
+    borderRightColor: 'rgba(56, 189, 248, 0.22)',
   },
   drawerPanelNeon: {
     backgroundColor: '#020905',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(0, 255, 135, 0.25)',
+    borderRightColor: 'rgba(0, 255, 135, 0.22)',
   },
   drawerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 48 : 16,
-    paddingBottom: 14,
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === 'ios' ? 44 : 12,
+    paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 255, 135, 0.15)',
+    borderBottomColor: 'rgba(0, 255, 135, 0.12)',
   },
   drawerHeaderLight: {
-    borderBottomColor: 'rgba(22, 163, 74, 0.15)',
+    borderBottomColor: 'rgba(22, 163, 74, 0.12)',
   },
   drawerHeaderDark: {
-    borderBottomColor: 'rgba(56, 189, 248, 0.2)',
+    borderBottomColor: 'rgba(56, 189, 248, 0.15)',
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     flex: 1,
   },
   logoBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -560,83 +513,62 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   brandTitleText: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.2,
   },
   brandBadge: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.4)',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
+    paddingHorizontal: 3.5,
+    paddingVertical: 0.5,
+    borderRadius: 3,
   },
   brandSubtitleText: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: FONT.medium,
     color: '#6ee7b7',
-    marginTop: 1,
+    marginTop: 0.5,
   },
   closeButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  searchSection: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.25)',
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    paddingHorizontal: 10,
-    height: 36,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: FONT.medium,
-    color: '#ffffff',
-    paddingVertical: 0,
-  },
   sectionHeadingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   sectionHeadingText: {
-    fontSize: 10,
+    fontSize: 8.5,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
-    letterSpacing: 1.1,
+    letterSpacing: 1,
   },
   hubsCountPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.3)',
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
   },
   hubsCountText: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.bold,
     color: '#00ff87',
   },
@@ -644,25 +576,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   drawerScrollContent: {
-    paddingHorizontal: 10,
-    paddingBottom: 16,
-    gap: 6,
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+    gap: 4,
   },
   pillarWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    borderRadius: RADIUS.md,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.16)',
+    borderColor: 'rgba(0, 255, 135, 0.14)',
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    gap: 8,
+    gap: 7,
   },
   pillarIconSquircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 26,
+    height: 26,
+    borderRadius: 7,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -672,77 +604,77 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pillarTitleText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.semiBold,
     color: '#e2e8f0',
   },
   pillarRightCol: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   badgePill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
   badgePillText: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.bold,
   },
   drawerFooter: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 255, 135, 0.15)',
-    gap: 8,
+    borderTopColor: 'rgba(0, 255, 135, 0.12)',
+    gap: 6,
   },
   drawerFooterLight: {
-    borderTopColor: 'rgba(22, 163, 74, 0.15)',
+    borderTopColor: 'rgba(22, 163, 74, 0.12)',
   },
   drawerFooterDark: {
-    borderTopColor: 'rgba(56, 189, 248, 0.2)',
+    borderTopColor: 'rgba(56, 189, 248, 0.15)',
   },
   sellerHubBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 5,
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
-    paddingVertical: 7,
-    paddingHorizontal: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
+    borderColor: 'rgba(0, 255, 135, 0.25)',
   },
   sellerHubText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#16a34a',
   },
   themeBox: {
     flexDirection: 'row',
-    gap: 3,
+    gap: 2,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    padding: 3,
+    padding: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.25)',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
   },
   themeBoxLight: {
     backgroundColor: '#f1f5f9',
-    borderColor: 'rgba(22, 163, 74, 0.25)',
+    borderColor: 'rgba(22, 163, 74, 0.2)',
   },
   themeBoxDark: {
     backgroundColor: 'rgba(2, 6, 23, 0.75)',
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: 'rgba(56, 189, 248, 0.25)',
   },
   themeBtn: {
     flex: 1,
     flexDirection: 'row',
-    gap: 4,
-    paddingVertical: 6,
+    gap: 3,
+    paddingVertical: 4,
     paddingHorizontal: 4,
     borderRadius: RADIUS.pill,
     alignItems: 'center',
@@ -754,8 +686,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(234, 179, 8, 0.5)',
     shadowColor: '#f59e0b',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
     elevation: 2,
   },
   themeBtnActiveDark: {
@@ -764,12 +696,12 @@ const styles = StyleSheet.create({
     borderColor: '#00ff87',
     shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   themeBtnText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
@@ -783,10 +715,10 @@ const styles = StyleSheet.create({
   },
   closeBottomBtn: {
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   closeBottomText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONT.medium,
     color: '#94a3b8',
   },

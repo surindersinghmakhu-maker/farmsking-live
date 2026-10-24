@@ -47,6 +47,11 @@ docs/app/
 # Stray backup/scratch files that shouldn't live in the repo
 *.zip
 *_token.txt
+*.tsbuildinfo
+schema_dump.prisma
+*.bak
+*.tmp*
+*.orig.*
 
 # Runtime data
 whatsapp_auth_session/

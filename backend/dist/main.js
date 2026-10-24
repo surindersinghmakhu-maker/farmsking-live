@@ -12644,6 +12644,8 @@ function toEnglishCropName(rawName) {
 let MarketRatesService = class MarketRatesService {
     constructor(prisma) {
         this.prisma = prisma;
+        this.ratesCache = new Map();
+        this.CACHE_TTL_MS = 30 * 1000;
     }
     async getMyCropRates(user) {
         const profile = user?.id
@@ -12653,6 +12655,11 @@ let MarketRatesService = class MarketRatesService {
             })
             : null;
         const userState = (profile?.state || 'Punjab').trim();
+        const cacheKey = `${user?.id || 'anon'}_${userState}`;
+        const cached = this.ratesCache.get(cacheKey);
+        if (cached && Date.now() < cached.expiresAt) {
+            return cached.data;
+        }
         const since = new Date(Date.now() - ONE_DAY_MS);
         const sinceTime = since.getTime();
         let cropCycles = [];
@@ -12833,7 +12840,9 @@ let MarketRatesService = class MarketRatesService {
                 nationalSampleCount: nationalRatePool.length,
             };
         }));
-        return { state: userState, rates };
+        const result = { state: userState, rates };
+        this.ratesCache.set(cacheKey, { data: result, expiresAt: Date.now() + this.CACHE_TTL_MS });
+        return result;
     }
 };
 exports.MarketRatesService = MarketRatesService;

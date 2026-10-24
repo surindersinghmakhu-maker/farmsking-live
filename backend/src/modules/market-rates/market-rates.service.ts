@@ -87,6 +87,9 @@ export function toEnglishCropName(rawName: string): string {
 
 @Injectable()
 export class MarketRatesService {
+  private ratesCache = new Map<string, { data: { state: string | null; rates: CropRateSummary[] }; expiresAt: number }>();
+  private readonly CACHE_TTL_MS = 30 * 1000; // 30-second fast cache
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -125,6 +128,11 @@ export class MarketRatesService {
       : null;
 
     const userState = (profile?.state || 'Punjab').trim();
+    const cacheKey = `${user?.id || 'anon'}_${userState}`;
+    const cached = this.ratesCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
 
     const since = new Date(Date.now() - ONE_DAY_MS);
     const sinceTime = since.getTime();
@@ -345,7 +353,9 @@ export class MarketRatesService {
       }),
     );
 
-    return { state: userState, rates };
+    const result = { state: userState, rates };
+    this.ratesCache.set(cacheKey, { data: result, expiresAt: Date.now() + this.CACHE_TTL_MS });
+    return result;
   }
 }
 

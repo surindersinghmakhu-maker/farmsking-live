@@ -3147,6 +3147,8 @@ let AppSettingsService = class AppSettingsService {
     }
     async getSupportContact() {
         const settings = await this.get();
+        const integrations = await this.getIntegrations();
+        const pm = integrations?.projectMasterData || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData;
         let name = settings?.adminName;
         let mobile = settings?.adminMobile;
         let email = settings?.adminEmail;
@@ -3158,16 +3160,99 @@ let AppSettingsService = class AppSettingsService {
             });
             if (superAdmin) {
                 name = name || superAdmin.name || 'Surinder Singh (Super Admin)';
-                mobile = mobile || superAdmin.mobile || '95776-220000';
+                mobile = mobile || superAdmin.mobile || '+91 95776-22000';
                 email = email || superAdmin.email || 'farmskingindia@gmail.com';
             }
         }
+        const companyLegalName = pm.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED';
+        const helplinePhone = pm.primaryMobile || mobile || '+91 95776-22000';
+        const supportEmail = pm.contactEmail || pm.supportEmail || email || 'farmskingindia@gmail.com';
+        const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
+        const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
         return {
             name: name || 'Surinder Singh (Super Admin)',
-            mobile: mobile || '95776-220000',
-            email: email || 'farmskingindia@gmail.com',
-            helplinePhone: mobile || '95776-220000',
-            supportEmail: email || 'farmskingindia@gmail.com',
+            mobile: helplinePhone,
+            email: supportEmail,
+            helplinePhone,
+            supportEmail,
+            companyLegalName,
+            registeredAddress,
+            operationalHqAddress,
+            websiteUrl: pm.websiteUrl || 'https://farmsking.com',
+            mcaSrn: pm.mcaSrn || 'AC6979718',
+        };
+    }
+    async getPublicMasterData() {
+        const integrations = await this.getIntegrations();
+        const pm = integrations?.projectMasterData || system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG.projectMasterData;
+        return {
+            companyLegalName: pm.companyLegalName,
+            brandDisplayName: pm.brandDisplayName,
+            shortName: pm.shortName,
+            tagline: pm.tagline,
+            mcaSrn: pm.mcaSrn,
+            crcApprovalStatus: pm.crcApprovalStatus,
+            crcApprovalDate: pm.crcApprovalDate,
+            approvingAuthority: pm.approvingAuthority,
+            nicCodes: pm.nicCodes,
+            activityDescription: pm.activityDescription,
+            registeredAddress: pm.registeredAddress,
+            operationalHq: pm.operationalHq,
+            primaryMobile: pm.primaryMobile,
+            alternateMobile: pm.alternateMobile,
+            contactEmail: pm.contactEmail,
+            govtEmail: pm.govtEmail,
+            supportEmail: pm.supportEmail,
+            websiteUrl: pm.websiteUrl,
+            socialMedia: pm.socialMedia,
+            promotersAndCapital: {
+                authorizedEquityCapitalInr: pm.promotersAndCapital?.authorizedEquityCapitalInr,
+                authorizedSharesCount: pm.promotersAndCapital?.authorizedSharesCount,
+                faceValuePerShareInr: pm.promotersAndCapital?.faceValuePerShareInr,
+                paidUpCapitalInr: pm.promotersAndCapital?.paidUpCapitalInr,
+                firstDirectors: pm.promotersAndCapital?.firstDirectors,
+                founderAndChiefAiArchitect: pm.promotersAndCapital?.founderAndChiefAiArchitect,
+                generalManager: pm.promotersAndCapital?.generalManager,
+                leadAgronomists: pm.promotersAndCapital?.leadAgronomists,
+            },
+            cropSessions: {
+                activeSessionName: pm.cropSessions?.activeSessionName,
+                activeSeasonType: pm.cropSessions?.activeSeasonType,
+                startDate: pm.cropSessions?.startDate,
+                endDate: pm.cropSessions?.endDate,
+                isDataIsolated: pm.cropSessions?.isDataIsolated,
+                autoSwitchMandiRates: pm.cropSessions?.autoSwitchMandiRates,
+                majorCrops: pm.cropSessions?.majorCrops,
+            },
+            branding: {
+                primaryColor: pm.themeColors?.primaryColor,
+                secondaryColor: pm.themeColors?.secondaryColor,
+                buttonColor: pm.themeColors?.buttonColor,
+                logoUrl: pm.logoUrl,
+                faviconUrl: pm.faviconUrl,
+            },
+            operational: {
+                currency: pm.currency,
+                currencySymbol: pm.currencySymbol,
+                timezone: pm.timezone,
+                dateFormat: pm.dateFormat,
+                timeFormat: pm.timeFormat,
+                taxGstEnabled: pm.taxGst?.enabled,
+                taxPercentage: pm.taxGst?.taxPercentage,
+                invoicePrefix: pm.taxGst?.invoicePrefix,
+                gstNumber: pm.taxGst?.gstNumber,
+                panNumber: pm.taxGst?.panNumber,
+                hsnSacCode: pm.taxGst?.hsnSacCode,
+            },
+            certificates: pm.certificateConfig,
+            franchise: pm.franchiseRules,
+            backup: {
+                autoBackupEnabled: pm.backupSettings?.autoBackupEnabled,
+                frequency: pm.backupSettings?.frequency,
+                storageTarget: pm.backupSettings?.storageTarget,
+                retentionDays: pm.backupSettings?.retentionDays,
+                lastBackupTimestamp: pm.backupSettings?.lastBackupTimestamp,
+            },
         };
     }
     async update(admin, dto) {
@@ -4021,6 +4106,48 @@ exports.DEFAULT_PROJECT_MASTER_DATA = {
         invoicePrefix: 'FK-INV-',
         panNumber: 'AAAAF0000A',
         hsnSacCode: '998314',
+    },
+    promotersAndCapital: {
+        authorizedEquityCapitalInr: 100000,
+        authorizedSharesCount: 100000,
+        faceValuePerShareInr: 1,
+        paidUpCapitalInr: 100000,
+        firstDirectors: 'Bakhshish Singh, Gagandeep Kaur',
+        founderAndChiefAiArchitect: 'Surinder Singh',
+        generalManager: 'Gurnam Singh',
+        leadAgronomists: 'Sudhir Kumar Mahato, Manjeet Sra',
+    },
+    cropSessions: {
+        activeSessionName: 'Rabi 2026-27 (Winter Sowing)',
+        activeSeasonType: 'RABI',
+        startDate: '01/10/2026',
+        endDate: '15/04/2027',
+        isDataIsolated: true,
+        autoSwitchMandiRates: true,
+        majorCrops: 'Wheat, Mustard, Barley, Gram, Potato, Peas',
+    },
+    backupSettings: {
+        autoBackupEnabled: true,
+        frequency: 'DAILY',
+        retentionDays: 30,
+        storageTarget: 'R2_AND_LOCAL',
+        lastBackupTimestamp: '24/10/2026 22:30 IST',
+        encryptionStandard: 'AES-256-GCM',
+    },
+    certificateConfig: {
+        certificatePrefix: 'FK-CERT-',
+        verificationPortalUrl: 'https://farmsking.in/verify',
+        requireApproval: true,
+        digitalQrEnabled: true,
+        defaultValidityYears: 3,
+        certificateAuthority: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+    },
+    franchiseRules: {
+        mandiAgentCommissionPercent: 1.5,
+        dealerAreaAllocationType: 'TEHSIL',
+        centralizedApprovalRequired: true,
+        securityDepositInr: 25000,
+        minimumMonthlyTurnoverInr: 100000,
     },
 };
 exports.DEFAULT_INTEGRATIONS_CONFIG = {
@@ -6130,6 +6257,9 @@ let AppSettingsController = class AppSettingsController {
     updateIntegrations(user, payload) {
         return this.appSettingsService.updateIntegrations(user, payload);
     }
+    getPublicMasterData() {
+        return this.appSettingsService.getPublicMasterData();
+    }
 };
 exports.AppSettingsController = AppSettingsController;
 __decorate([
@@ -6196,6 +6326,12 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "updateIntegrations", null);
+__decorate([
+    (0, common_1.Get)('public-master-data'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "getPublicMasterData", null);
 exports.AppSettingsController = AppSettingsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('app-settings'),
@@ -6208,6 +6344,9 @@ let PublicContactController = class PublicContactController {
     getSupportContact() {
         return this.appSettingsService.getSupportContact();
     }
+    getPublicMasterData() {
+        return this.appSettingsService.getPublicMasterData();
+    }
 };
 exports.PublicContactController = PublicContactController;
 __decorate([
@@ -6216,6 +6355,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PublicContactController.prototype, "getSupportContact", null);
+__decorate([
+    (0, common_1.Get)('master-data'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PublicContactController.prototype, "getPublicMasterData", null);
 exports.PublicContactController = PublicContactController = __decorate([
     (0, common_1.Controller)('public-contact'),
     __metadata("design:paramtypes", [typeof (_c = typeof app_settings_service_1.AppSettingsService !== "undefined" && app_settings_service_1.AppSettingsService) === "function" ? _c : Object])

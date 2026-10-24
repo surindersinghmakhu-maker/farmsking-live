@@ -121,9 +121,12 @@ export class AppSettingsService {
     return result;
   }
 
-  /** Real contact details for the "Support"/"Contact Us" screens — pulled from AppSetting or live Super Admin account. */
+  /** Real contact details for the "Support"/"Contact Us" screens — pulled from Project Master Data, AppSetting or live Super Admin account. */
   async getSupportContact() {
     const settings = await this.get();
+    const integrations = await this.getIntegrations();
+    const pm = integrations?.projectMasterData || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!;
+
     let name = (settings as any)?.adminName;
     let mobile = (settings as any)?.adminMobile;
     let email = (settings as any)?.adminEmail;
@@ -136,17 +139,103 @@ export class AppSettingsService {
       });
       if (superAdmin) {
         name = name || superAdmin.name || 'Surinder Singh (Super Admin)';
-        mobile = mobile || superAdmin.mobile || '95776-220000';
+        mobile = mobile || superAdmin.mobile || '+91 95776-22000';
         email = email || superAdmin.email || 'farmskingindia@gmail.com';
       }
     }
 
+    const companyLegalName = pm.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED';
+    const helplinePhone = pm.primaryMobile || mobile || '+91 95776-22000';
+    const supportEmail = pm.contactEmail || pm.supportEmail || email || 'farmskingindia@gmail.com';
+    const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
+    const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
+
     return {
       name: name || 'Surinder Singh (Super Admin)',
-      mobile: mobile || '95776-220000',
-      email: email || 'farmskingindia@gmail.com',
-      helplinePhone: mobile || '95776-220000',
-      supportEmail: email || 'farmskingindia@gmail.com',
+      mobile: helplinePhone,
+      email: supportEmail,
+      helplinePhone,
+      supportEmail,
+      companyLegalName,
+      registeredAddress,
+      operationalHqAddress,
+      websiteUrl: pm.websiteUrl || 'https://farmsking.com',
+      mcaSrn: pm.mcaSrn || 'AC6979718',
+    };
+  }
+
+  /** Public-safe Project Master Data & Entity info (Zero private KYC, strictly public statutory & operational parameters) */
+  async getPublicMasterData() {
+    const integrations = await this.getIntegrations();
+    const pm = integrations?.projectMasterData || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!;
+    return {
+      companyLegalName: pm.companyLegalName,
+      brandDisplayName: pm.brandDisplayName,
+      shortName: pm.shortName,
+      tagline: pm.tagline,
+      mcaSrn: pm.mcaSrn,
+      crcApprovalStatus: pm.crcApprovalStatus,
+      crcApprovalDate: pm.crcApprovalDate,
+      approvingAuthority: pm.approvingAuthority,
+      nicCodes: pm.nicCodes,
+      activityDescription: pm.activityDescription,
+      registeredAddress: pm.registeredAddress,
+      operationalHq: pm.operationalHq,
+      primaryMobile: pm.primaryMobile,
+      alternateMobile: pm.alternateMobile,
+      contactEmail: pm.contactEmail,
+      govtEmail: pm.govtEmail,
+      supportEmail: pm.supportEmail,
+      websiteUrl: pm.websiteUrl,
+      socialMedia: pm.socialMedia,
+      promotersAndCapital: {
+        authorizedEquityCapitalInr: pm.promotersAndCapital?.authorizedEquityCapitalInr,
+        authorizedSharesCount: pm.promotersAndCapital?.authorizedSharesCount,
+        faceValuePerShareInr: pm.promotersAndCapital?.faceValuePerShareInr,
+        paidUpCapitalInr: pm.promotersAndCapital?.paidUpCapitalInr,
+        firstDirectors: pm.promotersAndCapital?.firstDirectors,
+        founderAndChiefAiArchitect: pm.promotersAndCapital?.founderAndChiefAiArchitect,
+        generalManager: pm.promotersAndCapital?.generalManager,
+        leadAgronomists: pm.promotersAndCapital?.leadAgronomists,
+      },
+      cropSessions: {
+        activeSessionName: pm.cropSessions?.activeSessionName,
+        activeSeasonType: pm.cropSessions?.activeSeasonType,
+        startDate: pm.cropSessions?.startDate,
+        endDate: pm.cropSessions?.endDate,
+        isDataIsolated: pm.cropSessions?.isDataIsolated,
+        autoSwitchMandiRates: pm.cropSessions?.autoSwitchMandiRates,
+        majorCrops: pm.cropSessions?.majorCrops,
+      },
+      branding: {
+        primaryColor: pm.themeColors?.primaryColor,
+        secondaryColor: pm.themeColors?.secondaryColor,
+        buttonColor: pm.themeColors?.buttonColor,
+        logoUrl: pm.logoUrl,
+        faviconUrl: pm.faviconUrl,
+      },
+      operational: {
+        currency: pm.currency,
+        currencySymbol: pm.currencySymbol,
+        timezone: pm.timezone,
+        dateFormat: pm.dateFormat,
+        timeFormat: pm.timeFormat,
+        taxGstEnabled: pm.taxGst?.enabled,
+        taxPercentage: pm.taxGst?.taxPercentage,
+        invoicePrefix: pm.taxGst?.invoicePrefix,
+        gstNumber: pm.taxGst?.gstNumber,
+        panNumber: pm.taxGst?.panNumber,
+        hsnSacCode: pm.taxGst?.hsnSacCode,
+      },
+      certificates: pm.certificateConfig,
+      franchise: pm.franchiseRules,
+      backup: {
+        autoBackupEnabled: pm.backupSettings?.autoBackupEnabled,
+        frequency: pm.backupSettings?.frequency,
+        storageTarget: pm.backupSettings?.storageTarget,
+        retentionDays: pm.backupSettings?.retentionDays,
+        lastBackupTimestamp: pm.backupSettings?.lastBackupTimestamp,
+      },
     };
   }
 

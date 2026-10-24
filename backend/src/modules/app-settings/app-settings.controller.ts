@@ -68,6 +68,12 @@ export class AppSettingsController {
   updateIntegrations(@CurrentUser() user: AuthUser, @Body() payload: any) {
     return this.appSettingsService.updateIntegrations(user, payload);
   }
+
+  /** Get public project master data (any authenticated user) */
+  @Get('public-master-data')
+  getPublicMasterData() {
+    return this.appSettingsService.getPublicMasterData();
+  }
 }
 
 /** Public unauthenticated endpoint for website visitors & app public screens */
@@ -78,6 +84,12 @@ export class PublicContactController {
   @Get()
   getSupportContact() {
     return this.appSettingsService.getSupportContact();
+  }
+
+  /** Public master data for website visitors & mobile app startup without login */
+  @Get('master-data')
+  getPublicMasterData() {
+    return this.appSettingsService.getPublicMasterData();
   }
 }
 

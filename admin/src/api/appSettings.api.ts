@@ -450,6 +450,53 @@ export interface ProjectMasterDataConfig {
     panNumber: string;
     hsnSacCode: string;
   };
+
+  promotersAndCapital?: {
+    authorizedEquityCapitalInr: number;
+    authorizedSharesCount: number;
+    faceValuePerShareInr: number;
+    paidUpCapitalInr: number;
+    firstDirectors: string;
+    founderAndChiefAiArchitect: string;
+    generalManager: string;
+    leadAgronomists: string;
+  };
+
+  cropSessions?: {
+    activeSessionName: string;
+    activeSeasonType: 'RABI' | 'KHARIF' | 'ZAID' | 'ANNUAL';
+    startDate: string;
+    endDate: string;
+    isDataIsolated: boolean;
+    autoSwitchMandiRates: boolean;
+    majorCrops: string;
+  };
+
+  backupSettings?: {
+    autoBackupEnabled: boolean;
+    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+    retentionDays: number;
+    storageTarget: 'R2_AND_LOCAL' | 'R2_ONLY' | 'LOCAL_ONLY';
+    lastBackupTimestamp: string;
+    encryptionStandard: string;
+  };
+
+  certificateConfig?: {
+    certificatePrefix: string;
+    verificationPortalUrl: string;
+    requireApproval: boolean;
+    digitalQrEnabled: boolean;
+    defaultValidityYears: number;
+    certificateAuthority: string;
+  };
+
+  franchiseRules?: {
+    mandiAgentCommissionPercent: number;
+    dealerAreaAllocationType: 'VILLAGE' | 'TEHSIL' | 'DISTRICT';
+    centralizedApprovalRequired: boolean;
+    securityDepositInr: number;
+    minimumMonthlyTurnoverInr: number;
+  };
 }
 
 export async function getSystemIntegrations(): Promise<SystemIntegrationsConfig> {
@@ -575,6 +622,53 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
     invoicePrefix: 'FK-INV-',
     panNumber: 'AAAAF0000A',
     hsnSacCode: '998314',
+  },
+
+  promotersAndCapital: {
+    authorizedEquityCapitalInr: 100000,
+    authorizedSharesCount: 100000,
+    faceValuePerShareInr: 1,
+    paidUpCapitalInr: 100000,
+    firstDirectors: 'Bakhshish Singh, Gagandeep Kaur',
+    founderAndChiefAiArchitect: 'Surinder Singh',
+    generalManager: 'Gurnam Singh',
+    leadAgronomists: 'Sudhir Kumar Mahato, Manjeet Sra',
+  },
+
+  cropSessions: {
+    activeSessionName: 'Rabi 2026-27 (Winter Sowing)',
+    activeSeasonType: 'RABI',
+    startDate: '01/10/2026',
+    endDate: '15/04/2027',
+    isDataIsolated: true,
+    autoSwitchMandiRates: true,
+    majorCrops: 'Wheat, Mustard, Barley, Gram, Potato, Peas',
+  },
+
+  backupSettings: {
+    autoBackupEnabled: true,
+    frequency: 'DAILY',
+    retentionDays: 30,
+    storageTarget: 'R2_AND_LOCAL',
+    lastBackupTimestamp: '24/10/2026 22:30 IST',
+    encryptionStandard: 'AES-256-GCM',
+  },
+
+  certificateConfig: {
+    certificatePrefix: 'FK-CERT-',
+    verificationPortalUrl: 'https://farmsking.in/verify',
+    requireApproval: true,
+    digitalQrEnabled: true,
+    defaultValidityYears: 3,
+    certificateAuthority: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+  },
+
+  franchiseRules: {
+    mandiAgentCommissionPercent: 1.5,
+    dealerAreaAllocationType: 'TEHSIL',
+    centralizedApprovalRequired: true,
+    securityDepositInr: 25000,
+    minimumMonthlyTurnoverInr: 100000,
   },
 };
 
@@ -1038,6 +1132,26 @@ export function mergeSystemIntegrationsWithDefaults(
       taxGst: {
         ...DEFAULT_PROJECT_MASTER_DATA.taxGst,
         ...(remote.projectMasterData?.taxGst || {}),
+      },
+      promotersAndCapital: {
+        ...DEFAULT_PROJECT_MASTER_DATA.promotersAndCapital!,
+        ...(remote.projectMasterData?.promotersAndCapital || {}),
+      },
+      cropSessions: {
+        ...DEFAULT_PROJECT_MASTER_DATA.cropSessions!,
+        ...(remote.projectMasterData?.cropSessions || {}),
+      },
+      backupSettings: {
+        ...DEFAULT_PROJECT_MASTER_DATA.backupSettings!,
+        ...(remote.projectMasterData?.backupSettings || {}),
+      },
+      certificateConfig: {
+        ...DEFAULT_PROJECT_MASTER_DATA.certificateConfig!,
+        ...(remote.projectMasterData?.certificateConfig || {}),
+      },
+      franchiseRules: {
+        ...DEFAULT_PROJECT_MASTER_DATA.franchiseRules!,
+        ...(remote.projectMasterData?.franchiseRules || {}),
       },
     },
   };

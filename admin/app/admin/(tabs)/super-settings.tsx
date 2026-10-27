@@ -458,59 +458,6 @@ export default function SuperSettingsScreen() {
               : 'Select a tool from the dropdown to configure credentials and toggle activation.'}
           </Text>
         </View>
-
-        {/* ── Primary Settings Section Switcher ── */}
-        <View style={[styles.sectionTabsWrapper, !isDesktop && { width: '100%', marginTop: 8 }, { backgroundColor: isLight ? '#f1f5f9' : '#03180c', borderColor: cardBorder }]}>
-          <TouchableOpacity
-            style={[
-              styles.sectionTabBtn,
-              !isDesktop && { flex: 1, justifyContent: 'center' },
-              activeSectionTab === 'MASTER_DATA' && (isLight ? styles.sectionTabBtnActiveLight : styles.sectionTabBtnActiveDark),
-            ]}
-            onPress={() => setActiveSectionTab('MASTER_DATA')}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="settings"
-              size={15}
-              color={activeSectionTab === 'MASTER_DATA' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor}
-            />
-            <Text
-              style={[
-                styles.sectionTabText,
-                { color: activeSectionTab === 'MASTER_DATA' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor },
-                activeSectionTab === 'MASTER_DATA' && { fontWeight: '700' },
-              ]}
-            >
-              Setting
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.sectionTabBtn,
-              !isDesktop && { flex: 1, justifyContent: 'center' },
-              activeSectionTab === 'TOOLS' && (isLight ? styles.sectionTabBtnActiveLight : styles.sectionTabBtnActiveDark),
-            ]}
-            onPress={() => setActiveSectionTab('TOOLS')}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="hardware-chip"
-              size={15}
-              color={activeSectionTab === 'TOOLS' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor}
-            />
-            <Text
-              style={[
-                styles.sectionTabText,
-                { color: activeSectionTab === 'TOOLS' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor },
-                activeSectionTab === 'TOOLS' && { fontWeight: '700' },
-              ]}
-            >
-              Platform Tools & Services
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* ── Toast Alert ─────────────────────────────────────────── */}

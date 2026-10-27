@@ -26,5 +26,10 @@
 - **Zero Public Leakage of Legal Data**: Internal company legal discussions, personal KYC (Aadhaar, Passports, PAN cards, Bank Statements), share transfer instruments (SH-4), and board resolutions must NEVER be committed to public code repositories or client-facing web bundles. All statutory records remain isolated in `Govt/docs` and guarded by `.gitignore`.
 - **100% Web App & Legal Entity Alignment**: The web application (Terms of Service, Privacy Policy, Footer, Contact info, E-commerce billing) must 100% match the registered entity: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`, Regd. Office: `VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422`, and operate strictly within approved e-MoA objects (AI Crop Doctor, Live Mandi, E-commerce, Satellite Telemetry).
 - **Proactive Guidance in Discussions**: In all future tasks, proactively guide and remind according to statutory requirements and company rules.
+## 4. Mandatory A4 Page Setup Rule for All Documents & PDFs (ਸਟੈਂਡਰਡ A4 ਪੇਜ ਸੈੱਟਅੱਪ ਨਿਯਮ)
+- **Strict A4 Standard (210mm × 297mm)**: Any document, PDF report, printable invoice, bill, receipt, lab diagnostic, passbook statement, certificate, or statutory format prepared for the company MUST strictly adhere to standard **A4 page setup** (`210mm × 297mm`).
+- **Print & PDF Layout Precision**: All HTML/CSS print templates and PDF generators must specify `@page { size: A4; margin: 12mm 15mm; }` with clean page-break guards (`page-break-inside: avoid`), professional running headers/footers, and crisp typography. Arbitrary non-A4 canvas sizes or US Letter formats are strictly prohibited.
+
+## 5. Master Guidelines
 - Follow `PROJECT_RULES.md` as master specification.
 

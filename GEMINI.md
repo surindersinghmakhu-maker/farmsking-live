@@ -35,6 +35,10 @@
 - **100% Web App & Legal Entity Alignment**: The web application (Terms of Service, Privacy Policy, Footer, Contact info, E-commerce billing) must 100% match the registered entity: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`, Regd. Office: `VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422`, and operate strictly within approved e-MoA objects (AI Crop Doctor, Live Mandi, E-commerce, Satellite Telemetry).
 - **Proactive Guidance in Discussions**: In all future tasks, proactively guide and remind according to statutory requirements and company rules.
 
-## 4. Master Guidelines
+## 4. Mandatory A4 Page Setup Rule for All Documents & PDFs (ਸਟੈਂਡਰਡ A4 ਪੇਜ ਸੈੱਟਅੱਪ ਨਿਯਮ)
+- **Strict A4 Dimensions (210mm × 297mm)**: Any document, PDF report, printable invoice, bill, receipt, lab diagnostic, passbook statement, certificate, or statutory dossier prepared for the company MUST strictly adhere to standard **A4 page setup** (`210mm × 297mm` / `595.28pt × 841.89pt`).
+- **Print & PDF Layout Precision**: All HTML/CSS print templates and PDF generation routines must explicitly specify `@page { size: A4; margin: 12mm 15mm; }` with clean page-break guards (`page-break-inside: avoid`), professional headers/footers, and clean typography without text clipping. Arbitrary custom canvas sizes or US Letter formats are strictly disallowed.
+
+## 5. Master Guidelines
 - Strictly adhere to `PROJECT_RULES.md`.
 

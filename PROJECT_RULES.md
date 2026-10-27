@@ -317,3 +317,49 @@ Every screen and feature in FarmsKing MUST achieve a **5-Star Quality Rating**:
      - **Official Helpline / Phone**: `+91 98720-66901`
      - **MoA Objects Synchronization**: All web application features (AI Crop Doctor, Live APMC Mandi Ticker, Agri-Input E-Commerce, Drone & Telemetry Services, Kisan Vidya) must directly reflect and operate within the official approved MCA e-MoA objects (Main Object Clause III).
 
+---
+
+## 13. 📄 Mandatory A4 Page Setup Rule for All Documents & PDFs (ਸਟੈਂਡਰਡ A4 ਪੇਜ ਸੈੱਟਅੱਪ ਨਿਯਮ)
+> **ਹਰ ਫਾਰਮੈਟ, ਦਸਤਾਵੇਜ਼, ਰਸੀਦ, ਸਰਟੀਫਿਕੇਟ ਅਤੇ ਪੀਡੀਐਫ (PDF) ਫਾਈਲ ਨੂੰ ਸਟੈਂਡਰਡ A4 ਪੇਜ ਸੈੱਟਅੱਪ ਦੇ ਹਿਸਾਬ ਨਾਲ ਬਣਾਉਣ ਦਾ ਸਖ਼ਤ ਨਿਯਮ**
+
+Every document generator, printable report, PDF exporter, receipt renderer, lab test sheet, and statutory dossier in the FarmsKing ecosystem MUST strictly adhere to the following A4 standards:
+
+1. **Standard ISO A4 Dimensions**:
+   - Page dimensions must strictly follow **ISO 216 A4 size**:
+     - Metric: `210 mm × 297 mm`
+     - Imperial: `8.27 in × 11.69 in`
+     - PostScript Points: `595.28 pt × 841.89 pt` (72 DPI)
+     - Screen / Print CSS: `794 px × 1123 px` (96 DPI) or `2480 px × 3508 px` (300 DPI high-resolution printing).
+   - Arbitrary canvas aspect ratios, non-standard proportions, or US Letter (`8.5 in × 11 in`) sizing are strictly prohibited for company documents.
+
+2. **Print & PDF Styling Directive (`@page`)**:
+   - In all HTML/React print templates and web print stylesheets, explicitly configure:
+     ```css
+     @page {
+       size: A4 portrait;
+       margin: 12mm 15mm 15mm 15mm;
+     }
+     @media print {
+       html, body {
+         width: 210mm;
+         min-height: 297mm;
+         margin: 0;
+         padding: 0;
+         -webkit-print-color-adjust: exact;
+         print-color-adjust: exact;
+       }
+     }
+     ```
+
+3. **Page-Break & Layout Integrity**:
+   - Use `page-break-inside: avoid` (or `break-inside: avoid`) on all critical blocks (invoice summary cards, signature boxes, statutory declarations, tables, and telemetry grids) to prevent awkward splitting across page breaks.
+   - Every multi-page PDF must include a clear, professional header and footer with formal pagination (e.g. `Page X of Y`), document title, and registered entity name (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`).
+
+4. **Scope of Application**:
+   - This A4 standard applies universally across:
+     - E-Commerce tax invoices, seller payout bills, and customer order receipts.
+     - Kisan Passbook and digital bahi-khata financial statements.
+     - Soil test reports, crop doctor pathology diagnoses, and spray dose charts.
+     - Government statutory dossiers, board resolutions, and CA/MCA compliance checklists.
+     - Partner certificates, franchise agreements, and official company circulars.
+

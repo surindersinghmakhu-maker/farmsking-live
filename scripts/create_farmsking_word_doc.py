@@ -327,7 +327,7 @@ def create_document():
     h1_run.font.size = Pt(14)
     h1_run.font.bold = True
 
-    cap_tbl = doc.add_table(rows=7, cols=5)
+    cap_tbl = doc.add_table(rows=4, cols=5)
     cap_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     cap_headers = ["Member Name", "Designation", "Proposed Shares", "Equity %", "Legal / Operational Status"]
     for i, h in enumerate(cap_headers):
@@ -342,12 +342,9 @@ def create_document():
         run.font.color.rgb = RGBColor(255, 255, 255)
 
     members_data = [
-        ("Surinder Singh", "Founder & 1st Shareholder", "800 Shares", "80.00%", "Passive Shareholder / 100% Supreme Control (Govt Rule 16 Compliant)"),
-        ("Komalpreet Kaur", "Shareholder", "60 Shares", "6.00%", "Minority Shareholder (NRI / Canada Permit)"),
-        ("Lovepreet Singh", "Shareholder", "60 Shares", "6.00%", "Resident Shareholder"),
-        ("Charanjit Singh", "Director & Shareholder", "60 Shares", "6.00%", "Active Executive Director 1 (DIN & DSC Holder)"),
-        ("Gurnam Singh", "Director & Shareholder", "10 Shares", "1.00%", "Active Executive Director 2 (DIN & DSC Holder)"),
-        ("Bakshish Singh", "Director & Shareholder", "10 Shares", "1.00%", "Active Executive Director 3 (DIN & DSC Holder)")
+        ("Surinder Singh", "Founder & Subscriber", "800 Shares", "80.00%", "Lead Founder & Primary Subscriber"),
+        ("Gagandeep Kaur", "Director & Subscriber", "100 Shares", "10.00%", "First Director & Subscriber (DIN & DSC Holder)"),
+        ("Bakshish Singh", "Director & Subscriber", "100 Shares", "10.00%", "First Director & Subscriber (DIN & DSC Holder)")
     ]
 
     for row_idx, data in enumerate(members_data, start=1):
@@ -488,7 +485,7 @@ def create_document():
 
     steps = [
         ("Step 1: Name Reservation (SPICe+ Part A)", "Apply for 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' with NIC code 62013 and attach the Name Significance paragraph from Section 1."),
-        ("Step 2: Digital Signatures (DSC)", "Obtain Class-3 Digital Signatures for active directors (Charanjit Singh, Gurnam Singh, etc.) via 1-minute mobile video KYC."),
+        ("Step 2: Digital Signatures (DSC)", "Obtain Class-3 Digital Signatures for active directors (Gagandeep Kaur, Bakshish Singh, Surinder Singh) via 1-minute mobile video KYC."),
         ("Step 3: SPICe+ Part B & e-MoA (INC-33) Filing", "Copy-paste the exact 6 Main Objects from Section 2 into e-MoA INC-33. Paste the 17 Incidental Objects into Clause III(B)."),
         ("Step 4: e-AoA (INC-34) Filing", "Adopt Table F with ROFR pre-emption rights and private limited share transfer restrictions from Section 4."),
         ("Step 5: AGILE-PRO-S Integrated Services", "Tick marks for: (a) GSTIN Registration, (b) EPFO & ESIC, (c) Profession Tax (Punjab), and (d) ICICI Bank / HDFC Bank Current Account opening."),

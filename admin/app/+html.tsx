@@ -97,11 +97,11 @@ export default function Root({ children }: PropsWithChildren) {
                     "jobTitle": "Lead Founder, Chief Architect & AI Expert",
                     "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
                     "description": "Computer Teacher, IT & AI Expert, vision founder of Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Led FarmsKing end-to-end from ideation, deep crop physiology research, programming, features development to field testing."
-                  },
-                  { "@type": "Person", "name": "Gurjant Singh" },
-                  { "@type": "Person", "name": "Charanjit Singh" },
-                  { "@type": "Person", "name": "Lovepreet Singh" },
-                  { "@type": "Person", "name": "Sudhir Kumar Mahato" }
+                  }
+                ],
+                "director": [
+                  { "@type": "Person", "name": "Bakshish Singh", "jobTitle": "Director" },
+                  { "@type": "Person", "name": "Gagandeep Kaur", "jobTitle": "Director" }
                 ],
                 "contributor": [
                   { "@type": "Person", "name": "Gurnam Singh", "description": "Field Testing & Practical Validation Lead" }
@@ -150,7 +150,7 @@ export default function Root({ children }: PropsWithChildren) {
                   "name": "Who created FarmsKing and what is its mission?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing was founded by Surinder Singh, alongside core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato, with extensive practical field testing conducted by Gurnam Singh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
+                    "text": "FarmsKing was founded by Surinder Singh, with registered entity FarmsKing Technologies Private Limited led by First Directors Bakshish Singh and Gagandeep Kaur, and practical field validation supported by Gurnam Singh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
                   }
                 },
                 {
@@ -371,7 +371,7 @@ export default function Root({ children }: PropsWithChildren) {
               <section style={{ marginBottom: '25px' }}>
                 <h2 style={{ color: '#15803d', fontSize: '20px' }}>FarmsKing Founders & Vision (ਮਿਸ਼ਨ ਅਤੇ ਸੰਸਥਾਪਕ):</h2>
                 <p style={{ fontSize: '15px' }}>
-                  FarmsKing was founded by <strong>Surinder Singh</strong> (Computer Teacher, IT & AI Expert, founder of Surinder Academy, Exilent Web Solutions, and Surinder Agro Farm) along with core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, Sudhir Kumar Mahato, and Gurnam Singh.
+                  FarmsKing was founded by <strong>Surinder Singh</strong> (Computer Teacher, IT & AI Expert, founder of Surinder Academy, Exilent Web Solutions, and Surinder Agro Farm) with registered directors <strong>Bakshish Singh</strong> and <strong>Gagandeep Kaur</strong>, and practical field validation supported by Gurnam Singh.
                 </p>
                 <p style={{ fontSize: '15px' }}>
                   FarmsKing has been developed with deep practical agricultural R&D at Surinder Agro Farm to solve ground-level farming challenges, protect farmers from fake pesticides, and provide transparent mandi pricing.

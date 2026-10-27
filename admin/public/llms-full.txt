@@ -26,8 +26,10 @@ FarmsKing is India's premier Smart Agriculture and Crop Intelligence Platform. B
   - **Surinder Computers, Makhu** (Hardware & Server Infrastructure)
   - **Surinder Agro Farm** (Practical Agricultural R&D Field Laboratory)
 
-### Core Founding Team
-- **Founders**: Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, Sudhir Kumar Mahato.
+### Company Directors & Statutory Entity
+- **Registered Entity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED
+- **Board of Directors**: Bakshish Singh, Gagandeep Kaur
+- **Lead Founder & Chief AI Architect**: Surinder Singh
 - **Lead Field Tester**: **Gurnam Singh** (Led extensive practical field validation and crop diagnostics in real farm conditions).
 
 ---

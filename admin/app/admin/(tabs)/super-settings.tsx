@@ -40,6 +40,7 @@ type ToolCategory =
 
 type MasterDataSubTab =
   | 'basic-details'
+  | 'tools'
   | 'theme-colors'
   | 'social'
   | 'smtp'
@@ -86,6 +87,7 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
 
 const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'basic-details', label: 'Basic Details & Identity', icon: 'business-outline' },
+  { key: 'tools', label: 'Platform Tools & Services', icon: 'hardware-chip-outline' },
   { key: 'theme-colors', label: 'Theme Colors & Presets', icon: 'color-palette-outline' },
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
@@ -133,22 +135,22 @@ export default function SuperSettingsScreen() {
   const [localConfig, setLocalConfig] = useState<SystemIntegrationsConfig>(() =>
     mergeSystemIntegrationsWithDefaults(remoteConfig)
   );
-  const isToolsSection = params?.section === 'TOOLS' || params?.section === 'API';
-  const [activeSectionTab, setActiveSectionTab] = useState<SectionTab>(() => {
-    return isToolsSection ? 'TOOLS' : 'MASTER_DATA';
-  });
   const [activeFilter, setActiveFilter] = useState<ToolCategory>(() => {
     return 'AI';
   });
 
-  useEffect(() => {
-    if (params?.section === 'TOOLS' || params?.section === 'API') {
-      setActiveSectionTab('TOOLS');
-    } else if (params?.section === 'MASTER_DATA') {
-      setActiveSectionTab('MASTER_DATA');
+  const [masterSubTab, setMasterSubTab] = useState<MasterDataSubTab>(() => {
+    if (params?.section === 'TOOLS' || params?.section === 'API' || (params as any)?.tab === 'tools') {
+      return 'tools';
     }
-  }, [params?.section]);
-  const [masterSubTab, setMasterSubTab] = useState<MasterDataSubTab>('basic-details');
+    return 'basic-details';
+  });
+
+  useEffect(() => {
+    if (params?.section === 'TOOLS' || params?.section === 'API' || (params as any)?.tab === 'tools') {
+      setMasterSubTab('tools');
+    }
+  }, [params?.section, (params as any)?.tab]);
   const [activeEmailTmpl, setActiveEmailTmpl] = useState<EmailTemplateKey>('registration');
   const [masterSearchQuery, setMasterSearchQuery] = useState('');
   const [previewEmailHtml, setPreviewEmailHtml] = useState(false);
@@ -441,21 +443,19 @@ export default function SuperSettingsScreen() {
         <View style={styles.headerInfo}>
           <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
             <Ionicons
-              name={activeSectionTab === 'MASTER_DATA' ? 'settings-outline' : 'hardware-chip-outline'}
+              name="settings-outline"
               size={15}
               color={isLight ? '#16a34a' : '#00ff87'}
             />
             <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
-              {activeSectionTab === 'MASTER_DATA' ? 'SYSTEM SETTING' : 'TOOL & API ACTIVATOR'}
+              SYSTEM SETTING & TOOLS
             </Text>
           </View>
           <Text style={[styles.headerTitle, { color: textColor }]}>
-            {activeSectionTab === 'MASTER_DATA' ? 'Setting' : 'Platform Tools & Services'}
+            Setting
           </Text>
           <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-            {activeSectionTab === 'MASTER_DATA'
-              ? 'Company identity, statutory address, tax/GST, contact & platform configuration.'
-              : 'Select a tool from the dropdown to configure credentials and toggle activation.'}
+            Company identity, statutory address, tax/GST, platform tools, services & platform configuration.
           </Text>
         </View>
       </View>
@@ -468,82 +468,10 @@ export default function SuperSettingsScreen() {
         </View>
       )}
 
-      {/* ── Category Dropdown Selector (Only rendered when in TOOLS tab) ── */}
-      {activeSectionTab === 'TOOLS' && (
-        <View style={[styles.filterBar, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder, zIndex: 100 }]}>
-          <View style={styles.dropdownContainer}>
-            <Text style={[styles.filterLabel, { color: subTextColor }]}>Select Service / Tool:</Text>
-            <View style={styles.dropdownRelativeBox}>
-              <TouchableOpacity
-                style={[styles.dropdownTrigger, { backgroundColor: isLight ? '#ffffff' : '#04170c', borderColor: cardBorder }]}
-                onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.dropdownLeft}>
-                  <Ionicons name={selectedCategory.icon} size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                  <Text style={[styles.dropdownSelectedText, { color: textColor }]}>
-                    {selectedCategory.label}
-                  </Text>
-                </View>
-                <Ionicons
-                  name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
-                  size={16}
-                  color={subTextColor}
-                />
-              </TouchableOpacity>
-
-              {isDropdownOpen && (
-                <View style={[styles.dropdownMenu, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
-                  {TOOL_SERVICES_FILTERS.map((cat) => {
-                    const isSelected = activeFilter === cat.key;
-                    return (
-                      <TouchableOpacity
-                        key={cat.key}
-                        style={[
-                          styles.dropdownItem,
-                          isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
-                        ]}
-                        onPress={() => {
-                          setActiveFilter(cat.key);
-                          setIsDropdownOpen(false);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.dropdownItemLeft}>
-                          <Ionicons
-                            name={cat.icon}
-                            size={16}
-                            color={isSelected ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
-                          />
-                          <Text
-                            style={[
-                              styles.dropdownItemText,
-                              { color: isSelected ? (isLight ? '#16a34a' : '#00ff87') : textColor },
-                              isSelected && { fontWeight: '700' },
-                            ]}
-                          >
-                            {cat.label}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* ── Single Active Tool Card Workspace ──────────────────── */}
+      {/* ── Settings & Tools Workspace ──────────────────── */}
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         <View style={[styles.cardsGrid, isDesktop && styles.cardsGridDesktop]}>
-          {/* 0. Setting & Entity Setup */}
-          {activeSectionTab === 'MASTER_DATA' && (
-            <View style={[styles.masterContainer, isDesktop && styles.masterContainerDesktop]}>
+          <View style={[styles.masterContainer, isDesktop && styles.masterContainerDesktop]}>
               {/* Header Banner */}
               <View style={[styles.masterHeaderBanner, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={styles.masterHeaderLeft}>
@@ -2355,15 +2283,61 @@ export default function SuperSettingsScreen() {
                       </View>
                     </View>
                   )}
-                </View>
-              </View>
-            </View>
-          )}
 
-          {/* ── TAB 2: Platform Tools & Services ────────────────── */}
-          {activeSectionTab === 'TOOLS' && (
-            <>
-              {/* 1. AI Vision & Crop Doctor */}
+                  {/* TAB: Platform Tools & Services */}
+                  {masterSubTab === 'tools' && (
+                    <View style={styles.masterTabPane}>
+                      <View style={styles.subPaneHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                          <View style={{ flex: 1, minWidth: 260 }}>
+                            <Text style={[styles.subPaneTitle, { color: textColor }]}>Platform Tools & Services</Text>
+                            <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
+                              Configure external third-party API providers, credentials, and toggle activation for AI, Payment Gateway, SMS, WhatsApp, Satellite, Weather, Logistics, and Push Notifications.
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Tool Category Switcher Pills */}
+                      <View style={[styles.toolsSelectorRow, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.toolsSelectorScroll}>
+                          {TOOL_SERVICES_FILTERS.map((cat) => {
+                            const isSelected = activeFilter === cat.key;
+                            return (
+                              <TouchableOpacity
+                                key={cat.key}
+                                style={[
+                                  styles.toolPillItem,
+                                  {
+                                    borderColor: isSelected ? (isLight ? '#16a34a' : '#00ff87') : cardBorder,
+                                    backgroundColor: isSelected ? (isLight ? '#16a34a' : '#00ff87') : cardBg,
+                                  },
+                                ]}
+                                onPress={() => setActiveFilter(cat.key)}
+                                activeOpacity={0.7}
+                              >
+                                <Ionicons
+                                  name={cat.icon}
+                                  size={15}
+                                  color={isSelected ? (isLight ? '#ffffff' : '#020d06') : (isLight ? '#64748b' : '#94a3b8')}
+                                />
+                                <Text
+                                  style={[
+                                    styles.toolPillText,
+                                    { color: isSelected ? (isLight ? '#ffffff' : '#020d06') : textColor },
+                                    isSelected && { fontWeight: '700' },
+                                  ]}
+                                >
+                                  {cat.label}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </ScrollView>
+                      </View>
+
+                      {/* Active Tool Configuration Cards */}
+{/* 1. AI Vision & Crop Doctor */}
               {activeFilter === 'AI' && (
             <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.cardHeader}>
@@ -3386,8 +3360,11 @@ export default function SuperSettingsScreen() {
               </View>
             </View>
           )}
-            </>
-          )}
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
         </View>
       </ScrollView>
     </View>
@@ -3442,6 +3419,31 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONT.bold,
     marginBottom: 2,
+  },
+  toolsSelectorRow: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 6,
+    marginBottom: 16,
+  },
+  toolsSelectorScroll: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    paddingHorizontal: 2,
+  },
+  toolPillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  toolPillText: {
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
   },
   sectionTabsWrapper: {
     flexDirection: 'row',

@@ -287,8 +287,7 @@ export default function TabLayout() {
     const isSectionMatch =
       !tab.params?.section ||
       (currentSection === tab.params.section) ||
-      ((currentSection === 'TOOLS' || currentSection === 'API') && (tab.params.section === 'TOOLS' || tab.params.section === 'API')) ||
-      (!currentSection && tab.params.section === 'MASTER_DATA');
+      ((currentSection === 'TOOLS' || currentSection === 'API' || !currentSection) && tab.params.section === 'MASTER_DATA');
     return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch && isSectionMatch;
   }) || activePillar.subTabs[0];
 

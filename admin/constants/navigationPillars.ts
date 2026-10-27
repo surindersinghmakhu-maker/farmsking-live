@@ -307,10 +307,10 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     subTabs: [
       {
         id: 'master-data',
-        title: 'Project Master Data',
-        shortTitle: 'Master Data',
+        title: 'Setting',
+        shortTitle: 'Setting',
         description: 'Company identity, statutory address, tax/GST, contact & system rules',
-        icon: 'business',
+        icon: 'settings-outline',
         path: '/admin/(tabs)/super-settings',
         params: { section: 'MASTER_DATA' },
       },
@@ -326,9 +326,9 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       {
         id: 'infrastructure-settings',
         title: 'System Configuration',
-        shortTitle: 'Settings',
-        description: 'Project master data, maintenance flags & feature switches',
-        icon: 'settings',
+        shortTitle: 'Config',
+        description: 'System parameters, maintenance flags & feature switches',
+        icon: 'options-outline',
         path: '/admin/(tabs)/super-settings',
         params: { section: 'ALL' },
       },

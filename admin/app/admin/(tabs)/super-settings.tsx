@@ -80,7 +80,7 @@ const TOOL_SERVICES_FILTERS: CategoryFilter[] = [
 ];
 
 const CATEGORY_FILTERS: CategoryFilter[] = [
-  { key: 'MASTER_DATA', label: 'Project Master Data & Entity Setup', icon: 'business-outline' },
+  { key: 'MASTER_DATA', label: 'Setting & Entity Setup', icon: 'settings-outline' },
   ...TOOL_SERVICES_FILTERS,
 ];
 
@@ -231,9 +231,9 @@ export default function SuperSettingsScreen() {
       await updateMutation.mutateAsync({
         projectMasterData: localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA,
       });
-      showToast('✅ Project Master Data saved and synchronized successfully!');
+      showToast('✅ Setting saved and synchronized successfully!');
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save Project Master Data');
+      Alert.alert('Error', err?.message || 'Failed to save Setting');
     }
   };
 
@@ -250,9 +250,9 @@ export default function SuperSettingsScreen() {
     const dataStr = JSON.stringify(masterData, null, 2);
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(dataStr);
-      showToast('💾 Master Data JSON copied to clipboard for export!');
+      showToast('💾 Setting JSON copied to clipboard for export!');
     } else {
-      showToast('💾 Master Data export generated successfully!');
+      showToast('💾 Setting export generated successfully!');
     }
   };
 
@@ -441,16 +441,16 @@ export default function SuperSettingsScreen() {
         <View style={styles.headerInfo}>
           <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
             <Ionicons
-              name={activeSectionTab === 'MASTER_DATA' ? 'business-outline' : 'hardware-chip-outline'}
+              name={activeSectionTab === 'MASTER_DATA' ? 'settings-outline' : 'hardware-chip-outline'}
               size={15}
               color={isLight ? '#16a34a' : '#00ff87'}
             />
             <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
-              {activeSectionTab === 'MASTER_DATA' ? 'CENTRAL REGISTRY' : 'TOOL & API ACTIVATOR'}
+              {activeSectionTab === 'MASTER_DATA' ? 'SYSTEM SETTING' : 'TOOL & API ACTIVATOR'}
             </Text>
           </View>
           <Text style={[styles.headerTitle, { color: textColor }]}>
-            {activeSectionTab === 'MASTER_DATA' ? 'Project Master Data' : 'Platform Tools & Services'}
+            {activeSectionTab === 'MASTER_DATA' ? 'Setting' : 'Platform Tools & Services'}
           </Text>
           <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
             {activeSectionTab === 'MASTER_DATA'
@@ -471,7 +471,7 @@ export default function SuperSettingsScreen() {
             activeOpacity={0.8}
           >
             <Ionicons
-              name="business"
+              name="settings"
               size={15}
               color={activeSectionTab === 'MASTER_DATA' ? (isLight ? '#ffffff' : '#00ff87') : subTextColor}
             />
@@ -482,7 +482,7 @@ export default function SuperSettingsScreen() {
                 activeSectionTab === 'MASTER_DATA' && { fontWeight: '700' },
               ]}
             >
-              Project Master Data
+              Setting
             </Text>
           </TouchableOpacity>
 
@@ -594,18 +594,18 @@ export default function SuperSettingsScreen() {
       {/* ── Single Active Tool Card Workspace ──────────────────── */}
       <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
         <View style={[styles.cardsGrid, isDesktop && styles.cardsGridDesktop]}>
-          {/* 0. Project Master Data & Entity Setup */}
+          {/* 0. Setting & Entity Setup */}
           {activeSectionTab === 'MASTER_DATA' && (
             <View style={[styles.masterContainer, isDesktop && styles.masterContainerDesktop]}>
               {/* Header Banner */}
               <View style={[styles.masterHeaderBanner, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={styles.masterHeaderLeft}>
                   <View style={[styles.iconBox, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
-                    <Ionicons name="business" size={24} color="#10b981" />
+                    <Ionicons name="settings" size={24} color="#10b981" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={styles.titleRow}>
-                      <Text style={[styles.toolTitle, { color: textColor }]}>Project Master Data & Entity Setup</Text>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Setting & Entity Setup</Text>
                       <View style={[styles.statusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
                         <Text style={[styles.statusText, { color: '#10b981' }]}>CENTRAL REGISTRY</Text>
                       </View>
@@ -643,7 +643,7 @@ export default function SuperSettingsScreen() {
                       ) : (
                         <>
                           <Ionicons name="checkmark-done" size={17} color="#ffffff" />
-                          <Text style={styles.globalSaveText}>Save Master Data</Text>
+                          <Text style={styles.globalSaveText}>Save Setting</Text>
                         </>
                       )}
                     </LinearGradient>
@@ -668,7 +668,7 @@ export default function SuperSettingsScreen() {
                 ) : null}
               </View>
 
-              {/* Master Data Sub-tabs Navigation */}
+              {/* Setting Sub-tabs Navigation */}
               <View style={[styles.masterSubNavWrapper, isDesktop && styles.masterSubNavDesktopWrapper]}>
                 {/* Tab Pills / Sidebar */}
                 <View style={[styles.masterPillsNav, isDesktop && styles.masterPillsNavDesktop, { backgroundColor: cardBg, borderColor: cardBorder }]}>

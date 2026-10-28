@@ -56,10 +56,6 @@ export function PortalGuard({ portalId, children }: PortalGuardProps) {
         Platform.OS === 'web' && ({ height: '100dvh', maxHeight: '100dvh', maxWidth: '100vw', overflowX: 'hidden' } as any),
       ]}
     >
-      {/* Super Admin Global Portal Switcher Bar (Desktop only, never render on mobile <768px) */}
-      {isSuperAdmin && isDesktop && (
-        <PortalSwitcherBar currentPortalId={portalId} />
-      )}
       <View style={styles.contentWrap}>
         {children}
       </View>

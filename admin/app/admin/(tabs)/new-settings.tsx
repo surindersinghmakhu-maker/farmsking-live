@@ -114,40 +114,8 @@ export default function NewSettingsScreen() {
         </View>
       )}
 
-      {/* Screen Header */}
-      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: cardBorder }]}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.headerTitleWrap}>
-            <View style={[styles.headerIconBox, { backgroundColor: isLight ? '#e0e7ff' : '#1e1b4b' }]}>
-              <Ionicons name="options" size={24} color="#6366f1" />
-            </View>
-            <View>
-              <View style={styles.titleBadgeRow}>
-                <Text style={[styles.headerTitle, { color: textColor }]}>New Settings</Text>
-                <View style={[styles.liveBadge, { backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)' }]}>
-                  <View style={[styles.liveDot, { backgroundColor: accentGreen }]} />
-                  <Text style={[styles.liveBadgeText, { color: accentGreen }]}>HQ COMMAND</Text>
-                </View>
-              </View>
-              <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-                FarmsKing Technologies · Central Corporate, Platform & System Configuration Hub
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={[styles.syncBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b', borderColor: cardBorder }]}
-              onPress={handleRefresh}
-              disabled={refreshing}
-            >
-              <Ionicons name="sync-outline" size={16} color={subTextColor} />
-              <Text style={[styles.syncBtnText, { color: subTextColor }]}>Sync Telemetry</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Dynamic Navigation Tabs (Only 'About' currently; easily extensible) */}
+      {/* Tab Switcher */}
+      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: cardBorder, paddingTop: 10, paddingBottom: 0 }]}>
         <View style={styles.tabBar}>
           {SETTINGS_TABS.map((tab) => {
             const isActive = activeTab === tab.id;

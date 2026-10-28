@@ -607,6 +607,94 @@ export default function TabLayout() {
                 </View>
               )}
 
+              {/* 🧭 Horizontal Workspace Sub-Tabs (About & Setting & Entity Setup in Menu Top Line) */}
+              {activePillar.subTabs && activePillar.subTabs.length > 0 && (
+                <View style={desktopStyles.topTabsAnimatedContainer}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={desktopStyles.topTabsScrollContent}
+                  >
+                    <View
+                      style={[
+                        desktopStyles.segmentedTabContainer,
+                        isLight && {
+                          backgroundColor: '#f1f5f9',
+                          borderColor: 'rgba(22, 163, 74, 0.25)',
+                        },
+                        isDarkTheme && {
+                          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                          borderColor: 'rgba(56, 189, 248, 0.25)',
+                        },
+                      ]}
+                    >
+                      {activePillar.subTabs.map((tab) => {
+                        const isActive = activeSubTab?.id === tab.id;
+                        return (
+                          <Pressable
+                            key={tab.id}
+                            onPress={() => handleSelectSubTab(tab)}
+                            onLayout={(e) => handleTabLayout(tab.id, e.nativeEvent.layout)}
+                            style={({ pressed, hovered }: any) => [
+                              desktopStyles.segmentedTabItem,
+                              isActive && (
+                                isLight
+                                  ? {
+                                      backgroundColor: '#16a34a',
+                                      shadowColor: '#16a34a',
+                                      shadowOffset: { width: 0, height: 1 },
+                                      shadowOpacity: 0.25,
+                                      shadowRadius: 5,
+                                      elevation: 3,
+                                    }
+                                  : isDarkTheme
+                                  ? {
+                                      backgroundColor: '#38bdf8',
+                                      shadowColor: '#38bdf8',
+                                      shadowOffset: { width: 0, height: 1 },
+                                      shadowOpacity: 0.3,
+                                      shadowRadius: 5,
+                                      elevation: 3,
+                                    }
+                                  : desktopStyles.segmentedTabItemActive
+                              ),
+                              hovered && !isActive && (
+                                isLight
+                                  ? { backgroundColor: '#e2e8f0' }
+                                  : desktopStyles.segmentedTabItemHover
+                              ),
+                              pressed && { transform: [{ scale: 0.98 }] },
+                            ]}
+                          >
+                            <Ionicons
+                              name={tab.icon}
+                              size={isDesktop ? 13.5 : 12}
+                              color={
+                                isActive
+                                  ? (isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06')
+                                  : (isLight ? '#64748b' : '#94a3b8')
+                              }
+                            />
+                            <Text
+                              style={[
+                                desktopStyles.segmentedTabText,
+                                !isDesktop && { fontSize: 10.5 },
+                                isActive
+                                  ? (isLight ? { color: '#ffffff', fontFamily: FONT.bold } : isDarkTheme ? { color: '#020617', fontFamily: FONT.bold } : desktopStyles.segmentedTabTextActive)
+                                  : (isLight ? { color: '#64748b', fontFamily: FONT.medium } : desktopStyles.segmentedTabTextInactive),
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {isDesktop ? tab.title : (tab.shortTitle || tab.title)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                </View>
+              )}
+
               <View style={{ flex: 1 }} />
 
               {/* 🎨 Global Theme Switcher Pill (Visible on Desktop Header) */}

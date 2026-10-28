@@ -114,41 +114,7 @@ export default function NewSettingsScreen() {
         </View>
       )}
 
-      {/* Tab Switcher */}
-      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: cardBorder, paddingTop: 10, paddingBottom: 0 }]}>
-        <View style={styles.tabBar}>
-          {SETTINGS_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={[
-                  styles.tabItem,
-                  isActive && { borderBottomColor: activeTabBg, borderBottomWidth: 3 },
-                ]}
-                onPress={() => setActiveTab(tab.id)}
-              >
-                <Ionicons
-                  name={tab.icon}
-                  size={18}
-                  color={isActive ? (isLight ? '#4f46e5' : '#818cf8') : subTextColor}
-                />
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    {
-                      color: isActive ? (isLight ? '#4f46e5' : '#818cf8') : subTextColor,
-                      fontWeight: isActive ? '700' : '500',
-                    },
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
+
 
       {/* Main Content Area */}
       <ScrollView

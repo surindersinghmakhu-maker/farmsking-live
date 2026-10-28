@@ -16,6 +16,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { useSystemIntegrations } from '@/src/hooks/useSystemIntegrations';
+import {
+  mergeSystemIntegrationsWithDefaults,
+  DEFAULT_PROJECT_MASTER_DATA,
+  DEFAULT_SYSTEM_INTEGRATIONS_CONFIG,
+} from '@/src/api/appSettings.api';
 import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
@@ -71,6 +76,9 @@ export default function NewSettingsScreen() {
 
   // System integrations query
   const { data: systemConfig, isLoading: isSysLoading, refetch: refetchSys } = useSystemIntegrations();
+  const config = useMemo(() => mergeSystemIntegrationsWithDefaults(systemConfig), [systemConfig]);
+  const masterData = config.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
+  const aboutData = config.about || DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.about;
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -172,7 +180,12 @@ export default function NewSettingsScreen() {
                   <Ionicons name="business" size={28} color="#ffffff" />
                 </View>
                 <View style={styles.heroTextWrap}>
-                  <Text style={styles.heroOrgTitle}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
+                  <Text style={styles.heroOrgTitle}>
+                    {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.85)', marginTop: 2, fontFamily: FONT.medium }}>
+                    {masterData.brandDisplayName || masterData.brandName || aboutData.brandName || 'FarmsKing™'}
+                  </Text>
                 </View>
               </View>
             </LinearGradient>
@@ -195,14 +208,42 @@ export default function NewSettingsScreen() {
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Legal Entity Name</Text>
                     <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>
-                      FARMSKING TECHNOLOGIES PRIVATE LIMITED
+                      {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Brand / Trade Name</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>
+                      {masterData.brandDisplayName || masterData.brandName || aboutData.brandName || 'FarmsKing™'}
                     </Text>
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Incorporation Authority</Text>
                     <Text style={[styles.infoValue, { color: textColor }]}>
-                      Ministry of Corporate Affairs (MCA), Govt. of India
+                      {masterData.approvingAuthority || 'Ministry of Corporate Affairs (MCA), CRC Manesar'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>MCA SRN</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontFamily: FONT.medium }]}>
+                      {masterData.mcaSrn || 'AC6979718'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>CIN Number</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontFamily: FONT.medium }]}>
+                      {masterData.cinNumber || (masterData as any).cin || aboutData.cin || 'U01100PB2026PTC063294'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Company PAN / TAN</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontFamily: FONT.medium }]}>
+                      PAN: {masterData.companyPan || (masterData as any).panNumber || aboutData.pan || 'AABCF1234D'} | TAN: {masterData.companyTan || 'PTLA12345B'}
                     </Text>
                   </View>
 
@@ -210,11 +251,11 @@ export default function NewSettingsScreen() {
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Registered Office</Text>
                     <View style={styles.addressWrap}>
                       <Text style={[styles.infoValue, { color: textColor, lineHeight: 20 }]}>
-                        VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India
+                        {masterData.registeredAddress || masterData.registeredOfficeAddress || aboutData.registeredAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India'}
                       </Text>
                       <TouchableOpacity
                         style={styles.copyInlineBtn}
-                        onPress={() => handleCopy('Registered Address', 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India')}
+                        onPress={() => handleCopy('Registered Address', masterData.registeredAddress || masterData.registeredOfficeAddress || aboutData.registeredAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India')}
                       >
                         <Ionicons name="copy-outline" size={13} color="#6366f1" />
                         <Text style={styles.copyInlineText}>Copy</Text>
@@ -223,17 +264,30 @@ export default function NewSettingsScreen() {
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
-                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Board of Directors</Text>
-                    <View>
-                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>• Surinder Singh (Director)</Text>
-                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>• Baljit Singh (Director)</Text>
-                    </View>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Operational HQ</Text>
+                    <Text style={[styles.infoValue, { color: textColor, lineHeight: 19 }]}>
+                      {masterData.operationalHq || aboutData.headquarters || 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India'}
+                    </Text>
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
-                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Share Capital</Text>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>First Directors & Promoters</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>
+                      {masterData.promotersAndCapital?.firstDirectors || 'Bakhshish Singh, Gagandeep Kaur'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Founder & Chief AI Architect</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>
+                      {masterData.promotersAndCapital?.founderAndChiefAiArchitect || 'Surinder Singh'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Authorized Share Capital</Text>
                     <Text style={[styles.infoValue, { color: textColor }]}>
-                      ₹1,00,000 Authorized Capital (10,000 Equity Shares @ ₹10 each)
+                      ₹{(masterData.promotersAndCapital?.authorizedEquityCapitalInr || 100000).toLocaleString('en-IN')} Authorized Capital ({(masterData.promotersAndCapital?.authorizedSharesCount || 100000).toLocaleString('en-IN')} Equity Shares @ ₹{masterData.promotersAndCapital?.faceValuePerShareInr || 1} each)
                     </Text>
                   </View>
 
@@ -241,7 +295,7 @@ export default function NewSettingsScreen() {
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Statutory Rules</Text>
                     <View style={styles.tagsRow}>
                       <View style={[styles.tagPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
-                        <Text style={[styles.tagText, { color: textColor }]}>Standard A4 Documents</Text>
+                        <Text style={[styles.tagText, { color: textColor }]}>Standard A4 Documents (210mm × 297mm)</Text>
                       </View>
                       <View style={[styles.tagPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
                         <Text style={[styles.tagText, { color: textColor }]}>Zero Public KYC Leakage</Text>
@@ -259,9 +313,22 @@ export default function NewSettingsScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.cardTitle, { color: textColor }]}>Approved Business Scope</Text>
-                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>Statutory Objects per MCA e-MoA</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
+                      Statutory Objects per MCA e-MoA (NIC: {masterData.nicCodes || '62013, 01619'})
+                    </Text>
                   </View>
                 </View>
+
+                {masterData.activityDescription ? (
+                  <View style={{ marginBottom: 14, padding: 12, borderRadius: RADIUS.md, backgroundColor: isLight ? '#f8fafc' : '#020617', borderWidth: 1, borderColor: cardBorder }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#10b981', marginBottom: 4 }}>
+                      OFFICIAL NIC SCOPE SUMMARY
+                    </Text>
+                    <Text style={{ fontSize: 12, color: textColor, lineHeight: 18 }}>
+                      {masterData.activityDescription}
+                    </Text>
+                  </View>
+                ) : null}
 
                 <View style={styles.scopeList}>
                   <View style={[styles.scopeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
@@ -350,20 +417,34 @@ export default function NewSettingsScreen() {
 
                   <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <Ionicons name="cloud-done" size={20} color="#f59e0b" />
-                    <Text style={[styles.techName, { color: textColor }]}>Cloud VPS Host</Text>
+                    <Text style={[styles.techName, { color: textColor }]}>Cloud Host</Text>
                     <Text style={[styles.techDetail, { color: subTextColor }]}>Hostinger Ubuntu 24.04 LTS, Nginx, PM2, TLS 1.3</Text>
                   </View>
 
                   <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <Ionicons name="sparkles" size={20} color="#ec4899" />
-                    <Text style={[styles.techName, { color: textColor }]}>AI & Satellite</Text>
-                    <Text style={[styles.techDetail, { color: subTextColor }]}>Google Gemini 1.5 Pro/Flash, Copernicus Sentinel-2</Text>
+                    <Text style={[styles.techName, { color: textColor }]}>AI Engine ({config.ai?.activeProvider || 'GEMINI'})</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Google Gemini 1.5 Pro / Flash & Computer Vision</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="card-outline" size={20} color="#10b981" />
+                    <Text style={[styles.techName, { color: textColor }]}>Payment Gateway ({config.gateway?.activeGateway || 'PHONEPE'})</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>
+                      {config.gateway?.isSandbox ? 'Sandbox / Test Mode' : 'Live Production Mode'} • UPI Direct
+                    </Text>
                   </View>
 
                   <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <Ionicons name="chatbubbles" size={20} color="#14b8a6" />
-                    <Text style={[styles.techName, { color: textColor }]}>Communications</Text>
-                    <Text style={[styles.techDetail, { color: subTextColor }]}>Fast2SMS DLT-Approved SMS, Meta WhatsApp Cloud API</Text>
+                    <Text style={[styles.techName, { color: textColor }]}>SMS & WhatsApp ({config.sms?.activeProvider || 'FIREBASE'})</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Fast2SMS DLT-Approved, Meta WhatsApp Cloud API</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="planet-outline" size={20} color="#0284c7" />
+                    <Text style={[styles.techName, { color: textColor }]}>Satellite Telemetry ({config.satellite?.activeProvider || 'AGROMONITORING'})</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Sentinel-2 Earth Observation & Soil Indices</Text>
                   </View>
                 </View>
               </View>
@@ -384,10 +465,12 @@ export default function NewSettingsScreen() {
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Helpline Number</Text>
                     <View style={styles.addressWrap}>
-                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>+91 98883 04511</Text>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>
+                        {masterData.primaryMobile || masterData.officialPhone || aboutData.supportPhone || '+91 95776 22000'}
+                      </Text>
                       <TouchableOpacity
                         style={styles.copyInlineBtn}
-                        onPress={() => handleCopy('Helpline', '+91 98883 04511')}
+                        onPress={() => handleCopy('Helpline', masterData.primaryMobile || masterData.officialPhone || aboutData.supportPhone || '+91 95776 22000')}
                       >
                         <Ionicons name="copy-outline" size={13} color="#6366f1" />
                         <Text style={styles.copyInlineText}>Copy</Text>
@@ -398,10 +481,12 @@ export default function NewSettingsScreen() {
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Official Email</Text>
                     <View style={styles.addressWrap}>
-                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>support@farmsking.in</Text>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>
+                        {masterData.supportEmail || masterData.officialEmail || aboutData.supportEmail || 'support@farmsking.in'}
+                      </Text>
                       <TouchableOpacity
                         style={styles.copyInlineBtn}
-                        onPress={() => handleCopy('Support Email', 'support@farmsking.in')}
+                        onPress={() => handleCopy('Support Email', masterData.supportEmail || masterData.officialEmail || aboutData.supportEmail || 'support@farmsking.in')}
                       >
                         <Ionicons name="copy-outline" size={13} color="#6366f1" />
                         <Text style={styles.copyInlineText}>Copy</Text>
@@ -410,13 +495,24 @@ export default function NewSettingsScreen() {
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Grievance Officer</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>
+                      {masterData.grievanceOfficerName || 'Surinder Singh'} ({masterData.grievanceOfficerEmail || 'grievance@farmsking.in'})
+                    </Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Official Web Portal</Text>
-                    <Text style={[styles.infoValue, { color: '#6366f1', fontWeight: '600' }]}>https://farmsking.in</Text>
+                    <Text style={[styles.infoValue, { color: '#6366f1', fontWeight: '600' }]}>
+                      {masterData.websiteUrl || 'https://farmsking.in'}
+                    </Text>
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
                     <Text style={[styles.infoLabel, { color: subTextColor }]}>Platform Version</Text>
-                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>v2.4.0-production</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>
+                      {aboutData.appVersion ? `v${aboutData.appVersion}-production` : 'v2.4.0-production'}
+                    </Text>
                   </View>
 
                   <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>

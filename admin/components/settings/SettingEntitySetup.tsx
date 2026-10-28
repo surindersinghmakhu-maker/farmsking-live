@@ -231,9 +231,9 @@ export default function SettingEntitySetup() {
       await updateMutation.mutateAsync({
         projectMasterData: localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA,
       });
-      showToast('✅ Setting & Entity Setup saved and synchronized successfully!');
+      showToast('✅ FK Setting saved and synchronized successfully!');
     } catch (err: any) {
-      Alert.alert('Save Failed', err?.message || 'Failed to save Setting & Entity Setup');
+      Alert.alert('Save Failed', err?.message || 'Failed to save FK Setting');
     }
   };
 
@@ -348,7 +348,7 @@ export default function SettingEntitySetup() {
           </View>
           <View>
             <View style={styles.titleRow}>
-              <Text style={[styles.topTitle, { color: textColor }]}>Setting & Entity Setup</Text>
+              <Text style={[styles.topTitle, { color: textColor }]}>FK Setting</Text>
               <View style={[styles.liveBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.2)' }]}>
                 <View style={[styles.dot, { backgroundColor: '#10b981' }]} />
                 <Text style={styles.liveBadgeText}>MCA Verified</Text>

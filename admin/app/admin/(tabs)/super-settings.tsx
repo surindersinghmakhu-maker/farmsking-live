@@ -81,7 +81,7 @@ const TOOL_SERVICES_FILTERS: CategoryFilter[] = [
 ];
 
 const CATEGORY_FILTERS: CategoryFilter[] = [
-  { key: 'MASTER_DATA', label: 'Setting & Entity Setup', icon: 'settings-outline' },
+  { key: 'MASTER_DATA', label: 'FK Setting', icon: 'settings-outline' },
   ...TOOL_SERVICES_FILTERS,
 ];
 
@@ -480,7 +480,7 @@ export default function SuperSettingsScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               <Ionicons name="business" size={20} color="#6366f1" />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.movedBannerTitle, { color: textColor }]}>Setting & Entity Setup moved to New Settings</Text>
+                <Text style={[styles.movedBannerTitle, { color: textColor }]}>FK Setting moved to New Settings</Text>
                 <Text style={[styles.movedBannerSubtitle, { color: subTextColor }]}>
                   Company identity, MCA SRN, CIN, PAN/TAN, registered address, tax/GST and branding are now managed in New Settings.
                 </Text>

@@ -316,8 +316,8 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       },
       {
         id: 'settings-entity',
-        title: 'Setting & Entity Setup',
-        shortTitle: 'Entity Setup',
+        title: 'FK Setting',
+        shortTitle: 'FK Setting',
         description: 'Corporate registry, registered address, directors, branding, tax/GST and master rules',
         icon: 'settings-outline',
         path: '/admin/(tabs)/new-settings',

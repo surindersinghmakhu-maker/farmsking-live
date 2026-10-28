@@ -40,7 +40,7 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
   },
   {
     id: 'ENTITY_SETUP',
-    label: 'Setting & Entity Setup',
+    label: 'FK Setting',
     icon: 'settings-outline',
     description: 'Master corporate registry, registered address, directors, branding, tax/GST, communication & system rules',
   },

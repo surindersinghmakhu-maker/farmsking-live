@@ -43,22 +43,23 @@ type ServiceCategory =
 interface CategoryPill {
   key: ServiceCategory;
   label: string;
+  description: string;
   icon: keyof typeof Ionicons.glyphMap;
   badge?: string;
 }
 
 const CATEGORY_PILLS: CategoryPill[] = [
-  { key: 'ALL', label: 'All Services', icon: 'grid-outline', badge: '10 Connected' },
-  { key: 'GATEWAY', label: 'Payment Gateways', icon: 'card-outline', badge: '10 Market Options' },
-  { key: 'AI', label: 'AI Crop Doctor', icon: 'sparkles-outline', badge: '7 Vision Engines' },
-  { key: 'TELECOM', label: 'Video Calling', icon: 'videocam-outline', badge: '6 WebRTC Engines' },
-  { key: 'WEATHER', label: 'Weather Telemetry', icon: 'cloud-outline', badge: '6 Forecast APIs' },
-  { key: 'SATELLITE', label: 'Satellite Telemetry', icon: 'planet-outline', badge: '6 Remote Sensing APIs' },
-  { key: 'SMS', label: 'SMS & OTP', icon: 'chatbox-ellipses-outline', badge: '8 Gateways' },
-  { key: 'WHATSAPP', label: 'WhatsApp Bot', icon: 'logo-whatsapp', badge: '7 Providers' },
-  { key: 'SMTP', label: 'Mail Server (SMTP)', icon: 'mail-outline', badge: 'Hostinger & SES' },
-  { key: 'LOGISTICS', label: 'Logistics & Shipping', icon: 'cube-outline', badge: '7 Couriers' },
-  { key: 'STORAGE_PUSH', label: 'Storage & Push', icon: 'server-outline', badge: 'Cloud & FCM' },
+  { key: 'ALL', label: 'All Services (Master View)', description: 'View and manage all 10 service engines simultaneously in a unified list.', icon: 'grid-outline', badge: '10 Connected' },
+  { key: 'GATEWAY', label: '1. Payment Gateways', description: 'Razorpay, Cashfree & UPI Direct merchant accounts and webhooks.', icon: 'card-outline', badge: '10 Market Options' },
+  { key: 'AI', label: '2. AI & Agronomy Doctor', description: 'Gemini 1.5 Pro & Vision prompt models and agronomy prescription engine.', icon: 'sparkles-outline', badge: '7 Vision Engines' },
+  { key: 'TELECOM', label: '3. Video Calling & Advisory', description: 'Live farmer-expert consultation, WebRTC room credentials and relay.', icon: 'videocam-outline', badge: '6 WebRTC Engines' },
+  { key: 'WEATHER', label: '4. Weather Telemetry Radar', description: 'Hyperlocal agricultural forecast data, rainfall and spray window radar.', icon: 'cloud-outline', badge: '6 Forecast APIs' },
+  { key: 'SMS', label: '5. SMS & OTP Relay', description: 'Transactional OTP login, mandi order alerts and DLT template routing.', icon: 'chatbox-ellipses-outline', badge: '8 Gateways' },
+  { key: 'WHATSAPP', label: '6. WhatsApp Bot Engine', description: 'Official Meta WhatsApp Business Cloud API & automated price bulletins.', icon: 'logo-whatsapp', badge: '7 Providers' },
+  { key: 'LOGISTICS', label: '7. Logistics & Shipping', description: 'Inter-district grain shipping, Delhivery freight and live driver tracking.', icon: 'cube-outline', badge: '7 Couriers' },
+  { key: 'STORAGE_PUSH', label: '8. Storage & Push Alerts', description: 'AWS S3, MinIO, Cloudflare R2 object storage and Firebase Cloud Messaging.', icon: 'server-outline', badge: 'Cloud & FCM' },
+  { key: 'SATELLITE', label: '9. Satellite Field Telemetry', description: 'Sentinel-2 & Landsat-9 remote sensing NDVI indices and field boundaries.', icon: 'planet-outline', badge: '6 Remote Sensing APIs' },
+  { key: 'SMTP', label: '10. Mail Server (SMTP)', description: 'Hostinger & Amazon SES transactional email dispatch and diagnostic mailer.', icon: 'mail-outline', badge: 'Hostinger & SES' },
 ];
 
 export const SMTP_PRESETS = [
@@ -1385,6 +1386,8 @@ export function ThirdPartyServicesSection() {
 
   const [localConfig, setLocalConfig] = useState<SystemIntegrationsConfig>(() => mergeSystemIntegrationsWithDefaults(config));
   const [appSettingsForm, setAppSettingsForm] = useState<UpdateAppSettingsPayload>({});
+  const [toolsTab, setToolsTab] = useState<'COCKPIT' | 'SERVICES'>('COCKPIT');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<ServiceCategory>('ALL');
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
@@ -1612,102 +1615,153 @@ export function ThirdPartyServicesSection() {
         </View>
       )}
 
-      {/* ── Category Filter Pills Bar ─────────────────────────────────── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterScroll}
-      >
-        {CATEGORY_PILLS.map((pill) => {
-          const isActive = activeCategory === pill.key;
-          return (
-            <TouchableOpacity
-              key={pill.key}
-              style={[
-                styles.categoryPill,
-                {
-                  backgroundColor: isActive
+      {/* ── Sub-Tabs Navigation (Tab 1: Telemetry Cockpit | Tab 2: All Services) ── */}
+      <View style={[styles.subTabsContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <TouchableOpacity
+          style={[
+            styles.subTabButton,
+            toolsTab === 'COCKPIT' && (isLight ? styles.subTabActiveLight : styles.subTabActiveDark),
+          ]}
+          onPress={() => setToolsTab('COCKPIT')}
+          activeOpacity={0.8}
+        >
+          <View
+            style={[
+              styles.subTabIconWrap,
+              {
+                backgroundColor:
+                  toolsTab === 'COCKPIT'
                     ? isLight
-                      ? '#16a34a'
-                      : '#00ff87'
+                      ? '#dcfce7'
+                      : 'rgba(0,255,135,0.15)'
                     : isLight
-                    ? '#ffffff'
-                    : '#03140a',
-                  borderColor: isActive
-                    ? isLight
-                      ? '#16a34a'
-                      : '#00ff87'
-                    : cardBorder,
-                },
-              ]}
-              onPress={() => setActiveCategory(pill.key)}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name={pill.icon}
-                size={16}
-                color={
-                  isActive
-                    ? isLight
-                      ? '#ffffff'
-                      : '#020d06'
-                    : isLight
-                    ? '#475569'
-                    : '#94a3b8'
-                }
-              />
+                    ? '#f1f5f9'
+                    : '#1e293b',
+              },
+            ]}
+          >
+            <Ionicons
+              name="speedometer"
+              size={18}
+              color={toolsTab === 'COCKPIT' ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text
                 style={[
-                  styles.categoryPillText,
+                  styles.subTabTitle,
+                  { color: toolsTab === 'COCKPIT' ? (isLight ? '#16a34a' : '#00ff87') : textColor },
+                  toolsTab === 'COCKPIT' && { fontWeight: '800' },
+                ]}
+              >
+                Telemetry Cockpit
+              </Text>
+              <View
+                style={[
+                  styles.subTabMiniBadge,
                   {
-                    color: isActive
-                      ? isLight
-                        ? '#ffffff'
-                        : '#020d06'
-                      : textColor,
-                    fontWeight: isActive ? '800' : '600',
+                    backgroundColor:
+                      toolsTab === 'COCKPIT'
+                        ? isLight
+                          ? '#16a34a'
+                          : '#00ff87'
+                        : isLight
+                        ? '#e2e8f0'
+                        : '#334155',
                   },
                 ]}
               >
-                {pill.label}
-              </Text>
-              {pill.badge && (
-                <View
+                <Text
                   style={[
-                    styles.pillMiniBadge,
-                    {
-                      backgroundColor: isActive
-                        ? isLight
-                          ? 'rgba(255,255,255,0.25)'
-                          : 'rgba(2,13,6,0.18)'
-                        : isLight
-                        ? '#f1f5f9'
-                        : '#072414',
-                    },
+                    styles.subTabMiniBadgeText,
+                    { color: toolsTab === 'COCKPIT' ? '#ffffff' : subTextColor },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.pillMiniBadgeText,
-                      {
-                        color: isActive
-                          ? isLight
-                            ? '#ffffff'
-                            : '#020d06'
-                          : subTextColor,
-                      },
-                    ]}
-                  >
-                    {pill.badge}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+                  Live Meters
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.subTabDesc, { color: subTextColor }]} numberOfLines={1}>
+              Master quota trackers, volume processed & active health
+            </Text>
+          </View>
+        </TouchableOpacity>
 
-      {/* ── MASTER SERVICES TELEMETRY COCKPIT (ALL 8 ENGINES METER) ── */}
+        <TouchableOpacity
+          style={[
+            styles.subTabButton,
+            toolsTab === 'SERVICES' && (isLight ? styles.subTabActiveLight : styles.subTabActiveDark),
+          ]}
+          onPress={() => setToolsTab('SERVICES')}
+          activeOpacity={0.8}
+        >
+          <View
+            style={[
+              styles.subTabIconWrap,
+              {
+                backgroundColor:
+                  toolsTab === 'SERVICES'
+                    ? isLight
+                      ? '#dcfce7'
+                      : 'rgba(0,255,135,0.15)'
+                    : isLight
+                    ? '#f1f5f9'
+                    : '#1e293b',
+              },
+            ]}
+          >
+            <Ionicons
+              name="options"
+              size={18}
+              color={toolsTab === 'SERVICES' ? (isLight ? '#16a34a' : '#00ff87') : subTextColor}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text
+                style={[
+                  styles.subTabTitle,
+                  { color: toolsTab === 'SERVICES' ? (isLight ? '#16a34a' : '#00ff87') : textColor },
+                  toolsTab === 'SERVICES' && { fontWeight: '800' },
+                ]}
+              >
+                All Services (Configuration)
+              </Text>
+              <View
+                style={[
+                  styles.subTabMiniBadge,
+                  {
+                    backgroundColor:
+                      toolsTab === 'SERVICES'
+                        ? isLight
+                          ? '#16a34a'
+                          : '#00ff87'
+                        : isLight
+                        ? '#e2e8f0'
+                        : '#334155',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.subTabMiniBadgeText,
+                    { color: toolsTab === 'SERVICES' ? '#ffffff' : subTextColor },
+                  ]}
+                >
+                  Dropdown List
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.subTabDesc, { color: subTextColor }]} numberOfLines={1}>
+              Credentials, API keys, presets & testing
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── TAB 1: MASTER SERVICES TELEMETRY COCKPIT ── */}
+      {toolsTab === 'COCKPIT' && (
       <View style={[styles.cockpitCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
         <View style={styles.cockpitHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -1763,7 +1817,10 @@ export function ThirdPartyServicesSection() {
           {/* 1. Gateway */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'GATEWAY' ? '#16a34a' : cardBorder }]}
-            onPress={() => setActiveCategory('GATEWAY')}
+            onPress={() => {
+              setActiveCategory('GATEWAY');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1791,7 +1848,10 @@ export function ThirdPartyServicesSection() {
           {/* 2. AI Doctor */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'AI' ? '#9333ea' : cardBorder }]}
-            onPress={() => setActiveCategory('AI')}
+            onPress={() => {
+              setActiveCategory('AI');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1819,7 +1879,10 @@ export function ThirdPartyServicesSection() {
           {/* 3. Telecom RTC */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'TELECOM' ? '#2563eb' : cardBorder }]}
-            onPress={() => setActiveCategory('TELECOM')}
+            onPress={() => {
+              setActiveCategory('TELECOM');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1847,7 +1910,10 @@ export function ThirdPartyServicesSection() {
           {/* 4. Weather Radar */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'WEATHER' ? '#059669' : cardBorder }]}
-            onPress={() => setActiveCategory('WEATHER')}
+            onPress={() => {
+              setActiveCategory('WEATHER');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1875,7 +1941,10 @@ export function ThirdPartyServicesSection() {
           {/* 5. SMS & OTP */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'SMS' ? '#ea580c' : cardBorder }]}
-            onPress={() => setActiveCategory('SMS')}
+            onPress={() => {
+              setActiveCategory('SMS');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1903,7 +1972,10 @@ export function ThirdPartyServicesSection() {
           {/* 6. WhatsApp Bot */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'WHATSAPP' ? '#22c55e' : cardBorder }]}
-            onPress={() => setActiveCategory('WHATSAPP')}
+            onPress={() => {
+              setActiveCategory('WHATSAPP');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1931,7 +2003,10 @@ export function ThirdPartyServicesSection() {
           {/* 7. Logistics */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'LOGISTICS' ? '#0284c7' : cardBorder }]}
-            onPress={() => setActiveCategory('LOGISTICS')}
+            onPress={() => {
+              setActiveCategory('LOGISTICS');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1959,7 +2034,10 @@ export function ThirdPartyServicesSection() {
           {/* 8. Storage & Push */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'STORAGE_PUSH' ? '#e11d48' : cardBorder }]}
-            onPress={() => setActiveCategory('STORAGE_PUSH')}
+            onPress={() => {
+              setActiveCategory('STORAGE_PUSH');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -1987,7 +2065,10 @@ export function ThirdPartyServicesSection() {
           {/* 9. Satellite Telemetry */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'SATELLITE' ? '#16a34a' : cardBorder }]}
-            onPress={() => setActiveCategory('SATELLITE')}
+            onPress={() => {
+              setActiveCategory('SATELLITE');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -2015,7 +2096,10 @@ export function ThirdPartyServicesSection() {
           {/* 10. Mail (SMTP) */}
           <TouchableOpacity
             style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'SMTP' ? '#6366f1' : cardBorder }]}
-            onPress={() => setActiveCategory('SMTP')}
+            onPress={() => {
+              setActiveCategory('SMTP');
+              setToolsTab('SERVICES');
+            }}
             activeOpacity={0.8}
           >
             <View style={styles.cockpitItemTop}>
@@ -2038,7 +2122,175 @@ export function ThirdPartyServicesSection() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={[styles.cockpitConfigShortcutBtn, { backgroundColor: innerBg, borderColor: cardBorder }]}
+          onPress={() => setToolsTab('SERVICES')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="options-outline" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+          <Text style={[styles.cockpitConfigShortcutText, { color: textColor }]}>
+            Open All Services Configuration Dropdown to edit API Keys & Secrets →
+          </Text>
+        </TouchableOpacity>
       </View>
+      )}
+
+      {/* ── TAB 2: ALL SERVICES CONFIGURATION WITH DROPDOWN LIST ── */}
+      {toolsTab === 'SERVICES' && (() => {
+        const activeCategoryItem = CATEGORY_PILLS.find((p) => p.key === activeCategory) || CATEGORY_PILLS[0];
+        const activeIndex = CATEGORY_PILLS.findIndex((p) => p.key === activeCategory);
+
+        return (
+          <>
+            {/* Executive All Services Dropdown Selector */}
+            <View style={[styles.serviceSelectorCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <TouchableOpacity
+                style={styles.serviceSelectorHeader}
+                onPress={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.serviceSelectorHeaderLeft}>
+                  <View
+                    style={[
+                      styles.serviceSelectorIconBadge,
+                      {
+                        backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(0, 255, 135, 0.15)',
+                      },
+                    ]}
+                  >
+                    <Ionicons name={activeCategoryItem.icon} size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.serviceSelectorTitleRow}>
+                      <Text style={[styles.serviceSelectorModuleLabel, { color: isLight ? '#15803d' : '#00ff87' }]}>
+                        ACTIVE SERVICE SELECTION
+                      </Text>
+                      <View style={[styles.serviceSelectorCountBadge, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                        <Text style={[styles.serviceSelectorCountText, { color: subTextColor }]}>
+                          {activeCategoryItem.badge || `${activeIndex + 1} of ${CATEGORY_PILLS.length}`}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.serviceSelectorTitle, { color: textColor }]}>{activeCategoryItem.label}</Text>
+                    <Text style={[styles.serviceSelectorSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                      {activeCategoryItem.description}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.serviceSelectorChevronBtn,
+                    { backgroundColor: isLight ? '#f8fafc' : '#0f172a', borderColor: cardBorder },
+                  ]}
+                >
+                  <Text style={[styles.serviceSelectorChevronText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
+                    Switch Service
+                  </Text>
+                  <Ionicons
+                    name={isCategoryDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={isLight ? '#16a34a' : '#00ff87'}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* Dropdown Options List */}
+              {isCategoryDropdownOpen && (
+                <View style={[styles.serviceSelectorList, { borderTopColor: cardBorder }]}>
+                  {CATEGORY_PILLS.map((pill) => {
+                    const isSelected = activeCategory === pill.key;
+                    return (
+                      <TouchableOpacity
+                        key={pill.key}
+                        style={[
+                          styles.serviceSelectorItem,
+                          isSelected && (isLight ? styles.serviceSelectorItemActiveLight : styles.serviceSelectorItemActiveDark),
+                        ]}
+                        onPress={() => {
+                          setActiveCategory(pill.key);
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View
+                          style={[
+                            styles.tabIconBadge,
+                            {
+                              backgroundColor: isSelected
+                                ? isLight
+                                  ? '#16a34a'
+                                  : '#00ff87'
+                                : isLight
+                                ? 'rgba(148, 163, 184, 0.15)'
+                                : 'rgba(51, 65, 85, 0.4)',
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name={pill.icon}
+                            size={17}
+                            color={isSelected ? (isLight ? '#ffffff' : '#020d06') : subTextColor}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={[
+                              styles.serviceSelectorItemTitle,
+                              { color: isSelected ? (isLight ? '#15803d' : '#00ff87') : textColor },
+                              isSelected && { fontWeight: '800' },
+                            ]}
+                          >
+                            {pill.label}
+                          </Text>
+                          <Text style={[styles.serviceSelectorItemDesc, { color: subTextColor }]} numberOfLines={1}>
+                            {pill.description}
+                          </Text>
+                        </View>
+                        {pill.badge && (
+                          <View
+                            style={[
+                              styles.pillMiniBadge,
+                              {
+                                backgroundColor: isSelected
+                                  ? isLight
+                                    ? 'rgba(22, 163, 74, 0.15)'
+                                    : 'rgba(0, 255, 135, 0.2)'
+                                  : isLight
+                                  ? '#f1f5f9'
+                                  : '#072414',
+                                marginRight: 6,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.pillMiniBadgeText,
+                                {
+                                  color: isSelected
+                                    ? isLight
+                                      ? '#15803d'
+                                      : '#00ff87'
+                                    : subTextColor,
+                                },
+                              ]}
+                            >
+                              {pill.badge}
+                            </Text>
+                          </View>
+                        )}
+                        {isSelected && (
+                          <View style={styles.activeCheckBadge}>
+                            <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
 
       {/* ═════════════════════════════════════════════════════════════════ */}
       {/* 1. PAYMENT GATEWAYS ENGINE                                       */}
@@ -8952,6 +9204,9 @@ export function ThirdPartyServicesSection() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+          </>
+        );
+      })()}
     </View>
   );
 }
@@ -9206,6 +9461,172 @@ const styles = StyleSheet.create({
   bottomSaveDesc: {
     fontSize: 11.5,
     marginTop: 2,
+  },
+  subTabsContainer: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 6,
+    gap: 8,
+    marginBottom: 16,
+    flexWrap: 'wrap',
+  },
+  subTabButton: {
+    flex: 1,
+    minWidth: 260,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  subTabActiveLight: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#16a34a',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  subTabActiveDark: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1,
+    borderColor: '#00ff87',
+  },
+  subTabIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subTabTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+  },
+  subTabDesc: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  subTabMiniBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  subTabMiniBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  cockpitConfigShortcutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  cockpitConfigShortcutText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  serviceSelectorCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  serviceSelectorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    gap: 12,
+  },
+  serviceSelectorHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  serviceSelectorIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  serviceSelectorTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  serviceSelectorModuleLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  serviceSelectorCountBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  serviceSelectorCountText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  serviceSelectorTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  serviceSelectorSubtitle: {
+    fontSize: 11.5,
+    marginTop: 1,
+  },
+  serviceSelectorChevronBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  serviceSelectorChevronText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  serviceSelectorList: {
+    borderTopWidth: 1,
+    padding: 8,
+    gap: 4,
+  },
+  serviceSelectorItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  serviceSelectorItemActiveLight: {
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+  },
+  serviceSelectorItemActiveDark: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+  },
+  serviceSelectorItemTitle: {
+    fontSize: 13.5,
+  },
+  serviceSelectorItemDesc: {
+    fontSize: 11,
+    marginTop: 1,
   },
   toastBanner: {
     flexDirection: 'row',

@@ -326,11 +326,11 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       {
         id: 'platform-tools',
         title: 'Platform Tools & Services',
-        shortTitle: 'Tools & Services',
-        description: 'Third-party API providers, credentials, and live telemetry toggles',
+        shortTitle: 'Tools API',
+        description: 'Third-party API providers, credentials, gateways & live service configurations',
         icon: 'hardware-chip-outline',
-        path: '/admin/(tabs)/super-settings',
-        params: { pillar: 'PLATFORM' },
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'TOOLS_API', pillar: 'PLATFORM' },
       },
       {
         id: 'cpanel-integrations',

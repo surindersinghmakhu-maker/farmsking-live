@@ -168,7 +168,7 @@ export default function NewSettingsScreen() {
       >
         {activeTab === 'ABOUT' && (
           <View style={styles.aboutTabWrapper}>
-            {/* Hero Company Banner */}
+            {/* Hero Company Banner - Compact Single Line */}
             <LinearGradient
               colors={isLight ? ['#4f46e5', '#3730a3'] : ['#1e1b4b', '#0f172a']}
               start={{ x: 0, y: 0 }}
@@ -177,16 +177,11 @@ export default function NewSettingsScreen() {
             >
               <View style={styles.heroContent}>
                 <View style={styles.heroIconBadge}>
-                  <Ionicons name="business" size={28} color="#ffffff" />
+                  <Ionicons name="business" size={18} color="#ffffff" />
                 </View>
-                <View style={styles.heroTextWrap}>
-                  <Text style={styles.heroOrgTitle}>
-                    {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
-                  </Text>
-                  <Text style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.85)', marginTop: 2, fontFamily: FONT.medium }}>
-                    {masterData.brandDisplayName || masterData.brandName || aboutData.brandName || 'FarmsKing™'}
-                  </Text>
-                </View>
+                <Text style={styles.heroOrgTitle} numberOfLines={1}>
+                  {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
+                </Text>
               </View>
             </LinearGradient>
 
@@ -684,57 +679,29 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   heroBanner: {
-    borderRadius: RADIUS.lg,
-    padding: 18,
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     overflow: 'hidden',
   },
   heroContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 12,
   },
   heroIconBadge: {
-    width: 54,
-    height: 54,
-    borderRadius: RADIUS.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 32,
+    height: 32,
+    borderRadius: RADIUS.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroTextWrap: {
-    flex: 1,
-  },
   heroOrgTitle: {
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: '800',
     color: '#ffffff',
-    letterSpacing: 0.2,
-  },
-  heroOrgSubtitle: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 4,
-    lineHeight: 19,
-  },
-  heroStatsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 16,
-  },
-  heroStatChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.full,
-  },
-  heroStatText: {
-    fontSize: 11,
-    color: '#ffffff',
-    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   modularNoticeCard: {
     flexDirection: 'row',

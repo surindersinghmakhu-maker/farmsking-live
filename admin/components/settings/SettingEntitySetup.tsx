@@ -46,25 +46,25 @@ export interface MasterDataTabItem {
 export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   {
     key: 'basic-details',
-    label: 'Basic Details & Identity',
+    label: 'Corporate Identity & Legal',
     icon: 'business-outline',
     description: 'Company name, MCA, CIN, PAN, TAN & address',
   },
   {
     key: 'theme-colors',
-    label: 'Theme Colors & Presets',
+    label: 'Branding & Theme Colors',
     icon: 'color-palette-outline',
     description: 'Executive theme highlights & color presets',
   },
   {
     key: 'social',
-    label: 'Social Media & Maps',
+    label: 'Social Profiles & Location',
     icon: 'share-social-outline',
     description: 'Official social profiles & Google Maps location',
   },
   {
     key: 'smtp',
-    label: 'Email SMTP Settings',
+    label: 'Mail Server (SMTP)',
     icon: 'mail-outline',
     description: 'Outgoing mail server, ports & credentials',
   },
@@ -82,7 +82,7 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   },
   {
     key: 'tax-gst',
-    label: 'Tax / GST Settings',
+    label: 'GST & Tax Invoicing',
     icon: 'receipt-outline',
     description: 'GSTIN, default rates, invoicing & rules',
   },
@@ -496,7 +496,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="business-outline" size={20} color="#6366f1" />
                   </View>
                   <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Institute & Company Identity</Text>
+                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Corporate Identity & Legal Registrations</Text>
                     <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
                       Approved corporate name, brand identity, and Ministry of Corporate Affairs (MCA) registration.
                     </Text>
@@ -733,7 +733,7 @@ export default function SettingEntitySetup() {
                       <Ionicons name="checkmark-done" size={16} color="#ffffff" />
                     )}
                     <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Identity Details'}
+                      {updateMutation.isPending ? 'Saving...' : 'Save Corporate Details'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -750,7 +750,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="color-palette-outline" size={20} color="#10b981" />
                   </View>
                   <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Theme Colors & Brand Presets</Text>
+                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Branding & Theme Colors</Text>
                     <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
                       Customize executive UI highlights, button colors, and visual branding tokens.
                     </Text>
@@ -891,7 +891,7 @@ export default function SettingEntitySetup() {
                       <Ionicons name="checkmark-done" size={16} color="#ffffff" />
                     )}
                     <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Theme Settings'}
+                      {updateMutation.isPending ? 'Saving...' : 'Save Brand Colors'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -908,7 +908,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="share-social-outline" size={20} color="#3b82f6" />
                   </View>
                   <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Social Media & Maps Integration</Text>
+                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Social Profiles & Location</Text>
                     <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
                       Manage official social networking handles and Google Maps geolocation coordinates.
                     </Text>
@@ -1090,7 +1090,7 @@ export default function SettingEntitySetup() {
                       <Ionicons name="checkmark-done" size={16} color="#ffffff" />
                     )}
                     <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Social Links'}
+                      {updateMutation.isPending ? 'Saving...' : 'Save Social & Location'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -1107,7 +1107,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="mail-outline" size={20} color="#6366f1" />
                   </View>
                   <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Email SMTP Settings</Text>
+                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Mail Server (SMTP)</Text>
                     <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
                       Outgoing mail server credentials for OTPs, invoices, and diagnostic notifications.
                     </Text>
@@ -1259,7 +1259,7 @@ export default function SettingEntitySetup() {
                       <Ionicons name="checkmark-done" size={16} color="#ffffff" />
                     )}
                     <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save SMTP Settings'}
+                      {updateMutation.isPending ? 'Saving...' : 'Save Mail Server'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -1587,7 +1587,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="receipt-outline" size={20} color="#10b981" />
                   </View>
                   <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Tax / GST Settings & Invoicing</Text>
+                    <Text style={[styles.subPaneTitle, { color: textColor }]}>GST & Tax Invoicing</Text>
                     <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
                       Configure GSTIN rates, state codes, and statutory invoicing rules for corporate transactions.
                     </Text>
@@ -1729,7 +1729,7 @@ export default function SettingEntitySetup() {
                       <Ionicons name="checkmark-done" size={16} color="#ffffff" />
                     )}
                     <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Tax & GST'}
+                      {updateMutation.isPending ? 'Saving...' : 'Save GST & Tax Rules'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>

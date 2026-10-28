@@ -27,7 +27,6 @@ import { FONT, RADIUS } from '@/constants/theme';
 
 export type MasterDataSubTab =
   | 'basic-details'
-  | 'theme-colors'
   | 'social'
   | 'smtp'
   | 'email-templates'
@@ -49,12 +48,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
     label: 'Corporate Identity & Legal',
     icon: 'business-outline',
     description: 'Company name, MCA, CIN, PAN, TAN & address',
-  },
-  {
-    key: 'theme-colors',
-    label: 'Branding & Theme Colors',
-    icon: 'color-palette-outline',
-    description: 'Executive theme highlights & color presets',
   },
   {
     key: 'social',
@@ -657,163 +650,7 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
-          {/* TAB 2: Theme Colors & Presets */}
-          {masterSubTab === 'theme-colors' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
-                    <Ionicons name="color-palette-outline" size={20} color="#10b981" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Branding & Theme Colors</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Customize executive UI highlights, button colors, and visual branding tokens.
-                    </Text>
-                  </View>
-                </View>
-              </View>
 
-              {/* Live Preview Mockup Card */}
-              <View style={[styles.previewMockupBox, { borderColor: cardBorder, backgroundColor: innerBg }]}>
-                <View style={styles.previewMockupHeader}>
-                  <Text style={[styles.previewMockupLabel, { color: subTextColor }]}>LIVE PALETTE PREVIEW</Text>
-                  <View style={styles.previewDotRow}>
-                    <View style={[styles.colorPreviewDot, { backgroundColor: masterData.themeColors?.primaryColor || '#16a34a' }]} />
-                    <View style={[styles.colorPreviewDot, { backgroundColor: masterData.themeColors?.secondaryColor || '#0284c7' }]} />
-                    <View style={[styles.colorPreviewDot, { backgroundColor: masterData.themeColors?.buttonColor || '#10b981' }]} />
-                  </View>
-                </View>
-
-                <View style={styles.previewMockupContent}>
-                  <View style={[styles.previewMockupBanner, { backgroundColor: masterData.themeColors?.primaryColor || '#16a34a' }]}>
-                    <Text style={styles.previewMockupBannerTitle}>FarmsKing Executive Console</Text>
-                    <View style={[styles.previewMockupBadge, { backgroundColor: masterData.themeColors?.secondaryColor || '#0284c7' }]}>
-                      <Text style={styles.previewMockupBadgeText}>Active Highlight</Text>
-                    </View>
-                  </View>
-                  <View style={styles.previewMockupControls}>
-                    <TouchableOpacity
-                      style={[styles.previewMockupBtn, { backgroundColor: masterData.themeColors?.buttonColor || '#10b981' }]}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.previewMockupBtnText}>Sample CTA Button</Text>
-                    </TouchableOpacity>
-                    <Text style={{ fontSize: 12, color: subTextColor }}>
-                      Tokens dynamically sync across all web and client touchpoints
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Quick Presets */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Curated Theme Presets</Text>
-                </View>
-
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {THEME_PRESETS.map((preset) => (
-                    <TouchableOpacity
-                      key={preset.name}
-                      style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg }]}
-                      onPress={() => handleApplyThemePreset(preset)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={{ flexDirection: 'row', gap: 4, marginRight: 8 }}>
-                        <View style={[styles.colorMiniDot, { backgroundColor: preset.primary }]} />
-                        <View style={[styles.colorMiniDot, { backgroundColor: preset.secondary }]} />
-                        <View style={[styles.colorMiniDot, { backgroundColor: preset.button }]} />
-                      </View>
-                      <Text style={{ fontSize: 13, color: textColor, fontFamily: FONT.semiBold }}>{preset.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-
-                  <TouchableOpacity
-                    style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg }]}
-                    onPress={handleResetThemeColors}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="refresh-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
-                    <Text style={{ fontSize: 13, color: subTextColor, fontFamily: FONT.medium }}>Reset Defaults</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Custom Hex Inputs */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Custom Color Tokens (Hex)</Text>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Primary Accent Color</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <View style={[styles.colorDot, { backgroundColor: masterData.themeColors?.primaryColor || '#16a34a' }]} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.themeColors?.primaryColor || '#16a34a'}
-                        onChangeText={(txt) => handleUpdateMasterNested('themeColors', 'primaryColor', txt)}
-                        placeholder="#16a34a"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Secondary Highlight Color</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <View style={[styles.colorDot, { backgroundColor: masterData.themeColors?.secondaryColor || '#0284c7' }]} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.themeColors?.secondaryColor || '#0284c7'}
-                        onChangeText={(txt) => handleUpdateMasterNested('themeColors', 'secondaryColor', txt)}
-                        placeholder="#0284c7"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Global Button Color</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <View style={[styles.colorDot, { backgroundColor: masterData.themeColors?.buttonColor || '#10b981' }]} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.themeColors?.buttonColor || '#10b981'}
-                        onChangeText={(txt) => handleUpdateMasterNested('themeColors', 'buttonColor', txt)}
-                        placeholder="#10b981"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Brand Colors'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* TAB 3: Social Media & Maps */}
           {masterSubTab === 'social' && (

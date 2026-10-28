@@ -88,7 +88,6 @@ const CATEGORY_FILTERS: CategoryFilter[] = [
 const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'basic-details', label: 'Basic Details & Identity', icon: 'business-outline' },
   { key: 'tools', label: 'Platform Tools & Services', icon: 'hardware-chip-outline' },
-  { key: 'theme-colors', label: 'Theme Colors & Presets', icon: 'color-palette-outline' },
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
   { key: 'email-templates', label: 'Email Templates', icon: 'document-text-outline' },

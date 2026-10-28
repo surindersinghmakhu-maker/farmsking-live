@@ -42,3 +42,7 @@
 ## 5. Master Guidelines
 - Strictly adhere to `PROJECT_RULES.md`.
 
+## 6. No Automatic Live Deployment (ਲਾਈਵ ਸਰਵਰ 'ਤੇ ਆਟੋ-ਡਿਪਲਾਇ ਬੰਦ ਰੱਖਣ ਦਾ ਸਖ਼ਤ ਨਿਯਮ)
+- **Zero Automatic Live Deployments**: NEVER automatically push or deploy to the live production server (`git push hostinger` or running live deploy routines) during regular coding or UI tasks.
+- **Explicit User Instruction Only ("ਜਦੋਂ ਕਰਨਾ ਹੋਵੇ ਉਦੋਂ ਦੱਸ ਦਿੱਤਾ ਜਾਵੇਗਾ")**: Deployments to the Hostinger live server must ONLY be executed when the user gives an explicit command to do so (e.g. "live deploy kro", "deploy to live", "hostinger te deploy kro").
+- **Local Verification First**: Test and verify all builds, screens, and features on the local development environment (`localhost:8081`, `localhost:8082`, `localhost:3000`). Present the results locally and wait for the user's explicit deployment order.

@@ -31,8 +31,6 @@ export type MasterDataSubTab =
   | 'social'
   | 'smtp'
   | 'email-templates'
-  | 'backup'
-  | 'otp-login'
   | 'maintenance'
   | 'tax-gst';
 
@@ -50,8 +48,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
   { key: 'email-templates', label: 'Email Templates', icon: 'document-text-outline' },
-  { key: 'backup', label: 'Backup & Recovery', icon: 'server-outline' },
-  { key: 'otp-login', label: 'OTP Login ON/OFF', icon: 'shield-checkmark-outline' },
   { key: 'maintenance', label: 'Maintenance Mode', icon: 'construct-outline' },
   { key: 'tax-gst', label: 'Tax / GST Settings', icon: 'receipt-outline' },
 ];
@@ -226,11 +222,7 @@ export default function SettingEntitySetup() {
     showToast(`📧 Applied ${preset.name} SMTP configuration!`);
   };
 
-  const handleTriggerManualBackup = () => {
-    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-    handleUpdateMasterNested('backupSettings' as any, 'lastBackupTimestamp', `${timestamp} (Manual Verified)`);
-    showToast(`🛡️ Instant backup snapshot generated: ${timestamp}`);
-  };
+
 
   const handleResetThemeColors = () => {
     setLocalConfig((prev) => ({
@@ -857,98 +849,7 @@ export default function SettingEntitySetup() {
 
 
 
-          {/* TAB 9: Backup & Recovery */}
-          {masterSubTab === 'backup' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <Text style={[styles.subPaneTitle, { color: textColor }]}>Backup & Disaster Recovery</Text>
-                <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                  Manage PostgreSQL database snapshot cadence, retention window and manual backups.
-                </Text>
-              </View>
 
-              <View style={styles.paneSectionBox}>
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Auto-Backup Frequency</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.backupSettings?.frequency || 'Daily (02:00 AM IST)'}
-                        onChangeText={(txt) => handleUpdateMasterNested('backupSettings' as any, 'frequency', txt)}
-                        placeholder="Daily (02:00 AM IST)"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Retention Window (Days)</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={String(masterData.backupSettings?.retentionDays || 30)}
-                        onChangeText={(txt) => handleUpdateMasterNested('backupSettings' as any, 'retentionDays', parseInt(txt) || 30)}
-                        placeholder="30"
-                        placeholderTextColor={subTextColor}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterBetween}>
-                <TouchableOpacity style={[styles.outlineActionBtn, { borderColor: cardBorder, backgroundColor: innerBg }]} onPress={handleTriggerManualBackup}>
-                  <Ionicons name="shield-checkmark-outline" size={15} color="#6366f1" />
-                  <Text style={[styles.outlineActionText, { color: textColor }]}>Trigger Instant Backup</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveMasterData}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={styles.saveActionText}>Save Backup Settings</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 10: OTP Login ON/OFF */}
-          {masterSubTab === 'otp-login' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <Text style={[styles.subPaneTitle, { color: textColor }]}>OTP Authentication & Login Switch</Text>
-                <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                  Manage SMS and WhatsApp OTP verification requirements for farmers and merchants.
-                </Text>
-              </View>
-
-              <View style={styles.paneSectionBox}>
-                <View style={styles.toggleRowInline}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.toggleTitle, { color: textColor }]}>SMS OTP Login Active</Text>
-                    <Text style={{ fontSize: 12, color: subTextColor }}>Fast2SMS DLT verified 6-digit OTP codes</Text>
-                  </View>
-                  <Switch
-                    value={masterData.otpLogin?.enabled ?? true}
-                    onValueChange={(val) => handleUpdateMasterNested('otpLogin', 'enabled', val)}
-                    thumbColor="#ffffff"
-                    trackColor={{ false: '#64748b', true: '#6366f1' }}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveMasterData}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={styles.saveActionText}>Save OTP Switch</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* TAB 11: Maintenance Mode */}
           {masterSubTab === 'maintenance' && (

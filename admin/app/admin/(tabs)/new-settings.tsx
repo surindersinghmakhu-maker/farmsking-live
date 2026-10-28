@@ -194,19 +194,6 @@ export default function NewSettingsScreen() {
               </View>
             </LinearGradient>
 
-            {/* Quick Informational Notice */}
-            <View style={[styles.modularNoticeCard, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.3)' }]}>
-              <Ionicons name="sparkles" size={20} color="#10b981" />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.modularNoticeTitle, { color: isLight ? '#166534' : '#34d399' }]}>
-                  Modular Settings Workspace Ready
-                </Text>
-                <Text style={[styles.modularNoticeDesc, { color: isLight ? '#15803d' : '#a7f3d0' }]}>
-                  All previous placeholder tabs have been removed. This Command Hub is now dedicated to the About profile, ready for fresh custom tabs to be registered cleanly.
-                </Text>
-              </View>
-            </View>
-
             {/* 2-Column Grid on Desktop, 1-Column on Mobile */}
             <View style={[styles.gridRow, !isDesktop && styles.gridRowMobile]}>
               {/* Card 1: Corporate Entity & Statutory Governance */}

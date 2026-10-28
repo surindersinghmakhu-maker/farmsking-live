@@ -300,11 +300,29 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     id: 'PLATFORM',
     title: 'Setting',
     shortTitle: 'Setting',
-    icon: 'hardware-chip-outline',
-    iconFilled: 'hardware-chip',
-    badge: 'Tools & Services',
+    icon: 'settings-outline',
+    iconFilled: 'settings',
+    badge: 'Settings & Setup',
     color: '#8b5cf6',
     subTabs: [
+      {
+        id: 'settings-about',
+        title: 'About',
+        shortTitle: 'About',
+        description: 'Company information, platform architecture, statutory details and legal compliance',
+        icon: 'information-circle-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'ABOUT', pillar: 'PLATFORM' },
+      },
+      {
+        id: 'settings-entity',
+        title: 'Setting & Entity Setup',
+        shortTitle: 'Entity Setup',
+        description: 'Corporate registry, registered address, directors, branding, tax/GST and master rules',
+        icon: 'settings-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'ENTITY_SETUP', pillar: 'PLATFORM' },
+      },
       {
         id: 'platform-tools',
         title: 'Platform Tools & Services',
@@ -312,6 +330,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         description: 'Third-party API providers, credentials, and live telemetry toggles',
         icon: 'hardware-chip-outline',
         path: '/admin/(tabs)/super-settings',
+        params: { pillar: 'PLATFORM' },
       },
       {
         id: 'cpanel-integrations',
@@ -320,210 +339,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         description: 'Marketplace commission, social links, CIN & legal branding',
         icon: 'options',
         path: '/admin/(tabs)/cpanel',
-      },
-    ],
-  },
-  {
-    id: 'FARMERS',
-    title: 'Farmers',
-    shortTitle: 'Farmers',
-    icon: 'leaf-outline',
-    iconFilled: 'leaf',
-    badge: 'Farmers HQ',
-    color: '#16a34a',
-    subTabs: [
-      {
-        id: 'farmers-hq',
-        title: 'Farmers & Doctors Command',
-        shortTitle: 'HQ Command',
-        description: 'Executive overview, field telemetry & doctor duty matrix',
-        icon: 'speedometer',
-        path: '/admin/(tabs)/farmers',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmers-directory',
-        title: 'Farmers Directory',
-        shortTitle: 'Farmers',
-        description: 'Farmer profiles, land acreage, King ID & passbook',
-        icon: 'people',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'CLIENTS', filter: 'FARMER', pillar: 'FARMERS' },
-      },
-      {
-        id: 'doctors-directory',
-        title: 'Crop Doctors Directory',
-        shortTitle: 'Crop Doctors',
-        description: 'Registered agronomists, qualifications, shifts & ratings',
-        icon: 'medkit',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'PARTNERS', filter: 'ADVISOR', pillar: 'FARMERS' },
-      },
-      {
-        id: 'doctor-dispatch',
-        title: 'Doctor Dispatch & VIP Visits',
-        shortTitle: 'VIP Advisory',
-        description: 'Doctor consultation requests, farm visits & VIP passes',
-        icon: 'calendar',
-        path: '/admin/(tabs)/memberships',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-crops',
-        title: 'Crop & Field Registry',
-        shortTitle: 'Crops',
-        description: 'Crop varieties, sowing dates, plot areas & master agronomy',
-        icon: 'leaf',
-        path: '/admin/(tabs)/super-crop-edit',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-disease-scanner',
-        title: 'AI Crop Disease Diagnostics',
-        shortTitle: 'AI Scanner',
-        description: 'Neural leaf diagnosis, severity levels & remedy prescriptions',
-        icon: 'scan',
-        path: '/admin/(tabs)/crop-disease-scanner',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-satellite',
-        title: 'Satellite Farm Radar',
-        shortTitle: 'Satellite GPS',
-        description: 'ISRO & Sentinel-2 vegetation health, soil moisture & GPS plots',
-        icon: 'planet',
-        path: '/admin/(tabs)/satellite-map',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'spray-doses',
-        title: 'Plant Nutrition & Spray Doses',
-        shortTitle: 'Spray Doses',
-        description: 'Standard fertilizer & 20-item spray dose calculator',
-        icon: 'flask',
-        path: '/admin/(tabs)/dose',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'crop-intelligence',
-        title: 'Crop Intelligence Engine',
-        shortTitle: 'Intelligence',
-        description: 'Seasonal crop calendar, sowing advisories & weather insights',
-        icon: 'sparkles',
-        path: '/admin/(tabs)/crop-intelligence',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-orders',
-        title: 'Farmer Orders & Supplies',
-        shortTitle: 'Orders',
-        description: 'Seeds, fertilizers & pesticide orders and village deliveries',
-        icon: 'receipt',
-        path: '/admin/(tabs)/admin-orders',
-        params: { pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-wallets',
-        title: 'Farmer & Doctor Ledgers',
-        shortTitle: 'Ledgers',
-        description: 'Farmer cashbacks, doctor consultation fees & payout statements',
-        icon: 'wallet',
-        path: '/admin/(tabs)/super-accounts',
-        params: { section: 'WALLETS', pillar: 'FARMERS' },
-      },
-      {
-        id: 'farmer-mandi-broadcast',
-        title: 'Mandi Rates & Alerts',
-        shortTitle: 'Mandi Rates',
-        description: 'Daily mandi commodity prices, weather alerts & subsidy broadcasts',
-        icon: 'megaphone',
-        path: '/admin/(tabs)/admin_shop',
-        params: { pillar: 'FARMERS' },
-      },
-    ],
-  },
-  {
-    id: 'NEW_FINANCE',
-    title: 'New Finance',
-    shortTitle: 'New Finance',
-    icon: 'cash-outline',
-    iconFilled: 'cash',
-    badge: 'Treasury & Ledgers',
-    color: '#059669',
-    subTabs: [
-      {
-        id: 'new-finance-hq',
-        title: 'New Finance Command HQ',
-        shortTitle: 'HQ Command',
-        description: 'Executive treasury balance, revenue streams & cash flow telemetry',
-        icon: 'speedometer',
-        path: '/admin/(tabs)/new-finance',
-        params: { pillar: 'NEW_FINANCE' },
-      },
-      {
-        id: 'new-payout-approvals',
-        title: 'Payout & Withdrawal Approvals',
-        shortTitle: 'Payouts',
-        description: 'Review pending UPI withdrawals, 2% TDS deductions & UTR proofs',
-        icon: 'time',
-        path: '/admin/(tabs)/super-accounts',
-        params: { section: 'REQUESTS', pillar: 'NEW_FINANCE' },
-      },
-      {
-        id: 'new-partner-ledgers',
-        title: 'Partner & Party Ledgers',
-        shortTitle: 'Bahi-Khata',
-        description: 'Commission agents, dealers & multi-party khata statements',
-        icon: 'briefcase',
-        path: '/admin/(tabs)/super-accounts',
-        params: { section: 'PARTNERS', pillar: 'NEW_FINANCE' },
-      },
-      {
-        id: 'new-coupons-engine',
-        title: 'Coupons & Referral Engine',
-        shortTitle: 'Coupons',
-        description: 'Generate discount vouchers, partner commissions & referral rules',
-        icon: 'ticket',
-        path: '/admin/(tabs)/super-coupons',
-        params: { pillar: 'NEW_FINANCE' },
-      },
-      {
-        id: 'new-platform-treasury',
-        title: 'Platform Treasury Wallet',
-        shortTitle: 'My Wallet',
-        description: 'FarmsKing central reserve account, bonus disbursement & ledger',
-        icon: 'card',
-        path: '/admin/(tabs)/wallet',
-        params: { pillar: 'NEW_FINANCE' },
-      },
-    ],
-  },
-  {
-    id: 'NEW_SETTINGS',
-    title: 'New Settings',
-    shortTitle: 'New Settings',
-    icon: 'options-outline',
-    iconFilled: 'options',
-    badge: 'Settings & Setup',
-    color: '#6366f1',
-    subTabs: [
-      {
-        id: 'new-settings-about',
-        title: 'About',
-        shortTitle: 'About',
-        description: 'Company information, platform architecture, statutory details and legal compliance',
-        icon: 'information-circle-outline',
-        path: '/admin/(tabs)/new-settings',
-        params: { tab: 'ABOUT', pillar: 'NEW_SETTINGS' },
-      },
-      {
-        id: 'new-settings-entity',
-        title: 'Setting & Entity Setup',
-        shortTitle: 'Entity Setup',
-        description: 'Corporate registry, registered address, directors, branding, tax/GST and master rules',
-        icon: 'settings-outline',
-        path: '/admin/(tabs)/new-settings',
-        params: { tab: 'ENTITY_SETUP', pillar: 'NEW_SETTINGS' },
+        params: { pillar: 'PLATFORM' },
       },
     ],
   },
@@ -537,28 +353,31 @@ export function normalizePillarId(pillarId?: string): string {
   switch (pillarId) {
     case 'NEW_SETTINGS':
     case 'NEW-SETTINGS':
-      return 'NEW_SETTINGS';
+    case 'SETTINGS':
+    case 'UTILITIES':
+    case 'TOOLS':
+    case 'OTHER':
+    case 'PLATFORM':
+      return 'PLATFORM';
     case 'NEW_FINANCE':
     case 'NEW-FINANCE':
-      return 'NEW_FINANCE';
-    case 'FARMERS':
-    case 'FARMER':
-      return 'FARMERS';
     case 'FINANCE':
     case 'ACCOUNTS':
     case 'TREASURY':
     case 'WALLET':
       return 'FINANCE';
-    case 'ECOMMERCE':
-    case 'COMMERCE':
-    case 'MARKET':
-      return 'COMMERCE';
+    case 'FARMERS':
+    case 'FARMER':
     case 'FARMER_HUB':
     case 'GARDENER_HUB':
     case 'ECOSYSTEM':
     case 'FARM':
     case 'GARDEN':
       return 'ECOSYSTEM';
+    case 'ECOMMERCE':
+    case 'COMMERCE':
+    case 'MARKET':
+      return 'COMMERCE';
     case 'DIRECTORY':
     case 'STAFF_HUB':
     case 'USERS':
@@ -599,79 +418,25 @@ export function detectPillarFromRoute(
   const effectivePillar = searchParams?.pillar || webPillar;
   const effectiveFilter = searchParams?.filter || webFilter;
 
-  // 0. Dedicated Farmers & Crop Doctors Hub Route or Pillar Parameter
+  // 0. Setting routes (all settings consolidate under PLATFORM)
   if (
-    pathname === '/admin/(tabs)/farmers' ||
-    pathname === '/(tabs)/farmers' ||
-    pathname === '/farmers' ||
-    pathname.includes('/farmers') ||
-    pathname.endsWith('/farmers') ||
-    effectivePillar === 'FARMERS'
+    pathname.includes('new-settings') ||
+    pathname.includes('super-settings') ||
+    pathname.includes('cpanel') ||
+    effectivePillar === 'PLATFORM' ||
+    effectivePillar === 'NEW_SETTINGS' ||
+    effectivePillar === 'SETTINGS'
   ) {
-    return 'FARMERS';
+    return 'PLATFORM';
   }
 
-  // 0.1 Dedicated New Finance Hub Route or Pillar Parameter
+  // 0.1 Finance routes
   if (
-    pathname === '/admin/(tabs)/new-finance' ||
-    pathname === '/(tabs)/new-finance' ||
-    pathname === '/new-finance' ||
-    pathname.includes('/new-finance') ||
-    pathname.endsWith('/new-finance') ||
+    pathname.includes('new-finance') ||
     effectivePillar === 'NEW_FINANCE' ||
     effectivePillar === 'NEW-FINANCE'
   ) {
-    return 'NEW_FINANCE';
-  }
-
-  // If currently in New Finance Hub and browsing its subtabs, preserve NEW_FINANCE hub
-  if (currentPillarId === 'NEW_FINANCE' || currentPillarId === 'NEW-FINANCE') {
-    if (
-      pathname.includes('new-finance') ||
-      pathname.includes('super-accounts') ||
-      pathname.includes('super-coupons') ||
-      pathname.includes('wallet')
-    ) {
-      return 'NEW_FINANCE';
-    }
-  }
-
-  // 0.2 Dedicated New Settings Hub Route or Pillar Parameter
-  if (
-    pathname === '/admin/(tabs)/new-settings' ||
-    pathname === '/(tabs)/new-settings' ||
-    pathname === '/new-settings' ||
-    pathname.includes('/new-settings') ||
-    pathname.endsWith('/new-settings') ||
-    effectivePillar === 'NEW_SETTINGS' ||
-    effectivePillar === 'NEW-SETTINGS'
-  ) {
-    return 'NEW_SETTINGS';
-  }
-
-  // If currently in New Settings Hub and browsing its subtabs, preserve NEW_SETTINGS hub
-  if (currentPillarId === 'NEW_SETTINGS' || currentPillarId === 'NEW-SETTINGS') {
-    if (pathname.includes('new-settings')) {
-      return 'NEW_SETTINGS';
-    }
-  }
-
-  // If currently in Farmers Hub and browsing its subtabs, preserve FARMERS hub
-  if (currentPillarId === 'FARMERS') {
-    if (
-      (pathname.includes('super-users') && (effectiveFilter === 'FARMER' || effectiveFilter === 'ADVISOR' || searchParams?.group === 'CLIENTS' || searchParams?.group === 'PARTNERS')) ||
-      pathname.includes('super-crop-edit') ||
-      pathname.includes('crop-disease-scanner') ||
-      pathname.includes('satellite-map') ||
-      pathname.includes('memberships') ||
-      pathname.includes('dose') ||
-      pathname.includes('crop-intelligence') ||
-      pathname.includes('admin-orders') ||
-      (pathname.includes('super-accounts') && searchParams?.section === 'WALLETS') ||
-      pathname.includes('admin_shop')
-    ) {
-      return 'FARMERS';
-    }
+    return 'FINANCE';
   }
 
   // 1. Executive Command routes

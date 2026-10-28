@@ -28,7 +28,6 @@ import { FONT, RADIUS } from '@/constants/theme';
 export type MasterDataSubTab =
   | 'basic-details'
   | 'social'
-  | 'smtp'
   | 'email-templates'
   | 'maintenance'
   | 'tax-gst';
@@ -56,12 +55,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
     description: 'Official social profiles & Google Maps location',
   },
   {
-    key: 'smtp',
-    label: 'Mail Server (SMTP)',
-    icon: 'mail-outline',
-    description: 'Outgoing mail server, ports & credentials',
-  },
-  {
     key: 'email-templates',
     label: 'Email Templates',
     icon: 'document-text-outline',
@@ -86,13 +79,6 @@ export const THEME_PRESETS = [
   { name: 'Golden Mandi Harvest', primary: '#d97706', secondary: '#2563eb', button: '#f59e0b' },
   { name: 'Deep Eco-Forest', primary: '#059669', secondary: '#0891b2', button: '#10b981' },
   { name: 'Obsidian Executive Dark', primary: '#0f172a', secondary: '#6366f1', button: '#10b981' },
-];
-
-export const SMTP_PRESETS = [
-  { name: 'Hostinger Business Mail', host: 'smtp.hostinger.com', port: 465, enc: 'ssl' },
-  { name: 'Google Workspace / Gmail', host: 'smtp.gmail.com', port: 587, enc: 'tls' },
-  { name: 'SendGrid / Twilio', host: 'smtp.sendgrid.net', port: 587, enc: 'tls' },
-  { name: 'Amazon SES (Mumbai)', host: 'email-smtp.ap-south-1.amazonaws.com', port: 587, enc: 'tls' },
 ];
 
 export const EMAIL_TEMPLATE_ITEMS: { key: EmailTemplateKey; label: string; icon: keyof typeof Ionicons.glyphMap; vars: string[] }[] = [
@@ -123,10 +109,10 @@ export default function SettingEntitySetup() {
   );
 
   const [masterSubTab, setMasterSubTab] = useState<MasterDataSubTab>('basic-details');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeEmailTmpl, setActiveEmailTmpl] = useState<EmailTemplateKey>('registration');
   const [emailViewMode, setEmailViewMode] = useState<'editor' | 'preview'>('editor');
   const [masterSearchQuery, setMasterSearchQuery] = useState('');
-  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -254,25 +240,6 @@ export default function SettingEntitySetup() {
     showToast(`🎨 Applied "${preset.name}" color preset!`);
   };
 
-  const handleApplySmtpPreset = (preset: typeof SMTP_PRESETS[0]) => {
-    setLocalConfig((prev) => {
-      const currentMaster = prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
-      return {
-        ...prev,
-        projectMasterData: {
-          ...currentMaster,
-          smtp: {
-            ...currentMaster.smtp,
-            host: preset.host,
-            port: preset.port,
-            encryption: preset.enc.toLowerCase() as any,
-          },
-        },
-      };
-    });
-    showToast(`📧 Applied ${preset.name} SMTP configuration!`);
-  };
-
   const handleResetThemeColors = () => {
     setLocalConfig((prev) => ({
       ...prev,
@@ -286,15 +253,6 @@ export default function SettingEntitySetup() {
       },
     }));
     showToast('🎨 Theme colors reset to FarmsKing standard emerald & sky palette.');
-  };
-
-  const handleTestEmail = () => {
-    const smtp = localConfig.projectMasterData?.smtp || DEFAULT_PROJECT_MASTER_DATA.smtp;
-    if (!smtp?.host || !smtp?.fromEmail) {
-      Alert.alert('Incomplete SMTP', 'Please enter SMTP Host and From Email before sending test email.');
-      return;
-    }
-    showToast(`📧 Test email ping queued to ${smtp.fromEmail} via ${smtp.host}:${smtp.port}`);
   };
 
   const filteredTabs = MASTER_DATA_TABS.filter((tab) =>
@@ -316,86 +274,115 @@ export default function SettingEntitySetup() {
       )}
 
 
-      {/* Main Two-Column Layout (Sidebar + Content Pane) */}
-      <View style={[styles.masterSubNavWrapper, isDesktop && styles.masterSubNavDesktopWrapper]}>
-        {/* Left Navigation Sidebar */}
-        <View style={[styles.masterPillsNav, isDesktop && styles.masterPillsNavDesktop, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <View style={styles.sidebarHeader}>
-            <Text style={[styles.sidebarHeaderText, { color: subTextColor }]}>
-              MODULES ({filteredTabs.length})
-            </Text>
-          </View>
-          <ScrollView
-            horizontal={!isDesktop}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.masterPillsScroll, isDesktop && styles.masterPillsScrollDesktop]}
-          >
-            {filteredTabs.map((tab) => {
-              const isActive = masterSubTab === tab.key;
-              return (
-                <TouchableOpacity
-                  key={tab.key}
-                  style={[
-                    styles.masterPillItem,
-                    isDesktop && styles.masterPillItemDesktop,
-                    isActive && (isLight ? styles.masterPillActiveLight : styles.masterPillActiveDark),
-                  ]}
-                  onPress={() => setMasterSubTab(tab.key)}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.tabIconBadge,
-                      {
-                        backgroundColor: isActive
-                          ? isLight
-                            ? '#6366f1'
-                            : '#818cf8'
-                          : isLight
-                          ? 'rgba(148, 163, 184, 0.15)'
-                          : 'rgba(51, 65, 85, 0.4)',
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={tab.icon}
-                      size={16}
-                      color={isActive ? '#ffffff' : subTextColor}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={[
-                        styles.masterPillText,
-                        { color: isActive ? (isLight ? '#4f46e5' : '#818cf8') : textColor },
-                        isActive && { fontFamily: FONT.bold },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {tab.label}
-                    </Text>
-                    {isDesktop && (
-                      <Text style={[styles.masterPillDesc, { color: subTextColor }]} numberOfLines={1}>
-                        {tab.description}
+      {/* Executive Module Dropdown Selector Bar */}
+      {(() => {
+        const activeTabItem = MASTER_DATA_TABS.find((t) => t.key === masterSubTab) || MASTER_DATA_TABS[0];
+        const activeIndex = MASTER_DATA_TABS.findIndex((t) => t.key === masterSubTab);
+        return (
+          <View style={[styles.dropdownContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <TouchableOpacity
+              style={styles.dropdownHeader}
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dropdownHeaderLeft}>
+                <View style={[styles.dropdownIconBadge, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
+                  <Ionicons name={activeTabItem.icon} size={20} color="#6366f1" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.dropdownTitleRow}>
+                    <Text style={[styles.dropdownModuleLabel, { color: subTextColor }]}>ACTIVE SETTING MODULE</Text>
+                    <View style={[styles.dropdownCountBadge, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                      <Text style={[styles.dropdownCountText, { color: subTextColor }]}>
+                        {activeIndex + 1} of {MASTER_DATA_TABS.length}
                       </Text>
-                    )}
+                    </View>
                   </View>
-                  {isActive && isDesktop && (
-                    <Ionicons
-                      name="chevron-forward"
-                      size={15}
-                      color={isLight ? '#4f46e5' : '#818cf8'}
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+                  <Text style={[styles.dropdownTitle, { color: textColor }]}>{activeTabItem.label}</Text>
+                  <Text style={[styles.dropdownSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                    {activeTabItem.description}
+                  </Text>
+                </View>
+              </View>
 
-        {/* Right Content Pane */}
-        <View style={[styles.masterContentPane, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={[styles.dropdownChevronBtn, { backgroundColor: isLight ? '#f8fafc' : '#0f172a', borderColor: cardBorder }]}>
+                <Text style={[styles.dropdownChevronText, { color: '#6366f1' }]}>Switch Module</Text>
+                <Ionicons
+                  name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color="#6366f1"
+                />
+              </View>
+            </TouchableOpacity>
+
+            {/* Dropdown Options List */}
+            {isDropdownOpen && (
+              <View style={[styles.dropdownList, { borderTopColor: cardBorder }]}>
+                {MASTER_DATA_TABS.map((tab) => {
+                  const isSelected = masterSubTab === tab.key;
+                  return (
+                    <TouchableOpacity
+                      key={tab.key}
+                      style={[
+                        styles.dropdownItem,
+                        isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
+                      ]}
+                      onPress={() => {
+                        setMasterSubTab(tab.key);
+                        setIsDropdownOpen(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={[
+                          styles.tabIconBadge,
+                          {
+                            backgroundColor: isSelected
+                              ? isLight
+                                ? '#6366f1'
+                                : '#818cf8'
+                              : isLight
+                              ? 'rgba(148, 163, 184, 0.15)'
+                              : 'rgba(51, 65, 85, 0.4)',
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={tab.icon}
+                          size={17}
+                          color={isSelected ? '#ffffff' : subTextColor}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[
+                            styles.dropdownItemTitle,
+                            { color: isSelected ? (isLight ? '#4f46e5' : '#818cf8') : textColor },
+                            isSelected && { fontFamily: FONT.bold },
+                          ]}
+                        >
+                          {tab.label}
+                        </Text>
+                        <Text style={[styles.dropdownItemDesc, { color: subTextColor }]} numberOfLines={1}>
+                          {tab.description}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <View style={styles.activeCheckBadge}>
+                          <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        );
+      })()}
+
+      {/* Main Full-Width Content Pane */}
+      <View style={[styles.masterContentPane, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           {/* TAB 1: Basic Details & Identity */}
           {masterSubTab === 'basic-details' && (
             <View style={styles.masterTabPane}>
@@ -851,174 +838,7 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
-          {/* TAB 4: SMTP Settings */}
-          {masterSubTab === 'smtp' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
-                    <Ionicons name="mail-outline" size={20} color="#6366f1" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Mail Server (SMTP)</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Outgoing mail server credentials for OTPs, invoices, and diagnostic notifications.
-                    </Text>
-                  </View>
-                </View>
-              </View>
 
-              {/* Quick Presets */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Quick Mail Server Presets</Text>
-                </View>
-
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                  {SMTP_PRESETS.map((preset) => (
-                    <TouchableOpacity
-                      key={preset.name}
-                      style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg }]}
-                      onPress={() => handleApplySmtpPreset(preset)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="mail-outline" size={15} color="#6366f1" style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 13, color: textColor, fontFamily: FONT.semiBold }}>{preset.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Host & Port */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Server Connection Details</Text>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>SMTP Host Server</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.smtp?.host || ''}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'host', txt)}
-                        placeholder="smtp.hostinger.com"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>SMTP Port Number</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={String(masterData.smtp?.port || 465)}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'port', parseInt(txt) || 465)}
-                        placeholder="465"
-                        placeholderTextColor={subTextColor}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Sender Email Address</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.smtp?.fromEmail || ''}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'fromEmail', txt)}
-                        placeholder="noreply@farmsking.in"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Sender Display Name</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.smtp?.fromName || ''}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'fromName', txt)}
-                        placeholder="FarmsKing Executive Mailer"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>SMTP Username / Account</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.smtp?.username || ''}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'username', txt)}
-                        placeholder="noreply@farmsking.in"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>SMTP Password / App Secret</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.smtp?.password || ''}
-                        onChangeText={(txt) => handleUpdateMasterNested('smtp', 'password', txt)}
-                        placeholder="••••••••••••"
-                        placeholderTextColor={subTextColor}
-                        secureTextEntry={!showSmtpPassword}
-                      />
-                      <TouchableOpacity onPress={() => setShowSmtpPassword(!showSmtpPassword)} style={{ padding: 4 }}>
-                        <Ionicons
-                          name={showSmtpPassword ? 'eye-off-outline' : 'eye-outline'}
-                          size={16}
-                          color={subTextColor}
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterBetween}>
-                <TouchableOpacity
-                  style={[styles.outlineActionBtn, { borderColor: cardBorder, backgroundColor: innerBg }]}
-                  onPress={handleTestEmail}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="paper-plane-outline" size={15} color="#6366f1" />
-                  <Text style={[styles.outlineActionText, { color: textColor }]}>Send Test Email</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Mail Server'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* TAB 5: Email Templates */}
           {masterSubTab === 'email-templates' && (
@@ -1490,7 +1310,6 @@ export default function SettingEntitySetup() {
             </View>
           )}
         </View>
-      </View>
     </View>
   );
 }
@@ -1621,51 +1440,104 @@ const styles = StyleSheet.create({
     fontFamily: FONT.regular,
     fontSize: 13,
   },
-  masterSubNavWrapper: {
-    flexDirection: 'column',
-    gap: 16,
-  },
-  masterSubNavDesktopWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-  },
-  masterPillsNav: {
+  dropdownContainer: {
     borderRadius: 14,
     borderWidth: 1,
-    padding: 10,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
-  masterPillsNavDesktop: {
-    width: 290,
-  },
-  sidebarHeader: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginBottom: 4,
-  },
-  sidebarHeaderText: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.6,
-  },
-  masterPillsScroll: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  masterPillsScrollDesktop: {
-    flexDirection: 'column',
-    gap: 6,
-  },
-  masterPillItem: {
+  dropdownHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    borderRadius: 10,
+    justifyContent: 'space-between',
+    padding: 14,
+    gap: 12,
   },
-  masterPillItemDesktop: {
-    width: '100%',
+  dropdownHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  dropdownIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  dropdownModuleLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  dropdownCountBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  dropdownCountText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  dropdownTitle: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+  },
+  dropdownSubtitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    marginTop: 1,
+  },
+  dropdownChevronBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  dropdownChevronText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  dropdownList: {
+    borderTopWidth: 1,
+    padding: 8,
+    gap: 4,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  dropdownItemActiveLight: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  dropdownItemActiveDark: {
+    backgroundColor: 'rgba(99, 102, 241, 0.2)',
+  },
+  dropdownItemTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.medium,
+  },
+  dropdownItemDesc: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    marginTop: 1,
+  },
+  activeCheckBadge: {
+    marginLeft: 8,
   },
   tabIconBadge: {
     width: 32,
@@ -1674,27 +1546,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  masterPillActiveLight: {
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
-  },
-  masterPillActiveDark: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-  },
-  masterPillText: {
-    fontSize: 13,
-    fontFamily: FONT.medium,
-  },
-  masterPillDesc: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    marginTop: 1,
-  },
   masterContentPane: {
-    flex: 1,
+    width: '100%',
     borderRadius: 14,
     borderWidth: 1,
     padding: 20,
-    minWidth: 320,
   },
   masterTabPane: {
     width: '100%',

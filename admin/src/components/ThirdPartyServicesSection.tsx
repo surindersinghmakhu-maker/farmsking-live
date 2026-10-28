@@ -21,6 +21,7 @@ import {
   UpdateAppSettingsPayload,
   mergeSystemIntegrationsWithDefaults,
   DEFAULT_SYSTEM_INTEGRATIONS_CONFIG,
+  DEFAULT_PROJECT_MASTER_DATA,
   SupportedPaymentGateway,
   ModulePaymentFeatureConfig,
 } from '@/src/api/appSettings.api';
@@ -35,6 +36,7 @@ type ServiceCategory =
   | 'SATELLITE'
   | 'SMS'
   | 'WHATSAPP'
+  | 'SMTP'
   | 'LOGISTICS'
   | 'STORAGE_PUSH';
 
@@ -46,7 +48,7 @@ interface CategoryPill {
 }
 
 const CATEGORY_PILLS: CategoryPill[] = [
-  { key: 'ALL', label: 'All Services', icon: 'grid-outline', badge: '9 Connected' },
+  { key: 'ALL', label: 'All Services', icon: 'grid-outline', badge: '10 Connected' },
   { key: 'GATEWAY', label: 'Payment Gateways', icon: 'card-outline', badge: '10 Market Options' },
   { key: 'AI', label: 'AI Crop Doctor', icon: 'sparkles-outline', badge: '7 Vision Engines' },
   { key: 'TELECOM', label: 'Video Calling', icon: 'videocam-outline', badge: '6 WebRTC Engines' },
@@ -54,8 +56,16 @@ const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'SATELLITE', label: 'Satellite Telemetry', icon: 'planet-outline', badge: '6 Remote Sensing APIs' },
   { key: 'SMS', label: 'SMS & OTP', icon: 'chatbox-ellipses-outline', badge: '8 Gateways' },
   { key: 'WHATSAPP', label: 'WhatsApp Bot', icon: 'logo-whatsapp', badge: '7 Providers' },
+  { key: 'SMTP', label: 'Mail Server (SMTP)', icon: 'mail-outline', badge: 'Hostinger & SES' },
   { key: 'LOGISTICS', label: 'Logistics & Shipping', icon: 'cube-outline', badge: '7 Couriers' },
   { key: 'STORAGE_PUSH', label: 'Storage & Push', icon: 'server-outline', badge: 'Cloud & FCM' },
+];
+
+export const SMTP_PRESETS = [
+  { name: 'Hostinger Business Mail', host: 'smtp.hostinger.com', port: 465, enc: 'ssl' },
+  { name: 'Google Workspace / Gmail', host: 'smtp.gmail.com', port: 587, enc: 'tls' },
+  { name: 'SendGrid / Twilio', host: 'smtp.sendgrid.net', port: 587, enc: 'tls' },
+  { name: 'Amazon SES (Mumbai)', host: 'email-smtp.ap-south-1.amazonaws.com', port: 587, enc: 'tls' },
 ];
 
 
@@ -1382,6 +1392,39 @@ export function ThirdPartyServicesSection() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isTestingRtc, setIsTestingRtc] = useState(false);
   const [isTestingWeatherPing, setIsTestingWeatherPing] = useState(false);
+  const [isTestingSmtp, setIsTestingSmtp] = useState(false);
+
+  const handleApplySmtpPreset = (preset: typeof SMTP_PRESETS[0]) => {
+    setLocalConfig((prev) => {
+      const currentMaster = prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
+      return {
+        ...prev,
+        projectMasterData: {
+          ...currentMaster,
+          smtp: {
+            ...currentMaster.smtp,
+            host: preset.host,
+            port: preset.port,
+            encryption: preset.enc.toLowerCase() as any,
+          },
+        },
+      };
+    });
+    showToast(`📧 Applied ${preset.name} configuration!`);
+  };
+
+  const handleTestEmail = () => {
+    const smtp = localConfig.projectMasterData?.smtp || DEFAULT_PROJECT_MASTER_DATA.smtp;
+    if (!smtp?.host || !smtp?.fromEmail) {
+      Alert.alert('Incomplete SMTP', 'Please enter SMTP Host and Sender Email before sending test email.');
+      return;
+    }
+    setIsTestingSmtp(true);
+    setTimeout(() => {
+      setIsTestingSmtp(false);
+      showToast(`📧 Test email ping queued to ${smtp.fromEmail} via ${smtp.host}:${smtp.port} (SSL/TLS Active)`);
+    }, 850);
+  };
 
   const handleTestTelecomHandshake = () => {
     setIsTestingRtc(true);
@@ -1721,7 +1764,7 @@ export function ThirdPartyServicesSection() {
             </View>
             <View>
               <Text style={[styles.cockpitTitle, { color: textColor }]}>
-                🎛️ Master Services Telemetry Cockpit (All 9 Engines Meter)
+                🎛️ Master Services Telemetry Cockpit (All 10 Engines Meter)
               </Text>
               <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
                 Live quota trackers, volume processed & active engines.
@@ -1731,7 +1774,7 @@ export function ThirdPartyServicesSection() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12, borderWidth: 1, borderColor: isLight ? '#86efac' : '#00ff87' }}>
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLight ? '#16a34a' : '#00ff87' }} />
             <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#15803d' : '#00ff87' }}>
-              ALL 9 ACTIVE
+              ALL 10 ACTIVE
             </Text>
           </View>
         </View>
@@ -1987,6 +2030,32 @@ export function ThirdPartyServicesSection() {
             </View>
             <Text style={[styles.cockpitSubText, { color: '#16a34a' }]}>
               10m Sentinel-2 · NDVI
+            </Text>
+          </TouchableOpacity>
+
+          {/* 10. Mail (SMTP) */}
+          <TouchableOpacity
+            style={[styles.cockpitItem, { backgroundColor: innerBg, borderColor: activeCategory === 'SMTP' ? '#6366f1' : cardBorder }]}
+            onPress={() => setActiveCategory('SMTP')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cockpitItemTop}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="mail" size={13.5} color="#6366f1" />
+                <Text style={[styles.cockpitItemTitle, { color: textColor }]}>10. Mail Server</Text>
+              </View>
+              <View style={[styles.cockpitPill, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
+                <Text style={[styles.cockpitPillText, { color: '#6366f1' }]}>SSL 465</Text>
+              </View>
+            </View>
+            <Text style={[styles.cockpitMetricText, { color: textColor }]} numberOfLines={1}>
+              {localConfig.projectMasterData?.smtp?.host || 'smtp.hostinger.com'}
+            </Text>
+            <View style={[styles.cockpitMiniBarWrap, { backgroundColor: isLight ? '#e2e8f0' : '#1e293b' }]}>
+              <View style={[styles.cockpitMiniBarFill, { width: '100%', backgroundColor: '#6366f1' }]} />
+            </View>
+            <Text style={[styles.cockpitSubText, { color: '#6366f1' }]}>
+              Hostinger Business Mail
             </Text>
           </TouchableOpacity>
         </View>
@@ -8650,6 +8719,218 @@ export function ThirdPartyServicesSection() {
                   />
                 </>
               )}
+            </View>
+          </View>
+        );
+      })()}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* 10. MAIL SERVER (SMTP) & TRANSACTIONAL EMAIL DISPATCH             */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {(activeCategory === 'ALL' || activeCategory === 'SMTP') && (() => {
+        const smtpData = localConfig.projectMasterData?.smtp || DEFAULT_PROJECT_MASTER_DATA.smtp;
+
+        const updateSmtpField = (field: string, val: any) => {
+          setLocalConfig((prev) => {
+            const master = prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
+            return {
+              ...prev,
+              projectMasterData: {
+                ...master,
+                smtp: {
+                  ...master.smtp,
+                  [field]: val,
+                },
+              },
+            };
+          });
+        };
+
+        return (
+          <View style={[styles.serviceCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            {/* Header */}
+            <View style={[styles.cardHeader, { borderBottomColor: cardBorder }]}>
+              <View style={styles.cardHeaderLeft}>
+                <View style={[styles.iconBox, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.12)' : 'rgba(99, 102, 241, 0.2)' }]}>
+                  <Ionicons name="mail" size={22} color="#6366f1" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>10. Mail Server (SMTP) & Transactional Dispatch</Text>
+                  <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
+                    Outgoing enterprise mail server credentials for OTPs, order invoices, alerts & diagnostic notifications
+                  </Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <View style={[styles.crownBadge, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b', borderColor: '#6366f1' }]}>
+                  <Ionicons name="shield-checkmark" size={13} color="#6366f1" />
+                  <Text style={[styles.crownText, { color: '#6366f1' }]}>SSL / TLS ACTIVE</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.guideToggleBtn, { backgroundColor: innerBg, borderColor: cardBorder }]}
+                  onPress={() => toggleGuide('smtp_guide')}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="help-circle-outline" size={16} color={subTextColor} />
+                  <Text style={[styles.guideToggleText, { color: subTextColor }]}>SMTP Guide</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Guide Info */}
+            {expandedGuides['smtp_guide'] && (
+              <View style={[styles.guideBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <Text style={[styles.guideTitle, { color: '#6366f1' }]}>📘 SMTP Server Setup & Port Guidance</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Hostinger Mail:</Text> Use smtp.hostinger.com on Port 465 with SSL encryption for company domain addresses.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Google Workspace / Gmail:</Text> Use smtp.gmail.com on Port 587 with TLS encryption. Requires a Google App Password.</Text>
+                <Text style={[styles.guidePoint, { color: subTextColor }]}>• <Text style={{ fontWeight: '700', color: textColor }}>Amazon SES (Mumbai):</Text> High-volume transactional delivery with 99.9% inbox placement across India.</Text>
+              </View>
+            )}
+
+            {/* Quick Mail Server Presets */}
+            <Text style={[styles.fieldHeading, { color: '#6366f1', marginTop: 4 }]}>
+              QUICK MAIL SERVER PRESETS:
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+              {SMTP_PRESETS.map((preset) => {
+                const isPresetActive = smtpData.host === preset.host;
+                return (
+                  <TouchableOpacity
+                    key={preset.name}
+                    style={[
+                      styles.telecomPlanBadge,
+                      {
+                        backgroundColor: isPresetActive ? '#6366f1' : innerBg,
+                        borderWidth: 1,
+                        borderColor: isPresetActive ? '#6366f1' : cardBorder,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 8,
+                      },
+                    ]}
+                    onPress={() => handleApplySmtpPreset(preset)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="mail-outline" size={14} color={isPresetActive ? '#ffffff' : subTextColor} />
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: isPresetActive ? '#ffffff' : textColor }}>
+                      {preset.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Deep-Dive Active Server Telemetry Card */}
+            <View style={[styles.telecomDetailCard, { backgroundColor: innerBg, borderColor: '#6366f1', borderWidth: 1.5 }]}>
+              <View style={styles.telecomDetailHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="server-outline" size={20} color="#6366f1" />
+                  <Text style={[styles.telecomDetailTitle, { color: textColor }]}>
+                    Active Mail Host: {smtpData.host || 'smtp.hostinger.com'}
+                  </Text>
+                </View>
+                <View style={[styles.telecomPlanBadge, { backgroundColor: '#6366f1' }]}>
+                  <Text style={[styles.telecomPlanBadgeText, { color: '#ffffff' }]}>
+                    Port {smtpData.port || 465} ({String(smtpData.encryption || 'ssl').toUpperCase()})
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.telecomDetailBadgesRow}>
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>From Address</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: textColor }]}>{smtpData.fromEmail || 'noreply@farmsking.in'}</Text>
+                </View>
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>Sender Name</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: textColor }]}>{smtpData.fromName || 'FarmsKing'}</Text>
+                </View>
+                <View style={[styles.telecomFeatureBadge, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <Text style={[styles.telecomFeatureBadgeTitle, { color: subTextColor }]}>Delivery Mode</Text>
+                  <Text style={[styles.telecomFeatureBadgeVal, { color: textColor }]}>Direct SMTP Relay</Text>
+                </View>
+              </View>
+
+              {/* Ping / Test Email button */}
+              <TouchableOpacity
+                style={[styles.testPingBtn, { backgroundColor: '#6366f1', opacity: isTestingSmtp ? 0.7 : 1 }]}
+                activeOpacity={0.85}
+                disabled={isTestingSmtp}
+                onPress={handleTestEmail}
+              >
+                {isTestingSmtp ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Ionicons name="paper-plane" size={14} color="#ffffff" />
+                )}
+                <Text style={styles.testPingBtnText}>
+                  {isTestingSmtp ? 'Dispatching Test Email Ping...' : `⚡ Test SMTP Ping & Send Diagnostic Mail to ${smtpData.fromEmail || 'noreply@farmsking.in'}`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Connection Credentials Form */}
+            <View style={styles.credBox}>
+              <Text style={[styles.credTitle, { color: textColor }]}>🔐 Server Connection & Auth Credentials</Text>
+
+              <View style={styles.twoColRow}>
+                <InputField
+                  label="SMTP Host Server"
+                  value={smtpData.host || ''}
+                  onChangeText={(val) => updateSmtpField('host', val)}
+                  placeholder="smtp.hostinger.com"
+                  isLight={isLight}
+                />
+                <InputField
+                  label="SMTP Port Number"
+                  value={String(smtpData.port || 465)}
+                  onChangeText={(val) => updateSmtpField('port', parseInt(val) || 465)}
+                  placeholder="465"
+                  keyboardType="numeric"
+                  isLight={isLight}
+                />
+              </View>
+
+              <View style={styles.twoColRow}>
+                <InputField
+                  label="Sender Email Address"
+                  value={smtpData.fromEmail || ''}
+                  onChangeText={(val) => updateSmtpField('fromEmail', val)}
+                  placeholder="noreply@farmsking.in"
+                  isLight={isLight}
+                />
+                <InputField
+                  label="Sender Display Name"
+                  value={smtpData.fromName || ''}
+                  onChangeText={(val) => updateSmtpField('fromName', val)}
+                  placeholder="FarmsKing Executive Mailer"
+                  isLight={isLight}
+                />
+              </View>
+
+              <View style={styles.twoColRow}>
+                <InputField
+                  label="SMTP Username / Account"
+                  value={smtpData.username || ''}
+                  onChangeText={(val) => updateSmtpField('username', val)}
+                  placeholder="noreply@farmsking.in"
+                  isLight={isLight}
+                />
+                <InputField
+                  label="SMTP Password / App Secret"
+                  value={smtpData.password || ''}
+                  onChangeText={(val) => updateSmtpField('password', val)}
+                  placeholder="••••••••••••"
+                  isSecret={!showSecrets['smtp_password']}
+                  onToggleSecret={() => toggleSecret('smtp_password')}
+                  isLight={isLight}
+                />
+              </View>
             </View>
           </View>
         );

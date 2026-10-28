@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { useSystemIntegrations } from '@/src/hooks/useSystemIntegrations';
+import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -32,7 +33,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     icon: 'information-circle-outline',
     description: 'Corporate profile, technology architecture, statutory details & legal compliance',
   },
-  // Future new tabs can easily be appended here
+  {
+    id: 'ENTITY_SETUP',
+    label: 'Setting & Entity Setup',
+    icon: 'settings-outline',
+    description: 'Master corporate registry, registered address, directors, branding, tax/GST, communication & system rules',
+  },
 ];
 
 export default function NewSettingsScreen() {
@@ -44,9 +50,21 @@ export default function NewSettingsScreen() {
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     const tabParam = params?.tab?.toUpperCase();
+    if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
+      return 'ENTITY_SETUP';
+    }
     const found = SETTINGS_TABS.find((t) => t.id === tabParam);
     return found ? found.id : 'ABOUT';
   });
+
+  React.useEffect(() => {
+    const tabParam = params?.tab?.toUpperCase();
+    if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
+      setActiveTab('ENTITY_SETUP');
+    } else if (tabParam === 'ABOUT') {
+      setActiveTab('ABOUT');
+    }
+  }, [params?.tab]);
 
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -480,6 +498,12 @@ export default function NewSettingsScreen() {
                 </View>
               </View>
             </View>
+          </View>
+        )}
+
+        {activeTab === 'ENTITY_SETUP' && (
+          <View style={{ width: '100%' }}>
+            <SettingEntitySetup />
           </View>
         )}
       </ScrollView>

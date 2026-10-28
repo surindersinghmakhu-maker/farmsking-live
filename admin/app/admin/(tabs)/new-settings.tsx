@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  TextInput,
-  Switch,
   ActivityIndicator,
   useWindowDimensions,
   RefreshControl,
@@ -17,13 +15,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
-import {
-  useSystemIntegrations,
-  useUpdateSystemIntegrations,
-} from '@/src/hooks/useSystemIntegrations';
-import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
+import { useSystemIntegrations } from '@/src/hooks/useSystemIntegrations';
 
-type SettingsTab = 'OVERVIEW' | 'CONFIG' | 'API' | 'DIAGNOSTICS';
+// Tab configuration array — allows adding new tabs cleanly whenever needed
+export interface SettingsTabItem {
+  id: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  description: string;
+}
+
+export const SETTINGS_TABS: SettingsTabItem[] = [
+  {
+    id: 'ABOUT',
+    label: 'About',
+    icon: 'information-circle-outline',
+    description: 'Corporate profile, technology architecture, statutory details & legal compliance',
+  },
+  // Future new tabs can easily be appended here
+];
 
 export default function NewSettingsScreen() {
   const router = useRouter();
@@ -32,48 +42,17 @@ export default function NewSettingsScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+  const [activeTab, setActiveTab] = useState<string>(() => {
     const tabParam = params?.tab?.toUpperCase();
-    if (tabParam === 'CONFIG' || tabParam === 'CONFIGURATION') return 'CONFIG';
-    if (tabParam === 'API') return 'API';
-    if (tabParam === 'DIAGNOSTICS' || tabParam === 'OTHERS') return 'DIAGNOSTICS';
-    return 'OVERVIEW';
+    const found = SETTINGS_TABS.find((t) => t.id === tabParam);
+    return found ? found.id : 'ABOUT';
   });
 
   const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
-  // Queries & Mutations
+  // System integrations query
   const { data: systemConfig, isLoading: isSysLoading, refetch: refetchSys } = useSystemIntegrations();
-  const updateSysMutation = useUpdateSystemIntegrations();
-
-  const { data: appSettings, isLoading: isAppLoading, refetch: refetchApp } = useAppSettings();
-  const updateAppMutation = useUpdateAppSettings();
-
-  // Local state for fast interaction
-  const [featureFlags, setFeatureFlags] = useState({
-    maintenanceMode: false,
-    autoBackup: true,
-    smsVerification: true,
-    whatsappBot: true,
-    aiDiagnostics: true,
-    paymentGateway: true,
-    satelliteRadar: true,
-    debugLogging: false,
-  });
-
-  const [configFields, setConfigFields] = useState({
-    platformName: 'FarmsKing™',
-    tagline: 'Farming Easy, Farming Smart',
-    helpline: '+91 98883 04511',
-    supportEmail: 'support@farmsking.in',
-    defaultCurrency: 'INR (₹)',
-    commissionRate: '5.0',
-    minWithdrawal: '500',
-    sessionTimeout: '60',
-    maxUploadMb: '25',
-  });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -82,9 +61,9 @@ export default function NewSettingsScreen() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.allSettled([refetchSys(), refetchApp()]);
+    await refetchSys();
     setRefreshing(false);
-    showToast('⚡ Telemetry and settings synchronized!');
+    showToast('⚡ System status and telemetry synchronized!');
   };
 
   const handleCopy = (label: string, text: string) => {
@@ -96,530 +75,409 @@ export default function NewSettingsScreen() {
     }
   };
 
-  const toggleKey = (keyName: string) => {
-    setShowKeys((prev) => ({ ...prev, [keyName]: !prev[keyName] }));
-  };
-
-  const handleToggleFlag = (key: keyof typeof featureFlags) => {
-    setFeatureFlags((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      showToast(`⚡ ${key.replace(/([A-Z])/g, ' $1')} is now ${next[key] ? 'ENABLED' : 'DISABLED'}`);
-      return next;
-    });
-  };
-
-  const handleSaveAll = async () => {
-    try {
-      await updateSysMutation.mutateAsync({
-        maintenance: {
-          isStorefrontMaintenance: featureFlags.maintenanceMode,
-        } as any,
-      });
-      showToast('✅ All settings saved and synchronized successfully!');
-    } catch (err: any) {
-      showToast('✅ Configuration updated and verified live!');
-    }
-  };
-
-  const handleExportJson = () => {
-    const payload = {
-      timestamp: new Date().toISOString(),
-      platform: 'FarmsKing Technologies Private Limited',
-      featureFlags,
-      configFields,
-      system: {
-        environment: 'Production',
-        version: '2.0.1',
-        node: 'v20.x',
-        db: 'PostgreSQL Active',
-      },
-    };
-    handleCopy('Settings Configuration JSON', JSON.stringify(payload, null, 2));
-  };
-
+  // Color palette matching FarmsKing Executive Theme
   const textColor = isLight ? '#0f172a' : '#f8fafc';
   const subTextColor = isLight ? '#64748b' : '#94a3b8';
-  const cardBg = isLight ? '#ffffff' : '#03140a';
-  const cardBorder = isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.16)';
-  const innerBg = isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.03)';
+  const cardBg = isLight ? '#ffffff' : '#0f172a';
+  const cardBorder = isLight ? '#e2e8f0' : '#1e293b';
+  const pageBg = isLight ? '#f8fafc' : '#030712';
+  const activeTabBg = isLight ? '#4f46e5' : '#6366f1';
+  const accentGreen = isLight ? '#16a34a' : '#10b981';
 
   return (
-    <View style={[styles.root, { backgroundColor: isLight ? '#f8fafc' : '#020b06' }]}>
-      {/* ── Toast Notification ─────────────────────────── */}
+    <View style={[styles.container, { backgroundColor: pageBg }]}>
+      {/* Toast Notification */}
       {toastMessage && (
-        <View style={[styles.toast, { backgroundColor: isLight ? '#f0fdf4' : '#062814', borderColor: isLight ? '#bbf7d0' : '#00ff87' }]}>
-          <Ionicons name="sparkles" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
-          <Text style={[styles.toastText, { color: textColor }]}>{toastMessage}</Text>
+        <View style={styles.toastContainer}>
+          <View style={styles.toastCard}>
+            <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
         </View>
       )}
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[styles.contentContainer, isDesktop ? styles.desktopPadding : styles.mobilePadding]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#6366f1" />}
-      >
-        {/* 🌟 EXECUTIVE HEADER BANNER */}
-        <View style={[styles.headerCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <LinearGradient
-            colors={
-              isLight
-                ? ['rgba(99, 102, 241, 0.08)', 'rgba(16, 185, 129, 0.04)']
-                : ['rgba(99, 102, 241, 0.16)', 'rgba(0, 255, 135, 0.05)']
-            }
-            style={styles.headerGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.headerTopRow}>
-              <View style={styles.headerLeft}>
-                <View style={[styles.headerIconBox, { backgroundColor: isLight ? '#e0e7ff' : 'rgba(99, 102, 241, 0.2)' }]}>
-                  <Ionicons name="options" size={24} color="#6366f1" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.badgeRow}>
-                    <Text style={[styles.headerTitle, { color: textColor }]}>New Settings</Text>
-                    <View style={styles.liveBadge}>
-                      <View style={styles.livePulseDot} />
-                      <Text style={styles.liveBadgeText}>SYSTEM COMMAND HQ</Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-                    Centralized system parameters, runtime switches, API gateways & live telemetry radar.
-                  </Text>
+      {/* Screen Header */}
+      <View style={[styles.header, { backgroundColor: cardBg, borderBottomColor: cardBorder }]}>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerTitleWrap}>
+            <View style={[styles.headerIconBox, { backgroundColor: isLight ? '#e0e7ff' : '#1e1b4b' }]}>
+              <Ionicons name="options" size={24} color="#6366f1" />
+            </View>
+            <View>
+              <View style={styles.titleBadgeRow}>
+                <Text style={[styles.headerTitle, { color: textColor }]}>New Settings</Text>
+                <View style={[styles.liveBadge, { backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)' }]}>
+                  <View style={[styles.liveDot, { backgroundColor: accentGreen }]} />
+                  <Text style={[styles.liveBadgeText, { color: accentGreen }]}>HQ COMMAND</Text>
                 </View>
               </View>
-
-              {/* Action Buttons */}
-              <View style={styles.headerRightActions}>
-                <TouchableOpacity
-                  style={[styles.outlineBtn, { borderColor: cardBorder, backgroundColor: innerBg }]}
-                  onPress={handleExportJson}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="download-outline" size={15} color={textColor} />
-                  <Text style={[styles.outlineBtnText, { color: textColor }]}>Export JSON</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.saveActionBtn}
-                  onPress={handleSaveAll}
-                  activeOpacity={0.8}
-                  disabled={updateSysMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#6366f1', '#4f46e5']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.saveGradient}
-                  >
-                    {updateSysMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <>
-                        <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                        <Text style={styles.saveBtnText}>Save Settings</Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+              <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
+                FarmsKing Technologies · Central Corporate, Platform & System Configuration Hub
+              </Text>
             </View>
+          </View>
 
-            {/* Quick KPIs Strip */}
-            <View style={styles.kpiRow}>
-              <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <Text style={[styles.kpiLabel, { color: subTextColor }]}>Platform Status</Text>
-                <Text style={[styles.kpiValue, { color: '#10b981' }]}>● Online 99.9%</Text>
-              </View>
-              <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <Text style={[styles.kpiLabel, { color: subTextColor }]}>Active Engines</Text>
-                <Text style={[styles.kpiValue, { color: '#6366f1' }]}>8 Microservices</Text>
-              </View>
-              <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <Text style={[styles.kpiLabel, { color: subTextColor }]}>DB Latency</Text>
-                <Text style={[styles.kpiValue, { color: '#0284c7' }]}>12 ms Fast</Text>
-              </View>
-              <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <Text style={[styles.kpiLabel, { color: subTextColor }]}>Environment</Text>
-                <Text style={[styles.kpiValue, { color: '#eab308' }]}>Production VPS</Text>
-              </View>
-            </View>
-          </LinearGradient>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.syncBtn, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b', borderColor: cardBorder }]}
+              onPress={handleRefresh}
+              disabled={refreshing}
+            >
+              <Ionicons name="sync-outline" size={16} color={subTextColor} />
+              <Text style={[styles.syncBtnText, { color: subTextColor }]}>Sync Telemetry</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* ── Sub-Tabs Navigation ─────────────────────────── */}
-        <View style={styles.tabsNavRow}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsNavScroll}>
-            {[
-              { key: 'OVERVIEW' as const, label: 'Settings Command HQ', icon: 'speedometer-outline' as const },
-              { key: 'CONFIG' as const, label: 'System Configuration', icon: 'construct-outline' as const },
-              { key: 'API' as const, label: 'API & Integrations', icon: 'hardware-chip-outline' as const },
-              { key: 'DIAGNOSTICS' as const, label: 'Diagnostics & Radar', icon: 'pulse-outline' as const },
-            ].map((t) => {
-              const isSelected = activeTab === t.key;
-              return (
-                <TouchableOpacity
-                  key={t.key}
+        {/* Dynamic Navigation Tabs (Only 'About' currently; easily extensible) */}
+        <View style={styles.tabBar}>
+          {SETTINGS_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={[
+                  styles.tabItem,
+                  isActive && { borderBottomColor: activeTabBg, borderBottomWidth: 3 },
+                ]}
+                onPress={() => setActiveTab(tab.id)}
+              >
+                <Ionicons
+                  name={tab.icon}
+                  size={18}
+                  color={isActive ? (isLight ? '#4f46e5' : '#818cf8') : subTextColor}
+                />
+                <Text
                   style={[
-                    styles.tabItem,
+                    styles.tabLabel,
                     {
-                      borderColor: isSelected ? '#6366f1' : cardBorder,
-                      backgroundColor: isSelected ? '#6366f1' : cardBg,
+                      color: isActive ? (isLight ? '#4f46e5' : '#818cf8') : subTextColor,
+                      fontWeight: isActive ? '700' : '500',
                     },
                   ]}
-                  onPress={() => setActiveTab(t.key)}
-                  activeOpacity={0.7}
                 >
-                  <Ionicons
-                    name={t.icon}
-                    size={15}
-                    color={isSelected ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')}
-                  />
-                  <Text
-                    style={[
-                      styles.tabItemText,
-                      { color: isSelected ? '#ffffff' : textColor },
-                      isSelected && { fontWeight: '700' },
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
+      </View>
 
-        {/* ── TAB 1: OVERVIEW ─────────────────────────────── */}
-        {activeTab === 'OVERVIEW' && (
-          <View style={styles.tabContentWrapper}>
-            {/* Quick Feature Flags Section */}
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionHeaderRow}>
-                <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="flash-outline" size={18} color="#6366f1" />
-                  <Text style={[styles.sectionTitle, { color: textColor }]}>Live Feature Switches & Operational Flags</Text>
+      {/* Main Content Area */}
+      <ScrollView
+        style={styles.contentScroll}
+        contentContainerStyle={[styles.contentContainer, !isDesktop && styles.contentContainerMobile]}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#6366f1" />
+        }
+      >
+        {activeTab === 'ABOUT' && (
+          <View style={styles.aboutTabWrapper}>
+            {/* Hero Company Banner */}
+            <LinearGradient
+              colors={isLight ? ['#4f46e5', '#3730a3'] : ['#1e1b4b', '#0f172a']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroBanner}
+            >
+              <View style={styles.heroContent}>
+                <View style={styles.heroIconBadge}>
+                  <Ionicons name="business" size={28} color="#ffffff" />
                 </View>
-                <Text style={[styles.sectionHint, { color: subTextColor }]}>Instant runtime toggles</Text>
-              </View>
-
-              <View style={styles.switchesGrid}>
-                {[
-                  { key: 'maintenanceMode' as const, title: 'Storefront Maintenance', desc: 'Halts checkout and displays maintenance notice' },
-                  { key: 'autoBackup' as const, title: 'Automatic Nightly Backup', desc: 'Daily database JSON dump to encrypted storage' },
-                  { key: 'smsVerification' as const, title: 'SMS OTP Verification', desc: 'Require OTP confirmation on farmer registration' },
-                  { key: 'whatsappBot' as const, title: 'WhatsApp Business Concierge', desc: 'Automated mandi prices and advisory assistant' },
-                  { key: 'aiDiagnostics' as const, title: 'AI Leaf Pathology Vision', desc: 'Gemini neural leaf disease detection engine' },
-                  { key: 'paymentGateway' as const, title: 'Razorpay & UPI Gateway', desc: 'Accept direct UPI, cards and netbanking checkout' },
-                  { key: 'satelliteRadar' as const, title: 'Satellite Telemetry Radar', desc: 'High-res ISRO & Sentinel farm vegetation map' },
-                  { key: 'debugLogging' as const, title: 'Verbose Debug Logging', desc: 'Output detailed API requests to system console' },
-                ].map((item) => {
-                  const val = featureFlags[item.key];
-                  return (
-                    <View key={item.key} style={[styles.switchCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <View style={{ flex: 1, paddingRight: 10 }}>
-                        <Text style={[styles.switchTitle, { color: textColor }]}>{item.title}</Text>
-                        <Text style={[styles.switchDesc, { color: subTextColor }]}>{item.desc}</Text>
-                      </View>
-                      <Switch
-                        value={val}
-                        onValueChange={() => handleToggleFlag(item.key)}
-                        trackColor={{ false: '#475569', true: '#6366f1' }}
-                        thumbColor="#ffffff"
-                      />
+                <View style={styles.heroTextWrap}>
+                  <Text style={styles.heroOrgTitle}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
+                  <Text style={styles.heroOrgSubtitle}>
+                    Next-Generation Autonomous Agronomy, Live Commodity Exchange & Multispectral Satellite Field Telemetry
+                  </Text>
+                  <View style={styles.heroStatsRow}>
+                    <View style={styles.heroStatChip}>
+                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                      <Text style={styles.heroStatText}>MCA Incorporated · Ministry of Corporate Affairs, India</Text>
                     </View>
-                  );
-                })}
+                    <View style={styles.heroStatChip}>
+                      <Ionicons name="document-text" size={14} color="#60a5fa" />
+                      <Text style={styles.heroStatText}>Strict A4 Document Standard (210mm × 297mm)</Text>
+                    </View>
+                    <View style={styles.heroStatChip}>
+                      <Ionicons name="globe" size={14} color="#fbbf24" />
+                      <Text style={styles.heroStatText}>100% English Executive UI</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Quick Informational Notice */}
+            <View style={[styles.modularNoticeCard, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.3)' }]}>
+              <Ionicons name="sparkles" size={20} color="#10b981" />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.modularNoticeTitle, { color: isLight ? '#166534' : '#34d399' }]}>
+                  Modular Settings Workspace Ready
+                </Text>
+                <Text style={[styles.modularNoticeDesc, { color: isLight ? '#15803d' : '#a7f3d0' }]}>
+                  All previous placeholder tabs have been removed. This Command Hub is now dedicated to the About profile, ready for fresh custom tabs to be registered cleanly.
+                </Text>
               </View>
             </View>
 
-            {/* Corporate Statutory Identity Card */}
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionHeaderRow}>
-                <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#10b981" />
-                  <Text style={[styles.sectionTitle, { color: textColor }]}>Registered Corporate Entity & MCA Compliance</Text>
-                </View>
-                <TouchableOpacity onPress={() => handleCopy('Entity Details', 'FARMSKING TECHNOLOGIES PRIVATE LIMITED')}>
-                  <Text style={{ fontSize: 11, color: '#10b981', fontFamily: FONT.medium }}>Copy Entity</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.entityDetailsGrid}>
-                <View style={[styles.entityDetailItem, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                  <Text style={[styles.entityLabel, { color: subTextColor }]}>Company Legal Name</Text>
-                  <Text style={[styles.entityValue, { color: textColor }]}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
-                </View>
-                <View style={[styles.entityDetailItem, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                  <Text style={[styles.entityLabel, { color: subTextColor }]}>Registered Office</Text>
-                  <Text style={[styles.entityValue, { color: textColor }]}>VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422</Text>
-                </View>
-                <View style={[styles.entityDetailItem, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                  <Text style={[styles.entityLabel, { color: subTextColor }]}>Runtime Architecture</Text>
-                  <Text style={[styles.entityValue, { color: textColor }]}>React Native Web + NestJS API + PostgreSQL</Text>
-                </View>
-                <View style={[styles.entityDetailItem, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                  <Text style={[styles.entityLabel, { color: subTextColor }]}>Cloud VPS Host</Text>
-                  <Text style={[styles.entityValue, { color: textColor }]}>Hostinger Enterprise Cloud (187.127.98.38)</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* ── TAB 2: CONFIGURATION ────────────────────────── */}
-        {activeTab === 'CONFIG' && (
-          <View style={styles.tabContentWrapper}>
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionHeaderRow}>
-                <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="construct-outline" size={18} color="#6366f1" />
-                  <Text style={[styles.sectionTitle, { color: textColor }]}>System & Commerce Parameters</Text>
-                </View>
-                <Text style={[styles.sectionHint, { color: subTextColor }]}>Global defaults</Text>
-              </View>
-
-              <View style={styles.formGrid}>
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Platform Public Title</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.platformName}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, platformName: val }))}
-                      placeholder="e.g. FarmsKing™"
-                      placeholderTextColor={subTextColor}
-                    />
+            {/* 2-Column Grid on Desktop, 1-Column on Mobile */}
+            <View style={[styles.gridRow, !isDesktop && styles.gridRowMobile]}>
+              {/* Card 1: Corporate Entity & Statutory Governance */}
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#eff6ff' : '#1e293b' }]}>
+                    <Ionicons name="shield-checkmark" size={18} color="#3b82f6" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Corporate & Statutory Entity</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>Official Registration & Registered Office</Text>
                   </View>
                 </View>
 
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Brand Tagline / Slogan</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.tagline}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, tagline: val }))}
-                      placeholder="e.g. Farming Easy, Farming Smart"
-                      placeholderTextColor={subTextColor}
-                    />
+                <View style={styles.infoList}>
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Legal Entity Name</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>
+                      FARMSKING TECHNOLOGIES PRIVATE LIMITED
+                    </Text>
                   </View>
-                </View>
 
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Farmer Helpline Phone</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.helpline}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, helpline: val }))}
-                      placeholder="e.g. +91 98883 04511"
-                      placeholderTextColor={subTextColor}
-                    />
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Incorporation Authority</Text>
+                    <Text style={[styles.infoValue, { color: textColor }]}>
+                      Ministry of Corporate Affairs (MCA), Govt. of India
+                    </Text>
                   </View>
-                </View>
 
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Official Support Email</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.supportEmail}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, supportEmail: val }))}
-                      placeholder="e.g. support@farmsking.in"
-                      placeholderTextColor={subTextColor}
-                    />
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Registered Office</Text>
+                    <View style={styles.addressWrap}>
+                      <Text style={[styles.infoValue, { color: textColor, lineHeight: 20 }]}>
+                        VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.copyInlineBtn}
+                        onPress={() => handleCopy('Registered Address', 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India')}
+                      >
+                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
+                        <Text style={styles.copyInlineText}>Copy</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Base Marketplace Commission (%)</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.commissionRate}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, commissionRate: val }))}
-                      keyboardType="numeric"
-                      placeholder="5.0"
-                      placeholderTextColor={subTextColor}
-                    />
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Board of Directors</Text>
+                    <View>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>• Surinder Singh (Director)</Text>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>• Baljit Singh (Director)</Text>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.formCol}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Minimum Payout Threshold (₹)</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={configFields.minWithdrawal}
-                      onChangeText={(val) => setConfigFields((p) => ({ ...p, minWithdrawal: val }))}
-                      keyboardType="numeric"
-                      placeholder="500"
-                      placeholderTextColor={subTextColor}
-                    />
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Share Capital</Text>
+                    <Text style={[styles.infoValue, { color: textColor }]}>
+                      ₹1,00,000 Authorized Capital (10,000 Equity Shares @ ₹10 each)
+                    </Text>
                   </View>
-                </View>
-              </View>
 
-              <View style={styles.cardFooterRight}>
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveAll} activeOpacity={0.8}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveGradient}>
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    <Text style={styles.saveBtnText}>Save Configuration</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* ── TAB 3: API & INTEGRATIONS ────────────────────── */}
-        {activeTab === 'API' && (
-          <View style={styles.tabContentWrapper}>
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionHeaderRow}>
-                <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="hardware-chip-outline" size={18} color="#6366f1" />
-                  <Text style={[styles.sectionTitle, { color: textColor }]}>Active API Services & Integration Summary</Text>
-                </View>
-                <TouchableOpacity onPress={() => router.push('/admin/(tabs)/super-settings?section=TOOLS')}>
-                  <Text style={{ fontSize: 11, color: '#6366f1', fontFamily: FONT.medium }}>Open Full Credentials →</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.apiCardsGrid}>
-                {[
-                  {
-                    id: 'gemini',
-                    title: 'Google Gemini AI',
-                    desc: 'Multimodal neural leaf pathology and chat engine',
-                    status: 'ACTIVE',
-                    provider: 'gemini-1.5-flash',
-                    keyMasked: 'AIzaSy************************',
-                    icon: 'sparkles' as const,
-                    color: '#10b981',
-                  },
-                  {
-                    id: 'razorpay',
-                    title: 'Razorpay Payment Gateway',
-                    desc: 'Instant UPI, Cards & Netbanking payment settlement',
-                    status: 'ACTIVE',
-                    provider: 'Live Production',
-                    keyMasked: 'rzp_live_********************',
-                    icon: 'card' as const,
-                    color: '#0284c7',
-                  },
-                  {
-                    id: 'fast2sms',
-                    title: 'Fast2SMS & Firebase OTP',
-                    desc: 'Farmer phone verification and SMS alerts gateway',
-                    status: 'ACTIVE',
-                    provider: 'DNT Route Live',
-                    keyMasked: 'f2s_sec_**********************',
-                    icon: 'chatbox-ellipses' as const,
-                    color: '#f59e0b',
-                  },
-                  {
-                    id: 'whatsapp',
-                    title: 'Meta WhatsApp Cloud API',
-                    desc: 'Automated mandi prices & advisory broadcast bot',
-                    status: 'ACTIVE',
-                    provider: 'Meta Business Cloud',
-                    keyMasked: 'EAAQ*************************',
-                    icon: 'logo-whatsapp' as const,
-                    color: '#22c55e',
-                  },
-                  {
-                    id: 'satellite',
-                    title: 'Sentinel-2 & ISRO Telemetry',
-                    desc: 'High-res multispectral vegetation and soil moisture index',
-                    status: 'ACTIVE',
-                    provider: 'Copernicus Hub',
-                    keyMasked: 'isro_sent_*******************',
-                    icon: 'planet' as const,
-                    color: '#8b5cf6',
-                  },
-                  {
-                    id: 'weather',
-                    title: 'OpenWeather & IMD Forecast',
-                    desc: 'Hyperlocal 7-day spray forecast and weather warnings',
-                    status: 'ACTIVE',
-                    provider: 'OpenWeather OneCall 3.0',
-                    keyMasked: 'owm_app_*********************',
-                    icon: 'partly-sunny' as const,
-                    color: '#06b6d4',
-                  },
-                ].map((api) => {
-                  return (
-                    <View key={api.id} style={[styles.apiCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <View style={styles.apiTopRow}>
-                        <View style={[styles.apiIconCircle, { backgroundColor: `${api.color}15`, borderColor: `${api.color}35` }]}>
-                          <Ionicons name={api.icon} size={18} color={api.color} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.apiTitle, { color: textColor }]}>{api.title}</Text>
-                          <Text style={[styles.apiProviderText, { color: subTextColor }]}>{api.provider}</Text>
-                        </View>
-                        <View style={[styles.apiBadge, { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)' }]}>
-                          <Text style={styles.apiBadgeText}>{api.status}</Text>
-                        </View>
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Statutory Rules</Text>
+                    <View style={styles.tagsRow}>
+                      <View style={[styles.tagPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                        <Text style={[styles.tagText, { color: textColor }]}>Standard A4 Documents</Text>
                       </View>
-
-                      <Text style={[styles.apiDesc, { color: subTextColor }]}>{api.desc}</Text>
-
-                      <View style={[styles.apiKeyBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                        <Text style={[styles.apiKeyText, { color: textColor }]}>
-                          {showKeys[api.id] ? api.keyMasked.replace(/\*/g, '•') : api.keyMasked}
-                        </Text>
-                        <View style={{ flexDirection: 'row', gap: 6 }}>
-                          <TouchableOpacity onPress={() => toggleKey(api.id)} style={{ padding: 4 }}>
-                            <Ionicons name={showKeys[api.id] ? 'eye-off-outline' : 'eye-outline'} size={15} color={subTextColor} />
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={() => handleCopy(api.title, api.keyMasked)} style={{ padding: 4 }}>
-                            <Ionicons name="copy-outline" size={15} color="#6366f1" />
-                          </TouchableOpacity>
-                        </View>
+                      <View style={[styles.tagPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                        <Text style={[styles.tagText, { color: textColor }]}>Zero Public KYC Leakage</Text>
                       </View>
                     </View>
-                  );
-                })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Card 2: Approved Business Scope (e-MoA Objects) */}
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#ecfdf5' : '#064e3b' }]}>
+                    <Ionicons name="leaf" size={18} color="#10b981" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Approved Business Scope</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>Statutory Objects per MCA e-MoA</Text>
+                  </View>
+                </View>
+
+                <View style={styles.scopeList}>
+                  <View style={[styles.scopeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <View style={[styles.scopeNumBox, { backgroundColor: isLight ? '#e0e7ff' : '#1e1b4b' }]}>
+                      <Text style={styles.scopeNumText}>01</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>AI Crop Doctor & Agronomy Diagnosis</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
+                        Autonomous visual leaf analysis, plant pathology, dosage scheduling and live agronomist consultation.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.scopeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <View style={[styles.scopeNumBox, { backgroundColor: isLight ? '#dcfce7' : '#064e3b' }]}>
+                      <Text style={[styles.scopeNumText, { color: '#10b981' }]}>02</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Live Agricultural Mandi & Commodity Exchange</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
+                        Direct farmer-to-buyer grain trading, APMC market rates, spot price bidding and instant digital settlement.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.scopeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <View style={[styles.scopeNumBox, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
+                      <Text style={[styles.scopeNumText, { color: '#f59e0b' }]}>03</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Agricultural E-Commerce Marketplace</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
+                        Certified hybrid seeds, fertilizers, organic nutrients, modern farm implements and doorstep delivery.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[styles.scopeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <View style={[styles.scopeNumBox, { backgroundColor: isLight ? '#fae8ff' : '#581c87' }]}>
+                      <Text style={[styles.scopeNumText, { color: '#c026d3' }]}>04</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Multispectral Satellite Telemetry</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
+                        Sentinel-2 Earth observation, NDVI vegetative indices, soil moisture radar and automated irrigation alerts.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
             </View>
-          </View>
-        )}
 
-        {/* ── TAB 4: DIAGNOSTICS & TELEMETRY ─────────────── */}
-        {activeTab === 'DIAGNOSTICS' && (
-          <View style={styles.tabContentWrapper}>
-            <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionHeaderRow}>
-                <View style={styles.sectionHeaderLeft}>
-                  <Ionicons name="pulse-outline" size={18} color="#0284c7" />
-                  <Text style={[styles.sectionTitle, { color: textColor }]}>Real-Time Diagnostics & Infrastructure Telemetry</Text>
+            {/* Row 2: Technology Stack & Executive Contact */}
+            <View style={[styles.gridRow, !isDesktop && styles.gridRowMobile]}>
+              {/* Card 3: Platform Architecture & Tech Stack */}
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#f3e8ff' : '#3b0764' }]}>
+                    <Ionicons name="hardware-chip" size={18} color="#9333ea" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Technology Stack & Architecture</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>Full-Stack Enterprise Infrastructure</Text>
+                  </View>
                 </View>
-                <TouchableOpacity onPress={handleRefresh}>
-                  <Text style={{ fontSize: 11, color: '#0284c7', fontFamily: FONT.medium }}>Ping All Nodes</Text>
-                </TouchableOpacity>
+
+                <View style={styles.techGrid}>
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="code-slash" size={20} color="#6366f1" />
+                    <Text style={[styles.techName, { color: textColor }]}>Frontend & Admin</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>React Native Web, Expo Router v3, TypeScript</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="server" size={20} color="#10b981" />
+                    <Text style={[styles.techName, { color: textColor }]}>Backend Core</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>NestJS 10 Enterprise API, Node.js, WebSockets</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="server-outline" size={20} color="#3b82f6" />
+                    <Text style={[styles.techName, { color: textColor }]}>Database & ORM</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>PostgreSQL 16 High-Performance, Prisma ORM v6</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="cloud-done" size={20} color="#f59e0b" />
+                    <Text style={[styles.techName, { color: textColor }]}>Cloud VPS Host</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Hostinger Ubuntu 24.04 LTS, Nginx, PM2, TLS 1.3</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="sparkles" size={20} color="#ec4899" />
+                    <Text style={[styles.techName, { color: textColor }]}>AI & Satellite</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Google Gemini 1.5 Pro/Flash, Copernicus Sentinel-2</Text>
+                  </View>
+
+                  <View style={[styles.techItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                    <Ionicons name="chatbubbles" size={20} color="#14b8a6" />
+                    <Text style={[styles.techName, { color: textColor }]}>Communications</Text>
+                    <Text style={[styles.techDetail, { color: subTextColor }]}>Fast2SMS DLT-Approved SMS, Meta WhatsApp Cloud API</Text>
+                  </View>
+                </View>
               </View>
 
-              <View style={styles.telemetryGrid}>
-                {[
-                  { title: 'PostgreSQL Latency', val: '12 ms', status: 'Optimal', color: '#10b981', icon: 'server-outline' as const },
-                  { title: 'Backend Node RAM', val: '24.8% (508 MB)', status: 'Healthy', color: '#6366f1', icon: 'hardware-chip-outline' as const },
-                  { title: 'Cache Hit Ratio', val: '99.4%', status: 'Hot In-Memory', color: '#0284c7', icon: 'flash-outline' as const },
-                  { title: 'WebSocket Active', val: 'Sync Channel ON', status: 'Connected', color: '#10b981', icon: 'radio-outline' as const },
-                  { title: 'Security Audit Log', val: '0 Escalations', status: 'Protected', color: '#10b981', icon: 'shield-checkmark-outline' as const },
-                  { title: 'Hostinger Cloud VPS', val: 'Ubuntu 24.04 LTS', status: '100% Uptime', color: '#eab308', icon: 'cloud-outline' as const },
-                ].map((item, idx) => (
-                  <View key={idx} style={[styles.telemetryBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <View style={styles.telemetryTop}>
-                      <Ionicons name={item.icon} size={16} color={item.color} />
-                      <Text style={[styles.telemetryStatus, { color: item.color }]}>{item.status}</Text>
-                    </View>
-                    <Text style={[styles.telemetryVal, { color: textColor }]}>{item.val}</Text>
-                    <Text style={[styles.telemetryTitle, { color: subTextColor }]}>{item.title}</Text>
+              {/* Card 4: Official Contacts & Platform Telemetry */}
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
+                    <Ionicons name="call" size={18} color="#f59e0b" />
                   </View>
-                ))}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Contact & Operating Telemetry</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>Helpdesk, Support Channels & Build Version</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoList}>
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Helpline Number</Text>
+                    <View style={styles.addressWrap}>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>+91 98883 04511</Text>
+                      <TouchableOpacity
+                        style={styles.copyInlineBtn}
+                        onPress={() => handleCopy('Helpline', '+91 98883 04511')}
+                      >
+                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
+                        <Text style={styles.copyInlineText}>Copy</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Official Email</Text>
+                    <View style={styles.addressWrap}>
+                      <Text style={[styles.infoValue, { color: textColor, fontWeight: '600' }]}>support@farmsking.in</Text>
+                      <TouchableOpacity
+                        style={styles.copyInlineBtn}
+                        onPress={() => handleCopy('Support Email', 'support@farmsking.in')}
+                      >
+                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
+                        <Text style={styles.copyInlineText}>Copy</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Official Web Portal</Text>
+                    <Text style={[styles.infoValue, { color: '#6366f1', fontWeight: '600' }]}>https://farmsking.in</Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Platform Version</Text>
+                    <Text style={[styles.infoValue, { color: textColor, fontWeight: '700' }]}>v2.4.0-production</Text>
+                  </View>
+
+                  <View style={[styles.infoRow, { borderBottomColor: cardBorder }]}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>System SLA</Text>
+                    <View style={styles.statusPill}>
+                      <View style={[styles.liveDot, { backgroundColor: '#10b981' }]} />
+                      <Text style={[styles.statusPillText, { color: '#10b981' }]}>100% Operational (Production)</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={[styles.infoLabel, { color: subTextColor }]}>Developer Guide</Text>
+                    <Text style={[styles.infoValue, { color: subTextColor, fontSize: 12, lineHeight: 18 }]}>
+                      To append new settings tabs, register their metadata inside the SETTINGS_TABS array and configure corresponding paths in navigationPillars.ts.
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>
@@ -630,389 +488,363 @@ export default function NewSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
   container: {
     flex: 1,
   },
-  contentContainer: {
-    paddingBottom: 40,
+  toastContainer: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 9999,
   },
-  desktopPadding: {
-    paddingHorizontal: 24,
-    paddingTop: 18,
-  },
-  mobilePadding: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
-  headerCard: {
-    borderRadius: RADIUS.lg,
+  toastCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    overflow: 'hidden',
-    marginBottom: 16,
+    borderColor: '#334155',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  headerGradient: {
-    padding: 18,
+  toastText: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    borderBottomWidth: 1,
   },
   headerTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 14,
+    gap: 16,
+    marginBottom: 16,
   },
-  headerLeft: {
+  headerTitleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     flex: 1,
     minWidth: 260,
   },
   headerIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeRow: {
+  titleBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     flexWrap: 'wrap',
   },
   headerTitle: {
-    fontSize: 20,
-    fontFamily: FONT.bold,
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(99, 102, 241, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.35)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
   },
-  livePulseDot: {
+  liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#6366f1',
   },
   liveBadgeText: {
-    fontSize: 9,
-    fontFamily: FONT.bold,
-    color: '#6366f1',
+    fontSize: 10,
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
-  headerSubtitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.regular,
-    marginTop: 3,
-  },
-  headerRightActions: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  outlineBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  outlineBtnText: {
-    fontSize: 12,
-    fontFamily: FONT.semiBold,
-  },
-  saveActionBtn: {
-    borderRadius: RADIUS.md,
-    overflow: 'hidden',
-  },
-  saveGradient: {
+  syncBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
   },
-  saveBtnText: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
+  syncBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tabBar: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  tabItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  tabLabel: {
+    fontSize: 14,
+  },
+  contentScroll: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 24,
+    maxWidth: 1400,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  contentContainerMobile: {
+    padding: 16,
+  },
+  aboutTabWrapper: {
+    gap: 20,
+  },
+  heroBanner: {
+    borderRadius: RADIUS.lg,
+    padding: 24,
+    overflow: 'hidden',
+  },
+  heroContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 18,
+  },
+  heroIconBadge: {
+    width: 54,
+    height: 54,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroTextWrap: {
+    flex: 1,
+  },
+  heroOrgTitle: {
+    fontSize: 20,
+    fontWeight: '800',
     color: '#ffffff',
+    letterSpacing: 0.2,
   },
-  kpiRow: {
+  heroOrgSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 4,
+    lineHeight: 19,
+  },
+  heroStatsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
     marginTop: 16,
   },
-  kpiBox: {
-    flex: 1,
-    minWidth: 130,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  kpiLabel: {
-    fontSize: 10,
-    fontFamily: FONT.medium,
-    marginBottom: 2,
-  },
-  kpiValue: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-  },
-  tabsNavRow: {
-    marginBottom: 16,
-  },
-  tabsNavScroll: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tabItem: {
+  heroStatChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+  },
+  heroStatText: {
+    fontSize: 11,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  modularNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
   },
-  tabItemText: {
-    fontSize: 12.5,
-    fontFamily: FONT.medium,
+  modularNoticeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
   },
-  tabContentWrapper: {
+  modularNoticeDesc: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 17,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  gridRowMobile: {
+    flexDirection: 'column',
     gap: 16,
   },
-  sectionCard: {
+  gridCol: {
+    flex: 1,
+  },
+  card: {
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    padding: 16,
+    padding: 20,
   },
-  sectionHeaderRow: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontFamily: FONT.bold,
-  },
-  sectionHint: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-  },
-  switchesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 12,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(150, 150, 150, 0.1)',
   },
-  switchCard: {
-    width: '48.5%',
-    minWidth: 260,
-    flexGrow: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  switchTitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.semiBold,
-    marginBottom: 2,
-  },
-  switchDesc: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-  },
-  entityDetailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  entityDetailItem: {
-    flex: 1,
-    minWidth: 240,
-    padding: 12,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  entityLabel: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
-    marginBottom: 4,
-  },
-  entityValue: {
-    fontSize: 12.5,
-    fontFamily: FONT.semiBold,
-  },
-  formGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  formCol: {
-    width: '48.5%',
-    minWidth: 260,
-    flexGrow: 1,
-  },
-  inputLabel: {
-    fontSize: 11.5,
-    fontFamily: FONT.semiBold,
-    marginBottom: 6,
-  },
-  inputBox: {
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  input: {
-    fontSize: 13,
-    fontFamily: FONT.regular,
-  },
-  cardFooterRight: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 18,
-  },
-  apiCardsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  apiCard: {
-    width: '48.5%',
-    minWidth: 260,
-    flexGrow: 1,
-    padding: 14,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  apiTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  apiIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
+  cardHeaderIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  apiTitle: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
   },
-  apiProviderText: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
+  cardSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
-  apiBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-  },
-  apiBadgeText: {
-    fontSize: 9,
-    fontFamily: FONT.bold,
-    color: '#10b981',
-  },
-  apiDesc: {
-    fontSize: 11.5,
-    fontFamily: FONT.regular,
-    marginBottom: 10,
-  },
-  apiKeyBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-  },
-  apiKeyText: {
-    fontSize: 11,
-    fontFamily: FONT.mono || FONT.regular,
-    flex: 1,
-  },
-  telemetryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  infoList: {
     gap: 12,
   },
-  telemetryBox: {
-    flex: 1,
-    minWidth: 180,
-    padding: 14,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
+  infoRow: {
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    gap: 4,
   },
-  telemetryTop: {
+  infoLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  infoValue: {
+    fontSize: 13,
+  },
+  addressWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    gap: 8,
   },
-  telemetryStatus: {
-    fontSize: 9.5,
-    fontFamily: FONT.bold,
-  },
-  telemetryVal: {
-    fontSize: 16,
-    fontFamily: FONT.extraBold,
-    marginBottom: 2,
-  },
-  telemetryTitle: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
-  },
-  toast: {
-    position: 'absolute',
-    top: 14,
-    right: 20,
-    zIndex: 9999,
+  copyInlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.sm,
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+  },
+  copyInlineText: {
+    fontSize: 11,
+    color: '#6366f1',
+    fontWeight: '600',
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    marginTop: 4,
+  },
+  tagPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+  },
+  tagText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  scopeList: {
+    gap: 12,
+  },
+  scopeItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 12,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 4,
   },
-  toastText: {
-    fontSize: 12.5,
-    fontFamily: FONT.semiBold,
+  scopeNumBox: {
+    width: 32,
+    height: 32,
+    borderRadius: RADIUS.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scopeNumText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#4f46e5',
+  },
+  scopeTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  scopeDesc: {
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  techGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  techItem: {
+    width: '48%',
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: 6,
+  },
+  techName: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  techDetail: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  statusPillText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });

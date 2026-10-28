@@ -23,11 +23,10 @@
 - **Sole Exception - Dedicated Language Switcher Box**: The only element on any page permitted to show regional language scripts is the dedicated Language Selector / Switcher box (e.g., `[ EN | PA | HI ]` or `English / ਪੰਜਾਬੀ / हिंदी`). Every other component, header, hero card, diagnostic widget, and footer must be 100% pure English.
 - Compact, clear, 5-star easily understandable executive wording.
 
-## 2. 100% Pure React, Concurrent Mobile Verification & Mobile Compatibility
-- **100% Pure React Architecture**: Build every page, feature, and portal in 100% React / React Native mode ("sabh react mode vich bane").
-- **Concurrent Mobile View Detection ("React ਨਾਲ ਨਾਲ Mobile View Det Kita Jave")**: Concurrently test and inspect the mobile view (<768px) alongside desktop when developing or modifying React components. Mobile is never an afterthought.
-- **Mobile Compatibility for All Designs & Wording ("Har Design Te Wording Mobile Compatibility Nu Dekhde Hoye")**: Every design element (cards, 2x2 grids, buttons, safe-area insets, >=44px hitboxes) and wording length must fit mobile viewports flawlessly without horizontal scroll or text truncation.
-- Fully responsive across Mobile (<768px), Tablet (768px - 1024px), and Desktop (>1024px).
+## 2. 100% Pure React, Primary PC/Website View & Background Mobile Adaptation (ਲੈਪਟਾਪ/ਪੀਸੀ ਵਿਊ ਪ੍ਰਾਇਮਰੀ ਨਿਯਮ)
+- **100% Pure React Architecture**: Build every page, feature, and portal in 100% React / Expo React Native Web mode ("sabh react mode vich bane").
+- **Primary Priority: PC / Website View ("Main PC View Nu Responsive Bnaun Te Jor Dena Hai")**: The user tests strictly on a laptop / PC screen. All user requests, screenshots, and visual feedback are 100% based on the website (PC view). The primary visual, layout, and responsive focus MUST be on the laptop/PC layout. Never hide desktop elements, never make mobile-first changes that break or conceal items on PC view, and never prioritize mobile over laptop view.
+- **Automatic Background Mobile Adaptation ("Mobile View Apne Aap Set Krde Jao")**: Maintain clean responsive CSS/flexbox in the background so mobile doesn't break, but do not focus discussions or design tradeoffs on mobile. Mobile app view testing will only occur when the user explicitly instructs it ("jado mobile app view dekhna howega ta user apne aap das deva ga").
 - Reusable modular tokens so components never require repetitive redesigns ("var var change na krna pave").
 
 ## 3. Statutory Confidentiality, Web App Synchronization & Proactive Legal Guidance

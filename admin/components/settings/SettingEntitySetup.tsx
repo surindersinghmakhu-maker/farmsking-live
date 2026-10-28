@@ -272,59 +272,7 @@ export default function SettingEntitySetup() {
         </View>
       )}
 
-      {/* Header Banner */}
-      <View style={[styles.masterHeaderBanner, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={styles.masterHeaderLeft}>
-          <View style={[styles.iconBox, { backgroundColor: 'rgba(99, 102, 241, 0.12)' }]}>
-            <Ionicons name="settings" size={24} color="#6366f1" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.titleRow}>
-              <Text style={[styles.toolTitle, { color: textColor }]}>Setting & Entity Setup</Text>
-              <View style={[styles.statusBadge, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
-                <Text style={[styles.statusText, { color: '#6366f1' }]}>CENTRAL REGISTRY</Text>
-              </View>
-            </View>
-            <Text style={[styles.toolDesc, { color: subTextColor }]}>
-              Master corporate registry, capital structure, registered address, branding, tax/GST, communication channels and platform rules.
-            </Text>
-          </View>
-        </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <TouchableOpacity
-            style={[styles.outlineActionBtn, { borderColor: cardBorder, backgroundColor: innerBg }]}
-            onPress={handleExportMasterDataJson}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="download-outline" size={15} color={textColor} />
-            <Text style={[styles.outlineActionText, { color: textColor, fontSize: 12.5 }]}>Export JSON</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.globalSaveBtn}
-            onPress={handleSaveMasterData}
-            activeOpacity={0.8}
-            disabled={updateMutation.isPending}
-          >
-            <LinearGradient
-              colors={['#6366f1', '#4f46e5']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.globalSaveGradient}
-            >
-              {updateMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-done" size={17} color="#ffffff" />
-                  <Text style={styles.globalSaveText}>Save Setting</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </View>
 
       {/* Quick Search & Master Navigation Bar */}
       <View style={[styles.masterSearchBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>

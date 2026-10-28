@@ -18,7 +18,7 @@ const nodeExe = fs.existsSync(path.join(localNodeDir, 'node.exe'))
 process.env.NODE_OPTIONS = '--max-old-space-size=2048';
 process.env.EXPO_NO_TELEMETRY = '1';
 process.env.EXPO_OFFLINE = '1';
-process.env.CI = '1';
+delete process.env.CI;
 process.env.EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK = '1';
 process.env.FAST_REFRESH = 'true';
 

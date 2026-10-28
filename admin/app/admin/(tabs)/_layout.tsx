@@ -284,11 +284,13 @@ export default function TabLayout() {
     const currentSection = localParams?.section || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('section') : undefined);
     const isFilterMatch = !tab.params?.filter || (currentFilter === tab.params.filter);
     const isGroupMatch = !tab.params?.group || (currentGroup === tab.params.group);
+    const currentTab = localParams?.tab || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : undefined);
     const isSectionMatch =
       !tab.params?.section ||
       (currentSection === tab.params.section) ||
       ((currentSection === 'TOOLS' || currentSection === 'API' || !currentSection) && tab.params.section === 'MASTER_DATA');
-    return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch && isSectionMatch;
+    const isTabMatch = !tab.params?.tab || (currentTab === tab.params.tab);
+    return (isIndexActive || isOtherActive) && isFilterMatch && isGroupMatch && isSectionMatch && isTabMatch;
   }) || activePillar.subTabs[0];
 
   useEffect(() => {
@@ -1026,6 +1028,12 @@ export default function TabLayout() {
           })}
 
           {/* Hidden tool screens — accessed via More tab, navigation shortcuts, and direct links */}
+          <Tabs.Screen
+            name="new-settings"
+            options={{
+              href: null,
+            }}
+          />
           <Tabs.Screen
             name="satellite-map"
             options={{

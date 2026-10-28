@@ -508,6 +508,53 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       },
     ],
   },
+  {
+    id: 'NEW_SETTINGS',
+    title: 'New Settings',
+    shortTitle: 'New Settings',
+    icon: 'options-outline',
+    iconFilled: 'options',
+    badge: 'Config & Tools',
+    color: '#6366f1',
+    subTabs: [
+      {
+        id: 'new-settings-overview',
+        title: 'New Settings Command',
+        shortTitle: 'Settings HQ',
+        description: 'Centralized environment variables, feature switches & system parameters',
+        icon: 'options',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'OVERVIEW', pillar: 'NEW_SETTINGS' },
+      },
+      {
+        id: 'new-settings-config',
+        title: 'System Configuration',
+        shortTitle: 'Configuration',
+        description: 'Runtime parameters, maintenance flags, features toggles & environment rules',
+        icon: 'construct-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'CONFIG', pillar: 'NEW_SETTINGS' },
+      },
+      {
+        id: 'new-settings-api',
+        title: 'API & Integrations',
+        shortTitle: 'API & Keys',
+        description: 'Payment gateway, SMS, WhatsApp, AI engines, maps & webhook API keys',
+        icon: 'hardware-chip-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'API', pillar: 'NEW_SETTINGS' },
+      },
+      {
+        id: 'new-settings-diagnostics',
+        title: 'System Diagnostics & Telemetry',
+        shortTitle: 'Diagnostics',
+        description: 'Database health, system cache, backups, audit trail & diagnostic telemetry',
+        icon: 'pulse-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'DIAGNOSTICS', pillar: 'NEW_SETTINGS' },
+      },
+    ],
+  },
 ];
 
 /**
@@ -516,6 +563,9 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
 export function normalizePillarId(pillarId?: string): string {
   if (!pillarId) return 'EXECUTIVE';
   switch (pillarId) {
+    case 'NEW_SETTINGS':
+    case 'NEW-SETTINGS':
+      return 'NEW_SETTINGS';
     case 'NEW_FINANCE':
     case 'NEW-FINANCE':
       return 'NEW_FINANCE';
@@ -611,6 +661,26 @@ export function detectPillarFromRoute(
       pathname.includes('wallet')
     ) {
       return 'NEW_FINANCE';
+    }
+  }
+
+  // 0.2 Dedicated New Settings Hub Route or Pillar Parameter
+  if (
+    pathname === '/admin/(tabs)/new-settings' ||
+    pathname === '/(tabs)/new-settings' ||
+    pathname === '/new-settings' ||
+    pathname.includes('/new-settings') ||
+    pathname.endsWith('/new-settings') ||
+    effectivePillar === 'NEW_SETTINGS' ||
+    effectivePillar === 'NEW-SETTINGS'
+  ) {
+    return 'NEW_SETTINGS';
+  }
+
+  // If currently in New Settings Hub and browsing its subtabs, preserve NEW_SETTINGS hub
+  if (currentPillarId === 'NEW_SETTINGS' || currentPillarId === 'NEW-SETTINGS') {
+    if (pathname.includes('new-settings')) {
+      return 'NEW_SETTINGS';
     }
   }
 

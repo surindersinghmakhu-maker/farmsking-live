@@ -158,7 +158,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                     </View>
                   </View>
                   <Text style={[styles.cockpitSubtitle, { color: subTextColor }]}>
-                    Executive Command HQ · 5 Executive Hubs Synchronized
+                    Executive Command HQ · 6 Executive Hubs Synchronized
                   </Text>
                 </View>
               </View>
@@ -477,7 +477,7 @@ export const AdminExecutiveOverview: React.FC = () => {
         <View style={styles.sectionTitleRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="grid" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
-            <Text style={[styles.sectionTitle, { color: textColor }]}>5 COMMAND HUBS</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>{ADMIN_PILLARS.length} COMMAND HUBS</Text>
           </View>
           {!isDesktop && (
             <TouchableOpacity

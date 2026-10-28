@@ -31,7 +31,6 @@ export type MasterDataSubTab =
   | 'social'
   | 'smtp'
   | 'email-templates'
-  | 'crop-sessions'
   | 'certificates'
   | 'franchise'
   | 'backup'
@@ -53,7 +52,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
   { key: 'email-templates', label: 'Email Templates', icon: 'document-text-outline' },
-  { key: 'crop-sessions', label: 'Crop Cycles & Seasons', icon: 'calendar-outline' },
   { key: 'certificates', label: 'Certificates & QR Portal', icon: 'ribbon-outline' },
   { key: 'franchise', label: 'Franchise & Mandi Agents', icon: 'storefront-outline' },
   { key: 'backup', label: 'Backup & Recovery', icon: 'server-outline' },
@@ -859,56 +857,7 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
-          {/* TAB 6: Crop Cycles & Seasons */}
-          {masterSubTab === 'crop-sessions' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <Text style={[styles.subPaneTitle, { color: textColor }]}>Crop Cycles & Agronomic Seasons</Text>
-                <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                  Configure national sowing, harvesting and mandi trading cycles (Kharif, Rabi, Zaid).
-                </Text>
-              </View>
 
-              <View style={styles.paneSectionBox}>
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Current Sowing Season</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.cropSessions?.currentSeason || 'Rabi 2026-27'}
-                        onChangeText={(txt) => handleUpdateMasterNested('cropSessions' as any, 'currentSeason', txt)}
-                        placeholder="Rabi 2026-27"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Next Season Start Date</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.cropSessions?.nextSeasonStart || '2027-04-01'}
-                        onChangeText={(txt) => handleUpdateMasterNested('cropSessions' as any, 'nextSeasonStart', txt)}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveMasterData}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={styles.saveActionText}>Save Crop Cycles</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* TAB 7: Certificates & QR Portal */}
           {masterSubTab === 'certificates' && (

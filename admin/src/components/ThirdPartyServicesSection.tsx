@@ -1595,54 +1595,6 @@ export function ThirdPartyServicesSection() {
 
   return (
     <View style={styles.container}>
-      {/* ── Section Header ────────────────────────────────────────────── */}
-      <View style={[styles.sectionHeader, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={styles.headerLeft}>
-          <View style={styles.headerTitleRow}>
-            <View style={[styles.headerIconBox, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(0, 255, 135, 0.15)', borderColor: isLight ? '#86efac' : '#0f3822' }]}>
-              <Ionicons name="git-network-outline" size={24} color={isLight ? '#16a34a' : '#00ff87'} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: textColor }]}>API & Third-Party Services</Text>
-              <View style={styles.headerStatusRow}>
-                <View style={styles.livePulseDot} />
-                <Text style={[styles.headerSubBadgeText, { color: isLight ? '#15803d' : '#00ff87' }]}>
-                  8 Live Active Engines
-                </Text>
-                <Text style={[styles.headerSubBullet, { color: subTextColor }]}>•</Text>
-                <Text style={[styles.headerSubDesc, { color: subTextColor }]}>
-                  Zero-Downtime Failover & Telemetry Control
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.saveBtn, (updateMutation.isPending || updateAppSettingsMutation.isPending) && styles.saveBtnDisabled]}
-          onPress={handleSave}
-          disabled={updateMutation.isPending || updateAppSettingsMutation.isPending}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.saveBtnGradient}
-          >
-            {updateMutation.isPending || updateAppSettingsMutation.isPending ? (
-              <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
-            ) : (
-              <>
-                <Ionicons name="checkmark-done-circle" size={18} color={isLight ? '#ffffff' : '#020d06'} />
-                <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
-                  Save All API Settings
-                </Text>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
 
       {/* ── Toast Notification Banner ─────────────────────────────────── */}
       {toastMessage && (
@@ -1771,11 +1723,38 @@ export function ThirdPartyServicesSection() {
               </Text>
             </View>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12, borderWidth: 1, borderColor: isLight ? '#86efac' : '#00ff87' }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLight ? '#16a34a' : '#00ff87' }} />
-            <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#15803d' : '#00ff87' }}>
-              ALL 10 ACTIVE
-            </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12, borderWidth: 1, borderColor: isLight ? '#86efac' : '#00ff87' }}>
+              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLight ? '#16a34a' : '#00ff87' }} />
+              <Text style={{ fontSize: 9.5, fontWeight: '800', color: isLight ? '#15803d' : '#00ff87' }}>
+                ALL 10 ACTIVE
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveBtnCompact, (updateMutation.isPending || updateAppSettingsMutation.isPending) && styles.saveBtnDisabled]}
+              onPress={handleSave}
+              disabled={updateMutation.isPending || updateAppSettingsMutation.isPending}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.saveBtnGradientCompact}
+              >
+                {updateMutation.isPending || updateAppSettingsMutation.isPending ? (
+                  <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-done-circle" size={13} color={isLight ? '#ffffff' : '#020d06'} />
+                    <Text style={[styles.saveBtnTextCompact, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                      Save All Settings
+                    </Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -8935,6 +8914,44 @@ export function ThirdPartyServicesSection() {
           </View>
         );
       })()}
+
+      {/* ── Bottom Save Action Bar ────────────────────────────────────────── */}
+      <View style={[styles.bottomSaveBar, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 240 }}>
+          <Ionicons name="shield-checkmark" size={20} color="#16a34a" />
+          <View>
+            <Text style={[styles.bottomSaveTitle, { color: textColor }]}>Sync & Hot-Reload Services</Text>
+            <Text style={[styles.bottomSaveDesc, { color: subTextColor }]}>
+              All credentials and failover routes update live across web, mobile and backend instances.
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveBtn, (updateMutation.isPending || updateAppSettingsMutation.isPending) && styles.saveBtnDisabled]}
+          onPress={handleSave}
+          disabled={updateMutation.isPending || updateAppSettingsMutation.isPending}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.saveBtnGradient}
+          >
+            {updateMutation.isPending || updateAppSettingsMutation.isPending ? (
+              <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
+            ) : (
+              <>
+                <Ionicons name="checkmark-done-circle" size={18} color={isLight ? '#ffffff' : '#020d06'} />
+                <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                  Save All API Settings
+                </Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -9153,6 +9170,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 0.4,
+  },
+  saveBtnCompact: {
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  saveBtnGradientCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+  },
+  saveBtnTextCompact: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  bottomSaveBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 20,
+    marginBottom: 24,
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  bottomSaveTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+  },
+  bottomSaveDesc: {
+    fontSize: 11.5,
+    marginTop: 2,
   },
   toastBanner: {
     flexDirection: 'row',

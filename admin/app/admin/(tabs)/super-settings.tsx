@@ -118,9 +118,6 @@ const SMTP_PRESETS = [
 const EMAIL_TEMPLATE_ITEMS: { key: EmailTemplateKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: 'registration', label: 'Registration Email', icon: 'person-add-outline' },
   { key: 'otp', label: 'OTP Verification', icon: 'key-outline' },
-  { key: 'feeReceipt', label: 'Fee / Order Receipt', icon: 'receipt-outline' },
-  { key: 'resultPublished', label: 'Crop Doctor Result', icon: 'fitness-outline' },
-  { key: 'certificateIssued', label: 'Certificate Issued', icon: 'ribbon-outline' },
 ];
 
 export default function SuperSettingsScreen() {

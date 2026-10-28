@@ -115,24 +115,6 @@ export const EMAIL_TEMPLATE_ITEMS: { key: EmailTemplateKey; label: string; icon:
     icon: 'key-outline',
     vars: ['{{otp_code}}', '{{expiry_minutes}}', '{{company_name}}'],
   },
-  {
-    key: 'feeReceipt',
-    label: 'Fee / Order Receipt',
-    icon: 'receipt-outline',
-    vars: ['{{farmer_name}}', '{{order_id}}', '{{amount}}', '{{company_name}}'],
-  },
-  {
-    key: 'resultPublished',
-    label: 'Crop Doctor Result',
-    icon: 'fitness-outline',
-    vars: ['{{crop_name}}', '{{disease_name}}', '{{severity}}', '{{remedy}}'],
-  },
-  {
-    key: 'certificateIssued',
-    label: 'Certificate Issued',
-    icon: 'ribbon-outline',
-    vars: ['{{member_name}}', '{{cert_number}}', '{{issue_date}}', '{{company_name}}'],
-  },
 ];
 
 export default function SettingEntitySetup() {

@@ -173,23 +173,6 @@ export default function NewSettingsScreen() {
                 </View>
                 <View style={styles.heroTextWrap}>
                   <Text style={styles.heroOrgTitle}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
-                  <Text style={styles.heroOrgSubtitle}>
-                    Next-Generation Autonomous Agronomy, Live Commodity Exchange & Multispectral Satellite Field Telemetry
-                  </Text>
-                  <View style={styles.heroStatsRow}>
-                    <View style={styles.heroStatChip}>
-                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
-                      <Text style={styles.heroStatText}>MCA Incorporated · Ministry of Corporate Affairs, India</Text>
-                    </View>
-                    <View style={styles.heroStatChip}>
-                      <Ionicons name="document-text" size={14} color="#60a5fa" />
-                      <Text style={styles.heroStatText}>Strict A4 Document Standard (210mm × 297mm)</Text>
-                    </View>
-                    <View style={styles.heroStatChip}>
-                      <Ionicons name="globe" size={14} color="#fbbf24" />
-                      <Text style={styles.heroStatText}>100% English Executive UI</Text>
-                    </View>
-                  </View>
                 </View>
               </View>
             </LinearGradient>
@@ -606,13 +589,13 @@ const styles = StyleSheet.create({
   },
   heroBanner: {
     borderRadius: RADIUS.lg,
-    padding: 24,
+    padding: 18,
     overflow: 'hidden',
   },
   heroContent: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 18,
+    alignItems: 'center',
+    gap: 16,
   },
   heroIconBadge: {
     width: 54,

@@ -31,8 +31,6 @@ export type MasterDataSubTab =
   | 'social'
   | 'smtp'
   | 'email-templates'
-  | 'certificates'
-  | 'franchise'
   | 'backup'
   | 'otp-login'
   | 'maintenance'
@@ -52,8 +50,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
   { key: 'email-templates', label: 'Email Templates', icon: 'document-text-outline' },
-  { key: 'certificates', label: 'Certificates & QR Portal', icon: 'ribbon-outline' },
-  { key: 'franchise', label: 'Franchise & Mandi Agents', icon: 'storefront-outline' },
   { key: 'backup', label: 'Backup & Recovery', icon: 'server-outline' },
   { key: 'otp-login', label: 'OTP Login ON/OFF', icon: 'shield-checkmark-outline' },
   { key: 'maintenance', label: 'Maintenance Mode', icon: 'construct-outline' },
@@ -859,107 +855,7 @@ export default function SettingEntitySetup() {
 
 
 
-          {/* TAB 7: Certificates & QR Portal */}
-          {masterSubTab === 'certificates' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <Text style={[styles.subPaneTitle, { color: textColor }]}>Certificates & QR Portal Standard</Text>
-                <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                  Verification stamps, digital QR codes and mandatory A4 page setup standard.
-                </Text>
-              </View>
 
-              <View style={styles.paneSectionBox}>
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Certificate Authority Title</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.certificateConfig?.authorityName || 'FarmsKing Agronomy Board'}
-                        onChangeText={(txt) => handleUpdateMasterNested('certificateConfig' as any, 'authorityName', txt)}
-                        placeholder="FarmsKing Agronomy Board"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Page Standard Layout</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value="Strict A4 (210mm × 297mm)"
-                        editable={false}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveMasterData}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={styles.saveActionText}>Save Certificate Rules</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 8: Franchise & Mandi Agents */}
-          {masterSubTab === 'franchise' && (
-            <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <Text style={[styles.subPaneTitle, { color: textColor }]}>Franchise & Mandi Agent Rules</Text>
-                <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                  Commission tiers, security deposit requirements and agreement parameters.
-                </Text>
-              </View>
-
-              <View style={styles.paneSectionBox}>
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Franchise Minimum Security (₹)</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={String(masterData.franchiseRules?.securityDeposit || 25000)}
-                        onChangeText={(txt) => handleUpdateMasterNested('franchiseRules' as any, 'securityDeposit', parseInt(txt) || 25000)}
-                        placeholder="25000"
-                        placeholderTextColor={subTextColor}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Commission Percentage (%)</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={String(masterData.franchiseRules?.commissionRate || 5)}
-                        onChangeText={(txt) => handleUpdateMasterNested('franchiseRules' as any, 'commissionRate', parseFloat(txt) || 5)}
-                        placeholder="5.0"
-                        placeholderTextColor={subTextColor}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity style={styles.saveActionBtn} onPress={handleSaveMasterData}>
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={styles.saveActionText}>Save Franchise Rules</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
 
           {/* TAB 9: Backup & Recovery */}
           {masterSubTab === 'backup' && (

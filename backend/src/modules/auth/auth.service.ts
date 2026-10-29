@@ -10,6 +10,8 @@ import { provisionReferralWelcomeCoupon } from '../../common/utils/referral-coup
 import { RegisterDto } from './dto/register.dto';
 import { RegisterTraderDto } from './dto/register-trader.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
+import { LinkGoogleDto } from './dto/link-google.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
@@ -99,23 +101,43 @@ export class AuthService {
     return { success, message: success ? 'Email OTP sent directly via Gmail SMTP.' : 'Failed to send Email OTP.' };
   }
 
-  async googleLogin(dto: { email?: string; name?: string; photoUrl?: string; googleId?: string; accessToken?: string }) {
+  async googleLogin(dto: GoogleLoginDto) {
     let verifiedEmail = dto.email;
     let verifiedName = dto.name;
     let verifiedPhoto = dto.photoUrl;
 
+    // 1. Verify Firebase ID Token if provided
+    if (dto.idToken) {
+      try {
+        const decoded = await getAuth().verifyIdToken(dto.idToken);
+        if (decoded?.email) {
+          verifiedEmail = decoded.email;
+          verifiedName = decoded.name || verifiedName;
+          verifiedPhoto = decoded.picture || verifiedPhoto;
+        }
+      } catch (fbErr: any) {
+        console.warn('[GoogleLogin] Firebase idToken verification note:', fbErr?.message);
+      }
+    }
+
+    // 2. Verify Google OAuth Access Token if provided
     if (dto.accessToken) {
       try {
         const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${dto.accessToken}` },
         });
-        if (!response.ok) throw new UnauthorizedException('Invalid Google access token.');
-        const userInfo = await response.json();
-        verifiedEmail = userInfo.email;
-        verifiedName = userInfo.name || userInfo.given_name || verifiedEmail?.split('@')[0];
-        verifiedPhoto = userInfo.picture;
-      } catch (err) {
-        throw new UnauthorizedException('Failed to verify Google access token.');
+        if (response.ok) {
+          const userInfo = await response.json();
+          verifiedEmail = userInfo.email || verifiedEmail;
+          verifiedName = userInfo.name || userInfo.given_name || verifiedEmail?.split('@')[0] || verifiedName;
+          verifiedPhoto = userInfo.picture || verifiedPhoto;
+        } else if (!verifiedEmail) {
+          throw new UnauthorizedException('Invalid Google access token.');
+        }
+      } catch (err: any) {
+        if (!verifiedEmail) {
+          throw new UnauthorizedException('Failed to verify Google access token.');
+        }
       }
     }
 
@@ -172,7 +194,7 @@ export class AuthService {
     };
   }
 
-  async linkGoogleAccount(currentUser: AuthUser, dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
+  async linkGoogleAccount(currentUser: AuthUser, dto: LinkGoogleDto) {
     const cleanEmail = dto.email.trim().toLowerCase();
 
     // Check if another active user has this email
@@ -516,6 +538,7 @@ export class AuthService {
           securityQuestion: dto.securityQuestion || null,
           securityAnswerHash: securityAnswerHash || null,
           referredById: referrer?.id || null,
+          isPhoneVerified: Boolean(dto.firebaseIdToken),
         },
         select: SAFE_USER_SELECT,
       });

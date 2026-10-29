@@ -96,4 +96,12 @@ export class RegisterTraderDto {
   @IsOptional()
   @IsString()
   state?: string;
+
+  /** Firebase Phone Auth ID Token passed from OTP verification */
+  @ApiPropertyOptional({
+    description: 'Firebase ID Token from phone auth OTP verification',
+  })
+  @IsOptional()
+  @IsString()
+  firebaseIdToken?: string;
 }

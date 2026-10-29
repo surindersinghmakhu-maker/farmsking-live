@@ -5,6 +5,16 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterTraderDto } from './dto/register-trader.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
+import { FirebaseLoginDto } from './dto/firebase-login.dto';
+import { LinkGoogleDto } from './dto/link-google.dto';
+import {
+  SendLoginOtpDto,
+  VerifyLoginOtpDto,
+  SendWhatsAppOtpDto,
+  SendEmailOtpDto,
+  SendMobileLinkOtpDto,
+} from './dto/otp.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
@@ -19,41 +29,41 @@ export class AuthController {
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('send-otp')
-  sendWhatsAppOtp(@Body() body: { mobile: string; otp: string }) {
+  sendWhatsAppOtp(@Body() body: SendWhatsAppOtpDto) {
     return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('send-login-otp')
-  sendLoginOtp(@Body() body: { mobile: string }) {
+  sendLoginOtp(@Body() body: SendLoginOtpDto) {
     return this.authService.sendLoginOtp(body.mobile);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('verify-login-otp')
-  verifyLoginOtp(@Body() body: { mobile: string; otp: string }) {
+  verifyLoginOtp(@Body() body: VerifyLoginOtpDto) {
     return this.authService.verifyLoginOtp(body.mobile, body.otp);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('send-email-otp')
-  sendEmailOtp(@Body() body: { email: string; otp: string }) {
+  sendEmailOtp(@Body() body: SendEmailOtpDto) {
     return this.authService.sendEmailOtp(body.email, body.otp);
   }
 
   @Throttle({ default: { limit: 100, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('google-login')
-  googleLogin(@Body() dto: { email?: string; name?: string; photoUrl?: string; googleId?: string; accessToken?: string }) {
+  googleLogin(@Body() dto: GoogleLoginDto) {
     return this.authService.googleLogin(dto);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('firebase-login')
-  firebaseLogin(@Body() body: { idToken: string }) {
+  firebaseLogin(@Body() body: FirebaseLoginDto) {
     return this.authService.firebaseLogin(body.idToken);
   }
 
@@ -62,7 +72,7 @@ export class AuthController {
   @Post('link-google')
   linkGoogleAccount(
     @CurrentUser() user: AuthUser,
-    @Body() dto: { email: string; name?: string; photoUrl?: string; googleId?: string },
+    @Body() dto: LinkGoogleDto,
   ) {
     return this.authService.linkGoogleAccount(user, dto);
   }
@@ -77,7 +87,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('send-mobile-link-otp')
-  sendMobileLinkOtp(@CurrentUser() user: AuthUser, @Body() body: { mobile: string }) {
+  sendMobileLinkOtp(@CurrentUser() user: AuthUser, @Body() body: SendMobileLinkOtpDto) {
     return this.authService.sendMobileLinkOtp(user, body.mobile);
   }
 

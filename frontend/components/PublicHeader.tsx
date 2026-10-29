@@ -208,7 +208,19 @@ export default function PublicHeader({
 
   const goTo = (path: string) => {
     setMoreMenuOpen(false);
-    router.push(path as any);
+    try {
+      router.push(path as any);
+    } catch {
+      // fallback
+    }
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      setTimeout(() => {
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          const target = path.startsWith('/(auth)') ? path.replace('/(auth)', '') : path;
+          window.location.href = target || path;
+        }
+      }, 120);
+    }
   };
 
   const goToDashboard = () => {
@@ -310,6 +322,7 @@ export default function PublicHeader({
           <BlurView
             intensity={45}
             tint={isDay ? 'light' : 'dark'}
+            pointerEvents="none"
             style={[StyleSheet.absoluteFill, { borderRadius: isMobile ? 20 : 28 }]}
           />
         )}
@@ -581,58 +594,71 @@ export default function PublicHeader({
                 </LinearGradient>
               </TouchableOpacity>
             ) : (
-              <Animated.View style={pulseStyle}>
-                <TouchableOpacity
+              <TouchableOpacity
+                style={[
+                  styles.loginBtn,
+                  isDay ? styles.loginBtnDay : styles.loginBtnNight,
+                  isMobile && { borderRadius: RADIUS.pill },
+                  Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : null,
+                ]}
+                onPress={() => {
+                  setMoreMenuOpen(false);
+                  try {
+                    router.push('/(auth)/login' as any);
+                  } catch (e) {
+                    console.warn('Navigation error:', e);
+                  }
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    setTimeout(() => {
+                      if (window.location.pathname === '/' || window.location.pathname === '') {
+                        window.location.href = '/login';
+                      }
+                    }, 120);
+                  }
+                }}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={
+                    isDay
+                      ? ['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.05)']
+                      : ['rgba(16,185,129,0.22)', 'rgba(16,185,129,0.10)']
+                  }
                   style={[
-                    styles.loginBtn,
-                    isDay ? styles.loginBtnDay : styles.loginBtnNight,
-                    isMobile && { borderRadius: RADIUS.pill },
+                    styles.loginBtnInner,
+                    isMobile && { paddingHorizontal: 9, paddingVertical: 5 },
                   ]}
-                  onPress={() => goTo('/(auth)/login')}
-                  activeOpacity={0.85}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                 >
-                  <LinearGradient
-                    colors={
-                      isDay
-                        ? ['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.05)']
-                        : ['rgba(16,185,129,0.22)', 'rgba(16,185,129,0.10)']
-                    }
-                    style={[
-                      styles.loginBtnInner,
-                      isMobile && { paddingHorizontal: 9, paddingVertical: 5 },
-                    ]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={isMobile ? 15 : 18}
-                      color={isDay ? '#059669' : '#34d399'}
-                    />
-                    <View style={styles.loginBtnTextBox}>
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={isMobile ? 15 : 18}
+                    color={isDay ? '#059669' : '#34d399'}
+                  />
+                  <View style={styles.loginBtnTextBox}>
+                    <Text
+                      style={[
+                        styles.loginBtnText,
+                        isDay ? styles.loginBtnTextDay : styles.loginBtnTextNight,
+                        isMobile && { fontSize: 11 },
+                      ]}
+                    >
+                      {isMobile ? 'Login' : 'Login / Register'}
+                    </Text>
+                    {!isMobile && (
                       <Text
                         style={[
-                          styles.loginBtnText,
-                          isDay ? styles.loginBtnTextDay : styles.loginBtnTextNight,
-                          isMobile && { fontSize: 11 },
+                          styles.loginBtnSubText,
+                          isDay ? styles.loginBtnSubTextDay : styles.loginBtnSubTextNight,
                         ]}
                       >
-                        {isMobile ? 'Login' : 'Login / Register'}
+                        Farmer & Partner Portal
                       </Text>
-                      {!isMobile && (
-                        <Text
-                          style={[
-                            styles.loginBtnSubText,
-                            isDay ? styles.loginBtnSubTextDay : styles.loginBtnSubTextNight,
-                          ]}
-                        >
-                          Farmer & Partner Portal
-                        </Text>
-                      )}
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </Animated.View>
+                    )}
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
             )}
           </View>
         </View>

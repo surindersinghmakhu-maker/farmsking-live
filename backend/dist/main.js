@@ -50,9 +50,9 @@ const swagger_1 = __webpack_require__(5);
 const helmet_1 = __importDefault(__webpack_require__(6));
 const compression_1 = __importDefault(__webpack_require__(7));
 const app_module_1 = __webpack_require__(8);
-const Sentry = __importStar(__webpack_require__(343));
-const profiling_node_1 = __webpack_require__(344);
-const sentry_filter_1 = __webpack_require__(345);
+const Sentry = __importStar(__webpack_require__(347));
+const profiling_node_1 = __webpack_require__(348);
+const sentry_filter_1 = __webpack_require__(349);
 const core_2 = __webpack_require__(3);
 process.on('uncaughtException', (err) => {
     if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
@@ -62,7 +62,7 @@ process.on('uncaughtException', (err) => {
     console.error('[uncaughtException] Unexpected error:', err);
     process.exit(1);
 });
-const express_1 = __webpack_require__(346);
+const express_1 = __webpack_require__(350);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -217,64 +217,64 @@ const app_controller_1 = __webpack_require__(10);
 const app_service_1 = __webpack_require__(11);
 const prisma_module_1 = __webpack_require__(16);
 const auth_module_1 = __webpack_require__(17);
-const farms_module_1 = __webpack_require__(61);
-const plots_module_1 = __webpack_require__(68);
-const crops_module_1 = __webpack_require__(73);
-const dashboard_module_1 = __webpack_require__(102);
-const market_rates_module_1 = __webpack_require__(105);
-const expenses_module_1 = __webpack_require__(109);
-const uploads_module_1 = __webpack_require__(132);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const subscriptions_module_1 = __webpack_require__(137);
-const crop_activity_schedules_module_1 = __webpack_require__(141);
-const spray_schedules_module_1 = __webpack_require__(149);
-const spray_item_templates_module_1 = __webpack_require__(154);
-const crop_problems_module_1 = __webpack_require__(159);
-const users_module_1 = __webpack_require__(165);
-const weather_module_1 = __webpack_require__(188);
-const notifications_module_1 = __webpack_require__(76);
-const wallet_module_1 = __webpack_require__(56);
-const coupons_module_1 = __webpack_require__(191);
-const withdrawals_module_1 = __webpack_require__(198);
-const plan_renewal_module_1 = __webpack_require__(203);
-const chat_module_1 = __webpack_require__(125);
-const products_module_1 = __webpack_require__(210);
-const orders_module_1 = __webpack_require__(215);
-const phonepe_module_1 = __webpack_require__(216);
-const farmer_plans_module_1 = __webpack_require__(74);
-const plan_payments_module_1 = __webpack_require__(232);
-const farmer_plan_payments_module_1 = __webpack_require__(237);
-const partner_assignment_module_1 = __webpack_require__(243);
-const gardener_plans_module_1 = __webpack_require__(246);
-const gardens_module_1 = __webpack_require__(251);
-const parties_module_1 = __webpack_require__(110);
-const sale_bills_module_1 = __webpack_require__(257);
-const payment_receipts_module_1 = __webpack_require__(261);
-const basic_plan_coupons_module_1 = __webpack_require__(264);
-const app_settings_module_1 = __webpack_require__(51);
-const coupon_settings_module_1 = __webpack_require__(268);
-const call_requests_module_1 = __webpack_require__(272);
-const addresses_module_1 = __webpack_require__(276);
-const audit_module_1 = __webpack_require__(280);
-const labour_module_1 = __webpack_require__(284);
-const admin_chat_module_1 = __webpack_require__(290);
-const whatsapp_module_1 = __webpack_require__(49);
-const referrals_module_1 = __webpack_require__(294);
-const voice_ai_module_1 = __webpack_require__(297);
-const satellite_module_1 = __webpack_require__(300);
-const mandi_ai_module_1 = __webpack_require__(303);
-const king_connect_module_1 = __webpack_require__(306);
-const voice_call_module_1 = __webpack_require__(317);
-const trainers_module_1 = __webpack_require__(323);
-const seller_module_1 = __webpack_require__(326);
-const cashfree_module_1 = __webpack_require__(223);
-const shiprocket_module_1 = __webpack_require__(219);
-const email_module_1 = __webpack_require__(330);
-const ai_chat_module_1 = __webpack_require__(331);
-const iso_controls_module_1 = __webpack_require__(334);
-const prisma_exception_filter_1 = __webpack_require__(337);
-const audit_log_interceptor_1 = __webpack_require__(338);
-const redis_module_1 = __webpack_require__(340);
+const farms_module_1 = __webpack_require__(65);
+const plots_module_1 = __webpack_require__(72);
+const crops_module_1 = __webpack_require__(77);
+const dashboard_module_1 = __webpack_require__(106);
+const market_rates_module_1 = __webpack_require__(109);
+const expenses_module_1 = __webpack_require__(113);
+const uploads_module_1 = __webpack_require__(136);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const subscriptions_module_1 = __webpack_require__(141);
+const crop_activity_schedules_module_1 = __webpack_require__(145);
+const spray_schedules_module_1 = __webpack_require__(153);
+const spray_item_templates_module_1 = __webpack_require__(158);
+const crop_problems_module_1 = __webpack_require__(163);
+const users_module_1 = __webpack_require__(169);
+const weather_module_1 = __webpack_require__(192);
+const notifications_module_1 = __webpack_require__(80);
+const wallet_module_1 = __webpack_require__(60);
+const coupons_module_1 = __webpack_require__(195);
+const withdrawals_module_1 = __webpack_require__(202);
+const plan_renewal_module_1 = __webpack_require__(207);
+const chat_module_1 = __webpack_require__(129);
+const products_module_1 = __webpack_require__(214);
+const orders_module_1 = __webpack_require__(219);
+const phonepe_module_1 = __webpack_require__(220);
+const farmer_plans_module_1 = __webpack_require__(78);
+const plan_payments_module_1 = __webpack_require__(236);
+const farmer_plan_payments_module_1 = __webpack_require__(241);
+const partner_assignment_module_1 = __webpack_require__(247);
+const gardener_plans_module_1 = __webpack_require__(250);
+const gardens_module_1 = __webpack_require__(255);
+const parties_module_1 = __webpack_require__(114);
+const sale_bills_module_1 = __webpack_require__(261);
+const payment_receipts_module_1 = __webpack_require__(265);
+const basic_plan_coupons_module_1 = __webpack_require__(268);
+const app_settings_module_1 = __webpack_require__(55);
+const coupon_settings_module_1 = __webpack_require__(272);
+const call_requests_module_1 = __webpack_require__(276);
+const addresses_module_1 = __webpack_require__(280);
+const audit_module_1 = __webpack_require__(284);
+const labour_module_1 = __webpack_require__(288);
+const admin_chat_module_1 = __webpack_require__(294);
+const whatsapp_module_1 = __webpack_require__(53);
+const referrals_module_1 = __webpack_require__(298);
+const voice_ai_module_1 = __webpack_require__(301);
+const satellite_module_1 = __webpack_require__(304);
+const mandi_ai_module_1 = __webpack_require__(307);
+const king_connect_module_1 = __webpack_require__(310);
+const voice_call_module_1 = __webpack_require__(321);
+const trainers_module_1 = __webpack_require__(327);
+const seller_module_1 = __webpack_require__(330);
+const cashfree_module_1 = __webpack_require__(227);
+const shiprocket_module_1 = __webpack_require__(223);
+const email_module_1 = __webpack_require__(334);
+const ai_chat_module_1 = __webpack_require__(335);
+const iso_controls_module_1 = __webpack_require__(338);
+const prisma_exception_filter_1 = __webpack_require__(341);
+const audit_log_interceptor_1 = __webpack_require__(342);
+const redis_module_1 = __webpack_require__(344);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -1312,10 +1312,10 @@ const jwt_1 = __webpack_require__(18);
 const passport_1 = __webpack_require__(19);
 const auth_controller_1 = __webpack_require__(20);
 const auth_service_1 = __webpack_require__(21);
-const jwt_strategy_1 = __webpack_require__(47);
-const whatsapp_module_1 = __webpack_require__(49);
-const app_settings_module_1 = __webpack_require__(51);
-const wallet_module_1 = __webpack_require__(56);
+const jwt_strategy_1 = __webpack_require__(51);
+const whatsapp_module_1 = __webpack_require__(53);
+const app_settings_module_1 = __webpack_require__(55);
+const wallet_module_1 = __webpack_require__(60);
 const user_session_service_1 = __webpack_require__(34);
 let AuthModule = class AuthModule {
 };
@@ -1374,7 +1374,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const common_1 = __webpack_require__(2);
@@ -1384,11 +1384,15 @@ const auth_service_1 = __webpack_require__(21);
 const register_dto_1 = __webpack_require__(37);
 const register_trader_dto_1 = __webpack_require__(40);
 const login_dto_1 = __webpack_require__(41);
-const forgot_password_start_dto_1 = __webpack_require__(42);
-const forgot_password_verify_dto_1 = __webpack_require__(43);
-const forgot_password_reset_dto_1 = __webpack_require__(44);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
+const google_login_dto_1 = __webpack_require__(42);
+const firebase_login_dto_1 = __webpack_require__(43);
+const link_google_dto_1 = __webpack_require__(44);
+const otp_dto_1 = __webpack_require__(45);
+const forgot_password_start_dto_1 = __webpack_require__(46);
+const forgot_password_verify_dto_1 = __webpack_require__(47);
+const forgot_password_reset_dto_1 = __webpack_require__(48);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -1455,7 +1459,7 @@ __decorate([
     (0, common_1.Post)('send-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_b = typeof otp_dto_1.SendWhatsAppOtpDto !== "undefined" && otp_dto_1.SendWhatsAppOtpDto) === "function" ? _b : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendWhatsAppOtp", null);
 __decorate([
@@ -1464,7 +1468,7 @@ __decorate([
     (0, common_1.Post)('send-login-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_c = typeof otp_dto_1.SendLoginOtpDto !== "undefined" && otp_dto_1.SendLoginOtpDto) === "function" ? _c : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendLoginOtp", null);
 __decorate([
@@ -1473,7 +1477,7 @@ __decorate([
     (0, common_1.Post)('verify-login-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof otp_dto_1.VerifyLoginOtpDto !== "undefined" && otp_dto_1.VerifyLoginOtpDto) === "function" ? _d : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyLoginOtp", null);
 __decorate([
@@ -1481,7 +1485,7 @@ __decorate([
     (0, common_1.Post)('send-email-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof otp_dto_1.SendEmailOtpDto !== "undefined" && otp_dto_1.SendEmailOtpDto) === "function" ? _e : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendEmailOtp", null);
 __decorate([
@@ -1490,7 +1494,7 @@ __decorate([
     (0, common_1.Post)('google-login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_f = typeof google_login_dto_1.GoogleLoginDto !== "undefined" && google_login_dto_1.GoogleLoginDto) === "function" ? _f : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "googleLogin", null);
 __decorate([
@@ -1499,7 +1503,7 @@ __decorate([
     (0, common_1.Post)('firebase-login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof firebase_login_dto_1.FirebaseLoginDto !== "undefined" && firebase_login_dto_1.FirebaseLoginDto) === "function" ? _g : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "firebaseLogin", null);
 __decorate([
@@ -1509,7 +1513,7 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, typeof (_h = typeof link_google_dto_1.LinkGoogleDto !== "undefined" && link_google_dto_1.LinkGoogleDto) === "function" ? _h : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "linkGoogleAccount", null);
 __decorate([
@@ -1528,7 +1532,7 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, typeof (_j = typeof otp_dto_1.SendMobileLinkOtpDto !== "undefined" && otp_dto_1.SendMobileLinkOtpDto) === "function" ? _j : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendMobileLinkOtp", null);
 __decorate([
@@ -1536,7 +1540,7 @@ __decorate([
     (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof register_dto_1.RegisterDto !== "undefined" && register_dto_1.RegisterDto) === "function" ? _b : Object]),
+    __metadata("design:paramtypes", [typeof (_k = typeof register_dto_1.RegisterDto !== "undefined" && register_dto_1.RegisterDto) === "function" ? _k : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
@@ -1557,7 +1561,7 @@ __decorate([
     (0, common_1.Post)('register-trader'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof register_trader_dto_1.RegisterTraderDto !== "undefined" && register_trader_dto_1.RegisterTraderDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_l = typeof register_trader_dto_1.RegisterTraderDto !== "undefined" && register_trader_dto_1.RegisterTraderDto) === "function" ? _l : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "registerTrader", null);
 __decorate([
@@ -1566,7 +1570,7 @@ __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [typeof (_m = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _m : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -1593,7 +1597,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/start'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof forgot_password_start_dto_1.ForgotPasswordStartDto !== "undefined" && forgot_password_start_dto_1.ForgotPasswordStartDto) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_o = typeof forgot_password_start_dto_1.ForgotPasswordStartDto !== "undefined" && forgot_password_start_dto_1.ForgotPasswordStartDto) === "function" ? _o : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordStart", null);
 __decorate([
@@ -1602,7 +1606,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/verify'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof forgot_password_verify_dto_1.ForgotPasswordVerifyDto !== "undefined" && forgot_password_verify_dto_1.ForgotPasswordVerifyDto) === "function" ? _f : Object]),
+    __metadata("design:paramtypes", [typeof (_p = typeof forgot_password_verify_dto_1.ForgotPasswordVerifyDto !== "undefined" && forgot_password_verify_dto_1.ForgotPasswordVerifyDto) === "function" ? _p : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordVerify", null);
 __decorate([
@@ -1611,7 +1615,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/reset'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof forgot_password_reset_dto_1.ForgotPasswordResetDto !== "undefined" && forgot_password_reset_dto_1.ForgotPasswordResetDto) === "function" ? _g : Object]),
+    __metadata("design:paramtypes", [typeof (_q = typeof forgot_password_reset_dto_1.ForgotPasswordResetDto !== "undefined" && forgot_password_reset_dto_1.ForgotPasswordResetDto) === "function" ? _q : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordReset", null);
 __decorate([
@@ -1753,20 +1757,38 @@ let AuthService = class AuthService {
         let verifiedEmail = dto.email;
         let verifiedName = dto.name;
         let verifiedPhoto = dto.photoUrl;
+        if (dto.idToken) {
+            try {
+                const decoded = await (0, auth_1.getAuth)().verifyIdToken(dto.idToken);
+                if (decoded?.email) {
+                    verifiedEmail = decoded.email;
+                    verifiedName = decoded.name || verifiedName;
+                    verifiedPhoto = decoded.picture || verifiedPhoto;
+                }
+            }
+            catch (fbErr) {
+                console.warn('[GoogleLogin] Firebase idToken verification note:', fbErr?.message);
+            }
+        }
         if (dto.accessToken) {
             try {
                 const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                     headers: { Authorization: `Bearer ${dto.accessToken}` },
                 });
-                if (!response.ok)
+                if (response.ok) {
+                    const userInfo = await response.json();
+                    verifiedEmail = userInfo.email || verifiedEmail;
+                    verifiedName = userInfo.name || userInfo.given_name || verifiedEmail?.split('@')[0] || verifiedName;
+                    verifiedPhoto = userInfo.picture || verifiedPhoto;
+                }
+                else if (!verifiedEmail) {
                     throw new common_1.UnauthorizedException('Invalid Google access token.');
-                const userInfo = await response.json();
-                verifiedEmail = userInfo.email;
-                verifiedName = userInfo.name || userInfo.given_name || verifiedEmail?.split('@')[0];
-                verifiedPhoto = userInfo.picture;
+                }
             }
             catch (err) {
-                throw new common_1.UnauthorizedException('Failed to verify Google access token.');
+                if (!verifiedEmail) {
+                    throw new common_1.UnauthorizedException('Failed to verify Google access token.');
+                }
             }
         }
         if (!verifiedEmail) {
@@ -2106,6 +2128,7 @@ let AuthService = class AuthService {
                     securityQuestion: dto.securityQuestion || null,
                     securityAnswerHash: securityAnswerHash || null,
                     referredById: referrer?.id || null,
+                    isPhoneVerified: Boolean(dto.firebaseIdToken),
                 },
                 select: SAFE_USER_SELECT,
             });
@@ -3107,9 +3130,27 @@ let AppSettingsService = class AppSettingsService {
                 logoUrl = superAdmin.photoUrl;
             }
         }
+        const flags = settings.featureFlags || {};
+        let faviconUrl = flags.faviconUrl;
+        if (!faviconUrl || !logoUrl) {
+            try {
+                const integrations = await this.getIntegrations();
+                if (!faviconUrl) {
+                    faviconUrl = integrations?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.ico';
+                }
+                if (!logoUrl) {
+                    logoUrl = integrations?.projectMasterData?.logoUrl || logoUrl;
+                }
+            }
+            catch {
+                if (!faviconUrl)
+                    faviconUrl = 'https://farmsking.in/favicon.ico';
+            }
+        }
         const result = {
             ...settings,
             logoUrl,
+            faviconUrl: faviconUrl || 'https://farmsking.in/favicon.ico',
             upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
             upiPayeeName: settings.upiPayeeName || 'Surinder Singh',
             referralSignupBonusAmount: settings.referralSignupBonusAmount ?? 10,
@@ -3141,6 +3182,12 @@ let AppSettingsService = class AppSettingsService {
             gardenExpertPlatformFeePercent: settings.gardenExpertPlatformFeePercent ?? 20.0,
             gardenerProCardPrice: settings.gardenerProCardPrice ?? 299.00,
             gardenerVipCardPrice: settings.gardenerVipCardPrice ?? 999.00,
+            allowDirectPlatformSales: settings.allowDirectPlatformSales ?? false,
+            withdrawalPlatformFeePercent: settings.withdrawalPlatformFeePercent ?? 2.0,
+            withdrawalGstPercent: settings.withdrawalGstPercent ?? 18.0,
+            walletUsagePlatformFeePercent: settings.walletUsagePlatformFeePercent ?? 2.0,
+            walletUsageGstPercent: settings.walletUsageGstPercent ?? 18.0,
+            walletTaxEnabled: settings.walletTaxEnabled ?? true,
         };
         this.cache = { data: result, timestamp: now };
         return result;
@@ -3169,16 +3216,22 @@ let AppSettingsService = class AppSettingsService {
         const supportEmail = pm.contactEmail || pm.supportEmail || email || 'farmskingindia@gmail.com';
         const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
         const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
+        const appDownloadUrl = settings?.appDownloadUrl || pm?.appDownloadUrl || 'https://www.farmsking.in';
+        const supportFaviconUrl = settings?.faviconUrl || settings?.featureFlags?.faviconUrl || pm.faviconUrl || 'https://farmsking.in/favicon.ico';
+        const supportLogoUrl = settings?.logoUrl || pm.logoUrl || 'https://farmsking.in/assets/logo.png';
         return {
-            name: name || 'Surinder Singh (Super Admin)',
+            name: name || 'FarmsKing Executive Support',
             mobile: helplinePhone,
             email: supportEmail,
             helplinePhone,
             supportEmail,
+            logoUrl: supportLogoUrl,
+            faviconUrl: supportFaviconUrl,
             companyLegalName,
             registeredAddress,
             operationalHqAddress,
-            websiteUrl: pm.websiteUrl || 'https://farmsking.com',
+            websiteUrl: pm.websiteUrl || 'https://www.farmsking.in',
+            appDownloadUrl,
             mcaSrn: pm.mcaSrn || 'AC6979718',
         };
     }
@@ -3190,6 +3243,8 @@ let AppSettingsService = class AppSettingsService {
             brandDisplayName: pm.brandDisplayName,
             shortName: pm.shortName,
             tagline: pm.tagline,
+            logoUrl: pm.logoUrl || 'https://farmsking.in/assets/logo.png',
+            faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.ico',
             mcaSrn: pm.mcaSrn,
             crcApprovalStatus: pm.crcApprovalStatus,
             crcApprovalDate: pm.crcApprovalDate,
@@ -3261,6 +3316,7 @@ let AppSettingsService = class AppSettingsService {
         const keys = [
             'appName',
             'logoUrl',
+            'faviconUrl',
             'tagline',
             'upiId',
             'upiPayeeName',
@@ -3301,6 +3357,15 @@ let AppSettingsService = class AppSettingsService {
             'freeTrialEnabled',
             'freeTrialDays',
             'freeTrialPlan',
+            'gardenExpertPlatformFeePercent',
+            'gardenerProCardPrice',
+            'gardenerVipCardPrice',
+            'allowDirectPlatformSales',
+            'withdrawalPlatformFeePercent',
+            'withdrawalGstPercent',
+            'walletUsagePlatformFeePercent',
+            'walletUsageGstPercent',
+            'walletTaxEnabled',
         ];
         for (const key of keys) {
             if (dto[key] !== undefined)
@@ -3393,11 +3458,41 @@ let AppSettingsService = class AppSettingsService {
             'walletUsagePlatformFeePercent',
             'walletUsageGstPercent',
             'walletTaxEnabled',
+            'featureFlags',
         ]);
         const prismaPayload = {};
         for (const [k, v] of Object.entries(fields)) {
             if (ALLOWED_PRISMA_FIELDS.has(k)) {
                 prismaPayload[k] = v;
+            }
+        }
+        if (dto.faviconUrl !== undefined) {
+            try {
+                const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
+                const currentFlags = existing?.featureFlags || {};
+                prismaPayload['featureFlags'] = {
+                    ...currentFlags,
+                    faviconUrl: dto.faviconUrl,
+                };
+            }
+            catch (err) {
+                console.warn('Could not update featureFlags.faviconUrl in AppSetting:', err);
+            }
+        }
+        if (dto.logoUrl !== undefined || dto.faviconUrl !== undefined) {
+            try {
+                const integrations = await this.getIntegrations();
+                if (integrations?.projectMasterData) {
+                    const pm = { ...integrations.projectMasterData };
+                    if (dto.logoUrl !== undefined)
+                        pm.logoUrl = dto.logoUrl;
+                    if (dto.faviconUrl !== undefined)
+                        pm.faviconUrl = dto.faviconUrl;
+                    await this.updateIntegrations(admin, { ...integrations, projectMasterData: pm });
+                }
+            }
+            catch (err) {
+                console.warn('Could not sync integrations projectMasterData with brand assets:', err);
             }
         }
         try {
@@ -5666,6 +5761,11 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "farmMobile", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "firebaseIdToken", void 0);
 
 
 /***/ }),
@@ -5792,6 +5892,14 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterTraderDto.prototype, "state", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Firebase ID Token from phone auth OTP verification',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "firebaseIdToken", void 0);
 
 
 /***/ }),
@@ -5844,6 +5952,224 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GoogleLoginDto = void 0;
+const class_validator_1 = __webpack_require__(38);
+const swagger_1 = __webpack_require__(5);
+class GoogleLoginDto {
+}
+exports.GoogleLoginDto = GoogleLoginDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Google email address' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User full name from Google profile' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Google profile picture URL' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "photoUrl", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Google UID / subject identifier' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "googleId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Google OAuth access token' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "accessToken", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Firebase or Google ID Token' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GoogleLoginDto.prototype, "idToken", void 0);
+
+
+/***/ }),
+/* 43 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FirebaseLoginDto = void 0;
+const class_validator_1 = __webpack_require__(38);
+const swagger_1 = __webpack_require__(5);
+class FirebaseLoginDto {
+}
+exports.FirebaseLoginDto = FirebaseLoginDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Firebase Auth ID Token' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FirebaseLoginDto.prototype, "idToken", void 0);
+
+
+/***/ }),
+/* 44 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LinkGoogleDto = void 0;
+const class_validator_1 = __webpack_require__(38);
+const swagger_1 = __webpack_require__(5);
+class LinkGoogleDto {
+}
+exports.LinkGoogleDto = LinkGoogleDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Google email address to link' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LinkGoogleDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Full name from Google profile' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LinkGoogleDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Profile picture URL from Google' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LinkGoogleDto.prototype, "photoUrl", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Google user ID (sub)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], LinkGoogleDto.prototype, "googleId", void 0);
+
+
+/***/ }),
+/* 45 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
+const class_validator_1 = __webpack_require__(38);
+const swagger_1 = __webpack_require__(5);
+class SendLoginOtpDto {
+}
+exports.SendLoginOtpDto = SendLoginOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendLoginOtpDto.prototype, "mobile", void 0);
+class VerifyLoginOtpDto {
+}
+exports.VerifyLoginOtpDto = VerifyLoginOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], VerifyLoginOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '6-digit OTP code' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], VerifyLoginOtpDto.prototype, "otp", void 0);
+class SendWhatsAppOtpDto {
+}
+exports.SendWhatsAppOtpDto = SendWhatsAppOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendWhatsAppOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'OTP code' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendWhatsAppOtpDto.prototype, "otp", void 0);
+class SendEmailOtpDto {
+}
+exports.SendEmailOtpDto = SendEmailOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Email address' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendEmailOtpDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'OTP code' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendEmailOtpDto.prototype, "otp", void 0);
+class SendMobileLinkOtpDto {
+}
+exports.SendMobileLinkOtpDto = SendMobileLinkOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SendMobileLinkOtpDto.prototype, "mobile", void 0);
+
+
+/***/ }),
+/* 46 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ForgotPasswordStartDto = void 0;
 const class_validator_1 = __webpack_require__(38);
 const is_indian_mobile_validator_1 = __webpack_require__(39);
@@ -5861,7 +6187,7 @@ __decorate([
 
 
 /***/ }),
-/* 43 */
+/* 47 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5892,7 +6218,7 @@ __decorate([
 
 
 /***/ }),
-/* 44 */
+/* 48 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5928,7 +6254,7 @@ __decorate([
 
 
 /***/ }),
-/* 45 */
+/* 49 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5951,7 +6277,7 @@ exports.JwtAuthGuard = JwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 46 */
+/* 50 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -5965,7 +6291,7 @@ exports.CurrentUser = (0, common_1.createParamDecorator)((_data, ctx) => {
 
 
 /***/ }),
-/* 47 */
+/* 51 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5984,7 +6310,7 @@ exports.JwtStrategy = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const passport_1 = __webpack_require__(19);
-const passport_jwt_1 = __webpack_require__(48);
+const passport_jwt_1 = __webpack_require__(52);
 const prisma_service_1 = __webpack_require__(12);
 const user_session_service_1 = __webpack_require__(34);
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
@@ -6033,13 +6359,13 @@ exports.JwtStrategy = JwtStrategy = __decorate([
 
 
 /***/ }),
-/* 48 */
+/* 52 */
 /***/ ((module) => {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 49 */
+/* 53 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6055,7 +6381,7 @@ const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
 const whatsapp_service_1 = __webpack_require__(28);
-const whatsapp_controller_1 = __webpack_require__(50);
+const whatsapp_controller_1 = __webpack_require__(54);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 let WhatsappBotModule = class WhatsappBotModule {
 };
@@ -6071,7 +6397,7 @@ exports.WhatsappBotModule = WhatsappBotModule = __decorate([
 
 
 /***/ }),
-/* 50 */
+/* 54 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6171,7 +6497,7 @@ exports.WhatsappBotController = WhatsappBotController = __decorate([
 
 
 /***/ }),
-/* 51 */
+/* 55 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6184,7 +6510,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppSettingsModule = void 0;
 const common_1 = __webpack_require__(2);
-const app_settings_controller_1 = __webpack_require__(52);
+const app_settings_controller_1 = __webpack_require__(56);
 const app_settings_service_1 = __webpack_require__(30);
 let AppSettingsModule = class AppSettingsModule {
 };
@@ -6199,7 +6525,7 @@ exports.AppSettingsModule = AppSettingsModule = __decorate([
 
 
 /***/ }),
-/* 52 */
+/* 56 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6220,12 +6546,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PublicContactController = exports.AppSettingsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
 const app_settings_service_1 = __webpack_require__(30);
-const update_app_settings_dto_1 = __webpack_require__(55);
+const update_app_settings_dto_1 = __webpack_require__(59);
 let AppSettingsController = class AppSettingsController {
     constructor(appSettingsService) {
         this.appSettingsService = appSettingsService;
@@ -6368,7 +6694,7 @@ exports.PublicContactController = PublicContactController = __decorate([
 
 
 /***/ }),
-/* 53 */
+/* 57 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6387,7 +6713,7 @@ exports.RolesGuard = void 0;
 const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
 const client_1 = __webpack_require__(13);
-const roles_decorator_1 = __webpack_require__(54);
+const roles_decorator_1 = __webpack_require__(58);
 let RolesGuard = class RolesGuard {
     constructor(reflector) {
         this.reflector = reflector;
@@ -6436,7 +6762,7 @@ exports.RolesGuard = RolesGuard = __decorate([
 
 
 /***/ }),
-/* 54 */
+/* 58 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -6449,7 +6775,7 @@ exports.Roles = Roles;
 
 
 /***/ }),
-/* 55 */
+/* 59 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6478,6 +6804,11 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateAppSettingsDto.prototype, "logoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateAppSettingsDto.prototype, "faviconUrl", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -6665,10 +6996,48 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateAppSettingsDto.prototype, "freeTrialPlan", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "gardenExpertPlatformFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "gardenerProCardPrice", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "gardenerVipCardPrice", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAppSettingsDto.prototype, "allowDirectPlatformSales", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "withdrawalPlatformFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "withdrawalGstPercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "walletUsagePlatformFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "walletUsageGstPercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAppSettingsDto.prototype, "walletTaxEnabled", void 0);
 
 
 /***/ }),
-/* 56 */
+/* 60 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6681,9 +7050,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WalletModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_controller_1 = __webpack_require__(57);
+const wallet_controller_1 = __webpack_require__(61);
 const wallet_service_1 = __webpack_require__(33);
-const whatsapp_module_1 = __webpack_require__(49);
+const whatsapp_module_1 = __webpack_require__(53);
 let WalletModule = class WalletModule {
 };
 exports.WalletModule = WalletModule;
@@ -6698,7 +7067,7 @@ exports.WalletModule = WalletModule = __decorate([
 
 
 /***/ }),
-/* 57 */
+/* 61 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6719,14 +7088,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WalletController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const operator_permission_guard_1 = __webpack_require__(58);
-const roles_decorator_1 = __webpack_require__(54);
-const operator_permission_decorator_1 = __webpack_require__(59);
-const current_user_decorator_1 = __webpack_require__(46);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const operator_permission_guard_1 = __webpack_require__(62);
+const roles_decorator_1 = __webpack_require__(58);
+const operator_permission_decorator_1 = __webpack_require__(63);
+const current_user_decorator_1 = __webpack_require__(50);
 const wallet_service_1 = __webpack_require__(33);
-const credit_wallet_dto_1 = __webpack_require__(60);
+const credit_wallet_dto_1 = __webpack_require__(64);
 let WalletController = class WalletController {
     constructor(walletService) {
         this.walletService = walletService;
@@ -6851,7 +7220,7 @@ exports.WalletController = WalletController = __decorate([
 
 
 /***/ }),
-/* 58 */
+/* 62 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6871,7 +7240,7 @@ const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const operator_permission_decorator_1 = __webpack_require__(59);
+const operator_permission_decorator_1 = __webpack_require__(63);
 let OperatorPermissionGuard = class OperatorPermissionGuard {
     constructor(reflector, prisma) {
         this.reflector = reflector;
@@ -6903,7 +7272,7 @@ exports.OperatorPermissionGuard = OperatorPermissionGuard = __decorate([
 
 
 /***/ }),
-/* 59 */
+/* 63 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -6916,7 +7285,7 @@ exports.RequireOperatorPermission = RequireOperatorPermission;
 
 
 /***/ }),
-/* 60 */
+/* 64 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6948,7 +7317,7 @@ __decorate([
 
 
 /***/ }),
-/* 61 */
+/* 65 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6961,8 +7330,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmsModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_controller_1 = __webpack_require__(62);
-const farms_service_1 = __webpack_require__(63);
+const farms_controller_1 = __webpack_require__(66);
+const farms_service_1 = __webpack_require__(67);
 let FarmsModule = class FarmsModule {
 };
 exports.FarmsModule = FarmsModule;
@@ -6976,7 +7345,7 @@ exports.FarmsModule = FarmsModule = __decorate([
 
 
 /***/ }),
-/* 62 */
+/* 66 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6997,13 +7366,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const farms_service_1 = __webpack_require__(63);
-const create_farm_dto_1 = __webpack_require__(65);
-const update_farm_dto_1 = __webpack_require__(66);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const farms_service_1 = __webpack_require__(67);
+const create_farm_dto_1 = __webpack_require__(69);
+const update_farm_dto_1 = __webpack_require__(70);
 let FarmsController = class FarmsController {
     constructor(farmsService) {
         this.farmsService = farmsService;
@@ -7074,7 +7443,7 @@ exports.FarmsController = FarmsController = __decorate([
 
 
 /***/ }),
-/* 63 */
+/* 67 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7093,7 +7462,7 @@ exports.FarmsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const effective_farmer_util_1 = __webpack_require__(64);
+const effective_farmer_util_1 = __webpack_require__(68);
 let FarmsService = class FarmsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -7149,7 +7518,7 @@ exports.FarmsService = FarmsService = __decorate([
 
 
 /***/ }),
-/* 64 */
+/* 68 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -7167,7 +7536,7 @@ function getEffectiveFarmerId(user) {
 
 
 /***/ }),
-/* 65 */
+/* 69 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7236,27 +7605,27 @@ __decorate([
 
 
 /***/ }),
-/* 66 */
+/* 70 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateFarmDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_farm_dto_1 = __webpack_require__(65);
+const mapped_types_1 = __webpack_require__(71);
+const create_farm_dto_1 = __webpack_require__(69);
 class UpdateFarmDto extends (0, mapped_types_1.PartialType)(create_farm_dto_1.CreateFarmDto) {
 }
 exports.UpdateFarmDto = UpdateFarmDto;
 
 
 /***/ }),
-/* 67 */
+/* 71 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/mapped-types");
 
 /***/ }),
-/* 68 */
+/* 72 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7269,9 +7638,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlotsModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_module_1 = __webpack_require__(61);
-const plots_controller_1 = __webpack_require__(69);
-const plots_service_1 = __webpack_require__(70);
+const farms_module_1 = __webpack_require__(65);
+const plots_controller_1 = __webpack_require__(73);
+const plots_service_1 = __webpack_require__(74);
 let PlotsModule = class PlotsModule {
 };
 exports.PlotsModule = PlotsModule;
@@ -7286,7 +7655,7 @@ exports.PlotsModule = PlotsModule = __decorate([
 
 
 /***/ }),
-/* 69 */
+/* 73 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7307,13 +7676,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlotsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const plots_service_1 = __webpack_require__(70);
-const create_plot_dto_1 = __webpack_require__(71);
-const update_plot_dto_1 = __webpack_require__(72);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const plots_service_1 = __webpack_require__(74);
+const create_plot_dto_1 = __webpack_require__(75);
+const update_plot_dto_1 = __webpack_require__(76);
 let PlotsController = class PlotsController {
     constructor(plotsService) {
         this.plotsService = plotsService;
@@ -7385,7 +7754,7 @@ exports.PlotsController = PlotsController = __decorate([
 
 
 /***/ }),
-/* 70 */
+/* 74 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7404,8 +7773,8 @@ exports.PlotsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const farms_service_1 = __webpack_require__(63);
-const effective_farmer_util_1 = __webpack_require__(64);
+const farms_service_1 = __webpack_require__(67);
+const effective_farmer_util_1 = __webpack_require__(68);
 let PlotsService = class PlotsService {
     constructor(prisma, farmsService) {
         this.prisma = prisma;
@@ -7450,7 +7819,7 @@ exports.PlotsService = PlotsService = __decorate([
 
 
 /***/ }),
-/* 71 */
+/* 75 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7513,21 +7882,21 @@ __decorate([
 
 
 /***/ }),
-/* 72 */
+/* 76 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdatePlotDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_plot_dto_1 = __webpack_require__(71);
+const mapped_types_1 = __webpack_require__(71);
+const create_plot_dto_1 = __webpack_require__(75);
 class UpdatePlotDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_plot_dto_1.CreatePlotDto, ['farmId'])) {
 }
 exports.UpdatePlotDto = UpdatePlotDto;
 
 
 /***/ }),
-/* 73 */
+/* 77 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7540,12 +7909,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropsModule = void 0;
 const common_1 = __webpack_require__(2);
-const plots_module_1 = __webpack_require__(68);
-const farmer_plans_module_1 = __webpack_require__(74);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const notifications_module_1 = __webpack_require__(76);
-const crops_controller_1 = __webpack_require__(95);
-const crops_service_1 = __webpack_require__(96);
+const plots_module_1 = __webpack_require__(72);
+const farmer_plans_module_1 = __webpack_require__(78);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const notifications_module_1 = __webpack_require__(80);
+const crops_controller_1 = __webpack_require__(99);
+const crops_service_1 = __webpack_require__(100);
 let CropsModule = class CropsModule {
 };
 exports.CropsModule = CropsModule;
@@ -7560,7 +7929,7 @@ exports.CropsModule = CropsModule = __decorate([
 
 
 /***/ }),
-/* 74 */
+/* 78 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7574,11 +7943,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlansModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const wallet_module_1 = __webpack_require__(56);
-const notifications_module_1 = __webpack_require__(76);
-const farmer_plans_service_1 = __webpack_require__(85);
-const farmer_plans_controller_1 = __webpack_require__(87);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const wallet_module_1 = __webpack_require__(60);
+const notifications_module_1 = __webpack_require__(80);
+const farmer_plans_service_1 = __webpack_require__(89);
+const farmer_plans_controller_1 = __webpack_require__(91);
 let FarmerPlansModule = class FarmerPlansModule {
 };
 exports.FarmerPlansModule = FarmerPlansModule;
@@ -7593,7 +7962,7 @@ exports.FarmerPlansModule = FarmerPlansModule = __decorate([
 
 
 /***/ }),
-/* 75 */
+/* 79 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7606,11 +7975,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdvisorAssignmentModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(76);
-const wallet_module_1 = __webpack_require__(56);
-const whatsapp_module_1 = __webpack_require__(49);
-const advisor_assignment_controller_1 = __webpack_require__(79);
-const advisor_assignment_service_1 = __webpack_require__(80);
+const notifications_module_1 = __webpack_require__(80);
+const wallet_module_1 = __webpack_require__(60);
+const whatsapp_module_1 = __webpack_require__(53);
+const advisor_assignment_controller_1 = __webpack_require__(83);
+const advisor_assignment_service_1 = __webpack_require__(84);
 let AdvisorAssignmentModule = class AdvisorAssignmentModule {
 };
 exports.AdvisorAssignmentModule = AdvisorAssignmentModule;
@@ -7625,7 +7994,7 @@ exports.AdvisorAssignmentModule = AdvisorAssignmentModule = __decorate([
 
 
 /***/ }),
-/* 76 */
+/* 80 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7638,8 +8007,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_controller_1 = __webpack_require__(77);
-const notifications_service_1 = __webpack_require__(78);
+const notifications_controller_1 = __webpack_require__(81);
+const notifications_service_1 = __webpack_require__(82);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -7653,7 +8022,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 77 */
+/* 81 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7674,11 +8043,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const notifications_service_1 = __webpack_require__(78);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const notifications_service_1 = __webpack_require__(82);
 let NotificationsController = class NotificationsController {
     constructor(notificationsService) {
         this.notificationsService = notificationsService;
@@ -7747,7 +8116,7 @@ exports.NotificationsController = NotificationsController = __decorate([
 
 
 /***/ }),
-/* 78 */
+/* 82 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7864,7 +8233,7 @@ exports.NotificationsService = NotificationsService = __decorate([
 
 
 /***/ }),
-/* 79 */
+/* 83 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7885,14 +8254,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdvisorAssignmentController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const create_advisor_assignment_dto_1 = __webpack_require__(82);
-const list_farmers_query_dto_1 = __webpack_require__(83);
-const reject_assignment_dto_1 = __webpack_require__(84);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const create_advisor_assignment_dto_1 = __webpack_require__(86);
+const list_farmers_query_dto_1 = __webpack_require__(87);
+const reject_assignment_dto_1 = __webpack_require__(88);
 let AdvisorAssignmentController = class AdvisorAssignmentController {
     constructor(advisorAssignmentService) {
         this.advisorAssignmentService = advisorAssignmentService;
@@ -8094,7 +8463,7 @@ exports.AdvisorAssignmentController = AdvisorAssignmentController = __decorate([
 
 
 /***/ }),
-/* 80 */
+/* 84 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8113,10 +8482,10 @@ exports.AdvisorAssignmentService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(78);
+const notifications_service_1 = __webpack_require__(82);
 const wallet_service_1 = __webpack_require__(33);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
-const auth_user_util_1 = __webpack_require__(81);
+const auth_user_util_1 = __webpack_require__(85);
 let AdvisorAssignmentService = class AdvisorAssignmentService {
     constructor(prisma, notificationsService, walletService, whatsAppGroupSyncService) {
         this.prisma = prisma;
@@ -8743,7 +9112,7 @@ exports.AdvisorAssignmentService = AdvisorAssignmentService = __decorate([
 
 
 /***/ }),
-/* 81 */
+/* 85 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -8757,7 +9126,7 @@ function hasActiveRole(user, role) {
 
 
 /***/ }),
-/* 82 */
+/* 86 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8792,7 +9161,7 @@ __decorate([
 
 
 /***/ }),
-/* 83 */
+/* 87 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8819,7 +9188,7 @@ __decorate([
 
 
 /***/ }),
-/* 84 */
+/* 88 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8846,7 +9215,7 @@ __decorate([
 
 
 /***/ }),
-/* 85 */
+/* 89 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8866,10 +9235,10 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
+const advisor_assignment_service_1 = __webpack_require__(84);
 const wallet_service_1 = __webpack_require__(33);
-const notifications_service_1 = __webpack_require__(78);
-const auth_user_util_1 = __webpack_require__(81);
+const notifications_service_1 = __webpack_require__(82);
+const auth_user_util_1 = __webpack_require__(85);
 exports.FREE_PLAN_MAX_CROPS = 3;
 exports.FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -10000,7 +10369,7 @@ let FarmerPlansService = class FarmerPlansService {
         ];
     }
     downloadAdminDocContent(docKey, lang = 'pa') {
-        const fs = __webpack_require__(86);
+        const fs = __webpack_require__(90);
         const path = __webpack_require__(1);
         const possiblePaths = {
             master: [
@@ -10473,13 +10842,13 @@ function getMultiLanguageGuideContent(docKey, lang, fallbackPa) {
 
 
 /***/ }),
-/* 86 */
+/* 90 */
 /***/ ((module) => {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 87 */
+/* 91 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10500,20 +10869,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlansController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const operator_permission_guard_1 = __webpack_require__(58);
-const roles_decorator_1 = __webpack_require__(54);
-const operator_permission_decorator_1 = __webpack_require__(59);
-const current_user_decorator_1 = __webpack_require__(46);
-const farmer_plans_service_1 = __webpack_require__(85);
-const create_farmer_plan_coupon_dto_1 = __webpack_require__(88);
-const generate_advisor_coupon_dto_1 = __webpack_require__(89);
-const redeem_farmer_plan_coupon_dto_1 = __webpack_require__(90);
-const grant_farmer_plan_days_dto_1 = __webpack_require__(91);
-const update_farmer_plan_pricing_dto_1 = __webpack_require__(92);
-const choose_advisor_dto_1 = __webpack_require__(93);
-const apply_coupon_to_farmer_dto_1 = __webpack_require__(94);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const operator_permission_guard_1 = __webpack_require__(62);
+const roles_decorator_1 = __webpack_require__(58);
+const operator_permission_decorator_1 = __webpack_require__(63);
+const current_user_decorator_1 = __webpack_require__(50);
+const farmer_plans_service_1 = __webpack_require__(89);
+const create_farmer_plan_coupon_dto_1 = __webpack_require__(92);
+const generate_advisor_coupon_dto_1 = __webpack_require__(93);
+const redeem_farmer_plan_coupon_dto_1 = __webpack_require__(94);
+const grant_farmer_plan_days_dto_1 = __webpack_require__(95);
+const update_farmer_plan_pricing_dto_1 = __webpack_require__(96);
+const choose_advisor_dto_1 = __webpack_require__(97);
+const apply_coupon_to_farmer_dto_1 = __webpack_require__(98);
 let FarmerPlansController = class FarmerPlansController {
     constructor(farmerPlansService) {
         this.farmerPlansService = farmerPlansService;
@@ -10770,7 +11139,7 @@ exports.FarmerPlansController = FarmerPlansController = __decorate([
 
 
 /***/ }),
-/* 88 */
+/* 92 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10835,7 +11204,7 @@ __decorate([
 
 
 /***/ }),
-/* 89 */
+/* 93 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10919,7 +11288,7 @@ __decorate([
 
 
 /***/ }),
-/* 90 */
+/* 94 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10956,7 +11325,7 @@ __decorate([
 
 
 /***/ }),
-/* 91 */
+/* 95 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10999,7 +11368,7 @@ __decorate([
 
 
 /***/ }),
-/* 92 */
+/* 96 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11132,7 +11501,7 @@ __decorate([
 
 
 /***/ }),
-/* 93 */
+/* 97 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11158,7 +11527,7 @@ __decorate([
 
 
 /***/ }),
-/* 94 */
+/* 98 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11188,7 +11557,7 @@ __decorate([
 
 
 /***/ }),
-/* 95 */
+/* 99 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11209,15 +11578,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const crops_service_1 = __webpack_require__(96);
-const create_crop_dto_1 = __webpack_require__(98);
-const update_crop_dto_1 = __webpack_require__(99);
-const reject_crop_dto_1 = __webpack_require__(100);
-const update_crop_schedule_dto_1 = __webpack_require__(101);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const crops_service_1 = __webpack_require__(100);
+const create_crop_dto_1 = __webpack_require__(102);
+const update_crop_dto_1 = __webpack_require__(103);
+const reject_crop_dto_1 = __webpack_require__(104);
+const update_crop_schedule_dto_1 = __webpack_require__(105);
 let CropsController = class CropsController {
     constructor(cropsService) {
         this.cropsService = cropsService;
@@ -11396,7 +11765,7 @@ exports.CropsController = CropsController = __decorate([
 
 
 /***/ }),
-/* 96 */
+/* 100 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11415,12 +11784,12 @@ exports.CropsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const plots_service_1 = __webpack_require__(70);
-const farmer_plans_service_1 = __webpack_require__(85);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const notifications_service_1 = __webpack_require__(78);
-const crop_id_util_1 = __webpack_require__(97);
-const effective_farmer_util_1 = __webpack_require__(64);
+const plots_service_1 = __webpack_require__(74);
+const farmer_plans_service_1 = __webpack_require__(89);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const notifications_service_1 = __webpack_require__(82);
+const crop_id_util_1 = __webpack_require__(101);
+const effective_farmer_util_1 = __webpack_require__(68);
 const DATE_FIELDS = ['sowingDate', 'transplantDate', 'expectedHarvestDate', 'actualHarvestDate'];
 const ACTIVE_STATUSES = [
     client_1.CropStatus.PLANNED,
@@ -11899,7 +12268,7 @@ exports.CropsService = CropsService = __decorate([
 
 
 /***/ }),
-/* 97 */
+/* 101 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -11920,7 +12289,7 @@ async function generateUniqueCropId(prisma) {
 
 
 /***/ }),
-/* 98 */
+/* 102 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12018,21 +12387,21 @@ __decorate([
 
 
 /***/ }),
-/* 99 */
+/* 103 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateCropDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_crop_dto_1 = __webpack_require__(98);
+const mapped_types_1 = __webpack_require__(71);
+const create_crop_dto_1 = __webpack_require__(102);
 class UpdateCropDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_crop_dto_1.CreateCropDto, ['plotId'])) {
 }
 exports.UpdateCropDto = UpdateCropDto;
 
 
 /***/ }),
-/* 100 */
+/* 104 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12059,7 +12428,7 @@ __decorate([
 
 
 /***/ }),
-/* 101 */
+/* 105 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12086,7 +12455,7 @@ __decorate([
 
 
 /***/ }),
-/* 102 */
+/* 106 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12099,8 +12468,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DashboardModule = void 0;
 const common_1 = __webpack_require__(2);
-const dashboard_controller_1 = __webpack_require__(103);
-const dashboard_service_1 = __webpack_require__(104);
+const dashboard_controller_1 = __webpack_require__(107);
+const dashboard_service_1 = __webpack_require__(108);
 const prisma_module_1 = __webpack_require__(16);
 let DashboardModule = class DashboardModule {
 };
@@ -12116,7 +12485,7 @@ exports.DashboardModule = DashboardModule = __decorate([
 
 
 /***/ }),
-/* 103 */
+/* 107 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12133,7 +12502,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DashboardController = void 0;
 const common_1 = __webpack_require__(2);
-const dashboard_service_1 = __webpack_require__(104);
+const dashboard_service_1 = __webpack_require__(108);
 let DashboardController = class DashboardController {
     constructor(dashboardService) {
         this.dashboardService = dashboardService;
@@ -12201,7 +12570,7 @@ exports.DashboardController = DashboardController = __decorate([
 
 
 /***/ }),
-/* 104 */
+/* 108 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12450,7 +12819,7 @@ exports.DashboardService = DashboardService = __decorate([
 
 
 /***/ }),
-/* 105 */
+/* 109 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12463,8 +12832,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MarketRatesModule = void 0;
 const common_1 = __webpack_require__(2);
-const market_rates_controller_1 = __webpack_require__(106);
-const market_rates_service_1 = __webpack_require__(108);
+const market_rates_controller_1 = __webpack_require__(110);
+const market_rates_service_1 = __webpack_require__(112);
 let MarketRatesModule = class MarketRatesModule {
 };
 exports.MarketRatesModule = MarketRatesModule;
@@ -12477,7 +12846,7 @@ exports.MarketRatesModule = MarketRatesModule = __decorate([
 
 
 /***/ }),
-/* 106 */
+/* 110 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12497,9 +12866,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MarketRatesController = void 0;
 const common_1 = __webpack_require__(2);
-const optional_jwt_auth_guard_1 = __webpack_require__(107);
-const current_user_decorator_1 = __webpack_require__(46);
-const market_rates_service_1 = __webpack_require__(108);
+const optional_jwt_auth_guard_1 = __webpack_require__(111);
+const current_user_decorator_1 = __webpack_require__(50);
+const market_rates_service_1 = __webpack_require__(112);
 let MarketRatesController = class MarketRatesController {
     constructor(marketRatesService) {
         this.marketRatesService = marketRatesService;
@@ -12524,7 +12893,7 @@ exports.MarketRatesController = MarketRatesController = __decorate([
 
 
 /***/ }),
-/* 107 */
+/* 111 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12553,7 +12922,7 @@ exports.OptionalJwtAuthGuard = OptionalJwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 108 */
+/* 112 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12978,7 +13347,7 @@ const CROP_SYNONYMS = {
 
 
 /***/ }),
-/* 109 */
+/* 113 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12991,12 +13360,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpensesModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_module_1 = __webpack_require__(61);
-const plots_module_1 = __webpack_require__(68);
-const crops_module_1 = __webpack_require__(73);
-const parties_module_1 = __webpack_require__(110);
-const expenses_controller_1 = __webpack_require__(128);
-const expenses_service_1 = __webpack_require__(129);
+const farms_module_1 = __webpack_require__(65);
+const plots_module_1 = __webpack_require__(72);
+const crops_module_1 = __webpack_require__(77);
+const parties_module_1 = __webpack_require__(114);
+const expenses_controller_1 = __webpack_require__(132);
+const expenses_service_1 = __webpack_require__(133);
 let ExpensesModule = class ExpensesModule {
 };
 exports.ExpensesModule = ExpensesModule;
@@ -13011,7 +13380,7 @@ exports.ExpensesModule = ExpensesModule = __decorate([
 
 
 /***/ }),
-/* 110 */
+/* 114 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13024,10 +13393,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartiesModule = void 0;
 const common_1 = __webpack_require__(2);
-const parties_controller_1 = __webpack_require__(111);
-const public_parties_controller_1 = __webpack_require__(123);
-const parties_service_1 = __webpack_require__(112);
-const chat_module_1 = __webpack_require__(125);
+const parties_controller_1 = __webpack_require__(115);
+const public_parties_controller_1 = __webpack_require__(127);
+const parties_service_1 = __webpack_require__(116);
+const chat_module_1 = __webpack_require__(129);
 let PartiesModule = class PartiesModule {
 };
 exports.PartiesModule = PartiesModule;
@@ -13042,7 +13411,7 @@ exports.PartiesModule = PartiesModule = __decorate([
 
 
 /***/ }),
-/* 111 */
+/* 115 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13064,17 +13433,17 @@ exports.PartiesController = void 0;
 const common_1 = __webpack_require__(2);
 const swagger_1 = __webpack_require__(5);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const parties_service_1 = __webpack_require__(112);
-const create_party_dto_1 = __webpack_require__(117);
-const record_sale_ledger_dto_1 = __webpack_require__(118);
-const record_payment_dto_1 = __webpack_require__(119);
-const create_unified_party_dto_1 = __webpack_require__(120);
-const record_arhtiya_advance_dto_1 = __webpack_require__(121);
-const record_arhtiya_crop_sale_dto_1 = __webpack_require__(122);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const parties_service_1 = __webpack_require__(116);
+const create_party_dto_1 = __webpack_require__(121);
+const record_sale_ledger_dto_1 = __webpack_require__(122);
+const record_payment_dto_1 = __webpack_require__(123);
+const create_unified_party_dto_1 = __webpack_require__(124);
+const record_arhtiya_advance_dto_1 = __webpack_require__(125);
+const record_arhtiya_crop_sale_dto_1 = __webpack_require__(126);
 let PartiesController = class PartiesController {
     constructor(partiesService) {
         this.partiesService = partiesService;
@@ -13267,7 +13636,7 @@ exports.PartiesController = PartiesController = __decorate([
 
 
 /***/ }),
-/* 112 */
+/* 116 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13286,8 +13655,8 @@ exports.PartiesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(113);
-const effective_farmer_util_1 = __webpack_require__(64);
+const chat_gateway_1 = __webpack_require__(117);
+const effective_farmer_util_1 = __webpack_require__(68);
 const SIGN = {
     SALE_CREDIT: 1,
     SALE_PAYMENT: -1,
@@ -14160,7 +14529,7 @@ exports.PartiesService = PartiesService = __decorate([
 
 
 /***/ }),
-/* 113 */
+/* 117 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14182,10 +14551,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = exports.userRoom = void 0;
 const common_1 = __webpack_require__(2);
 const jwt_1 = __webpack_require__(18);
-const websockets_1 = __webpack_require__(114);
-const socket_io_1 = __webpack_require__(115);
+const websockets_1 = __webpack_require__(118);
+const socket_io_1 = __webpack_require__(119);
 const prisma_service_1 = __webpack_require__(12);
-const chat_service_1 = __webpack_require__(116);
+const chat_service_1 = __webpack_require__(120);
 const userRoom = (userId) => `user:${userId}`;
 exports.userRoom = userRoom;
 let ChatGateway = ChatGateway_1 = class ChatGateway {
@@ -14287,19 +14656,19 @@ exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
 
 
 /***/ }),
-/* 114 */
+/* 118 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 115 */
+/* 119 */
 /***/ ((module) => {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 116 */
+/* 120 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14321,8 +14690,8 @@ exports.ChatService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(78);
-const chat_gateway_1 = __webpack_require__(113);
+const notifications_service_1 = __webpack_require__(82);
+const chat_gateway_1 = __webpack_require__(117);
 let ChatService = class ChatService {
     constructor(prisma, notificationsService, chatGateway) {
         this.prisma = prisma;
@@ -14455,7 +14824,7 @@ exports.ChatService = ChatService = __decorate([
 
 
 /***/ }),
-/* 117 */
+/* 121 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14507,7 +14876,7 @@ __decorate([
 
 
 /***/ }),
-/* 118 */
+/* 122 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14549,7 +14918,7 @@ __decorate([
 
 
 /***/ }),
-/* 119 */
+/* 123 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14581,7 +14950,7 @@ __decorate([
 
 
 /***/ }),
-/* 120 */
+/* 124 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14655,7 +15024,7 @@ __decorate([
 
 
 /***/ }),
-/* 121 */
+/* 125 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14701,7 +15070,7 @@ __decorate([
 
 
 /***/ }),
-/* 122 */
+/* 126 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14789,7 +15158,7 @@ __decorate([
 
 
 /***/ }),
-/* 123 */
+/* 127 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14811,8 +15180,8 @@ exports.PublicPartiesController = void 0;
 const common_1 = __webpack_require__(2);
 const swagger_1 = __webpack_require__(5);
 const throttler_1 = __webpack_require__(9);
-const parties_service_1 = __webpack_require__(112);
-const lookup_buyer_statement_dto_1 = __webpack_require__(124);
+const parties_service_1 = __webpack_require__(116);
+const lookup_buyer_statement_dto_1 = __webpack_require__(128);
 let PublicPartiesController = class PublicPartiesController {
     constructor(partiesService) {
         this.partiesService = partiesService;
@@ -14855,7 +15224,7 @@ exports.PublicPartiesController = PublicPartiesController = __decorate([
 
 
 /***/ }),
-/* 124 */
+/* 128 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14898,7 +15267,7 @@ __decorate([
 
 
 /***/ }),
-/* 125 */
+/* 129 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14912,10 +15281,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatModule = void 0;
 const common_1 = __webpack_require__(2);
 const auth_module_1 = __webpack_require__(17);
-const notifications_module_1 = __webpack_require__(76);
-const chat_controller_1 = __webpack_require__(126);
-const chat_service_1 = __webpack_require__(116);
-const chat_gateway_1 = __webpack_require__(113);
+const notifications_module_1 = __webpack_require__(80);
+const chat_controller_1 = __webpack_require__(130);
+const chat_service_1 = __webpack_require__(120);
+const chat_gateway_1 = __webpack_require__(117);
 let ChatModule = class ChatModule {
 };
 exports.ChatModule = ChatModule;
@@ -14930,7 +15299,7 @@ exports.ChatModule = ChatModule = __decorate([
 
 
 /***/ }),
-/* 126 */
+/* 130 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14951,12 +15320,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const chat_service_1 = __webpack_require__(116);
-const send_message_dto_1 = __webpack_require__(127);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const chat_service_1 = __webpack_require__(120);
+const send_message_dto_1 = __webpack_require__(131);
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
@@ -15036,7 +15405,7 @@ exports.ChatController = ChatController = __decorate([
 
 
 /***/ }),
-/* 127 */
+/* 131 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15067,7 +15436,7 @@ __decorate([
 
 
 /***/ }),
-/* 128 */
+/* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15088,13 +15457,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpensesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const expenses_service_1 = __webpack_require__(129);
-const create_expense_dto_1 = __webpack_require__(130);
-const update_expense_dto_1 = __webpack_require__(131);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const expenses_service_1 = __webpack_require__(133);
+const create_expense_dto_1 = __webpack_require__(134);
+const update_expense_dto_1 = __webpack_require__(135);
 let ExpensesController = class ExpensesController {
     constructor(expensesService) {
         this.expensesService = expensesService;
@@ -15229,7 +15598,7 @@ exports.ExpensesController = ExpensesController = __decorate([
 
 
 /***/ }),
-/* 129 */
+/* 133 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15248,11 +15617,11 @@ exports.ExpensesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const farms_service_1 = __webpack_require__(63);
-const plots_service_1 = __webpack_require__(70);
-const crops_service_1 = __webpack_require__(96);
-const parties_service_1 = __webpack_require__(112);
-const effective_farmer_util_1 = __webpack_require__(64);
+const farms_service_1 = __webpack_require__(67);
+const plots_service_1 = __webpack_require__(74);
+const crops_service_1 = __webpack_require__(100);
+const parties_service_1 = __webpack_require__(116);
+const effective_farmer_util_1 = __webpack_require__(68);
 let ExpensesService = class ExpensesService {
     constructor(prisma, farmsService, plotsService, cropsService, partiesService) {
         this.prisma = prisma;
@@ -15495,7 +15864,7 @@ exports.ExpensesService = ExpensesService = __decorate([
 
 
 /***/ }),
-/* 130 */
+/* 134 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15587,21 +15956,21 @@ __decorate([
 
 
 /***/ }),
-/* 131 */
+/* 135 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateExpenseDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_expense_dto_1 = __webpack_require__(130);
+const mapped_types_1 = __webpack_require__(71);
+const create_expense_dto_1 = __webpack_require__(134);
 class UpdateExpenseDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_expense_dto_1.CreateExpenseDto, ['farmId'])) {
 }
 exports.UpdateExpenseDto = UpdateExpenseDto;
 
 
 /***/ }),
-/* 132 */
+/* 136 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15614,8 +15983,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UploadsModule = void 0;
 const common_1 = __webpack_require__(2);
-const uploads_controller_1 = __webpack_require__(133);
-const uploads_service_1 = __webpack_require__(136);
+const uploads_controller_1 = __webpack_require__(137);
+const uploads_service_1 = __webpack_require__(140);
 let UploadsModule = class UploadsModule {
 };
 exports.UploadsModule = UploadsModule;
@@ -15628,7 +15997,7 @@ exports.UploadsModule = UploadsModule = __decorate([
 
 
 /***/ }),
-/* 133 */
+/* 137 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15650,14 +16019,26 @@ exports.UploadsController = void 0;
 const crypto_1 = __webpack_require__(23);
 const path_1 = __webpack_require__(1);
 const common_1 = __webpack_require__(2);
-const platform_express_1 = __webpack_require__(134);
-const multer_1 = __webpack_require__(135);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const uploads_service_1 = __webpack_require__(136);
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/octet-stream'];
+const platform_express_1 = __webpack_require__(138);
+const multer_1 = __webpack_require__(139);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const uploads_service_1 = __webpack_require__(140);
+const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'image/svg+xml',
+    'image/x-png',
+    'application/octet-stream',
+];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg'];
 let UploadsController = class UploadsController {
     constructor(uploadsService) {
         this.uploadsService = uploadsService;
@@ -15685,6 +16066,10 @@ __decorate([
                         ext = '.webp';
                     else if (file.mimetype === 'image/heic')
                         ext = '.heic';
+                    else if (file.mimetype === 'image/x-icon' || file.mimetype === 'image/vnd.microsoft.icon')
+                        ext = '.ico';
+                    else if (file.mimetype === 'image/svg+xml')
+                        ext = '.svg';
                     else
                         ext = '.jpg';
                 }
@@ -15694,7 +16079,7 @@ __decorate([
         limits: { fileSize: MAX_FILE_SIZE_BYTES },
         fileFilter: (_req, file, callback) => {
             if (!ALLOWED_MIME_TYPES.includes(file.mimetype) && !file.mimetype?.startsWith('image/')) {
-                callback(new common_1.BadRequestException('Only image files (JPEG, PNG, WEBP, HEIC) are allowed.'), false);
+                callback(new common_1.BadRequestException('Only image files (JPEG, PNG, WEBP, ICO, SVG, HEIC) are allowed.'), false);
                 return;
             }
             callback(null, true);
@@ -15714,19 +16099,19 @@ exports.UploadsController = UploadsController = __decorate([
 
 
 /***/ }),
-/* 134 */
+/* 138 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 135 */
+/* 139 */
 /***/ ((module) => {
 
 module.exports = require("multer");
 
 /***/ }),
-/* 136 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15768,7 +16153,7 @@ exports.UploadsService = UploadsService = __decorate([
 
 
 /***/ }),
-/* 137 */
+/* 141 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15781,10 +16166,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SubscriptionsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const whatsapp_module_1 = __webpack_require__(49);
-const subscriptions_controller_1 = __webpack_require__(138);
-const subscriptions_service_1 = __webpack_require__(139);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const whatsapp_module_1 = __webpack_require__(53);
+const subscriptions_controller_1 = __webpack_require__(142);
+const subscriptions_service_1 = __webpack_require__(143);
 let SubscriptionsModule = class SubscriptionsModule {
 };
 exports.SubscriptionsModule = SubscriptionsModule;
@@ -15799,7 +16184,7 @@ exports.SubscriptionsModule = SubscriptionsModule = __decorate([
 
 
 /***/ }),
-/* 138 */
+/* 142 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15820,12 +16205,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SubscriptionsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const subscriptions_service_1 = __webpack_require__(139);
-const create_subscription_dto_1 = __webpack_require__(140);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const subscriptions_service_1 = __webpack_require__(143);
+const create_subscription_dto_1 = __webpack_require__(144);
 let SubscriptionsController = class SubscriptionsController {
     constructor(subscriptionsService) {
         this.subscriptionsService = subscriptionsService;
@@ -15908,7 +16293,7 @@ exports.SubscriptionsController = SubscriptionsController = __decorate([
 
 
 /***/ }),
-/* 139 */
+/* 143 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15927,7 +16312,7 @@ exports.SubscriptionsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
+const advisor_assignment_service_1 = __webpack_require__(84);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 const DAY_MS = 24 * 60 * 60 * 1000;
 let SubscriptionsService = class SubscriptionsService {
@@ -16075,7 +16460,7 @@ exports.SubscriptionsService = SubscriptionsService = __decorate([
 
 
 /***/ }),
-/* 140 */
+/* 144 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16101,7 +16486,7 @@ __decorate([
 
 
 /***/ }),
-/* 141 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16114,12 +16499,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropActivitySchedulesModule = void 0;
 const common_1 = __webpack_require__(2);
-const crops_module_1 = __webpack_require__(73);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const notifications_module_1 = __webpack_require__(76);
-const chat_module_1 = __webpack_require__(125);
-const crop_activity_schedules_controller_1 = __webpack_require__(142);
-const crop_activity_schedules_service_1 = __webpack_require__(143);
+const crops_module_1 = __webpack_require__(77);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const notifications_module_1 = __webpack_require__(80);
+const chat_module_1 = __webpack_require__(129);
+const crop_activity_schedules_controller_1 = __webpack_require__(146);
+const crop_activity_schedules_service_1 = __webpack_require__(147);
 let CropActivitySchedulesModule = class CropActivitySchedulesModule {
 };
 exports.CropActivitySchedulesModule = CropActivitySchedulesModule;
@@ -16134,7 +16519,7 @@ exports.CropActivitySchedulesModule = CropActivitySchedulesModule = __decorate([
 
 
 /***/ }),
-/* 142 */
+/* 146 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16155,15 +16540,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropActivitySchedulesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const crop_activity_schedules_service_1 = __webpack_require__(143);
-const create_activity_schedule_dto_1 = __webpack_require__(144);
-const update_activity_schedule_dto_1 = __webpack_require__(145);
-const bulk_create_activity_schedule_dto_1 = __webpack_require__(146);
-const complete_activity_dto_1 = __webpack_require__(148);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const crop_activity_schedules_service_1 = __webpack_require__(147);
+const create_activity_schedule_dto_1 = __webpack_require__(148);
+const update_activity_schedule_dto_1 = __webpack_require__(149);
+const bulk_create_activity_schedule_dto_1 = __webpack_require__(150);
+const complete_activity_dto_1 = __webpack_require__(152);
 let CropActivitySchedulesController = class CropActivitySchedulesController {
     constructor(cropActivitySchedulesService) {
         this.cropActivitySchedulesService = cropActivitySchedulesService;
@@ -16308,7 +16693,7 @@ exports.CropActivitySchedulesController = CropActivitySchedulesController = __de
 
 
 /***/ }),
-/* 143 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16327,11 +16712,11 @@ exports.CropActivitySchedulesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const crops_service_1 = __webpack_require__(96);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const notifications_service_1 = __webpack_require__(78);
-const chat_service_1 = __webpack_require__(116);
-const chat_gateway_1 = __webpack_require__(113);
+const crops_service_1 = __webpack_require__(100);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const notifications_service_1 = __webpack_require__(82);
+const chat_service_1 = __webpack_require__(120);
+const chat_gateway_1 = __webpack_require__(117);
 let CropActivitySchedulesService = class CropActivitySchedulesService {
     constructor(prisma, cropsService, advisorAssignmentService, notificationsService, chatService, chatGateway) {
         this.prisma = prisma;
@@ -16547,7 +16932,7 @@ exports.CropActivitySchedulesService = CropActivitySchedulesService = __decorate
 
 
 /***/ }),
-/* 144 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16598,21 +16983,21 @@ __decorate([
 
 
 /***/ }),
-/* 145 */
+/* 149 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateActivityScheduleDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_activity_schedule_dto_1 = __webpack_require__(144);
+const mapped_types_1 = __webpack_require__(71);
+const create_activity_schedule_dto_1 = __webpack_require__(148);
 class UpdateActivityScheduleDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_activity_schedule_dto_1.CreateActivityScheduleDto, ['cropCycleId'])) {
 }
 exports.UpdateActivityScheduleDto = UpdateActivityScheduleDto;
 
 
 /***/ }),
-/* 146 */
+/* 150 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16628,7 +17013,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BulkCreateActivityScheduleDto = void 0;
-const class_transformer_1 = __webpack_require__(147);
+const class_transformer_1 = __webpack_require__(151);
 const client_1 = __webpack_require__(13);
 const class_validator_1 = __webpack_require__(38);
 class ActivityScheduleItemDto {
@@ -16673,13 +17058,13 @@ __decorate([
 
 
 /***/ }),
-/* 147 */
+/* 151 */
 /***/ ((module) => {
 
 module.exports = require("class-transformer");
 
 /***/ }),
-/* 148 */
+/* 152 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16706,7 +17091,7 @@ __decorate([
 
 
 /***/ }),
-/* 149 */
+/* 153 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16719,10 +17104,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayScheduleModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const notifications_module_1 = __webpack_require__(76);
-const spray_schedules_controller_1 = __webpack_require__(150);
-const spray_schedules_service_1 = __webpack_require__(151);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const notifications_module_1 = __webpack_require__(80);
+const spray_schedules_controller_1 = __webpack_require__(154);
+const spray_schedules_service_1 = __webpack_require__(155);
 let SprayScheduleModule = class SprayScheduleModule {
 };
 exports.SprayScheduleModule = SprayScheduleModule;
@@ -16737,7 +17122,7 @@ exports.SprayScheduleModule = SprayScheduleModule = __decorate([
 
 
 /***/ }),
-/* 150 */
+/* 154 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16758,13 +17143,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayScheduleController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const spray_schedules_service_1 = __webpack_require__(151);
-const create_spray_schedule_dto_1 = __webpack_require__(152);
-const update_spray_schedule_dto_1 = __webpack_require__(153);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const spray_schedules_service_1 = __webpack_require__(155);
+const create_spray_schedule_dto_1 = __webpack_require__(156);
+const update_spray_schedule_dto_1 = __webpack_require__(157);
 let SprayScheduleController = class SprayScheduleController {
     constructor(sprayScheduleService) {
         this.sprayScheduleService = sprayScheduleService;
@@ -16838,7 +17223,7 @@ exports.SprayScheduleController = SprayScheduleController = __decorate([
 
 
 /***/ }),
-/* 151 */
+/* 155 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16857,8 +17242,8 @@ exports.SprayScheduleService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const notifications_service_1 = __webpack_require__(78);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const notifications_service_1 = __webpack_require__(82);
 let SprayScheduleService = class SprayScheduleService {
     constructor(prisma, advisorAssignmentService, notificationsService) {
         this.prisma = prisma;
@@ -16955,7 +17340,7 @@ exports.SprayScheduleService = SprayScheduleService = __decorate([
 
 
 /***/ }),
-/* 152 */
+/* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17017,7 +17402,7 @@ __decorate([
 
 
 /***/ }),
-/* 153 */
+/* 157 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17033,10 +17418,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateSprayScheduleDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
+const mapped_types_1 = __webpack_require__(71);
 const class_validator_1 = __webpack_require__(38);
 const client_1 = __webpack_require__(13);
-const create_spray_schedule_dto_1 = __webpack_require__(152);
+const create_spray_schedule_dto_1 = __webpack_require__(156);
 class UpdateSprayScheduleDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_spray_schedule_dto_1.CreateSprayScheduleDto, ['cropCycleId'])) {
 }
 exports.UpdateSprayScheduleDto = UpdateSprayScheduleDto;
@@ -17048,7 +17433,7 @@ __decorate([
 
 
 /***/ }),
-/* 154 */
+/* 158 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17061,8 +17446,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayItemTemplatesModule = void 0;
 const common_1 = __webpack_require__(2);
-const spray_item_templates_controller_1 = __webpack_require__(155);
-const spray_item_templates_service_1 = __webpack_require__(156);
+const spray_item_templates_controller_1 = __webpack_require__(159);
+const spray_item_templates_service_1 = __webpack_require__(160);
 let SprayItemTemplatesModule = class SprayItemTemplatesModule {
 };
 exports.SprayItemTemplatesModule = SprayItemTemplatesModule;
@@ -17075,7 +17460,7 @@ exports.SprayItemTemplatesModule = SprayItemTemplatesModule = __decorate([
 
 
 /***/ }),
-/* 155 */
+/* 159 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17096,13 +17481,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayItemTemplatesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const spray_item_templates_service_1 = __webpack_require__(156);
-const create_spray_item_template_dto_1 = __webpack_require__(157);
-const update_spray_item_template_dto_1 = __webpack_require__(158);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const spray_item_templates_service_1 = __webpack_require__(160);
+const create_spray_item_template_dto_1 = __webpack_require__(161);
+const update_spray_item_template_dto_1 = __webpack_require__(162);
 let SprayItemTemplatesController = class SprayItemTemplatesController {
     constructor(service) {
         this.service = service;
@@ -17186,7 +17571,7 @@ exports.SprayItemTemplatesController = SprayItemTemplatesController = __decorate
 
 
 /***/ }),
-/* 156 */
+/* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17260,7 +17645,7 @@ exports.SprayItemTemplatesService = SprayItemTemplatesService = __decorate([
 
 
 /***/ }),
-/* 157 */
+/* 161 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17309,21 +17694,21 @@ __decorate([
 
 
 /***/ }),
-/* 158 */
+/* 162 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateSprayItemTemplateDto = void 0;
-const mapped_types_1 = __webpack_require__(67);
-const create_spray_item_template_dto_1 = __webpack_require__(157);
+const mapped_types_1 = __webpack_require__(71);
+const create_spray_item_template_dto_1 = __webpack_require__(161);
 class UpdateSprayItemTemplateDto extends (0, mapped_types_1.PartialType)(create_spray_item_template_dto_1.CreateSprayItemTemplateDto) {
 }
 exports.UpdateSprayItemTemplateDto = UpdateSprayItemTemplateDto;
 
 
 /***/ }),
-/* 159 */
+/* 163 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17336,12 +17721,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropProblemsModule = void 0;
 const common_1 = __webpack_require__(2);
-const crops_module_1 = __webpack_require__(73);
-const notifications_module_1 = __webpack_require__(76);
-const spray_schedules_module_1 = __webpack_require__(149);
-const chat_module_1 = __webpack_require__(125);
-const crop_problems_controller_1 = __webpack_require__(160);
-const crop_problems_service_1 = __webpack_require__(161);
+const crops_module_1 = __webpack_require__(77);
+const notifications_module_1 = __webpack_require__(80);
+const spray_schedules_module_1 = __webpack_require__(153);
+const chat_module_1 = __webpack_require__(129);
+const crop_problems_controller_1 = __webpack_require__(164);
+const crop_problems_service_1 = __webpack_require__(165);
 let CropProblemsModule = class CropProblemsModule {
 };
 exports.CropProblemsModule = CropProblemsModule;
@@ -17356,7 +17741,7 @@ exports.CropProblemsModule = CropProblemsModule = __decorate([
 
 
 /***/ }),
-/* 160 */
+/* 164 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17377,14 +17762,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropProblemsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const crop_problems_service_1 = __webpack_require__(161);
-const create_crop_problem_dto_1 = __webpack_require__(162);
-const respond_crop_problem_dto_1 = __webpack_require__(163);
-const update_crop_problem_status_dto_1 = __webpack_require__(164);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const crop_problems_service_1 = __webpack_require__(165);
+const create_crop_problem_dto_1 = __webpack_require__(166);
+const respond_crop_problem_dto_1 = __webpack_require__(167);
+const update_crop_problem_status_dto_1 = __webpack_require__(168);
 let CropProblemsController = class CropProblemsController {
     constructor(cropProblemsService) {
         this.cropProblemsService = cropProblemsService;
@@ -17496,7 +17881,7 @@ exports.CropProblemsController = CropProblemsController = __decorate([
 
 
 /***/ }),
-/* 161 */
+/* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17515,10 +17900,10 @@ exports.CropProblemsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const crops_service_1 = __webpack_require__(96);
-const notifications_service_1 = __webpack_require__(78);
-const chat_service_1 = __webpack_require__(116);
-const chat_gateway_1 = __webpack_require__(113);
+const crops_service_1 = __webpack_require__(100);
+const notifications_service_1 = __webpack_require__(82);
+const chat_service_1 = __webpack_require__(120);
+const chat_gateway_1 = __webpack_require__(117);
 const DETAIL_INCLUDE = {
     photos: true,
     reportedBy: { select: { id: true, name: true, mobile: true, sprayTankSizeL: true } },
@@ -17749,7 +18134,7 @@ exports.CropProblemsService = CropProblemsService = __decorate([
 
 
 /***/ }),
-/* 162 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17799,7 +18184,7 @@ __decorate([
 
 
 /***/ }),
-/* 163 */
+/* 167 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17843,7 +18228,7 @@ __decorate([
 
 
 /***/ }),
-/* 164 */
+/* 168 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17871,7 +18256,7 @@ __decorate([
 
 
 /***/ }),
-/* 165 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17884,11 +18269,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(56);
-const whatsapp_module_1 = __webpack_require__(49);
-const notifications_module_1 = __webpack_require__(76);
-const users_controller_1 = __webpack_require__(166);
-const users_service_1 = __webpack_require__(167);
+const wallet_module_1 = __webpack_require__(60);
+const whatsapp_module_1 = __webpack_require__(53);
+const notifications_module_1 = __webpack_require__(80);
+const users_controller_1 = __webpack_require__(170);
+const users_service_1 = __webpack_require__(171);
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -17902,7 +18287,7 @@ exports.UsersModule = UsersModule = __decorate([
 
 
 /***/ }),
-/* 166 */
+/* 170 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17923,31 +18308,31 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const operator_permission_guard_1 = __webpack_require__(58);
-const roles_decorator_1 = __webpack_require__(54);
-const operator_permission_decorator_1 = __webpack_require__(59);
-const current_user_decorator_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(167);
-const create_advisor_dto_1 = __webpack_require__(170);
-const create_assistant_doctor_dto_1 = __webpack_require__(171);
-const create_staff_dto_1 = __webpack_require__(172);
-const list_users_query_dto_1 = __webpack_require__(173);
-const update_role_dto_1 = __webpack_require__(174);
-const update_active_roles_dto_1 = __webpack_require__(175);
-const update_farmer_profile_dto_1 = __webpack_require__(176);
-const update_advisor_profile_dto_1 = __webpack_require__(177);
-const update_partner_profile_dto_1 = __webpack_require__(178);
-const update_my_address_dto_1 = __webpack_require__(179);
-const update_operator_permissions_dto_1 = __webpack_require__(180);
-const create_supervisor_dto_1 = __webpack_require__(181);
-const appoint_supervisor_request_dto_1 = __webpack_require__(182);
-const update_supervisor_permissions_dto_1 = __webpack_require__(183);
-const update_admin_staff_permissions_dto_1 = __webpack_require__(184);
-const set_referrer_dto_1 = __webpack_require__(185);
-const admin_update_user_dto_1 = __webpack_require__(186);
-const reset_user_password_dto_1 = __webpack_require__(187);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const operator_permission_guard_1 = __webpack_require__(62);
+const roles_decorator_1 = __webpack_require__(58);
+const operator_permission_decorator_1 = __webpack_require__(63);
+const current_user_decorator_1 = __webpack_require__(50);
+const users_service_1 = __webpack_require__(171);
+const create_advisor_dto_1 = __webpack_require__(174);
+const create_assistant_doctor_dto_1 = __webpack_require__(175);
+const create_staff_dto_1 = __webpack_require__(176);
+const list_users_query_dto_1 = __webpack_require__(177);
+const update_role_dto_1 = __webpack_require__(178);
+const update_active_roles_dto_1 = __webpack_require__(179);
+const update_farmer_profile_dto_1 = __webpack_require__(180);
+const update_advisor_profile_dto_1 = __webpack_require__(181);
+const update_partner_profile_dto_1 = __webpack_require__(182);
+const update_my_address_dto_1 = __webpack_require__(183);
+const update_operator_permissions_dto_1 = __webpack_require__(184);
+const create_supervisor_dto_1 = __webpack_require__(185);
+const appoint_supervisor_request_dto_1 = __webpack_require__(186);
+const update_supervisor_permissions_dto_1 = __webpack_require__(187);
+const update_admin_staff_permissions_dto_1 = __webpack_require__(188);
+const set_referrer_dto_1 = __webpack_require__(189);
+const admin_update_user_dto_1 = __webpack_require__(190);
+const reset_user_password_dto_1 = __webpack_require__(191);
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -18561,7 +18946,7 @@ exports.UsersController = UsersController = __decorate([
 
 
 /***/ }),
-/* 167 */
+/* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18616,15 +19001,15 @@ const client_1 = __webpack_require__(13);
 const argon2 = __importStar(__webpack_require__(14));
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(33);
-const notifications_service_1 = __webpack_require__(78);
+const notifications_service_1 = __webpack_require__(82);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 const king_id_util_1 = __webpack_require__(22);
 const invite_coupon_util_1 = __webpack_require__(24);
 const common_2 = __webpack_require__(2);
 const auth_1 = __webpack_require__(27);
-const partner_coupon_util_1 = __webpack_require__(168);
+const partner_coupon_util_1 = __webpack_require__(172);
 const referral_coupon_util_1 = __webpack_require__(25);
-const partner_profile_util_1 = __webpack_require__(169);
+const partner_profile_util_1 = __webpack_require__(173);
 const SAFE_USER_SELECT = {
     id: true,
     kingId: true,
@@ -20290,7 +20675,7 @@ exports.UsersService = UsersService = __decorate([
 
 
 /***/ }),
-/* 168 */
+/* 172 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -20344,7 +20729,7 @@ async function provisionPartnerReferralCoupon(prisma, businessPartnerId, created
 
 
 /***/ }),
-/* 169 */
+/* 173 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -20377,7 +20762,7 @@ function getAdvisorPayoutProfileStatus(user) {
 
 
 /***/ }),
-/* 170 */
+/* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20440,7 +20825,7 @@ __decorate([
 
 
 /***/ }),
-/* 171 */
+/* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20504,7 +20889,7 @@ __decorate([
 
 
 /***/ }),
-/* 172 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20561,7 +20946,7 @@ __decorate([
 
 
 /***/ }),
-/* 173 */
+/* 177 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20577,7 +20962,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ListUsersQueryDto = void 0;
-const class_transformer_1 = __webpack_require__(147);
+const class_transformer_1 = __webpack_require__(151);
 const class_validator_1 = __webpack_require__(38);
 const client_1 = __webpack_require__(13);
 class ListUsersQueryDto {
@@ -20615,7 +21000,7 @@ __decorate([
 
 
 /***/ }),
-/* 174 */
+/* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20643,7 +21028,7 @@ __decorate([
 
 
 /***/ }),
-/* 175 */
+/* 179 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20672,7 +21057,7 @@ __decorate([
 
 
 /***/ }),
-/* 176 */
+/* 180 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20777,7 +21162,7 @@ __decorate([
 
 
 /***/ }),
-/* 177 */
+/* 181 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20903,7 +21288,7 @@ __decorate([
 
 
 /***/ }),
-/* 178 */
+/* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20961,7 +21346,7 @@ __decorate([
 
 
 /***/ }),
-/* 179 */
+/* 183 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21103,7 +21488,7 @@ __decorate([
 
 
 /***/ }),
-/* 180 */
+/* 184 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21131,7 +21516,7 @@ __decorate([
 
 
 /***/ }),
-/* 181 */
+/* 185 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21180,7 +21565,7 @@ __decorate([
 
 
 /***/ }),
-/* 182 */
+/* 186 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21230,7 +21615,7 @@ __decorate([
 
 
 /***/ }),
-/* 183 */
+/* 187 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21258,7 +21643,7 @@ __decorate([
 
 
 /***/ }),
-/* 184 */
+/* 188 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21286,7 +21671,7 @@ __decorate([
 
 
 /***/ }),
-/* 185 */
+/* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21313,7 +21698,7 @@ __decorate([
 
 
 /***/ }),
-/* 186 */
+/* 190 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21514,7 +21899,7 @@ __decorate([
 
 
 /***/ }),
-/* 187 */
+/* 191 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21542,7 +21927,7 @@ __decorate([
 
 
 /***/ }),
-/* 188 */
+/* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21555,9 +21940,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WeatherModule = void 0;
 const common_1 = __webpack_require__(2);
-const weather_controller_1 = __webpack_require__(189);
-const weather_service_1 = __webpack_require__(190);
-const advisor_assignment_module_1 = __webpack_require__(75);
+const weather_controller_1 = __webpack_require__(193);
+const weather_service_1 = __webpack_require__(194);
+const advisor_assignment_module_1 = __webpack_require__(79);
 let WeatherModule = class WeatherModule {
 };
 exports.WeatherModule = WeatherModule;
@@ -21571,7 +21956,7 @@ exports.WeatherModule = WeatherModule = __decorate([
 
 
 /***/ }),
-/* 189 */
+/* 193 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21592,11 +21977,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WeatherController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const weather_service_1 = __webpack_require__(190);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const weather_service_1 = __webpack_require__(194);
 let WeatherController = class WeatherController {
     constructor(weatherService) {
         this.weatherService = weatherService;
@@ -21634,7 +22019,7 @@ exports.WeatherController = WeatherController = __decorate([
 
 
 /***/ }),
-/* 190 */
+/* 194 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21653,7 +22038,7 @@ exports.WeatherService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
+const advisor_assignment_service_1 = __webpack_require__(84);
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
 function conditionFromWeatherCode(code) {
@@ -21908,7 +22293,7 @@ exports.WeatherService = WeatherService = __decorate([
 
 
 /***/ }),
-/* 191 */
+/* 195 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21921,9 +22306,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponsModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(56);
-const coupons_controller_1 = __webpack_require__(192);
-const coupons_service_1 = __webpack_require__(193);
+const wallet_module_1 = __webpack_require__(60);
+const coupons_controller_1 = __webpack_require__(196);
+const coupons_service_1 = __webpack_require__(197);
 let CouponsModule = class CouponsModule {
 };
 exports.CouponsModule = CouponsModule;
@@ -21938,7 +22323,7 @@ exports.CouponsModule = CouponsModule = __decorate([
 
 
 /***/ }),
-/* 192 */
+/* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21959,17 +22344,17 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const operator_permission_guard_1 = __webpack_require__(58);
-const roles_decorator_1 = __webpack_require__(54);
-const operator_permission_decorator_1 = __webpack_require__(59);
-const current_user_decorator_1 = __webpack_require__(46);
-const coupons_service_1 = __webpack_require__(193);
-const create_coupon_dto_1 = __webpack_require__(194);
-const update_coupon_dto_1 = __webpack_require__(195);
-const redeem_coupon_dto_1 = __webpack_require__(196);
-const issue_partner_coupon_dto_1 = __webpack_require__(197);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const operator_permission_guard_1 = __webpack_require__(62);
+const roles_decorator_1 = __webpack_require__(58);
+const operator_permission_decorator_1 = __webpack_require__(63);
+const current_user_decorator_1 = __webpack_require__(50);
+const coupons_service_1 = __webpack_require__(197);
+const create_coupon_dto_1 = __webpack_require__(198);
+const update_coupon_dto_1 = __webpack_require__(199);
+const redeem_coupon_dto_1 = __webpack_require__(200);
+const issue_partner_coupon_dto_1 = __webpack_require__(201);
 let CouponsController = class CouponsController {
     constructor(couponsService) {
         this.couponsService = couponsService;
@@ -22095,7 +22480,7 @@ exports.CouponsController = CouponsController = __decorate([
 
 
 /***/ }),
-/* 193 */
+/* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22116,7 +22501,7 @@ const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(33);
-const partner_coupon_util_1 = __webpack_require__(168);
+const partner_coupon_util_1 = __webpack_require__(172);
 const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCouponCode() {
     const bytes = (0, crypto_1.randomBytes)(5);
@@ -22327,7 +22712,7 @@ exports.CouponsService = CouponsService = __decorate([
 
 
 /***/ }),
-/* 194 */
+/* 198 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22411,7 +22796,7 @@ __decorate([
 
 
 /***/ }),
-/* 195 */
+/* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22479,7 +22864,7 @@ __decorate([
 
 
 /***/ }),
-/* 196 */
+/* 200 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22506,7 +22891,7 @@ __decorate([
 
 
 /***/ }),
-/* 197 */
+/* 201 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22533,7 +22918,7 @@ __decorate([
 
 
 /***/ }),
-/* 198 */
+/* 202 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22546,10 +22931,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WithdrawalsModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(56);
-const app_settings_module_1 = __webpack_require__(51);
-const withdrawals_controller_1 = __webpack_require__(199);
-const withdrawals_service_1 = __webpack_require__(200);
+const wallet_module_1 = __webpack_require__(60);
+const app_settings_module_1 = __webpack_require__(55);
+const withdrawals_controller_1 = __webpack_require__(203);
+const withdrawals_service_1 = __webpack_require__(204);
 let WithdrawalsModule = class WithdrawalsModule {
 };
 exports.WithdrawalsModule = WithdrawalsModule;
@@ -22563,7 +22948,7 @@ exports.WithdrawalsModule = WithdrawalsModule = __decorate([
 
 
 /***/ }),
-/* 199 */
+/* 203 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22584,13 +22969,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WithdrawalsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const withdrawals_service_1 = __webpack_require__(200);
-const create_withdrawal_dto_1 = __webpack_require__(201);
-const approve_withdrawal_dto_1 = __webpack_require__(202);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const withdrawals_service_1 = __webpack_require__(204);
+const create_withdrawal_dto_1 = __webpack_require__(205);
+const approve_withdrawal_dto_1 = __webpack_require__(206);
 let WithdrawalsController = class WithdrawalsController {
     constructor(withdrawalsService) {
         this.withdrawalsService = withdrawalsService;
@@ -22664,7 +23049,7 @@ exports.WithdrawalsController = WithdrawalsController = __decorate([
 
 
 /***/ }),
-/* 200 */
+/* 204 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22685,7 +23070,7 @@ const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(33);
 const app_settings_service_1 = __webpack_require__(30);
-const partner_profile_util_1 = __webpack_require__(169);
+const partner_profile_util_1 = __webpack_require__(173);
 let WithdrawalsService = class WithdrawalsService {
     constructor(prisma, walletService, appSettingsService) {
         this.prisma = prisma;
@@ -22888,7 +23273,7 @@ exports.WithdrawalsService = WithdrawalsService = __decorate([
 
 
 /***/ }),
-/* 201 */
+/* 205 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22915,7 +23300,7 @@ __decorate([
 
 
 /***/ }),
-/* 202 */
+/* 206 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22948,7 +23333,7 @@ __decorate([
 
 
 /***/ }),
-/* 203 */
+/* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22961,10 +23346,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanRenewalModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const app_settings_module_1 = __webpack_require__(51);
-const plan_renewal_controller_1 = __webpack_require__(204);
-const plan_renewal_service_1 = __webpack_require__(205);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const app_settings_module_1 = __webpack_require__(55);
+const plan_renewal_controller_1 = __webpack_require__(208);
+const plan_renewal_service_1 = __webpack_require__(209);
 let PlanRenewalModule = class PlanRenewalModule {
 };
 exports.PlanRenewalModule = PlanRenewalModule;
@@ -22979,7 +23364,7 @@ exports.PlanRenewalModule = PlanRenewalModule = __decorate([
 
 
 /***/ }),
-/* 204 */
+/* 208 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23000,14 +23385,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanRenewalController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const plan_renewal_service_1 = __webpack_require__(205);
-const create_plan_renewal_coupon_dto_1 = __webpack_require__(207);
-const redeem_plan_renewal_coupon_dto_1 = __webpack_require__(208);
-const grant_plan_days_dto_1 = __webpack_require__(209);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const plan_renewal_service_1 = __webpack_require__(209);
+const create_plan_renewal_coupon_dto_1 = __webpack_require__(211);
+const redeem_plan_renewal_coupon_dto_1 = __webpack_require__(212);
+const grant_plan_days_dto_1 = __webpack_require__(213);
 let PlanRenewalController = class PlanRenewalController {
     constructor(planRenewalService) {
         this.planRenewalService = planRenewalService;
@@ -23104,7 +23489,7 @@ exports.PlanRenewalController = PlanRenewalController = __decorate([
 
 
 /***/ }),
-/* 205 */
+/* 209 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23124,9 +23509,9 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const auth_user_util_1 = __webpack_require__(81);
-const upi_util_1 = __webpack_require__(206);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const auth_user_util_1 = __webpack_require__(85);
+const upi_util_1 = __webpack_require__(210);
 const app_settings_service_1 = __webpack_require__(30);
 const DAY_MS = 24 * 60 * 60 * 1000;
 function generateCode() {
@@ -23336,7 +23721,7 @@ exports.PlanRenewalService = PlanRenewalService = __decorate([
 
 
 /***/ }),
-/* 206 */
+/* 210 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -23358,7 +23743,7 @@ function buildUpiPaymentLink(params) {
 
 
 /***/ }),
-/* 207 */
+/* 211 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23395,7 +23780,7 @@ __decorate([
 
 
 /***/ }),
-/* 208 */
+/* 212 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23422,7 +23807,7 @@ __decorate([
 
 
 /***/ }),
-/* 209 */
+/* 213 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23453,7 +23838,7 @@ __decorate([
 
 
 /***/ }),
-/* 210 */
+/* 214 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23466,8 +23851,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsModule = void 0;
 const common_1 = __webpack_require__(2);
-const products_controller_1 = __webpack_require__(211);
-const products_service_1 = __webpack_require__(212);
+const products_controller_1 = __webpack_require__(215);
+const products_service_1 = __webpack_require__(216);
 let ProductsModule = class ProductsModule {
 };
 exports.ProductsModule = ProductsModule;
@@ -23480,7 +23865,7 @@ exports.ProductsModule = ProductsModule = __decorate([
 
 
 /***/ }),
-/* 211 */
+/* 215 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23501,13 +23886,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const products_service_1 = __webpack_require__(212);
-const create_product_dto_1 = __webpack_require__(213);
-const update_product_dto_1 = __webpack_require__(214);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const products_service_1 = __webpack_require__(216);
+const create_product_dto_1 = __webpack_require__(217);
+const update_product_dto_1 = __webpack_require__(218);
 let ProductsController = class ProductsController {
     constructor(productsService) {
         this.productsService = productsService;
@@ -23636,7 +24021,7 @@ exports.ProductsController = ProductsController = __decorate([
 
 
 /***/ }),
-/* 212 */
+/* 216 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23907,7 +24292,7 @@ exports.ProductsService = ProductsService = __decorate([
 
 
 /***/ }),
-/* 213 */
+/* 217 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24123,7 +24508,7 @@ __decorate([
 
 
 /***/ }),
-/* 214 */
+/* 218 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24188,7 +24573,7 @@ __decorate([
 
 
 /***/ }),
-/* 215 */
+/* 219 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24201,16 +24586,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrdersModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(76);
-const coupons_module_1 = __webpack_require__(191);
-const wallet_module_1 = __webpack_require__(56);
-const app_settings_module_1 = __webpack_require__(51);
-const phonepe_module_1 = __webpack_require__(216);
-const shiprocket_module_1 = __webpack_require__(219);
-const cashfree_module_1 = __webpack_require__(223);
-const orders_controller_1 = __webpack_require__(227);
-const orders_service_1 = __webpack_require__(228);
-const billing_service_1 = __webpack_require__(229);
+const notifications_module_1 = __webpack_require__(80);
+const coupons_module_1 = __webpack_require__(195);
+const wallet_module_1 = __webpack_require__(60);
+const app_settings_module_1 = __webpack_require__(55);
+const phonepe_module_1 = __webpack_require__(220);
+const shiprocket_module_1 = __webpack_require__(223);
+const cashfree_module_1 = __webpack_require__(227);
+const orders_controller_1 = __webpack_require__(231);
+const orders_service_1 = __webpack_require__(232);
+const billing_service_1 = __webpack_require__(233);
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -24233,7 +24618,7 @@ exports.OrdersModule = OrdersModule = __decorate([
 
 
 /***/ }),
-/* 216 */
+/* 220 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24246,9 +24631,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PhonePeModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(76);
-const phonepe_service_1 = __webpack_require__(217);
-const phonepe_webhook_controller_1 = __webpack_require__(218);
+const notifications_module_1 = __webpack_require__(80);
+const phonepe_service_1 = __webpack_require__(221);
+const phonepe_webhook_controller_1 = __webpack_require__(222);
 let PhonePeModule = class PhonePeModule {
 };
 exports.PhonePeModule = PhonePeModule;
@@ -24263,7 +24648,7 @@ exports.PhonePeModule = PhonePeModule = __decorate([
 
 
 /***/ }),
-/* 217 */
+/* 221 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24392,7 +24777,7 @@ exports.PhonePeService = PhonePeService = PhonePeService_1 = __decorate([
 
 
 /***/ }),
-/* 218 */
+/* 222 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24415,8 +24800,8 @@ exports.PhonePeWebhookController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(78);
-const phonepe_service_1 = __webpack_require__(217);
+const notifications_service_1 = __webpack_require__(82);
+const phonepe_service_1 = __webpack_require__(221);
 let PhonePeWebhookController = PhonePeWebhookController_1 = class PhonePeWebhookController {
     constructor(prisma, phonePeService, notificationsService) {
         this.prisma = prisma;
@@ -24471,7 +24856,7 @@ exports.PhonePeWebhookController = PhonePeWebhookController = PhonePeWebhookCont
 
 
 /***/ }),
-/* 219 */
+/* 223 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24486,8 +24871,8 @@ exports.ShiprocketModule = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
-const shiprocket_service_1 = __webpack_require__(220);
-const shiprocket_controller_1 = __webpack_require__(221);
+const shiprocket_service_1 = __webpack_require__(224);
+const shiprocket_controller_1 = __webpack_require__(225);
 let ShiprocketModule = class ShiprocketModule {
 };
 exports.ShiprocketModule = ShiprocketModule;
@@ -24502,7 +24887,7 @@ exports.ShiprocketModule = ShiprocketModule = __decorate([
 
 
 /***/ }),
-/* 220 */
+/* 224 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24745,7 +25130,7 @@ exports.ShiprocketService = ShiprocketService = ShiprocketService_1 = __decorate
 
 
 /***/ }),
-/* 221 */
+/* 225 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24765,9 +25150,9 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiprocketController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const shiprocket_service_1 = __webpack_require__(220);
-const shiprocket_dto_1 = __webpack_require__(222);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const shiprocket_service_1 = __webpack_require__(224);
+const shiprocket_dto_1 = __webpack_require__(226);
 let ShiprocketController = class ShiprocketController {
     constructor(shiprocketService) {
         this.shiprocketService = shiprocketService;
@@ -24824,7 +25209,7 @@ exports.ShiprocketController = ShiprocketController = __decorate([
 
 
 /***/ }),
-/* 222 */
+/* 226 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24934,7 +25319,7 @@ __decorate([
 
 
 /***/ }),
-/* 223 */
+/* 227 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24949,8 +25334,8 @@ exports.CashfreeModule = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
-const cashfree_service_1 = __webpack_require__(224);
-const cashfree_controller_1 = __webpack_require__(225);
+const cashfree_service_1 = __webpack_require__(228);
+const cashfree_controller_1 = __webpack_require__(229);
 let CashfreeModule = class CashfreeModule {
 };
 exports.CashfreeModule = CashfreeModule;
@@ -24965,7 +25350,7 @@ exports.CashfreeModule = CashfreeModule = __decorate([
 
 
 /***/ }),
-/* 224 */
+/* 228 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25374,7 +25759,7 @@ exports.CashfreeService = CashfreeService = CashfreeService_1 = __decorate([
 
 
 /***/ }),
-/* 225 */
+/* 229 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25394,10 +25779,10 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CashfreeController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const cashfree_service_1 = __webpack_require__(224);
-const cashfree_dto_1 = __webpack_require__(226);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const cashfree_service_1 = __webpack_require__(228);
+const cashfree_dto_1 = __webpack_require__(230);
 let CashfreeController = class CashfreeController {
     constructor(cashfreeService) {
         this.cashfreeService = cashfreeService;
@@ -25471,7 +25856,7 @@ exports.CashfreeController = CashfreeController = __decorate([
 
 
 /***/ }),
-/* 226 */
+/* 230 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25569,7 +25954,7 @@ __decorate([
 
 
 /***/ }),
-/* 227 */
+/* 231 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25590,13 +25975,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrdersController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const orders_service_1 = __webpack_require__(228);
-const create_order_dto_1 = __webpack_require__(230);
-const dispatch_order_dto_1 = __webpack_require__(231);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const orders_service_1 = __webpack_require__(232);
+const create_order_dto_1 = __webpack_require__(234);
+const dispatch_order_dto_1 = __webpack_require__(235);
 const STAFF_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
 let OrdersController = class OrdersController {
     constructor(ordersService) {
@@ -25812,7 +26197,7 @@ exports.OrdersController = OrdersController = __decorate([
 
 
 /***/ }),
-/* 228 */
+/* 232 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25832,15 +26217,15 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(78);
-const coupons_service_1 = __webpack_require__(193);
+const notifications_service_1 = __webpack_require__(82);
+const coupons_service_1 = __webpack_require__(197);
 const wallet_service_1 = __webpack_require__(33);
 const app_settings_service_1 = __webpack_require__(30);
-const phonepe_service_1 = __webpack_require__(217);
-const shiprocket_service_1 = __webpack_require__(220);
-const cashfree_service_1 = __webpack_require__(224);
-const upi_util_1 = __webpack_require__(206);
-const billing_service_1 = __webpack_require__(229);
+const phonepe_service_1 = __webpack_require__(221);
+const shiprocket_service_1 = __webpack_require__(224);
+const cashfree_service_1 = __webpack_require__(228);
+const upi_util_1 = __webpack_require__(210);
+const billing_service_1 = __webpack_require__(233);
 const DETAIL_INCLUDE = {
     items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true, gstPercentage: true } }, sellerStore: true } },
     subOrders: { include: { sellerStore: { select: { id: true, storeName: true, slug: true, sellerType: true, rtoBearer: true, rtoSharedVendorRatio: true, gstin: true, commissionRate: true } } } },
@@ -26393,7 +26778,7 @@ exports.OrdersService = OrdersService = __decorate([
 
 
 /***/ }),
-/* 229 */
+/* 233 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26770,7 +27155,7 @@ exports.BillingService = BillingService = __decorate([
 
 
 /***/ }),
-/* 230 */
+/* 234 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26786,7 +27171,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateOrderDto = exports.OrderItemInputDto = void 0;
-const class_transformer_1 = __webpack_require__(147);
+const class_transformer_1 = __webpack_require__(151);
 const class_validator_1 = __webpack_require__(38);
 const client_1 = __webpack_require__(13);
 class OrderItemInputDto {
@@ -26838,7 +27223,7 @@ __decorate([
 
 
 /***/ }),
-/* 231 */
+/* 235 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26870,7 +27255,7 @@ __decorate([
 
 
 /***/ }),
-/* 232 */
+/* 236 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26883,12 +27268,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanPaymentsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const plan_renewal_module_1 = __webpack_require__(203);
-const notifications_module_1 = __webpack_require__(76);
-const app_settings_module_1 = __webpack_require__(51);
-const plan_payments_controller_1 = __webpack_require__(233);
-const plan_payments_service_1 = __webpack_require__(234);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const plan_renewal_module_1 = __webpack_require__(207);
+const notifications_module_1 = __webpack_require__(80);
+const app_settings_module_1 = __webpack_require__(55);
+const plan_payments_controller_1 = __webpack_require__(237);
+const plan_payments_service_1 = __webpack_require__(238);
 let PlanPaymentsModule = class PlanPaymentsModule {
 };
 exports.PlanPaymentsModule = PlanPaymentsModule;
@@ -26902,7 +27287,7 @@ exports.PlanPaymentsModule = PlanPaymentsModule = __decorate([
 
 
 /***/ }),
-/* 233 */
+/* 237 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26923,13 +27308,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanPaymentsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const plan_payments_service_1 = __webpack_require__(234);
-const submit_plan_payment_dto_1 = __webpack_require__(235);
-const reject_plan_payment_dto_1 = __webpack_require__(236);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const plan_payments_service_1 = __webpack_require__(238);
+const submit_plan_payment_dto_1 = __webpack_require__(239);
+const reject_plan_payment_dto_1 = __webpack_require__(240);
 let PlanPaymentsController = class PlanPaymentsController {
     constructor(planPaymentsService) {
         this.planPaymentsService = planPaymentsService;
@@ -27015,7 +27400,7 @@ exports.PlanPaymentsController = PlanPaymentsController = __decorate([
 
 
 /***/ }),
-/* 234 */
+/* 238 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27034,11 +27419,11 @@ exports.PlanPaymentsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const plan_renewal_service_1 = __webpack_require__(205);
-const notifications_service_1 = __webpack_require__(78);
-const auth_user_util_1 = __webpack_require__(81);
-const upi_util_1 = __webpack_require__(206);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const plan_renewal_service_1 = __webpack_require__(209);
+const notifications_service_1 = __webpack_require__(82);
+const auth_user_util_1 = __webpack_require__(85);
+const upi_util_1 = __webpack_require__(210);
 const app_settings_service_1 = __webpack_require__(30);
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
@@ -27182,7 +27567,7 @@ exports.PlanPaymentsService = PlanPaymentsService = __decorate([
 
 
 /***/ }),
-/* 235 */
+/* 239 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27210,7 +27595,7 @@ __decorate([
 
 
 /***/ }),
-/* 236 */
+/* 240 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27238,7 +27623,7 @@ __decorate([
 
 
 /***/ }),
-/* 237 */
+/* 241 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27251,14 +27636,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlanPaymentsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(75);
-const notifications_module_1 = __webpack_require__(76);
-const app_settings_module_1 = __webpack_require__(51);
-const farmer_plans_module_1 = __webpack_require__(74);
-const wallet_module_1 = __webpack_require__(56);
-const cashfree_module_1 = __webpack_require__(223);
-const farmer_plan_payments_controller_1 = __webpack_require__(238);
-const farmer_plan_payments_service_1 = __webpack_require__(239);
+const advisor_assignment_module_1 = __webpack_require__(79);
+const notifications_module_1 = __webpack_require__(80);
+const app_settings_module_1 = __webpack_require__(55);
+const farmer_plans_module_1 = __webpack_require__(78);
+const wallet_module_1 = __webpack_require__(60);
+const cashfree_module_1 = __webpack_require__(227);
+const farmer_plan_payments_controller_1 = __webpack_require__(242);
+const farmer_plan_payments_service_1 = __webpack_require__(243);
 let FarmerPlanPaymentsModule = class FarmerPlanPaymentsModule {
 };
 exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule;
@@ -27272,7 +27657,7 @@ exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule = __decorate([
 
 
 /***/ }),
-/* 238 */
+/* 242 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27293,14 +27678,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlanPaymentsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const farmer_plan_payments_service_1 = __webpack_require__(239);
-const initiate_farmer_plan_payment_dto_1 = __webpack_require__(240);
-const submit_farmer_plan_payment_dto_1 = __webpack_require__(241);
-const reject_farmer_plan_payment_dto_1 = __webpack_require__(242);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const farmer_plan_payments_service_1 = __webpack_require__(243);
+const initiate_farmer_plan_payment_dto_1 = __webpack_require__(244);
+const submit_farmer_plan_payment_dto_1 = __webpack_require__(245);
+const reject_farmer_plan_payment_dto_1 = __webpack_require__(246);
 let FarmerPlanPaymentsController = class FarmerPlanPaymentsController {
     constructor(farmerPlanPaymentsService) {
         this.farmerPlanPaymentsService = farmerPlanPaymentsService;
@@ -27387,7 +27772,7 @@ exports.FarmerPlanPaymentsController = FarmerPlanPaymentsController = __decorate
 
 
 /***/ }),
-/* 239 */
+/* 243 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27406,14 +27791,14 @@ exports.FarmerPlanPaymentsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(80);
-const notifications_service_1 = __webpack_require__(78);
+const advisor_assignment_service_1 = __webpack_require__(84);
+const notifications_service_1 = __webpack_require__(82);
 const app_settings_service_1 = __webpack_require__(30);
-const farmer_plans_service_1 = __webpack_require__(85);
-const auth_user_util_1 = __webpack_require__(81);
-const upi_util_1 = __webpack_require__(206);
+const farmer_plans_service_1 = __webpack_require__(89);
+const auth_user_util_1 = __webpack_require__(85);
+const upi_util_1 = __webpack_require__(210);
 const wallet_service_1 = __webpack_require__(33);
-const cashfree_service_1 = __webpack_require__(224);
+const cashfree_service_1 = __webpack_require__(228);
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
 };
@@ -27629,7 +28014,7 @@ exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = __decorate([
 
 
 /***/ }),
-/* 240 */
+/* 244 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27679,7 +28064,7 @@ __decorate([
 
 
 /***/ }),
-/* 241 */
+/* 245 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27712,7 +28097,7 @@ __decorate([
 
 
 /***/ }),
-/* 242 */
+/* 246 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27740,7 +28125,7 @@ __decorate([
 
 
 /***/ }),
-/* 243 */
+/* 247 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27753,8 +28138,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartnerAssignmentModule = void 0;
 const common_1 = __webpack_require__(2);
-const partner_assignment_controller_1 = __webpack_require__(244);
-const partner_assignment_service_1 = __webpack_require__(245);
+const partner_assignment_controller_1 = __webpack_require__(248);
+const partner_assignment_service_1 = __webpack_require__(249);
 let PartnerAssignmentModule = class PartnerAssignmentModule {
 };
 exports.PartnerAssignmentModule = PartnerAssignmentModule;
@@ -27767,7 +28152,7 @@ exports.PartnerAssignmentModule = PartnerAssignmentModule = __decorate([
 
 
 /***/ }),
-/* 244 */
+/* 248 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27788,11 +28173,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartnerAssignmentController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const partner_assignment_service_1 = __webpack_require__(245);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const partner_assignment_service_1 = __webpack_require__(249);
 let PartnerAssignmentController = class PartnerAssignmentController {
     constructor(partnerAssignmentService) {
         this.partnerAssignmentService = partnerAssignmentService;
@@ -27829,7 +28214,7 @@ exports.PartnerAssignmentController = PartnerAssignmentController = __decorate([
 
 
 /***/ }),
-/* 245 */
+/* 249 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27878,7 +28263,7 @@ exports.PartnerAssignmentService = PartnerAssignmentService = __decorate([
 
 
 /***/ }),
-/* 246 */
+/* 250 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27892,10 +28277,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardenerPlansModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const app_settings_module_1 = __webpack_require__(51);
-const cashfree_module_1 = __webpack_require__(223);
-const gardener_plans_service_1 = __webpack_require__(247);
-const gardener_plans_controller_1 = __webpack_require__(248);
+const app_settings_module_1 = __webpack_require__(55);
+const cashfree_module_1 = __webpack_require__(227);
+const gardener_plans_service_1 = __webpack_require__(251);
+const gardener_plans_controller_1 = __webpack_require__(252);
 let GardenerPlansModule = class GardenerPlansModule {
 };
 exports.GardenerPlansModule = GardenerPlansModule;
@@ -27910,7 +28295,7 @@ exports.GardenerPlansModule = GardenerPlansModule = __decorate([
 
 
 /***/ }),
-/* 247 */
+/* 251 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27931,7 +28316,7 @@ const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const app_settings_service_1 = __webpack_require__(30);
-const cashfree_service_1 = __webpack_require__(224);
+const cashfree_service_1 = __webpack_require__(228);
 exports.FREE_PLAN_MAX_PLANTS = 5;
 exports.EXPIRY_WARNING_DAYS = 5;
 exports.GRACE_PERIOD_DAYS = 2;
@@ -28184,7 +28569,7 @@ exports.GardenerPlansService = GardenerPlansService = __decorate([
 
 
 /***/ }),
-/* 248 */
+/* 252 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28205,14 +28590,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardenerPlansController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const gardener_plans_service_1 = __webpack_require__(247);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const gardener_plans_service_1 = __webpack_require__(251);
 const client_2 = __webpack_require__(13);
-const create_gardener_plan_coupon_dto_1 = __webpack_require__(249);
-const redeem_gardener_plan_coupon_dto_1 = __webpack_require__(250);
+const create_gardener_plan_coupon_dto_1 = __webpack_require__(253);
+const redeem_gardener_plan_coupon_dto_1 = __webpack_require__(254);
 let GardenerPlansController = class GardenerPlansController {
     constructor(gardenerPlansService) {
         this.gardenerPlansService = gardenerPlansService;
@@ -28317,7 +28702,7 @@ exports.GardenerPlansController = GardenerPlansController = __decorate([
 
 
 /***/ }),
-/* 249 */
+/* 253 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28360,7 +28745,7 @@ __decorate([
 
 
 /***/ }),
-/* 250 */
+/* 254 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28387,7 +28772,7 @@ __decorate([
 
 
 /***/ }),
-/* 251 */
+/* 255 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28401,9 +28786,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardensModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const gardener_plans_module_1 = __webpack_require__(246);
-const gardens_service_1 = __webpack_require__(252);
-const gardens_controller_1 = __webpack_require__(253);
+const gardener_plans_module_1 = __webpack_require__(250);
+const gardens_service_1 = __webpack_require__(256);
+const gardens_controller_1 = __webpack_require__(257);
 let GardensModule = class GardensModule {
 };
 exports.GardensModule = GardensModule;
@@ -28417,7 +28802,7 @@ exports.GardensModule = GardensModule = __decorate([
 
 
 /***/ }),
-/* 252 */
+/* 256 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28436,7 +28821,7 @@ exports.GardensService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const gardener_plans_service_1 = __webpack_require__(247);
+const gardener_plans_service_1 = __webpack_require__(251);
 let GardensService = class GardensService {
     constructor(prisma, gardenerPlansService) {
         this.prisma = prisma;
@@ -28523,7 +28908,7 @@ exports.GardensService = GardensService = __decorate([
 
 
 /***/ }),
-/* 253 */
+/* 257 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28544,14 +28929,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardensController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const gardens_service_1 = __webpack_require__(252);
-const create_garden_dto_1 = __webpack_require__(254);
-const create_plant_dto_1 = __webpack_require__(255);
-const create_garden_expense_dto_1 = __webpack_require__(256);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const gardens_service_1 = __webpack_require__(256);
+const create_garden_dto_1 = __webpack_require__(258);
+const create_plant_dto_1 = __webpack_require__(259);
+const create_garden_expense_dto_1 = __webpack_require__(260);
 let GardensController = class GardensController {
     constructor(gardensService) {
         this.gardensService = gardensService;
@@ -28654,7 +29039,7 @@ exports.GardensController = GardensController = __decorate([
 
 
 /***/ }),
-/* 254 */
+/* 258 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28691,7 +29076,7 @@ __decorate([
 
 
 /***/ }),
-/* 255 */
+/* 259 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28733,7 +29118,7 @@ __decorate([
 
 
 /***/ }),
-/* 256 */
+/* 260 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28794,7 +29179,7 @@ __decorate([
 
 
 /***/ }),
-/* 257 */
+/* 261 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28807,9 +29192,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsModule = void 0;
 const common_1 = __webpack_require__(2);
-const sale_bills_controller_1 = __webpack_require__(258);
-const sale_bills_service_1 = __webpack_require__(259);
-const chat_module_1 = __webpack_require__(125);
+const sale_bills_controller_1 = __webpack_require__(262);
+const sale_bills_service_1 = __webpack_require__(263);
+const chat_module_1 = __webpack_require__(129);
 let SaleBillsModule = class SaleBillsModule {
 };
 exports.SaleBillsModule = SaleBillsModule;
@@ -28824,7 +29209,7 @@ exports.SaleBillsModule = SaleBillsModule = __decorate([
 
 
 /***/ }),
-/* 258 */
+/* 262 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28845,12 +29230,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const sale_bills_service_1 = __webpack_require__(259);
-const create_sale_bill_dto_1 = __webpack_require__(260);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const sale_bills_service_1 = __webpack_require__(263);
+const create_sale_bill_dto_1 = __webpack_require__(264);
 let SaleBillsController = class SaleBillsController {
     constructor(saleBillsService) {
         this.saleBillsService = saleBillsService;
@@ -28932,7 +29317,7 @@ exports.SaleBillsController = SaleBillsController = __decorate([
 
 
 /***/ }),
-/* 259 */
+/* 263 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28950,8 +29335,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(113);
-const effective_farmer_util_1 = __webpack_require__(64);
+const chat_gateway_1 = __webpack_require__(117);
+const effective_farmer_util_1 = __webpack_require__(68);
 let SaleBillsService = class SaleBillsService {
     constructor(prisma, chatGateway) {
         this.prisma = prisma;
@@ -29132,7 +29517,7 @@ exports.SaleBillsService = SaleBillsService = __decorate([
 
 
 /***/ }),
-/* 260 */
+/* 264 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29147,7 +29532,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateSaleBillDto = void 0;
-const class_transformer_1 = __webpack_require__(147);
+const class_transformer_1 = __webpack_require__(151);
 const class_validator_1 = __webpack_require__(38);
 class SaleBillItemDto {
     constructor() {
@@ -29321,7 +29706,7 @@ __decorate([
 
 
 /***/ }),
-/* 261 */
+/* 265 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29334,8 +29719,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaymentReceiptsModule = void 0;
 const common_1 = __webpack_require__(2);
-const payment_receipts_controller_1 = __webpack_require__(262);
-const payment_receipts_service_1 = __webpack_require__(263);
+const payment_receipts_controller_1 = __webpack_require__(266);
+const payment_receipts_service_1 = __webpack_require__(267);
 let PaymentReceiptsModule = class PaymentReceiptsModule {
 };
 exports.PaymentReceiptsModule = PaymentReceiptsModule;
@@ -29348,7 +29733,7 @@ exports.PaymentReceiptsModule = PaymentReceiptsModule = __decorate([
 
 
 /***/ }),
-/* 262 */
+/* 266 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29369,11 +29754,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaymentReceiptsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const payment_receipts_service_1 = __webpack_require__(263);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const payment_receipts_service_1 = __webpack_require__(267);
 let PaymentReceiptsController = class PaymentReceiptsController {
     constructor(paymentReceiptsService) {
         this.paymentReceiptsService = paymentReceiptsService;
@@ -29410,7 +29795,7 @@ exports.PaymentReceiptsController = PaymentReceiptsController = __decorate([
 
 
 /***/ }),
-/* 263 */
+/* 267 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29455,7 +29840,7 @@ exports.PaymentReceiptsService = PaymentReceiptsService = __decorate([
 
 
 /***/ }),
-/* 264 */
+/* 268 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29468,9 +29853,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BasicPlanCouponsModule = void 0;
 const common_1 = __webpack_require__(2);
-const basic_plan_coupons_controller_1 = __webpack_require__(265);
-const basic_plan_coupons_service_1 = __webpack_require__(266);
-const wallet_module_1 = __webpack_require__(56);
+const basic_plan_coupons_controller_1 = __webpack_require__(269);
+const basic_plan_coupons_service_1 = __webpack_require__(270);
+const wallet_module_1 = __webpack_require__(60);
 let BasicPlanCouponsModule = class BasicPlanCouponsModule {
 };
 exports.BasicPlanCouponsModule = BasicPlanCouponsModule;
@@ -29484,7 +29869,7 @@ exports.BasicPlanCouponsModule = BasicPlanCouponsModule = __decorate([
 
 
 /***/ }),
-/* 265 */
+/* 269 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29505,12 +29890,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BasicPlanCouponsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const basic_plan_coupons_service_1 = __webpack_require__(266);
-const create_basic_plan_coupon_dto_1 = __webpack_require__(267);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const basic_plan_coupons_service_1 = __webpack_require__(270);
+const create_basic_plan_coupon_dto_1 = __webpack_require__(271);
 let BasicPlanCouponsController = class BasicPlanCouponsController {
     constructor(basicPlanCouponsService) {
         this.basicPlanCouponsService = basicPlanCouponsService;
@@ -29592,7 +29977,7 @@ exports.BasicPlanCouponsController = BasicPlanCouponsController = __decorate([
 
 
 /***/ }),
-/* 266 */
+/* 270 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29722,7 +30107,7 @@ exports.BasicPlanCouponsService = BasicPlanCouponsService = __decorate([
 
 
 /***/ }),
-/* 267 */
+/* 271 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29749,7 +30134,7 @@ __decorate([
 
 
 /***/ }),
-/* 268 */
+/* 272 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29762,8 +30147,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponSettingsModule = void 0;
 const common_1 = __webpack_require__(2);
-const coupon_settings_controller_1 = __webpack_require__(269);
-const coupon_settings_service_1 = __webpack_require__(270);
+const coupon_settings_controller_1 = __webpack_require__(273);
+const coupon_settings_service_1 = __webpack_require__(274);
 let CouponSettingsModule = class CouponSettingsModule {
 };
 exports.CouponSettingsModule = CouponSettingsModule;
@@ -29777,7 +30162,7 @@ exports.CouponSettingsModule = CouponSettingsModule = __decorate([
 
 
 /***/ }),
-/* 269 */
+/* 273 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29798,12 +30183,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponSettingsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const coupon_settings_service_1 = __webpack_require__(270);
-const update_coupon_settings_dto_1 = __webpack_require__(271);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const coupon_settings_service_1 = __webpack_require__(274);
+const update_coupon_settings_dto_1 = __webpack_require__(275);
 let CouponSettingsController = class CouponSettingsController {
     constructor(couponSettingsService) {
         this.couponSettingsService = couponSettingsService;
@@ -29839,7 +30224,7 @@ exports.CouponSettingsController = CouponSettingsController = __decorate([
 
 
 /***/ }),
-/* 270 */
+/* 274 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29911,7 +30296,7 @@ exports.CouponSettingsService = CouponSettingsService = __decorate([
 
 
 /***/ }),
-/* 271 */
+/* 275 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30047,7 +30432,7 @@ __decorate([
 
 
 /***/ }),
-/* 272 */
+/* 276 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30060,10 +30445,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallRequestsModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(76);
-const call_requests_controller_1 = __webpack_require__(273);
-const call_requests_service_1 = __webpack_require__(274);
-const chat_module_1 = __webpack_require__(125);
+const notifications_module_1 = __webpack_require__(80);
+const call_requests_controller_1 = __webpack_require__(277);
+const call_requests_service_1 = __webpack_require__(278);
+const chat_module_1 = __webpack_require__(129);
 let CallRequestsModule = class CallRequestsModule {
 };
 exports.CallRequestsModule = CallRequestsModule;
@@ -30078,7 +30463,7 @@ exports.CallRequestsModule = CallRequestsModule = __decorate([
 
 
 /***/ }),
-/* 273 */
+/* 277 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30099,12 +30484,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallRequestsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const call_requests_service_1 = __webpack_require__(274);
-const resolve_call_request_dto_1 = __webpack_require__(275);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const call_requests_service_1 = __webpack_require__(278);
+const resolve_call_request_dto_1 = __webpack_require__(279);
 let CallRequestsController = class CallRequestsController {
     constructor(callRequestsService) {
         this.callRequestsService = callRequestsService;
@@ -30165,7 +30550,7 @@ exports.CallRequestsController = CallRequestsController = __decorate([
 
 
 /***/ }),
-/* 274 */
+/* 278 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30187,8 +30572,8 @@ exports.CallRequestsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(78);
-const chat_gateway_1 = __webpack_require__(113);
+const notifications_service_1 = __webpack_require__(82);
+const chat_gateway_1 = __webpack_require__(117);
 const SELECT = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true, photoUrl: true } },
     advisor: { select: { id: true, name: true, mobile: true } },
@@ -30291,7 +30676,7 @@ exports.CallRequestsService = CallRequestsService = __decorate([
 
 
 /***/ }),
-/* 275 */
+/* 279 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30318,7 +30703,7 @@ __decorate([
 
 
 /***/ }),
-/* 276 */
+/* 280 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30331,8 +30716,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesModule = void 0;
 const common_1 = __webpack_require__(2);
-const addresses_controller_1 = __webpack_require__(277);
-const addresses_service_1 = __webpack_require__(278);
+const addresses_controller_1 = __webpack_require__(281);
+const addresses_service_1 = __webpack_require__(282);
 let AddressesModule = class AddressesModule {
 };
 exports.AddressesModule = AddressesModule;
@@ -30345,7 +30730,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 
 
 /***/ }),
-/* 277 */
+/* 281 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30365,11 +30750,11 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const current_user_decorator_1 = __webpack_require__(46);
-const addresses_service_1 = __webpack_require__(278);
-const create_address_dto_1 = __webpack_require__(279);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const current_user_decorator_1 = __webpack_require__(50);
+const addresses_service_1 = __webpack_require__(282);
+const create_address_dto_1 = __webpack_require__(283);
 let AddressesController = class AddressesController {
     constructor(addressesService) {
         this.addressesService = addressesService;
@@ -30428,7 +30813,7 @@ exports.AddressesController = AddressesController = __decorate([
 
 
 /***/ }),
-/* 278 */
+/* 282 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30494,7 +30879,7 @@ exports.AddressesService = AddressesService = __decorate([
 
 
 /***/ }),
-/* 279 */
+/* 283 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30549,7 +30934,7 @@ __decorate([
 
 
 /***/ }),
-/* 280 */
+/* 284 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30562,8 +30947,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditModule = void 0;
 const common_1 = __webpack_require__(2);
-const audit_controller_1 = __webpack_require__(281);
-const audit_service_1 = __webpack_require__(282);
+const audit_controller_1 = __webpack_require__(285);
+const audit_service_1 = __webpack_require__(286);
 let AuditModule = class AuditModule {
 };
 exports.AuditModule = AuditModule;
@@ -30576,7 +30961,7 @@ exports.AuditModule = AuditModule = __decorate([
 
 
 /***/ }),
-/* 281 */
+/* 285 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30597,11 +30982,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const audit_service_1 = __webpack_require__(282);
-const list_audit_log_query_dto_1 = __webpack_require__(283);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const audit_service_1 = __webpack_require__(286);
+const list_audit_log_query_dto_1 = __webpack_require__(287);
 let AuditController = class AuditController {
     constructor(auditService) {
         this.auditService = auditService;
@@ -30627,7 +31012,7 @@ exports.AuditController = AuditController = __decorate([
 
 
 /***/ }),
-/* 282 */
+/* 286 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30686,7 +31071,7 @@ exports.AuditService = AuditService = __decorate([
 
 
 /***/ }),
-/* 283 */
+/* 287 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30701,7 +31086,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ListAuditLogQueryDto = void 0;
-const class_transformer_1 = __webpack_require__(147);
+const class_transformer_1 = __webpack_require__(151);
 const class_validator_1 = __webpack_require__(38);
 class ListAuditLogQueryDto {
 }
@@ -30743,7 +31128,7 @@ __decorate([
 
 
 /***/ }),
-/* 284 */
+/* 288 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30756,8 +31141,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabourModule = void 0;
 const common_1 = __webpack_require__(2);
-const labour_controller_1 = __webpack_require__(285);
-const labour_service_1 = __webpack_require__(286);
+const labour_controller_1 = __webpack_require__(289);
+const labour_service_1 = __webpack_require__(290);
 let LabourModule = class LabourModule {
 };
 exports.LabourModule = LabourModule;
@@ -30771,7 +31156,7 @@ exports.LabourModule = LabourModule = __decorate([
 
 
 /***/ }),
-/* 285 */
+/* 289 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30792,16 +31177,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabourController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const optional_jwt_auth_guard_1 = __webpack_require__(107);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const labour_service_1 = __webpack_require__(286);
-const create_labour_worker_dto_1 = __webpack_require__(287);
-const create_work_entry_dto_1 = __webpack_require__(288);
-const create_labour_payment_dto_1 = __webpack_require__(289);
-const effective_farmer_util_1 = __webpack_require__(64);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const optional_jwt_auth_guard_1 = __webpack_require__(111);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const labour_service_1 = __webpack_require__(290);
+const create_labour_worker_dto_1 = __webpack_require__(291);
+const create_work_entry_dto_1 = __webpack_require__(292);
+const create_labour_payment_dto_1 = __webpack_require__(293);
+const effective_farmer_util_1 = __webpack_require__(68);
 let LabourController = class LabourController {
     constructor(labourService) {
         this.labourService = labourService;
@@ -30960,7 +31345,7 @@ exports.LabourController = LabourController = __decorate([
 
 
 /***/ }),
-/* 286 */
+/* 290 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31014,7 +31399,7 @@ const prisma_service_1 = __webpack_require__(12);
 const client_1 = __webpack_require__(13);
 const argon2 = __importStar(__webpack_require__(14));
 const king_id_util_1 = __webpack_require__(22);
-const effective_farmer_util_1 = __webpack_require__(64);
+const effective_farmer_util_1 = __webpack_require__(68);
 let LabourService = class LabourService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -31577,7 +31962,7 @@ exports.LabourService = LabourService = __decorate([
 
 
 /***/ }),
-/* 287 */
+/* 291 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31689,7 +32074,7 @@ __decorate([
 
 
 /***/ }),
-/* 288 */
+/* 292 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31761,7 +32146,7 @@ __decorate([
 
 
 /***/ }),
-/* 289 */
+/* 293 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31810,7 +32195,7 @@ __decorate([
 
 
 /***/ }),
-/* 290 */
+/* 294 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31823,11 +32208,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminChatModule = void 0;
 const common_1 = __webpack_require__(2);
-const admin_chat_controller_1 = __webpack_require__(291);
-const admin_chat_service_1 = __webpack_require__(292);
+const admin_chat_controller_1 = __webpack_require__(295);
+const admin_chat_service_1 = __webpack_require__(296);
 const prisma_module_1 = __webpack_require__(16);
-const chat_module_1 = __webpack_require__(125);
-const notifications_module_1 = __webpack_require__(76);
+const chat_module_1 = __webpack_require__(129);
+const notifications_module_1 = __webpack_require__(80);
 let AdminChatModule = class AdminChatModule {
 };
 exports.AdminChatModule = AdminChatModule;
@@ -31842,7 +32227,7 @@ exports.AdminChatModule = AdminChatModule = __decorate([
 
 
 /***/ }),
-/* 291 */
+/* 295 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31862,11 +32247,11 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminChatController = void 0;
 const common_1 = __webpack_require__(2);
-const admin_chat_service_1 = __webpack_require__(292);
-const send_chat_message_dto_1 = __webpack_require__(293);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
+const admin_chat_service_1 = __webpack_require__(296);
+const send_chat_message_dto_1 = __webpack_require__(297);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
 const client_1 = __webpack_require__(13);
 let AdminChatController = class AdminChatController {
     constructor(adminChatService) {
@@ -31937,7 +32322,7 @@ exports.AdminChatController = AdminChatController = __decorate([
 
 
 /***/ }),
-/* 292 */
+/* 296 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31959,8 +32344,8 @@ exports.AdminChatService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
 const client_1 = __webpack_require__(13);
-const chat_gateway_1 = __webpack_require__(113);
-const notifications_service_1 = __webpack_require__(78);
+const chat_gateway_1 = __webpack_require__(117);
+const notifications_service_1 = __webpack_require__(82);
 let AdminChatService = class AdminChatService {
     constructor(prisma, chatGateway, notificationsService) {
         this.prisma = prisma;
@@ -32158,7 +32543,7 @@ exports.AdminChatService = AdminChatService = __decorate([
 
 
 /***/ }),
-/* 293 */
+/* 297 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32195,7 +32580,7 @@ __decorate([
 
 
 /***/ }),
-/* 294 */
+/* 298 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32208,9 +32593,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferralsModule = void 0;
 const common_1 = __webpack_require__(2);
-const referrals_service_1 = __webpack_require__(295);
-const referrals_controller_1 = __webpack_require__(296);
-const wallet_module_1 = __webpack_require__(56);
+const referrals_service_1 = __webpack_require__(299);
+const referrals_controller_1 = __webpack_require__(300);
+const wallet_module_1 = __webpack_require__(60);
 let ReferralsModule = class ReferralsModule {
 };
 exports.ReferralsModule = ReferralsModule;
@@ -32225,7 +32610,7 @@ exports.ReferralsModule = ReferralsModule = __decorate([
 
 
 /***/ }),
-/* 295 */
+/* 299 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32410,7 +32795,7 @@ exports.ReferralsService = ReferralsService = __decorate([
 
 
 /***/ }),
-/* 296 */
+/* 300 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32430,9 +32815,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferralsController = exports.LinkReferralDto = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const referrals_service_1 = __webpack_require__(295);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const referrals_service_1 = __webpack_require__(299);
 class LinkReferralDto {
 }
 exports.LinkReferralDto = LinkReferralDto;
@@ -32471,7 +32856,7 @@ exports.ReferralsController = ReferralsController = __decorate([
 
 
 /***/ }),
-/* 297 */
+/* 301 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32484,8 +32869,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceAIModule = void 0;
 const common_1 = __webpack_require__(2);
-const voice_ai_service_1 = __webpack_require__(298);
-const voice_ai_controller_1 = __webpack_require__(299);
+const voice_ai_service_1 = __webpack_require__(302);
+const voice_ai_controller_1 = __webpack_require__(303);
 let VoiceAIModule = class VoiceAIModule {
 };
 exports.VoiceAIModule = VoiceAIModule;
@@ -32499,7 +32884,7 @@ exports.VoiceAIModule = VoiceAIModule = __decorate([
 
 
 /***/ }),
-/* 298 */
+/* 302 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32569,7 +32954,7 @@ exports.VoiceAIService = VoiceAIService = __decorate([
 
 
 /***/ }),
-/* 299 */
+/* 303 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32589,9 +32974,9 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceAIController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const voice_ai_service_1 = __webpack_require__(298);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const voice_ai_service_1 = __webpack_require__(302);
 let VoiceAIController = class VoiceAIController {
     constructor(voiceAIService) {
         this.voiceAIService = voiceAIService;
@@ -32627,7 +33012,7 @@ exports.VoiceAIController = VoiceAIController = __decorate([
 
 
 /***/ }),
-/* 300 */
+/* 304 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32640,9 +33025,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SatelliteModule = void 0;
 const common_1 = __webpack_require__(2);
-const satellite_service_1 = __webpack_require__(301);
-const satellite_controller_1 = __webpack_require__(302);
-const app_settings_module_1 = __webpack_require__(51);
+const satellite_service_1 = __webpack_require__(305);
+const satellite_controller_1 = __webpack_require__(306);
+const app_settings_module_1 = __webpack_require__(55);
 let SatelliteModule = class SatelliteModule {
 };
 exports.SatelliteModule = SatelliteModule;
@@ -32657,7 +33042,7 @@ exports.SatelliteModule = SatelliteModule = __decorate([
 
 
 /***/ }),
-/* 301 */
+/* 305 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32779,7 +33164,7 @@ exports.SatelliteService = SatelliteService = __decorate([
 
 
 /***/ }),
-/* 302 */
+/* 306 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32799,8 +33184,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SatelliteController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const satellite_service_1 = __webpack_require__(301);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const satellite_service_1 = __webpack_require__(305);
 let SatelliteController = class SatelliteController {
     constructor(satelliteService) {
         this.satelliteService = satelliteService;
@@ -32825,7 +33210,7 @@ exports.SatelliteController = SatelliteController = __decorate([
 
 
 /***/ }),
-/* 303 */
+/* 307 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32838,8 +33223,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MandiAIModule = void 0;
 const common_1 = __webpack_require__(2);
-const mandi_ai_service_1 = __webpack_require__(304);
-const mandi_ai_controller_1 = __webpack_require__(305);
+const mandi_ai_service_1 = __webpack_require__(308);
+const mandi_ai_controller_1 = __webpack_require__(309);
 let MandiAIModule = class MandiAIModule {
 };
 exports.MandiAIModule = MandiAIModule;
@@ -32853,7 +33238,7 @@ exports.MandiAIModule = MandiAIModule = __decorate([
 
 
 /***/ }),
-/* 304 */
+/* 308 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32945,7 +33330,7 @@ exports.MandiAIService = MandiAIService = __decorate([
 
 
 /***/ }),
-/* 305 */
+/* 309 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32965,9 +33350,9 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MandiAIController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const mandi_ai_service_1 = __webpack_require__(304);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const mandi_ai_service_1 = __webpack_require__(308);
 let MandiAIController = class MandiAIController {
     constructor(mandiAIService) {
         this.mandiAIService = mandiAIService;
@@ -33014,7 +33399,7 @@ exports.MandiAIController = MandiAIController = __decorate([
 
 
 /***/ }),
-/* 306 */
+/* 310 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33027,8 +33412,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KingConnectModule = void 0;
 const common_1 = __webpack_require__(2);
-const king_connect_controller_1 = __webpack_require__(307);
-const king_connect_service_1 = __webpack_require__(308);
+const king_connect_controller_1 = __webpack_require__(311);
+const king_connect_service_1 = __webpack_require__(312);
 const prisma_module_1 = __webpack_require__(16);
 let KingConnectModule = class KingConnectModule {
 };
@@ -33044,7 +33429,7 @@ exports.KingConnectModule = KingConnectModule = __decorate([
 
 
 /***/ }),
-/* 307 */
+/* 311 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33064,17 +33449,17 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KingConnectController = void 0;
 const common_1 = __webpack_require__(2);
-const king_connect_service_1 = __webpack_require__(308);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const current_user_decorator_1 = __webpack_require__(46);
-const send_connect_request_dto_1 = __webpack_require__(309);
-const respond_connect_dto_1 = __webpack_require__(310);
-const create_sync_request_dto_1 = __webpack_require__(311);
-const respond_sync_request_dto_1 = __webpack_require__(312);
-const create_demand_request_dto_1 = __webpack_require__(313);
-const respond_demand_request_dto_1 = __webpack_require__(314);
-const create_payment_request_dto_1 = __webpack_require__(315);
-const respond_payment_request_dto_1 = __webpack_require__(316);
+const king_connect_service_1 = __webpack_require__(312);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const current_user_decorator_1 = __webpack_require__(50);
+const send_connect_request_dto_1 = __webpack_require__(313);
+const respond_connect_dto_1 = __webpack_require__(314);
+const create_sync_request_dto_1 = __webpack_require__(315);
+const respond_sync_request_dto_1 = __webpack_require__(316);
+const create_demand_request_dto_1 = __webpack_require__(317);
+const respond_demand_request_dto_1 = __webpack_require__(318);
+const create_payment_request_dto_1 = __webpack_require__(319);
+const respond_payment_request_dto_1 = __webpack_require__(320);
 let KingConnectController = class KingConnectController {
     constructor(service) {
         this.service = service;
@@ -33284,7 +33669,7 @@ exports.KingConnectController = KingConnectController = __decorate([
 
 
 /***/ }),
-/* 308 */
+/* 312 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33848,7 +34233,7 @@ exports.KingConnectService = KingConnectService = __decorate([
 
 
 /***/ }),
-/* 309 */
+/* 313 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33880,7 +34265,7 @@ __decorate([
 
 
 /***/ }),
-/* 310 */
+/* 314 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33906,7 +34291,7 @@ __decorate([
 
 
 /***/ }),
-/* 311 */
+/* 315 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33958,7 +34343,7 @@ __decorate([
 
 
 /***/ }),
-/* 312 */
+/* 316 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33999,7 +34384,7 @@ __decorate([
 
 
 /***/ }),
-/* 313 */
+/* 317 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34055,7 +34440,7 @@ __decorate([
 
 
 /***/ }),
-/* 314 */
+/* 318 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34096,7 +34481,7 @@ __decorate([
 
 
 /***/ }),
-/* 315 */
+/* 319 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34147,7 +34532,7 @@ __decorate([
 
 
 /***/ }),
-/* 316 */
+/* 320 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34193,7 +34578,7 @@ __decorate([
 
 
 /***/ }),
-/* 317 */
+/* 321 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34207,9 +34592,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallModule = void 0;
 const common_1 = __webpack_require__(2);
 const auth_module_1 = __webpack_require__(17);
-const voice_call_controller_1 = __webpack_require__(318);
-const voice_call_service_1 = __webpack_require__(319);
-const voice_call_gateway_1 = __webpack_require__(322);
+const voice_call_controller_1 = __webpack_require__(322);
+const voice_call_service_1 = __webpack_require__(323);
+const voice_call_gateway_1 = __webpack_require__(326);
 let VoiceCallModule = class VoiceCallModule {
 };
 exports.VoiceCallModule = VoiceCallModule;
@@ -34224,7 +34609,7 @@ exports.VoiceCallModule = VoiceCallModule = __decorate([
 
 
 /***/ }),
-/* 318 */
+/* 322 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34245,12 +34630,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const voice_call_service_1 = __webpack_require__(319);
-const start_group_call_dto_1 = __webpack_require__(321);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const voice_call_service_1 = __webpack_require__(323);
+const start_group_call_dto_1 = __webpack_require__(325);
 let VoiceCallController = class VoiceCallController {
     constructor(voiceCallService) {
         this.voiceCallService = voiceCallService;
@@ -34311,7 +34696,7 @@ exports.VoiceCallController = VoiceCallController = __decorate([
 
 
 /***/ }),
-/* 319 */
+/* 323 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34346,7 +34731,7 @@ let VoiceCallService = class VoiceCallService {
             };
         }
         try {
-            const { RtcTokenBuilder, RtcRole } = __webpack_require__(320);
+            const { RtcTokenBuilder, RtcRole } = __webpack_require__(324);
             const agoraRole = role === 'publisher' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
             const expirationTimeInSeconds = 3600 * 2;
             const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -34549,13 +34934,13 @@ exports.VoiceCallService = VoiceCallService = __decorate([
 
 
 /***/ }),
-/* 320 */
+/* 324 */
 /***/ ((module) => {
 
 module.exports = require("agora-token");
 
 /***/ }),
-/* 321 */
+/* 325 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34587,7 +34972,7 @@ __decorate([
 
 
 /***/ }),
-/* 322 */
+/* 326 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34609,10 +34994,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallGateway = exports.callRoom = void 0;
 const common_1 = __webpack_require__(2);
 const jwt_1 = __webpack_require__(18);
-const websockets_1 = __webpack_require__(114);
-const socket_io_1 = __webpack_require__(115);
+const websockets_1 = __webpack_require__(118);
+const socket_io_1 = __webpack_require__(119);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(113);
+const chat_gateway_1 = __webpack_require__(117);
 const callRoom = (callId) => `call:${callId}`;
 exports.callRoom = callRoom;
 let VoiceCallGateway = VoiceCallGateway_1 = class VoiceCallGateway {
@@ -34822,7 +35207,7 @@ exports.VoiceCallGateway = VoiceCallGateway = VoiceCallGateway_1 = __decorate([
 
 
 /***/ }),
-/* 323 */
+/* 327 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34835,11 +35220,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrainersModule = void 0;
 const common_1 = __webpack_require__(2);
-const trainers_service_1 = __webpack_require__(324);
-const trainers_controller_1 = __webpack_require__(325);
+const trainers_service_1 = __webpack_require__(328);
+const trainers_controller_1 = __webpack_require__(329);
 const prisma_module_1 = __webpack_require__(16);
-const wallet_module_1 = __webpack_require__(56);
-const whatsapp_module_1 = __webpack_require__(49);
+const wallet_module_1 = __webpack_require__(60);
+const whatsapp_module_1 = __webpack_require__(53);
 let TrainersModule = class TrainersModule {
 };
 exports.TrainersModule = TrainersModule;
@@ -34854,7 +35239,7 @@ exports.TrainersModule = TrainersModule = __decorate([
 
 
 /***/ }),
-/* 324 */
+/* 328 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -35231,7 +35616,7 @@ exports.TrainersService = TrainersService = __decorate([
 
 
 /***/ }),
-/* 325 */
+/* 329 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -35251,12 +35636,12 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrainersController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
 const client_1 = __webpack_require__(13);
-const trainers_service_1 = __webpack_require__(324);
+const trainers_service_1 = __webpack_require__(328);
 let TrainersController = class TrainersController {
     constructor(trainersService) {
         this.trainersService = trainersService;
@@ -35403,7 +35788,7 @@ exports.TrainersController = TrainersController = __decorate([
 
 
 /***/ }),
-/* 326 */
+/* 330 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -35417,10 +35802,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const shiprocket_module_1 = __webpack_require__(219);
-const notifications_module_1 = __webpack_require__(76);
-const seller_service_1 = __webpack_require__(327);
-const seller_controller_1 = __webpack_require__(328);
+const shiprocket_module_1 = __webpack_require__(223);
+const notifications_module_1 = __webpack_require__(80);
+const seller_service_1 = __webpack_require__(331);
+const seller_controller_1 = __webpack_require__(332);
 let SellerModule = class SellerModule {
 };
 exports.SellerModule = SellerModule;
@@ -35435,7 +35820,7 @@ exports.SellerModule = SellerModule = __decorate([
 
 
 /***/ }),
-/* 327 */
+/* 331 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -35453,8 +35838,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
-const shiprocket_service_1 = __webpack_require__(220);
-const notifications_service_1 = __webpack_require__(78);
+const shiprocket_service_1 = __webpack_require__(224);
+const notifications_service_1 = __webpack_require__(82);
 const client_1 = __webpack_require__(13);
 let SellerService = class SellerService {
     constructor(prisma, shiprocketService, notificationsService) {
@@ -35779,7 +36164,7 @@ exports.SellerService = SellerService = __decorate([
 
 
 /***/ }),
-/* 328 */
+/* 332 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -35800,12 +36185,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
-const current_user_decorator_1 = __webpack_require__(46);
-const seller_service_1 = __webpack_require__(327);
-const seller_store_dto_1 = __webpack_require__(329);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(50);
+const seller_service_1 = __webpack_require__(331);
+const seller_store_dto_1 = __webpack_require__(333);
 let SellerController = class SellerController {
     constructor(sellerService) {
         this.sellerService = sellerService;
@@ -35919,7 +36304,7 @@ exports.SellerController = SellerController = __decorate([
 
 
 /***/ }),
-/* 329 */
+/* 333 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36282,7 +36667,7 @@ __decorate([
 
 
 /***/ }),
-/* 330 */
+/* 334 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36309,7 +36694,7 @@ exports.EmailModule = EmailModule = __decorate([
 
 
 /***/ }),
-/* 331 */
+/* 335 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36322,8 +36707,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatModule = void 0;
 const common_1 = __webpack_require__(2);
-const ai_chat_controller_1 = __webpack_require__(332);
-const ai_chat_service_1 = __webpack_require__(333);
+const ai_chat_controller_1 = __webpack_require__(336);
+const ai_chat_service_1 = __webpack_require__(337);
 let AiChatModule = class AiChatModule {
 };
 exports.AiChatModule = AiChatModule;
@@ -36337,7 +36722,7 @@ exports.AiChatModule = AiChatModule = __decorate([
 
 
 /***/ }),
-/* 332 */
+/* 336 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36358,7 +36743,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatController = void 0;
 const common_1 = __webpack_require__(2);
 const throttler_1 = __webpack_require__(9);
-const ai_chat_service_1 = __webpack_require__(333);
+const ai_chat_service_1 = __webpack_require__(337);
 let AiChatController = class AiChatController {
     constructor(aiChatService) {
         this.aiChatService = aiChatService;
@@ -36384,7 +36769,7 @@ exports.AiChatController = AiChatController = __decorate([
 
 
 /***/ }),
-/* 333 */
+/* 337 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36652,7 +37037,7 @@ exports.AiChatService = AiChatService = AiChatService_1 = __decorate([
 
 
 /***/ }),
-/* 334 */
+/* 338 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36665,8 +37050,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsoControlsModule = void 0;
 const common_1 = __webpack_require__(2);
-const iso_controls_service_1 = __webpack_require__(335);
-const iso_controls_controller_1 = __webpack_require__(336);
+const iso_controls_service_1 = __webpack_require__(339);
+const iso_controls_controller_1 = __webpack_require__(340);
 const prisma_module_1 = __webpack_require__(16);
 let IsoControlsModule = class IsoControlsModule {
 };
@@ -36682,7 +37067,7 @@ exports.IsoControlsModule = IsoControlsModule = __decorate([
 
 
 /***/ }),
-/* 335 */
+/* 339 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36842,7 +37227,7 @@ exports.IsoControlsService = IsoControlsService = IsoControlsService_1 = __decor
 
 
 /***/ }),
-/* 336 */
+/* 340 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36862,12 +37247,12 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsoControlsController = void 0;
 const common_1 = __webpack_require__(2);
-const iso_controls_service_1 = __webpack_require__(335);
-const jwt_auth_guard_1 = __webpack_require__(45);
-const roles_guard_1 = __webpack_require__(53);
-const roles_decorator_1 = __webpack_require__(54);
+const iso_controls_service_1 = __webpack_require__(339);
+const jwt_auth_guard_1 = __webpack_require__(49);
+const roles_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(58);
 const client_1 = __webpack_require__(13);
-const current_user_decorator_1 = __webpack_require__(46);
+const current_user_decorator_1 = __webpack_require__(50);
 let IsoControlsController = class IsoControlsController {
     constructor(isoControlsService) {
         this.isoControlsService = isoControlsService;
@@ -36925,7 +37310,7 @@ exports.IsoControlsController = IsoControlsController = __decorate([
 
 
 /***/ }),
-/* 337 */
+/* 341 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36979,7 +37364,7 @@ exports.PrismaExceptionFilter = PrismaExceptionFilter = PrismaExceptionFilter_1 
 
 
 /***/ }),
-/* 338 */
+/* 342 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -36996,7 +37381,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditLogInterceptor = void 0;
 const common_1 = __webpack_require__(2);
-const rxjs_1 = __webpack_require__(339);
+const rxjs_1 = __webpack_require__(343);
 const prisma_service_1 = __webpack_require__(12);
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 const REDACT_KEYS = new Set(['password', 'passwordHash', 'securityAnswer', 'securityAnswerHash', 'newPassword']);
@@ -37064,13 +37449,13 @@ exports.AuditLogInterceptor = AuditLogInterceptor = __decorate([
 
 
 /***/ }),
-/* 339 */
+/* 343 */
 /***/ ((module) => {
 
 module.exports = require("rxjs");
 
 /***/ }),
-/* 340 */
+/* 344 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -37083,7 +37468,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RedisModule = void 0;
 const common_1 = __webpack_require__(2);
-const redis_service_1 = __webpack_require__(341);
+const redis_service_1 = __webpack_require__(345);
 let RedisModule = class RedisModule {
 };
 exports.RedisModule = RedisModule;
@@ -37097,7 +37482,7 @@ exports.RedisModule = RedisModule = __decorate([
 
 
 /***/ }),
-/* 341 */
+/* 345 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -37119,7 +37504,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RedisService = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
-const ioredis_1 = __importDefault(__webpack_require__(342));
+const ioredis_1 = __importDefault(__webpack_require__(346));
 let RedisService = RedisService_1 = class RedisService {
     constructor(configService) {
         this.configService = configService;
@@ -37218,25 +37603,25 @@ exports.RedisService = RedisService = RedisService_1 = __decorate([
 
 
 /***/ }),
-/* 342 */
+/* 346 */
 /***/ ((module) => {
 
 module.exports = require("ioredis");
 
 /***/ }),
-/* 343 */
+/* 347 */
 /***/ ((module) => {
 
 module.exports = require("@sentry/node");
 
 /***/ }),
-/* 344 */
+/* 348 */
 /***/ ((module) => {
 
 module.exports = require("@sentry/profiling-node");
 
 /***/ }),
-/* 345 */
+/* 349 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -37284,7 +37669,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SentryFilter = void 0;
 const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
-const Sentry = __importStar(__webpack_require__(343));
+const Sentry = __importStar(__webpack_require__(347));
 let SentryFilter = SentryFilter_1 = class SentryFilter extends core_1.BaseExceptionFilter {
     constructor() {
         super(...arguments);
@@ -37310,7 +37695,7 @@ exports.SentryFilter = SentryFilter = SentryFilter_1 = __decorate([
 
 
 /***/ }),
-/* 346 */
+/* 350 */
 /***/ ((module) => {
 
 module.exports = require("express");

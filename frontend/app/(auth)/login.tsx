@@ -19,7 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
@@ -240,12 +246,43 @@ export default function LoginScreen() {
   }, [response]);
 
   const handleGoogleSignIn = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google Sign-In configuration missing.');
-      return;
-    }
     setError(null);
     setGoogleLoading(true);
+
+    if (Platform.OS === 'web') {
+      try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        const result = await signInWithPopup(auth, provider);
+        const fbUser = result.user;
+        const idToken = await fbUser.getIdToken();
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const accessToken = credential?.accessToken || (result as any)?._tokenResponse?.oauthAccessToken;
+
+        const res = await googleLogin({
+          email: fbUser.email || undefined,
+          name: fbUser.displayName || undefined,
+          photoUrl: fbUser.photoURL || undefined,
+          googleId: fbUser.uid,
+          idToken,
+          accessToken,
+        });
+
+        handleSuccessNavigation(Boolean(res?.isProfileIncomplete));
+        return;
+      } catch (fbErr: any) {
+        console.warn('[GoogleSignIn Web] Firebase popup error:', fbErr);
+        if (
+          fbErr?.code === 'auth/popup-closed-by-user' ||
+          fbErr?.code === 'auth/cancelled-popup-request'
+        ) {
+          setGoogleLoading(false);
+          return;
+        }
+        // If popup was blocked or failed, fall through to promptAsync fallback
+      }
+    }
+
     try {
       const result = await promptAsync({ showInRecents: true });
       if (result?.type !== 'success') {

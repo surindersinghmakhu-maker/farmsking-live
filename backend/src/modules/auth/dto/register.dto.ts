@@ -86,4 +86,9 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   farmMobile?: string;
+
+  /** Firebase Phone Auth ID Token passed from OTP verification */
+  @IsOptional()
+  @IsString()
+  firebaseIdToken?: string;
 }

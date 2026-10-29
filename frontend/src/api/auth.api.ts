@@ -78,6 +78,7 @@ export interface GoogleLoginPayload {
   photoUrl?: string;
   googleId?: string;
   accessToken?: string;
+  idToken?: string;
 }
 
 export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }> {

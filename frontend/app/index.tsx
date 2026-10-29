@@ -1659,7 +1659,11 @@ export default function PublicLandingPage() {
                   style={[S.mandiRate4DBtn, isDay && S.mandiRate4DBtnDay, isMobile && { paddingHorizontal: 6, paddingVertical: 2.5 }]}
                   onPress={() => {
                     if (user) {
-                      router.push('/(dashboard)');
+                      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                        router.push('/(partner)/(tabs)' as any);
+                      } else {
+                        router.push('/(user)/(tabs)' as any);
+                      }
                     } else {
                       setOfficialRatesModalVisible(true);
                     }
@@ -1685,7 +1689,11 @@ export default function PublicLandingPage() {
                 activeOpacity={0.94}
                 onPress={() => {
                   if (user) {
-                    router.push('/(dashboard)');
+                    if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                      router.push('/(partner)/(tabs)' as any);
+                    } else {
+                      router.push('/(user)/(tabs)' as any);
+                    }
                   } else {
                     setOfficialRatesModalVisible(true);
                   }
@@ -1935,7 +1943,12 @@ export default function PublicLandingPage() {
                       style={S.officialModalPrimaryBtn}
                       onPress={() => {
                         setOfficialRatesModalVisible(false);
-                        router.push('/(auth)/login');
+                        try {
+                          router.push('/(auth)/login' as any);
+                        } catch {}
+                        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                          window.location.href = '/login';
+                        }
                       }}
                       activeOpacity={0.88}
                     >
@@ -1967,7 +1980,22 @@ export default function PublicLandingPage() {
             {/* ══ HIGH-CONVERTING UNIFIED HERO CTA (MERGED WITH "LOGIN FOR LIVE PRICES") ══ */}
             <View style={[S.ctaRow, isMobile && { flexDirection: 'row', gap: 6, marginBottom: 6 }]}>
               <TouchableOpacity
-                onPress={() => router.push(user ? '/(dashboard)' : '/(auth)/login')}
+                onPress={() => {
+                  if (user) {
+                    if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                      router.push('/(partner)/(tabs)' as any);
+                    } else {
+                      router.push('/(user)/(tabs)' as any);
+                    }
+                  } else {
+                    try {
+                      router.push('/(auth)/login' as any);
+                    } catch {}
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.location.href = '/login';
+                    }
+                  }
+                }}
                 activeOpacity={0.88}
                 style={[
                   S.primaryBtnContainer,

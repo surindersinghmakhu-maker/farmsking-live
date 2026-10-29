@@ -457,7 +457,7 @@ export class AppSettingsService {
           const pm = { ...integrations.projectMasterData };
           if (dto.logoUrl !== undefined) pm.logoUrl = dto.logoUrl;
           if (dto.faviconUrl !== undefined) pm.faviconUrl = dto.faviconUrl;
-          await this.updateIntegrations({ ...integrations, projectMasterData: pm });
+          await this.updateIntegrations(admin, { ...integrations, projectMasterData: pm });
         }
       } catch (err) {
         console.warn('Could not sync integrations projectMasterData with brand assets:', err);

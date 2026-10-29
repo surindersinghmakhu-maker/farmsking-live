@@ -2741,95 +2741,6 @@ export default function PublicLandingPage() {
           )}
         </View>
 
-        {/* ══ DEDICATED APP DOWNLOAD & DYNAMIC SMARTPHONE QR SECTION ══ */}
-        <View style={S.appBannerWrapper}>
-          <LinearGradient
-            colors={isDay ? ['#f0fdf4', '#ecfdf5'] : ['#061a1e', '#0b192c']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              S.appDownloadCard,
-              isDay && S.appDownloadCardDay,
-              isMobile && S.appDownloadCardMobile,
-            ]}
-          >
-            {/* Left Column: App Highlights & Download CTAs */}
-            <View style={[S.appDownloadLeft, isDesktop ? { flex: 1, paddingRight: 28 } : { width: '100%' }]}>
-              <View style={[S.appDownloadBadge, isDay && S.appDownloadBadgeDay]}>
-                <Ionicons name="phone-portrait-outline" size={12} color={isDay ? '#047857' : '#34d399'} />
-                <Text style={[S.appDownloadBadgeText, isDay && S.appDownloadBadgeTextDay]}>OFFICIAL MOBILE APPLICATION</Text>
-              </View>
-
-              <Text style={[S.appDownloadHeadline, isDay && S.appDownloadHeadlineDay]}>
-                Download FarmsKing App
-              </Text>
-
-              <Text style={[S.appDownloadSubhead, isDay && S.appDownloadSubheadDay]}>
-                Scan the QR code with your smartphone camera to download and install the official FarmsKing application directly on your Android device.
-              </Text>
-
-              {/* Feature Highlights Pills */}
-              <View style={S.appDownloadFeaturesRow}>
-                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
-                  <Ionicons name="shield-checkmark" size={13} color="#10b981" />
-                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>AI Crop Doctor Scanner</Text>
-                </View>
-                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
-                  <Ionicons name="trending-up" size={13} color="#10b981" />
-                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>Real-Time APMC Mandi Rates</Text>
-                </View>
-                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
-                  <Ionicons name="cloudy-night-outline" size={13} color="#10b981" />
-                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>Satellite Field Telemetry</Text>
-                </View>
-              </View>
-
-              {/* Direct Buttons */}
-              <View style={S.appDownloadBtnsRow}>
-                <TouchableOpacity
-                  style={S.appDownloadPrimaryBtn}
-                  onPress={() => {
-                    if (typeof window !== 'undefined') {
-                      window.open(appDownloadUrl, '_blank');
-                    } else {
-                      Linking.openURL(appDownloadUrl).catch(() => {});
-                    }
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="download-outline" size={17} color="#022c22" />
-                  <Text style={S.appDownloadPrimaryBtnText}>Download Android APK</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[S.appDownloadSecondaryBtn, isDay && S.appDownloadSecondaryBtnDay]}
-                  onPress={() => router.push('/contact-us')}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="call-outline" size={15} color={isDay ? '#0f172a' : '#ffffff'} />
-                  <Text style={[S.appDownloadSecondaryBtnText, isDay && S.appDownloadSecondaryBtnTextDay]}>
-                    Helpline: {supportContact.helplinePhone}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Right Column: Dynamic QR Code */}
-            <View style={[S.appDownloadRight, isMobile && { marginTop: 16, width: '100%', alignItems: 'center' }]}>
-              <View style={[S.appQrBox, isDay && S.appQrBoxDay]}>
-                <FarmsKingQRCode
-                  size={120}
-                  url={appDownloadUrl}
-                  badgeLabel="SCAN TO DOWNLOAD APP"
-                  captionTitle="FarmsKing Mobile App"
-                  captionSub="Scan to install on smartphone"
-                  themeMode={isDay ? 'day' : 'night'}
-                />
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-
         {/* ══ COMPREHENSIVE MULTI-COLUMN RESPONSIVE FOOTER ══ */}
         <View style={[S.footer, isDay && S.footerDay]}>
           <View style={S.footerColumnsGrid}>
@@ -2905,6 +2816,37 @@ export default function PublicLandingPage() {
               <Text style={[S.helplineSub, isDay && S.helplineSubDay]}>{t.helplineHours}</Text>
               <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
               <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran • Corp: Makhu, Punjab - 143422</Text>
+            </View>
+
+            {/* Column 5: Official Mobile App QR & Download */}
+            <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
+              <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>FarmsKing App</Text>
+              <Text style={[S.footerDesc, isDay && S.footerDescDay, { marginBottom: 10, fontSize: 11 }]}>
+                Scan QR code with smartphone camera to install official Android app.
+              </Text>
+              <View style={[S.footerQrContainer, isDay && S.footerQrContainerDay]}>
+                <FarmsKingQRCode
+                  size={92}
+                  url={appDownloadUrl}
+                  badgeLabel="SCAN TO INSTALL"
+                  themeMode={isDay ? 'day' : 'night'}
+                  showCaption={false}
+                />
+              </View>
+              <TouchableOpacity
+                style={[S.footerAppDownloadBtn, isDay && S.footerAppDownloadBtnDay]}
+                onPress={() => {
+                  if (typeof window !== 'undefined') {
+                    window.open(appDownloadUrl, '_blank');
+                  } else {
+                    Linking.openURL(appDownloadUrl).catch(() => {});
+                  }
+                }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="logo-android" size={14} color="#022c22" />
+                <Text style={S.footerAppDownloadBtnText}>Download Android APK</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -6481,6 +6423,43 @@ const S = StyleSheet.create({
   },
   footerContactAddrDay: {
     color: '#64748b',
+  },
+  footerQrContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.45)',
+    marginBottom: 10,
+    ...premiumShadow('#000000', 'xs'),
+  },
+  footerQrContainerDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    ...premiumShadow('rgba(0, 0, 0, 0.05)', 'xs'),
+  },
+  footerAppDownloadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#10b981',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.pill,
+    alignSelf: 'flex-start',
+    ...premiumShadow('rgba(16, 185, 129, 0.3)', 'xs'),
+  },
+  footerAppDownloadBtnDay: {
+    backgroundColor: '#10b981',
+  },
+  footerAppDownloadBtnText: {
+    color: '#022c22',
+    fontSize: 11,
+    fontFamily: FONT.bold,
   },
   footerBottomRow: {
     borderTopWidth: 1,

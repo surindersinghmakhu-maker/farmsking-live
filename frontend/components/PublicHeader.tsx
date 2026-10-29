@@ -271,6 +271,30 @@ export default function PublicHeader({
     Linking.openURL('tel:9577622000');
   };
 
+  const [appDownloadUrl, setAppDownloadUrl] = useState<string>('https://www.farmsking.in');
+
+  useEffect(() => {
+    import('@/src/api/appSettings.api')
+      .then(({ getSupportContact }) => {
+        getSupportContact()
+          .then((contact) => {
+            if (contact?.appDownloadUrl && contact.appDownloadUrl.trim()) {
+              setAppDownloadUrl(contact.appDownloadUrl.trim());
+            }
+          })
+          .catch(() => {});
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleDownloadApp = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(appDownloadUrl, '_blank');
+    } else {
+      Linking.openURL(appDownloadUrl).catch(() => {});
+    }
+  };
+
   return (
     <>
       {/* ── Main Floating Capsule Header ── */}
@@ -783,6 +807,34 @@ export default function PublicHeader({
                     <View style={styles.modalActionPill}>
                       <Text style={styles.modalActionPillText}>Dial 95776-22000</Text>
                       <Ionicons name="call" size={10} color="#ffffff" />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Option 3: Official Mobile App */}
+              <TouchableOpacity
+                style={styles.modalActionCardApp}
+                activeOpacity={0.88}
+                onPress={handleDownloadApp}
+              >
+                <LinearGradient
+                  colors={['#0284c7', '#0369a1']}
+                  style={styles.modalActionGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.modalActionIconWrap}>
+                    <Ionicons name="phone-portrait-outline" size={24} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalActionTitle}>Official Mobile App</Text>
+                    <Text style={styles.modalActionDesc}>
+                      Download Android APK directly or scan QR code on homepage footer
+                    </Text>
+                    <View style={styles.modalActionPill}>
+                      <Text style={styles.modalActionPillText}>Download APK</Text>
+                      <Ionicons name="download-outline" size={10} color="#ffffff" />
                     </View>
                   </View>
                 </LinearGradient>
@@ -1527,6 +1579,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
     ...premiumShadow('rgba(5,150,105,0.25)', 'md'),
+  },
+  modalActionCardApp: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(2,132,199,0.25)', 'md'),
   },
   modalActionGradient: {
     flexDirection: 'row',

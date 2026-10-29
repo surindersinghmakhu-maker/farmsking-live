@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -28,6 +30,7 @@ import {
 
 type OtherCategoryFilter =
   | 'ALL'
+  | 'APP_DOWNLOAD'
   | 'REWARDS'
   | 'WALLET_FEES'
   | 'TRIAL_PLANS'
@@ -53,6 +56,7 @@ interface CategoryPill {
 
 const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'ALL', label: 'All Unexposed Settings', icon: 'apps-outline' },
+  { key: 'APP_DOWNLOAD', label: 'App Download & Link', icon: 'phone-portrait-outline' },
   { key: 'REWARDS', label: 'Referral & Bonuses', icon: 'gift-outline' },
   { key: 'WALLET_FEES', label: 'Wallet Taxes & TDS', icon: 'wallet-outline' },
   { key: 'TRIAL_PLANS', label: 'Free Trial & Plans', icon: 'ribbon-outline' },
@@ -250,6 +254,8 @@ export default function SettingOtherSetup() {
         whatsappAutoRemoveEnabled: Boolean(appForm.whatsappAutoRemoveEnabled ?? true),
         whatsappGroupJid: appForm.whatsappGroupJid || '',
         otpDeliveryChannel: appForm.otpDeliveryChannel || 'WHATSAPP',
+        appDownloadUrl: appForm.appDownloadUrl || (intForm.projectMasterData as any)?.appDownloadUrl || '',
+        latestAppVersion: appForm.latestAppVersion || (intForm.projectMasterData as any)?.latestAppVersion || '2.1.0',
       };
 
       await Promise.all([
@@ -283,6 +289,8 @@ export default function SettingOtherSetup() {
 
   const pm = intForm.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
   const q = searchQuery.toLowerCase().trim();
+  const currentAppDownloadUrl = appForm.appDownloadUrl || (intForm.projectMasterData as any)?.appDownloadUrl || '';
+  const currentLatestVersion = appForm.latestAppVersion || (intForm.projectMasterData as any)?.latestAppVersion || '2.1.0';
 
   const isVisible = (cat: OtherCategoryFilter, keywords: string) => {
     if (activeCategory !== 'ALL' && activeCategory !== cat) return false;
@@ -388,6 +396,120 @@ export default function SettingOtherSetup() {
 
       {/* Main Grid of Settings Cards */}
       <View style={[styles.grid, isDesktop && styles.gridDesktop]}>
+        {/* 0. Official Mobile App Distribution & Download Link */}
+        {isVisible('APP_DOWNLOAD', 'app download android apk play store url mobile link qr code version install') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardFull]}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: '#ecfdf5' }]}>
+                <Ionicons name="phone-portrait" size={20} color="#10b981" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>FarmsKing Mobile App Distribution & Download Link</Text>
+                  <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#10b981' }}>Live Website Sync</Text>
+                  </View>
+                </View>
+                <Text style={[styles.cardSub, { color: subTextColor }]}>
+                  Updates the Android APK download URL and automatically regenerates the live QR code across the website footer and mobile portals.
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 20, marginTop: 4 }}>
+              <View style={{ flex: 2, gap: 12 }}>
+                <View style={styles.fieldItem}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={[styles.label, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
+                    {currentAppDownloadUrl ? (
+                      <TouchableOpacity
+                        onPress={() => {
+                          const target = currentAppDownloadUrl.trim();
+                          const url = target.startsWith('http') ? target : `https://${target}`;
+                          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                            window.open(url, '_blank');
+                          } else {
+                            Linking.openURL(url).catch(() => {});
+                          }
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#10b981' }}>Test Link ↗</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    placeholder="https://farmsking.in/download/farmsking.apk"
+                    placeholderTextColor={subTextColor}
+                    value={currentAppDownloadUrl}
+                    onChangeText={(txt) => {
+                      updateAppField('appDownloadUrl' as any, txt);
+                      updateMasterField('appDownloadUrl' as any, txt);
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                    Direct APK download URL or Google Play Store link. Visitors scanning the homepage footer QR code will be routed here.
+                  </Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Latest Production Build Version</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    placeholder="2.1.0"
+                    placeholderTextColor={subTextColor}
+                    value={currentLatestVersion}
+                    onChangeText={(txt) => {
+                      updateAppField('latestAppVersion' as any, txt);
+                      updateMasterField('latestAppVersion' as any, txt);
+                    }}
+                  />
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                    Current published version shown on public download cards and release notifications.
+                  </Text>
+                </View>
+              </View>
+
+              {/* QR Preview Box */}
+              <View style={{
+                flex: 1,
+                backgroundColor: isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.04)',
+                borderRadius: 14,
+                padding: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: cardBorder,
+              }}>
+                <View style={{
+                  padding: 10,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: '#10b981',
+                  marginBottom: 8,
+                }}>
+                  <Image
+                    source={{
+                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                        (currentAppDownloadUrl || 'https://www.farmsking.in').trim()
+                      )}&margin=4`,
+                    }}
+                    style={{ width: 110, height: 110, borderRadius: 6 }}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: textColor, textAlign: 'center' }}>
+                  Live Auto-Generated QR
+                </Text>
+                <Text style={{ fontSize: 10, color: subTextColor, textAlign: 'center', marginTop: 2 }} numberOfLines={1}>
+                  {currentAppDownloadUrl || 'https://www.farmsking.in'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* 1. Referral & Welcome Bonus Settings */}
         {isVisible('REWARDS', 'referral welcome bonus rewards partner offer') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
@@ -1748,6 +1870,9 @@ const styles = StyleSheet.create({
   },
   cardHalf: {
     width: '48.8%',
+  },
+  cardFull: {
+    width: '100%',
   },
   cardHeader: {
     flexDirection: 'row',

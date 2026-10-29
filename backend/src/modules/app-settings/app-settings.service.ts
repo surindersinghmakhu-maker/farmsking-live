@@ -156,8 +156,7 @@ export class AppSettingsService {
     const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
     const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
 
-    const settings = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } }).catch(() => null);
-    const appDownloadUrl = settings?.appDownloadUrl || (pm as any).appDownloadUrl || 'https://www.farmsking.in';
+    const appDownloadUrl = (settings as any)?.appDownloadUrl || (pm as any)?.appDownloadUrl || 'https://www.farmsking.in';
 
     return {
       name: name || 'FarmsKing Executive Support',

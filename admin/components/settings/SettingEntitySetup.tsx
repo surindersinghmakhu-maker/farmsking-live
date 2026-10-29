@@ -210,12 +210,15 @@ export default function SettingEntitySetup() {
       await updateMutation.mutateAsync({
         projectMasterData: pmd,
       });
-      if (pmd.appDownloadUrl) {
+      if (pmd.appDownloadUrl !== undefined || pmd.latestAppVersion !== undefined) {
         try {
-          await updateAppSettings({ appDownloadUrl: pmd.appDownloadUrl });
+          await updateAppSettings({
+            appDownloadUrl: pmd.appDownloadUrl || '',
+            latestAppVersion: pmd.latestAppVersion || '2.1.0',
+          });
         } catch {}
       }
-      showToast('✅ FK Setting saved and synchronized successfully!');
+      showToast('✅ App Download link & FK Setting saved successfully!');
     } catch (err: any) {
       Alert.alert('Save Failed', err?.message || 'Failed to save FK Setting');
     }

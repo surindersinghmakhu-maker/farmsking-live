@@ -176,7 +176,7 @@ export class AppSettingsService {
     const appDownloadUrl = (settings as any)?.appDownloadUrl || (pm as any)?.appDownloadUrl || 'https://www.farmsking.in';
 
     const supportFaviconUrl = (settings as any)?.faviconUrl || (settings as any)?.featureFlags?.faviconUrl || pm.faviconUrl || 'https://farmsking.in/favicon.ico';
-    const supportLogoUrl = (settings as any)?.logoUrl || pm.logoUrl || 'https://farmsking.in/assets/logo.png';
+    const supportLogoUrl = (settings as any)?.logoUrl || pm.logoUrl || 'https://farmsking.in/brand_logo.png';
 
     return {
       name: name || 'FarmsKing Executive Support',
@@ -204,7 +204,7 @@ export class AppSettingsService {
       brandDisplayName: pm.brandDisplayName,
       shortName: pm.shortName,
       tagline: pm.tagline,
-      logoUrl: pm.logoUrl || 'https://farmsking.in/assets/logo.png',
+      logoUrl: pm.logoUrl || 'https://farmsking.in/brand_logo.png',
       faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.ico',
       mcaSrn: pm.mcaSrn,
       crcApprovalStatus: pm.crcApprovalStatus,

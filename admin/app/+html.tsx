@@ -29,12 +29,12 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:type" content="website" />
         <meta property="og:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
         <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
-        <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
+        <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
         <meta name="twitter:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
-        <meta name="twitter:image" content="https://farmsking.in/farmsking_logo.png" />
+        <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
         {/* WebSite Sitelinks SearchBox Schema for Google #1 Ranking */}
         <script

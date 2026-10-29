@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 export default function PublicHeader({ 
@@ -59,7 +60,7 @@ export default function PublicHeader({
     <>
       <View style={[styles.floatingHeader, !isDesktop && styles.floatingHeaderMobile, menuOpen && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
         <TouchableOpacity style={styles.logoContainer} onPress={() => router.push('/')}>
-          <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 36, height: 36, marginRight: 8 }} resizeMode="contain" />
+          <BrandLogo size={36} useHdQuality style={{ marginRight: 8 }} />
           <View>
             <Text style={styles.logoText}>FarmsKing</Text>
             <Text style={{ color: '#10b981', fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.5, marginTop: -2 }}>SMART FARMING PLATFORM</Text>

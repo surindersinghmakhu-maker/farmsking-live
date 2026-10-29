@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { apiClient } from '@/src/api/client';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 const ROLE_LABELS: Record<string, { title: string; color: string; icon: string; description: string }> = {
   TECHNICAL_TRAINER: {
@@ -99,7 +100,8 @@ export default function StaffProfileSetupScreen() {
       <View style={styles.container}>
         <LinearGradient colors={[roleMeta.color, '#0f172a']} style={styles.header}>
           <View style={{ alignItems: 'center', paddingTop: 30, paddingBottom: 16 }}>
-            <Ionicons name="checkmark-circle" size={54} color="#ffffff" />
+            <BrandLogo size={46} useHdQuality style={{ marginBottom: 8 }} />
+            <Ionicons name="checkmark-circle" size={44} color="#ffffff" />
             <Text style={styles.headerTitle}>{isTechnicalTrainer ? 'Basic Employee Info Saved!' : 'Profile Submitted!'}</Text>
           </View>
         </LinearGradient>
@@ -132,7 +134,8 @@ export default function StaffProfileSetupScreen() {
     <View style={styles.container}>
       <LinearGradient colors={[roleMeta.color, '#0f172a']} style={styles.header}>
         <View style={{ alignItems: 'center', paddingTop: Platform.OS === 'ios' ? 50 : 30, paddingBottom: 16 }}>
-          <Ionicons name={roleMeta.icon as any} size={40} color="#ffffff" />
+          <BrandLogo size={52} useHdQuality style={{ marginBottom: 10 }} />
+          <Ionicons name={roleMeta.icon as any} size={32} color="#ffffff" />
           <Text style={styles.headerTitle}>{roleMeta.title}</Text>
           <Text style={styles.headerSub}>
             {isTechnicalTrainer ? 'Basic Employee Information' : 'Complete Profile to Get Approved'}

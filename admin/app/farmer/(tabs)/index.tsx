@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 export default function AgriHubIndexScreen() {
   const router = useRouter();
@@ -12,9 +13,7 @@ export default function AgriHubIndexScreen() {
       {/* Header Banner */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <View style={styles.logoBadge}>
-            <Ionicons name="leaf" size={20} color="#ffffff" />
-          </View>
+          <BrandLogo size={36} useHdQuality style={{ marginRight: 4 }} />
           <View>
             <Text style={styles.title}>Agri-Hub Command</Text>
             <Text style={styles.subtitle}>Intelligence for Every Field • Crop Radar & Mandi Analytics</Text>

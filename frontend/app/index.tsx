@@ -25,6 +25,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AdminWebPortalScreen from './admin';
 import { useAuth } from '@/src/store/auth-context';
 import PublicHeader from '@/components/PublicHeader';
+import { BrandLogo } from '@/src/components/BrandLogo';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
 import { getSupportContact } from '@/src/api/appSettings.api';
 import { LIVE_FARMER_ACTIVITIES, getUnifiedLiveFarmerFeed, recordRealFarmerActivity, getActivityDisplayTime, LiveFarmerActivity } from '@/constants/liveFarmerFeed';
@@ -2775,11 +2776,7 @@ export default function PublicLandingPage() {
             {/* Column 1: Brand & Mission */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
               <View style={S.footerBrandRow}>
-                <Image
-                  source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
-                  style={S.footerLogoImg}
-                  resizeMode="contain"
-                />
+                <BrandLogo size={36} useHdQuality style={S.footerLogoImg} />
                 <Text style={[S.footerBrandName, isDay && S.footerBrandNameDay]}>FarmsKing</Text>
               </View>
               <Text style={[S.footerDesc, isDay && S.footerDescDay]}>
@@ -2992,10 +2989,10 @@ export default function PublicLandingPage() {
             {/* Header: Brand & Close Button */}
             <View style={S.drawerHeaderRow}>
               <View style={S.drawerBrandRow}>
-                <Image
-                  source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
+                <BrandLogo
+                  size={38}
+                  useHdQuality
                   style={S.drawerLogoImg}
-                  resizeMode="contain"
                 />
                 <View>
                   <Text style={[S.drawerBrandText, isDay && S.drawerBrandTextDay]}>FarmsKing</Text>

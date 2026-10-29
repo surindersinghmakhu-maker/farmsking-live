@@ -332,7 +332,8 @@ export default function PublicHeader({
           {/* Logo */}
           <TouchableOpacity style={[styles.logo, isMobile && { gap: width < 380 ? 4 : 6, flexShrink: 0 }]} onPress={() => goTo('/')} activeOpacity={0.8}>
             <BrandLogo
-              size={isMobile ? 26 : 34}
+              size={isMobile ? 28 : 36}
+              useHdQuality={true}
             />
             <View>
               <Text

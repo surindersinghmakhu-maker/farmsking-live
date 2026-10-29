@@ -30,12 +30,12 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:type" content="website" />
         <meta property="og:title" content="FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)" />
         <meta property="og:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
-        <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
+        <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)" />
         <meta name="twitter:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
-        <meta name="twitter:image" content="https://farmsking.in/farmsking_logo.png" />
+        <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
         {/* WebSite Sitelinks SearchBox Schema for Google Ranking */}
         <script
@@ -112,7 +112,7 @@ export default function Root({ children }: PropsWithChildren) {
                 "FarmsKing Technologies"
               ],
               "url": "https://farmsking.in",
-              "logo": "https://farmsking.in/farmsking_logo.png",
+              "logo": "https://farmsking.in/brand_logo.png",
               "slogan": "Farming Easy, Farming Smart",
               "description": "FARMSKING TECHNOLOGIES PRIVATE LIMITED (farmsking.in) is India's leading Smart Farming Platform & Agriculture App. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing encompasses the Multi-King ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique across all verticals, blending rare technology (multimodal AI vision, satellite remote sensing) with real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute guarantee of 100% pure authentic food with zero counterfeits. A divine boon for farmers and plant lovers. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: Zero hardware sales, zero equipment or machinery rentals, and zero farm machinery manufacturing. Exclusively dedicated to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, live plants, and digital farmer accounting.",
               "address": [

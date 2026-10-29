@@ -31,6 +31,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { uploadPhoto, UploadResponse } from '@/src/api/uploads.api';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
 import { updateWebFavicon } from '@/src/hooks/useAppSettings';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 export type MasterDataSubTab =
   | 'basic-details'
@@ -666,12 +667,12 @@ export default function SettingEntitySetup() {
                           Official Brand Logo
                         </Text>
                       </View>
-                      {masterData.logoUrl && masterData.logoUrl !== 'https://farmsking.in/assets/logo.png' ? (
+                      {masterData.logoUrl && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' && !masterData.logoUrl.includes('farmsking.in/assets/logo.png') ? (
                         <TouchableOpacity
                           onPress={() => {
-                            handleUpdateMasterField('logoUrl', 'https://farmsking.in/assets/logo.png');
-                            handleUpdateAboutField('logoUrl', 'https://farmsking.in/assets/logo.png');
-                            updateAppSettings({ logoUrl: 'https://farmsking.in/assets/logo.png' }).catch(() => { });
+                            handleUpdateMasterField('logoUrl', 'https://farmsking.in/brand_logo.png');
+                            handleUpdateAboutField('logoUrl', 'https://farmsking.in/brand_logo.png');
+                            updateAppSettings({ logoUrl: 'https://farmsking.in/brand_logo.png' }).catch(() => { });
                             showToast('Reset logo to default official emblem');
                           }}
                         >
@@ -694,11 +695,15 @@ export default function SettingEntitySetup() {
                       padding: 10,
                       position: 'relative',
                     }}>
-                      <Image
-                        source={{ uri: resolveMediaUrl(masterData.logoUrl) || 'https://farmsking.in/assets/logo.png' }}
-                        style={{ width: '85%', height: 95 }}
-                        resizeMode="contain"
-                      />
+                      {masterData.logoUrl && !masterData.logoUrl.includes('farmsking.in/assets/logo.png') && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' ? (
+                        <Image
+                          source={{ uri: resolveMediaUrl(masterData.logoUrl) || 'https://farmsking.in/brand_logo.png' }}
+                          style={{ width: '85%', height: 95 }}
+                          resizeMode="contain"
+                        />
+                      ) : (
+                        <BrandLogo size={88} useHdQuality={true} />
+                      )}
                       <View style={{ position: 'absolute', bottom: 6, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                         <Text style={{ fontSize: 9, color: '#ffffff', fontWeight: '700' }}>LIVE PREVIEW</Text>
                       </View>
@@ -741,7 +746,7 @@ export default function SettingEntitySetup() {
                           handleUpdateMasterField('logoUrl', txt);
                           handleUpdateAboutField('logoUrl', txt);
                         }}
-                        placeholder="Or paste direct image URL (PNG, JPG, WEBP, SVG)"
+                        placeholder="https://farmsking.in/brand_logo.png or uploaded image URL"
                         placeholderTextColor={subTextColor}
                       />
                     </View>

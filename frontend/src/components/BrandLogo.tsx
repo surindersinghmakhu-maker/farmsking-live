@@ -66,8 +66,11 @@ export function BrandLogo({
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  // Prefer Database logoUrl when present (and not forcing fast bundled asset or gold ring); fall back to local official emblem
-  const finalSource = (logoUri && !imageError && !useFastBundledOnly && !useGoldRing)
+  // Guard against known broken legacy URLs or invalid schemes
+  const isInvalidRemoteLogo = !logoUri || logoUri.includes('farmsking.in/assets/logo.png') || imageError;
+
+  // Prefer valid database/custom uploaded logoUrl when present; fall back to local official brand emblem
+  const finalSource = (!isInvalidRemoteLogo && !useFastBundledOnly && !useGoldRing)
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 

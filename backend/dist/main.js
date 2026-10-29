@@ -3218,7 +3218,7 @@ let AppSettingsService = class AppSettingsService {
         const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
         const appDownloadUrl = settings?.appDownloadUrl || pm?.appDownloadUrl || 'https://www.farmsking.in';
         const supportFaviconUrl = settings?.faviconUrl || settings?.featureFlags?.faviconUrl || pm.faviconUrl || 'https://farmsking.in/favicon.ico';
-        const supportLogoUrl = settings?.logoUrl || pm.logoUrl || 'https://farmsking.in/assets/logo.png';
+        const supportLogoUrl = settings?.logoUrl || pm.logoUrl || 'https://farmsking.in/brand_logo.png';
         return {
             name: name || 'FarmsKing Executive Support',
             mobile: helplinePhone,
@@ -3243,7 +3243,7 @@ let AppSettingsService = class AppSettingsService {
             brandDisplayName: pm.brandDisplayName,
             shortName: pm.shortName,
             tagline: pm.tagline,
-            logoUrl: pm.logoUrl || 'https://farmsking.in/assets/logo.png',
+            logoUrl: pm.logoUrl || 'https://farmsking.in/brand_logo.png',
             faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.ico',
             mcaSrn: pm.mcaSrn,
             crcApprovalStatus: pm.crcApprovalStatus,
@@ -4109,7 +4109,7 @@ exports.DEFAULT_PROJECT_MASTER_DATA = {
     approvingAuthority: 'Assistant Registrar of Companies, CRC Manesar',
     nicCodes: '62013, 01619',
     activityDescription: 'Providing software support and maintenance to clients, supporting activities for crop production & smart farming',
-    logoUrl: 'https://farmsking.in/assets/logo.png',
+    logoUrl: 'https://farmsking.in/brand_logo.png',
     faviconUrl: 'https://farmsking.in/favicon.ico',
     premisesName: 'M/s GURU NANAK COMPUTER ACADEMY',
     landmark: 'Near Co-operative Bank',
@@ -4642,7 +4642,7 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
         companyName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
         brandName: 'FarmsKing',
         tagline: 'National Agritech Platform | AI Crop Doctor, Live Mandi, Organic Fertilizers & Floriculture',
-        logoUrl: 'https://farmsking.in/assets/logo.png',
+        logoUrl: 'https://farmsking.in/brand_logo.png',
         faviconUrl: 'https://farmsking.in/favicon.ico',
         registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India',
         headquarters: 'Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India',

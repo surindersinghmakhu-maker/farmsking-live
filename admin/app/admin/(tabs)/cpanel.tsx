@@ -19,6 +19,7 @@ import {
   useUpdateSystemIntegrations,
 } from '@/src/hooks/useSystemIntegrations';
 import { SystemIntegrationsConfig } from '@/src/api/appSettings.api';
+import { BrandLogo } from '@/src/components/BrandLogo';
 import { router } from 'expo-router';
 
 type TabKey = 'product' | 'social' | 'about';
@@ -468,12 +469,10 @@ function AboutSettingsSection({
       {/* Brand Preview Card */}
       <View style={styles.brandPreviewCard}>
         <View style={styles.logoPreviewWrapper}>
-          {data.logoUrl ? (
+          {data.logoUrl && !data.logoUrl.includes('farmsking.in/assets/logo.png') && data.logoUrl !== 'https://farmsking.in/brand_logo.png' ? (
             <Image source={{ uri: data.logoUrl }} style={styles.logoPreviewImage} resizeMode="contain" />
           ) : (
-            <View style={styles.logoPlaceholder}>
-              <Ionicons name="image-outline" size={32} color="#64748b" />
-            </View>
+            <BrandLogo size={52} useHdQuality={true} />
           )}
         </View>
         <View style={styles.brandInfoPreview}>
@@ -526,7 +525,7 @@ function AboutSettingsSection({
               label="Company Logo Image URL"
               value={data.logoUrl}
               onChangeText={(val) => onChange({ ...data, logoUrl: val })}
-              placeholder="https://farmsking.in/assets/logo.png"
+              placeholder="https://farmsking.in/brand_logo.png"
             />
           </View>
           <View style={styles.colHalf}>

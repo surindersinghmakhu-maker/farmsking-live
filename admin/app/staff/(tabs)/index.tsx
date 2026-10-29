@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 export default function OperationsDeskIndexScreen() {
   const router = useRouter();
@@ -12,9 +13,7 @@ export default function OperationsDeskIndexScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <View style={styles.logoBadge}>
-            <Ionicons name="compass" size={20} color="#ffffff" />
-          </View>
+          <BrandLogo size={36} useHdQuality style={{ marginRight: 4 }} />
           <View>
             <Text style={styles.title}>Operations Desk</Text>
             <Text style={styles.subtitle}>Command • Coordinate • Deliver • Technical Training & Dispatch</Text>

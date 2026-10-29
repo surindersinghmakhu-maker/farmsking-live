@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 interface DoseItem {
   srNo: number;
@@ -112,21 +113,21 @@ export default function DosePage() {
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          🌼 Marigold Schedule / गेंदे का ड्रेंचिंग शेड्यूल
+          🌼 Marigold Drenching Schedule
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Capturable Master Unified Report Card */}
         <View ref={scheduleShotRef} collapsable={false} style={styles.masterReportCard}>
-          {/* Official Report Title Header with Official Logo */}
+          {/* Official Report Title Header with Official Brand Logo */}
           <View style={styles.reportHeaderBox}>
-            <Image source={FARMSKING_ICON} style={styles.logoIcon} resizeMode="contain" />
-            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 4 }}>
+            <BrandLogo size={40} useHdQuality />
+            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 8 }}>
               <Text style={styles.reportMainTitle}>FARMSKING OFFICIAL DRENCHING REPORT</Text>
-              <Text style={styles.reportSubTitle}>MARIGOLD PRODUCTION (गेंदे का ड्रेंचिंग शेड्यूल)</Text>
+              <Text style={styles.reportSubTitle}>MARIGOLD PRODUCTION CROP PROTOCOL</Text>
             </View>
-            <Image source={FARMSKING_LOGO} style={styles.logoBrand} resizeMode="contain" />
+            <BrandLogo size={40} useHdQuality />
           </View>
 
           {/* Farmer & Field Details Metadata Table */}

@@ -40,16 +40,6 @@ const MAIN_NAV_LINKS = [
     isAction: 'home',
   },
   {
-    id: 'store',
-    label: 'Agri Store',
-    path: '/shop',
-    icon: 'storefront-outline',
-    image: require('@/assets/images/icon_agristore_3d_clean.png'),
-    color: '#f97316',
-    bg: 'rgba(249,115,22,0.1)',
-    bgNight: 'rgba(249,115,22,0.22)',
-  },
-  {
     id: 'doctors',
     label: 'Crop Doctors',
     path: '/topic/Crop-Doctors',
@@ -58,6 +48,16 @@ const MAIN_NAV_LINKS = [
     color: '#06b6d4',
     bg: 'rgba(6,182,212,0.1)',
     bgNight: 'rgba(6,182,212,0.22)',
+  },
+  {
+    id: 'store',
+    label: 'Agri Store',
+    path: '/shop',
+    icon: 'storefront-outline',
+    image: require('@/assets/images/icon_agristore_3d_clean.png'),
+    color: '#f97316',
+    bg: 'rgba(249,115,22,0.1)',
+    bgNight: 'rgba(249,115,22,0.22)',
   },
   {
     id: 'helpline',

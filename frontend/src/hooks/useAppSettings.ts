@@ -3,13 +3,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/appSettings.api';
 
 export function updateWebFavicon(url?: string | null) {
-  if (typeof document === 'undefined' || !url) return;
+  if (typeof document === 'undefined') return;
   try {
-    const resolvedUrl = url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')
-      ? url
-      : `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    const rawUrl = url || '/favicon.png';
+    const resolvedUrl = rawUrl.startsWith('http') || rawUrl.startsWith('blob:') || rawUrl.startsWith('data:')
+      ? rawUrl
+      : `${window.location.origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
 
-    let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
+    const pngUrl = resolvedUrl.endsWith('.ico') ? resolvedUrl.replace('.ico', '.png') : resolvedUrl;
+
+    // 1. Standard rel="icon" PNG
+    let linkPng = document.querySelector("link[rel='icon'][type='image/png']") as HTMLLinkElement | null;
+    if (!linkPng) {
+      linkPng = document.createElement('link');
+      linkPng.rel = 'icon';
+      linkPng.type = 'image/png';
+      document.head.appendChild(linkPng);
+    }
+    linkPng.href = pngUrl;
+
+    // 2. Generic rel="icon"
+    let link = document.querySelector("link[rel='icon']:not([type='image/png'])") as HTMLLinkElement | null;
     if (!link) {
       link = document.createElement('link');
       link.rel = 'icon';
@@ -17,6 +31,7 @@ export function updateWebFavicon(url?: string | null) {
     }
     link.href = resolvedUrl;
 
+    // 3. rel="shortcut icon"
     let shortcutLink = document.querySelector("link[rel='shortcut icon']") as HTMLLinkElement | null;
     if (!shortcutLink) {
       shortcutLink = document.createElement('link');
@@ -25,13 +40,27 @@ export function updateWebFavicon(url?: string | null) {
     }
     shortcutLink.href = resolvedUrl;
 
-    const appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
-    if (appleLink) {
-      appleLink.href = resolvedUrl;
+    // 4. rel="apple-touch-icon"
+    let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
+    if (!appleLink) {
+      appleLink = document.createElement('link');
+      appleLink.rel = 'apple-touch-icon';
+      document.head.appendChild(appleLink);
     }
+    appleLink.href = pngUrl;
   } catch (e) {
     // ignore
   }
+}
+
+// Immediately ensure official favicon on browser execution
+if (typeof document !== 'undefined') {
+  updateWebFavicon();
+}
+
+export function AppFaviconGlobalizer() {
+  useAppSettings();
+  return null;
 }
 
 export function useAppSettings() {
@@ -41,9 +70,7 @@ export function useAppSettings() {
   });
 
   useEffect(() => {
-    if (query.data?.faviconUrl) {
-      updateWebFavicon(query.data.faviconUrl);
-    }
+    updateWebFavicon(query.data?.faviconUrl || '/favicon.png');
   }, [query.data?.faviconUrl]);
 
   return query;

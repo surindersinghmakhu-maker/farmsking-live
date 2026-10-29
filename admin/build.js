@@ -215,13 +215,21 @@ try {
     <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Surinder Singh, Gurnam Singh, Surinder Academy, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India" />
     <meta property="og:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
     <meta property="og:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
-    <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
+    <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
     <meta property="og:url" content="https://farmsking.in" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />
     <meta name="twitter:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
-    <meta name="twitter:image" content="https://farmsking.in/farmsking_logo.png" />
+    <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
+
+    <!-- 🌟 Global Official FarmsKing Brand Favicons & Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+
     <!-- Google & AI Search Engine Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
@@ -230,7 +238,7 @@ try {
       "name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
       "alternateName": ["FarmsKing", "FarmsKing Technologies"],
       "url": "https://farmsking.in",
-      "logo": "https://farmsking.in/farmsking_logo.png",
+      "logo": "https://farmsking.in/brand_logo.png",
       "description": "National agricultural technology platform delivering multimodal AI crop pathology, certified vermicompost bio-fertilizers, commercial marigold floriculture advisory, live mandi commodity intelligence, and urban balcony gardening kits across India.",
       "address": [
         {

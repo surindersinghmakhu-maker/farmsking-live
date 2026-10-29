@@ -804,11 +804,15 @@ export default function SettingEntitySetup() {
                         borderColor: cardBorder,
                         maxWidth: 220,
                       }}>
-                        <Image
-                          source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.ico' }}
-                          style={{ width: 18, height: 18, borderRadius: 3 }}
-                          resizeMode="contain"
-                        />
+                        {masterData.faviconUrl && !masterData.faviconUrl.endsWith('.ico') && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
+                          <Image
+                            source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.png' }}
+                            style={{ width: 18, height: 18, borderRadius: 3 }}
+                            resizeMode="contain"
+                          />
+                        ) : (
+                          <BrandLogo size={18} useHdQuality={true} />
+                        )}
                         <Text style={{ fontSize: 11, fontWeight: '600', color: textColor }} numberOfLines={1}>
                           FarmsKing - India's Smart...
                         </Text>
@@ -817,11 +821,15 @@ export default function SettingEntitySetup() {
 
                       {/* Large 32x32 Favicon Zoom */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                        <Image
-                          source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.ico' }}
-                          style={{ width: 32, height: 32, borderRadius: 6 }}
-                          resizeMode="contain"
-                        />
+                        {masterData.faviconUrl && !masterData.faviconUrl.endsWith('.ico') && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
+                          <Image
+                            source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.png' }}
+                            style={{ width: 32, height: 32, borderRadius: 6 }}
+                            resizeMode="contain"
+                          />
+                        ) : (
+                          <BrandLogo size={32} useHdQuality={true} />
+                        )}
                         <Text style={{ fontSize: 10, color: subTextColor }}>32×32 & 18×18 Browser Tab View</Text>
                       </View>
 

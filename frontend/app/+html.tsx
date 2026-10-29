@@ -326,10 +326,11 @@ export default function Root({ children }: PropsWithChildren) {
 
 
         {/* App Favicon & Official FarmsKing Logo Icons */}
-        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="icon" sizes="192x192" href="/icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
 
         {/* 🌟 100% Reliable Production Web Fonts & Vector Icons CDN Fallbacks */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

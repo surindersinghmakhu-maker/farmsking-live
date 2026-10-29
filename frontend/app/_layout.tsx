@@ -24,6 +24,7 @@ import { LanguageProvider } from '@/src/store/language-context';
 import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { SplashView } from '@/components/SplashView';
 import PublicBottomNav from '@/components/PublicBottomNav';
+import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -167,6 +168,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AppFaviconGlobalizer />
       <LanguageProvider>
         <ExecutiveThemeProvider>
           <AuthProvider>

@@ -3243,6 +3243,16 @@ export default function PublicLandingPage() {
                   {user ? 'Open Farmer Dashboard' : 'Login / Enter FarmsKing App'}
                 </Text>
               </TouchableOpacity>
+
+              {/* Drawer Statutory Copyright Footer */}
+              <View style={{ alignItems: 'center', marginTop: 18, marginBottom: 12, paddingHorizontal: 12 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: isDay ? '#475569' : '#94a3b8', textAlign: 'center' }}>
+                  © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED
+                </Text>
+                <Text style={{ fontSize: 9.5, color: isDay ? '#64748b' : '#64748b', textAlign: 'center', marginTop: 3 }}>
+                  All rights reserved • Regd: Goindwal Sahib, Tarn Taran, Punjab
+                </Text>
+              </View>
             </ScrollView>
           </View>
         </View>

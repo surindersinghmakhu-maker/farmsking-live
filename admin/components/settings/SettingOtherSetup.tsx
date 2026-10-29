@@ -35,10 +35,7 @@ type OtherCategoryFilter =
   | 'WALLET_FEES'
   | 'TRIAL_PLANS'
   | 'GARDEN_FEES'
-  | 'SUB_MAINTENANCE'
-  | 'WHATSAPP_CALLS'
   | 'ECOMMERCE_RULES'
-  | 'OTP_RULES'
   | 'REGIONAL_FORMATS'
   | 'CROP_SEASONS'
   | 'BACKUP_RECOVERY'
@@ -59,10 +56,7 @@ const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'WALLET_FEES', label: 'Wallet Taxes & TDS', icon: 'wallet-outline' },
   { key: 'TRIAL_PLANS', label: 'Free Trial & Plans', icon: 'ribbon-outline' },
   { key: 'GARDEN_FEES', label: 'Garden & Direct Sales', icon: 'flower-outline' },
-  { key: 'SUB_MAINTENANCE', label: 'Module Lockdowns', icon: 'lock-closed-outline' },
-  { key: 'WHATSAPP_CALLS', label: 'Calls & WhatsApp Sync', icon: 'call-outline' },
   { key: 'ECOMMERCE_RULES', label: 'Store Marketplace', icon: 'cart-outline' },
-  { key: 'OTP_RULES', label: 'OTP & Anti-Spam', icon: 'key-outline' },
   { key: 'REGIONAL_FORMATS', label: 'Regional & Currency', icon: 'globe-outline' },
   { key: 'CROP_SEASONS', label: 'Crop Cycles & Seasons', icon: 'calendar-outline' },
   { key: 'BACKUP_RECOVERY', label: 'Backup & Recovery', icon: 'server-outline' },
@@ -804,169 +798,6 @@ export default function SettingOtherSetup() {
           </View>
         )}
 
-        {/* 5. Granular Module Lockdown Switches */}
-        {isVisible('SUB_MAINTENANCE', 'lockdown maintenance storefront agri garden wallet trainer') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#fee2e2' }]}>
-                <Ionicons name="lock-closed" size={20} color="#dc2626" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Granular Module Lockdowns</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Isolate individual sections during targeted server maintenance</Text>
-              </View>
-            </View>
-
-            <View style={{ gap: 12 }}>
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Storefront Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause public checkout and cart actions</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.storefrontMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('storefrontMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Live Mandi Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause mandi bidding and live rate feeds</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.agriMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('agriMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Garden King Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause balcony plant and urban garden appointments</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.gardenMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('gardenMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Wallet Withdrawals Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause bank payouts and UPI fund withdrawals</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.walletMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('walletMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Technical Trainer Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause onboarding and trainer exams</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.trainerMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('trainerMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 6. Group Voice Calling & WhatsApp Automation */}
-        {isVisible('WHATSAPP_CALLS', 'group call voice whatsapp jid sync auto add remove otp channel') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#dcfce7' }]}>
-                <Ionicons name="call" size={20} color="#15803d" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Calls & WhatsApp Automation</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Group advisory calls & official WhatsApp farmer sync</Text>
-              </View>
-            </View>
-
-            <View style={{ gap: 12 }}>
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Group Voice Calling</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Enable multi-farmer audio call conferences</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.groupVoiceCallEnabled ?? true)}
-                  onValueChange={(v) => updateAppField('groupVoiceCallEnabled', v)}
-                  trackColor={{ false: '#475569', true: '#15803d' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>WhatsApp Group Sync</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Synchronize farmer directory with official broadcast groups</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.whatsappGroupSyncEnabled ?? true)}
-                  onValueChange={(v) => updateAppField('whatsappGroupSyncEnabled', v)}
-                  trackColor={{ false: '#475569', true: '#15803d' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Auto-Add on Verification</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Automatically add verified growers to community group</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.whatsappAutoAddEnabled ?? true)}
-                  onValueChange={(v) => updateAppField('whatsappAutoAddEnabled', v)}
-                  trackColor={{ false: '#475569', true: '#15803d' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Auto-Remove on Deactivation</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Auto-remove blocked or deactivated accounts</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.whatsappAutoRemoveEnabled ?? true)}
-                  onValueChange={(v) => updateAppField('whatsappAutoRemoveEnabled', v)}
-                  trackColor={{ false: '#475569', true: '#15803d' }}
-                />
-              </View>
-
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Official WhatsApp Group JID</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={appForm.whatsappGroupJid || ''}
-                  placeholder="e.g. 12036302839201928@g.us"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateAppField('whatsappGroupJid', t)}
-                />
-              </View>
-
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Preferred OTP Channel</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={appForm.otpDeliveryChannel || 'WHATSAPP'}
-                  placeholder="WHATSAPP / SMS / EMAIL"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateAppField('otpDeliveryChannel', t.toUpperCase())}
-                />
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* 7. E-Commerce Store Rules & Thresholds */}
         {isVisible('ECOMMERCE_RULES', 'ecommerce store shipping delivery threshold cod reviews kyc seller') && (
@@ -1067,71 +898,6 @@ export default function SettingOtherSetup() {
           </View>
         )}
 
-        {/* 8. OTP Delivery & Anti-Spam Security Rules */}
-        {isVisible('OTP_RULES', 'otp delivery code length expiry rate limit spam') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#f1f5f9' }]}>
-                <Ionicons name="key" size={20} color="#0284c7" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>OTP Security & Rate Limiting</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Code length, timeout duration & flood protection</Text>
-              </View>
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Delivery Mode</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={intForm.otp?.deliveryMode || 'ANY_SINGLE'}
-                  placeholder="ANY_SINGLE / EMAIL_ONLY / SMS_ONLY"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateOtpField('deliveryMode', t.toUpperCase())}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>OTP Code Length (Digits)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(intForm.otp?.codeLength ?? 6)}
-                  onChangeText={(t) => updateOtpField('codeLength', parseInt(t, 10) === 4 ? 4 : 6)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Expiry Duration (Seconds)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(intForm.otp?.expirySeconds ?? 300)}
-                  onChangeText={(t) => updateOtpField('expirySeconds', parseInt(t, 10) || 300)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Max Resend Attempts</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(intForm.otp?.maxResendAttempts ?? 3)}
-                  onChangeText={(t) => updateOtpField('maxResendAttempts', parseInt(t, 10) || 3)}
-                />
-              </View>
-            </View>
-
-            <View style={{ marginTop: 12 }}>
-              <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: textColor }]}>Enable IP & Mobile Rate Limiting</Text>
-                <Switch
-                  value={Boolean(intForm.otp?.enableRateLimiting ?? true)}
-                  onValueChange={(v) => updateOtpField('enableRateLimiting', v)}
-                  trackColor={{ false: '#475569', true: '#0284c7' }}
-                />
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* 9. Regional Formatting & Localization */}
         {isVisible('REGIONAL_FORMATS', 'timezone currency format regional date time symbol') && (

@@ -24,6 +24,7 @@ import {
 import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
 import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
+import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -45,6 +46,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     label: 'FK Setting',
     icon: 'settings-outline',
     description: 'Master corporate registry, registered address, directors, branding, tax/GST, communication & system rules',
+  },
+  {
+    id: 'FEATURES',
+    label: 'Features',
+    icon: 'sparkles-outline',
+    description: 'Calls & WhatsApp automation, module lockdowns, OTP security & rate limiting',
   },
   {
     id: 'TOOLS_API',
@@ -72,6 +79,9 @@ export default function NewSettingsScreen() {
     if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
       return 'ENTITY_SETUP';
     }
+    if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
+      return 'FEATURES';
+    }
     if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       return 'TOOLS_API';
     }
@@ -86,6 +96,8 @@ export default function NewSettingsScreen() {
     const tabParam = params?.tab?.toUpperCase();
     if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
       setActiveTab('ENTITY_SETUP');
+    } else if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
+      setActiveTab('FEATURES');
     } else if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       setActiveTab('TOOLS_API');
     } else if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
@@ -833,6 +845,12 @@ export default function NewSettingsScreen() {
         {activeTab === 'ENTITY_SETUP' && (
           <View style={{ width: '100%' }}>
             <SettingEntitySetup />
+          </View>
+        )}
+
+        {activeTab === 'FEATURES' && (
+          <View style={{ width: '100%' }}>
+            <SettingFeaturesSetup />
           </View>
         )}
 

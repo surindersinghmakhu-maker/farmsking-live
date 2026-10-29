@@ -299,9 +299,6 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
                   <Text style={[styles.dropdownTitle, { color: textColor }]}>{activeTabItem.label}</Text>
-                  <Text style={[styles.dropdownSubtitle, { color: subTextColor }]} numberOfLines={1}>
-                    {activeTabItem.description}
-                  </Text>
                 </View>
               </View>
 
@@ -362,9 +359,6 @@ export default function SettingEntitySetup() {
                           ]}
                         >
                           {tab.label}
-                        </Text>
-                        <Text style={[styles.dropdownItemDesc, { color: subTextColor }]} numberOfLines={1}>
-                          {tab.description}
                         </Text>
                       </View>
                       {isSelected && (

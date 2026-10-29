@@ -44,7 +44,6 @@ type OtherCategoryFilter =
   | 'BACKUP_RECOVERY'
   | 'CERTIFICATES'
   | 'FRANCHISE_RULES'
-  | 'PROMOTERS_CAPITAL'
   | 'STORAGE_TELECOM';
 
 interface CategoryPill {
@@ -69,7 +68,6 @@ const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'BACKUP_RECOVERY', label: 'Backup & Recovery', icon: 'server-outline' },
   { key: 'CERTIFICATES', label: 'Certificates & QR', icon: 'shield-checkmark-outline' },
   { key: 'FRANCHISE_RULES', label: 'Mandi Franchise', icon: 'storefront-outline' },
-  { key: 'PROMOTERS_CAPITAL', label: 'Capital & Officers', icon: 'business-outline' },
   { key: 'STORAGE_TELECOM', label: 'Cloud Storage & Agora', icon: 'cloud-outline' },
 ];
 
@@ -1481,86 +1479,6 @@ export default function SettingOtherSetup() {
           </View>
         )}
 
-        {/* 14. Promoters, Directors & Statutory Capital */}
-        {isVisible('PROMOTERS_CAPITAL', 'promoters capital equity shares directors founder architect agronomist') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#f1f5f9' }]}>
-                <Ionicons name="business" size={20} color="#475569" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Corporate Capital & Officers</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>MCA e-MoA authorized equity shares, directors & management</Text>
-              </View>
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Authorized Capital (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(pm.promotersAndCapital?.authorizedEquityCapitalInr ?? 100000)}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'authorizedEquityCapitalInr', parseFloat(t) || 0)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Authorized Shares Count</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(pm.promotersAndCapital?.authorizedSharesCount ?? 100000)}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'authorizedSharesCount', parseInt(t, 10) || 0)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Face Value Per Share (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(pm.promotersAndCapital?.faceValuePerShareInr ?? 1)}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'faceValuePerShareInr', parseFloat(t) || 0)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Paid-Up Capital (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(pm.promotersAndCapital?.paidUpCapitalInr ?? 100000)}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'paidUpCapitalInr', parseFloat(t) || 0)}
-                />
-              </View>
-            </View>
-
-            <View style={{ gap: 10, marginTop: 10 }}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>First Directors</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.promotersAndCapital?.firstDirectors || 'Bakhshish Singh, Gagandeep Kaur'}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'firstDirectors', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Founder & Chief AI Architect</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.promotersAndCapital?.founderAndChiefAiArchitect || 'Surinder Singh'}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'founderAndChiefAiArchitect', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Lead Agronomists</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.promotersAndCapital?.leadAgronomists || 'Sudhir Kumar Mahato, Manjeet Sra'}
-                  onChangeText={(t) => updateMasterNested('promotersAndCapital', 'leadAgronomists', t)}
-                />
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* 15. Media Storage & Agora Telecom */}
         {isVisible('STORAGE_TELECOM', 'storage r2 cloudflare bucket agora telecom video audio') && (

@@ -161,13 +161,13 @@ export default function SettingEntitySetup() {
   };
 
   const handleUpdateMasterNested = (
-    section: 'themeColors' | 'socialMedia' | 'smtp' | 'emailTemplates' | 'maintenance' | 'taxGst',
+    section: 'themeColors' | 'socialMedia' | 'smtp' | 'emailTemplates' | 'maintenance' | 'taxGst' | 'promotersAndCapital',
     field: string,
     value: any
   ) => {
     setLocalConfig((prev) => {
       const currentMaster = prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
-      const currentSection = (currentMaster as any)[section] || {};
+      const currentSection = (currentMaster as any)[section] || (DEFAULT_PROJECT_MASTER_DATA as any)[section] || {};
       return {
         ...prev,
         projectMasterData: {
@@ -869,6 +869,140 @@ export default function SettingEntitySetup() {
                     <Text style={{ fontSize: 10, color: subTextColor, marginTop: 4 }}>
                       Recommended: Square 1:1 image, .ico, .png, or .svg (32×32 or 64×64px)
                     </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* ── Corporate Capital & Officers ── */}
+              <View style={{ marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: cardBorder }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="business" size={18} color="#475569" />
+                    <Text style={[styles.inputLabel, { color: textColor, fontSize: 13.5, fontWeight: '700', marginBottom: 0 }]}>
+                      Corporate Capital & Officers
+                    </Text>
+                    <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(71, 85, 105, 0.12)' : 'rgba(148, 163, 184, 0.22)' }]}>
+                      <Text style={[styles.pillBadgeText, { color: isLight ? '#334155' : '#cbd5e1' }]}>MCA e-MoA Capital & Leadership</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 11, color: subTextColor }}>
+                    Authorized equity shares, paid-up capital, first directors & founding officers
+                  </Text>
+                </View>
+
+                {/* 4 Columns for Capital Figures */}
+                <View style={styles.fourCol}>
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Authorized Capital (₹)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        keyboardType="numeric"
+                        value={String(masterData.promotersAndCapital?.authorizedEquityCapitalInr ?? 100000)}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'authorizedEquityCapitalInr', parseFloat(txt) || 0)}
+                        placeholder="100000"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Authorized Shares Count</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        keyboardType="numeric"
+                        value={String(masterData.promotersAndCapital?.authorizedSharesCount ?? 100000)}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'authorizedSharesCount', parseInt(txt, 10) || 0)}
+                        placeholder="100000"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Face Value Per Share (₹)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        keyboardType="numeric"
+                        value={String(masterData.promotersAndCapital?.faceValuePerShareInr ?? 1)}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'faceValuePerShareInr', parseFloat(txt) || 0)}
+                        placeholder="1"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Paid-Up Capital (₹)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        keyboardType="numeric"
+                        value={String(masterData.promotersAndCapital?.paidUpCapitalInr ?? 100000)}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'paidUpCapitalInr', parseFloat(txt) || 0)}
+                        placeholder="100000"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Directors and Key Officers */}
+                <View style={[styles.twoCol, { marginTop: 10 }]}>
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>First Directors</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.promotersAndCapital?.firstDirectors || 'Bakhshish Singh, Gagandeep Kaur'}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'firstDirectors', txt)}
+                        placeholder="Bakhshish Singh, Gagandeep Kaur"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Founder & Chief AI Architect</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.promotersAndCapital?.founderAndChiefAiArchitect || 'Surinder Singh'}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'founderAndChiefAiArchitect', txt)}
+                        placeholder="Surinder Singh"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.twoCol}>
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>General Manager</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.promotersAndCapital?.generalManager || 'Gurnam Singh'}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'generalManager', txt)}
+                        placeholder="Gurnam Singh"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Lead Agronomists</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.promotersAndCapital?.leadAgronomists || 'Sudhir Kumar Mahato, Manjeet Sra'}
+                        onChangeText={(txt) => handleUpdateMasterNested('promotersAndCapital', 'leadAgronomists', txt)}
+                        placeholder="Sudhir Kumar Mahato, Manjeet Sra"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
                   </View>
                 </View>
               </View>

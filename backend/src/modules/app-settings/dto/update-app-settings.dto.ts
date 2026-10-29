@@ -11,6 +11,10 @@ export class UpdateAppSettingsDto {
 
   @IsOptional()
   @IsString()
+  faviconUrl?: string;
+
+  @IsOptional()
+  @IsString()
   tagline?: string;
 
   @IsOptional()

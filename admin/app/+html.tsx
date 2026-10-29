@@ -14,6 +14,11 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 
+        {/* App Favicon & Official FarmsKing Logo Icons */}
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
         <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform founded by Surinder Singh (Surinder Academy / Surinder Agro Farm). AI crop intelligence, disease diagnosis, PAU advisory & farmer rewards." />

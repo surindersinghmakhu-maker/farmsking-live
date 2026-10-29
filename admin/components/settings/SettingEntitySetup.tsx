@@ -27,6 +27,10 @@ import {
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadPhoto, UploadResponse } from '@/src/api/uploads.api';
+import { apiClient, resolveMediaUrl } from '@/src/api/client';
+import { updateWebFavicon } from '@/src/hooks/useAppSettings';
 
 export type MasterDataSubTab =
   | 'basic-details'
@@ -204,21 +208,170 @@ export default function SettingEntitySetup() {
     showToast(`Inserted ${variable} into email subject!`);
   };
 
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+
+  const handleUpdateAboutField = (field: string, value: any) => {
+    setLocalConfig((prev) => ({
+      ...prev,
+      about: {
+        ...(prev.about || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handlePickAndUploadLogo = async () => {
+    try {
+      setIsUploadingLogo(true);
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg';
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) {
+            setIsUploadingLogo(false);
+            return;
+          }
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const { data } = await apiClient.post<UploadResponse>('/uploads', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            const resolved = resolveMediaUrl(data.fileUrl) || data.fileUrl;
+            handleUpdateMasterField('logoUrl', resolved);
+            handleUpdateAboutField('logoUrl', resolved);
+            try {
+              await updateAppSettings({ logoUrl: resolved });
+            } catch { }
+            showToast('✅ Brand Logo uploaded and updated globally!');
+          } catch (e: any) {
+            Alert.alert('Upload Failed', e?.message || 'Could not upload logo');
+          } finally {
+            setIsUploadingLogo(false);
+          }
+        };
+        input.oncancel = () => setIsUploadingLogo(false);
+        input.click();
+      } else {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          quality: 0.95,
+        });
+        if (result.canceled || !result.assets || !result.assets[0]) {
+          setIsUploadingLogo(false);
+          return;
+        }
+        const uploaded = await uploadPhoto(result.assets[0].uri);
+        const resolved = resolveMediaUrl(uploaded.fileUrl) || uploaded.fileUrl;
+        handleUpdateMasterField('logoUrl', resolved);
+        handleUpdateAboutField('logoUrl', resolved);
+        try {
+          await updateAppSettings({ logoUrl: resolved });
+        } catch { }
+        showToast('✅ Brand Logo uploaded and updated globally!');
+        setIsUploadingLogo(false);
+      }
+    } catch (err: any) {
+      setIsUploadingLogo(false);
+      Alert.alert('Upload Failed', err?.message || 'Could not open file picker');
+    }
+  };
+
+  const handlePickAndUploadFavicon = async () => {
+    try {
+      setIsUploadingFavicon(true);
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,image/webp,.ico,.png,.svg,.webp';
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) {
+            setIsUploadingFavicon(false);
+            return;
+          }
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const { data } = await apiClient.post<UploadResponse>('/uploads', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            const resolved = resolveMediaUrl(data.fileUrl) || data.fileUrl;
+            handleUpdateMasterField('faviconUrl', resolved);
+            handleUpdateAboutField('faviconUrl', resolved);
+            try {
+              await updateAppSettings({ faviconUrl: resolved });
+            } catch {}
+            if (Platform.OS === 'web') {
+              updateWebFavicon(resolved);
+            }
+            showToast('✅ Website Favicon uploaded and updated globally!');
+          } catch (e: any) {
+            Alert.alert('Upload Failed', e?.message || 'Could not upload favicon');
+          } finally {
+            setIsUploadingFavicon(false);
+          }
+        };
+        input.oncancel = () => setIsUploadingFavicon(false);
+        input.click();
+      } else {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          quality: 0.95,
+        });
+        if (result.canceled || !result.assets || !result.assets[0]) {
+          setIsUploadingFavicon(false);
+          return;
+        }
+        const uploaded = await uploadPhoto(result.assets[0].uri);
+        const resolved = resolveMediaUrl(uploaded.fileUrl) || uploaded.fileUrl;
+        handleUpdateMasterField('faviconUrl', resolved);
+        handleUpdateAboutField('faviconUrl', resolved);
+        try {
+          await updateAppSettings({ faviconUrl: resolved });
+        } catch {}
+        if (Platform.OS === 'web') {
+          updateWebFavicon(resolved);
+        }
+        showToast('✅ Website Favicon uploaded and updated globally!');
+        setIsUploadingFavicon(false);
+      }
+    } catch (err: any) {
+      setIsUploadingFavicon(false);
+      Alert.alert('Upload Failed', err?.message || 'Could not open file picker');
+    }
+  };
+
   const handleSaveMasterData = async () => {
     try {
       const pmd = localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
       await updateMutation.mutateAsync({
         projectMasterData: pmd,
+        about: {
+          ...(localConfig.about || {}),
+          logoUrl: pmd.logoUrl,
+          faviconUrl: pmd.faviconUrl,
+        },
       });
-      if (pmd.appDownloadUrl !== undefined || pmd.latestAppVersion !== undefined) {
+      if (pmd.logoUrl || pmd.faviconUrl || pmd.appDownloadUrl !== undefined || pmd.latestAppVersion !== undefined) {
         try {
           await updateAppSettings({
-            appDownloadUrl: pmd.appDownloadUrl || '',
-            latestAppVersion: pmd.latestAppVersion || '2.1.0',
+            ...(pmd.logoUrl ? { logoUrl: pmd.logoUrl } : {}),
+            ...(pmd.faviconUrl ? { faviconUrl: pmd.faviconUrl } : {}),
+            ...(pmd.appDownloadUrl !== undefined ? { appDownloadUrl: pmd.appDownloadUrl || '' } : {}),
+            ...(pmd.latestAppVersion !== undefined ? { latestAppVersion: pmd.latestAppVersion || '2.1.0' } : {}),
           });
-        } catch {}
+          if (Platform.OS === 'web' && pmd.faviconUrl) {
+            updateWebFavicon(pmd.faviconUrl);
+          }
+        } catch { }
       }
-      showToast('✅ App Download link & FK Setting saved successfully!');
+      showToast('✅ Corporate Identity, Brand Logo & Favicon saved successfully!');
     } catch (err: any) {
       Alert.alert('Save Failed', err?.message || 'Failed to save FK Setting');
     }
@@ -284,8 +437,8 @@ export default function SettingEntitySetup() {
   const filteredTabs = MASTER_DATA_TABS.filter((tab) =>
     masterSearchQuery
       ? tab.label.toLowerCase().includes(masterSearchQuery.toLowerCase()) ||
-        tab.description.toLowerCase().includes(masterSearchQuery.toLowerCase()) ||
-        tab.key.toLowerCase().includes(masterSearchQuery.toLowerCase())
+      tab.description.toLowerCase().includes(masterSearchQuery.toLowerCase()) ||
+      tab.key.toLowerCase().includes(masterSearchQuery.toLowerCase())
       : true
   );
 
@@ -365,8 +518,8 @@ export default function SettingEntitySetup() {
                                 ? '#6366f1'
                                 : '#818cf8'
                               : isLight
-                              ? 'rgba(148, 163, 184, 0.15)'
-                              : 'rgba(51, 65, 85, 0.4)',
+                                ? 'rgba(148, 163, 184, 0.15)'
+                                : 'rgba(51, 65, 85, 0.4)',
                           },
                         ]}
                       >
@@ -403,1057 +556,1291 @@ export default function SettingEntitySetup() {
 
       {/* Main Full-Width Content Pane */}
       <View style={[styles.masterContentPane, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          {/* TAB 1: Basic Details & Identity */}
-          {masterSubTab === 'basic-details' && (
-            <View style={styles.masterTabPane}>
-              {/* Group 1: Corporate Name & Brand */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Corporate Identity & Brand</Text>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Company Legal Name</Text>
-                      <TouchableOpacity onPress={() => handleCopyValue('Legal Name', masterData.companyLegalName)}>
-                        <Text style={styles.copyLink}>Copy</Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.companyLegalName}
-                        onChangeText={(txt) => handleUpdateMasterField('companyLegalName', txt)}
-                        placeholder="FARMSKING TECHNOLOGIES PRIVATE LIMITED"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Brand / Trade Name</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.brandName || (masterData as any).brandDisplayName || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('brandName', txt);
-                          handleUpdateMasterField('brandDisplayName' as any, txt);
-                        }}
-                        placeholder="FarmsKing™"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Registered Office Address</Text>
-                      <TouchableOpacity onPress={() => handleCopyValue('Registered Address', masterData.registeredOfficeAddress || (masterData as any).registeredAddress || '')}>
-                        <Text style={styles.copyLink}>Copy</Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor, height: 38 }]}
-                        value={masterData.registeredOfficeAddress || (masterData as any).registeredAddress || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('registeredOfficeAddress', txt);
-                          handleUpdateMasterField('registeredAddress' as any, txt);
-                        }}
-                        placeholder="VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India"
-                        placeholderTextColor={subTextColor}
-                        multiline
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Corporate Tagline</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor, height: 38 }]}
-                        value={masterData.tagline}
-                        onChangeText={(txt) => handleUpdateMasterField('tagline', txt)}
-                        placeholder="Farming Easy, Farming Smart | National Smart Farming Platform"
-                        placeholderTextColor={subTextColor}
-                        multiline
-                      />
-                    </View>
-                  </View>
-                </View>
+        {/* TAB 1: Basic Details & Identity */}
+        {masterSubTab === 'basic-details' && (
+          <View style={styles.masterTabPane}>
+            {/* Group 1: Corporate Name & Brand */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Corporate Identity & Brand</Text>
               </View>
 
-              {/* Group 2: Ministry of Corporate Affairs (MCA) Details */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Ministry of Corporate Affairs (MCA) Registrations</Text>
-                  <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
-                    <Text style={[styles.pillBadgeText, { color: '#6366f1' }]}>Government of India</Text>
-                  </View>
-                </View>
-
-                <View style={styles.fourCol}>
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>MCA Incorporation SRN</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.mcaSrn}
-                        onChangeText={(txt) => handleUpdateMasterField('mcaSrn', txt)}
-                        placeholder="AC6979718"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>CIN Number</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.cinNumber || (masterData as any).cin || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('cinNumber', txt);
-                          handleUpdateMasterField('cin' as any, txt);
-                        }}
-                        placeholder="U01100PB2026PTC063294"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Company PAN</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.companyPan || (masterData as any).panNumber || ''}
-                        onChangeText={(txt) => {
-                          const val = txt.toUpperCase();
-                          handleUpdateMasterField('companyPan', val);
-                          handleUpdateMasterField('panNumber' as any, val);
-                        }}
-                        placeholder="AABCF1234D"
-                        placeholderTextColor={subTextColor}
-                        autoCapitalize="characters"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Company TAN</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.companyTan || ''}
-                        onChangeText={(txt) => handleUpdateMasterField('companyTan', txt.toUpperCase())}
-                        placeholder="PTLA12345B"
-                        placeholderTextColor={subTextColor}
-                        autoCapitalize="characters"
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Group 3: Helpdesk & Official Communication */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Official Helpdesk & Locations</Text>
-                </View>
-
-                <View style={styles.threeCol}>
-                  <View style={styles.col3}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Helpline Phone Number</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="call-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.officialPhone || masterData.primaryMobile || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('officialPhone', txt);
-                          handleUpdateMasterField('primaryMobile', txt);
-                        }}
-                        placeholder="+91 95776 22000"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Official Support Email</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="mail-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.officialEmail || masterData.supportEmail || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('officialEmail', txt);
-                          handleUpdateMasterField('supportEmail', txt);
-                        }}
-                        placeholder="support@farmsking.in"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ / Admin Office</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="location-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.operationalHq || ''}
-                        onChangeText={(txt) => handleUpdateMasterField('operationalHq', txt)}
-                        placeholder="Near Grain Market, Makhu, Punjab - 142044"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Corporate Details'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB: App Download & Mobile QR Settings */}
-          {masterSubTab === 'app-download' && (
-            <View style={styles.masterTabPane}>
-              {/* Group 1: Mobile App Links */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>FarmsKing Mobile App Distribution Links</Text>
-                  <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
-                    <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>Live Automatic QR Sync</Text>
-                  </View>
-                </View>
-
-                <Text style={{ fontSize: 13, color: subTextColor, marginBottom: 16, lineHeight: 19 }}>
-                  Configure the official download link for the FarmsKing Mobile App. The QR code on the public website homepage automatically regenerates from this link in real-time so farmers and visitors can scan and install the app seamlessly.
-                </Text>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
-                      {masterData.appDownloadUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.appDownloadUrl || '')}>
-                          <Text style={styles.openLink}>Test Link</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-android" size={17} color="#10b981" style={{ marginRight: 8 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.appDownloadUrl || ''}
-                        onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
-                        placeholder="https://farmsking.in/download/farmsking.apk"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                      Direct APK download link or Google Play Store URL. If left blank, defaults to https://www.farmsking.in
-                    </Text>
-                  </View>
-
-                  <View style={styles.col}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Latest Mobile App Version</Text>
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="git-branch-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.latestAppVersion || '2.1.0'}
-                        onChangeText={(txt) => handleUpdateMasterField('latestAppVersion', txt)}
-                        placeholder="2.1.0"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                      Current released production build version displayed to farmers.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Group 2: Live QR Code Preview */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Live Auto-Generated QR Code Preview</Text>
-                </View>
-
-                <View style={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: 'center', gap: 24, paddingVertical: 12 }}>
-                  <View style={{
-                    padding: 16,
-                    backgroundColor: '#ffffff',
-                    borderRadius: 16,
-                    borderWidth: 1.5,
-                    borderColor: '#10b981',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                  }}>
-                    {/* Live QR Image */}
-                    <Image
-                      source={{
-                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                          masterData.appDownloadUrl && masterData.appDownloadUrl.trim()
-                            ? masterData.appDownloadUrl.trim()
-                            : 'https://www.farmsking.in'
-                        )}&margin=4`,
-                      }}
-                      style={{ width: 140, height: 140, borderRadius: 8 }}
-                      resizeMode="contain"
-                    />
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#0f172a', marginTop: 10 }}>
-                      SCAN TO DOWNLOAD APP
-                    </Text>
-                    <Text style={{ fontSize: 10, color: '#64748b', marginTop: 2, maxWidth: 170, textAlign: 'center' }} numberOfLines={1}>
-                      {masterData.appDownloadUrl || 'https://www.farmsking.in'}
-                    </Text>
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <Ionicons name="checkmark-circle" size={18} color="#10b981" />
-                      <Text style={{ fontSize: 14, fontWeight: '700', color: textColor }}>
-                        Automatic Homepage Synchronization
-                      </Text>
-                    </View>
-                    <Text style={{ fontSize: 13, color: subTextColor, lineHeight: 20, marginBottom: 12 }}>
-                      Any changes saved to the App Download URL here will instantly reflect on the public website homepage. Visitors scanning the QR code with their mobile cameras will be routed directly to this download address.
-                    </Text>
-
-                    <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
-                      <TouchableOpacity
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 6,
-                          paddingVertical: 8,
-                          paddingHorizontal: 14,
-                          borderRadius: 8,
-                          backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
-                          borderWidth: 1,
-                          borderColor: cardBorder,
-                        }}
-                        onPress={() => handleCopyValue('App Download URL', masterData.appDownloadUrl || 'https://www.farmsking.in')}
-                      >
-                        <Ionicons name="copy-outline" size={14} color={textColor} />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: textColor }}>Copy Link</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 6,
-                          paddingVertical: 8,
-                          paddingHorizontal: 14,
-                          borderRadius: 8,
-                          backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)',
-                          borderWidth: 1,
-                          borderColor: '#10b981',
-                        }}
-                        onPress={() => handleOpenLink(masterData.appDownloadUrl || 'https://www.farmsking.in')}
-                      >
-                        <Ionicons name="open-outline" size={14} color="#10b981" />
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#10b981' }}>Open & Test Link</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#10b981', '#059669']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save App Download Settings'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 2: Social Media & Maps */}
-          {masterSubTab === 'social' && (
-            <View style={styles.masterTabPane}>
-              {/* Group: Social Channels */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Official Social Channels & Maps</Text>
-                </View>
-
-                {/* Row 1: Facebook, Instagram, YouTube */}
-                <View style={styles.threeCol}>
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Facebook Page</Text>
-                      {masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-facebook" size={16} color="#1877f2" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'facebook', txt);
-                          handleUpdateMasterNested('socialMedia', 'facebookUrl', txt);
-                        }}
-                        placeholder="https://facebook.com/farmsking.india"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Instagram Profile</Text>
-                      {masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-instagram" size={16} color="#e1306c" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'instagram', txt);
-                          handleUpdateMasterNested('socialMedia', 'instagramUrl', txt);
-                        }}
-                        placeholder="https://instagram.com/farmsking.india"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>YouTube Channel</Text>
-                      {masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-youtube" size={16} color="#ff0000" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'youtube', txt);
-                          handleUpdateMasterNested('socialMedia', 'youtubeUrl', txt);
-                        }}
-                        placeholder="https://youtube.com/@farmsking"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Row 2: Twitter, LinkedIn, Google Maps */}
-                <View style={styles.threeCol}>
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Twitter / X</Text>
-                      {masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-twitter" size={16} color="#0284c7" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'twitter', txt);
-                          handleUpdateMasterNested('socialMedia', 'twitterUrl', txt);
-                        }}
-                        placeholder="https://x.com/farmsking"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>LinkedIn Organization</Text>
-                      {masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-linkedin" size={16} color="#0a66c2" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'linkedin', txt);
-                          handleUpdateMasterNested('socialMedia', 'linkedinUrl', txt);
-                        }}
-                        placeholder="https://linkedin.com/company/farmsking"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col3}>
-                    <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps Link</Text>
-                      {masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl ? (
-                        <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || '')}>
-                          <Text style={styles.openLink}>Open</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="location-outline" size={16} color="#10b981" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterNested('socialMedia', 'googleBusinessUrl', txt);
-                          handleUpdateMasterNested('socialMedia', 'mapsUrl', txt);
-                        }}
-                        placeholder="https://maps.google.com/?q=FarmsKing+Technologies"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Social & Location'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-
-
-          {/* TAB 3: Email Templates */}
-          {masterSubTab === 'email-templates' && (
-            <View style={styles.masterTabPane}>
-              {/* Template Selectors */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                {EMAIL_TEMPLATE_ITEMS.map((item) => {
-                  const isSelected = activeEmailTmpl === item.key;
-                  return (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[
-                        styles.tmplPill,
-                        { borderColor: isSelected ? '#6366f1' : cardBorder },
-                        isSelected && (isLight ? styles.tmplPillActiveLight : styles.tmplPillActiveDark),
-                      ]}
-                      onPress={() => setActiveEmailTmpl(item.key)}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name={item.icon} size={14} color={isSelected ? '#6366f1' : subTextColor} />
-                      <Text style={[styles.tmplPillText, { color: isSelected ? textColor : subTextColor, fontFamily: isSelected ? FONT.bold : FONT.medium }]}>
-                        {item.label}
-                      </Text>
+              <View style={styles.twoCol}>
+                <View style={styles.col}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Company Legal Name</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('Legal Name', masterData.companyLegalName)}>
+                      <Text style={styles.copyLink}>Copy</Text>
                     </TouchableOpacity>
-                  );
-                })}
-              </View>
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.companyLegalName}
+                      onChangeText={(txt) => handleUpdateMasterField('companyLegalName', txt)}
+                      placeholder="FARMSKING TECHNOLOGIES PRIVATE LIMITED"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
 
-              {/* Mode Toggle Bar: Editor vs Preview */}
-              <View style={[styles.templateModeBar, { borderColor: cardBorder }]}>
-                <View style={styles.segmentedToggle}>
-                  <TouchableOpacity
-                    style={[
-                      styles.toggleSegment,
-                      emailViewMode === 'editor' && (isLight ? styles.toggleSegmentActiveLight : styles.toggleSegmentActiveDark),
-                    ]}
-                    onPress={() => setEmailViewMode('editor')}
-                  >
-                    <Ionicons name="create-outline" size={13} color={emailViewMode === 'editor' ? '#6366f1' : subTextColor} />
-                    <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'editor' ? textColor : subTextColor }]}>
-                      Template Editor
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.toggleSegment,
-                      emailViewMode === 'preview' && (isLight ? styles.toggleSegmentActiveLight : styles.toggleSegmentActiveDark),
-                    ]}
-                    onPress={() => setEmailViewMode('preview')}
-                  >
-                    <Ionicons name="eye-outline" size={13} color={emailViewMode === 'preview' ? '#6366f1' : subTextColor} />
-                    <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'preview' ? textColor : subTextColor }]}>
-                      Live Email Preview
-                    </Text>
-                  </TouchableOpacity>
+                <View style={styles.col}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Brand / Trade Name</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.brandName || (masterData as any).brandDisplayName || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('brandName', txt);
+                        handleUpdateMasterField('brandDisplayName' as any, txt);
+                      }}
+                      placeholder="FarmsKing™"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
                 </View>
               </View>
 
-              {emailViewMode === 'editor' ? (
-                <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                  {/* Subject Line */}
-                  <View style={{ marginBottom: 8 }}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Email Subject Line</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.emailTemplates?.[activeEmailTmpl]?.subject || ''}
-                        onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'subject', txt)}
-                        placeholder="Subject line..."
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
+              <View style={styles.twoCol}>
+                <View style={styles.col}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Registered Office Address</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('Registered Address', masterData.registeredOfficeAddress || (masterData as any).registeredAddress || '')}>
+                      <Text style={styles.copyLink}>Copy</Text>
+                    </TouchableOpacity>
                   </View>
-
-                  {/* Available Variables */}
-                  <View style={{ marginBottom: 8 }}>
-                    <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
-                      AVAILABLE DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
-                    </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                      {(EMAIL_TEMPLATE_ITEMS.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
-                        <TouchableOpacity
-                          key={v}
-                          style={[styles.varChip, { backgroundColor: innerBg, borderColor: cardBorder }]}
-                          onPress={() => handleInsertVariable(v)}
-                        >
-                          <Text style={[styles.varChipText, { color: '#6366f1' }]}>{v}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-
-                  {/* Body Editor */}
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Email Body (HTML / Formatted Content)</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 110 }]}>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 100, textAlignVertical: 'top', paddingTop: 6 }]}
-                      value={masterData.emailTemplates?.[activeEmailTmpl]?.body || ''}
-                      onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'body', txt)}
-                      placeholder="HTML email body..."
+                      style={[styles.input, { color: textColor, height: 38 }]}
+                      value={masterData.registeredOfficeAddress || (masterData as any).registeredAddress || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('registeredOfficeAddress', txt);
+                        handleUpdateMasterField('registeredAddress' as any, txt);
+                      }}
+                      placeholder="VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India"
                       placeholderTextColor={subTextColor}
                       multiline
                     />
                   </View>
                 </View>
-              ) : (
-                /* Live Preview Mode */
-                <View style={[styles.liveEmailPreviewBox, { borderColor: cardBorder, backgroundColor: innerBg }]}>
-                  <View style={styles.previewMetaHeader}>
-                    <Text style={[styles.previewMetaSubject, { color: textColor }]}>
-                      Subject: {masterData.emailTemplates?.[activeEmailTmpl]?.subject || 'No Subject Defined'}
-                    </Text>
-                    <Text style={{ fontSize: 11.5, color: subTextColor }}>
-                      From: {masterData.smtp?.fromName || 'FarmsKing'} &lt;{masterData.smtp?.fromEmail || 'noreply@farmsking.in'}&gt;
-                    </Text>
-                  </View>
 
-                  <View style={[styles.previewEmailCard, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: cardBorder }]}>
-                    <View style={styles.previewEmailBrandHeader}>
-                      <Text style={{ fontSize: 16, fontFamily: FONT.bold, color: '#16a34a' }}>
-                        {masterData.brandName || 'FarmsKing™'}
-                      </Text>
-                      <Text style={{ fontSize: 10.5, color: subTextColor }}>Official Notification</Text>
-                    </View>
-
-                    <View style={{ marginVertical: 8 }}>
-                      <Text style={{ fontSize: 13, color: textColor, lineHeight: 20 }}>
-                        {masterData.emailTemplates?.[activeEmailTmpl]?.body
-                          ?.replace(/<[^>]+>/g, ' ')
-                          ?.replace(/\s+/g, ' ')
-                          ?.trim() || 'No email body preview available.'}
-                      </Text>
-                    </View>
-
-                    <View style={[styles.previewEmailFooter, { borderTopColor: cardBorder }]}>
-                      <Text style={{ fontSize: 10.5, color: subTextColor }}>
-                        {masterData.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'} • {masterData.officialEmail || 'support@farmsking.in'}
-                      </Text>
-                    </View>
+                <View style={styles.col}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Corporate Tagline</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor, height: 38 }]}
+                      value={masterData.tagline}
+                      onChangeText={(txt) => handleUpdateMasterField('tagline', txt)}
+                      placeholder="Farming Easy, Farming Smart | National Smart Farming Platform"
+                      placeholderTextColor={subTextColor}
+                      multiline
+                    />
                   </View>
                 </View>
-              )}
+              </View>
 
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Email Templates'}
+              {/* ── Global Brand Assets: Official Logo & Favicon ── */}
+              <View style={{ marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: cardBorder }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="images-outline" size={18} color="#10b981" />
+                    <Text style={[styles.inputLabel, { color: textColor, fontSize: 13.5, fontWeight: '700', marginBottom: 0 }]}>
+                      Global Brand Assets (Logo & Favicon)
                     </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                    <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.22)' }]}>
+                      <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>System-Wide Global</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 11, color: subTextColor }}>
+                    Applies globally across public header, admin portal, invoices, bills & browser tabs
+                  </Text>
+                </View>
+
+                <View style={styles.twoCol}>
+                  {/* Item 1: Global Corporate Logo */}
+                  <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: cardBorder }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="image" size={16} color="#10b981" />
+                        <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
+                          Official Brand Logo
+                        </Text>
+                      </View>
+                      {masterData.logoUrl && masterData.logoUrl !== 'https://farmsking.in/assets/logo.png' ? (
+                        <TouchableOpacity
+                          onPress={() => {
+                            handleUpdateMasterField('logoUrl', 'https://farmsking.in/assets/logo.png');
+                            handleUpdateAboutField('logoUrl', 'https://farmsking.in/assets/logo.png');
+                            updateAppSettings({ logoUrl: 'https://farmsking.in/assets/logo.png' }).catch(() => { });
+                            showToast('Reset logo to default official emblem');
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+
+                    {/* Live Logo Preview Box */}
+                    <View style={{
+                      height: 120,
+                      backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
+                      borderRadius: 10,
+                      borderWidth: 1.5,
+                      borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
+                      borderStyle: 'dashed',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 12,
+                      padding: 10,
+                      position: 'relative',
+                    }}>
+                      <Image
+                        source={{ uri: resolveMediaUrl(masterData.logoUrl) || 'https://farmsking.in/assets/logo.png' }}
+                        style={{ width: '85%', height: 95 }}
+                        resizeMode="contain"
+                      />
+                      <View style={{ position: 'absolute', bottom: 6, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ fontSize: 9, color: '#ffffff', fontWeight: '700' }}>LIVE PREVIEW</Text>
+                      </View>
+                    </View>
+
+                    {/* Browse & Upload Button */}
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#10b981',
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: RADIUS.md,
+                        marginBottom: 10,
+                      }}
+                      onPress={handlePickAndUploadLogo}
+                      disabled={isUploadingLogo}
+                      activeOpacity={0.85}
+                    >
+                      {isUploadingLogo ? (
+                        <ActivityIndicator size="small" color="#022c22" />
+                      ) : (
+                        <Ionicons name="cloud-upload-outline" size={16} color="#022c22" />
+                      )}
+                      <Text style={{ color: '#022c22', fontSize: 12.5, fontWeight: '700' }}>
+                        {isUploadingLogo ? 'Uploading Logo...' : 'Browse & Upload Logo'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Direct URL input */}
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 38 }]}>
+                      <Ionicons name="link-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
+                      <TextInput
+                        style={[styles.input, { color: textColor, fontSize: 11 }]}
+                        value={masterData.logoUrl || ''}
+                        onChangeText={(txt) => {
+                          handleUpdateMasterField('logoUrl', txt);
+                          handleUpdateAboutField('logoUrl', txt);
+                        }}
+                        placeholder="Or paste direct image URL (PNG, JPG, WEBP, SVG)"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 10, color: subTextColor, marginTop: 4 }}>
+                      Recommended: Transparent PNG or SVG (512×512px or wide 4:1 banner)
+                    </Text>
+                  </View>
+
+                  {/* Item 2: Global Website Favicon */}
+                  <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: cardBorder }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="globe" size={16} color="#0284c7" />
+                        <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
+                          Official Website Favicon
+                        </Text>
+                      </View>
+                      {masterData.faviconUrl && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
+                        <TouchableOpacity
+                          onPress={() => {
+                            handleUpdateMasterField('faviconUrl', 'https://farmsking.in/favicon.ico');
+                            handleUpdateAboutField('faviconUrl', 'https://farmsking.in/favicon.ico');
+                            showToast('Reset favicon to default icon');
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+
+                    {/* Live Favicon Preview Box (Simulated Browser Tab) */}
+                    <View style={{
+                      height: 120,
+                      backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
+                      borderRadius: 10,
+                      borderWidth: 1.5,
+                      borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
+                      borderStyle: 'dashed',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginBottom: 12,
+                      padding: 10,
+                      position: 'relative',
+                    }}>
+                      {/* Browser Tab Simulation */}
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: cardBorder,
+                        maxWidth: 220,
+                      }}>
+                        <Image
+                          source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.ico' }}
+                          style={{ width: 18, height: 18, borderRadius: 3 }}
+                          resizeMode="contain"
+                        />
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: textColor }} numberOfLines={1}>
+                          FarmsKing - India's Smart...
+                        </Text>
+                        <Ionicons name="close" size={12} color={subTextColor} />
+                      </View>
+
+                      {/* Large 32x32 Favicon Zoom */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
+                        <Image
+                          source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.ico' }}
+                          style={{ width: 32, height: 32, borderRadius: 6 }}
+                          resizeMode="contain"
+                        />
+                        <Text style={{ fontSize: 10, color: subTextColor }}>32×32 & 18×18 Browser Tab View</Text>
+                      </View>
+
+                      <View style={{ position: 'absolute', bottom: 6, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ fontSize: 9, color: '#ffffff', fontWeight: '700' }}>TAB PREVIEW</Text>
+                      </View>
+                    </View>
+
+                    {/* Browse & Upload Button */}
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        backgroundColor: '#0284c7',
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: RADIUS.md,
+                        marginBottom: 10,
+                      }}
+                      onPress={handlePickAndUploadFavicon}
+                      disabled={isUploadingFavicon}
+                      activeOpacity={0.85}
+                    >
+                      {isUploadingFavicon ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <Ionicons name="cloud-upload-outline" size={16} color="#ffffff" />
+                      )}
+                      <Text style={{ color: '#ffffff', fontSize: 12.5, fontWeight: '700' }}>
+                        {isUploadingFavicon ? 'Uploading Favicon...' : 'Browse & Upload Favicon'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Direct URL input */}
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 38 }]}>
+                      <Ionicons name="link-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
+                      <TextInput
+                        style={[styles.input, { color: textColor, fontSize: 11 }]}
+                        value={masterData.faviconUrl || ''}
+                        onChangeText={(txt) => {
+                          handleUpdateMasterField('faviconUrl', txt);
+                          handleUpdateAboutField('faviconUrl', txt);
+                        }}
+                        placeholder="Or paste direct favicon URL (ICO, PNG, SVG)"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 10, color: subTextColor, marginTop: 4 }}>
+                      Recommended: Square 1:1 image, .ico, .png, or .svg (32×32 or 64×64px)
+                    </Text>
+                  </View>
+                </View>
               </View>
             </View>
-          )}
 
-          {/* TAB 4: Maintenance Mode */}
-          {masterSubTab === 'maintenance' && (
-            <View style={styles.masterTabPane}>
-              {/* Status Banner */}
-              <View
-                style={[
-                  styles.maintenanceStatusCard,
-                  {
-                    backgroundColor: masterData.maintenance?.enabled
-                      ? isLight
-                        ? '#fef2f2'
-                        : '#2c1212'
-                      : isLight
-                      ? '#f0fdf4'
-                      : '#062814',
-                    borderColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981',
-                  },
-                ]}
-              >
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View
-                      style={[
-                        styles.dot,
-                        { backgroundColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.maintenanceStatusTitle,
-                        { color: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
-                      ]}
-                    >
-                      {masterData.maintenance?.enabled
-                        ? 'MAINTENANCE MODE ACTIVE (PUBLIC LOCKDOWN)'
-                        : 'SYSTEM LIVE & FULLY OPERATIONAL'}
-                    </Text>
-                  </View>
-                  <Text style={[styles.maintenanceStatusDesc, { color: textColor }]}>
-                    {masterData.maintenance?.enabled
-                      ? 'Farmers and public visitors will see the maintenance notice instead of normal portal views.'
-                      : 'All web, mobile apps, Mandi telemetry, and AI pathology services are online.'}
-                  </Text>
+            {/* Group 2: Ministry of Corporate Affairs (MCA) Details */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Ministry of Corporate Affairs (MCA) Registrations</Text>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#6366f1' }]}>Government of India</Text>
                 </View>
-                <Switch
-                  value={masterData.maintenance?.enabled ?? false}
-                  onValueChange={(val) => handleUpdateMasterNested('maintenance', 'enabled', val)}
-                  thumbColor="#ffffff"
-                  trackColor={{ false: '#64748b', true: '#ef4444' }}
-                />
               </View>
 
-              {/* Notice Message & Presets */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Public Maintenance Notice</Text>
-                </View>
-
-                <View style={{ marginBottom: 8 }}>
-                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
-                    QUICK NOTICE PRESETS:
-                  </Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                    {[
-                      'Scheduled agritech platform upgrades in progress. We will be back shortly.',
-                      'Database migration & security patch in progress. Normal operations resume at 06:00 AM IST.',
-                      'Emergency server maintenance. Our engineering team is restoring services.',
-                    ].map((presetMsg, idx) => (
-                      <TouchableOpacity
-                        key={idx}
-                        style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 6, paddingHorizontal: 10 }]}
-                        onPress={() => handleUpdateMasterNested('maintenance', 'message', presetMsg)}
-                      >
-                        <Text style={{ fontSize: 11.5, color: textColor }} numberOfLines={1}>
-                          Preset {idx + 1}: {presetMsg.slice(0, 36)}...
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+              <View style={styles.fourCol}>
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>MCA Incorporation SRN</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.mcaSrn}
+                      onChangeText={(txt) => handleUpdateMasterField('mcaSrn', txt)}
+                      placeholder="AC6979718"
+                      placeholderTextColor={subTextColor}
+                    />
                   </View>
                 </View>
 
-                <View>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Displayed Public Notice</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 44 }]}>
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>CIN Number</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 36 }]}
-                      value={masterData.maintenance?.message || ''}
-                      onChangeText={(txt) => handleUpdateMasterNested('maintenance', 'message', txt)}
-                      placeholder="Public maintenance notice shown on web and mobile..."
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.cinNumber || (masterData as any).cin || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('cinNumber', txt);
+                        handleUpdateMasterField('cin' as any, txt);
+                      }}
+                      placeholder="U01100PB2026PTC063294"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Company PAN</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.companyPan || (masterData as any).panNumber || ''}
+                      onChangeText={(txt) => {
+                        const val = txt.toUpperCase();
+                        handleUpdateMasterField('companyPan', val);
+                        handleUpdateMasterField('panNumber' as any, val);
+                      }}
+                      placeholder="AABCF1234D"
+                      placeholderTextColor={subTextColor}
+                      autoCapitalize="characters"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Company TAN</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.companyTan || ''}
+                      onChangeText={(txt) => handleUpdateMasterField('companyTan', txt.toUpperCase())}
+                      placeholder="PTLA12345B"
+                      placeholderTextColor={subTextColor}
+                      autoCapitalize="characters"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Group 3: Helpdesk & Official Communication */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Official Helpdesk & Locations</Text>
+              </View>
+
+              <View style={styles.threeCol}>
+                <View style={styles.col3}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Helpline Phone Number</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="call-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.officialPhone || masterData.primaryMobile || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('officialPhone', txt);
+                        handleUpdateMasterField('primaryMobile', txt);
+                      }}
+                      placeholder="+91 95776 22000"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Official Support Email</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="mail-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.officialEmail || masterData.supportEmail || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('officialEmail', txt);
+                        handleUpdateMasterField('supportEmail', txt);
+                      }}
+                      placeholder="support@farmsking.in"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ / Admin Office</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="location-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.operationalHq || ''}
+                      onChangeText={(txt) => handleUpdateMasterField('operationalHq', txt)}
+                      placeholder="Near Grain Market, Makhu, Punjab - 142044"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save Corporate Details'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB: App Download & Mobile QR Settings */}
+        {masterSubTab === 'app-download' && (
+          <View style={styles.masterTabPane}>
+            {/* Group 1: Mobile App Links */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>FarmsKing Mobile App Distribution Links</Text>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>Live Automatic QR Sync</Text>
+                </View>
+              </View>
+
+              <Text style={{ fontSize: 13, color: subTextColor, marginBottom: 16, lineHeight: 19 }}>
+                Configure the official download link for the FarmsKing Mobile App. The QR code on the public website homepage automatically regenerates from this link in real-time so farmers and visitors can scan and install the app seamlessly.
+              </Text>
+
+              <View style={styles.twoCol}>
+                <View style={styles.col}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
+                    {masterData.appDownloadUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.appDownloadUrl || '')}>
+                        <Text style={styles.openLink}>Test Link</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-android" size={17} color="#10b981" style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.appDownloadUrl || ''}
+                      onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
+                      placeholder="https://farmsking.in/download/farmsking.apk"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                    Direct APK download link or Google Play Store URL. If left blank, defaults to https://www.farmsking.in
+                  </Text>
+                </View>
+
+                <View style={styles.col}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Latest Mobile App Version</Text>
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="git-branch-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.latestAppVersion || '2.1.0'}
+                      onChangeText={(txt) => handleUpdateMasterField('latestAppVersion', txt)}
+                      placeholder="2.1.0"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                    Current released production build version displayed to farmers.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Group 2: Live QR Code Preview */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Live Auto-Generated QR Code Preview</Text>
+              </View>
+
+              <View style={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: 'center', gap: 24, paddingVertical: 12 }}>
+                <View style={{
+                  padding: 16,
+                  backgroundColor: '#ffffff',
+                  borderRadius: 16,
+                  borderWidth: 1.5,
+                  borderColor: '#10b981',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                }}>
+                  {/* Live QR Image */}
+                  <Image
+                    source={{
+                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                        masterData.appDownloadUrl && masterData.appDownloadUrl.trim()
+                          ? masterData.appDownloadUrl.trim()
+                          : 'https://www.farmsking.in'
+                      )}&margin=4`,
+                    }}
+                    style={{ width: 140, height: 140, borderRadius: 8 }}
+                    resizeMode="contain"
+                  />
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#0f172a', marginTop: 10 }}>
+                    SCAN TO DOWNLOAD APP
+                  </Text>
+                  <Text style={{ fontSize: 10, color: '#64748b', marginTop: 2, maxWidth: 170, textAlign: 'center' }} numberOfLines={1}>
+                    {masterData.appDownloadUrl || 'https://www.farmsking.in'}
+                  </Text>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: textColor }}>
+                      Automatic Homepage Synchronization
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 13, color: subTextColor, lineHeight: 20, marginBottom: 12 }}>
+                    Any changes saved to the App Download URL here will instantly reflect on the public website homepage. Visitors scanning the QR code with their mobile cameras will be routed directly to this download address.
+                  </Text>
+
+                  <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                        borderWidth: 1,
+                        borderColor: cardBorder,
+                      }}
+                      onPress={() => handleCopyValue('App Download URL', masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                    >
+                      <Ionicons name="copy-outline" size={14} color={textColor} />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: textColor }}>Copy Link</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)',
+                        borderWidth: 1,
+                        borderColor: '#10b981',
+                      }}
+                      onPress={() => handleOpenLink(masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                    >
+                      <Ionicons name="open-outline" size={14} color="#10b981" />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#10b981' }}>Open & Test Link</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#10b981', '#059669']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save App Download Settings'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB 2: Social Media & Maps */}
+        {masterSubTab === 'social' && (
+          <View style={styles.masterTabPane}>
+            {/* Group: Social Channels */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Official Social Channels & Maps</Text>
+              </View>
+
+              {/* Row 1: Facebook, Instagram, YouTube */}
+              <View style={styles.threeCol}>
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Facebook Page</Text>
+                    {masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-facebook" size={16} color="#1877f2" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'facebook', txt);
+                        handleUpdateMasterNested('socialMedia', 'facebookUrl', txt);
+                      }}
+                      placeholder="https://facebook.com/farmsking.india"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Instagram Profile</Text>
+                    {masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-instagram" size={16} color="#e1306c" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'instagram', txt);
+                        handleUpdateMasterNested('socialMedia', 'instagramUrl', txt);
+                      }}
+                      placeholder="https://instagram.com/farmsking.india"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>YouTube Channel</Text>
+                    {masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-youtube" size={16} color="#ff0000" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'youtube', txt);
+                        handleUpdateMasterNested('socialMedia', 'youtubeUrl', txt);
+                      }}
+                      placeholder="https://youtube.com/@farmsking"
                       placeholderTextColor={subTextColor}
                     />
                   </View>
                 </View>
               </View>
 
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save Maintenance Settings'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+              {/* Row 2: Twitter, LinkedIn, Google Maps */}
+              <View style={styles.threeCol}>
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Twitter / X</Text>
+                    {masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-twitter" size={16} color="#0284c7" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'twitter', txt);
+                        handleUpdateMasterNested('socialMedia', 'twitterUrl', txt);
+                      }}
+                      placeholder="https://x.com/farmsking"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>LinkedIn Organization</Text>
+                    {masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-linkedin" size={16} color="#0a66c2" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'linkedin', txt);
+                        handleUpdateMasterNested('socialMedia', 'linkedinUrl', txt);
+                      }}
+                      placeholder="https://linkedin.com/company/farmsking"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps Link</Text>
+                    {masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="location-outline" size={16} color="#10b981" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'googleBusinessUrl', txt);
+                        handleUpdateMasterNested('socialMedia', 'mapsUrl', txt);
+                      }}
+                      placeholder="https://maps.google.com/?q=FarmsKing+Technologies"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
               </View>
             </View>
-          )}
 
-          {/* TAB 5: Tax / GST Settings */}
-          {masterSubTab === 'tax-gst' && (
-            <View style={styles.masterTabPane}>
-              {/* Group: Statutory GST Identifiers */}
-              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Goods & Services Tax (GST) Identification</Text>
-                  <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.2)' }]}>
-                    <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>GST Act Compliance</Text>
-                  </View>
-                </View>
-
-                <View style={styles.fourCol}>
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Company GSTIN</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.taxGst?.gstin || masterData.taxGst?.gstNumber || ''}
-                        onChangeText={(txt) => {
-                          const val = txt.toUpperCase();
-                          handleUpdateMasterNested('taxGst', 'gstin', val);
-                          handleUpdateMasterNested('taxGst', 'gstNumber', val);
-                        }}
-                        placeholder="03AAAAF0000A1Z5"
-                        placeholderTextColor={subTextColor}
-                        autoCapitalize="characters"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Default Rate (%)</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={String(masterData.taxGst?.defaultGstRate || masterData.taxGst?.taxPercentage || 18)}
-                        onChangeText={(txt) => {
-                          const parsed = parseFloat(txt) || 0;
-                          handleUpdateMasterNested('taxGst', 'defaultGstRate', parsed);
-                          handleUpdateMasterNested('taxGst', 'taxPercentage', parsed);
-                        }}
-                        placeholder="18"
-                        placeholderTextColor={subTextColor}
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Invoice Prefix</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.taxGst?.invoicePrefix || 'FK-INV-'}
-                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'invoicePrefix', txt)}
-                        placeholder="FK-INV-"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col4}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>HSN / SAC Code</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.taxGst?.hsnSacCode || '998314'}
-                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'hsnSacCode', txt)}
-                        placeholder="998314"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Quick Tax Rate Selectors */}
-                <View style={{ marginTop: 4, marginBottom: 8 }}>
-                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
-                    STANDARD GST SLABS:
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save Social & Location'}
                   </Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                    {[0, 5, 12, 18, 28].map((rate) => {
-                      const isCurrent =
-                        (masterData.taxGst?.defaultGstRate || masterData.taxGst?.taxPercentage) === rate;
-                      return (
-                        <TouchableOpacity
-                          key={rate}
-                          style={[
-                            styles.ratePill,
-                            { borderColor: isCurrent ? '#10b981' : cardBorder, backgroundColor: innerBg },
-                            isCurrent && { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.25)' },
-                          ]}
-                          onPress={() => {
-                            handleUpdateMasterNested('taxGst', 'defaultGstRate', rate);
-                            handleUpdateMasterNested('taxGst', 'taxPercentage', rate);
-                          }}
-                        >
-                          <Text style={{ fontSize: 11.5, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
-                            {rate}% GST
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              </View>
-
-              {/* Statutory Agricultural Exemption Notice */}
-              <View style={[styles.exemptionNotice, { borderColor: cardBorder, backgroundColor: innerBg }]}>
-                <Ionicons name="information-circle-outline" size={17} color="#10b981" />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.exemptionTitle, { color: textColor }]}>
-                    Agricultural Produce Exemption (Section 11, CGST Act)
-                  </Text>
-                  <Text style={[styles.exemptionDesc, { color: subTextColor }]}>
-                    Under statutory Indian tax regulations, wholesale raw agricultural produce transacted through APMC Mandis is exempt from GST. Software platforms and value-added agri services are billed at the configured rate above.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.paneFooterRight}>
-                <TouchableOpacity
-                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                  onPress={handleSaveMasterData}
-                  disabled={updateMutation.isPending}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                    {updateMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                    )}
-                    <Text style={styles.saveActionText}>
-                      {updateMutation.isPending ? 'Saving...' : 'Save GST & Tax Rules'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 7: Other System Settings */}
-          {masterSubTab === 'other' && (
-            <View style={styles.masterTabPane}>
-              <SettingOtherSetup />
-            </View>
-          )}
-        </View>
-
-        {/* Statutory Copyright & Entity Registration Footer */}
-        <View style={[styles.statutoryFooterBanner, { backgroundColor: isLight ? '#f8fafc' : '#030d07', borderColor: cardBorder }]}>
-          <View style={styles.statutoryFooterLeft}>
-            <View style={[styles.statutoryShieldBox, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.15)' }]}>
-              <Ionicons name="shield-checkmark" size={18} color="#0284c7" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.statutoryCopyrightTitle, { color: textColor }]}>
-                © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
-              </Text>
-              <Text style={[styles.statutoryCopyrightSub, { color: subTextColor }]}>
-                MCA Incorporated under Companies Act, 2013 • CIN: U01100PB2026PTC063294 • Regd Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
-              </Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.statutoryLawBadge, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#bbf7d0' : '#10b981' }]}>
-            <Ionicons name="document-text-outline" size={13} color="#10b981" />
-            <Text style={[styles.statutoryLawText, { color: isLight ? '#166534' : '#6ee7b7' }]}>
-              Indian Copyright Act, 1957 Protected
+        )}
+
+
+
+        {/* TAB 3: Email Templates */}
+        {masterSubTab === 'email-templates' && (
+          <View style={styles.masterTabPane}>
+            {/* Template Selectors */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+              {EMAIL_TEMPLATE_ITEMS.map((item) => {
+                const isSelected = activeEmailTmpl === item.key;
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.tmplPill,
+                      { borderColor: isSelected ? '#6366f1' : cardBorder },
+                      isSelected && (isLight ? styles.tmplPillActiveLight : styles.tmplPillActiveDark),
+                    ]}
+                    onPress={() => setActiveEmailTmpl(item.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name={item.icon} size={14} color={isSelected ? '#6366f1' : subTextColor} />
+                    <Text style={[styles.tmplPillText, { color: isSelected ? textColor : subTextColor, fontFamily: isSelected ? FONT.bold : FONT.medium }]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Mode Toggle Bar: Editor vs Preview */}
+            <View style={[styles.templateModeBar, { borderColor: cardBorder }]}>
+              <View style={styles.segmentedToggle}>
+                <TouchableOpacity
+                  style={[
+                    styles.toggleSegment,
+                    emailViewMode === 'editor' && (isLight ? styles.toggleSegmentActiveLight : styles.toggleSegmentActiveDark),
+                  ]}
+                  onPress={() => setEmailViewMode('editor')}
+                >
+                  <Ionicons name="create-outline" size={13} color={emailViewMode === 'editor' ? '#6366f1' : subTextColor} />
+                  <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'editor' ? textColor : subTextColor }]}>
+                    Template Editor
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.toggleSegment,
+                    emailViewMode === 'preview' && (isLight ? styles.toggleSegmentActiveLight : styles.toggleSegmentActiveDark),
+                  ]}
+                  onPress={() => setEmailViewMode('preview')}
+                >
+                  <Ionicons name="eye-outline" size={13} color={emailViewMode === 'preview' ? '#6366f1' : subTextColor} />
+                  <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'preview' ? textColor : subTextColor }]}>
+                    Live Email Preview
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {emailViewMode === 'editor' ? (
+              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+                {/* Subject Line */}
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Email Subject Line</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.emailTemplates?.[activeEmailTmpl]?.subject || ''}
+                      onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'subject', txt)}
+                      placeholder="Subject line..."
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                {/* Available Variables */}
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
+                    AVAILABLE DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
+                  </Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                    {(EMAIL_TEMPLATE_ITEMS.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
+                      <TouchableOpacity
+                        key={v}
+                        style={[styles.varChip, { backgroundColor: innerBg, borderColor: cardBorder }]}
+                        onPress={() => handleInsertVariable(v)}
+                      >
+                        <Text style={[styles.varChipText, { color: '#6366f1' }]}>{v}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Body Editor */}
+                <Text style={[styles.inputLabel, { color: textColor }]}>Email Body (HTML / Formatted Content)</Text>
+                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 110 }]}>
+                  <TextInput
+                    style={[styles.input, { color: textColor, height: 100, textAlignVertical: 'top', paddingTop: 6 }]}
+                    value={masterData.emailTemplates?.[activeEmailTmpl]?.body || ''}
+                    onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'body', txt)}
+                    placeholder="HTML email body..."
+                    placeholderTextColor={subTextColor}
+                    multiline
+                  />
+                </View>
+              </View>
+            ) : (
+              /* Live Preview Mode */
+              <View style={[styles.liveEmailPreviewBox, { borderColor: cardBorder, backgroundColor: innerBg }]}>
+                <View style={styles.previewMetaHeader}>
+                  <Text style={[styles.previewMetaSubject, { color: textColor }]}>
+                    Subject: {masterData.emailTemplates?.[activeEmailTmpl]?.subject || 'No Subject Defined'}
+                  </Text>
+                  <Text style={{ fontSize: 11.5, color: subTextColor }}>
+                    From: {masterData.smtp?.fromName || 'FarmsKing'} &lt;{masterData.smtp?.fromEmail || 'noreply@farmsking.in'}&gt;
+                  </Text>
+                </View>
+
+                <View style={[styles.previewEmailCard, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: cardBorder }]}>
+                  <View style={styles.previewEmailBrandHeader}>
+                    <Text style={{ fontSize: 16, fontFamily: FONT.bold, color: '#16a34a' }}>
+                      {masterData.brandName || 'FarmsKing™'}
+                    </Text>
+                    <Text style={{ fontSize: 10.5, color: subTextColor }}>Official Notification</Text>
+                  </View>
+
+                  <View style={{ marginVertical: 8 }}>
+                    <Text style={{ fontSize: 13, color: textColor, lineHeight: 20 }}>
+                      {masterData.emailTemplates?.[activeEmailTmpl]?.body
+                        ?.replace(/<[^>]+>/g, ' ')
+                        ?.replace(/\s+/g, ' ')
+                        ?.trim() || 'No email body preview available.'}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.previewEmailFooter, { borderTopColor: cardBorder }]}>
+                    <Text style={{ fontSize: 10.5, color: subTextColor }}>
+                      {masterData.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'} • {masterData.officialEmail || 'support@farmsking.in'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save Email Templates'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB 4: Maintenance Mode */}
+        {masterSubTab === 'maintenance' && (
+          <View style={styles.masterTabPane}>
+            {/* Status Banner */}
+            <View
+              style={[
+                styles.maintenanceStatusCard,
+                {
+                  backgroundColor: masterData.maintenance?.enabled
+                    ? isLight
+                      ? '#fef2f2'
+                      : '#2c1212'
+                    : isLight
+                      ? '#f0fdf4'
+                      : '#062814',
+                  borderColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981',
+                },
+              ]}
+            >
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.maintenanceStatusTitle,
+                      { color: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
+                    ]}
+                  >
+                    {masterData.maintenance?.enabled
+                      ? 'MAINTENANCE MODE ACTIVE (PUBLIC LOCKDOWN)'
+                      : 'SYSTEM LIVE & FULLY OPERATIONAL'}
+                  </Text>
+                </View>
+                <Text style={[styles.maintenanceStatusDesc, { color: textColor }]}>
+                  {masterData.maintenance?.enabled
+                    ? 'Farmers and public visitors will see the maintenance notice instead of normal portal views.'
+                    : 'All web, mobile apps, Mandi telemetry, and AI pathology services are online.'}
+                </Text>
+              </View>
+              <Switch
+                value={masterData.maintenance?.enabled ?? false}
+                onValueChange={(val) => handleUpdateMasterNested('maintenance', 'enabled', val)}
+                thumbColor="#ffffff"
+                trackColor={{ false: '#64748b', true: '#ef4444' }}
+              />
+            </View>
+
+            {/* Notice Message & Presets */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Public Maintenance Notice</Text>
+              </View>
+
+              <View style={{ marginBottom: 8 }}>
+                <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
+                  QUICK NOTICE PRESETS:
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                  {[
+                    'Scheduled agritech platform upgrades in progress. We will be back shortly.',
+                    'Database migration & security patch in progress. Normal operations resume at 06:00 AM IST.',
+                    'Emergency server maintenance. Our engineering team is restoring services.',
+                  ].map((presetMsg, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 6, paddingHorizontal: 10 }]}
+                      onPress={() => handleUpdateMasterNested('maintenance', 'message', presetMsg)}
+                    >
+                      <Text style={{ fontSize: 11.5, color: textColor }} numberOfLines={1}>
+                        Preset {idx + 1}: {presetMsg.slice(0, 36)}...
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Displayed Public Notice</Text>
+                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 44 }]}>
+                  <TextInput
+                    style={[styles.input, { color: textColor, height: 36 }]}
+                    value={masterData.maintenance?.message || ''}
+                    onChangeText={(txt) => handleUpdateMasterNested('maintenance', 'message', txt)}
+                    placeholder="Public maintenance notice shown on web and mobile..."
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save Maintenance Settings'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB 5: Tax / GST Settings */}
+        {masterSubTab === 'tax-gst' && (
+          <View style={styles.masterTabPane}>
+            {/* Group: Statutory GST Identifiers */}
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <Text style={[styles.groupTitle, { color: textColor }]}>Goods & Services Tax (GST) Identification</Text>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.2)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>GST Act Compliance</Text>
+                </View>
+              </View>
+
+              <View style={styles.fourCol}>
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Company GSTIN</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.taxGst?.gstin || masterData.taxGst?.gstNumber || ''}
+                      onChangeText={(txt) => {
+                        const val = txt.toUpperCase();
+                        handleUpdateMasterNested('taxGst', 'gstin', val);
+                        handleUpdateMasterNested('taxGst', 'gstNumber', val);
+                      }}
+                      placeholder="03AAAAF0000A1Z5"
+                      placeholderTextColor={subTextColor}
+                      autoCapitalize="characters"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Default Rate (%)</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={String(masterData.taxGst?.defaultGstRate || masterData.taxGst?.taxPercentage || 18)}
+                      onChangeText={(txt) => {
+                        const parsed = parseFloat(txt) || 0;
+                        handleUpdateMasterNested('taxGst', 'defaultGstRate', parsed);
+                        handleUpdateMasterNested('taxGst', 'taxPercentage', parsed);
+                      }}
+                      placeholder="18"
+                      placeholderTextColor={subTextColor}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Invoice Prefix</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.taxGst?.invoicePrefix || 'FK-INV-'}
+                      onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'invoicePrefix', txt)}
+                      placeholder="FK-INV-"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col4}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>HSN / SAC Code</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.taxGst?.hsnSacCode || '998314'}
+                      onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'hsnSacCode', txt)}
+                      placeholder="998314"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Quick Tax Rate Selectors */}
+              <View style={{ marginTop: 4, marginBottom: 8 }}>
+                <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
+                  STANDARD GST SLABS:
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
+                  {[0, 5, 12, 18, 28].map((rate) => {
+                    const isCurrent =
+                      (masterData.taxGst?.defaultGstRate || masterData.taxGst?.taxPercentage) === rate;
+                    return (
+                      <TouchableOpacity
+                        key={rate}
+                        style={[
+                          styles.ratePill,
+                          { borderColor: isCurrent ? '#10b981' : cardBorder, backgroundColor: innerBg },
+                          isCurrent && { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.25)' },
+                        ]}
+                        onPress={() => {
+                          handleUpdateMasterNested('taxGst', 'defaultGstRate', rate);
+                          handleUpdateMasterNested('taxGst', 'taxPercentage', rate);
+                        }}
+                      >
+                        <Text style={{ fontSize: 11.5, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
+                          {rate}% GST
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+
+            {/* Statutory Agricultural Exemption Notice */}
+            <View style={[styles.exemptionNotice, { borderColor: cardBorder, backgroundColor: innerBg }]}>
+              <Ionicons name="information-circle-outline" size={17} color="#10b981" />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.exemptionTitle, { color: textColor }]}>
+                  Agricultural Produce Exemption (Section 11, CGST Act)
+                </Text>
+                <Text style={[styles.exemptionDesc, { color: subTextColor }]}>
+                  Under statutory Indian tax regulations, wholesale raw agricultural produce transacted through APMC Mandis is exempt from GST. Software platforms and value-added agri services are billed at the configured rate above.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save GST & Tax Rules'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB 7: Other System Settings */}
+        {masterSubTab === 'other' && (
+          <View style={styles.masterTabPane}>
+            <SettingOtherSetup />
+          </View>
+        )}
+      </View>
+
+      {/* Statutory Copyright & Entity Registration Footer */}
+      <View style={[styles.statutoryFooterBanner, { backgroundColor: isLight ? '#f8fafc' : '#030d07', borderColor: cardBorder }]}>
+        <View style={styles.statutoryFooterLeft}>
+          <View style={[styles.statutoryShieldBox, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.15)' }]}>
+            <Ionicons name="shield-checkmark" size={18} color="#0284c7" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.statutoryCopyrightTitle, { color: textColor }]}>
+              © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
+            </Text>
+            <Text style={[styles.statutoryCopyrightSub, { color: subTextColor }]}>
+              MCA Incorporated under Companies Act, 2013 • CIN: U01100PB2026PTC063294 • Regd Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
             </Text>
           </View>
         </View>
+        <View style={[styles.statutoryLawBadge, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#bbf7d0' : '#10b981' }]}>
+          <Ionicons name="document-text-outline" size={13} color="#10b981" />
+          <Text style={[styles.statutoryLawText, { color: isLight ? '#166534' : '#6ee7b7' }]}>
+            Indian Copyright Act, 1957 Protected
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }

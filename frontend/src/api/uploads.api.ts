@@ -11,10 +11,19 @@ export async function uploadPhoto(localUri: string): Promise<UploadResponse> {
   const rawFilename = localUri.split('/').pop()?.split('?')[0] ?? `photo-${Date.now()}.jpg`;
   const match = /\.(\w+)$/.exec(rawFilename);
   const rawExt = match?.[1]?.toLowerCase() ?? '';
-  const validExts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+  const validExts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'ico', 'svg'];
   const ext = validExts.includes(rawExt) ? rawExt : 'jpg';
   const filename = rawFilename.replace(/\.\w+$/, '') + `.${ext}`;
-  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const mimeType =
+    ext === 'png'
+      ? 'image/png'
+      : ext === 'webp'
+      ? 'image/webp'
+      : ext === 'ico'
+      ? 'image/x-icon'
+      : ext === 'svg'
+      ? 'image/svg+xml'
+      : 'image/jpeg';
 
   const formData = new FormData();
   if (Platform.OS === 'web') {

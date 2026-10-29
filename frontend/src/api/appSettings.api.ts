@@ -4,6 +4,7 @@ export interface AppSettings {
   id: string;
   appName: string;
   logoUrl: string | null;
+  faviconUrl?: string | null;
   tagline: string | null;
   upiId: string | null;
   upiPayeeName: string | null;
@@ -54,6 +55,7 @@ export interface AppSettings {
 export interface UpdateAppSettingsPayload {
   appName?: string;
   logoUrl?: string;
+  faviconUrl?: string;
   tagline?: string;
   upiId?: string;
   upiPayeeName?: string;

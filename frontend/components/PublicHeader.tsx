@@ -25,6 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 // ── Streamlined Top Navigation: Exactly 4 Core Links ──
 const MAIN_NAV_LINKS = [
@@ -317,10 +318,8 @@ export default function PublicHeader({
         <View style={[styles.topRow, isMobile && { flexWrap: 'nowrap' }]}>
           {/* Logo */}
           <TouchableOpacity style={[styles.logo, isMobile && { gap: width < 380 ? 4 : 6, flexShrink: 0 }]} onPress={() => goTo('/')} activeOpacity={0.8}>
-            <Image
-              source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
-              style={isMobile ? styles.logoImgMobile : styles.logoImg}
-              resizeMode="contain"
+            <BrandLogo
+              size={isMobile ? 26 : 34}
             />
             <View>
               <Text

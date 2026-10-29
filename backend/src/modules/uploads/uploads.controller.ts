@@ -15,9 +15,21 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { UploadsService } from './uploads.service';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/octet-stream'];
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+  'image/svg+xml',
+  'image/x-png',
+  'application/octet-stream',
+];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
+const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg'];
 
 @UseGuards(JwtAuthGuard)
 @Controller('uploads')
@@ -36,6 +48,8 @@ export class UploadsController {
             if (file.mimetype === 'image/png') ext = '.png';
             else if (file.mimetype === 'image/webp') ext = '.webp';
             else if (file.mimetype === 'image/heic') ext = '.heic';
+            else if (file.mimetype === 'image/x-icon' || file.mimetype === 'image/vnd.microsoft.icon') ext = '.ico';
+            else if (file.mimetype === 'image/svg+xml') ext = '.svg';
             else ext = '.jpg';
           }
           callback(null, `${randomUUID()}${ext}`);
@@ -44,7 +58,7 @@ export class UploadsController {
       limits: { fileSize: MAX_FILE_SIZE_BYTES },
       fileFilter: (_req, file, callback) => {
         if (!ALLOWED_MIME_TYPES.includes(file.mimetype) && !file.mimetype?.startsWith('image/')) {
-          callback(new BadRequestException('Only image files (JPEG, PNG, WEBP, HEIC) are allowed.'), false);
+          callback(new BadRequestException('Only image files (JPEG, PNG, WEBP, ICO, SVG, HEIC) are allowed.'), false);
           return;
         }
         callback(null, true);

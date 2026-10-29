@@ -81,9 +81,26 @@ export class AppSettingsService {
       }
     }
 
+    const flags = ((settings as any).featureFlags as Record<string, any>) || {};
+    let faviconUrl = flags.faviconUrl;
+    if (!faviconUrl || !logoUrl) {
+      try {
+        const integrations = await this.getIntegrations();
+        if (!faviconUrl) {
+          faviconUrl = integrations?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.ico';
+        }
+        if (!logoUrl) {
+          logoUrl = integrations?.projectMasterData?.logoUrl || logoUrl;
+        }
+      } catch {
+        if (!faviconUrl) faviconUrl = 'https://farmsking.in/favicon.ico';
+      }
+    }
+
     const result = {
       ...settings,
       logoUrl,
+      faviconUrl: faviconUrl || 'https://farmsking.in/favicon.ico',
       upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
       upiPayeeName: settings.upiPayeeName || 'Surinder Singh',
       referralSignupBonusAmount: (settings as any).referralSignupBonusAmount ?? 10,
@@ -158,12 +175,17 @@ export class AppSettingsService {
 
     const appDownloadUrl = (settings as any)?.appDownloadUrl || (pm as any)?.appDownloadUrl || 'https://www.farmsking.in';
 
+    const supportFaviconUrl = (settings as any)?.faviconUrl || (settings as any)?.featureFlags?.faviconUrl || pm.faviconUrl || 'https://farmsking.in/favicon.ico';
+    const supportLogoUrl = (settings as any)?.logoUrl || pm.logoUrl || 'https://farmsking.in/assets/logo.png';
+
     return {
       name: name || 'FarmsKing Executive Support',
       mobile: helplinePhone,
       email: supportEmail,
       helplinePhone,
       supportEmail,
+      logoUrl: supportLogoUrl,
+      faviconUrl: supportFaviconUrl,
       companyLegalName,
       registeredAddress,
       operationalHqAddress,
@@ -182,6 +204,8 @@ export class AppSettingsService {
       brandDisplayName: pm.brandDisplayName,
       shortName: pm.shortName,
       tagline: pm.tagline,
+      logoUrl: pm.logoUrl || 'https://farmsking.in/assets/logo.png',
+      faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.ico',
       mcaSrn: pm.mcaSrn,
       crcApprovalStatus: pm.crcApprovalStatus,
       crcApprovalDate: pm.crcApprovalDate,
@@ -254,6 +278,7 @@ export class AppSettingsService {
     const keys: (keyof UpdateAppSettingsDto)[] = [
       'appName',
       'logoUrl',
+      'faviconUrl',
       'tagline',
       'upiId',
       'upiPayeeName',
@@ -402,12 +427,40 @@ export class AppSettingsService {
       'walletUsagePlatformFeePercent',
       'walletUsageGstPercent',
       'walletTaxEnabled',
+      'featureFlags',
     ]);
 
     const prismaPayload: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(fields)) {
       if (ALLOWED_PRISMA_FIELDS.has(k)) {
         prismaPayload[k] = v;
+      }
+    }
+
+    if (dto.faviconUrl !== undefined) {
+      try {
+        const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
+        const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};
+        prismaPayload['featureFlags'] = {
+          ...currentFlags,
+          faviconUrl: dto.faviconUrl,
+        };
+      } catch (err) {
+        console.warn('Could not update featureFlags.faviconUrl in AppSetting:', err);
+      }
+    }
+
+    if (dto.logoUrl !== undefined || dto.faviconUrl !== undefined) {
+      try {
+        const integrations = await this.getIntegrations();
+        if (integrations?.projectMasterData) {
+          const pm = { ...integrations.projectMasterData };
+          if (dto.logoUrl !== undefined) pm.logoUrl = dto.logoUrl;
+          if (dto.faviconUrl !== undefined) pm.faviconUrl = dto.faviconUrl;
+          await this.updateIntegrations({ ...integrations, projectMasterData: pm });
+        }
+      } catch (err) {
+        console.warn('Could not sync integrations projectMasterData with brand assets:', err);
       }
     }
 

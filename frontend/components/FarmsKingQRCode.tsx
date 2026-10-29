@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 interface FarmsKingQRCodeProps {
   size?: number;
@@ -55,11 +56,7 @@ export default function FarmsKingQRCode({
 
         {/* Center FarmsKing Verified Badge */}
         <View style={styles.centerLogoBadge}>
-          <Image
-            source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
-            style={styles.centerLogoImg}
-            resizeMode="contain"
-          />
+          <BrandLogo size={Math.round(size * 0.16)} />
         </View>
       </TouchableOpacity>
 

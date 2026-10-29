@@ -25,6 +25,7 @@ import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
 import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
+import SettingPaymentShareSetup from '@/components/settings/SettingPaymentShareSetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -54,6 +55,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     description: 'Calls & WhatsApp automation, module lockdowns, OTP security & rate limiting',
   },
   {
+    id: 'PAYMENT_SHARE',
+    label: 'Payment Share',
+    icon: 'cash-outline',
+    description: 'Referral rewards, wallet taxes & TDS, garden expert fee share, marketplace commissions & store rules',
+  },
+  {
     id: 'TOOLS_API',
     label: 'Tools API',
     icon: 'hardware-chip-outline',
@@ -63,7 +70,7 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     id: 'OTHER',
     label: 'Other',
     icon: 'options-outline',
-    description: 'Referral rewards, wallet taxes, telecom, storage, crop seasons, certificates & advanced system rules',
+    description: 'Telecom, cloud storage, crop calendars, certificates, backup recovery & system rules',
   },
 ];
 
@@ -82,6 +89,9 @@ export default function NewSettingsScreen() {
     if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
       return 'FEATURES';
     }
+    if (tabParam === 'PAYMENT_SHARE' || tabParam === 'PAYMENT' || tabParam === 'SHARE') {
+      return 'PAYMENT_SHARE';
+    }
     if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       return 'TOOLS_API';
     }
@@ -98,6 +108,8 @@ export default function NewSettingsScreen() {
       setActiveTab('ENTITY_SETUP');
     } else if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
       setActiveTab('FEATURES');
+    } else if (tabParam === 'PAYMENT_SHARE' || tabParam === 'PAYMENT' || tabParam === 'SHARE') {
+      setActiveTab('PAYMENT_SHARE');
     } else if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       setActiveTab('TOOLS_API');
     } else if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
@@ -851,6 +863,12 @@ export default function NewSettingsScreen() {
         {activeTab === 'FEATURES' && (
           <View style={{ width: '100%' }}>
             <SettingFeaturesSetup />
+          </View>
+        )}
+
+        {activeTab === 'PAYMENT_SHARE' && (
+          <View style={{ width: '100%' }}>
+            <SettingPaymentShareSetup />
           </View>
         )}
 

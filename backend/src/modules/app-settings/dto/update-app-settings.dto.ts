@@ -155,5 +155,34 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsString()
   freeTrialPlan?: string;
+
+  @IsOptional()
+  gardenExpertPlatformFeePercent?: number;
+
+  @IsOptional()
+  gardenerProCardPrice?: number;
+
+  @IsOptional()
+  gardenerVipCardPrice?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  allowDirectPlatformSales?: boolean;
+
+  @IsOptional()
+  withdrawalPlatformFeePercent?: number;
+
+  @IsOptional()
+  withdrawalGstPercent?: number;
+
+  @IsOptional()
+  walletUsagePlatformFeePercent?: number;
+
+  @IsOptional()
+  walletUsageGstPercent?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  walletTaxEnabled?: boolean;
 }
 

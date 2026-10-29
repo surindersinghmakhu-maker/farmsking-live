@@ -38,7 +38,7 @@ export interface AppSettings {
   walletMaintenanceMode?: boolean;
   doctorMaintenanceMode?: boolean;
   gardenAdvisorMaintenanceMode?: boolean;
-  accountsMaintenanceMode?: boolean;
+  trainerMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
@@ -47,6 +47,13 @@ export interface AppSettings {
   gardenExpertPlatformFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
+  allowDirectPlatformSales?: boolean;
+  withdrawalPlatformFeePercent?: number;
+  withdrawalGstPercent?: number;
+  walletUsagePlatformFeePercent?: number;
+  walletUsageGstPercent?: number;
+  walletTaxEnabled?: boolean;
+  otpDeliveryChannel?: string;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -92,6 +99,7 @@ export interface UpdateAppSettingsPayload {
   doctorMaintenanceMode?: boolean;
   gardenAdvisorMaintenanceMode?: boolean;
   accountsMaintenanceMode?: boolean;
+  trainerMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
@@ -100,6 +108,13 @@ export interface UpdateAppSettingsPayload {
   gardenExpertPlatformFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
+  allowDirectPlatformSales?: boolean;
+  withdrawalPlatformFeePercent?: number;
+  withdrawalGstPercent?: number;
+  walletUsagePlatformFeePercent?: number;
+  walletUsageGstPercent?: number;
+  walletTaxEnabled?: boolean;
+  otpDeliveryChannel?: string;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

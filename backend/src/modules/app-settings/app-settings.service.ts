@@ -115,6 +115,12 @@ export class AppSettingsService {
       gardenExpertPlatformFeePercent: (settings as any).gardenExpertPlatformFeePercent ?? 20.0,
       gardenerProCardPrice: (settings as any).gardenerProCardPrice ?? 299.00,
       gardenerVipCardPrice: (settings as any).gardenerVipCardPrice ?? 999.00,
+      allowDirectPlatformSales: (settings as any).allowDirectPlatformSales ?? false,
+      withdrawalPlatformFeePercent: (settings as any).withdrawalPlatformFeePercent ?? 2.0,
+      withdrawalGstPercent: (settings as any).withdrawalGstPercent ?? 18.0,
+      walletUsagePlatformFeePercent: (settings as any).walletUsagePlatformFeePercent ?? 2.0,
+      walletUsageGstPercent: (settings as any).walletUsageGstPercent ?? 18.0,
+      walletTaxEnabled: (settings as any).walletTaxEnabled ?? true,
     };
 
     this.cache = { data: result, timestamp: now };
@@ -289,6 +295,15 @@ export class AppSettingsService {
       'freeTrialEnabled',
       'freeTrialDays',
       'freeTrialPlan',
+      'gardenExpertPlatformFeePercent',
+      'gardenerProCardPrice',
+      'gardenerVipCardPrice',
+      'allowDirectPlatformSales',
+      'withdrawalPlatformFeePercent',
+      'withdrawalGstPercent',
+      'walletUsagePlatformFeePercent',
+      'walletUsageGstPercent',
+      'walletTaxEnabled',
     ];
 
     for (const key of keys) {

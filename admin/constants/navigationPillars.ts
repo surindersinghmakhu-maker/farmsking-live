@@ -333,6 +333,15 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         params: { tab: 'TOOLS_API', pillar: 'PLATFORM' },
       },
       {
+        id: 'settings-other',
+        title: 'Other Settings',
+        shortTitle: 'Other',
+        description: 'Referral rewards, wallet taxes, telecom, storage, crop seasons & unexposed rules',
+        icon: 'options-outline',
+        path: '/admin/(tabs)/new-settings',
+        params: { tab: 'OTHER', pillar: 'PLATFORM' },
+      },
+      {
         id: 'cpanel-integrations',
         title: 'Store & Company Rules',
         shortTitle: 'Store Rules',

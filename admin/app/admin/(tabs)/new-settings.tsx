@@ -23,6 +23,7 @@ import {
 } from '@/src/api/appSettings.api';
 import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
+import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -51,6 +52,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     icon: 'hardware-chip-outline',
     description: 'Third-party API providers, credentials, gateways & live service configurations',
   },
+  {
+    id: 'OTHER',
+    label: 'Other',
+    icon: 'options-outline',
+    description: 'Referral rewards, wallet taxes, telecom, storage, crop seasons, certificates & advanced system rules',
+  },
 ];
 
 export default function NewSettingsScreen() {
@@ -68,6 +75,9 @@ export default function NewSettingsScreen() {
     if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       return 'TOOLS_API';
     }
+    if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
+      return 'OTHER';
+    }
     const found = SETTINGS_TABS.find((t) => t.id === tabParam);
     return found ? found.id : 'ABOUT';
   });
@@ -78,6 +88,8 @@ export default function NewSettingsScreen() {
       setActiveTab('ENTITY_SETUP');
     } else if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
       setActiveTab('TOOLS_API');
+    } else if (tabParam === 'OTHER' || tabParam === 'OTHERS' || tabParam === 'SYSTEM' || tabParam === 'MISC') {
+      setActiveTab('OTHER');
     } else if (tabParam === 'ABOUT') {
       setActiveTab('ABOUT');
     }
@@ -827,6 +839,12 @@ export default function NewSettingsScreen() {
         {activeTab === 'TOOLS_API' && (
           <View style={{ width: '100%' }}>
             <ThirdPartyServicesSection />
+          </View>
+        )}
+
+        {activeTab === 'OTHER' && (
+          <View style={{ width: '100%' }}>
+            <SettingOtherSetup />
           </View>
         )}
       </ScrollView>

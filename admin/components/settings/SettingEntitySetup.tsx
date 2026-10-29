@@ -26,6 +26,7 @@ import {
 } from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
+import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 
 export type MasterDataSubTab =
   | 'basic-details'
@@ -33,7 +34,8 @@ export type MasterDataSubTab =
   | 'social'
   | 'email-templates'
   | 'maintenance'
-  | 'tax-gst';
+  | 'tax-gst'
+  | 'other';
 
 export type EmailTemplateKey = 'registration' | 'otp' | 'feeReceipt' | 'resultPublished' | 'certificateIssued';
 
@@ -80,6 +82,12 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
     label: 'GST & Tax Invoicing',
     icon: 'receipt-outline',
     description: 'GSTIN, default rates, invoicing & rules',
+  },
+  {
+    key: 'other',
+    label: 'Other System Settings',
+    icon: 'options-outline',
+    description: 'Referral bonuses, wallet taxes, telecom, storage & unexposed rules',
   },
 ];
 
@@ -1410,6 +1418,13 @@ export default function SettingEntitySetup() {
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
+            </View>
+          )}
+
+          {/* TAB 7: Other System Settings */}
+          {masterSubTab === 'other' && (
+            <View style={styles.masterTabPane}>
+              <SettingOtherSetup />
             </View>
           )}
         </View>

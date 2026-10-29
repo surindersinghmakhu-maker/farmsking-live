@@ -1069,7 +1069,7 @@ export default function PublicHeader({
                     isDay ? styles.modalInfoTextDay : styles.modalInfoTextNight,
                   ]}
                 >
-                  Daily Operating Hours: 6:00 AM – 10:00 PM IST
+                  Daily Operating Hours: 10:00 AM – 5:00 PM IST
                 </Text>
               </View>
               <View style={styles.modalInfoItem}>

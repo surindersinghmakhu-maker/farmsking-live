@@ -252,7 +252,7 @@ export default function RefundPolicyScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                📞 Farmer Helpline: 95776-22000 (6:00 AM – 10:00 PM IST)
+                📞 Farmer Helpline: 95776-22000 (10:00 AM – 5:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
                 ✉️ Support Email: farmskingindia@gmail.com / orders@farmsking.in

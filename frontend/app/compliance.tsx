@@ -549,7 +549,7 @@ export default function ComplianceScreen() {
                 <View style={styles.officerDetailRow}>
                   <Ionicons name="call-outline" size={15} color={isDay ? '#059669' : '#34d399'} />
                   <Text style={[styles.officerDetailText, isDay ? styles.officerDetailTextDay : styles.officerDetailTextNight]}>
-                    95776-22000 (Farmer Helpline • 6:00 AM – 10:00 PM IST)
+                    95776-22000 (Farmer Helpline • 10:00 AM – 5:00 PM IST)
                   </Text>
                 </View>
                 <View style={styles.officerDetailRow}>

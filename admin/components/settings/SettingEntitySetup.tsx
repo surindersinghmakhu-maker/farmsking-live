@@ -380,20 +380,6 @@ export default function SettingEntitySetup() {
           {/* TAB 1: Basic Details & Identity */}
           {masterSubTab === 'basic-details' && (
             <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
-                    <Ionicons name="business-outline" size={20} color="#6366f1" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Corporate Identity & Legal Registrations</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Approved corporate name, brand identity, and Ministry of Corporate Affairs (MCA) registration.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Group 1: Corporate Name & Brand */}
               <View style={[styles.groupSection, { borderColor: cardBorder }]}>
                 <View style={styles.groupHeader}>
@@ -444,9 +430,9 @@ export default function SettingEntitySetup() {
                         <Text style={styles.copyLink}>Copy</Text>
                       </TouchableOpacity>
                     </View>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 68 }]}>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
                       <TextInput
-                        style={[styles.input, { color: textColor, height: 58 }]}
+                        style={[styles.input, { color: textColor, height: 38 }]}
                         value={masterData.registeredOfficeAddress || (masterData as any).registeredAddress || ''}
                         onChangeText={(txt) => {
                           handleUpdateMasterField('registeredOfficeAddress', txt);
@@ -461,9 +447,9 @@ export default function SettingEntitySetup() {
 
                   <View style={styles.col}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Corporate Tagline</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 68 }]}>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
                       <TextInput
-                        style={[styles.input, { color: textColor, height: 58 }]}
+                        style={[styles.input, { color: textColor, height: 38 }]}
                         value={masterData.tagline}
                         onChangeText={(txt) => handleUpdateMasterField('tagline', txt)}
                         placeholder="Farming Easy, Farming Smart | National Smart Farming Platform"
@@ -484,8 +470,8 @@ export default function SettingEntitySetup() {
                   </View>
                 </View>
 
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                <View style={styles.fourCol}>
+                  <View style={styles.col4}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>MCA Incorporation SRN</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
@@ -498,8 +484,8 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>CIN (Corporate Identification Number)</Text>
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>CIN Number</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
                         style={[styles.input, { color: textColor }]}
@@ -513,10 +499,8 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                  <View style={styles.col4}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Company PAN</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
@@ -534,7 +518,7 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
+                  <View style={styles.col4}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Company TAN</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
@@ -556,11 +540,11 @@ export default function SettingEntitySetup() {
                   <Text style={[styles.groupTitle, { color: textColor }]}>Official Helpdesk & Locations</Text>
                 </View>
 
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                <View style={styles.threeCol}>
+                  <View style={styles.col3}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Helpline Phone Number</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="call-outline" size={16} color={subTextColor} style={{ marginRight: 8 }} />
+                      <Ionicons name="call-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.officialPhone || masterData.primaryMobile || ''}
@@ -574,10 +558,10 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
+                  <View style={styles.col3}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Official Support Email</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="mail-outline" size={16} color={subTextColor} style={{ marginRight: 8 }} />
+                      <Ionicons name="mail-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.officialEmail || masterData.supportEmail || ''}
@@ -590,18 +574,16 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ / Administrative Office</Text>
+                  <View style={styles.col3}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ / Admin Office</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="location-outline" size={16} color={subTextColor} style={{ marginRight: 8 }} />
+                      <Ionicons name="location-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.operationalHq || ''}
                         onChangeText={(txt) => handleUpdateMasterField('operationalHq', txt)}
-                        placeholder="Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India"
+                        placeholder="Near Grain Market, Makhu, Punjab - 142044"
                         placeholderTextColor={subTextColor}
                       />
                     </View>
@@ -633,32 +615,18 @@ export default function SettingEntitySetup() {
 
 
 
-          {/* TAB 3: Social Media & Maps */}
+          {/* TAB 2: Social Media & Maps */}
           {masterSubTab === 'social' && (
             <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.2)' }]}>
-                    <Ionicons name="share-social-outline" size={20} color="#3b82f6" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Social Profiles & Location</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Manage official social networking handles and Google Maps geolocation coordinates.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Group: Social Channels */}
               <View style={[styles.groupSection, { borderColor: cardBorder }]}>
                 <View style={styles.groupHeader}>
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Official Social Channels</Text>
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Official Social Channels & Maps</Text>
                 </View>
 
-                {/* Facebook & Instagram */}
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                {/* Row 1: Facebook, Instagram, YouTube */}
+                <View style={styles.threeCol}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
                       <Text style={[styles.inputLabel, { color: textColor }]}>Facebook Page</Text>
                       {masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl ? (
@@ -668,7 +636,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-facebook" size={18} color="#1877f2" style={{ marginRight: 8 }} />
+                      <Ionicons name="logo-facebook" size={16} color="#1877f2" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || ''}
@@ -682,7 +650,7 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
                       <Text style={[styles.inputLabel, { color: textColor }]}>Instagram Profile</Text>
                       {masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl ? (
@@ -692,7 +660,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-instagram" size={18} color="#e1306c" style={{ marginRight: 8 }} />
+                      <Ionicons name="logo-instagram" size={16} color="#e1306c" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || ''}
@@ -705,11 +673,8 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
-                </View>
 
-                {/* YouTube & Twitter */}
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
                       <Text style={[styles.inputLabel, { color: textColor }]}>YouTube Channel</Text>
                       {masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl ? (
@@ -719,7 +684,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-youtube" size={18} color="#ff0000" style={{ marginRight: 8 }} />
+                      <Ionicons name="logo-youtube" size={16} color="#ff0000" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || ''}
@@ -732,8 +697,11 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
+                </View>
 
-                  <View style={styles.col}>
+                {/* Row 2: Twitter, LinkedIn, Google Maps */}
+                <View style={styles.threeCol}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
                       <Text style={[styles.inputLabel, { color: textColor }]}>Twitter / X</Text>
                       {masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl ? (
@@ -743,7 +711,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-twitter" size={18} color="#0284c7" style={{ marginRight: 8 }} />
+                      <Ionicons name="logo-twitter" size={16} color="#0284c7" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || ''}
@@ -756,11 +724,8 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
-                </View>
 
-                {/* LinkedIn & Google Maps */}
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
                       <Text style={[styles.inputLabel, { color: textColor }]}>LinkedIn Organization</Text>
                       {masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl ? (
@@ -770,7 +735,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="logo-linkedin" size={18} color="#0a66c2" style={{ marginRight: 8 }} />
+                      <Ionicons name="logo-linkedin" size={16} color="#0a66c2" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || ''}
@@ -784,9 +749,9 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
+                  <View style={styles.col3}>
                     <View style={styles.labelRow}>
-                      <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps / Business Link</Text>
+                      <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps Link</Text>
                       {masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl ? (
                         <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || '')}>
                           <Text style={styles.openLink}>Open</Text>
@@ -794,7 +759,7 @@ export default function SettingEntitySetup() {
                       ) : null}
                     </View>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <Ionicons name="location-outline" size={18} color="#10b981" style={{ marginRight: 8 }} />
+                      <Ionicons name="location-outline" size={16} color="#10b981" style={{ marginRight: 6 }} />
                       <TextInput
                         style={[styles.input, { color: textColor }]}
                         value={masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || ''}
@@ -834,25 +799,11 @@ export default function SettingEntitySetup() {
 
 
 
-          {/* TAB 5: Email Templates */}
+          {/* TAB 3: Email Templates */}
           {masterSubTab === 'email-templates' && (
             <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
-                    <Ionicons name="document-text-outline" size={20} color="#6366f1" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Email Notification Templates</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Customize transaction, verification and diagnostic dispatch templates with live preview.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Template Selectors */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                 {EMAIL_TEMPLATE_ITEMS.map((item) => {
                   const isSelected = activeEmailTmpl === item.key;
                   return (
@@ -866,7 +817,7 @@ export default function SettingEntitySetup() {
                       onPress={() => setActiveEmailTmpl(item.key)}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name={item.icon} size={15} color={isSelected ? '#6366f1' : subTextColor} />
+                      <Ionicons name={item.icon} size={14} color={isSelected ? '#6366f1' : subTextColor} />
                       <Text style={[styles.tmplPillText, { color: isSelected ? textColor : subTextColor, fontFamily: isSelected ? FONT.bold : FONT.medium }]}>
                         {item.label}
                       </Text>
@@ -885,7 +836,7 @@ export default function SettingEntitySetup() {
                     ]}
                     onPress={() => setEmailViewMode('editor')}
                   >
-                    <Ionicons name="create-outline" size={14} color={emailViewMode === 'editor' ? '#6366f1' : subTextColor} />
+                    <Ionicons name="create-outline" size={13} color={emailViewMode === 'editor' ? '#6366f1' : subTextColor} />
                     <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'editor' ? textColor : subTextColor }]}>
                       Template Editor
                     </Text>
@@ -898,7 +849,7 @@ export default function SettingEntitySetup() {
                     ]}
                     onPress={() => setEmailViewMode('preview')}
                   >
-                    <Ionicons name="eye-outline" size={14} color={emailViewMode === 'preview' ? '#6366f1' : subTextColor} />
+                    <Ionicons name="eye-outline" size={13} color={emailViewMode === 'preview' ? '#6366f1' : subTextColor} />
                     <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'preview' ? textColor : subTextColor }]}>
                       Live Email Preview
                     </Text>
@@ -909,7 +860,7 @@ export default function SettingEntitySetup() {
               {emailViewMode === 'editor' ? (
                 <View style={[styles.groupSection, { borderColor: cardBorder }]}>
                   {/* Subject Line */}
-                  <View style={{ marginBottom: 14 }}>
+                  <View style={{ marginBottom: 8 }}>
                     <Text style={[styles.inputLabel, { color: textColor }]}>Email Subject Line</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
@@ -923,11 +874,11 @@ export default function SettingEntitySetup() {
                   </View>
 
                   {/* Available Variables */}
-                  <View style={{ marginBottom: 14 }}>
-                    <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11.5 }]}>
+                  <View style={{ marginBottom: 8 }}>
+                    <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
                       AVAILABLE DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
                     </Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
                       {(EMAIL_TEMPLATE_ITEMS.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
                         <TouchableOpacity
                           key={v}
@@ -942,9 +893,9 @@ export default function SettingEntitySetup() {
 
                   {/* Body Editor */}
                   <Text style={[styles.inputLabel, { color: textColor }]}>Email Body (HTML / Formatted Content)</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 180 }]}>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 110 }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 170, textAlignVertical: 'top', paddingTop: 8 }]}
+                      style={[styles.input, { color: textColor, height: 100, textAlignVertical: 'top', paddingTop: 6 }]}
                       value={masterData.emailTemplates?.[activeEmailTmpl]?.body || ''}
                       onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'body', txt)}
                       placeholder="HTML email body..."
@@ -960,21 +911,21 @@ export default function SettingEntitySetup() {
                     <Text style={[styles.previewMetaSubject, { color: textColor }]}>
                       Subject: {masterData.emailTemplates?.[activeEmailTmpl]?.subject || 'No Subject Defined'}
                     </Text>
-                    <Text style={{ fontSize: 12, color: subTextColor }}>
+                    <Text style={{ fontSize: 11.5, color: subTextColor }}>
                       From: {masterData.smtp?.fromName || 'FarmsKing'} &lt;{masterData.smtp?.fromEmail || 'noreply@farmsking.in'}&gt;
                     </Text>
                   </View>
 
                   <View style={[styles.previewEmailCard, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: cardBorder }]}>
                     <View style={styles.previewEmailBrandHeader}>
-                      <Text style={{ fontSize: 18, fontFamily: FONT.bold, color: '#16a34a' }}>
+                      <Text style={{ fontSize: 16, fontFamily: FONT.bold, color: '#16a34a' }}>
                         {masterData.brandName || 'FarmsKing™'}
                       </Text>
-                      <Text style={{ fontSize: 11, color: subTextColor }}>Official Notification</Text>
+                      <Text style={{ fontSize: 10.5, color: subTextColor }}>Official Notification</Text>
                     </View>
 
-                    <View style={{ marginVertical: 14 }}>
-                      <Text style={{ fontSize: 14, color: textColor, lineHeight: 22 }}>
+                    <View style={{ marginVertical: 8 }}>
+                      <Text style={{ fontSize: 13, color: textColor, lineHeight: 20 }}>
                         {masterData.emailTemplates?.[activeEmailTmpl]?.body
                           ?.replace(/<[^>]+>/g, ' ')
                           ?.replace(/\s+/g, ' ')
@@ -983,7 +934,7 @@ export default function SettingEntitySetup() {
                     </View>
 
                     <View style={[styles.previewEmailFooter, { borderTopColor: cardBorder }]}>
-                      <Text style={{ fontSize: 11, color: subTextColor }}>
+                      <Text style={{ fontSize: 10.5, color: subTextColor }}>
                         {masterData.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'} • {masterData.officialEmail || 'support@farmsking.in'}
                       </Text>
                     </View>
@@ -1013,23 +964,9 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
-          {/* TAB 6: Maintenance Mode */}
+          {/* TAB 4: Maintenance Mode */}
           {masterSubTab === 'maintenance' && (
             <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.2)' }]}>
-                    <Ionicons name="construct-outline" size={20} color="#ef4444" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>Maintenance Mode & Emergency Lockdown</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Temporarily pause farmer portal and live Mandi during system maintenance.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Status Banner */}
               <View
                 style={[
@@ -1047,7 +984,7 @@ export default function SettingEntitySetup() {
                 ]}
               >
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View
                       style={[
                         styles.dot,
@@ -1085,11 +1022,11 @@ export default function SettingEntitySetup() {
                   <Text style={[styles.groupTitle, { color: textColor }]}>Public Maintenance Notice</Text>
                 </View>
 
-                <View style={{ marginBottom: 14 }}>
-                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11.5 }]}>
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
                     QUICK NOTICE PRESETS:
                   </Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
                     {[
                       'Scheduled agritech platform upgrades in progress. We will be back shortly.',
                       'Database migration & security patch in progress. Normal operations resume at 06:00 AM IST.',
@@ -1097,10 +1034,10 @@ export default function SettingEntitySetup() {
                     ].map((presetMsg, idx) => (
                       <TouchableOpacity
                         key={idx}
-                        style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg }]}
+                        style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 6, paddingHorizontal: 10 }]}
                         onPress={() => handleUpdateMasterNested('maintenance', 'message', presetMsg)}
                       >
-                        <Text style={{ fontSize: 12, color: textColor }} numberOfLines={1}>
+                        <Text style={{ fontSize: 11.5, color: textColor }} numberOfLines={1}>
                           Preset {idx + 1}: {presetMsg.slice(0, 36)}...
                         </Text>
                       </TouchableOpacity>
@@ -1110,14 +1047,13 @@ export default function SettingEntitySetup() {
 
                 <View>
                   <Text style={[styles.inputLabel, { color: textColor }]}>Displayed Public Notice</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 72 }]}>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 44 }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 62 }]}
+                      style={[styles.input, { color: textColor, height: 36 }]}
                       value={masterData.maintenance?.message || ''}
                       onChangeText={(txt) => handleUpdateMasterNested('maintenance', 'message', txt)}
                       placeholder="Public maintenance notice shown on web and mobile..."
                       placeholderTextColor={subTextColor}
-                      multiline
                     />
                   </View>
                 </View>
@@ -1145,23 +1081,9 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
-          {/* TAB 7: Tax / GST Settings */}
+          {/* TAB 5: Tax / GST Settings */}
           {masterSubTab === 'tax-gst' && (
             <View style={styles.masterTabPane}>
-              <View style={styles.subPaneHeader}>
-                <View style={styles.paneTitleRow}>
-                  <View style={[styles.paneIconBox, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
-                    <Ionicons name="receipt-outline" size={20} color="#10b981" />
-                  </View>
-                  <View>
-                    <Text style={[styles.subPaneTitle, { color: textColor }]}>GST & Tax Invoicing</Text>
-                    <Text style={[styles.subPaneSubtitle, { color: subTextColor }]}>
-                      Configure GSTIN rates, state codes, and statutory invoicing rules for corporate transactions.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Group: Statutory GST Identifiers */}
               <View style={[styles.groupSection, { borderColor: cardBorder }]}>
                 <View style={styles.groupHeader}>
@@ -1171,9 +1093,9 @@ export default function SettingEntitySetup() {
                   </View>
                 </View>
 
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Company GSTIN Number</Text>
+                <View style={styles.fourCol}>
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Company GSTIN</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
                         style={[styles.input, { color: textColor }]}
@@ -1190,8 +1112,8 @@ export default function SettingEntitySetup() {
                     </View>
                   </View>
 
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Default Service GST Rate (%)</Text>
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Default Rate (%)</Text>
                     <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                       <TextInput
                         style={[styles.input, { color: textColor }]}
@@ -1207,14 +1129,40 @@ export default function SettingEntitySetup() {
                       />
                     </View>
                   </View>
+
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Invoice Prefix</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.taxGst?.invoicePrefix || 'FK-INV-'}
+                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'invoicePrefix', txt)}
+                        placeholder="FK-INV-"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.col4}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>HSN / SAC Code</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.taxGst?.hsnSacCode || '998314'}
+                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'hsnSacCode', txt)}
+                        placeholder="998314"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                  </View>
                 </View>
 
                 {/* Quick Tax Rate Selectors */}
-                <View style={{ marginTop: 8, marginBottom: 14 }}>
-                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11.5 }]}>
+                <View style={{ marginTop: 4, marginBottom: 8 }}>
+                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
                     STANDARD GST SLABS:
                   </Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
                     {[0, 5, 12, 18, 28].map((rate) => {
                       const isCurrent =
                         (masterData.taxGst?.defaultGstRate || masterData.taxGst?.taxPercentage) === rate;
@@ -1231,7 +1179,7 @@ export default function SettingEntitySetup() {
                             handleUpdateMasterNested('taxGst', 'taxPercentage', rate);
                           }}
                         >
-                          <Text style={{ fontSize: 12, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
+                          <Text style={{ fontSize: 11.5, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
                             {rate}% GST
                           </Text>
                         </TouchableOpacity>
@@ -1239,39 +1187,11 @@ export default function SettingEntitySetup() {
                     })}
                   </View>
                 </View>
-
-                <View style={styles.twoCol}>
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Invoice Number Prefix</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.taxGst?.invoicePrefix || 'FK-INV-'}
-                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'invoicePrefix', txt)}
-                        placeholder="FK-INV-"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-
-                  <View style={styles.col}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>HSN / SAC Code</Text>
-                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                      <TextInput
-                        style={[styles.input, { color: textColor }]}
-                        value={masterData.taxGst?.hsnSacCode || '998314'}
-                        onChangeText={(txt) => handleUpdateMasterNested('taxGst', 'hsnSacCode', txt)}
-                        placeholder="998314 (IT & Agronomy Software Support)"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                  </View>
-                </View>
               </View>
 
               {/* Statutory Agricultural Exemption Notice */}
               <View style={[styles.exemptionNotice, { borderColor: cardBorder, backgroundColor: innerBg }]}>
-                <Ionicons name="information-circle-outline" size={20} color="#10b981" />
+                <Ionicons name="information-circle-outline" size={17} color="#10b981" />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.exemptionTitle, { color: textColor }]}>
                     Agricultural Produce Exemption (Section 11, CGST Act)
@@ -1435,85 +1355,86 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   dropdownContainer: {
-    borderRadius: 14,
+    borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 10,
     overflow: 'hidden',
   },
   dropdownHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    gap: 10,
   },
   dropdownHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     flex: 1,
   },
   dropdownIconBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dropdownTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     marginBottom: 2,
   },
   dropdownModuleLabel: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   dropdownCountBadge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
   },
   dropdownCountText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '700',
   },
   dropdownTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT.bold,
   },
   dropdownSubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.regular,
     marginTop: 1,
   },
   dropdownChevronBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
   },
   dropdownChevronText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.bold,
   },
   dropdownList: {
     borderTopWidth: 1,
-    padding: 8,
-    gap: 4,
+    padding: 6,
+    gap: 3,
   },
   dropdownItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 6,
   },
   dropdownItemActiveLight: {
     backgroundColor: 'rgba(99, 102, 241, 0.1)',
@@ -1522,118 +1443,139 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
   },
   dropdownItemTitle: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.medium,
   },
   dropdownItemDesc: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.regular,
     marginTop: 1,
   },
   activeCheckBadge: {
-    marginLeft: 8,
+    marginLeft: 6,
   },
   tabIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  masterContentPane: {
+    width: '100%',
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 12,
+  },
+  masterTabPane: {
+    width: '100%',
+  },
+  subPaneHeader: {
+    marginBottom: 8,
+  },
+  paneTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  paneIconBox: {
     width: 32,
     height: 32,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  masterContentPane: {
-    width: '100%',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 20,
-  },
-  masterTabPane: {
-    width: '100%',
-  },
-  subPaneHeader: {
-    marginBottom: 18,
-  },
-  paneTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  paneIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   subPaneTitle: {
-    fontSize: 17,
+    fontSize: 14,
     fontFamily: FONT.bold,
   },
   subPaneSubtitle: {
-    fontSize: 12.5,
+    fontSize: 11,
     fontFamily: FONT.regular,
-    marginTop: 2,
+    marginTop: 1,
   },
   groupSection: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
   groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 8,
   },
   groupTitle: {
-    fontSize: 14,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
   },
   pillBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   pillBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONT.bold,
   },
   twoCol: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 10,
     flexWrap: 'wrap',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  threeCol: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  fourCol: {
+    flexDirection: 'row',
+    gap: 10,
+    flexWrap: 'wrap',
+    marginBottom: 8,
   },
   col: {
     flex: 1,
-    minWidth: 240,
+    minWidth: 220,
+  },
+  col3: {
+    flex: 1,
+    minWidth: 200,
+  },
+  col4: {
+    flex: 1,
+    minWidth: 160,
   },
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 2,
   },
   inputLabel: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.semiBold,
-    marginBottom: 6,
+    marginBottom: 2,
   },
   copyLink: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#6366f1',
     fontFamily: FONT.medium,
   },
   openLink: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#10b981',
     fontFamily: FONT.medium,
   },
   inputBox: {
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
+    borderRadius: 7,
+    paddingHorizontal: 10,
+    height: 36,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -1641,7 +1583,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontFamily: FONT.regular,
-    fontSize: 13,
+    fontSize: 12.5,
   },
   previewMockupBox: {
     borderWidth: 1,
@@ -1787,22 +1729,22 @@ const styles = StyleSheet.create({
   },
   liveEmailPreviewBox: {
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
   },
   previewMetaHeader: {
-    marginBottom: 14,
-    gap: 4,
+    marginBottom: 8,
+    gap: 2,
   },
   previewMetaSubject: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontFamily: FONT.bold,
   },
   previewEmailCard: {
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 8,
+    padding: 10,
   },
   previewEmailBrandHeader: {
     flexDirection: 'row',
@@ -1810,96 +1752,96 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(148, 163, 184, 0.2)',
-    paddingBottom: 10,
+    paddingBottom: 6,
   },
   previewEmailFooter: {
     borderTopWidth: 1,
-    paddingTop: 10,
-    marginTop: 10,
+    paddingTop: 6,
+    marginTop: 6,
   },
   maintenanceStatusCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
+    padding: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 16,
-    gap: 14,
+    marginBottom: 8,
+    gap: 8,
   },
   maintenanceStatusTitle: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
     letterSpacing: 0.5,
   },
   maintenanceStatusDesc: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.regular,
-    marginTop: 4,
+    marginTop: 2,
   },
   ratePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: 6,
     borderWidth: 1,
   },
   exemptionNotice: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    padding: 14,
-    borderRadius: 12,
+    gap: 8,
+    padding: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   exemptionTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   exemptionDesc: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.regular,
-    lineHeight: 18,
+    lineHeight: 15,
   },
   outlineActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
     borderWidth: 1,
   },
   outlineActionText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.medium,
   },
   paneFooterRight: {
-    marginTop: 20,
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   paneFooterBetween: {
-    marginTop: 20,
+    marginTop: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   saveActionBtn: {
-    borderRadius: 10,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   saveActionGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
   saveActionText: {
     color: '#ffffff',
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
   },
 });

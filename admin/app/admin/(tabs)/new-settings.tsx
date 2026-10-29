@@ -945,29 +945,31 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 14,
   },
   tabItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 4,
   },
   tabLabel: {
-    fontSize: 14,
+    fontSize: 13.5,
   },
   contentScroll: {
     flex: 1,
   },
   contentContainer: {
-    padding: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     maxWidth: 1400,
     alignSelf: 'center',
     width: '100%',
   },
   contentContainerMobile: {
-    padding: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
   aboutTabWrapper: {
     gap: 20,

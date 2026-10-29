@@ -373,7 +373,7 @@ const TRANSLATIONS = {
     scanWithPhone: 'Scan with Smartphone',
     openFarmsKing: 'Universal Web & App QR Code',
     farmerHelpline: 'Farmer Helpline',
-    helplineHours: 'Farmer Helpline • 6:00 AM – 10:00 PM IST',
+    helplineHours: 'Farmer Helpline • 10:00 AM – 5:00 PM IST',
     legalHeading: 'Legal & Compliance',
     mcaDisclosures: 'MCA & Statutory Disclosures',
     returnHome: 'Return to FarmsKing Homepage',

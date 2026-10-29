@@ -232,7 +232,7 @@ export default function TermsOfServiceScreen() {
                 Email: farmskingindia@gmail.com / grievance@farmsking.in
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Helpline: 95776-22000 (Farmer Support Desk • 6:00 AM – 10:00 PM IST)
+                Helpline: 95776-22000 (Farmer Support Desk • 10:00 AM – 5:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
                 Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 • Corporate Office: Makhu, Ferozepur • Jurisdiction: Courts of Punjab, India

@@ -847,29 +847,6 @@ export default function NewSettingsScreen() {
             <SettingOtherSetup />
           </View>
         )}
-
-        {/* Global Admin Statutory Copyright Footer */}
-        <View style={[styles.statutoryFooterBanner, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <View style={styles.statutoryFooterLeft}>
-            <View style={[styles.statutoryShieldBox, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.15)' }]}>
-              <Ionicons name="shield-checkmark" size={18} color="#0284c7" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.statutoryCopyrightTitle, { color: textColor }]}>
-                © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
-              </Text>
-              <Text style={[styles.statutoryCopyrightSub, { color: subTextColor }]}>
-                MCA Incorporated under Companies Act, 2013 • CIN: U01100PB2026PTC063294 • Regd Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.statutoryLawBadge, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#bbf7d0' : '#10b981' }]}>
-            <Ionicons name="document-text-outline" size={13} color="#10b981" />
-            <Text style={[styles.statutoryLawText, { color: isLight ? '#166534' : '#6ee7b7' }]}>
-              Protected under Indian Copyright Act, 1957
-            </Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );

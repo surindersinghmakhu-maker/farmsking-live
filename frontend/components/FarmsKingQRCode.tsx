@@ -8,6 +8,9 @@ interface FarmsKingQRCodeProps {
   showCaption?: boolean;
   themeMode?: 'day' | 'night';
   url?: string;
+  badgeLabel?: string;
+  captionTitle?: string;
+  captionSub?: string;
   onPress?: () => void;
 }
 
@@ -16,6 +19,9 @@ export default function FarmsKingQRCode({
   showCaption = true,
   themeMode = 'day',
   url = 'https://www.farmsking.in',
+  badgeLabel,
+  captionTitle,
+  captionSub,
   onPress,
 }: FarmsKingQRCodeProps) {
   const isDay = themeMode === 'day';
@@ -28,16 +34,21 @@ export default function FarmsKingQRCode({
     }
   };
 
+  const dynamicQrUri = url
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=${Math.round(size * 2)}x${Math.round(size * 2)}&data=${encodeURIComponent(url)}&margin=4`
+    : null;
+
   return (
     <View style={[styles.container, isDay ? styles.containerDay : styles.containerNight]}>
       {/* QR Code Container with Scan Frame */}
       <TouchableOpacity
-        style={[styles.qrWrapper, { width: size + 24, height: size + 24 }, isDay ? styles.qrWrapperDay : styles.qrWrapperNight]}
+        style={[styles.qrWrapper, { width: size + 20, height: size + 20 }, isDay ? styles.qrWrapperDay : styles.qrWrapperNight]}
         onPress={handleOpenUrl}
         activeOpacity={0.85}
       >
         <Image
-          source={require('@/assets/images/farmsking_qr_code.png')}
+          source={dynamicQrUri ? { uri: dynamicQrUri } : require('@/assets/images/farmsking_qr_code.png')}
+          defaultSource={require('@/assets/images/farmsking_qr_code.png')}
           style={{ width: size, height: size, borderRadius: 10 }}
           resizeMode="contain"
         />
@@ -57,14 +68,14 @@ export default function FarmsKingQRCode({
           <View style={[styles.scanBadge, isDay ? styles.scanBadgeDay : styles.scanBadgeNight]}>
             <Ionicons name="qr-code-outline" size={13} color={isDay ? '#059669' : '#34d399'} />
             <Text style={[styles.scanBadgeText, isDay ? styles.scanBadgeTextDay : styles.scanBadgeTextNight]}>
-              SCAN WITH PHONE CAMERA
+              {badgeLabel || 'SCAN TO DOWNLOAD APP'}
             </Text>
           </View>
-          <Text style={[styles.captionTitle, isDay ? styles.captionTitleDay : styles.captionTitleNight]}>
-            www.farmsking.in
+          <Text style={[styles.captionTitle, isDay ? styles.captionTitleDay : styles.captionTitleNight]} numberOfLines={1}>
+            {captionTitle || (url ? url.replace(/^https?:\/\//i, '').split('/')[0] : 'www.farmsking.in')}
           </Text>
           <Text style={[styles.captionSub, isDay ? styles.captionSubDay : styles.captionSubNight]}>
-            Mobile & Web Compatible • Direct Access
+            {captionSub || 'Direct Mobile App Installation'}
           </Text>
         </View>
       )}

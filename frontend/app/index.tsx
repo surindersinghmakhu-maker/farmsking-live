@@ -719,11 +719,12 @@ export default function PublicLandingPage() {
   const [lang, setLang] = useState<'EN' | 'PA' | 'HI'>('EN');
   const t = TRANSLATIONS[lang] || TRANSLATIONS.EN;
 
-  // Dynamic support contact fetched from Admin Settings backend
+  // Dynamic support contact and app download url fetched from Admin Settings backend
   const [supportContact, setSupportContact] = useState<{ helplinePhone: string; supportEmail: string }>({
     helplinePhone: '95776-22000',
     supportEmail: 'farmskingindia@gmail.com',
   });
+  const [appDownloadUrl, setAppDownloadUrl] = useState<string>('https://www.farmsking.in');
 
   useEffect(() => {
     getSupportContact()
@@ -733,6 +734,9 @@ export default function PublicLandingPage() {
             helplinePhone: contact.helplinePhone || '95776-22000',
             supportEmail: contact.supportEmail || 'farmskingindia@gmail.com',
           });
+        }
+        if (contact?.appDownloadUrl && contact.appDownloadUrl.trim()) {
+          setAppDownloadUrl(contact.appDownloadUrl.trim());
         }
       })
       .catch(() => {});
@@ -2737,75 +2741,92 @@ export default function PublicLandingPage() {
           )}
         </View>
 
-        {/* ══ UNIVERSAL ACCESS & APP CALLOUT BANNER (COMPACT EXECUTIVE) ══ */}
+        {/* ══ DEDICATED APP DOWNLOAD & DYNAMIC SMARTPHONE QR SECTION ══ */}
         <View style={S.appBannerWrapper}>
           <LinearGradient
-            colors={isDay ? ['#e0f2fe', '#dcfce7'] : ['#0b1a30', '#062024']}
+            colors={isDay ? ['#f0fdf4', '#ecfdf5'] : ['#061a1e', '#0b192c']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
-              S.appBannerCard,
-              isDay && S.appBannerCardDay,
-              isMobile && { flexDirection: 'column', alignItems: 'stretch', padding: 14, gap: 10 },
+              S.appDownloadCard,
+              isDay && S.appDownloadCardDay,
+              isMobile && S.appDownloadCardMobile,
             ]}
           >
-            <View style={[S.appBannerLeft, isDesktop ? { flex: 1, paddingRight: 16 } : { width: '100%' }]}>
-              <View style={[S.bannerTag, isDay && S.bannerTagDay, { marginBottom: 6, paddingVertical: 2.5, paddingHorizontal: 8 }]}>
-                <Ionicons name="sparkles" size={11} color={isDay ? '#047857' : '#a7f3d0'} />
-                <Text style={[S.bannerTagText, isDay && { color: '#047857' }, { fontSize: 9.5 }]}>MOBILE & WEB COMPATIBLE</Text>
+            {/* Left Column: App Highlights & Download CTAs */}
+            <View style={[S.appDownloadLeft, isDesktop ? { flex: 1, paddingRight: 28 } : { width: '100%' }]}>
+              <View style={[S.appDownloadBadge, isDay && S.appDownloadBadgeDay]}>
+                <Ionicons name="phone-portrait-outline" size={12} color={isDay ? '#047857' : '#34d399'} />
+                <Text style={[S.appDownloadBadgeText, isDay && S.appDownloadBadgeTextDay]}>OFFICIAL MOBILE APPLICATION</Text>
               </View>
 
-              <Text style={[S.bannerHeadline, isDay && S.bannerHeadlineDay, { fontSize: 18, lineHeight: 23, marginBottom: 4 }]}>
-                {t.appDownloadTitle}
+              <Text style={[S.appDownloadHeadline, isDay && S.appDownloadHeadlineDay]}>
+                Download FarmsKing App
               </Text>
 
-              <Text style={[S.bannerSubhead, isDay && S.bannerSubheadDay, { fontSize: 12, lineHeight: 17, marginBottom: 10, maxWidth: 540 }]}>
-                {t.appDownloadSub}
+              <Text style={[S.appDownloadSubhead, isDay && S.appDownloadSubheadDay]}>
+                Scan the QR code with your smartphone camera to download and install the official FarmsKing application directly on your Android device.
               </Text>
 
-              <View style={[S.bannerCtasRow, { gap: 8 }]}>
+              {/* Feature Highlights Pills */}
+              <View style={S.appDownloadFeaturesRow}>
+                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
+                  <Ionicons name="shield-checkmark" size={13} color="#10b981" />
+                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>AI Crop Doctor Scanner</Text>
+                </View>
+                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
+                  <Ionicons name="trending-up" size={13} color="#10b981" />
+                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>Real-Time APMC Mandi Rates</Text>
+                </View>
+                <View style={[S.appFeaturePill, isDay && S.appFeaturePillDay]}>
+                  <Ionicons name="cloudy-night-outline" size={13} color="#10b981" />
+                  <Text style={[S.appFeaturePillText, isDay && S.appFeaturePillTextDay]}>Satellite Field Telemetry</Text>
+                </View>
+              </View>
+
+              {/* Direct Buttons */}
+              <View style={S.appDownloadBtnsRow}>
                 <TouchableOpacity
-                  style={[S.bannerBtnPrimary, { paddingHorizontal: 14, paddingVertical: 8 }]}
+                  style={S.appDownloadPrimaryBtn}
                   onPress={() => {
                     if (typeof window !== 'undefined') {
-                      const deferredPrompt = (window as any).deferredPrompt;
-                      if (deferredPrompt) {
-                        deferredPrompt.prompt();
-                      } else {
-                        window.open('/api/v1/app/download-apk', '_blank');
-                      }
+                      window.open(appDownloadUrl, '_blank');
                     } else {
-                      router.push('/(auth)/login');
+                      Linking.openURL(appDownloadUrl).catch(() => {});
                     }
                   }}
-                  activeOpacity={0.88}
+                  activeOpacity={0.85}
                 >
-                  <Ionicons name="download-outline" size={15} color="#022c22" />
-                  <Text style={[S.bannerBtnPrimaryText, { fontSize: 12.5 }]}>Install App / PWA</Text>
+                  <Ionicons name="download-outline" size={17} color="#022c22" />
+                  <Text style={S.appDownloadPrimaryBtnText}>Download Android APK</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[S.bannerBtnSecondary, isDay && S.bannerBtnSecondaryDay, { paddingHorizontal: 12, paddingVertical: 8 }]}
+                  style={[S.appDownloadSecondaryBtn, isDay && S.appDownloadSecondaryBtnDay]}
                   onPress={() => router.push('/contact-us')}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="call-outline" size={14} color={isDay ? '#0f172a' : '#ffffff'} />
-                  <Text style={[S.bannerBtnSecondaryText, isDay && { color: '#0f172a' }, { fontSize: 12 }]}>
-                    {t.farmerHelpline}: {supportContact.helplinePhone}
+                  <Ionicons name="call-outline" size={15} color={isDay ? '#0f172a' : '#ffffff'} />
+                  <Text style={[S.appDownloadSecondaryBtnText, isDay && S.appDownloadSecondaryBtnTextDay]}>
+                    Helpline: {supportContact.helplinePhone}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {isDesktop && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: isDay ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 14, borderWidth: 1, borderColor: isDay ? 'rgba(16,185,129,0.2)' : 'rgba(167,243,208,0.2)' }}>
-                <FarmsKingQRCode size={68} />
-                <View>
-                  <Text style={[S.qrScanText, isDay && { color: '#0f172a' }, { marginTop: 0, fontSize: 11 }]}>{t.scanWithPhone}</Text>
-                  <Text style={[S.qrSubText, { fontSize: 9.5 }]}>www.farmsking.in</Text>
-                </View>
+            {/* Right Column: Dynamic QR Code */}
+            <View style={[S.appDownloadRight, isMobile && { marginTop: 16, width: '100%', alignItems: 'center' }]}>
+              <View style={[S.appQrBox, isDay && S.appQrBoxDay]}>
+                <FarmsKingQRCode
+                  size={120}
+                  url={appDownloadUrl}
+                  badgeLabel="SCAN TO DOWNLOAD APP"
+                  captionTitle="FarmsKing Mobile App"
+                  captionSub="Scan to install on smartphone"
+                  themeMode={isDay ? 'day' : 'night'}
+                />
               </View>
-            )}
+            </View>
           </LinearGradient>
         </View>
 
@@ -6035,7 +6056,7 @@ const S = StyleSheet.create({
   },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // APP CALLOUT BANNER
+  // DEDICATED APP DOWNLOAD CARD & DYNAMIC QR
   // ══════════════════════════════════════════════════════════════════════════
   appBannerWrapper: {
     paddingVertical: 14,
@@ -6044,6 +6065,159 @@ const S = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
+  appDownloadCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: RADIUS.xl,
+    padding: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.3)',
+    ...premiumShadow('rgba(0, 0, 0, 0.35)', 'md'),
+  },
+  appDownloadCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#a7f3d0',
+    ...premiumShadow('rgba(16, 185, 129, 0.12)', 'sm'),
+  },
+  appDownloadCardMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    padding: 16,
+  },
+  appDownloadLeft: {
+    justifyContent: 'center',
+  },
+  appDownloadBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  appDownloadBadgeDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  appDownloadBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    letterSpacing: 0.6,
+  },
+  appDownloadBadgeTextDay: {
+    color: '#047857',
+  },
+  appDownloadHeadline: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 6,
+    letterSpacing: -0.3,
+  },
+  appDownloadHeadlineDay: {
+    color: '#0f172a',
+  },
+  appDownloadSubhead: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginBottom: 14,
+    maxWidth: 580,
+  },
+  appDownloadSubheadDay: {
+    color: '#475569',
+  },
+  appDownloadFeaturesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  appFeaturePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  appFeaturePillDay: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  appFeaturePillText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#e2e8f0',
+  },
+  appFeaturePillTextDay: {
+    color: '#1e293b',
+  },
+  appDownloadBtnsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  appDownloadPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#10b981',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: RADIUS.pill,
+    ...premiumShadow('rgba(16, 185, 129, 0.35)', 'sm'),
+  },
+  appDownloadPrimaryBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#022c22',
+  },
+  appDownloadSecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 9.5,
+    paddingHorizontal: 16,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  appDownloadSecondaryBtnDay: {
+    borderColor: '#cbd5e1',
+    backgroundColor: '#f8fafc',
+  },
+  appDownloadSecondaryBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  appDownloadSecondaryBtnTextDay: {
+    color: '#0f172a',
+  },
+  appDownloadRight: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appQrBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appQrBoxDay: {},
   appBannerCard: {
     borderRadius: RADIUS.xl,
     borderWidth: 1.5,

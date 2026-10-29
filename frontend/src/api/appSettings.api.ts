@@ -118,6 +118,7 @@ export interface SupportContact {
   email: string | null;
   helplinePhone?: string;
   supportEmail?: string;
+  appDownloadUrl?: string | null;
 }
 
 export async function getSupportContact(): Promise<SupportContact> {
@@ -127,6 +128,7 @@ export async function getSupportContact(): Promise<SupportContact> {
       ...data,
       helplinePhone: data?.helplinePhone || data?.mobile || '95776-22000',
       supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
+      appDownloadUrl: data?.appDownloadUrl || 'https://www.farmsking.in',
     };
   } catch {
     try {
@@ -135,6 +137,7 @@ export async function getSupportContact(): Promise<SupportContact> {
         ...data,
         helplinePhone: data?.helplinePhone || data?.mobile || '95776-22000',
         supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
+        appDownloadUrl: (data as any)?.appDownloadUrl || 'https://www.farmsking.in',
       };
     } catch {
       return {
@@ -143,6 +146,7 @@ export async function getSupportContact(): Promise<SupportContact> {
         email: 'farmskingindia@gmail.com',
         helplinePhone: '95776-22000',
         supportEmail: 'support@farmsking.in',
+        appDownloadUrl: 'https://www.farmsking.in',
       };
     }
   }

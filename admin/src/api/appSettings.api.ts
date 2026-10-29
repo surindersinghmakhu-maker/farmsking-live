@@ -383,6 +383,8 @@ export interface ProjectMasterDataConfig {
   grievanceOfficerName: string;
   grievanceOfficerEmail: string;
   websiteUrl: string;
+  appDownloadUrl?: string;
+  latestAppVersion?: string;
 
   dateFormat: string;
   timeFormat: string;
@@ -536,11 +538,13 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   primaryMobile: '+91 95776 22000',
   alternateMobile: '+91 98720 66901',
   contactEmail: 'farmskingindia@gmail.com',
-  govtEmail: 'surindersinghmakhu@gmail.com',
+  govtEmail: 'compliance@farmsking.in',
   supportEmail: 'support@farmsking.in',
-  grievanceOfficerName: 'Surinder Singh',
+  grievanceOfficerName: 'Corporate Compliance Officer',
   grievanceOfficerEmail: 'grievance@farmsking.in',
   websiteUrl: 'https://farmsking.in',
+  appDownloadUrl: 'https://farmsking.in/download/farmsking.apk',
+  latestAppVersion: '2.1.0',
 
   dateFormat: 'DD/MM/YYYY',
   timeFormat: '12',

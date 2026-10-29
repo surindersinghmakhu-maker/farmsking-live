@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Linking,
   Platform,
   ScrollView,
@@ -21,12 +22,14 @@ import {
   mergeSystemIntegrationsWithDefaults,
   ProjectMasterDataConfig,
   DEFAULT_PROJECT_MASTER_DATA,
+  updateAppSettings,
 } from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 
 export type MasterDataSubTab =
   | 'basic-details'
+  | 'app-download'
   | 'social'
   | 'email-templates'
   | 'maintenance'
@@ -47,6 +50,12 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
     label: 'Corporate Identity & Legal',
     icon: 'business-outline',
     description: 'Company name, MCA, CIN, PAN, TAN & address',
+  },
+  {
+    key: 'app-download',
+    label: 'App Download & QR Links',
+    icon: 'phone-portrait-outline',
+    description: 'Android APK / Play Store URL & auto QR generator',
   },
   {
     key: 'social',
@@ -189,9 +198,15 @@ export default function SettingEntitySetup() {
 
   const handleSaveMasterData = async () => {
     try {
+      const pmd = localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
       await updateMutation.mutateAsync({
-        projectMasterData: localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA,
+        projectMasterData: pmd,
       });
+      if (pmd.appDownloadUrl) {
+        try {
+          await updateAppSettings({ appDownloadUrl: pmd.appDownloadUrl });
+        } catch {}
+      }
       showToast('✅ FK Setting saved and synchronized successfully!');
     } catch (err: any) {
       Alert.alert('Save Failed', err?.message || 'Failed to save FK Setting');
@@ -613,7 +628,181 @@ export default function SettingEntitySetup() {
             </View>
           )}
 
+          {/* TAB: App Download & Mobile QR Settings */}
+          {masterSubTab === 'app-download' && (
+            <View style={styles.masterTabPane}>
+              {/* Group 1: Mobile App Links */}
+              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+                <View style={styles.groupHeader}>
+                  <Text style={[styles.groupTitle, { color: textColor }]}>FarmsKing Mobile App Distribution Links</Text>
+                  <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
+                    <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>Live Automatic QR Sync</Text>
+                  </View>
+                </View>
 
+                <Text style={{ fontSize: 13, color: subTextColor, marginBottom: 16, lineHeight: 19 }}>
+                  Configure the official download link for the FarmsKing Mobile App. The QR code on the public website homepage automatically regenerates from this link in real-time so farmers and visitors can scan and install the app seamlessly.
+                </Text>
+
+                <View style={styles.twoCol}>
+                  <View style={styles.col}>
+                    <View style={styles.labelRow}>
+                      <Text style={[styles.inputLabel, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
+                      {masterData.appDownloadUrl ? (
+                        <TouchableOpacity onPress={() => handleOpenLink(masterData.appDownloadUrl || '')}>
+                          <Text style={styles.openLink}>Test Link</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <Ionicons name="logo-android" size={17} color="#10b981" style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.appDownloadUrl || ''}
+                        onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
+                        placeholder="https://farmsking.in/download/farmsking.apk"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                      Direct APK download link or Google Play Store URL. If left blank, defaults to https://www.farmsking.in
+                    </Text>
+                  </View>
+
+                  <View style={styles.col}>
+                    <View style={styles.labelRow}>
+                      <Text style={[styles.inputLabel, { color: textColor }]}>Latest Mobile App Version</Text>
+                    </View>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <Ionicons name="git-branch-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        value={masterData.latestAppVersion || '2.1.0'}
+                        onChangeText={(txt) => handleUpdateMasterField('latestAppVersion', txt)}
+                        placeholder="2.1.0"
+                        placeholderTextColor={subTextColor}
+                      />
+                    </View>
+                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
+                      Current released production build version displayed to farmers.
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Group 2: Live QR Code Preview */}
+              <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+                <View style={styles.groupHeader}>
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Live Auto-Generated QR Code Preview</Text>
+                </View>
+
+                <View style={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: 'center', gap: 24, paddingVertical: 12 }}>
+                  <View style={{
+                    padding: 16,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: '#10b981',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                  }}>
+                    {/* Live QR Image */}
+                    <Image
+                      source={{
+                        uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                          masterData.appDownloadUrl && masterData.appDownloadUrl.trim()
+                            ? masterData.appDownloadUrl.trim()
+                            : 'https://www.farmsking.in'
+                        )}&margin=4`,
+                      }}
+                      style={{ width: 140, height: 140, borderRadius: 8 }}
+                      resizeMode="contain"
+                    />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#0f172a', marginTop: 10 }}>
+                      SCAN TO DOWNLOAD APP
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#64748b', marginTop: 2, maxWidth: 170, textAlign: 'center' }} numberOfLines={1}>
+                      {masterData.appDownloadUrl || 'https://www.farmsking.in'}
+                    </Text>
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: textColor }}>
+                        Automatic Homepage Synchronization
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 13, color: subTextColor, lineHeight: 20, marginBottom: 12 }}>
+                      Any changes saved to the App Download URL here will instantly reflect on the public website homepage. Visitors scanning the QR code with their mobile cameras will be routed directly to this download address.
+                    </Text>
+
+                    <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingVertical: 8,
+                          paddingHorizontal: 14,
+                          borderRadius: 8,
+                          backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                          borderWidth: 1,
+                          borderColor: cardBorder,
+                        }}
+                        onPress={() => handleCopyValue('App Download URL', masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                      >
+                        <Ionicons name="copy-outline" size={14} color={textColor} />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: textColor }}>Copy Link</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          paddingVertical: 8,
+                          paddingHorizontal: 14,
+                          borderRadius: 8,
+                          backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)',
+                          borderWidth: 1,
+                          borderColor: '#10b981',
+                        }}
+                        onPress={() => handleOpenLink(masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                      >
+                        <Ionicons name="open-outline" size={14} color="#10b981" />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#10b981' }}>Open & Test Link</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.paneFooterRight}>
+                <TouchableOpacity
+                  style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                  onPress={handleSaveMasterData}
+                  disabled={updateMutation.isPending}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient colors={['#10b981', '#059669']} style={styles.saveActionGradient}>
+                    {updateMutation.isPending ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                    )}
+                    <Text style={styles.saveActionText}>
+                      {updateMutation.isPending ? 'Saving...' : 'Save App Download Settings'}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* TAB 2: Social Media & Maps */}
           {masterSubTab === 'social' && (

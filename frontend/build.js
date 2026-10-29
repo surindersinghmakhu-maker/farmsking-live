@@ -330,18 +330,17 @@ try {
       ],
       "employee": [
         { "@type": "Person", "name": "Gurnam Singh", "jobTitle": "General Manager & Quality Assurance Lead" },
-        { "@type": "Person", "name": "Surinder Singh", "jobTitle": "Lead Founder, Visionary & Chief AI Architect" },
         { "@type": "Person", "name": "Engg. Gurdit Singh", "jobTitle": "Technical Support Lead" },
         {
           "@type": "Person",
           "name": "Charanjit Singh",
-          "jobTitle": "Backend Support Lead & Director of Surinder Academy, Makhu",
-          "description": "IT services expert leading high-performance backend infrastructure, API gateways, database optimization, and cloud architecture for FarmsKing."
+          "jobTitle": "Backend Support Lead",
+          "description": "IT systems expert leading high-performance backend infrastructure, API gateways, database optimization, and cloud architecture for FarmsKing."
         },
         {
           "@type": "Person",
           "name": "Gurjant Singh",
-          "jobTitle": "Hardware Support Lead & Director of Surinder Computers, Makhu",
+          "jobTitle": "Hardware Support Lead",
           "description": "Hardware and edge telemetry expert managing server equipment, diagnostic hardware, rural kiosk devices, and networking infrastructure for FarmsKing."
         },
         { "@type": "Person", "name": "Sudhir Kumar Mahato", "jobTitle": "Marigold Farming Expert, Promotion Partner & Testing Advisor" },
@@ -418,7 +417,7 @@ try {
           "name": "Who manages Technical, Backend and Hardware Support at FarmsKing?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Technical Support is led by Engg. Gurdit Singh. Backend Support is provided by Charanjit Singh, Director of Surinder Academy Makhu (IT Services). Hardware Support is provided by Gurjant Singh, Director of Surinder Computers Makhu. Testing Advisors are Gurnam Singh and Sudhir Kumar Mahato."
+            "text": "Technical Support is led by Engg. Gurdit Singh. Backend Support is led by Charanjit Singh (Cloud Infrastructure). Hardware Support is led by Gurjant Singh (Telemetry & Systems). Operational Testing Advisors are Gurnam Singh and Sudhir Kumar Mahato."
           }
         }
       ]
@@ -471,9 +470,8 @@ try {
             </p>
             <p style="font-size: 14px; color: #334155; margin: 0;">
               • <strong>Directors:</strong> Bakshish Singh &amp; Gagandeep Kaur<br />
-              • <strong>General Manager &amp; Quality Lead:</strong> Gurnam Singh<br />
-              • <strong>Lead Founder &amp; Chief AI Architect:</strong> Surinder Singh (B.Sc CS, MBA, LLB)<br />
-              • <strong>Engineering &amp; Support:</strong> Engg. Gurdit Singh (Tech Support), Charanjit Singh (Backend Lead - Director, Surinder Academy Makhu), Gurjant Singh (Hardware Lead - Director, Surinder Computers Makhu)<br />
+              • <strong>General Manager &amp; Operations Lead:</strong> Gurnam Singh<br />
+              • <strong>Engineering &amp; Support:</strong> Engg. Gurdit Singh (Tech Support Lead), Charanjit Singh (Backend Systems Lead), Gurjant Singh (Hardware Systems Lead)<br />
               • <strong>Agronomy Specialists:</strong> Sudhir Kumar Mahato (Marigold Floriculture &amp; Testing Advisor), Manjeet Sra (Organic Products &amp; Marketing Manager)<br />
               • <strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India<br />
               • <strong>Operational Headquarters:</strong> Makhu, Ferozepur, Punjab - 142044, India

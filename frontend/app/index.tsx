@@ -27,7 +27,7 @@ import { useAuth } from '@/src/store/auth-context';
 import PublicHeader from '@/components/PublicHeader';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
 import { getSupportContact } from '@/src/api/appSettings.api';
-import { LIVE_FARMER_ACTIVITIES } from '@/constants/liveFarmerFeed';
+import { LIVE_FARMER_ACTIVITIES, getUnifiedLiveFarmerFeed, recordRealFarmerActivity, LiveFarmerActivity } from '@/constants/liveFarmerFeed';
 
 // ─── Public Ecosystem Nav Links ──────────────────────────────────────────────
 const PUBLIC_NAV_LINKS = [
@@ -502,10 +502,46 @@ export default function PublicLandingPage() {
   }, []);
 
   // ── Live Social Proof Activity Ticker (Smooth slide every 6 seconds) ──
+  // Dynamic Live Social Proof Feed with Real Farmer Permanent Persistence
+  const [liveActivities, setLiveActivities] = useState<LiveFarmerActivity[]>(() => getUnifiedLiveFarmerFeed());
   const [activeActivityIdx, setActiveActivityIdx] = useState(0);
   const [tickerDismissed, setTickerDismissed] = useState(false);
   const tickerFadeAnim = useSharedValue(1);
   const tickerSlideAnim = useSharedValue(0);
+
+  useEffect(() => {
+    // Listen for new real farmers added anywhere in the app
+    const handleRealFarmerUpdate = () => {
+      const freshFeed = getUnifiedLiveFarmerFeed();
+      setLiveActivities(freshFeed);
+      setActiveActivityIdx(0); // Immediately show the newly registered real farmer!
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('farmsking_real_farmer_updated', handleRealFarmerUpdate);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('farmsking_real_farmer_updated', handleRealFarmerUpdate);
+      }
+    };
+  }, []);
+
+  // When logged-in user is a FARMER, ensure their real identity is recorded permanently
+  useEffect(() => {
+    if (user && (user.role === 'FARMER' || (user as any).roles?.includes('FARMER'))) {
+      const name = user.farmName || user.name || 'Verified Farmer';
+      const location = [user.village, user.district, user.state].filter(Boolean).join(', ') || 'Punjab, India';
+      recordRealFarmerActivity({
+        name,
+        location,
+        action: 'Active on FarmsKing Smart Farming Network',
+        detail: 'Verified Cultivator • Live Member',
+        emoji: '🌾',
+        tagColor: '#059669',
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (tickerDismissed) return;
@@ -515,22 +551,22 @@ export default function PublicLandingPage() {
       tickerSlideAnim.value = withTiming(14, { duration: 320 });
 
       setTimeout(() => {
-        setActiveActivityIdx((prev) => (prev + 1) % LIVE_FARMER_ACTIVITIES.length);
+        setActiveActivityIdx((prev) => (prev + 1) % liveActivities.length);
         tickerSlideAnim.value = -14;
         tickerFadeAnim.value = withTiming(1, { duration: 380 });
         tickerSlideAnim.value = withTiming(0, { duration: 380 });
       }, 340);
-    }, 18000); // 3x the previous 6s interval = 18s comfortable viewing cycle
+    }, 18000); // 18s comfortable viewing cycle
 
     return () => clearInterval(interval);
-  }, [tickerDismissed]);
+  }, [tickerDismissed, liveActivities.length]);
 
   const tickerAnimatedStyle = useAnimatedStyle(() => ({
     opacity: tickerFadeAnim.value,
     transform: [{ translateY: tickerSlideAnim.value }],
   }));
 
-  const currentActivity = LIVE_FARMER_ACTIVITIES[activeActivityIdx] || LIVE_FARMER_ACTIVITIES[0];
+  const currentActivity = liveActivities[activeActivityIdx] || liveActivities[0] || LIVE_FARMER_ACTIVITIES[0];
 
   // Mobile navigation drawer state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1050,8 +1086,8 @@ export default function PublicLandingPage() {
               transform: scale(1.02) translateY(0px) rotate(0deg);
             }
           }
-          /* Drone Spray Mist Cascade */
-          @keyframes droneSprayCascade {
+          /* Agronomy Telemetry Scan Cascade */
+          @keyframes agronomyScanCascade {
             0% {
               opacity: 0.25;
               transform: scaleX(0.75) scaleY(0.85);
@@ -1065,8 +1101,8 @@ export default function PublicLandingPage() {
               transform: scaleX(0.75) scaleY(0.85);
             }
           }
-          /* Drone Spray Droplet Stream Drift */
-          @keyframes droneSprayDrift {
+          /* Agronomy Telemetry Scan Drift */
+          @keyframes agronomyScanDrift {
             0% {
               transform: translateY(0) scaleY(0.6);
               opacity: 0.2;
@@ -1079,8 +1115,8 @@ export default function PublicLandingPage() {
               opacity: 0;
             }
           }
-          /* Drone Aviation Nav Strobes */
-          @keyframes droneStrobePulse {
+          /* Satellite Navigation Strobes */
+          @keyframes satelliteStrobePulse {
             0%, 70%, 100% { opacity: 0.15; transform: scale(0.7); }
             75%, 90% { opacity: 1; transform: scale(1.6); }
           }
@@ -1848,7 +1884,7 @@ export default function PublicLandingPage() {
             </View>
           </View>
 
-          {/* Right Column: Clean 3D Living Showcase Frame with Drone Spray Mist, Farmer Tablet Scan HUD, and Breeze Motion */}
+          {/* Right Column: Clean 3D Living Showcase Frame with Satellite Telemetry Beam, Farmer Tablet Scan HUD, and Breeze Motion */}
           <View style={[S.heroRight, isDesktop ? { flex: 5 } : { width: '100%', marginTop: isMobile ? 4 : 16 }]}>
             <SpatialTiltCard
               style={[S.showcaseFrame, isDay && S.showcaseFrameDay, isMobile && { padding: 4 }]}
@@ -1865,7 +1901,7 @@ export default function PublicLandingPage() {
                 </View>
                 <View style={[S.showcaseGpsBadge, isDay && S.showcaseGpsBadgeDay, isMobile && { paddingHorizontal: 5, paddingVertical: 2 }]}>
                   <Text style={[S.showcaseGpsText, isDay && S.showcaseGpsTextDay, isMobile && { fontSize: 8.5 }]}>
-                    {isMobile ? 'DRONE: 3.2L/M' : 'DRONE SPRAY: 3.2L/MIN'}
+                    {isMobile ? 'NDVI: 0.88' : 'NDVI CANOPY: 98% OPTIMAL'}
                   </Text>
                 </View>
               </View>
@@ -1891,9 +1927,9 @@ export default function PublicLandingPage() {
                 {/* 2. Web Cinemagraph Animated Overlays (Direct Web Elements with Inline Styles) */}
                 {Platform.OS === 'web' && (
                   <>
-                    {/* Drone Aerosol Fertilizer / Spray Mist Cone */}
+                    {/* Agronomy Telemetry Scan Beam */}
                     <div
-                      className="drone-mist-spray"
+                      className="telemetry-scan-beam"
                       style={{
                         position: 'absolute',
                         left: '32%',
@@ -1903,13 +1939,13 @@ export default function PublicLandingPage() {
                         background: 'radial-gradient(ellipse at 50% 0%, rgba(224, 242, 254, 0.92) 0%, rgba(186, 230, 253, 0.55) 45%, rgba(56, 189, 248, 0.25) 70%, transparent 85%)',
                         clipPath: 'polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%)',
                         WebkitClipPath: 'polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%)',
-                        animation: 'droneSprayCascade 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                        animation: 'agronomyScanCascade 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite',
                         pointerEvents: 'none',
                         zIndex: 15,
                       }}
                     />
 
-                    {/* Drone Spray Mist Secondary Droplet Drift */}
+                    {/* Agronomy Telemetry Secondary Scan Wave */}
                     <div
                       style={{
                         position: 'absolute',
@@ -1918,15 +1954,15 @@ export default function PublicLandingPage() {
                         width: '8%',
                         height: '25%',
                         background: 'repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0px, transparent 4px, rgba(224, 242, 254, 0.5) 8px, transparent 12px)',
-                        animation: 'droneSprayDrift 1.8s linear infinite',
+                        animation: 'agronomyScanDrift 1.8s linear infinite',
                         pointerEvents: 'none',
                         zIndex: 16,
                       }}
                     />
 
-                    {/* Drone Navigation Strobes */}
+                    {/* Satellite Navigation Strobes */}
                     <div
-                      className="drone-strobe-green"
+                      className="satellite-beacon-green"
                       style={{
                         position: 'absolute',
                         left: '42.6%',
@@ -1936,13 +1972,13 @@ export default function PublicLandingPage() {
                         borderRadius: '50%',
                         background: '#34d399',
                         boxShadow: '0 0 12px #34d399, 0 0 20px #10b981',
-                        animation: 'droneStrobePulse 1.8s infinite',
+                        animation: 'satelliteStrobePulse 1.8s infinite',
                         pointerEvents: 'none',
                         zIndex: 18,
                       }}
                     />
                     <div
-                      className="drone-strobe-white"
+                      className="satellite-beacon-white"
                       style={{
                         position: 'absolute',
                         left: '33.8%',
@@ -1952,7 +1988,7 @@ export default function PublicLandingPage() {
                         borderRadius: '50%',
                         background: '#ffffff',
                         boxShadow: '0 0 12px #ffffff, 0 0 20px #38bdf8',
-                        animation: 'droneStrobePulse 1.8s infinite 0.9s',
+                        animation: 'satelliteStrobePulse 1.8s infinite 0.9s',
                         pointerEvents: 'none',
                         zIndex: 18,
                       }}
@@ -2197,9 +2233,9 @@ export default function PublicLandingPage() {
 
               {/* Highlight Micro Value Badge */}
               <View style={[S.pillarMicroBadge, isDay ? S.pillarMicroBadgeFarmingDay : S.pillarMicroBadgeFarmingNight]}>
-                <Ionicons name="hardware-chip" size={11} color={isDay ? '#d97706' : '#fbbf24'} />
+                <Ionicons name="scan-circle" size={11} color={isDay ? '#d97706' : '#fbbf24'} />
                 <Text style={[S.pillarMicroBadgeText, isDay ? S.pillarMicroBadgeTextFarmingDay : S.pillarMicroBadgeTextFarmingNight]}>
-                  Precision Drone Spraying
+                  AI Crop Doctor &amp; Mandi
                 </Text>
               </View>
 
@@ -2702,7 +2738,7 @@ export default function PublicLandingPage() {
               <Text style={[S.helplineNum, isDay && S.helplineNumDay]}>{supportContact.helplinePhone}</Text>
               <Text style={[S.helplineSub, isDay && S.helplineSubDay]}>{t.helplineHours}</Text>
               <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
-              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Ludhiana & Chandigarh, Punjab, India</Text>
+              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran • Corp: Makhu, Punjab - 143422</Text>
             </View>
           </View>
 
@@ -3084,6 +3120,12 @@ export default function PublicLandingPage() {
                 >
                   ({currentActivity.location})
                 </Text>
+                {currentActivity.isReal && (
+                  <View style={{ backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 4 }}>
+                    <Ionicons name="shield-checkmark" size={10} color="#059669" />
+                    <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#047857', letterSpacing: 0.3 }}>REAL FARMER</Text>
+                  </View>
+                )}
               </View>
 
               <Text

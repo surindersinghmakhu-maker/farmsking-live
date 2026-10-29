@@ -1,38 +1,39 @@
 # FarmsKing - Smart Agriculture & Crop Intelligence Platform
 
-> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, initiated by **Surinder Singh** (Lead Founder & Chief AI Architect) with registered entity Directors **Bakshish Singh** and **Gagandeep Kaur**, supported by local agricultural advisors and progressive farmers who identified ground-level field problems.
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (CIN: U01100PB2026PTC063294, ROC Chandigarh) with Board of Directors **Bakshish Singh** and **Gagandeep Kaur**, and General Manager **Gurnam Singh**, supported by certified agronomists, software engineers, and progressive farmers across India.
 
-## Founder & Core Team
-- **Primary Visionary & Chief Architect**: **Surinder Singh**
-  - **Background**: Computer Teacher, IT Expert & AI Specialist.
-  - **Educational Qualifications**: Graduation in Computer Science, MBA, and LLB.
-  - **Knowledge & Mindset**: Extensive reader of General Knowledge literature, follower of motivational leadership, progressive thinker dedicated to public welfare and problem solving.
-  - **End-to-End Leadership Role**: Spearheaded FarmsKing entirely from initial idea, rapid deep study of crop physiology & plant health, to system programming, feature design, and testing.
-  - **Entity Founder**: Founded all underlying organizations — Surinder Academy (2001), Exilent Web Solutions, Surinder Computers Makhu, and Surinder Agro Farm.
-- **Board of Directors**: Bakshish Singh, Gagandeep Kaur.
-- **Field Testing & Practical Validation**: **Gurnam Singh** (Lead Field Testing & Crop Diagnostics).
-- **Backing Institution**: **Surinder Academy** (Makhu, Punjab, India - https://surinderacademy.com), established and serving education since 2001.
-- **Software Engineering**: **Exilent Web Solutions**, specializing in international-grade web software architecture.
-- **Hardware Infrastructure**: **Surinder Computers, Makhu**, providing high-performance server hardware.
-- **Practical Field R&D**: **Surinder Agro Farm**, established to study ground-level agricultural problems, deeply understand plant health, and test natural farming methods.
+## Corporate Governance & Core Team
+- **Board of Directors**: Bakshish Singh & Gagandeep Kaur (Corporate Governance, Operations, and Partnerships).
+- **General Manager & Field Quality Lead**: Gurnam Singh (Mandi Networks, Field Agronomy & Quality Assurance).
+- **Technical Support Lead**: Engg. Gurdit Singh (Cloud Telemetry, IoT & Technical Operations).
+- **Backend IT Support Lead**: Charanjit Singh (Cloud Infrastructure & Backend Systems).
+- **Hardware & Telemetry Lead**: Gurjant Singh (Edge Devices & Hardware Systems).
+- **Agronomy & Floriculture Specialists**:
+  - Sudhir Kumar Mahato (Marigold Floriculture & Agronomy Advisory).
+  - Manjeet Sra (Organic Products & Soil Fertility Manager).
 
-## Launch & Expansion Roadmap
-- **Punjab Agricultural University (PAU) Partnership**: Platform release is being planned for official launch in collaboration with Punjab Agricultural University (PAU).
-- **National Scale Rollout**: Targeted for a comprehensive launch at the National Level across all agricultural states in India.
+## Corporate Offices
+- **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India.
+- **Corporate Headquarters & Operational Office**: Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India.
+- **Helpline**: 95776-22000 (Monday – Saturday • 10:00 AM – 5:00 PM IST)
+- **Official Emails**: support@farmsking.in / farmskingindia@gmail.com / grievance@farmsking.in
 
-## Core Mission & Purpose
-- **Non-Profit Social Vision**: Primary motive is NOT commercial profit-making, but creating rural employment, supporting farmers, and building a sustainable future.
-- **Practical Problem Solving**: Built to resolve practical ground-level challenges faced by farmers in everyday crop cycles.
-- **Smart & Natural Farming Awareness**: Spreading education to encourage natural farming practices, reducing chemical overuse, and advocating natural organic products.
+## Core Mission & Philosophy
+- **Farming Easy, Farming Smart**: Making advanced agricultural AI and satellite telemetry effortless, accessible, and highly profitable for Indian farmers.
+- **Practical Problem Solving**: Built to resolve real-time crop disease detection (<820ms), APMC market price discovery, and soil degradation issues.
+- **100% Genuine Organic Inputs**: Guaranteed zero fake products, delivering microbial vermicompost, marigold farming blueprints, and bio-nutrients.
+- **Strict Scope Boundaries**: Zero sales of hardware or physical machinery, zero equipment rentals, and zero machinery manufacturing. 100% dedicated to digital software, AI diagnostics, live mandi rates, and organic bio-inputs.
 
 ## Platform Capabilities & Offerings
-- **Crop Intelligence Engine**: Smart sowing schedule, spray calendar, and yield optimization.
-- **Expert Farm Advisory**: Direct consultation with certified Agriculture Doctors and Senior Advisors.
-- **Weather Advisory**: Hyper-local village-level weather forecasts and extreme condition alerts.
-- **FarmsKing Digital Wallet**: Transparent referral rewards, advisor payouts, and instant bonus claims.
+- **AI Crop Doctor**: Real-time multimodal computer vision leaf disease pathology and ICAR-calibrated spray recommendations.
+- **Live Mandi Intelligence**: Daily wholesale arrivals and price trends across 50+ crops and major APMC markets nationwide.
+- **Satellite Telemetry**: 6-constellation satellite remote sensing (Sentinel-2, ISRO Bhuvan) providing NDVI crop health and moisture index.
+- **Digital Bahi-Khata (Account King)**: Transparent digital ledger and farm accounting for cultivators.
+- **Upcoming Live Plants Delivery (Garden King)**: Doorstep delivery of healthy live nursery plants, herbs, and ornamental flora.
 
 ## Key Links
 - Web App Platform: https://farmsking.in
-- Parent Institution: https://surinderacademy.com
+- About FarmsKing: https://farmsking.in/about-farmsking.html
+- Corporate Compliance: https://farmsking.in/compliance
+- Contact Support: https://farmsking.in/contact-us
 - Kisan Crop Intelligence Engine: https://farmsking.in/kisan-crop-intelligence-engine.html
-- Reverse Sowing Engine: https://farmsking.in/reverse-sowing-engine.html

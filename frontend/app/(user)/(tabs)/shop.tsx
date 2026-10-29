@@ -257,7 +257,7 @@ const CATEGORY_TREE: Record<string, string[]> = {
     'VIP Gold Farmer Membership Pass',
     'Crop Advisory Voucher',
     'Agri Store Flat ₹500 Discount Pass',
-    'Soil Testing & Drone Spray Voucher',
+    'Soil Testing & Precision Agronomy Pass',
     'Live Plant Nursery & Potting Voucher',
   ],
 };
@@ -2056,7 +2056,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   {[
                     { title: '🥇 VIP Gold Farmer VIP Pass', type: 'Annual Pass', price: '₹999', original: '₹1,999', desc: '10% Extra Store Discount + Priority Agronomist Call Support' },
                     { title: '🌱 Organic Bio-Inputs & Live Plant Voucher', type: 'Plant Voucher', price: '₹499', original: '₹800', desc: 'Flat ₹500 voucher on Organic Vermicompost & Nursery Live Plants' },
-                    { title: '🧪 Soil Testing & Drone Spray Voucher', type: 'Service Pass', price: '₹299', original: '₹500', desc: 'Free 1 Acre Soil NPK Test + 20% Off Drone Spraying' },
+                    { title: '🧪 Soil Testing & Precision Agronomy Voucher', type: 'Service Pass', price: '₹299', original: '₹500', desc: 'Free 1 Acre Soil NPK Test + Certified Agronomist Advisory' },
                     { title: '🎟️ Agri Store Flat ₹500 Discount Coupon', type: 'Store Discount', price: '₹350', original: '₹500', desc: 'Redeemable on any Fertilizers or Seeds order above ₹2,000' },
                   ].map((plan, idx) => (
                     <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fffbeb', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>

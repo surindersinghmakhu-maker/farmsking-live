@@ -27,6 +27,7 @@ import { SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { SprayTankSizeL } from '@/src/types/api';
 import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 import { useSearchWorkersByMobile } from '@/src/hooks/useLabour';
+import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 
 const theme = RoleThemes.FARMER;
 
@@ -207,6 +208,19 @@ export default function RegisterScreen() {
         state: state || undefined,
         referralCode: referralCode.trim() || undefined,
       });
+
+      // Permanently record real farmer in live feed ticker
+      if (accountType === 'FARMER') {
+        recordRealFarmerActivity({
+          name: values.name.trim(),
+          location: [district, state].filter(Boolean).join(', ') || 'Punjab, India',
+          action: 'Joined FarmsKing Verified Farmer Network',
+          detail: 'Verified Cultivator Registered',
+          emoji: '🚜',
+          tagColor: '#10b981',
+        });
+      }
+
       if (searchParams.redirect) {
         router.replace(searchParams.redirect as any);
       } else if (accountType === 'CUSTOMER') {

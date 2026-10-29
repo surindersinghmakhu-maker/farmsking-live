@@ -405,55 +405,61 @@ export const ACTIVE_INDIAN_CROPS = [
   },
 ];
 
-// ── Realistic Farm Intelligence Activity Templates ──
+// ── Genuine FarmsKing Agricultural Activity Templates (100% Real Services Only) ──
 const ACTIVITY_TEMPLATES = [
   {
-    action: (crop: string) => `Checked live APMC rate for ${crop}`,
-    detail: (price: string, mandi: string) => `${price} • ${mandi}`,
+    action: (crop: string) => `Checked live APMC market rates for ${crop}`,
+    detail: (price: string, mandi: string) => `${price} • ${mandi} daily arrivals`,
     icon: (cropEmoji: string) => cropEmoji,
     color: '#10b981',
   },
   {
     action: (crop: string) => `Scanned ${crop} with AI Crop Doctor`,
-    detail: () => 'Pathogen detected • Exact tank dosage prescribed',
+    detail: () => 'Pathogen detected • ICAR-calibrated tank dosage prescribed',
     icon: () => '🧪',
     color: '#06b6d4',
   },
   {
-    action: (crop: string) => `Ordered Certified ${crop} Seeds & Bio-Inputs`,
-    detail: () => 'Direct Agri Store dispatch to doorstep',
-    icon: () => '📦',
-    color: '#f97316',
-  },
-  {
-    action: (crop: string) => `Booked Precision Drone Spraying for ${crop}`,
-    detail: () => 'GPS-guided micro-aerosol spray fleet assigned',
-    icon: () => '🛸',
-    color: '#8b5cf6',
+    action: (crop: string) => `Ordered 100% Pure Organic Vermicompost`,
+    detail: () => 'Certified microbial bio-fertilizer dispatched to doorstep',
+    icon: () => '🌱',
+    color: '#10b981',
   },
   {
     action: (crop: string) => `Monitored satellite moisture & NDVI for ${crop}`,
-    detail: () => 'Canopy health: 98% optimal • Zero water stress',
+    detail: () => 'Canopy health: 98% optimal • 6-constellation telemetry',
     icon: () => '🛰️',
     color: '#0284c7',
   },
   {
-    action: (crop: string) => `Verified eNAM buyer bids for ${crop}`,
-    detail: (price: string) => `Sold directly to certified buyer at ${price}`,
+    action: (crop: string) => `Listed ${crop} harvest direct on Live Mandi`,
+    detail: (price: string) => `Sold directly to verified buyers at ${price} (0% commission)`,
     icon: () => '🌾',
     color: '#059669',
   },
   {
-    action: () => 'Consulted PAU Senior Agronomist via Helpline',
+    action: (crop: string) => `Consulted Agronomy Advisor via Helpline`,
     detail: (price: string, mandi: string, crop: string) => `Field nutrition schedule finalized for ${crop}`,
     icon: () => '🩺',
-    color: '#10b981',
+    color: '#14b8a6',
   },
   {
-    action: (crop: string) => `Ordered Bio-Organic Fungicide & Micro-Nutrients`,
-    detail: (price: string, mandi: string, crop: string) => `100% Genuine Certified for ${crop} field`,
-    icon: () => '🌱',
-    color: '#14b8a6',
+    action: (crop: string) => `Enrolled in Marigold Floriculture Program`,
+    detail: () => 'High-yield commercial flower farming 3x-5x profit plan',
+    icon: () => '🌼',
+    color: '#f59e0b',
+  },
+  {
+    action: () => 'Recorded harvest settlement in Account King digital ledger',
+    detail: () => 'Transparent digital bahi-khata voucher saved',
+    icon: () => '📑',
+    color: '#6366f1',
+  },
+  {
+    action: (crop: string) => `Ordered Certified ${crop} Seeds & Bio-Inputs`,
+    detail: () => 'Direct Agri Store dispatch with 100% genuine guarantee',
+    icon: () => '📦',
+    color: '#f97316',
   },
 ];
 
@@ -471,8 +477,8 @@ const TIME_AGO_OPTIONS = [
 ];
 
 /**
- * Generate 2,000+ pan-India live farmer activities by cross-multiplying
- * 220+ farmers from all communities with 16 active seasonal crops and activities.
+ * Generate simulated pan-India farmer activities by cross-multiplying
+ * 220+ farmers from all communities with 16 active seasonal crops and genuine services.
  */
 export function generateLiveFarmerActivities(count = 2400): LiveFarmerActivity[] {
   const list: LiveFarmerActivity[] = [];
@@ -483,7 +489,6 @@ export function generateLiveFarmerActivities(count = 2400): LiveFarmerActivity[]
 
   for (let i = 0; i < count; i++) {
     const farmer = PAN_INDIA_FARMERS[i % farmerLen];
-    // Stride with coprime offset so the same farmer cycles through different crops and activities
     const crop = ACTIVE_INDIAN_CROPS[(i * 3 + Math.floor(i / farmerLen)) % cropLen];
     const template = ACTIVITY_TEMPLATES[(i * 7 + Math.floor(i / cropLen)) % actLen];
     const timeAgo = TIME_AGO_OPTIONS[i % timeLen];
@@ -502,11 +507,181 @@ export function generateLiveFarmerActivities(count = 2400): LiveFarmerActivity[]
       detail: detailText,
       timeAgo,
       tagColor: itemColor,
+      isReal: false,
     });
   }
 
   return list;
 }
 
-// Pre-generated static live feed instance of 2,400 activities
-export const LIVE_FARMER_ACTIVITIES: LiveFarmerActivity[] = generateLiveFarmerActivities(2400);
+// ── Persistent Real Farmer Storage & High-Frequency Priority System ──
+const REAL_FARMER_STORAGE_KEY = 'farmsking_persistent_real_farmers';
+
+// Default foundational real verified members
+const INITIAL_REAL_FARMERS: LiveFarmerActivity[] = [
+  {
+    id: 'real-seed-1',
+    isReal: true,
+    emoji: '🌾',
+    name: 'Gurnam Singh Ji',
+    location: 'Makhu, Ferozepur, Punjab',
+    action: 'Verified Mandi Network & Field Quality Lead',
+    detail: 'FARMSKING TECHNOLOGIES • General Manager',
+    timeAgo: 'Active Member',
+    tagColor: '#059669',
+    createdAt: Date.now() - 3600000,
+  },
+  {
+    id: 'real-seed-2',
+    isReal: true,
+    emoji: '🚜',
+    name: 'Bakshish Singh',
+    location: 'Goindwal Sahib, Tarn Taran, Punjab',
+    action: 'Registered Corporate Governance Director',
+    detail: 'FARMSKING TECHNOLOGIES • Active Cultivator',
+    timeAgo: 'Verified Director',
+    tagColor: '#10b981',
+    createdAt: Date.now() - 7200000,
+  },
+  {
+    id: 'real-seed-3',
+    isReal: true,
+    emoji: '🌼',
+    name: 'Sudhir Kumar Mahato',
+    location: 'Makhu, Punjab',
+    action: 'Consulted Floriculture Desk for Marigold Blueprints',
+    detail: 'Floriculture Promotion Partner & Testing Advisor',
+    timeAgo: 'Verified Advisor',
+    tagColor: '#f59e0b',
+    createdAt: Date.now() - 10800000,
+  },
+  {
+    id: 'real-seed-4',
+    isReal: true,
+    emoji: '🌱',
+    name: 'Manjeet Sra',
+    location: 'Punjab',
+    action: 'Dispatched Certified Vermicompost Bio-Fertilizer Lot',
+    detail: 'Organic Products & Soil Microbiology Manager',
+    timeAgo: 'Verified Manager',
+    tagColor: '#047857',
+    createdAt: Date.now() - 14400000,
+  },
+];
+
+let cachedRealFarmers: LiveFarmerActivity[] | null = null;
+
+export function getPersistentRealFarmers(): LiveFarmerActivity[] {
+  if (typeof window === 'undefined') {
+    return cachedRealFarmers || INITIAL_REAL_FARMERS;
+  }
+
+  try {
+    const raw = localStorage.getItem(REAL_FARMER_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedRealFarmers = parsed;
+        return parsed;
+      }
+    }
+    // Initialize with foundational records if empty
+    localStorage.setItem(REAL_FARMER_STORAGE_KEY, JSON.stringify(INITIAL_REAL_FARMERS));
+    cachedRealFarmers = INITIAL_REAL_FARMERS;
+    return INITIAL_REAL_FARMERS;
+  } catch {
+    return cachedRealFarmers || INITIAL_REAL_FARMERS;
+  }
+}
+
+/**
+ * Record a new real farmer action permanently.
+ * Real farmers are never deleted, never randomized, and permanently reflected.
+ */
+export function recordRealFarmerActivity(item: {
+  name: string;
+  location?: string;
+  action?: string;
+  detail?: string;
+  emoji?: string;
+  tagColor?: string;
+}): LiveFarmerActivity {
+  const newActivity: LiveFarmerActivity = {
+    id: `real-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    isReal: true,
+    emoji: item.emoji || '🌾',
+    name: item.name.trim(),
+    location: item.location?.trim() || 'Punjab, India',
+    action: item.action?.trim() || 'Joined FarmsKing Verified Farmer Network',
+    detail: item.detail?.trim() || 'Verified Real Farmer • Direct Member',
+    timeAgo: 'Just now',
+    tagColor: item.tagColor || '#059669',
+    createdAt: Date.now(),
+  };
+
+  const existing = getPersistentRealFarmers();
+  // Check if identical farmer already registered recently to prevent exact duplicate flooding
+  const filtered = existing.filter(
+    (e) => !(e.name.toLowerCase() === newActivity.name.toLowerCase() && e.action === newActivity.action)
+  );
+
+  const updated = [newActivity, ...filtered];
+  cachedRealFarmers = updated;
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(REAL_FARMER_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('farmsking_real_farmer_updated', { detail: newActivity }));
+    } catch {}
+  }
+
+  return newActivity;
+}
+
+/**
+ * Merge Real Farmers into the notification feed with High-Frequency Priority.
+ * Real farmers are permanently reflected and interleaved prominently ("usnu jyada show kro").
+ */
+export function getUnifiedLiveFarmerFeed(): LiveFarmerActivity[] {
+  const simulated = generateLiveFarmerActivities(2400);
+  const realFarmers = getPersistentRealFarmers();
+
+  if (realFarmers.length === 0) return simulated;
+
+  const result: LiveFarmerActivity[] = [];
+  let simIdx = 0;
+  let realIdx = 0;
+
+  // Interleave real farmers frequently: 1 Real Farmer every 2 items!
+  while (simIdx < simulated.length) {
+    // Add real farmer
+    const currentReal = realFarmers[realIdx % realFarmers.length];
+    result.push({
+      ...currentReal,
+      timeAgo: currentReal.createdAt
+        ? calculateDynamicTimeAgo(currentReal.createdAt)
+        : currentReal.timeAgo,
+    });
+    realIdx++;
+
+    // Add 1-2 simulated activities
+    if (simIdx < simulated.length) result.push(simulated[simIdx++]);
+    if (simIdx < simulated.length) result.push(simulated[simIdx++]);
+  }
+
+  return result;
+}
+
+function calculateDynamicTimeAgo(timestamp: number): string {
+  const diffMins = Math.floor((Date.now() - timestamp) / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} mins ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+}
+
+// Pre-generated static live feed instance
+export const LIVE_FARMER_ACTIVITIES: LiveFarmerActivity[] = getUnifiedLiveFarmerFeed();
+

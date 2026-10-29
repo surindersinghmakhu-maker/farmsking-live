@@ -158,13 +158,6 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "Person",
-                  "name": "Surinder Singh",
-                  "jobTitle": "Lead Founder, Visionary & Chief AI Architect",
-                  "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
-                  "description": "Computer Teacher, IT & AI Specialist who spearheaded FarmsKing end-to-end from conceptualization, deep crop physiology research, software architecture, and features to field validation."
-                },
-                {
-                  "@type": "Person",
                   "name": "Engg. Gurdit Singh",
                   "jobTitle": "Technical Support Lead",
                   "description": "Leads software platform reliability, server telemetry, and technical customer support."
@@ -315,7 +308,7 @@ export default function Root({ children }: PropsWithChildren) {
                   "name": "Who are the Directors and General Manager of FarmsKing?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "The Board of Directors comprises Bakshish Singh and Gagandeep Kaur. The General Manager is Gurnam Singh, who also leads nationwide agricultural testing and quality assurance. The platform was architected by Lead Founder and Chief AI Architect Surinder Singh (B.Sc CS, MBA, LLB)."
+                    "text": "The Board of Directors comprises Bakshish Singh and Gagandeep Kaur. The General Manager is Gurnam Singh, who leads nationwide operations, agricultural testing, and quality assurance."
                   }
                 },
                 {
@@ -470,9 +463,8 @@ export default function Root({ children }: PropsWithChildren) {
                 </p>
                 <p style={{ fontSize: '14px', color: '#334155', margin: 0 }}>
                   • <strong>Board of Directors:</strong> Bakshish Singh &amp; Gagandeep Kaur<br />
-                  • <strong>General Manager &amp; Quality Lead:</strong> Gurnam Singh<br />
-                  • <strong>Lead Founder &amp; Chief AI Architect:</strong> Surinder Singh (B.Sc CS, MBA, LLB)<br />
-                  • <strong>Technical &amp; Systems Engineering:</strong> Engg. Gurdit Singh (Tech Support), Charanjit Singh (Backend Lead - Director, Surinder Academy Makhu), Gurjant Singh (Hardware Lead - Director, Surinder Computers Makhu)<br />
+                  • <strong>General Manager &amp; Operations Lead:</strong> Gurnam Singh<br />
+                  • <strong>Technical &amp; Systems Engineering:</strong> Engg. Gurdit Singh (Tech Support Lead), Charanjit Singh (Backend Systems Lead), Gurjant Singh (Hardware Systems Lead)<br />
                   • <strong>Agronomy &amp; Floriculture Specialists:</strong> Sudhir Kumar Mahato (Marigold Floriculture Expert &amp; Testing Advisor), Manjeet Sra (Organic Products &amp; Marketing Manager)<br />
                   • <strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India<br />
                   • <strong>Operational Headquarters:</strong> Makhu, Ferozepur, Punjab - 142044, India

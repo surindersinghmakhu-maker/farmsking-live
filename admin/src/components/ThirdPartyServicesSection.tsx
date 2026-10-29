@@ -404,7 +404,7 @@ export const ALL_WEATHER_PROVIDERS: WeatherProviderDetail[] = [
     icon: 'analytics',
     color: '#8b5cf6',
     recommendation: '🤖 AI Precision Spray Window Scoring (0-100 Suitability Index)',
-    summary: 'Computes proprietary agricultural indices including Spray Window Index (0-100), Delta-T, and Evapotranspiration to guide precision drone and tractor spraying.',
+    summary: 'Computes proprietary agricultural indices including Spray Window Index (0-100), Delta-T, and Evapotranspiration to guide optimal spray timing and precision field application.',
     dailyFreeRequests: 500,
     simulatedUsedRequests: 195,
   },

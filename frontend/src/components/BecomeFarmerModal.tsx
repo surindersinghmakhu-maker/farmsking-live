@@ -20,6 +20,7 @@ import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '
 import { useBecomeFarmer } from '../hooks/useBecomeRole';
 import { useAuth } from '../store/auth-context';
 import { SoilType, SprayTankSizeL, WaterType } from '../types/api';
+import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 
 import { UpiQrScannerModal } from './UpiQrScannerModal';
 
@@ -90,6 +91,16 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
         farmName: farmName.trim(),
         farmAddress: farmAddress.trim(),
         farmMobile: farmMobile.trim(),
+      });
+
+      // Permanently record verified real farmer in live feed ticker
+      recordRealFarmerActivity({
+        name: user?.name || farmName.trim() || 'Verified Farmer',
+        location: farmAddress.trim() || 'Punjab, India',
+        action: 'Upgraded to Verified FarmsKing Cultivator',
+        detail: 'Active Member • Kisan Network',
+        emoji: '🌾',
+        tagColor: '#059669',
       });
 
       onSuccess(updatedUser);

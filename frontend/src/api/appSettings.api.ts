@@ -125,7 +125,7 @@ export async function getSupportContact(): Promise<SupportContact> {
     const { data } = await apiClient.get<SupportContact>('/public-contact');
     return {
       ...data,
-      helplinePhone: data?.helplinePhone || data?.mobile || '95776-220000',
+      helplinePhone: data?.helplinePhone || data?.mobile || '95776-22000',
       supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
     };
   } catch {
@@ -133,16 +133,16 @@ export async function getSupportContact(): Promise<SupportContact> {
       const { data } = await apiClient.get<SupportContact>('/app-settings/support-contact');
       return {
         ...data,
-        helplinePhone: data?.helplinePhone || data?.mobile || '95776-220000',
+        helplinePhone: data?.helplinePhone || data?.mobile || '95776-22000',
         supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
       };
     } catch {
       return {
-        name: 'Surinder Singh (Super Admin)',
-        mobile: '95776-220000',
+        name: 'FarmsKing Executive Support Desk',
+        mobile: '95776-22000',
         email: 'farmskingindia@gmail.com',
-        helplinePhone: '95776-220000',
-        supportEmail: 'farmskingindia@gmail.com',
+        helplinePhone: '95776-22000',
+        supportEmail: 'support@farmsking.in',
       };
     }
   }

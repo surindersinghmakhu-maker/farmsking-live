@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import PublicHeader from '@/components/PublicHeader';
 import { useSupportContact } from '@/src/hooks/useAppSettings';
+import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 
 export default function ContactUsPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function ContactUsPage() {
 
   const phone = '9577622000';
   const displayPhone = '95776-22000';
-  const email = support?.email || 'surindersinghmakhu@gmail.com';
+  const email = support?.email || 'support@farmsking.in';
   const registeredAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nVPO Goindwal Sahib, Tehsil Khadur Sahib\nDistrict Tarn Taran, Punjab, India - 143422';
   const corporateAddress = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nMakhu, Ferozepur\nPunjab, India - 142044';
 
@@ -81,6 +82,16 @@ export default function ContactUsPage() {
     }
 
     setIsSent(true);
+
+    // Record real farmer activity permanently into live social proof feed
+    recordRealFarmerActivity({
+      name: senderName.trim(),
+      location: 'Punjab, India',
+      action: `Submitted Agronomy Inquiry (${senderTopic})`,
+      detail: 'Contacted FarmsKing Official Advisory Desk',
+      emoji: '🌾',
+      tagColor: '#059669',
+    });
     setTimeout(() => {
       setSenderName('');
       setSenderMobile('');
@@ -147,7 +158,7 @@ export default function ContactUsPage() {
               <Text style={[styles.cardTitle, isDay ? styles.cardTitleDay : styles.cardTitleNight]}>Direct Phone Support</Text>
               <Text style={styles.cardHighlight}>{displayPhone}</Text>
               <Text style={[styles.cardSubText, isDay ? styles.cardSubDay : styles.cardSubNight]}>
-                Mon-Sat • 9:00 AM to 7:00 PM IST
+                Mon-Sat • 10:00 AM to 5:00 PM IST
               </Text>
               <View style={styles.actionPill}>
                 <Ionicons name="call-outline" size={13} color="#059669" />
@@ -320,7 +331,7 @@ export default function ContactUsPage() {
                   Charanjit Singh
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Backend Support Lead • Director of Surinder Academy, Makhu (IT Services)
+                  Backend Support Lead • Cloud Infrastructure &amp; IT Systems Desk
                 </Text>
               </View>
 
@@ -333,7 +344,7 @@ export default function ContactUsPage() {
                   Gurjant Singh
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Hardware Support Lead • Director of Surinder Computers, Makhu
+                  Hardware Support Lead • Telemetry &amp; Enterprise Systems Desk
                 </Text>
               </View>
 

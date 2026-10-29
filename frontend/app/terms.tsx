@@ -223,10 +223,10 @@ export default function TermsOfServiceScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
-                Surinder Singh
+                Executive Grievance &amp; Compliance Desk
               </Text>
               <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
-                Grievance Officer • Legal & Agronomy Operations Desk
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED • Statutory Legal &amp; Agronomy Cell
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
                 Email: farmskingindia@gmail.com / grievance@farmsking.in

@@ -277,7 +277,7 @@ export default function ComplianceScreen() {
                   <Text style={[styles.objectNum, isDay ? styles.objectNumDay : styles.objectNumNight]}>2.</Text>
                   <Text style={[styles.objectText, isDay ? styles.objectTextDay : styles.objectTextNight]}>
                     <Text style={{ fontFamily: FONT.bold }}>Agronomic R&D & Demonstration Hubs: </Text>
-                    To establish and operate agricultural research hubs, demonstration fields (such as Surinder Agro Farm Makhu), soil and water testing laboratories, and crop pathology clinics to formulate sustainable bio-solutions.
+                    To establish and operate agricultural research hubs, demonstration fields (such as certified agronomy research stations), soil and water testing laboratories, and crop pathology clinics to formulate sustainable bio-solutions.
                   </Text>
                 </View>
 
@@ -335,12 +335,8 @@ export default function ComplianceScreen() {
                     <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>General Manager &amp; Quality Assurance Lead</Text>
                   </View>
                   <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Surinder Singh</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Lead Founder, Visionary &amp; Chief AI Architect (B.Sc CS, MBA, LLB)</Text>
-                  </View>
-                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
                     <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Executive &amp; Advisory Team</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Engg. Gurdit Singh (Tech Support Lead) • Charanjit Singh (Backend Support - Surinder Academy Makhu) • Gurjant Singh (Hardware Support - Surinder Computers Makhu) • Sudhir Kumar Mahato (Marigold Expert &amp; Testing Advisor) • Manjeet Sra (Organic Products &amp; Marketing Manager)</Text>
+                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Engg. Gurdit Singh (Tech Support Lead) • Charanjit Singh (Backend IT Support Lead) • Gurjant Singh (Hardware Systems Lead) • Sudhir Kumar Mahato (Floriculture &amp; Agronomy Advisor) • Manjeet Sra (Organic Products &amp; Marketing Manager)</Text>
                   </View>
                 </View>
               </View>
@@ -363,7 +359,7 @@ export default function ComplianceScreen() {
 
               <View style={styles.tableContainer}>
                 {[
-                  { k: 'Corporate Identification Number (CIN)', v: 'U62013PB2026PTC060000' },
+                  { k: 'Corporate Identification Number (CIN)', v: 'U01100PB2026PTC063294' },
                   { k: 'Company Name', v: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' },
                   { k: 'ROC Office', v: 'RoC - Chandigarh (Punjab)' },
                   { k: 'Company Category', v: 'Company limited by Shares' },
@@ -375,7 +371,7 @@ export default function ComplianceScreen() {
                   { k: 'Principal Activities', v: 'Agri-Tech Platforms, E-Commerce, Crop Advisory & AI Pathology' },
                   { k: 'Registered Office Address', v: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab, India - 143422' },
                   { k: 'Corporate / Operations Office', v: 'Near Grain Market, Makhu, District Ferozepur, Punjab, India - 142044' },
-                  { k: 'Official Email ID', v: 'surindersinghmakhu@gmail.com' },
+                  { k: 'Official Email ID', v: 'farmskingindia@gmail.com / support@farmsking.in' },
                   { k: 'Company Status', v: 'Active (Incorporated under Companies Act 2013)' },
                 ].map((row, idx) => (
                   <View
@@ -535,10 +531,10 @@ export default function ComplianceScreen() {
               </Text>
               <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
                 <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
-                  Surinder Singh
+                  Executive Grievance &amp; Compliance Desk
                 </Text>
                 <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
-                  Head of Legal, Regulatory & Agronomy Compliance Desk
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED • Regulatory &amp; Agronomy Compliance Desk
                 </Text>
                 <View style={styles.officerDetailRow}>
                   <Ionicons name="mail-outline" size={15} color={isDay ? '#059669' : '#34d399'} />
@@ -555,7 +551,7 @@ export default function ComplianceScreen() {
                 <View style={styles.officerDetailRow}>
                   <Ionicons name="location-outline" size={15} color={isDay ? '#059669' : '#34d399'} />
                   <Text style={[styles.officerDetailText, isDay ? styles.officerDetailTextDay : styles.officerDetailTextNight]}>
-                    Makhu, District Ferozepur & Ludhiana / Chandigarh, Punjab, India - 142044
+                    Regd: VPO Goindwal Sahib, Tarn Taran - 143422 • Corp: Makhu, Ferozepur, Punjab - 142044
                   </Text>
                 </View>
               </View>

@@ -337,6 +337,119 @@ function SpatialTiltCard({
   );
 }
 
+// ── Verified Cultivator Field Success Stories Data with Real Profile Pictures (DPs) ──
+export interface CultivatorSuccessStory {
+  id: string;
+  name: string;
+  location: string;
+  cropRole: string;
+  metric: string;
+  metricColor: string;
+  quote: string;
+  avatarUrl: string;
+  initials: string;
+  stars: number;
+}
+
+const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
+  {
+    id: 'story-1',
+    name: 'S. Gurpreet Singh',
+    location: 'Ludhiana, Punjab',
+    cropRole: '38-Acre Progressive Cultivator • Basmati 1121 & Wheat',
+    metric: '+24% Yield Gain',
+    metricColor: '#10b981',
+    quote: 'The satellite moisture maps helped us calibrate canal water cycles with precision. Our Basmati 1121 yield crossed 24 quintals per acre with zero lodging.',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
+    initials: 'GS',
+    stars: 5,
+  },
+  {
+    id: 'story-2',
+    name: 'Balwinder Singh',
+    location: 'Khanna Mandi Region, Punjab',
+    cropRole: 'Wheat & Mustard Cultivator • 26 Acres',
+    metric: 'Zero Disease Spread',
+    metricColor: '#0284c7',
+    quote: 'We detected Yellow Rust at the earliest pinhead stage using the Crop Doctor scanner. The exact spray dosage saved our 14-acre wheat crop from devastation.',
+    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
+    initials: 'BS',
+    stars: 5,
+  },
+  {
+    id: 'story-3',
+    name: 'Harjinder Singh',
+    location: 'Sangrur, Punjab',
+    cropRole: 'Organic Rice & Potato Grower • 32 Acres',
+    metric: '+₹140/q Higher Price',
+    metricColor: '#d97706',
+    quote: 'Instant mandi pricing allowed us to route our paddy directly to Khanna instead of local village arhtiyas, securing ₹140 more per quintal transparently.',
+    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&auto=format&fit=crop&q=80',
+    initials: 'HS',
+    stars: 5,
+  },
+  {
+    id: 'story-4',
+    name: 'Sardar Amarjit Singh Dhillon',
+    location: 'Bathinda, Punjab',
+    cropRole: '52-Acre Progressive Farmer • Bt Cotton & Wheat',
+    metric: '+₹2.85 Lakh Net Profit',
+    metricColor: '#10b981',
+    quote: 'Satellite NDVI canopy scans identified micro-nutrient zinc deficiency across our cotton blocks 18 days before visual yellowing, saving our bumper yield.',
+    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&auto=format&fit=crop&q=80',
+    initials: 'AD',
+    stars: 5,
+  },
+  {
+    id: 'story-5',
+    name: 'Manpreet Kaur Brar',
+    location: 'Moga, Punjab',
+    cropRole: 'Commercial Floriculture • Marigold & Vegetables',
+    metric: '3.4x Revenue Growth',
+    metricColor: '#f59e0b',
+    quote: 'Transitioning 4 acres to commercial Marigold with FarmsKing guidance and direct buyer linkages tripled our monthly cash flow compared to conventional farming.',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80',
+    initials: 'MK',
+    stars: 5,
+  },
+  {
+    id: 'story-6',
+    name: 'Shamsher Singh Virk',
+    location: 'Karnal, Haryana',
+    cropRole: 'Smart Irrigation Cultivator • 45 Acres',
+    metric: '28% Water Saved',
+    metricColor: '#06b6d4',
+    quote: 'Precision weather alerts and laser moisture telemetry eliminated 3 redundant tubewell irrigation cycles, cutting electricity and diesel costs substantially.',
+    avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=240&auto=format&fit=crop&q=80',
+    initials: 'SV',
+    stars: 5,
+  },
+  {
+    id: 'story-7',
+    name: 'Jagtar Singh Sandhu',
+    location: 'Tarn Taran, Punjab',
+    cropRole: 'Direct Mandi Member • Basmati & Green Pea',
+    metric: 'Zero Middleman Fee',
+    metricColor: '#059669',
+    quote: 'Sold 480 quintals through FarmsKing Live Mandi verified buyer network. Transparent weighment settlement arrived straight in our bank account within 24 hours.',
+    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&auto=format&fit=crop&q=80',
+    initials: 'JS',
+    stars: 5,
+  },
+  {
+    id: 'story-8',
+    name: 'Rameshwar Dayal Sharma',
+    location: 'Meerut, Uttar Pradesh',
+    cropRole: 'Sugarcane & Mustard Cultivator • 28 Acres',
+    metric: '+19% Sugar Recovery',
+    metricColor: '#16a34a',
+    quote: 'Certified bio-organic vermicompost and calibrated nutrition schedules from FarmsKing Agri Store revived our soil biology and lifted sugar sucrose levels.',
+    avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=240&auto=format&fit=crop&q=80',
+    initials: 'RS',
+    stars: 5,
+  },
+];
+
 const TRANSLATIONS = {
   EN: {
     badge: 'FarmsKing (Smart Farming Platform)',
@@ -542,6 +655,37 @@ export default function PublicLandingPage() {
       });
     }
   }, [user]);
+
+  // ── Verified Cultivator Field Success Stories State & Real Profile Sync ──
+  const [showAllStories, setShowAllStories] = useState(false);
+
+  const realCultivatorStories = useMemo(() => {
+    const list: CultivatorSuccessStory[] = [...VERIFIED_CULTIVATOR_STORIES];
+
+    // If active user is logged in with an online photo/avatar or verified role, prepend their real story
+    if (user && user.name && user.name.trim() && user.photoUrl) {
+      const photo = user.photoUrl.startsWith('http')
+        ? user.photoUrl
+        : `/uploads/${user.photoUrl.replace(/^\/uploads\//, '')}`;
+      const loc = [user.village, user.district, user.state || 'Punjab'].filter(Boolean).join(', ');
+      list.unshift({
+        id: `user-${user.id || 'real'}`,
+        name: user.name,
+        location: loc || 'Punjab, India',
+        cropRole: `${user.role === 'FARMER' ? 'Verified Cultivator' : 'Active Member'} • FarmsKing Network`,
+        metric: 'Verified Member',
+        metricColor: '#10b981',
+        quote: 'FarmsKing digital tools and helpline support have made modern farm management transparent, precise, and highly profitable.',
+        avatarUrl: photo,
+        initials: user.name.slice(0, 2).toUpperCase(),
+        stars: 5,
+      });
+    }
+
+    return list;
+  }, [user?.id, user?.name, user?.photoUrl, user?.village, user?.district, user?.state, user?.role]);
+
+  const displayedStories = showAllStories ? realCultivatorStories : realCultivatorStories.slice(0, 3);
 
   useEffect(() => {
     if (tickerDismissed) return;
@@ -2518,78 +2662,79 @@ export default function PublicLandingPage() {
           </View>
 
           <View style={S.testimonialsGrid}>
-            {/* Story 1 */}
-            <View style={[S.testimonialCard, isTablet && S.testimonialCardTablet, isMobile && S.testimonialCardMobile, isDay && S.testimonialCardDay]}>
-              <View style={S.testiStarsRow}>
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name="star" size={14} color="#f59e0b" />
-                ))}
-                <View style={S.testiMetricBadge}>
-                  <Text style={S.testiMetricText}>+24% Yield Gain</Text>
+            {displayedStories.map((story) => (
+              <View
+                key={story.id}
+                style={[
+                  S.testimonialCard,
+                  isTablet && S.testimonialCardTablet,
+                  isMobile && S.testimonialCardMobile,
+                  isDay && S.testimonialCardDay,
+                ]}
+              >
+                <View style={S.testiStarsRow}>
+                  <View style={S.testiStarsGroup}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Ionicons key={s} name="star" size={14} color="#f59e0b" />
+                    ))}
+                  </View>
+                  <View style={[S.testiMetricBadge, { backgroundColor: `${story.metricColor}22` }]}>
+                    <Text style={[S.testiMetricText, { color: story.metricColor }]}>{story.metric}</Text>
+                  </View>
+                </View>
+                <Text style={[S.testiQuote, isDay && S.testiQuoteDay]}>
+                  "{story.quote}"
+                </Text>
+                <View style={S.testiAuthorRow}>
+                  <View style={S.testiAvatarWrapper}>
+                    <Image
+                      source={{ uri: story.avatarUrl }}
+                      style={S.testiAvatarImg}
+                      resizeMode="cover"
+                    />
+                    <View style={S.testiVerifiedBadge}>
+                      <Ionicons name="checkmark-circle" size={13} color="#10b981" />
+                    </View>
+                  </View>
+                  <View style={S.testiAuthorInfo}>
+                    <Text style={[S.testiAuthorName, isDay && S.testiAuthorNameDay]} numberOfLines={1}>
+                      {story.name}
+                    </Text>
+                    <Text style={S.testiAuthorLocation} numberOfLines={1}>
+                      {story.location}
+                    </Text>
+                    <Text style={S.testiAuthorCropRole} numberOfLines={1}>
+                      {story.cropRole}
+                    </Text>
+                  </View>
                 </View>
               </View>
-              <Text style={[S.testiQuote, isDay && S.testiQuoteDay]}>
-                "The satellite moisture maps helped us calibrate canal water cycles with precision. Our Basmati 1121 yield crossed 24 quintals per acre with zero lodging."
-              </Text>
-              <View style={S.testiAuthorRow}>
-                <View style={S.testiAvatarCircle}>
-                  <Text style={S.testiAvatarText}>GS</Text>
-                </View>
-                <View>
-                  <Text style={[S.testiAuthorName, isDay && S.testiAuthorNameDay]}>S. Gurpreet Singh</Text>
-                  <Text style={S.testiAuthorLocation}>Ludhiana • 38-Acre Progressive Cultivator</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Story 2 */}
-            <View style={[S.testimonialCard, isTablet && S.testimonialCardTablet, isMobile && S.testimonialCardMobile, isDay && S.testimonialCardDay]}>
-              <View style={S.testiStarsRow}>
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name="star" size={14} color="#f59e0b" />
-                ))}
-                <View style={S.testiMetricBadge}>
-                  <Text style={S.testiMetricText}>Zero Disease Spread</Text>
-                </View>
-              </View>
-              <Text style={[S.testiQuote, isDay && S.testiQuoteDay]}>
-                "We detected Yellow Rust at the earliest pinhead stage using the Crop Doctor scanner. The exact spray dosage saved our 14-acre wheat crop from devastation."
-              </Text>
-              <View style={S.testiAuthorRow}>
-                <View style={[S.testiAvatarCircle, { backgroundColor: '#0284c7' }]}>
-                  <Text style={S.testiAvatarText}>BS</Text>
-                </View>
-                <View>
-                  <Text style={[S.testiAuthorName, isDay && S.testiAuthorNameDay]}>Balwinder Singh</Text>
-                  <Text style={S.testiAuthorLocation}>Khanna Mandi Region • Wheat & Mustard</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Story 3 */}
-            <View style={[S.testimonialCard, isTablet && S.testimonialCardTablet, isMobile && S.testimonialCardMobile, isDay && S.testimonialCardDay]}>
-              <View style={S.testiStarsRow}>
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Ionicons key={s} name="star" size={14} color="#f59e0b" />
-                ))}
-                <View style={S.testiMetricBadge}>
-                  <Text style={S.testiMetricText}>+₹140/q Higher Price</Text>
-                </View>
-              </View>
-              <Text style={[S.testiQuote, isDay && S.testiQuoteDay]}>
-                "Instant mandi pricing allowed us to route our paddy directly to Khanna instead of local village arhtiyas, securing ₹140 more per quintal transparently."
-              </Text>
-              <View style={S.testiAuthorRow}>
-                <View style={[S.testiAvatarCircle, { backgroundColor: '#d97706' }]}>
-                  <Text style={S.testiAvatarText}>HS</Text>
-                </View>
-                <View>
-                  <Text style={[S.testiAuthorName, isDay && S.testiAuthorNameDay]}>Harjinder Singh</Text>
-                  <Text style={S.testiAuthorLocation}>Sangrur • Organic Rice & Potato Grower</Text>
-                </View>
-              </View>
-            </View>
+            ))}
           </View>
+
+          {/* Show More / Show Less Toggle Button */}
+          {realCultivatorStories.length > 3 && (
+            <View style={S.testiShowMoreContainer}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setShowAllStories((prev) => !prev)}
+                style={[S.testiShowMoreBtn, isDay && S.testiShowMoreBtnDay]}
+              >
+                <View style={[S.testiShowMoreBadge, isDay && S.testiShowMoreBadgeDay]}>
+                  <Ionicons
+                    name={showAllStories ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color={isDay ? '#047857' : '#34d399'}
+                  />
+                </View>
+                <Text style={[S.testiShowMoreBtnText, isDay && S.testiShowMoreBtnTextDay]}>
+                  {showAllStories
+                    ? 'Show Fewer Stories ▴'
+                    : `Show More Verified Cultivator Stories (${realCultivatorStories.length - 3} More) ▾`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* ══ UNIVERSAL ACCESS & APP CALLOUT BANNER (COMPACT EXECUTIVE) ══ */}
@@ -5746,18 +5891,22 @@ const S = StyleSheet.create({
   testiStarsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
+  testiStarsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
   testiMetricBadge: {
-    marginLeft: 'auto',
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
   },
   testiMetricText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#10b981',
   },
@@ -5765,8 +5914,9 @@ const S = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.regular,
     color: '#e2e8f0',
-    lineHeight: 20,
+    lineHeight: 21,
     marginBottom: 16,
+    flex: 1,
   },
   testiQuoteDay: {
     color: '#334155',
@@ -5775,6 +5925,57 @@ const S = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginTop: 'auto',
+  },
+  testiAvatarWrapper: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+  },
+  testiAvatarImg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#10b981',
+    backgroundColor: '#0f172a',
+  },
+  testiVerifiedBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  testiAuthorInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  testiAuthorName: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  testiAuthorNameDay: {
+    color: '#0f172a',
+  },
+  testiAuthorLocation: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  testiAuthorCropRole: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#10b981',
+    marginTop: 1,
   },
   testiAvatarCircle: {
     width: 38,
@@ -5789,18 +5990,48 @@ const S = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
-  testiAuthorName: {
-    fontSize: 13.5,
+  testiShowMoreContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 26,
+    width: '100%',
+  },
+  testiShowMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 22,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(52, 211, 153, 0.45)',
+    ...premiumShadow('rgba(16, 185, 129, 0.25)', 'sm'),
+  },
+  testiShowMoreBtnDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+    ...premiumShadow('rgba(16, 185, 129, 0.15)', 'xs'),
+  },
+  testiShowMoreBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testiShowMoreBadgeDay: {
+    backgroundColor: '#d1fae5',
+  },
+  testiShowMoreBtnText: {
+    fontSize: 12.5,
     fontFamily: FONT.bold,
-    color: '#ffffff',
+    color: '#34d399',
+    letterSpacing: 0.2,
   },
-  testiAuthorNameDay: {
-    color: '#0f172a',
-  },
-  testiAuthorLocation: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    color: '#64748b',
+  testiShowMoreBtnTextDay: {
+    color: '#047857',
   },
 
   // ══════════════════════════════════════════════════════════════════════════

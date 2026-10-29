@@ -45,8 +45,7 @@ type OtherCategoryFilter =
   | 'CERTIFICATES'
   | 'FRANCHISE_RULES'
   | 'PROMOTERS_CAPITAL'
-  | 'STORAGE_TELECOM'
-  | 'SMTP_THEME';
+  | 'STORAGE_TELECOM';
 
 interface CategoryPill {
   key: OtherCategoryFilter;
@@ -72,7 +71,6 @@ const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'FRANCHISE_RULES', label: 'Mandi Franchise', icon: 'storefront-outline' },
   { key: 'PROMOTERS_CAPITAL', label: 'Capital & Officers', icon: 'business-outline' },
   { key: 'STORAGE_TELECOM', label: 'Cloud Storage & Agora', icon: 'cloud-outline' },
-  { key: 'SMTP_THEME', label: 'Email SMTP & Theme', icon: 'mail-outline' },
 ];
 
 export default function SettingOtherSetup() {
@@ -1620,85 +1618,6 @@ export default function SettingOtherSetup() {
           </View>
         )}
 
-        {/* 16. Email SMTP & Theme Customization */}
-        {isVisible('SMTP_THEME', 'smtp email theme colors primary host port password') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="mail" size={20} color="#d97706" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Email SMTP & Theme Palette</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Hostinger business email credentials & brand theme colors</Text>
-              </View>
-            </View>
-
-            <Text style={[styles.sectionSubtitle, { color: textColor }]}>Hostinger Business Mail SMTP</Text>
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>SMTP Host</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.smtp?.host || 'smtp.hostinger.com'}
-                  onChangeText={(t) => updateMasterNested('smtp', 'host', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>SMTP Port</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(pm.smtp?.port || 465)}
-                  onChangeText={(t) => updateMasterNested('smtp', 'port', parseInt(t, 10) || 465)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>From Email</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.smtp?.fromEmail || 'noreply@farmsking.in'}
-                  onChangeText={(t) => updateMasterNested('smtp', 'fromEmail', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>From Name</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.smtp?.fromName || 'FarmsKing Agritech'}
-                  onChangeText={(t) => updateMasterNested('smtp', 'fromName', t)}
-                />
-              </View>
-            </View>
-
-            <Text style={[styles.sectionSubtitle, { color: textColor, marginTop: 14 }]}>FarmsKing Standard Brand Colors</Text>
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Primary Green</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.themeColors?.primaryColor || '#16a34a'}
-                  onChangeText={(t) => updateMasterNested('themeColors', 'primaryColor', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Secondary Blue</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.themeColors?.secondaryColor || '#0284c7'}
-                  onChangeText={(t) => updateMasterNested('themeColors', 'secondaryColor', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Accent Button</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.themeColors?.buttonColor || '#10b981'}
-                  onChangeText={(t) => updateMasterNested('themeColors', 'buttonColor', t)}
-                />
-              </View>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Floating Bottom Bar for Fast Desktop Saving */}

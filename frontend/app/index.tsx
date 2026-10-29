@@ -27,7 +27,7 @@ import { useAuth } from '@/src/store/auth-context';
 import PublicHeader from '@/components/PublicHeader';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
 import { getSupportContact } from '@/src/api/appSettings.api';
-import { LIVE_FARMER_ACTIVITIES, getUnifiedLiveFarmerFeed, recordRealFarmerActivity, LiveFarmerActivity } from '@/constants/liveFarmerFeed';
+import { LIVE_FARMER_ACTIVITIES, getUnifiedLiveFarmerFeed, recordRealFarmerActivity, getActivityDisplayTime, LiveFarmerActivity } from '@/constants/liveFarmerFeed';
 
 // ─── Public Ecosystem Nav Links ──────────────────────────────────────────────
 const PUBLIC_NAV_LINKS = [
@@ -3304,7 +3304,7 @@ export default function PublicLandingPage() {
               <View style={S.liveTickerMetaRow}>
                 <Text style={S.liveTickerDetailText}>{currentActivity.detail}</Text>
                 <Text style={S.liveTickerBullet}>•</Text>
-                <Text style={S.liveTickerTimeText}>{currentActivity.timeAgo}</Text>
+                <Text style={S.liveTickerTimeText}>{getActivityDisplayTime(currentActivity)}</Text>
               </View>
             </View>
 

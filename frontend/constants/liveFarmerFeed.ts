@@ -5,7 +5,7 @@
  */
 
 export interface LiveFarmerActivity {
-  id: number;
+  id: string | number;
   emoji: string;
   name: string;
   location: string;
@@ -13,6 +13,9 @@ export interface LiveFarmerActivity {
   detail: string;
   timeAgo: string;
   tagColor: string;
+  isReal?: boolean;
+  createdAt?: number;
+  isLeafScan?: boolean;
 }
 
 // ── 220+ Authentic Pan-India Cultivators (All Regions & Communities) ──
@@ -406,18 +409,28 @@ export const ACTIVE_INDIAN_CROPS = [
 ];
 
 // ── Genuine FarmsKing Agricultural Activity Templates (100% Real Services Only) ──
-const ACTIVITY_TEMPLATES = [
+const ACTIVITY_TEMPLATES: Array<{
+  action: (crop: string) => string;
+  detail: (price: string, mandi: string, crop: string) => string;
+  icon: (cropEmoji: string) => string;
+  color?: string;
+  isLeafScan?: boolean;
+  isDaylight?: boolean;
+}> = [
   {
     action: (crop: string) => `Checked live APMC market rates for ${crop}`,
     detail: (price: string, mandi: string) => `${price} • ${mandi} daily arrivals`,
     icon: (cropEmoji: string) => cropEmoji,
     color: '#10b981',
+    isDaylight: true,
   },
   {
     action: (crop: string) => `Scanned ${crop} with AI Crop Doctor`,
     detail: () => 'Pathogen detected • ICAR-calibrated tank dosage prescribed',
     icon: () => '🧪',
     color: '#06b6d4',
+    isLeafScan: true,
+    isDaylight: true,
   },
   {
     action: (crop: string) => `Ordered 100% Pure Organic Vermicompost`,
@@ -442,6 +455,7 @@ const ACTIVITY_TEMPLATES = [
     detail: (price: string, mandi: string, crop: string) => `Field nutrition schedule finalized for ${crop}`,
     icon: () => '🩺',
     color: '#14b8a6',
+    isDaylight: true,
   },
   {
     action: (crop: string) => `Enrolled in Marigold Floriculture Program`,
@@ -476,6 +490,102 @@ const TIME_AGO_OPTIONS = [
   '15 mins ago',
 ];
 
+export function calculateDynamicTimeAgo(timestamp: number, referenceTimestamp?: number): string {
+  const diffMins = Math.floor(((referenceTimestamp || Date.now()) - timestamp) / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+}
+
+/**
+ * Dynamic calculation of activity time that strictly adheres to agricultural & daylight laws:
+ * 1. REAL USERS: Can scan crop leaves or register 24/7 at any hour of the day or night.
+ *    Their exact real-time elapsed duration is ALWAYS displayed without restriction.
+ * 2. SIMULATED LEAF SCANS & DAYLIGHT ACTIVITIES:
+ *    - Must strictly show times from BEFORE SUNSET (Daylight hours: 6:30 AM to 5:45 PM).
+ *    - After sunset (18:00 - 23:59): Shows today's pre-sunset daylight hours (e.g., 'Today before sunset • 5:18 PM').
+ *    - Late night / Pre-dawn (00:00 - 06:29): Shows yesterday's pre-sunset daylight hours (e.g., 'Yesterday before sunset • 5:15 PM').
+ *    - Daytime (06:30 - 17:59): Shows daylight scan hours earlier today before sunset (e.g., 'Today at 10:45 AM', 'Today at 2:15 PM', 'Today before sunset • 4:50 PM', or recent daylight scan).
+ */
+export function getActivityDisplayTime(activity: LiveFarmerActivity, referenceTimestamp?: number): string {
+  // ── 1. REAL USERS: 100% Unrestricted Real Time ──
+  if (activity.isReal) {
+    if (activity.createdAt) {
+      return calculateDynamicTimeAgo(activity.createdAt, referenceTimestamp);
+    }
+    return activity.timeAgo || 'Just now';
+  }
+
+  // ── 2. SIMULATED ACTIVITIES: Check if Leaf Scan or Daylight Dependent ──
+  const isLeafScan =
+    activity.isLeafScan ||
+    /scanned.*crop doctor|leaf disease|leaf scan|pathogen/i.test(activity.action);
+
+  const isDaylightActivity =
+    isLeafScan ||
+    /consulted agronomy advisor|checked live apmc/i.test(activity.action);
+
+  if (!isDaylightActivity) {
+    // Non-daylight actions (e.g. store orders, digital ledger bahi-khata entries)
+    return activity.timeAgo || 'Just now';
+  }
+
+  const now = new Date(referenceTimestamp || Date.now());
+  const currentHour = now.getHours(); // 0 - 23
+  const currentMinute = now.getMinutes(); // 0 - 59
+
+  // Deterministic seed based on activity id so the time is stable and realistic
+  const numId = typeof activity.id === 'number'
+    ? activity.id
+    : parseInt(String(activity.id).replace(/\D/g, ''), 10) || 1;
+
+  // Realistic pre-sunset afternoon times (between 3:45 PM and 5:45 PM - India golden hour before sunset)
+  const PRE_SUNSET_AFTERNOON_TIMES = [
+    '5:18 PM', '5:24 PM', '4:52 PM', '5:08 PM', '4:45 PM',
+    '5:12 PM', '4:35 PM', '5:32 PM', '4:20 PM', '5:15 PM',
+    '3:55 PM', '5:28 PM', '4:15 PM', '5:05 PM', '4:58 PM',
+    '5:35 PM', '4:40 PM', '5:22 PM', '3:48 PM', '5:10 PM',
+  ];
+  const preSunsetTime = PRE_SUNSET_AFTERNOON_TIMES[numId % PRE_SUNSET_AFTERNOON_TIMES.length];
+
+  // Case A: Night after Sunset (18:00 to 23:59)
+  // The sun has already set today. Simulated leaf scans MUST show pre-sunset time from today.
+  if (currentHour >= 18) {
+    return `Today before sunset • ${preSunsetTime}`;
+  }
+
+  // Case B: Late Night / Pre-Dawn before Sunrise (00:00 to 06:29)
+  // Pitch darkness before sunrise. The most recent daylight scan was yesterday afternoon before sunset.
+  if (currentHour < 6 || (currentHour === 6 && currentMinute < 30)) {
+    return `Yesterday before sunset • ${preSunsetTime}`;
+  }
+
+  // Case C: Daytime before Sunset (06:30 to 17:59)
+  // It is currently daylight before sunset!
+  const morningHours = ['Today at 7:45 AM', 'Today at 8:20 AM', 'Today at 9:15 AM', 'Today at 10:10 AM'];
+  const middayHours = ['Today at 11:30 AM', 'Today at 12:15 PM', 'Today at 1:40 PM', 'Today at 2:20 PM'];
+  const lateAfternoonHours = ['Today at 3:15 PM', 'Today at 4:20 PM', `Today before sunset • ${preSunsetTime}`];
+
+  const mode = numId % 3;
+  if (mode === 0) {
+    const minsAgo = [2, 5, 8, 12, 18, 25][numId % 6];
+    return `${minsAgo} mins ago (Daylight scan)`;
+  } else if (mode === 1) {
+    return 'Just now (Daylight scan)';
+  } else {
+    if (currentHour < 12) {
+      return morningHours[numId % morningHours.length];
+    } else if (currentHour < 16) {
+      return middayHours[numId % middayHours.length];
+    } else {
+      return lateAfternoonHours[numId % lateAfternoonHours.length];
+    }
+  }
+}
+
 /**
  * Generate simulated pan-India farmer activities by cross-multiplying
  * 220+ farmers from all communities with 16 active seasonal crops and genuine services.
@@ -491,24 +601,30 @@ export function generateLiveFarmerActivities(count = 2400): LiveFarmerActivity[]
     const farmer = PAN_INDIA_FARMERS[i % farmerLen];
     const crop = ACTIVE_INDIAN_CROPS[(i * 3 + Math.floor(i / farmerLen)) % cropLen];
     const template = ACTIVITY_TEMPLATES[(i * 7 + Math.floor(i / cropLen)) % actLen];
-    const timeAgo = TIME_AGO_OPTIONS[i % timeLen];
+    const baseTimeAgo = TIME_AGO_OPTIONS[i % timeLen];
 
     const actionText = template.action(crop.name);
     const detailText = template.detail(crop.price, crop.mandi, crop.name);
     const itemEmoji = template.icon(crop.emoji);
     const itemColor = template.color || crop.tagColor;
+    const isLeafScan = template.isLeafScan || /scanned.*crop doctor|leaf/i.test(actionText);
 
-    list.push({
+    const activityItem: LiveFarmerActivity = {
       id: i + 1,
       emoji: itemEmoji,
       name: farmer.name,
       location: farmer.location,
       action: actionText,
       detail: detailText,
-      timeAgo,
+      timeAgo: baseTimeAgo,
       tagColor: itemColor,
       isReal: false,
-    });
+      isLeafScan,
+    };
+
+    // Calculate realistic pre-sunset daylight timing for leaf scan activities
+    activityItem.timeAgo = getActivityDisplayTime(activityItem);
+    list.push(activityItem);
   }
 
   return list;
@@ -654,32 +770,32 @@ export function getUnifiedLiveFarmerFeed(): LiveFarmerActivity[] {
 
   // Interleave real farmers frequently: 1 Real Farmer every 2 items!
   while (simIdx < simulated.length) {
-    // Add real farmer
+    // Add real farmer (evaluated with unrestricted real-time)
     const currentReal = realFarmers[realIdx % realFarmers.length];
     result.push({
       ...currentReal,
-      timeAgo: currentReal.createdAt
-        ? calculateDynamicTimeAgo(currentReal.createdAt)
-        : currentReal.timeAgo,
+      timeAgo: getActivityDisplayTime(currentReal),
     });
     realIdx++;
 
-    // Add 1-2 simulated activities
-    if (simIdx < simulated.length) result.push(simulated[simIdx++]);
-    if (simIdx < simulated.length) result.push(simulated[simIdx++]);
+    // Add 1-2 simulated activities (evaluated with pre-sunset daylight rules)
+    if (simIdx < simulated.length) {
+      const sim1 = simulated[simIdx++];
+      result.push({
+        ...sim1,
+        timeAgo: getActivityDisplayTime(sim1),
+      });
+    }
+    if (simIdx < simulated.length) {
+      const sim2 = simulated[simIdx++];
+      result.push({
+        ...sim2,
+        timeAgo: getActivityDisplayTime(sim2),
+      });
+    }
   }
 
   return result;
-}
-
-function calculateDynamicTimeAgo(timestamp: number): string {
-  const diffMins = Math.floor((Date.now() - timestamp) / 60000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} mins ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
 // Pre-generated static live feed instance

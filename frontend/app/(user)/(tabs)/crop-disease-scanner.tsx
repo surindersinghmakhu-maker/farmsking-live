@@ -15,6 +15,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useCart } from '@/src/store/cart-context';
+import { useAuth } from '@/src/store/auth-context';
+import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 
 export interface AiDiseaseDiagnostic {
@@ -221,6 +223,7 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
 export default function CropDiseaseScannerScreen() {
   const router = useRouter();
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -315,6 +318,23 @@ export default function CropDiseaseScannerScreen() {
       }
       const diagnostic = DISEASE_KNOWLEDGE_BASE[targetKey] || DISEASE_KNOWLEDGE_BASE.Paddy;
       setScanResult(diagnostic);
+
+      // Record real user leaf scan in live farmer activity feed (Available 24/7 at real-time!)
+      try {
+        const farmerName = user?.farmName || user?.name || 'Verified Cultivator';
+        const location = [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || 'Punjab, India';
+        const cleanCrop = diagnostic.cropName.split('(')[0].trim();
+        recordRealFarmerActivity({
+          name: farmerName,
+          location,
+          action: `Scanned ${cleanCrop} with AI Crop Doctor`,
+          detail: `${diagnostic.diseaseName} detected • ${diagnostic.confidenceScore}% AI Confidence`,
+          emoji: '🧪',
+          tagColor: '#06b6d4',
+        });
+      } catch {
+        // Safe fallback
+      }
     }, 2000);
   };
 

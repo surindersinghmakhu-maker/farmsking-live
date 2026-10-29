@@ -72,72 +72,7 @@ const MAIN_NAV_LINKS = [
   },
 ];
 
-// ── Secondary Links under "More ▾" ──
-const MORE_NAV_LINKS = [
-  {
-    id: 'mandi',
-    label: 'Mandi Rates',
-    subtext: 'Live APMC daily auction rates across India',
-    path: '/#mandi-rates',
-    icon: 'trending-up-outline',
-    image: null,
-    color: '#10b981',
-  },
-  {
-    id: 'farming',
-    label: 'Farming Advisory',
-    subtext: 'Scientific crop cultivation, soil health & advisory',
-    path: '/topic/Farming',
-    icon: 'leaf-outline',
-    image: require('@/assets/images/icon_farming_3d_clean.png'),
-    color: '#10b981',
-  },
-  {
-    id: 'gardening',
-    label: 'Gardening & Nursery',
-    subtext: 'Terrace garden kits, indoor plants & organic inputs',
-    path: '/topic/Gardening',
-    icon: 'flower-outline',
-    image: require('@/assets/images/icon_gardening_3d_clean.png'),
-    color: '#e11d48',
-  },
-  {
-    id: 'cropintel',
-    label: 'Crop Intelligence AI',
-    subtext: 'Live disease scanner, pest detection & yield forecast',
-    path: '/topic/Crop-Doctors',
-    icon: 'scan-outline',
-    image: null,
-    color: '#8b5cf6',
-  },
-  {
-    id: 'orders',
-    label: 'Track Orders & Delivery',
-    subtext: 'Check doorstep delivery, seed dispatch & invoices',
-    path: '/shop',
-    icon: 'cube-outline',
-    image: null,
-    color: '#3b82f6',
-  },
-  {
-    id: 'contact',
-    label: 'Contact & Support Hub',
-    subtext: 'Headquarters, regional centres & agronomist directory',
-    path: '/contact-us',
-    icon: 'mail-outline',
-    image: null,
-    color: '#0284c7',
-  },
-  {
-    id: 'terms',
-    label: 'Compliance & Legal',
-    subtext: 'Terms of service, privacy policy & farmer protection',
-    path: '/terms',
-    icon: 'shield-checkmark-outline',
-    image: null,
-    color: '#64748b',
-  },
-];
+
 
 export default function PublicHeader({
   onCartPress,
@@ -158,7 +93,6 @@ export default function PublicHeader({
   const isMobile = width <= 768;
   const { user } = useAuth();
 
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [helplineModalOpen, setHelplineModalOpen] = useState(false);
 
   // Synchronized Theme state
@@ -428,107 +362,6 @@ export default function PublicHeader({
                   </TouchableOpacity>
                 );
               })}
-
-              {/* Desktop "More ▾" Dropdown Trigger */}
-              <View style={styles.moreBtnWrapper}>
-                <TouchableOpacity
-                  onPress={() => setMoreMenuOpen(!moreMenuOpen)}
-                  activeOpacity={0.7}
-                  style={[
-                    styles.navLink,
-                    isDay ? styles.navLinkDay : styles.navLinkNight,
-                    moreMenuOpen && (isDay ? styles.navLinkActiveDay : styles.navLinkActiveNight),
-                    styles.moreBtnInner,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.navLinkText,
-                      isDay ? styles.navLinkTextDay : styles.navLinkTextNight,
-                      moreMenuOpen && { color: '#10b981', fontFamily: FONT.extraBold },
-                    ]}
-                  >
-                    More
-                  </Text>
-                  <Ionicons
-                    name={moreMenuOpen ? 'chevron-up' : 'chevron-down'}
-                    size={12}
-                    color={moreMenuOpen ? '#10b981' : isDay ? '#64748b' : '#94a3b8'}
-                  />
-                </TouchableOpacity>
-
-                {/* Floating "More" Dropdown Menu */}
-                {moreMenuOpen && (
-                  <View
-                    style={[
-                      styles.moreDropdownCard,
-                      isDay ? styles.moreDropdownCardDay : styles.moreDropdownCardNight,
-                    ]}
-                  >
-                    <View style={styles.moreDropdownHeader}>
-                      <Text
-                        style={[
-                          styles.moreDropdownHeaderTitle,
-                          isDay ? styles.moreDropdownHeaderTitleDay : styles.moreDropdownHeaderTitleNight,
-                        ]}
-                      >
-                        MORE SERVICES & TOOLS
-                      </Text>
-                      <TouchableOpacity onPress={() => setMoreMenuOpen(false)}>
-                        <Ionicons name="close" size={15} color={isDay ? '#64748b' : '#94a3b8'} />
-                      </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.moreDropdownGrid}>
-                      {MORE_NAV_LINKS.map((item) => (
-                        <TouchableOpacity
-                          key={item.id}
-                          style={[
-                            styles.moreDropdownItem,
-                            isDay ? styles.moreDropdownItemDay : styles.moreDropdownItemNight,
-                          ]}
-                          onPress={() => {
-                            setMoreMenuOpen(false);
-                            goTo(item.path);
-                          }}
-                          activeOpacity={0.75}
-                        >
-                          <View
-                            style={[
-                              styles.moreDropdownItemIconWrap,
-                              { backgroundColor: `${item.color}18` },
-                            ]}
-                          >
-                            {item.image ? (
-                              <Image source={item.image} style={{ width: 20, height: 20 }} resizeMode="contain" />
-                            ) : (
-                              <Ionicons name={item.icon as any} size={16} color={item.color} />
-                            )}
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text
-                              style={[
-                                styles.moreDropdownItemLabel,
-                                isDay ? styles.moreDropdownItemLabelDay : styles.moreDropdownItemLabelNight,
-                              ]}
-                            >
-                              {item.label}
-                            </Text>
-                            <Text style={styles.moreDropdownItemSub} numberOfLines={1}>
-                              {item.subtext}
-                            </Text>
-                          </View>
-                          <Ionicons
-                            name="chevron-forward"
-                            size={13}
-                            color={isDay ? '#94a3b8' : '#64748b'}
-                          />
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
             </View>
           )}
 
@@ -826,105 +659,7 @@ export default function PublicHeader({
                   </TouchableOpacity>
                 );
               })}
-
-              {/* Mobile "More ▾" Pill */}
-              <TouchableOpacity
-                onPress={() => setMoreMenuOpen(!moreMenuOpen)}
-                activeOpacity={0.8}
-                style={[
-                  styles.mobileNavPill,
-                  isDay ? styles.mobileNavPillDay : styles.mobileNavPillNight,
-                  moreMenuOpen &&
-                    (isDay
-                      ? { backgroundColor: 'rgba(16,185,129,0.1)', borderColor: '#10b981' }
-                      : { backgroundColor: 'rgba(16,185,129,0.2)', borderColor: '#10b981' }),
-                ]}
-              >
-                <Ionicons
-                  name="apps-outline"
-                  size={12}
-                  color={moreMenuOpen ? '#10b981' : isDay ? '#475569' : '#94a3b8'}
-                />
-                <Text
-                  style={[
-                    styles.mobileNavPillText,
-                    isDay ? styles.mobileNavPillTextDay : styles.mobileNavPillTextNight,
-                    moreMenuOpen && { color: '#10b981', fontFamily: FONT.extraBold },
-                  ]}
-                >
-                  More ▾
-                </Text>
-              </TouchableOpacity>
             </ScrollView>
-
-            {/* Mobile Expanded Secondary Links */}
-            {moreMenuOpen && (
-              <View
-                style={[
-                  styles.mobileMoreMenu,
-                  isDay ? styles.mobileMoreMenuDay : styles.mobileMoreMenuNight,
-                ]}
-              >
-                <View style={styles.mobileMoreMenuHeader}>
-                  <Text
-                    style={[
-                      styles.mobileMoreMenuTitle,
-                      isDay ? styles.mobileMoreMenuTitleDay : styles.mobileMoreMenuTitleNight,
-                    ]}
-                  >
-                    MORE SERVICES & TOOLS
-                  </Text>
-                  <TouchableOpacity onPress={() => setMoreMenuOpen(false)}>
-                    <Ionicons name="close" size={16} color={isDay ? '#64748b' : '#94a3b8'} />
-                  </TouchableOpacity>
-                </View>
-                {MORE_NAV_LINKS.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.mobileMoreMenuItem,
-                      isDay ? styles.mobileMoreMenuItemDay : styles.mobileMoreMenuItemNight,
-                    ]}
-                    onPress={() => {
-                      setMoreMenuOpen(false);
-                      goTo(item.path);
-                    }}
-                    activeOpacity={0.75}
-                  >
-                    <View
-                      style={[
-                        styles.mobileMoreIconWrap,
-                        { backgroundColor: `${item.color}18` },
-                      ]}
-                    >
-                      {item.image ? (
-                        <Image source={item.image} style={{ width: 18, height: 18 }} resizeMode="contain" />
-                      ) : (
-                        <Ionicons name={item.icon as any} size={15} color={item.color} />
-                      )}
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        style={[
-                          styles.mobileMoreLabel,
-                          isDay ? styles.mobileMoreLabelDay : styles.mobileMoreLabelNight,
-                        ]}
-                      >
-                        {item.label}
-                      </Text>
-                      <Text style={styles.mobileMoreSub} numberOfLines={1}>
-                        {item.subtext}
-                      </Text>
-                    </View>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={13}
-                      color={isDay ? '#94a3b8' : '#64748b'}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
           </View>
         )}
       </View>

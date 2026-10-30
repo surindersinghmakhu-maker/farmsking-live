@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -26,7 +25,6 @@ import {
 } from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
-import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadPhoto, UploadResponse } from '@/src/api/uploads.api';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
@@ -35,12 +33,10 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 
 export type MasterDataSubTab =
   | 'basic-details'
-  | 'app-download'
+  | 'brand-assets'
   | 'social'
   | 'email-templates'
-  | 'maintenance'
-  | 'tax-gst'
-  | 'other';
+  | 'tax-gst';
 
 export type EmailTemplateKey = 'registration' | 'otp' | 'feeReceipt' | 'resultPublished' | 'certificateIssued';
 
@@ -54,67 +50,66 @@ export interface MasterDataTabItem {
 export const MASTER_DATA_TABS: MasterDataTabItem[] = [
   {
     key: 'basic-details',
-    label: 'Corporate Identity & Legal',
+    label: 'Company Profile',
     icon: 'business-outline',
-    description: 'Company name, MCA, CIN, PAN, TAN & address',
+    description: 'Legal identity, capital & leadership',
   },
   {
-    key: 'app-download',
-    label: 'App Download & QR Links',
-    icon: 'phone-portrait-outline',
-    description: 'Android APK / Play Store URL & auto QR generator',
+    key: 'brand-assets',
+    label: 'Brand Assets',
+    icon: 'images-outline',
+    description: 'Official logo & browser favicon',
   },
   {
     key: 'social',
-    label: 'Social Profiles & Location',
+    label: 'Social & App',
     icon: 'share-social-outline',
-    description: 'Official social profiles & Google Maps location',
+    description: 'Channels, maps & APK download',
   },
   {
     key: 'email-templates',
     label: 'Email Templates',
-    icon: 'document-text-outline',
-    description: 'Automated email messages & live preview',
-  },
-  {
-    key: 'maintenance',
-    label: 'Maintenance Mode',
-    icon: 'construct-outline',
-    description: 'Emergency lockdown switch & public notice',
+    icon: 'mail-outline',
+    description: 'OTP & account notifications',
   },
   {
     key: 'tax-gst',
-    label: 'GST & Tax Invoicing',
+    label: 'Tax & GST',
     icon: 'receipt-outline',
-    description: 'GSTIN, default rates, invoicing & rules',
+    description: 'GSTIN, slabs & invoicing rules',
   },
-  {
-    key: 'other',
-    label: 'Other System Settings',
-    icon: 'options-outline',
-    description: 'Referral bonuses, wallet taxes, telecom, storage & unexposed rules',
-  },
-];
-
-export const THEME_PRESETS = [
-  { name: 'Emerald Agritech (Default)', primary: '#16a34a', secondary: '#0284c7', button: '#10b981' },
-  { name: 'Golden Mandi Harvest', primary: '#d97706', secondary: '#2563eb', button: '#f59e0b' },
-  { name: 'Deep Eco-Forest', primary: '#059669', secondary: '#0891b2', button: '#10b981' },
-  { name: 'Obsidian Executive Dark', primary: '#0f172a', secondary: '#6366f1', button: '#10b981' },
 ];
 
 export const EMAIL_TEMPLATE_ITEMS: { key: EmailTemplateKey; label: string; icon: keyof typeof Ionicons.glyphMap; vars: string[] }[] = [
   {
     key: 'registration',
-    label: 'Registration Email',
+    label: 'Registration',
     icon: 'person-add-outline',
     vars: ['{{farmer_name}}', '{{company_name}}', '{{support_email}}', '{{support_phone}}'],
   },
   {
     key: 'otp',
-    label: 'OTP Verification',
+    label: 'OTP Verify',
     icon: 'key-outline',
     vars: ['{{otp_code}}', '{{expiry_minutes}}', '{{company_name}}'],
+  },
+  {
+    key: 'feeReceipt',
+    label: 'Fee Receipt',
+    icon: 'receipt-outline',
+    vars: ['{{farmer_name}}', '{{amount}}', '{{invoice_no}}'],
+  },
+  {
+    key: 'resultPublished',
+    label: 'Lab Result',
+    icon: 'flask-outline',
+    vars: ['{{farmer_name}}', '{{crop_name}}', '{{diagnosis}}'],
+  },
+  {
+    key: 'certificateIssued',
+    label: 'Certificate',
+    icon: 'ribbon-outline',
+    vars: ['{{farmer_name}}', '{{certificate_id}}', '{{portal_url}}'],
   },
 ];
 
@@ -123,7 +118,7 @@ export default function SettingEntitySetup() {
   const isDesktop = width >= 860 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 860));
   const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
 
-  const { data: remoteConfig, isLoading, refetch } = useSystemIntegrations();
+  const { data: remoteConfig } = useSystemIntegrations();
   const updateMutation = useUpdateSystemIntegrations();
 
   const [localConfig, setLocalConfig] = useState<SystemIntegrationsConfig>(() =>
@@ -131,11 +126,15 @@ export default function SettingEntitySetup() {
   );
 
   const [masterSubTab, setMasterSubTab] = useState<MasterDataSubTab>('basic-details');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [activeEmailTmpl, setActiveEmailTmpl] = useState<EmailTemplateKey>('registration');
   const [emailViewMode, setEmailViewMode] = useState<'editor' | 'preview'>('editor');
-  const [masterSearchQuery, setMasterSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+  const [isSavingFavicon, setIsSavingFavicon] = useState(false);
+  const [isSavingLogo, setIsSavingLogo] = useState(false);
+  const [favImageError, setFavImageError] = useState(false);
 
   useEffect(() => {
     if (remoteConfig) {
@@ -149,6 +148,20 @@ export default function SettingEntitySetup() {
   };
 
   const masterData: ProjectMasterDataConfig = localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
+
+  // Resolve favicon URL cleanly
+  const resolvedFaviconUri = useMemo(() => {
+    const raw = masterData.faviconUrl || '/favicon.png';
+    const resolved = resolveMediaUrl(raw) || raw;
+    return resolved;
+  }, [masterData.faviconUrl]);
+
+  // Resolve logo URL cleanly
+  const resolvedLogoUri = useMemo(() => {
+    const raw = masterData.logoUrl || 'https://farmsking.in/brand_logo.png';
+    const resolved = resolveMediaUrl(raw) || raw;
+    return resolved;
+  }, [masterData.logoUrl]);
 
   const handleUpdateMasterField = (field: keyof ProjectMasterDataConfig, value: any) => {
     setLocalConfig((prev) => ({
@@ -209,9 +222,6 @@ export default function SettingEntitySetup() {
     showToast(`Inserted ${variable} into email subject!`);
   };
 
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
-
   const handleUpdateAboutField = (field: string, value: any) => {
     setLocalConfig((prev) => ({
       ...prev,
@@ -244,10 +254,23 @@ export default function SettingEntitySetup() {
             const resolved = resolveMediaUrl(data.fileUrl) || data.fileUrl;
             handleUpdateMasterField('logoUrl', resolved);
             handleUpdateAboutField('logoUrl', resolved);
+
+            // Auto-save logo immediately
+            await updateMutation.mutateAsync({
+              projectMasterData: {
+                ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+                logoUrl: resolved,
+              },
+              about: {
+                ...(localConfig.about || {}),
+                logoUrl: resolved,
+              },
+            });
             try {
               await updateAppSettings({ logoUrl: resolved });
             } catch { }
-            showToast('✅ Brand Logo uploaded and updated globally!');
+
+            showToast('✅ Brand Logo uploaded and saved globally!');
           } catch (e: any) {
             Alert.alert('Upload Failed', e?.message || 'Could not upload logo');
           } finally {
@@ -270,10 +293,22 @@ export default function SettingEntitySetup() {
         const resolved = resolveMediaUrl(uploaded.fileUrl) || uploaded.fileUrl;
         handleUpdateMasterField('logoUrl', resolved);
         handleUpdateAboutField('logoUrl', resolved);
+
+        await updateMutation.mutateAsync({
+          projectMasterData: {
+            ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+            logoUrl: resolved,
+          },
+          about: {
+            ...(localConfig.about || {}),
+            logoUrl: resolved,
+          },
+        });
         try {
           await updateAppSettings({ logoUrl: resolved });
         } catch { }
-        showToast('✅ Brand Logo uploaded and updated globally!');
+
+        showToast('✅ Brand Logo uploaded and saved globally!');
         setIsUploadingLogo(false);
       }
     } catch (err: any) {
@@ -285,6 +320,7 @@ export default function SettingEntitySetup() {
   const handlePickAndUploadFavicon = async () => {
     try {
       setIsUploadingFavicon(true);
+      setFavImageError(false);
       if (Platform.OS === 'web' && typeof document !== 'undefined') {
         const input = document.createElement('input');
         input.type = 'file';
@@ -304,13 +340,27 @@ export default function SettingEntitySetup() {
             const resolved = resolveMediaUrl(data.fileUrl) || data.fileUrl;
             handleUpdateMasterField('faviconUrl', resolved);
             handleUpdateAboutField('faviconUrl', resolved);
+
+            // Auto-save favicon immediately to both backend tables
+            await updateMutation.mutateAsync({
+              projectMasterData: {
+                ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+                faviconUrl: resolved,
+              },
+              about: {
+                ...(localConfig.about || {}),
+                faviconUrl: resolved,
+              },
+            });
             try {
               await updateAppSettings({ faviconUrl: resolved });
-            } catch {}
+            } catch { }
+
+            // Update browser document immediately
             if (Platform.OS === 'web') {
               updateWebFavicon(resolved);
             }
-            showToast('✅ Website Favicon uploaded and updated globally!');
+            showToast('✅ Website Favicon uploaded & saved globally!');
           } catch (e: any) {
             Alert.alert('Upload Failed', e?.message || 'Could not upload favicon');
           } finally {
@@ -333,18 +383,92 @@ export default function SettingEntitySetup() {
         const resolved = resolveMediaUrl(uploaded.fileUrl) || uploaded.fileUrl;
         handleUpdateMasterField('faviconUrl', resolved);
         handleUpdateAboutField('faviconUrl', resolved);
+
+        await updateMutation.mutateAsync({
+          projectMasterData: {
+            ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+            faviconUrl: resolved,
+          },
+          about: {
+            ...(localConfig.about || {}),
+            faviconUrl: resolved,
+          },
+        });
         try {
           await updateAppSettings({ faviconUrl: resolved });
-        } catch {}
+        } catch { }
+
         if (Platform.OS === 'web') {
           updateWebFavicon(resolved);
         }
-        showToast('✅ Website Favicon uploaded and updated globally!');
+        showToast('✅ Website Favicon uploaded & saved globally!');
         setIsUploadingFavicon(false);
       }
     } catch (err: any) {
       setIsUploadingFavicon(false);
       Alert.alert('Upload Failed', err?.message || 'Could not open file picker');
+    }
+  };
+
+  const handleSaveFaviconOnly = async () => {
+    try {
+      setIsSavingFavicon(true);
+      const favUrl = masterData.faviconUrl || '/favicon.png';
+      const resolved = resolveMediaUrl(favUrl) || favUrl;
+
+      // 1. Update projectMasterData in system integrations
+      await updateMutation.mutateAsync({
+        projectMasterData: {
+          ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+          faviconUrl: resolved,
+        },
+        about: {
+          ...(localConfig.about || {}),
+          faviconUrl: resolved,
+        },
+      });
+
+      // 2. Update appSettings table
+      try {
+        await updateAppSettings({ faviconUrl: resolved });
+      } catch { }
+
+      // 3. Immediately apply to browser document tab
+      if (Platform.OS === 'web') {
+        updateWebFavicon(resolved);
+      }
+
+      showToast('✅ Website Favicon saved & applied to browser tab!');
+    } catch (err: any) {
+      Alert.alert('Save Failed', err?.message || 'Could not save favicon');
+    } finally {
+      setIsSavingFavicon(false);
+    }
+  };
+
+  const handleResetFavicon = async () => {
+    const defaultUrl = '/favicon.png';
+    handleUpdateMasterField('faviconUrl', defaultUrl);
+    handleUpdateAboutField('faviconUrl', defaultUrl);
+    setFavImageError(false);
+    try {
+      await updateMutation.mutateAsync({
+        projectMasterData: {
+          ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+          faviconUrl: defaultUrl,
+        },
+        about: {
+          ...(localConfig.about || {}),
+          faviconUrl: defaultUrl,
+        },
+      });
+      await updateAppSettings({ faviconUrl: defaultUrl });
+      if (Platform.OS === 'web') {
+        updateWebFavicon(defaultUrl);
+      }
+      showToast('✅ Favicon reset to official default emblem!');
+    } catch (err: any) {
+      showToast('Reset applied in local form.');
     }
   };
 
@@ -372,7 +496,7 @@ export default function SettingEntitySetup() {
           }
         } catch { }
       }
-      showToast('✅ Corporate Identity, Brand Logo & Favicon saved successfully!');
+      showToast('✅ Settings saved successfully across the system!');
     } catch (err: any) {
       Alert.alert('Save Failed', err?.message || 'Failed to save FK Setting');
     }
@@ -399,177 +523,117 @@ export default function SettingEntitySetup() {
     const dataStr = JSON.stringify(masterData, null, 2);
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(dataStr);
-      showToast('💾 Setting JSON configuration copied to clipboard!');
+      showToast('💾 Setting JSON copied to clipboard!');
     } else {
-      showToast('💾 Settings exported successfully!');
+      showToast('💾 Settings exported!');
     }
   };
-
-  const handleApplyThemePreset = (preset: typeof THEME_PRESETS[0]) => {
-    setLocalConfig((prev) => ({
-      ...prev,
-      projectMasterData: {
-        ...(prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
-        themeColors: {
-          primaryColor: preset.primary,
-          secondaryColor: preset.secondary,
-          buttonColor: preset.button,
-        },
-      },
-    }));
-    showToast(`🎨 Applied "${preset.name}" color preset!`);
-  };
-
-  const handleResetThemeColors = () => {
-    setLocalConfig((prev) => ({
-      ...prev,
-      projectMasterData: {
-        ...(prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
-        themeColors: {
-          primaryColor: '#16a34a',
-          secondaryColor: '#0284c7',
-          buttonColor: '#10b981',
-        },
-      },
-    }));
-    showToast('🎨 Theme colors reset to FarmsKing standard emerald & sky palette.');
-  };
-
-  const filteredTabs = MASTER_DATA_TABS.filter((tab) =>
-    masterSearchQuery
-      ? tab.label.toLowerCase().includes(masterSearchQuery.toLowerCase()) ||
-      tab.description.toLowerCase().includes(masterSearchQuery.toLowerCase()) ||
-      tab.key.toLowerCase().includes(masterSearchQuery.toLowerCase())
-      : true
-  );
 
   return (
     <View style={styles.masterContainer}>
       {/* Toast Alert */}
       {toastMessage && (
         <View style={[styles.toast, { backgroundColor: isLight ? '#f0fdf4' : '#062814', borderColor: isLight ? '#bbf7d0' : '#10b981' }]}>
-          <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+          <Ionicons name="checkmark-circle" size={17} color="#10b981" />
           <Text style={[styles.toastText, { color: textColor }]}>{toastMessage}</Text>
         </View>
       )}
 
-
-      {/* Executive Module Dropdown Selector Bar */}
-      {(() => {
-        const activeTabItem = MASTER_DATA_TABS.find((t) => t.key === masterSubTab) || MASTER_DATA_TABS[0];
-        const activeIndex = MASTER_DATA_TABS.findIndex((t) => t.key === masterSubTab);
-        return (
-          <View style={[styles.dropdownContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <TouchableOpacity
-              style={styles.dropdownHeader}
-              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.dropdownHeaderLeft}>
-                <View style={[styles.dropdownIconBadge, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
-                  <Ionicons name={activeTabItem.icon} size={20} color="#6366f1" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.dropdownTitleRow}>
-                    <Text style={[styles.dropdownModuleLabel, { color: subTextColor }]}>ACTIVE SETTING MODULE</Text>
-                    <View style={[styles.dropdownCountBadge, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
-                      <Text style={[styles.dropdownCountText, { color: subTextColor }]}>
-                        {activeIndex + 1} of {MASTER_DATA_TABS.length}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.dropdownTitle, { color: textColor }]}>{activeTabItem.label}</Text>
-                </View>
-              </View>
-
-              <View style={[styles.dropdownChevronBtn, { backgroundColor: isLight ? '#f8fafc' : '#0f172a', borderColor: cardBorder }]}>
-                <Text style={[styles.dropdownChevronText, { color: '#6366f1' }]}>Switch Module</Text>
+      {/* Modern Horizontal Executive Tab Pills & Quick Actions */}
+      <View style={[styles.tabBarCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabScrollContent}
+        >
+          {MASTER_DATA_TABS.map((tab) => {
+            const isSelected = masterSubTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[
+                  styles.modulePill,
+                  { borderColor: isSelected ? '#6366f1' : cardBorder },
+                  isSelected && (isLight ? styles.modulePillActiveLight : styles.modulePillActiveDark),
+                ]}
+                onPress={() => setMasterSubTab(tab.key)}
+                activeOpacity={0.75}
+              >
                 <Ionicons
-                  name={isDropdownOpen ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color="#6366f1"
+                  name={tab.icon}
+                  size={16}
+                  color={isSelected ? (isLight ? '#4f46e5' : '#818cf8') : subTextColor}
                 />
-              </View>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.modulePillText,
+                    {
+                      color: isSelected ? (isLight ? '#4f46e5' : '#818cf8') : textColor,
+                      fontFamily: isSelected ? FONT.bold : FONT.medium,
+                    },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+                {isSelected && (
+                  <View style={styles.moduleActiveDot} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
-            {/* Dropdown Options List */}
-            {isDropdownOpen && (
-              <View style={[styles.dropdownList, { borderTopColor: cardBorder }]}>
-                {MASTER_DATA_TABS.map((tab) => {
-                  const isSelected = masterSubTab === tab.key;
-                  return (
-                    <TouchableOpacity
-                      key={tab.key}
-                      style={[
-                        styles.dropdownItem,
-                        isSelected && (isLight ? styles.dropdownItemActiveLight : styles.dropdownItemActiveDark),
-                      ]}
-                      onPress={() => {
-                        setMasterSubTab(tab.key);
-                        setIsDropdownOpen(false);
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <View
-                        style={[
-                          styles.tabIconBadge,
-                          {
-                            backgroundColor: isSelected
-                              ? isLight
-                                ? '#6366f1'
-                                : '#818cf8'
-                              : isLight
-                                ? 'rgba(148, 163, 184, 0.15)'
-                                : 'rgba(51, 65, 85, 0.4)',
-                          },
-                        ]}
-                      >
-                        <Ionicons
-                          name={tab.icon}
-                          size={17}
-                          color={isSelected ? '#ffffff' : subTextColor}
-                        />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text
-                          style={[
-                            styles.dropdownItemTitle,
-                            { color: isSelected ? (isLight ? '#4f46e5' : '#818cf8') : textColor },
-                            isSelected && { fontFamily: FONT.bold },
-                          ]}
-                        >
-                          {tab.label}
-                        </Text>
-                      </View>
-                      {isSelected && (
-                        <View style={styles.activeCheckBadge}>
-                          <Ionicons name="checkmark-circle" size={18} color="#10b981" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
-          </View>
-        );
-      })()}
+        <View style={styles.tabBarActions}>
+          <TouchableOpacity
+            style={[styles.outlineActionBtn, { borderColor: cardBorder, backgroundColor: innerBg }]}
+            onPress={handleExportMasterDataJson}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="copy-outline" size={13} color={subTextColor} />
+            <Text style={[styles.outlineActionText, { color: textColor }]}>Copy JSON</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.topSaveBtn, updateMutation.isPending && { opacity: 0.7 }]}
+            onPress={handleSaveMasterData}
+            disabled={updateMutation.isPending}
+            activeOpacity={0.8}
+          >
+            <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.topSaveGradient}>
+              {updateMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+              )}
+              <Text style={styles.topSaveText}>
+                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Main Full-Width Content Pane */}
       <View style={[styles.masterContentPane, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        {/* TAB 1: Basic Details & Identity */}
+        {/* TAB 1: Company Profile & Legal */}
         {masterSubTab === 'basic-details' && (
           <View style={styles.masterTabPane}>
-            {/* Group 1: Corporate Name & Brand */}
+            {/* Group 1: Company Profile */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Corporate Identity & Brand</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="business-outline" size={16} color="#6366f1" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Company Profile</Text>
+                </View>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                  <Text style={[styles.pillBadgeText, { color: subTextColor }]}>Core Identity</Text>
+                </View>
               </View>
 
               <View style={styles.twoCol}>
                 <View style={styles.col}>
                   <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Company Legal Name</Text>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Legal Entity Name</Text>
                     <TouchableOpacity onPress={() => handleCopyValue('Legal Name', masterData.companyLegalName)}>
                       <Text style={styles.copyLink}>Copy</Text>
                     </TouchableOpacity>
@@ -586,7 +650,7 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Brand / Trade Name</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Brand Name</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -605,14 +669,14 @@ export default function SettingEntitySetup() {
               <View style={styles.twoCol}>
                 <View style={styles.col}>
                   <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Registered Office Address</Text>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Registered Office</Text>
                     <TouchableOpacity onPress={() => handleCopyValue('Registered Address', masterData.registeredOfficeAddress || (masterData as any).registeredAddress || '')}>
                       <Text style={styles.copyLink}>Copy</Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 38 }]}
+                      style={[styles.input, { color: textColor }]}
                       value={masterData.registeredOfficeAddress || (masterData as any).registeredAddress || ''}
                       onChangeText={(txt) => {
                         handleUpdateMasterField('registeredOfficeAddress', txt);
@@ -620,289 +684,37 @@ export default function SettingEntitySetup() {
                       }}
                       placeholder="VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India"
                       placeholderTextColor={subTextColor}
-                      multiline
                     />
                   </View>
                 </View>
 
                 <View style={styles.col}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Corporate Tagline</Text>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 46 }]}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Brand Tagline</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
-                      style={[styles.input, { color: textColor, height: 38 }]}
+                      style={[styles.input, { color: textColor }]}
                       value={masterData.tagline}
                       onChangeText={(txt) => handleUpdateMasterField('tagline', txt)}
                       placeholder="Farming Easy, Farming Smart | National Smart Farming Platform"
                       placeholderTextColor={subTextColor}
-                      multiline
                     />
-                  </View>
-                </View>
-              </View>
-
-              {/* ── Global Brand Assets: Official Logo & Favicon ── */}
-              <View style={{ marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: cardBorder }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="images-outline" size={18} color="#10b981" />
-                    <Text style={[styles.inputLabel, { color: textColor, fontSize: 13.5, fontWeight: '700', marginBottom: 0 }]}>
-                      Global Brand Assets (Logo & Favicon)
-                    </Text>
-                    <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.22)' }]}>
-                      <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>System-Wide Global</Text>
-                    </View>
-                  </View>
-                  <Text style={{ fontSize: 11, color: subTextColor }}>
-                    Applies globally across public header, admin portal, invoices, bills & browser tabs
-                  </Text>
-                </View>
-
-                <View style={styles.twoCol}>
-                  {/* Item 1: Global Corporate Logo */}
-                  <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: cardBorder }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="image" size={16} color="#10b981" />
-                        <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
-                          Official Brand Logo
-                        </Text>
-                      </View>
-                      {masterData.logoUrl && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' && !masterData.logoUrl.includes('farmsking.in/assets/logo.png') ? (
-                        <TouchableOpacity
-                          onPress={() => {
-                            handleUpdateMasterField('logoUrl', 'https://farmsking.in/brand_logo.png');
-                            handleUpdateAboutField('logoUrl', 'https://farmsking.in/brand_logo.png');
-                            updateAppSettings({ logoUrl: 'https://farmsking.in/brand_logo.png' }).catch(() => { });
-                            showToast('Reset logo to default official emblem');
-                          }}
-                        >
-                          <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-
-                    {/* Live Logo Preview Box */}
-                    <View style={{
-                      height: 120,
-                      backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
-                      borderStyle: 'dashed',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 12,
-                      padding: 10,
-                      position: 'relative',
-                    }}>
-                      {masterData.logoUrl && !masterData.logoUrl.includes('farmsking.in/assets/logo.png') && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' ? (
-                        <Image
-                          source={{ uri: resolveMediaUrl(masterData.logoUrl) || 'https://farmsking.in/brand_logo.png' }}
-                          style={{ width: '85%', height: 95 }}
-                          resizeMode="contain"
-                        />
-                      ) : (
-                        <BrandLogo size={88} useHdQuality={true} />
-                      )}
-                      <View style={{ position: 'absolute', bottom: 6, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                        <Text style={{ fontSize: 9, color: '#ffffff', fontWeight: '700' }}>LIVE PREVIEW</Text>
-                      </View>
-                    </View>
-
-                    {/* Browse & Upload Button */}
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
-                        backgroundColor: '#10b981',
-                        paddingVertical: 10,
-                        paddingHorizontal: 16,
-                        borderRadius: RADIUS.md,
-                        marginBottom: 10,
-                      }}
-                      onPress={handlePickAndUploadLogo}
-                      disabled={isUploadingLogo}
-                      activeOpacity={0.85}
-                    >
-                      {isUploadingLogo ? (
-                        <ActivityIndicator size="small" color="#022c22" />
-                      ) : (
-                        <Ionicons name="cloud-upload-outline" size={16} color="#022c22" />
-                      )}
-                      <Text style={{ color: '#022c22', fontSize: 12.5, fontWeight: '700' }}>
-                        {isUploadingLogo ? 'Uploading Logo...' : 'Browse & Upload Logo'}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Direct URL input */}
-                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 38 }]}>
-                      <Ionicons name="link-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor, fontSize: 11 }]}
-                        value={masterData.logoUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('logoUrl', txt);
-                          handleUpdateAboutField('logoUrl', txt);
-                        }}
-                        placeholder="https://farmsking.in/brand_logo.png or uploaded image URL"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 10, color: subTextColor, marginTop: 4 }}>
-                      Recommended: Transparent PNG or SVG (512×512px or wide 4:1 banner)
-                    </Text>
-                  </View>
-
-                  {/* Item 2: Global Website Favicon */}
-                  <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: cardBorder }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="globe" size={16} color="#0284c7" />
-                        <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
-                          Official Website Favicon
-                        </Text>
-                      </View>
-                      {masterData.faviconUrl && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
-                        <TouchableOpacity
-                          onPress={() => {
-                            handleUpdateMasterField('faviconUrl', 'https://farmsking.in/favicon.ico');
-                            handleUpdateAboutField('faviconUrl', 'https://farmsking.in/favicon.ico');
-                            showToast('Reset favicon to default icon');
-                          }}
-                        >
-                          <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-
-                    {/* Live Favicon Preview Box (Simulated Browser Tab) */}
-                    <View style={{
-                      height: 120,
-                      backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
-                      borderStyle: 'dashed',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 12,
-                      padding: 10,
-                      position: 'relative',
-                    }}>
-                      {/* Browser Tab Simulation */}
-                      <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: cardBorder,
-                        maxWidth: 220,
-                      }}>
-                        {masterData.faviconUrl && !masterData.faviconUrl.endsWith('.ico') && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
-                          <Image
-                            source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.png' }}
-                            style={{ width: 18, height: 18, borderRadius: 3 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <BrandLogo size={18} useHdQuality={true} />
-                        )}
-                        <Text style={{ fontSize: 11, fontWeight: '600', color: textColor }} numberOfLines={1}>
-                          FarmsKing - India's Smart...
-                        </Text>
-                        <Ionicons name="close" size={12} color={subTextColor} />
-                      </View>
-
-                      {/* Large 32x32 Favicon Zoom */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                        {masterData.faviconUrl && !masterData.faviconUrl.endsWith('.ico') && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
-                          <Image
-                            source={{ uri: resolveMediaUrl(masterData.faviconUrl) || 'https://farmsking.in/favicon.png' }}
-                            style={{ width: 32, height: 32, borderRadius: 6 }}
-                            resizeMode="contain"
-                          />
-                        ) : (
-                          <BrandLogo size={32} useHdQuality={true} />
-                        )}
-                        <Text style={{ fontSize: 10, color: subTextColor }}>32×32 & 18×18 Browser Tab View</Text>
-                      </View>
-
-                      <View style={{ position: 'absolute', bottom: 6, right: 8, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                        <Text style={{ fontSize: 9, color: '#ffffff', fontWeight: '700' }}>TAB PREVIEW</Text>
-                      </View>
-                    </View>
-
-                    {/* Browse & Upload Button */}
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
-                        backgroundColor: '#0284c7',
-                        paddingVertical: 10,
-                        paddingHorizontal: 16,
-                        borderRadius: RADIUS.md,
-                        marginBottom: 10,
-                      }}
-                      onPress={handlePickAndUploadFavicon}
-                      disabled={isUploadingFavicon}
-                      activeOpacity={0.85}
-                    >
-                      {isUploadingFavicon ? (
-                        <ActivityIndicator size="small" color="#ffffff" />
-                      ) : (
-                        <Ionicons name="cloud-upload-outline" size={16} color="#ffffff" />
-                      )}
-                      <Text style={{ color: '#ffffff', fontSize: 12.5, fontWeight: '700' }}>
-                        {isUploadingFavicon ? 'Uploading Favicon...' : 'Browse & Upload Favicon'}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Direct URL input */}
-                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 38 }]}>
-                      <Ionicons name="link-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={[styles.input, { color: textColor, fontSize: 11 }]}
-                        value={masterData.faviconUrl || ''}
-                        onChangeText={(txt) => {
-                          handleUpdateMasterField('faviconUrl', txt);
-                          handleUpdateAboutField('faviconUrl', txt);
-                        }}
-                        placeholder="Or paste direct favicon URL (ICO, PNG, SVG)"
-                        placeholderTextColor={subTextColor}
-                      />
-                    </View>
-                    <Text style={{ fontSize: 10, color: subTextColor, marginTop: 4 }}>
-                      Recommended: Square 1:1 image, .ico, .png, or .svg (32×32 or 64×64px)
-                    </Text>
                   </View>
                 </View>
               </View>
             </View>
 
-            {/* Group 2: Corporate Capital & Officers */}
+            {/* Group 2: Capital & Leadership */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="business" size={18} color="#475569" />
-                  <Text style={[styles.groupTitle, { color: textColor }]}>Corporate Capital & Officers</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="people-outline" size={16} color="#0284c7" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Capital & Leadership</Text>
                 </View>
-                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(71, 85, 105, 0.12)' : 'rgba(148, 163, 184, 0.22)' }]}>
-                  <Text style={[styles.pillBadgeText, { color: isLight ? '#334155' : '#cbd5e1' }]}>MCA e-MoA Capital & Leadership</Text>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(2, 132, 199, 0.12)' : 'rgba(2, 132, 199, 0.22)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#0284c7' }]}>MoA Registered</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 11, color: subTextColor, marginBottom: 12 }}>
-                Authorized equity shares, paid-up capital, first directors & founding officers
-              </Text>
 
-              {/* 4 Columns for Capital Figures */}
               <View style={styles.fourCol}>
                 <View style={styles.col4}>
                   <Text style={[styles.inputLabel, { color: textColor }]}>Authorized Capital (₹)</Text>
@@ -919,7 +731,7 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Authorized Shares Count</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Total Shares</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -933,7 +745,7 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Face Value Per Share (₹)</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Face Value (₹)</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -961,10 +773,9 @@ export default function SettingEntitySetup() {
                 </View>
               </View>
 
-              {/* Directors and Key Officers */}
-              <View style={[styles.twoCol, { marginTop: 10 }]}>
+              <View style={[styles.twoCol, { marginTop: 8 }]}>
                 <View style={styles.col}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>First Directors</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Directors</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -977,7 +788,7 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Founder & Chief AI Architect</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Founder & AI Lead</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1019,18 +830,26 @@ export default function SettingEntitySetup() {
               </View>
             </View>
 
-            {/* Group 3: Ministry of Corporate Affairs (MCA) Details */}
+            {/* Group 3: MCA Registrations */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Ministry of Corporate Affairs (MCA) Registrations</Text>
-                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.2)' }]}>
-                  <Text style={[styles.pillBadgeText, { color: '#6366f1' }]}>Government of India</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="shield-checkmark-outline" size={16} color="#10b981" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>MCA Registrations</Text>
+                </View>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.22)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>Govt. of India</Text>
                 </View>
               </View>
 
               <View style={styles.fourCol}>
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>MCA Incorporation SRN</Text>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>MCA SRN</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('MCA SRN', masterData.mcaSrn)}>
+                      <Text style={styles.copyLink}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1043,7 +862,12 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>CIN Number</Text>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>CIN</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('CIN', masterData.cinNumber || (masterData as any).cin || '')}>
+                      <Text style={styles.copyLink}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1059,7 +883,12 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Company PAN</Text>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>PAN</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('PAN', masterData.companyPan || (masterData as any).panNumber || '')}>
+                      <Text style={styles.copyLink}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1077,7 +906,12 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Company TAN</Text>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>TAN</Text>
+                    <TouchableOpacity onPress={() => handleCopyValue('TAN', masterData.companyTan || '')}>
+                      <Text style={styles.copyLink}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1092,17 +926,23 @@ export default function SettingEntitySetup() {
               </View>
             </View>
 
-            {/* Group 3: Helpdesk & Official Communication */}
+            {/* Group 4: Support & Office */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Official Helpdesk & Locations</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="call-outline" size={16} color="#f59e0b" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Support & Office</Text>
+                </View>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                  <Text style={[styles.pillBadgeText, { color: subTextColor }]}>Public Contact</Text>
+                </View>
               </View>
 
               <View style={styles.threeCol}>
                 <View style={styles.col3}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Helpline Phone Number</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Support Phone</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="call-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <Ionicons name="call-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
                     <TextInput
                       style={[styles.input, { color: textColor }]}
                       value={masterData.officialPhone || masterData.primaryMobile || ''}
@@ -1117,9 +957,9 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col3}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Official Support Email</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Support Email</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="mail-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <Ionicons name="mail-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
                     <TextInput
                       style={[styles.input, { color: textColor }]}
                       value={masterData.officialEmail || masterData.supportEmail || ''}
@@ -1134,9 +974,9 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col3}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ / Admin Office</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Operational HQ</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="location-outline" size={15} color={subTextColor} style={{ marginRight: 6 }} />
+                    <Ionicons name="location-outline" size={14} color={subTextColor} style={{ marginRight: 6 }} />
                     <TextInput
                       style={[styles.input, { color: textColor }]}
                       value={masterData.operationalHq || ''}
@@ -1160,10 +1000,10 @@ export default function SettingEntitySetup() {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
                   )}
                   <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Corporate Details'}
+                    {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -1171,335 +1011,277 @@ export default function SettingEntitySetup() {
           </View>
         )}
 
-        {/* TAB: App Download & Mobile QR Settings */}
-        {masterSubTab === 'app-download' && (
+        {/* TAB 2: Brand Assets (Brand Logo & Website Favicon) */}
+        {masterSubTab === 'brand-assets' && (
           <View style={styles.masterTabPane}>
-            {/* Group 1: Mobile App Links */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>FarmsKing Mobile App Distribution Links</Text>
-                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.2)' }]}>
-                  <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>Live Automatic QR Sync</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="images-outline" size={16} color="#10b981" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Official Brand Assets</Text>
+                </View>
+                <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.22)' }]}>
+                  <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>System-Wide Live</Text>
                 </View>
               </View>
 
-              <Text style={{ fontSize: 13, color: subTextColor, marginBottom: 16, lineHeight: 19 }}>
-                Configure the official download link for the FarmsKing Mobile App. The QR code on the public website homepage automatically regenerates from this link in real-time so farmers and visitors can scan and install the app seamlessly.
-              </Text>
-
               <View style={styles.twoCol}>
-                <View style={styles.col}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
-                    {masterData.appDownloadUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.appDownloadUrl || '')}>
-                        <Text style={styles.openLink}>Test Link</Text>
+                {/* 1. Official Brand Logo Card */}
+                <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: cardBorder }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="image-outline" size={16} color="#10b981" />
+                      <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
+                        Brand Logo
+                      </Text>
+                    </View>
+                    {masterData.logoUrl && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' ? (
+                      <TouchableOpacity
+                        onPress={() => {
+                          handleUpdateMasterField('logoUrl', 'https://farmsking.in/brand_logo.png');
+                          handleUpdateAboutField('logoUrl', 'https://farmsking.in/brand_logo.png');
+                          updateAppSettings({ logoUrl: 'https://farmsking.in/brand_logo.png' }).catch(() => { });
+                          showToast('Reset logo to default official emblem');
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
                       </TouchableOpacity>
                     ) : null}
                   </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-android" size={17} color="#10b981" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.appDownloadUrl || ''}
-                      onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
-                      placeholder="https://farmsking.in/download/farmsking.apk"
-                      placeholderTextColor={subTextColor}
-                    />
+
+                  {/* Logo Live Preview Frame */}
+                  <View style={{
+                    height: 110,
+                    backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
+                    borderRadius: 8,
+                    borderWidth: 1.5,
+                    borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
+                    borderStyle: 'dashed',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                    padding: 8,
+                    position: 'relative',
+                  }}>
+                    {masterData.logoUrl && !masterData.logoUrl.includes('farmsking.in/assets/logo.png') && masterData.logoUrl !== 'https://farmsking.in/brand_logo.png' ? (
+                      <Image
+                        source={{ uri: resolvedLogoUri }}
+                        style={{ width: '85%', height: 90 }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <BrandLogo size={78} useHdQuality={true} />
+                    )}
+                    <View style={{ position: 'absolute', bottom: 5, right: 6, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
+                      <Text style={{ fontSize: 8.5, color: '#ffffff', fontWeight: '700' }}>HEADER LOGO PREVIEW</Text>
+                    </View>
                   </View>
-                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                    Direct APK download link or Google Play Store URL. If left blank, defaults to https://www.farmsking.in
-                  </Text>
-                </View>
 
-                <View style={styles.col}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Latest Mobile App Version</Text>
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="git-branch-outline" size={16} color="#6366f1" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.latestAppVersion || '2.1.0'}
-                      onChangeText={(txt) => handleUpdateMasterField('latestAppVersion', txt)}
-                      placeholder="2.1.0"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                    Current released production build version displayed to farmers.
-                  </Text>
-                </View>
-              </View>
-            </View>
+                  {/* Logo Action Buttons */}
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        backgroundColor: '#10b981',
+                        paddingVertical: 8,
+                        borderRadius: 7,
+                      }}
+                      onPress={handlePickAndUploadLogo}
+                      disabled={isUploadingLogo}
+                      activeOpacity={0.85}
+                    >
+                      {isUploadingLogo ? (
+                        <ActivityIndicator size="small" color="#022c22" />
+                      ) : (
+                        <Ionicons name="cloud-upload-outline" size={15} color="#022c22" />
+                      )}
+                      <Text style={{ color: '#022c22', fontSize: 12, fontWeight: '700' }}>
+                        {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                      </Text>
+                    </TouchableOpacity>
 
-            {/* Group 2: Live QR Code Preview */}
-            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-              <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Live Auto-Generated QR Code Preview</Text>
-              </View>
-
-              <View style={{ flexDirection: isDesktop ? 'row' : 'column', alignItems: 'center', gap: 24, paddingVertical: 12 }}>
-                <View style={{
-                  padding: 16,
-                  backgroundColor: '#ffffff',
-                  borderRadius: 16,
-                  borderWidth: 1.5,
-                  borderColor: '#10b981',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 8,
-                }}>
-                  {/* Live QR Image */}
-                  <Image
-                    source={{
-                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                        masterData.appDownloadUrl && masterData.appDownloadUrl.trim()
-                          ? masterData.appDownloadUrl.trim()
-                          : 'https://www.farmsking.in'
-                      )}&margin=4`,
-                    }}
-                    style={{ width: 140, height: 140, borderRadius: 8 }}
-                    resizeMode="contain"
-                  />
-                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#0f172a', marginTop: 10 }}>
-                    SCAN TO DOWNLOAD APP
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#64748b', marginTop: 2, maxWidth: 170, textAlign: 'center' }} numberOfLines={1}>
-                    {masterData.appDownloadUrl || 'https://www.farmsking.in'}
-                  </Text>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Ionicons name="checkmark-circle" size={18} color="#10b981" />
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: textColor }}>
-                      Automatic Homepage Synchronization
-                    </Text>
-                  </View>
-                  <Text style={{ fontSize: 13, color: subTextColor, lineHeight: 20, marginBottom: 12 }}>
-                    Any changes saved to the App Download URL here will instantly reflect on the public website homepage. Visitors scanning the QR code with their mobile cameras will be routed directly to this download address.
-                  </Text>
-
-                  <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
                     <TouchableOpacity
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 6,
-                        paddingVertical: 8,
-                        paddingHorizontal: 14,
-                        borderRadius: 8,
+                        justifyContent: 'center',
+                        gap: 5,
                         backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 7,
                         borderWidth: 1,
                         borderColor: cardBorder,
                       }}
-                      onPress={() => handleCopyValue('App Download URL', masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                      onPress={async () => {
+                        setIsSavingLogo(true);
+                        try {
+                          await updateMutation.mutateAsync({
+                            projectMasterData: {
+                              ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+                              logoUrl: masterData.logoUrl,
+                            },
+                            about: {
+                              ...(localConfig.about || {}),
+                              logoUrl: masterData.logoUrl,
+                            },
+                          });
+                          await updateAppSettings({ logoUrl: masterData.logoUrl || '' });
+                          showToast('✅ Brand Logo saved globally!');
+                        } catch (err: any) {
+                          Alert.alert('Save Failed', err?.message || 'Could not save logo');
+                        } finally {
+                          setIsSavingLogo(false);
+                        }
+                      }}
+                      disabled={isSavingLogo}
+                      activeOpacity={0.8}
                     >
-                      <Ionicons name="copy-outline" size={14} color={textColor} />
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: textColor }}>Copy Link</Text>
+                      {isSavingLogo ? (
+                        <ActivityIndicator size="small" color="#10b981" />
+                      ) : (
+                        <Ionicons name="checkmark-done" size={15} color="#10b981" />
+                      )}
+                      <Text style={{ color: textColor, fontSize: 12, fontWeight: '700' }}>
+                        {isSavingLogo ? 'Saving...' : 'Save Logo'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 34 }]}>
+                    <Ionicons name="link-outline" size={13} color={subTextColor} style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor, fontSize: 11 }]}
+                      value={masterData.logoUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterField('logoUrl', txt);
+                        handleUpdateAboutField('logoUrl', txt);
+                      }}
+                      placeholder="https://farmsking.in/brand_logo.png"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                {/* 2. Official Website Favicon Card */}
+                <View style={[styles.col, { backgroundColor: innerBg, borderRadius: 10, padding: 14, borderWidth: 1, borderColor: cardBorder }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="globe-outline" size={16} color="#10b981" />
+                      <Text style={[styles.inputLabel, { color: textColor, fontWeight: '700', marginBottom: 0 }]}>
+                        Website Favicon
+                      </Text>
+                    </View>
+                    {masterData.faviconUrl && masterData.faviconUrl !== '/favicon.png' && masterData.faviconUrl !== 'https://farmsking.in/favicon.ico' ? (
+                      <TouchableOpacity
+                        onPress={handleResetFavicon}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={{ fontSize: 11, color: '#ef4444', fontWeight: '600' }}>Reset Default</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+
+                  {/* Favicon Live Preview Frame - matches Brand Logo Card */}
+                  <View style={{
+                    height: 110,
+                    backgroundColor: isLight ? '#ffffff' : 'rgba(0, 0, 0, 0.35)',
+                    borderRadius: 8,
+                    borderWidth: 1.5,
+                    borderColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)',
+                    borderStyle: 'dashed',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 10,
+                    padding: 8,
+                    position: 'relative',
+                  }}>
+                    {favImageError ? (
+                      <BrandLogo size={52} useHdQuality={true} />
+                    ) : (
+                      <Image
+                        source={{ uri: resolvedFaviconUri }}
+                        style={{ width: 56, height: 56, borderRadius: 8 }}
+                        resizeMode="contain"
+                        onError={() => setFavImageError(true)}
+                      />
+                    )}
+                    <View style={{ position: 'absolute', bottom: 5, right: 6, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
+                      <Text style={{ fontSize: 8.5, color: '#ffffff', fontWeight: '700' }}>BROWSER TAB FAVICON PREVIEW</Text>
+                    </View>
+                  </View>
+
+                  {/* Favicon Action Buttons - matches Brand Logo Card */}
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        backgroundColor: '#10b981',
+                        paddingVertical: 8,
+                        borderRadius: 7,
+                      }}
+                      onPress={handlePickAndUploadFavicon}
+                      disabled={isUploadingFavicon}
+                      activeOpacity={0.85}
+                    >
+                      {isUploadingFavicon ? (
+                        <ActivityIndicator size="small" color="#022c22" />
+                      ) : (
+                        <Ionicons name="cloud-upload-outline" size={15} color="#022c22" />
+                      )}
+                      <Text style={{ color: '#022c22', fontSize: 12, fontWeight: '700' }}>
+                        {isUploadingFavicon ? 'Uploading...' : 'Upload Favicon'}
+                      </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        gap: 6,
+                        justifyContent: 'center',
+                        gap: 5,
+                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
+                        paddingHorizontal: 12,
                         paddingVertical: 8,
-                        paddingHorizontal: 14,
-                        borderRadius: 8,
-                        backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)',
+                        borderRadius: 7,
                         borderWidth: 1,
-                        borderColor: '#10b981',
+                        borderColor: cardBorder,
                       }}
-                      onPress={() => handleOpenLink(masterData.appDownloadUrl || 'https://www.farmsking.in')}
+                      onPress={handleSaveFaviconOnly}
+                      disabled={isSavingFavicon}
+                      activeOpacity={0.8}
                     >
-                      <Ionicons name="open-outline" size={14} color="#10b981" />
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: '#10b981' }}>Open & Test Link</Text>
+                      {isSavingFavicon ? (
+                        <ActivityIndicator size="small" color="#10b981" />
+                      ) : (
+                        <Ionicons name="checkmark-done" size={15} color="#10b981" />
+                      )}
+                      <Text style={{ color: textColor, fontSize: 12, fontWeight: '700' }}>
+                        {isSavingFavicon ? 'Saving...' : 'Save Favicon'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
-                </View>
-              </View>
-            </View>
 
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#10b981', '#059669']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save App Download Settings'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* TAB 2: Social Media & Maps */}
-        {masterSubTab === 'social' && (
-          <View style={styles.masterTabPane}>
-            {/* Group: Social Channels */}
-            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-              <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Official Social Channels & Maps</Text>
-              </View>
-
-              {/* Row 1: Facebook, Instagram, YouTube */}
-              <View style={styles.threeCol}>
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Facebook Page</Text>
-                    {masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-facebook" size={16} color="#1877f2" style={{ marginRight: 6 }} />
+                  {/* Direct URL Input - matches Brand Logo Card */}
+                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 34 }]}>
+                    <Ionicons name="link-outline" size={13} color={subTextColor} style={{ marginRight: 6 }} />
                     <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || ''}
+                      style={[styles.input, { color: textColor, fontSize: 11 }]}
+                      value={masterData.faviconUrl || ''}
                       onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'facebook', txt);
-                        handleUpdateMasterNested('socialMedia', 'facebookUrl', txt);
+                        handleUpdateMasterField('faviconUrl', txt);
+                        handleUpdateAboutField('faviconUrl', txt);
+                        setFavImageError(false);
                       }}
-                      placeholder="https://facebook.com/farmsking.india"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Instagram Profile</Text>
-                    {masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-instagram" size={16} color="#e1306c" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || ''}
-                      onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'instagram', txt);
-                        handleUpdateMasterNested('socialMedia', 'instagramUrl', txt);
-                      }}
-                      placeholder="https://instagram.com/farmsking.india"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>YouTube Channel</Text>
-                    {masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-youtube" size={16} color="#ff0000" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || ''}
-                      onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'youtube', txt);
-                        handleUpdateMasterNested('socialMedia', 'youtubeUrl', txt);
-                      }}
-                      placeholder="https://youtube.com/@farmsking"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              {/* Row 2: Twitter, LinkedIn, Google Maps */}
-              <View style={styles.threeCol}>
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Twitter / X</Text>
-                    {masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-twitter" size={16} color="#0284c7" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || ''}
-                      onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'twitter', txt);
-                        handleUpdateMasterNested('socialMedia', 'twitterUrl', txt);
-                      }}
-                      placeholder="https://x.com/farmsking"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>LinkedIn Organization</Text>
-                    {masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="logo-linkedin" size={16} color="#0a66c2" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || ''}
-                      onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'linkedin', txt);
-                        handleUpdateMasterNested('socialMedia', 'linkedinUrl', txt);
-                      }}
-                      placeholder="https://linkedin.com/company/farmsking"
-                      placeholderTextColor={subTextColor}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.col3}>
-                  <View style={styles.labelRow}>
-                    <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps Link</Text>
-                    {masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl ? (
-                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || '')}>
-                        <Text style={styles.openLink}>Open</Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                    <Ionicons name="location-outline" size={16} color="#10b981" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.input, { color: textColor }]}
-                      value={masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl || ''}
-                      onChangeText={(txt) => {
-                        handleUpdateMasterNested('socialMedia', 'googleBusinessUrl', txt);
-                        handleUpdateMasterNested('socialMedia', 'mapsUrl', txt);
-                      }}
-                      placeholder="https://maps.google.com/?q=FarmsKing+Technologies"
+                      placeholder="https://farmsking.in/favicon.png"
                       placeholderTextColor={subTextColor}
                     />
                   </View>
@@ -1518,10 +1300,10 @@ export default function SettingEntitySetup() {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
                   )}
                   <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Social & Location'}
+                    {updateMutation.isPending ? 'Saving...' : 'Save All Brand Assets'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -1529,12 +1311,229 @@ export default function SettingEntitySetup() {
           </View>
         )}
 
+        {/* TAB 3: Social & App */}
+        {masterSubTab === 'social' && (
+          <View style={styles.masterTabPane}>
+            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
+              <View style={styles.groupHeader}>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="share-social-outline" size={16} color="#6366f1" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>Social Channels & Maps</Text>
+                </View>
+              </View>
 
+              <View style={styles.threeCol}>
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Facebook</Text>
+                    {masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-facebook" size={15} color="#1877f2" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.facebook || masterData.socialMedia?.facebookUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'facebook', txt);
+                        handleUpdateMasterNested('socialMedia', 'facebookUrl', txt);
+                      }}
+                      placeholder="https://facebook.com/farmsking.india"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
 
-        {/* TAB 3: Email Templates */}
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Instagram</Text>
+                    {masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-instagram" size={15} color="#e1306c" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.instagram || masterData.socialMedia?.instagramUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'instagram', txt);
+                        handleUpdateMasterNested('socialMedia', 'instagramUrl', txt);
+                      }}
+                      placeholder="https://instagram.com/farmsking.india"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>YouTube</Text>
+                    {masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-youtube" size={15} color="#ff0000" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.youtube || masterData.socialMedia?.youtubeUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'youtube', txt);
+                        handleUpdateMasterNested('socialMedia', 'youtubeUrl', txt);
+                      }}
+                      placeholder="https://youtube.com/@farmsking"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.threeCol}>
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Twitter / X</Text>
+                    {masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-twitter" size={15} color="#0284c7" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.twitter || masterData.socialMedia?.twitterUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'twitter', txt);
+                        handleUpdateMasterNested('socialMedia', 'twitterUrl', txt);
+                      }}
+                      placeholder="https://x.com/farmsking"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>LinkedIn</Text>
+                    {masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-linkedin" size={15} color="#0a66c2" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.linkedin || masterData.socialMedia?.linkedinUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'linkedin', txt);
+                        handleUpdateMasterNested('socialMedia', 'linkedinUrl', txt);
+                      }}
+                      placeholder="https://linkedin.com/company/farmsking"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col3}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Google Maps</Text>
+                    {masterData.socialMedia?.googleBusinessUrl || (masterData.socialMedia as any)?.mapsUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.socialMedia?.googleBusinessUrl || (masterData as any)?.mapsUrl || '')}>
+                        <Text style={styles.openLink}>Open</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="location-outline" size={15} color="#10b981" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.socialMedia?.googleBusinessUrl || (masterData as any)?.mapsUrl || ''}
+                      onChangeText={(txt) => {
+                        handleUpdateMasterNested('socialMedia', 'googleBusinessUrl', txt);
+                        handleUpdateMasterNested('socialMedia', 'mapsUrl', txt);
+                      }}
+                      placeholder="https://maps.google.com/?q=FarmsKing"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {/* Mobile App Distribution */}
+              <View style={[styles.twoCol, { marginTop: 6, paddingTop: 10, borderTopWidth: 1, borderTopColor: cardBorder }]}>
+                <View style={styles.col}>
+                  <View style={styles.labelRow}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Android App Link (APK / Store)</Text>
+                    {masterData.appDownloadUrl ? (
+                      <TouchableOpacity onPress={() => handleOpenLink(masterData.appDownloadUrl || '')}>
+                        <Text style={styles.openLink}>Test Link</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="logo-android" size={16} color="#10b981" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.appDownloadUrl || ''}
+                      onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
+                      placeholder="https://farmsking.in/download/farmsking.apk"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.col}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Production App Version</Text>
+                  <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                    <Ionicons name="git-branch-outline" size={15} color="#6366f1" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={[styles.input, { color: textColor }]}
+                      value={masterData.latestAppVersion || '2.1.0'}
+                      onChangeText={(txt) => handleUpdateMasterField('latestAppVersion', txt)}
+                      placeholder="2.1.0"
+                      placeholderTextColor={subTextColor}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.paneFooterRight}>
+              <TouchableOpacity
+                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
+                onPress={handleSaveMasterData}
+                disabled={updateMutation.isPending}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
+                  {updateMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                  )}
+                  <Text style={styles.saveActionText}>
+                    {updateMutation.isPending ? 'Saving...' : 'Save Social & App'}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* TAB 4: Email Templates */}
         {masterSubTab === 'email-templates' && (
           <View style={styles.masterTabPane}>
-            {/* Template Selectors */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
               {EMAIL_TEMPLATE_ITEMS.map((item) => {
                 const isSelected = activeEmailTmpl === item.key;
@@ -1547,9 +1546,9 @@ export default function SettingEntitySetup() {
                       isSelected && (isLight ? styles.tmplPillActiveLight : styles.tmplPillActiveDark),
                     ]}
                     onPress={() => setActiveEmailTmpl(item.key)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.75}
                   >
-                    <Ionicons name={item.icon} size={14} color={isSelected ? '#6366f1' : subTextColor} />
+                    <Ionicons name={item.icon} size={13} color={isSelected ? '#6366f1' : subTextColor} />
                     <Text style={[styles.tmplPillText, { color: isSelected ? textColor : subTextColor, fontFamily: isSelected ? FONT.bold : FONT.medium }]}>
                       {item.label}
                     </Text>
@@ -1558,7 +1557,6 @@ export default function SettingEntitySetup() {
               })}
             </View>
 
-            {/* Mode Toggle Bar: Editor vs Preview */}
             <View style={[styles.templateModeBar, { borderColor: cardBorder }]}>
               <View style={styles.segmentedToggle}>
                 <TouchableOpacity
@@ -1570,7 +1568,7 @@ export default function SettingEntitySetup() {
                 >
                   <Ionicons name="create-outline" size={13} color={emailViewMode === 'editor' ? '#6366f1' : subTextColor} />
                   <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'editor' ? textColor : subTextColor }]}>
-                    Template Editor
+                    Editor
                   </Text>
                 </TouchableOpacity>
 
@@ -1583,7 +1581,7 @@ export default function SettingEntitySetup() {
                 >
                   <Ionicons name="eye-outline" size={13} color={emailViewMode === 'preview' ? '#6366f1' : subTextColor} />
                   <Text style={[styles.toggleSegmentText, { color: emailViewMode === 'preview' ? textColor : subTextColor }]}>
-                    Live Email Preview
+                    Preview
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1591,24 +1589,22 @@ export default function SettingEntitySetup() {
 
             {emailViewMode === 'editor' ? (
               <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-                {/* Subject Line */}
                 <View style={{ marginBottom: 8 }}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Email Subject Line</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Subject Line</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
                       value={masterData.emailTemplates?.[activeEmailTmpl]?.subject || ''}
                       onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'subject', txt)}
-                      placeholder="Subject line..."
+                      placeholder="Email subject..."
                       placeholderTextColor={subTextColor}
                     />
                   </View>
                 </View>
 
-                {/* Available Variables */}
                 <View style={{ marginBottom: 8 }}>
-                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
-                    AVAILABLE DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
+                  <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 10.5 }]}>
+                    DYNAMIC TOKENS (CLICK TO APPEND TO SUBJECT):
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
                     {(EMAIL_TEMPLATE_ITEMS.find((t) => t.key === activeEmailTmpl)?.vars || []).map((v) => (
@@ -1623,50 +1619,48 @@ export default function SettingEntitySetup() {
                   </View>
                 </View>
 
-                {/* Body Editor */}
-                <Text style={[styles.inputLabel, { color: textColor }]}>Email Body (HTML / Formatted Content)</Text>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Email Body (HTML / Text)</Text>
                 <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 110 }]}>
                   <TextInput
                     style={[styles.input, { color: textColor, height: 100, textAlignVertical: 'top', paddingTop: 6 }]}
                     value={masterData.emailTemplates?.[activeEmailTmpl]?.body || ''}
                     onChangeText={(txt) => handleUpdateEmailTemplate(activeEmailTmpl, 'body', txt)}
-                    placeholder="HTML email body..."
+                    placeholder="HTML body..."
                     placeholderTextColor={subTextColor}
                     multiline
                   />
                 </View>
               </View>
             ) : (
-              /* Live Preview Mode */
               <View style={[styles.liveEmailPreviewBox, { borderColor: cardBorder, backgroundColor: innerBg }]}>
                 <View style={styles.previewMetaHeader}>
                   <Text style={[styles.previewMetaSubject, { color: textColor }]}>
-                    Subject: {masterData.emailTemplates?.[activeEmailTmpl]?.subject || 'No Subject Defined'}
+                    {masterData.emailTemplates?.[activeEmailTmpl]?.subject || 'No Subject Defined'}
                   </Text>
-                  <Text style={{ fontSize: 11.5, color: subTextColor }}>
+                  <Text style={{ fontSize: 11, color: subTextColor }}>
                     From: {masterData.smtp?.fromName || 'FarmsKing'} &lt;{masterData.smtp?.fromEmail || 'noreply@farmsking.in'}&gt;
                   </Text>
                 </View>
 
                 <View style={[styles.previewEmailCard, { backgroundColor: isLight ? '#ffffff' : '#0f172a', borderColor: cardBorder }]}>
                   <View style={styles.previewEmailBrandHeader}>
-                    <Text style={{ fontSize: 16, fontFamily: FONT.bold, color: '#16a34a' }}>
+                    <Text style={{ fontSize: 15, fontFamily: FONT.bold, color: '#16a34a' }}>
                       {masterData.brandName || 'FarmsKing™'}
                     </Text>
-                    <Text style={{ fontSize: 10.5, color: subTextColor }}>Official Notification</Text>
+                    <Text style={{ fontSize: 10, color: subTextColor }}>Official Notification</Text>
                   </View>
 
                   <View style={{ marginVertical: 8 }}>
-                    <Text style={{ fontSize: 13, color: textColor, lineHeight: 20 }}>
+                    <Text style={{ fontSize: 12.5, color: textColor, lineHeight: 19 }}>
                       {masterData.emailTemplates?.[activeEmailTmpl]?.body
                         ?.replace(/<[^>]+>/g, ' ')
                         ?.replace(/\s+/g, ' ')
-                        ?.trim() || 'No email body preview available.'}
+                        ?.trim() || 'No preview available.'}
                     </Text>
                   </View>
 
                   <View style={[styles.previewEmailFooter, { borderTopColor: cardBorder }]}>
-                    <Text style={{ fontSize: 10.5, color: subTextColor }}>
+                    <Text style={{ fontSize: 10, color: subTextColor }}>
                       {masterData.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'} • {masterData.officialEmail || 'support@farmsking.in'}
                     </Text>
                   </View>
@@ -1685,10 +1679,10 @@ export default function SettingEntitySetup() {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
                   )}
                   <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Email Templates'}
+                    {updateMutation.isPending ? 'Saving...' : 'Save Templates'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -1696,130 +1690,15 @@ export default function SettingEntitySetup() {
           </View>
         )}
 
-        {/* TAB 4: Maintenance Mode */}
-        {masterSubTab === 'maintenance' && (
-          <View style={styles.masterTabPane}>
-            {/* Status Banner */}
-            <View
-              style={[
-                styles.maintenanceStatusCard,
-                {
-                  backgroundColor: masterData.maintenance?.enabled
-                    ? isLight
-                      ? '#fef2f2'
-                      : '#2c1212'
-                    : isLight
-                      ? '#f0fdf4'
-                      : '#062814',
-                  borderColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981',
-                },
-              ]}
-            >
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View
-                    style={[
-                      styles.dot,
-                      { backgroundColor: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.maintenanceStatusTitle,
-                      { color: masterData.maintenance?.enabled ? '#ef4444' : '#10b981' },
-                    ]}
-                  >
-                    {masterData.maintenance?.enabled
-                      ? 'MAINTENANCE MODE ACTIVE (PUBLIC LOCKDOWN)'
-                      : 'SYSTEM LIVE & FULLY OPERATIONAL'}
-                  </Text>
-                </View>
-                <Text style={[styles.maintenanceStatusDesc, { color: textColor }]}>
-                  {masterData.maintenance?.enabled
-                    ? 'Farmers and public visitors will see the maintenance notice instead of normal portal views.'
-                    : 'All web, mobile apps, Mandi telemetry, and AI pathology services are online.'}
-                </Text>
-              </View>
-              <Switch
-                value={masterData.maintenance?.enabled ?? false}
-                onValueChange={(val) => handleUpdateMasterNested('maintenance', 'enabled', val)}
-                thumbColor="#ffffff"
-                trackColor={{ false: '#64748b', true: '#ef4444' }}
-              />
-            </View>
-
-            {/* Notice Message & Presets */}
-            <View style={[styles.groupSection, { borderColor: cardBorder }]}>
-              <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Public Maintenance Notice</Text>
-              </View>
-
-              <View style={{ marginBottom: 8 }}>
-                <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
-                  QUICK NOTICE PRESETS:
-                </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                  {[
-                    'Scheduled agritech platform upgrades in progress. We will be back shortly.',
-                    'Database migration & security patch in progress. Normal operations resume at 06:00 AM IST.',
-                    'Emergency server maintenance. Our engineering team is restoring services.',
-                  ].map((presetMsg, idx) => (
-                    <TouchableOpacity
-                      key={idx}
-                      style={[styles.presetCard, { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 6, paddingHorizontal: 10 }]}
-                      onPress={() => handleUpdateMasterNested('maintenance', 'message', presetMsg)}
-                    >
-                      <Text style={{ fontSize: 11.5, color: textColor }} numberOfLines={1}>
-                        Preset {idx + 1}: {presetMsg.slice(0, 36)}...
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              <View>
-                <Text style={[styles.inputLabel, { color: textColor }]}>Displayed Public Notice</Text>
-                <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 44 }]}>
-                  <TextInput
-                    style={[styles.input, { color: textColor, height: 36 }]}
-                    value={masterData.maintenance?.message || ''}
-                    onChangeText={(txt) => handleUpdateMasterNested('maintenance', 'message', txt)}
-                    placeholder="Public maintenance notice shown on web and mobile..."
-                    placeholderTextColor={subTextColor}
-                  />
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Maintenance Settings'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* TAB 5: Tax / GST Settings */}
+        {/* TAB 5: Tax & GST */}
         {masterSubTab === 'tax-gst' && (
           <View style={styles.masterTabPane}>
-            {/* Group: Statutory GST Identifiers */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
-                <Text style={[styles.groupTitle, { color: textColor }]}>Goods & Services Tax (GST) Identification</Text>
+                <View style={styles.groupHeaderLeft}>
+                  <Ionicons name="receipt-outline" size={16} color="#10b981" />
+                  <Text style={[styles.groupTitle, { color: textColor }]}>GST & Invoicing</Text>
+                </View>
                 <View style={[styles.pillBadge, { backgroundColor: isLight ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.2)' }]}>
                   <Text style={[styles.pillBadgeText, { color: '#10b981' }]}>GST Act Compliance</Text>
                 </View>
@@ -1845,7 +1724,7 @@ export default function SettingEntitySetup() {
                 </View>
 
                 <View style={styles.col4}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Default Rate (%)</Text>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>GST Rate (%)</Text>
                   <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                     <TextInput
                       style={[styles.input, { color: textColor }]}
@@ -1889,9 +1768,9 @@ export default function SettingEntitySetup() {
                 </View>
               </View>
 
-              {/* Quick Tax Rate Selectors */}
-              <View style={{ marginTop: 4, marginBottom: 8 }}>
-                <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 11 }]}>
+              {/* Quick Tax Rate Slabs */}
+              <View style={{ marginTop: 6, marginBottom: 8 }}>
+                <Text style={[styles.inputLabel, { color: subTextColor, fontSize: 10.5 }]}>
                   STANDARD GST SLABS:
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
@@ -1911,7 +1790,7 @@ export default function SettingEntitySetup() {
                           handleUpdateMasterNested('taxGst', 'taxPercentage', rate);
                         }}
                       >
-                        <Text style={{ fontSize: 11.5, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
+                        <Text style={{ fontSize: 11, color: isCurrent ? '#10b981' : textColor, fontFamily: FONT.semiBold }}>
                           {rate}% GST
                         </Text>
                       </TouchableOpacity>
@@ -1921,15 +1800,15 @@ export default function SettingEntitySetup() {
               </View>
             </View>
 
-            {/* Statutory Agricultural Exemption Notice */}
+            {/* Exemption Notice */}
             <View style={[styles.exemptionNotice, { borderColor: cardBorder, backgroundColor: innerBg }]}>
-              <Ionicons name="information-circle-outline" size={17} color="#10b981" />
+              <Ionicons name="information-circle-outline" size={16} color="#10b981" />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.exemptionTitle, { color: textColor }]}>
                   Agricultural Produce Exemption (Section 11, CGST Act)
                 </Text>
                 <Text style={[styles.exemptionDesc, { color: subTextColor }]}>
-                  Under statutory Indian tax regulations, wholesale raw agricultural produce transacted through APMC Mandis is exempt from GST. Software platforms and value-added agri services are billed at the configured rate above.
+                  Wholesale agricultural produce transacted through APMC Mandis is exempt from GST. Software platforms and value-added agri services are billed at the configured rate above.
                 </Text>
               </View>
             </View>
@@ -1945,30 +1824,23 @@ export default function SettingEntitySetup() {
                   {updateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#ffffff" />
                   ) : (
-                    <Ionicons name="checkmark-done" size={16} color="#ffffff" />
+                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
                   )}
                   <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save GST & Tax Rules'}
+                    {updateMutation.isPending ? 'Saving...' : 'Save Tax Rules'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
         )}
-
-        {/* TAB 7: Other System Settings */}
-        {masterSubTab === 'other' && (
-          <View style={styles.masterTabPane}>
-            <SettingOtherSetup />
-          </View>
-        )}
       </View>
 
-      {/* Statutory Copyright & Entity Registration Footer */}
+      {/* Statutory Running Footer Banner */}
       <View style={[styles.statutoryFooterBanner, { backgroundColor: isLight ? '#f8fafc' : '#030d07', borderColor: cardBorder }]}>
         <View style={styles.statutoryFooterLeft}>
           <View style={[styles.statutoryShieldBox, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.15)' }]}>
-            <Ionicons name="shield-checkmark" size={18} color="#0284c7" />
+            <Ionicons name="shield-checkmark" size={17} color="#0284c7" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.statutoryCopyrightTitle, { color: textColor }]}>
@@ -1980,9 +1852,9 @@ export default function SettingEntitySetup() {
           </View>
         </View>
         <View style={[styles.statutoryLawBadge, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#bbf7d0' : '#10b981' }]}>
-          <Ionicons name="document-text-outline" size={13} color="#10b981" />
+          <Ionicons name="document-text-outline" size={12} color="#10b981" />
           <Text style={[styles.statutoryLawText, { color: isLight ? '#166534' : '#6ee7b7' }]}>
-            Indian Copyright Act, 1957 Protected
+            Protected
           </Text>
         </View>
       </View>
@@ -1997,39 +1869,39 @@ const styles = StyleSheet.create({
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+    gap: 8,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 8,
     borderWidth: 1,
   },
   toastText: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: FONT.semiBold,
   },
   topExecutiveBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 14,
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: 10,
     flexWrap: 'wrap',
-    gap: 14,
+    gap: 10,
   },
   topExecutiveLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     flex: 1,
     minWidth: 260,
   },
   topIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2040,21 +1912,21 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   topTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONT.bold,
   },
   topSubtitle: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.regular,
-    marginTop: 2,
+    marginTop: 1,
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    gap: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
   dot: {
     width: 6,
@@ -2062,166 +1934,77 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   liveBadgeText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#10b981',
   },
   topExecutiveActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  topActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  topActionBtnText: {
-    fontSize: 12.5,
-    fontFamily: FONT.medium,
+    gap: 8,
   },
   topSaveBtn: {
-    borderRadius: 10,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   topSaveGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
   },
   topSaveText: {
     color: '#ffffff',
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
   },
-  masterSearchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 16,
-    height: 44,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: '100%',
-    fontFamily: FONT.regular,
-    fontSize: 13,
-  },
-  dropdownContainer: {
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 10,
-    overflow: 'hidden',
-  },
-  dropdownHeader: {
+  tabBarCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    gap: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 6,
+    marginBottom: 10,
+    gap: 8,
+    flexWrap: 'wrap',
   },
-  dropdownHeaderLeft: {
+  tabBarActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    flex: 1,
+    gap: 8,
+    marginLeft: 'auto',
   },
-  dropdownIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dropdownTitleRow: {
+  tabScrollContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 2,
   },
-  dropdownModuleLabel: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  dropdownCountBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  dropdownCountText: {
-    fontSize: 9,
-    fontWeight: '700',
-  },
-  dropdownTitle: {
-    fontSize: 14,
-    fontFamily: FONT.bold,
-  },
-  dropdownSubtitle: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    marginTop: 1,
-  },
-  dropdownChevronBtn: {
+  modulePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
     borderWidth: 1,
   },
-  dropdownChevronText: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
+  modulePillActiveLight: {
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
   },
-  dropdownList: {
-    borderTopWidth: 1,
-    padding: 6,
-    gap: 3,
+  modulePillActiveDark: {
+    backgroundColor: 'rgba(99, 102, 241, 0.22)',
   },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 6,
+  modulePillText: {
+    fontSize: 12,
   },
-  dropdownItemActiveLight: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-  },
-  dropdownItemActiveDark: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-  },
-  dropdownItemTitle: {
-    fontSize: 13,
-    fontFamily: FONT.medium,
-  },
-  dropdownItemDesc: {
-    fontSize: 10.5,
-    fontFamily: FONT.regular,
-    marginTop: 1,
-  },
-  activeCheckBadge: {
-    marginLeft: 6,
-  },
-  tabIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+  moduleActiveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#6366f1',
+    marginLeft: 2,
   },
   masterContentPane: {
     width: '100%',
@@ -2231,30 +2014,6 @@ const styles = StyleSheet.create({
   },
   masterTabPane: {
     width: '100%',
-  },
-  subPaneHeader: {
-    marginBottom: 8,
-  },
-  paneTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  paneIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subPaneTitle: {
-    fontSize: 14,
-    fontFamily: FONT.bold,
-  },
-  subPaneSubtitle: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    marginTop: 1,
   },
   groupSection: {
     borderWidth: 1,
@@ -2269,12 +2028,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  groupHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   groupTitle: {
     fontSize: 12.5,
     fontFamily: FONT.bold,
   },
   pillBadge: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
@@ -2310,7 +2074,7 @@ const styles = StyleSheet.create({
   },
   col4: {
     flex: 1,
-    minWidth: 160,
+    minWidth: 150,
   },
   labelRow: {
     flexDirection: 'row',
@@ -2345,101 +2109,116 @@ const styles = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontFamily: FONT.regular,
-    fontSize: 12.5,
+    fontSize: 12,
   },
-  previewMockupBox: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+  faviconShowcaseContainer: {
+    gap: 8,
+    marginBottom: 10,
   },
-  previewMockupHeader: {
+  faviconZoomBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  previewMockupLabel: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-  },
-  previewDotRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  colorPreviewDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-  },
-  previewMockupContent: {
     gap: 12,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
   },
-  previewMockupBanner: {
-    padding: 14,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  faviconZoomFrame: {
+    width: 52,
+    height: 52,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
   },
-  previewMockupBannerTitle: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontFamily: FONT.bold,
+  faviconZoomMeta: {
+    flex: 1,
+    gap: 4,
   },
-  previewMockupBadge: {
+  faviconHdBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  faviconHdBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#0284c7',
+  },
+  faviconMetaHint: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+  },
+  browserWindowMockup: {
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  browserTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+  },
+  trafficLightsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginRight: 10,
+  },
+  trafficLight: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  activeBrowserTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 6,
-  },
-  previewMockupBadgeText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontFamily: FONT.bold,
-  },
-  previewMockupControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flexWrap: 'wrap',
-  },
-  previewMockupBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  previewMockupBtnText: {
-    color: '#ffffff',
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-  },
-  presetCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 8,
     borderWidth: 1,
+    maxWidth: 200,
   },
-  colorMiniDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  activeBrowserTabTitle: {
+    fontSize: 10,
+    fontWeight: '600',
+    maxWidth: 150,
   },
-  colorDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    marginRight: 8,
+  browserAddressBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderBottomWidth: 1,
+  },
+  omniboxPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    flex: 1,
+  },
+  omniboxUrlText: {
+    fontSize: 10,
+  },
+  searchSnippetPreview: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
   tmplPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 20,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
     borderWidth: 1,
   },
   tmplPillActiveLight: {
@@ -2449,25 +2228,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
   },
   tmplPillText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
   },
   templateModeBar: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   segmentedToggle: {
     flexDirection: 'row',
-    borderRadius: 8,
-    padding: 3,
+    borderRadius: 6,
+    padding: 2,
   },
   toggleSegment: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
   },
   toggleSegmentActiveLight: {
     backgroundColor: 'rgba(99, 102, 241, 0.12)',
@@ -2476,17 +2255,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(99, 102, 241, 0.25)',
   },
   toggleSegmentText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.semiBold,
   },
   varChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 5,
     borderWidth: 1,
   },
   varChipText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.medium,
   },
   liveEmailPreviewBox: {
@@ -2500,7 +2279,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   previewMetaSubject: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.bold,
   },
   previewEmailCard: {
@@ -2521,29 +2300,9 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 6,
   },
-  maintenanceStatusCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 8,
-    gap: 8,
-  },
-  maintenanceStatusTitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    letterSpacing: 0.5,
-  },
-  maintenanceStatusDesc: {
-    fontSize: 11.5,
-    fontFamily: FONT.regular,
-    marginTop: 2,
-  },
   ratePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4.5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
   },
@@ -2552,106 +2311,100 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 7,
     borderWidth: 1,
     marginBottom: 8,
   },
   exemptionTitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     marginBottom: 1,
   },
   exemptionDesc: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.regular,
-    lineHeight: 15,
+    lineHeight: 14,
   },
   outlineActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 7,
     borderWidth: 1,
   },
   outlineActionText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
   },
   paneFooterRight: {
-    marginTop: 8,
+    marginTop: 6,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  paneFooterBetween: {
-    marginTop: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   saveActionBtn: {
-    borderRadius: 8,
+    borderRadius: 7,
     overflow: 'hidden',
   },
   saveActionGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   saveActionText: {
     color: '#ffffff',
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: FONT.bold,
   },
   statutoryFooterBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
-    marginTop: 16,
+    marginTop: 12,
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
   statutoryFooterLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     flex: 1,
-    minWidth: 280,
+    minWidth: 260,
   },
   statutoryShieldBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statutoryCopyrightTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
   },
   statutoryCopyrightSub: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.regular,
-    marginTop: 2,
-    lineHeight: 16,
+    marginTop: 1,
+    lineHeight: 14,
   },
   statutoryLawBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: RADIUS.full,
     borderWidth: 1,
   },
   statutoryLawText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
   },
 });

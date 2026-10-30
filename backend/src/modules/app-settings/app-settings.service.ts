@@ -138,6 +138,11 @@ export class AppSettingsService {
       walletUsagePlatformFeePercent: (settings as any).walletUsagePlatformFeePercent ?? 2.0,
       walletUsageGstPercent: (settings as any).walletUsageGstPercent ?? 18.0,
       walletTaxEnabled: (settings as any).walletTaxEnabled ?? true,
+      advisorCertificationFee: flags.advisorCertificationFee ?? 999.00,
+      advisorCertificationDiscount: flags.advisorCertificationDiscount ?? 0.0,
+      doctorMaintenanceMode: flags.doctorMaintenanceMode ?? false,
+      gardenAdvisorMaintenanceMode: flags.gardenAdvisorMaintenanceMode ?? false,
+      accountsMaintenanceMode: flags.accountsMaintenanceMode ?? false,
     };
 
     this.cache = { data: result, timestamp: now };
@@ -328,6 +333,11 @@ export class AppSettingsService {
       'walletUsagePlatformFeePercent',
       'walletUsageGstPercent',
       'walletTaxEnabled',
+      'advisorCertificationFee',
+      'advisorCertificationDiscount',
+      'doctorMaintenanceMode',
+      'gardenAdvisorMaintenanceMode',
+      'accountsMaintenanceMode',
     ];
 
     for (const key of keys) {
@@ -437,16 +447,33 @@ export class AppSettingsService {
       }
     }
 
-    if (dto.faviconUrl !== undefined) {
+    const extraFlagKeys = [
+      'advisorCertificationFee',
+      'advisorCertificationDiscount',
+      'doctorMaintenanceMode',
+      'gardenAdvisorMaintenanceMode',
+      'accountsMaintenanceMode',
+    ];
+    const extraFlags: Record<string, any> = {};
+    let hasExtraFlags = false;
+    for (const ek of extraFlagKeys) {
+      if ((dto as any)[ek] !== undefined) {
+        extraFlags[ek] = (dto as any)[ek];
+        hasExtraFlags = true;
+      }
+    }
+
+    if (dto.faviconUrl !== undefined || hasExtraFlags) {
       try {
         const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
         const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};
         prismaPayload['featureFlags'] = {
           ...currentFlags,
-          faviconUrl: dto.faviconUrl,
+          ...(dto.faviconUrl !== undefined ? { faviconUrl: dto.faviconUrl } : {}),
+          ...extraFlags,
         };
       } catch (err) {
-        console.warn('Could not update featureFlags.faviconUrl in AppSetting:', err);
+        console.warn('Could not update featureFlags in AppSetting:', err);
       }
     }
 
@@ -909,6 +936,9 @@ export class AppSettingsService {
     const updatedFlags = {
       ...currentFlags,
       systemIntegrations: merged,
+      ...(merged.projectMasterData?.faviconUrl || merged.about?.faviconUrl
+        ? { faviconUrl: merged.projectMasterData?.faviconUrl || merged.about?.faviconUrl }
+        : {}),
     };
 
     const topLevelUpdates: Record<string, any> = {};
@@ -939,6 +969,7 @@ export class AppSettingsService {
       topLevelUpdates.otpDeliveryChannel = merged.otp.deliveryMode;
     }
 
+    this.clearCache();
     await this.prisma.appSetting.upsert({
       where: { id: SINGLETON_ID },
       create: {
@@ -954,6 +985,7 @@ export class AppSettingsService {
       },
     });
 
+    this.clearCache();
     return merged;
   }
 }

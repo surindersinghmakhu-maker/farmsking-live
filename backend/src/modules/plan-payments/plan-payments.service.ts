@@ -65,15 +65,26 @@ export class PlanPaymentsService {
     });
 
     const settings = await this.appSettingsService.get();
-    if (!settings.upiId) {
+    let upiId = settings.upiId;
+    let upiPayeeName = settings.upiPayeeName;
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      if (integrations?.gateway?.providers?.upiDirect?.upiId) {
+        upiId = integrations.gateway.providers.upiDirect.upiId;
+      }
+      if (integrations?.gateway?.providers?.upiDirect?.payeeName) {
+        upiPayeeName = integrations.gateway.providers.upiDirect.payeeName;
+      }
+    } catch {}
+    if (!upiId) {
       throw new BadRequestException('UPI payment is not configured yet. Please contact support.');
     }
     const upiLink = buildUpiPaymentLink({
       amount,
       note: remark,
       transactionRef: request.id,
-      payeeVpa: settings.upiId,
-      payeeName: settings.upiPayeeName ?? undefined,
+      payeeVpa: upiId,
+      payeeName: upiPayeeName ?? undefined,
     });
     return { ...request, upiLink };
   }

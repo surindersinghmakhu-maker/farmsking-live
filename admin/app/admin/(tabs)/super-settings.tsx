@@ -50,7 +50,6 @@ type MasterDataSubTab =
   | 'franchise'
   | 'backup'
   | 'otp-login'
-  | 'maintenance'
   | 'tax-gst';
 
 type EmailTemplateKey = 'registration' | 'otp' | 'feeReceipt' | 'resultPublished' | 'certificateIssued';
@@ -96,7 +95,6 @@ const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'franchise', label: 'Franchise & Mandi Agents', icon: 'storefront-outline' },
   { key: 'backup', label: 'Backup & Recovery', icon: 'server-outline' },
   { key: 'otp-login', label: 'OTP Login ON/OFF', icon: 'shield-checkmark-outline' },
-  { key: 'maintenance', label: 'Maintenance Mode', icon: 'construct-outline' },
   { key: 'tax-gst', label: 'Tax / GST Settings', icon: 'receipt-outline' },
 ];
 

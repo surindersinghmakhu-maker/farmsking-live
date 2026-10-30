@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
-  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -15,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
@@ -30,9 +29,7 @@ import {
 
 type OtherCategoryFilter =
   | 'ALL'
-  | 'APP_DOWNLOAD'
-  | 'TRIAL_PLANS'
-  | 'REGIONAL_FORMATS'
+  | 'CROP_LEAF_SCANNER'
   | 'CROP_SEASONS'
   | 'BACKUP_RECOVERY'
   | 'CERTIFICATES'
@@ -47,9 +44,7 @@ interface CategoryPill {
 
 const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'ALL', label: 'All Unexposed Settings', icon: 'apps-outline' },
-  { key: 'APP_DOWNLOAD', label: 'App Download & Link', icon: 'phone-portrait-outline' },
-  { key: 'TRIAL_PLANS', label: 'Free Trial & Plans', icon: 'ribbon-outline' },
-  { key: 'REGIONAL_FORMATS', label: 'Regional & Currency', icon: 'globe-outline' },
+  { key: 'CROP_LEAF_SCANNER', label: 'Scan Any Crop / Leaf Photo Directly', icon: 'scan-outline' },
   { key: 'CROP_SEASONS', label: 'Crop Cycles & Seasons', icon: 'calendar-outline' },
   { key: 'BACKUP_RECOVERY', label: 'Backup & Recovery', icon: 'server-outline' },
   { key: 'CERTIFICATES', label: 'Certificates & QR', icon: 'shield-checkmark-outline' },
@@ -58,6 +53,7 @@ const CATEGORY_PILLS: CategoryPill[] = [
 ];
 
 export default function SettingOtherSetup() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 860 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 860));
   const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
@@ -77,7 +73,6 @@ export default function SettingOtherSetup() {
   );
 
   const [activeCategory, setActiveCategory] = useState<OtherCategoryFilter>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -196,6 +191,16 @@ export default function SettingOtherSetup() {
     });
   };
 
+  const updateAiField = (field: string, val: any) => {
+    setIntForm((prev) => ({
+      ...prev,
+      ai: {
+        ...prev.ai,
+        [field]: val,
+      },
+    }));
+  };
+
   // Master Save Handler
   const handleSaveAll = async () => {
     try {
@@ -229,6 +234,7 @@ export default function SettingOtherSetup() {
         agriMaintenanceMode: Boolean(appForm.agriMaintenanceMode ?? false),
         gardenMaintenanceMode: Boolean(appForm.gardenMaintenanceMode ?? false),
         walletMaintenanceMode: Boolean(appForm.walletMaintenanceMode ?? false),
+        doctorMaintenanceMode: Boolean(appForm.doctorMaintenanceMode ?? false),
         trainerMaintenanceMode: Boolean(appForm.trainerMaintenanceMode ?? false),
         groupVoiceCallEnabled: Boolean(appForm.groupVoiceCallEnabled ?? true),
         whatsappGroupSyncEnabled: Boolean(appForm.whatsappGroupSyncEnabled ?? true),
@@ -245,6 +251,7 @@ export default function SettingOtherSetup() {
         updateIntMutation.mutateAsync({
           product: intForm.product,
           otp: intForm.otp,
+          ai: intForm.ai,
           storage: intForm.storage,
           telecom: intForm.telecom,
           projectMasterData: intForm.projectMasterData,
@@ -270,14 +277,9 @@ export default function SettingOtherSetup() {
   }
 
   const pm = intForm.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
-  const q = searchQuery.toLowerCase().trim();
-  const currentAppDownloadUrl = appForm.appDownloadUrl || (intForm.projectMasterData as any)?.appDownloadUrl || '';
-  const currentLatestVersion = appForm.latestAppVersion || (intForm.projectMasterData as any)?.latestAppVersion || '2.1.0';
 
-  const isVisible = (cat: OtherCategoryFilter, keywords: string) => {
-    if (activeCategory !== 'ALL' && activeCategory !== cat) return false;
-    if (!q) return true;
-    return keywords.toLowerCase().includes(q);
+  const isVisible = (cat: OtherCategoryFilter) => {
+    return activeCategory === 'ALL' || activeCategory === cat;
   };
 
   return (
@@ -292,54 +294,8 @@ export default function SettingOtherSetup() {
         </View>
       )}
 
-      {/* Header Bar */}
-      <View style={[styles.bannerCard, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderColor: isLight ? '#bbf7d0' : '#059669' }]}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.bannerTitleRow}>
-            <Ionicons name="options-outline" size={22} color="#10b981" />
-            <Text style={[styles.bannerTitle, { color: textColor }]}>Other System Settings</Text>
-            <View style={[styles.badgePill, { backgroundColor: isLight ? '#dcfce7' : '#064e3b' }]}>
-              <Text style={[styles.badgeText, { color: isLight ? '#166534' : '#6ee7b7' }]}>Active Database Parameters</Text>
-            </View>
-          </View>
-          <Text style={[styles.bannerSub, { color: subTextColor }]}>
-            All operational, financial, referral, and background parameters configured in the database schema that were previously unexposed.
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
-          onPress={handleSaveAll}
-          disabled={isSaving}
-          activeOpacity={0.8}
-        >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Ionicons name="save-outline" size={18} color="#ffffff" />
-          )}
-          <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save All Settings'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search & Category Filter Pills */}
+      {/* Category Filter Pills & Quick Save */}
       <View style={[styles.filterBar, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={[styles.searchBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-          <Ionicons name="search-outline" size={18} color={subTextColor} />
-          <TextInput
-            style={[styles.searchInput, { color: textColor }]}
-            placeholder="Search parameter by name, fee, TDS, bonus, season..."
-            placeholderTextColor={subTextColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color={subTextColor} />
-            </TouchableOpacity>
-          )}
-        </View>
-
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
           {CATEGORY_PILLS.map((pill) => {
             const isSelected = activeCategory === pill.key;
@@ -374,260 +330,190 @@ export default function SettingOtherSetup() {
             );
           })}
         </ScrollView>
+
+        <TouchableOpacity
+          style={[styles.saveBtnTop, isSaving && { opacity: 0.7 }]}
+          onPress={handleSaveAll}
+          disabled={isSaving}
+          activeOpacity={0.8}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Ionicons name="save-outline" size={14} color="#ffffff" />
+          )}
+          <Text style={styles.saveBtnTopText}>{isSaving ? 'Saving...' : 'Save Settings'}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Main Grid of Settings Cards */}
       <View style={[styles.grid, isDesktop && styles.gridDesktop]}>
-        {/* 0. Official Mobile App Distribution & Download Link */}
-        {isVisible('APP_DOWNLOAD', 'app download android apk play store url mobile link qr code version install') && (
+        {/* Universal AI Crop & Leaf Photo Scanner */}
+        {isVisible('CROP_LEAF_SCANNER') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardFull]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#ecfdf5' }]}>
-                <Ionicons name="phone-portrait" size={20} color="#10b981" />
+                <Ionicons name="scan" size={20} color="#16a34a" />
               </View>
               <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={[styles.cardTitle, { color: textColor }]}>FarmsKing Mobile App Distribution & Download Link</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={[styles.cardTitle, { color: textColor }]}>Scan Any Crop / Leaf Photo Directly</Text>
                   <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#10b981' }}>Live Website Sync</Text>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#10b981' }}>Universal 1-Step Detection</Text>
                   </View>
                 </View>
                 <Text style={[styles.cardSub, { color: subTextColor }]}>
-                  Updates the Android APK download URL and automatically regenerates the live QR code across the website footer and mobile portals.
+                  Automatic 1-step crop and disease identification from any field leaf photo. No crop selection needed. Deep neural network identifies crop species and detects fungal, bacterial, viral, or pest infections in 2 seconds.
                 </Text>
+              </View>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: '#16a34a',
+                  paddingHorizontal: 12,
+                  paddingVertical: 7,
+                  borderRadius: 8,
+                }}
+                onPress={() => router.push('/admin/crop-disease-scanner')}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="camera-outline" size={15} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontSize: 12, fontWeight: '700' }}>Open Live Scanner ↗</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Toggle Switches Row */}
+            <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 14, borderBottomWidth: 1, borderBottomColor: cardBorder, paddingBottom: 14, marginBottom: 14 }}>
+              <View style={[styles.toggleRow, { flex: 1, borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>Universal Leaf Scanner Active</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Enable instant leaf photo diagnostic scans for farmers and field advisors</Text>
+                </View>
+                <Switch
+                  value={Boolean(intForm.ai?.isEnabled ?? true)}
+                  onValueChange={(v) => updateAiField('isEnabled', v)}
+                  trackColor={{ false: '#475569', true: '#16a34a' }}
+                />
+              </View>
+
+              <View style={[styles.toggleRow, { flex: 1, borderBottomWidth: 0, paddingBottom: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>Crop Doctor Emergency Lockdown</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Temporarily pause public leaf scanner during model maintenance or updates</Text>
+                </View>
+                <Switch
+                  value={Boolean(appForm.doctorMaintenanceMode ?? false)}
+                  onValueChange={(v) => updateAppField('doctorMaintenanceMode' as any, v)}
+                  trackColor={{ false: '#475569', true: '#dc2626' }}
+                />
               </View>
             </View>
 
-            <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 20, marginTop: 4 }}>
-              <View style={{ flex: 2, gap: 12 }}>
-                <View style={styles.fieldItem}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <Text style={[styles.label, { color: textColor }]}>Android App Download URL / Direct APK Link</Text>
-                    {currentAppDownloadUrl ? (
-                      <TouchableOpacity
-                        onPress={() => {
-                          const target = currentAppDownloadUrl.trim();
-                          const url = target.startsWith('http') ? target : `https://${target}`;
-                          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                            window.open(url, '_blank');
-                          } else {
-                            Linking.openURL(url).catch(() => {});
-                          }
-                        }}
-                      >
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#10b981' }}>Test Link ↗</Text>
-                      </TouchableOpacity>
-                    ) : null}
+            {/* Parameters Grid */}
+            <View style={styles.fieldsGrid}>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Vision Engine Provider</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={intForm.ai?.activeProvider || 'GEMINI'}
+                  onChangeText={(t) => updateAiField('activeProvider', t.toUpperCase() as any)}
+                  placeholder="GEMINI / GROQ / HUGGINGFACE / OPENAI"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Diagnostic Confidence Threshold (%)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value="85"
+                  placeholder="85"
+                  placeholderTextColor={subTextColor}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Diagnosis Timeout (Seconds)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value="5"
+                  placeholder="5"
+                  placeholderTextColor={subTextColor}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Default Vision Model</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={intForm.ai?.providers?.gemini?.model || 'gemini-1.5-flash'}
+                  onChangeText={(t) => {
+                    setIntForm((prev) => ({
+                      ...prev,
+                      ai: {
+                        ...prev.ai,
+                        providers: {
+                          ...prev.ai.providers,
+                          gemini: {
+                            ...prev.ai.providers.gemini,
+                            model: t,
+                          },
+                        },
+                      },
+                    }));
+                  }}
+                  placeholder="gemini-1.5-flash"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+            </View>
+
+            {/* Universal Supported Crops Directory */}
+            <View style={{ marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: cardBorder }}>
+              <Text style={{ fontSize: 11.5, fontWeight: '700', color: textColor, marginBottom: 8 }}>
+                Supported Universal Crop Varieties (Fine-Tuned on 50,000+ Indian Farm Photos):
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  { name: 'Paddy / Rice', icon: 'leaf-outline' },
+                  { name: 'Wheat', icon: 'nutrition-outline' },
+                  { name: 'Cotton (Narma)', icon: 'flower-outline' },
+                  { name: 'Sugarcane', icon: 'git-commit-outline' },
+                  { name: 'Potato & Tubers', icon: 'ellipse-outline' },
+                  { name: 'Tomato, Chilli & Vegetables', icon: 'basket-outline' },
+                  { name: 'Mustard (Sarson)', icon: 'color-palette-outline' },
+                  { name: 'Citrus (Kinnow & Lemon)', icon: 'aperture-outline' },
+                ].map((item, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 5,
+                      backgroundColor: innerBg,
+                      borderWidth: 1,
+                      borderColor: cardBorder,
+                      paddingHorizontal: 9,
+                      paddingVertical: 5,
+                      borderRadius: 6,
+                    }}
+                  >
+                    <Ionicons name={item.icon as any} size={12} color="#16a34a" />
+                    <Text style={{ fontSize: 11, color: textColor, fontWeight: '500' }}>{item.name}</Text>
                   </View>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                    placeholder="https://farmsking.in/download/farmsking.apk"
-                    placeholderTextColor={subTextColor}
-                    value={currentAppDownloadUrl}
-                    onChangeText={(txt) => {
-                      updateAppField('appDownloadUrl' as any, txt);
-                      updateMasterField('appDownloadUrl' as any, txt);
-                    }}
-                  />
-                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                    Direct APK download URL or Google Play Store link. Visitors scanning the homepage footer QR code will be routed here.
-                  </Text>
-                </View>
-
-                <View style={styles.fieldItem}>
-                  <Text style={[styles.label, { color: textColor }]}>Latest Production Build Version</Text>
-                  <TextInput
-                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                    placeholder="2.1.0"
-                    placeholderTextColor={subTextColor}
-                    value={currentLatestVersion}
-                    onChangeText={(txt) => {
-                      updateAppField('latestAppVersion' as any, txt);
-                      updateMasterField('latestAppVersion' as any, txt);
-                    }}
-                  />
-                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 4 }}>
-                    Current published version shown on public download cards and release notifications.
-                  </Text>
-                </View>
-              </View>
-
-              {/* QR Preview Box */}
-              <View style={{
-                flex: 1,
-                backgroundColor: isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.04)',
-                borderRadius: 14,
-                padding: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: cardBorder,
-              }}>
-                <View style={{
-                  padding: 10,
-                  backgroundColor: '#ffffff',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: '#10b981',
-                  marginBottom: 8,
-                }}>
-                  <Image
-                    source={{
-                      uri: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                        (currentAppDownloadUrl || 'https://www.farmsking.in').trim()
-                      )}&margin=4`,
-                    }}
-                    style={{ width: 110, height: 110, borderRadius: 6 }}
-                    resizeMode="contain"
-                  />
-                </View>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: textColor, textAlign: 'center' }}>
-                  Live Auto-Generated QR
-                </Text>
-                <Text style={{ fontSize: 10, color: subTextColor, textAlign: 'center', marginTop: 2 }} numberOfLines={1}>
-                  {currentAppDownloadUrl || 'https://www.farmsking.in'}
-                </Text>
+                ))}
               </View>
             </View>
           </View>
         )}
 
-
-
-        {/* 3. Free Trial & Subscription Plans */}
-        {isVisible('TRIAL_PLANS', 'free trial days subscription plans certification fee') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#fce7f3' }]}>
-                <Ionicons name="ribbon" size={20} color="#db2777" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Free Trial & Certification Plans</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Trial periods, plan tiers, and agronomist verification</Text>
-              </View>
-            </View>
-
-            <View style={[styles.toggleRow, { borderBottomColor: cardBorder, borderBottomWidth: 1, paddingBottom: 12 }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.toggleLabel, { color: textColor }]}>Enable Free Trial on Signup</Text>
-                <Text style={[styles.toggleSub, { color: subTextColor }]}>Grant instant full access upon registration</Text>
-              </View>
-              <Switch
-                value={Boolean(appForm.freeTrialEnabled ?? true)}
-                onValueChange={(v) => updateAppField('freeTrialEnabled', v)}
-                trackColor={{ false: '#475569', true: '#db2777' }}
-              />
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Free Trial Duration (Days)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.freeTrialDays ?? 10)}
-                  onChangeText={(t) => updateAppField('freeTrialDays', parseInt(t, 10) || 0)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Trial Plan Tier</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={String(appForm.freeTrialPlan || 'SUPER')}
-                  placeholder="SUPER / SMART / PRO"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateAppField('freeTrialPlan', t.toUpperCase())}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Advisor Certification Fee (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.advisorCertificationFee ?? 999)}
-                  onChangeText={(t) => updateAppField('advisorCertificationFee', parseFloat(t) || 0)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Certification Discount (%)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.advisorCertificationDiscount ?? 0)}
-                  onChangeText={(t) => updateAppField('advisorCertificationDiscount', parseFloat(t) || 0)}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-
-
-
-
-
-        {/* 9. Regional Formatting & Localization */}
-        {isVisible('REGIONAL_FORMATS', 'timezone currency format regional date time symbol') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#ecfdf5' }]}>
-                <Ionicons name="globe" size={20} color="#059669" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Regional Formatting & Locale</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Timezone, currency symbol, and date-time format standard</Text>
-              </View>
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Date Format</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.dateFormat || 'DD/MM/YYYY'}
-                  onChangeText={(t) => updateMasterField('dateFormat', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Time Format</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.timeFormat || '12'}
-                  placeholder="12 or 24"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateMasterField('timeFormat', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>System Timezone</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.timezone || 'Asia/Kolkata'}
-                  onChangeText={(t) => updateMasterField('timezone', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Currency Code</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.currency || 'INR'}
-                  onChangeText={(t) => updateMasterField('currency', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Currency Symbol</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.currencySymbol || '₹'}
-                  onChangeText={(t) => updateMasterField('currencySymbol', t)}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* 10. Crop Cycles & Farming Seasons */}
-        {isVisible('CROP_SEASONS', 'crop cycle season rabi kharif zaid sowing harvest dates') && (
+        {/* Crop Cycles & Farming Seasons */}
+        {isVisible('CROP_SEASONS') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
@@ -707,7 +593,7 @@ export default function SettingOtherSetup() {
         )}
 
         {/* 11. Automated Backup & Recovery */}
-        {isVisible('BACKUP_RECOVERY', 'backup disaster recovery snapshot database storage retention') && (
+        {isVisible('BACKUP_RECOVERY') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#f1f5f9' }]}>
@@ -777,7 +663,7 @@ export default function SettingOtherSetup() {
         )}
 
         {/* 12. Certificates & Public Verification QR Portal */}
-        {isVisible('CERTIFICATES', 'certificate qr portal prefix validity authority verification') && (
+        {isVisible('CERTIFICATES') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#e0f2fe' }]}>
@@ -847,7 +733,7 @@ export default function SettingOtherSetup() {
         )}
 
         {/* 13. Franchise & Mandi Network Rules */}
-        {isVisible('FRANCHISE_RULES', 'franchise mandi agent commission security deposit tehsil turnover') && (
+        {isVisible('FRANCHISE_RULES') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
@@ -914,7 +800,7 @@ export default function SettingOtherSetup() {
 
 
         {/* 15. Media Storage & Agora Telecom */}
-        {isVisible('STORAGE_TELECOM', 'storage r2 cloudflare bucket agora telecom video audio') && (
+        {isVisible('STORAGE_TELECOM') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#f0fdf4' }]}>
@@ -1037,42 +923,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.semiBold,
   },
-  bannerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 18,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: 16,
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  bannerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flexWrap: 'wrap',
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontFamily: FONT.bold,
-  },
-  badgePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-  },
-  bannerSub: {
-    fontSize: 13,
-    fontFamily: FONT.regular,
-    marginTop: 4,
-    lineHeight: 18,
-  },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1087,26 +937,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONT.bold,
   },
-  filterBar: {
-    padding: 14,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: 20,
-    gap: 12,
-  },
-  searchBox: {
+  saveBtnTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    height: 42,
+    gap: 6,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+  },
+  saveBtnTopText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 8,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
-    fontFamily: FONT.regular,
+    marginBottom: 16,
+    gap: 8,
+    flexWrap: 'wrap',
   },
   categoryScroll: {
     flexDirection: 'row',

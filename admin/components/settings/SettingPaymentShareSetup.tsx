@@ -28,7 +28,6 @@ type PaymentShareCategoryFilter =
   | 'ALL'
   | 'REWARDS'
   | 'WALLET_FEES'
-  | 'SUB_MAINTENANCE'
   | 'GARDEN_FEES'
   | 'ECOMMERCE_RULES';
 
@@ -42,7 +41,6 @@ const PAYMENT_SHARE_PILLS: PaymentShareCategoryPill[] = [
   { key: 'ALL', label: 'All Share Rules', icon: 'cash-outline' },
   { key: 'REWARDS', label: 'Referral & Welcome Rewards', icon: 'gift-outline' },
   { key: 'WALLET_FEES', label: 'Wallet TDS & Platform Fees', icon: 'wallet-outline' },
-  { key: 'SUB_MAINTENANCE', label: 'Granular Module Lockdowns', icon: 'lock-closed-outline' },
   { key: 'GARDEN_FEES', label: 'Urban Garden & Direct Sales', icon: 'flower-outline' },
   { key: 'ECOMMERCE_RULES', label: 'AgriStore Marketplace Rules', icon: 'cart-outline' },
 ];
@@ -67,7 +65,6 @@ export default function SettingPaymentShareSetup() {
   );
 
   const [activeCategory, setActiveCategory] = useState<PaymentShareCategoryFilter>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -124,13 +121,6 @@ export default function SettingPaymentShareSetup() {
         walletUsagePlatformFeePercent: Number(appForm.walletUsagePlatformFeePercent ?? 2.0),
         walletUsageGstPercent: Number(appForm.walletUsageGstPercent ?? 18.0),
 
-        // Granular Module Lockdowns
-        storefrontMaintenanceMode: Boolean(appForm.storefrontMaintenanceMode),
-        agriMaintenanceMode: Boolean(appForm.agriMaintenanceMode),
-        gardenMaintenanceMode: Boolean(appForm.gardenMaintenanceMode),
-        walletMaintenanceMode: Boolean(appForm.walletMaintenanceMode),
-        trainerMaintenanceMode: Boolean(appForm.trainerMaintenanceMode),
-
         // Urban Garden & Platform Sales
         allowDirectPlatformSales: Boolean(appForm.allowDirectPlatformSales ?? false),
         gardenExpertPlatformFeePercent: Number(appForm.gardenExpertPlatformFeePercent ?? 20.0),
@@ -162,11 +152,8 @@ export default function SettingPaymentShareSetup() {
     );
   }
 
-  const query = searchQuery.toLowerCase().trim();
-  const isVisible = (catKey: PaymentShareCategoryFilter, keywords: string) => {
-    const matchCategory = activeCategory === 'ALL' || activeCategory === catKey;
-    const matchQuery = !query || keywords.toLowerCase().includes(query);
-    return matchCategory && matchQuery;
+  const isVisible = (catKey: PaymentShareCategoryFilter) => {
+    return activeCategory === 'ALL' || activeCategory === catKey;
   };
 
   return (
@@ -181,53 +168,8 @@ export default function SettingPaymentShareSetup() {
         </View>
       )}
 
-      {/* Header Banner */}
-      <View style={[styles.bannerCard, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderColor: isLight ? '#bbf7d0' : '#059669' }]}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.bannerTitleRow}>
-            <Ionicons name="cash" size={22} color="#10b981" />
-            <Text style={[styles.bannerTitle, { color: textColor }]}>Payment Share & Platform Commissions</Text>
-            <View style={[styles.badgePill, { backgroundColor: isLight ? '#dcfce7' : '#064e3b' }]}>
-              <Text style={[styles.badgeText, { color: isLight ? '#166534' : '#6ee7b7' }]}>Financial Parameters</Text>
-            </View>
-          </View>
-          <Text style={[styles.bannerSub, { color: subTextColor }]}>
-            Configure wallet TDS, transaction processing fees, referral bonuses, marketplace commissions, direct sales, and operational payment modules.
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
-          onPress={handleSaveAll}
-          disabled={isSaving}
-          activeOpacity={0.8}
-        >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Ionicons name="save-outline" size={18} color="#ffffff" />
-          )}
-          <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save Settings'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Category Pills & Search Bar */}
+      {/* Category Pills & Quick Save */}
       <View style={[styles.filterBar, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={[styles.searchBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-          <Ionicons name="search-outline" size={18} color={subTextColor} />
-          <TextInput
-            style={[styles.searchInput, { color: textColor }]}
-            placeholder="Search fees, referral, bonus, commission, TDS, GST, marketplace..."
-            placeholderTextColor={subTextColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color={subTextColor} />
-            </TouchableOpacity>
-          )}
-        </View>
-
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
           {PAYMENT_SHARE_PILLS.map((pill) => {
             const isActive = activeCategory === pill.key;
@@ -258,12 +200,26 @@ export default function SettingPaymentShareSetup() {
             );
           })}
         </ScrollView>
+
+        <TouchableOpacity
+          style={[styles.saveBtnTop, isSaving && { opacity: 0.7 }]}
+          onPress={handleSaveAll}
+          disabled={isSaving}
+          activeOpacity={0.8}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Ionicons name="save-outline" size={14} color="#ffffff" />
+          )}
+          <Text style={styles.saveBtnTopText}>{isSaving ? 'Saving...' : 'Save Settings'}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Cards Grid */}
       <View style={[styles.grid, isDesktop && styles.gridDesktop]}>
         {/* 1. Referral & Welcome Rewards */}
-        {isVisible('REWARDS', 'referral welcome bonus rewards partner offer signup commission') && (
+        {isVisible('REWARDS') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
@@ -371,7 +327,7 @@ export default function SettingPaymentShareSetup() {
         )}
 
         {/* 2. Wallet TDS, Taxes & Platform Fees */}
-        {isVisible('WALLET_FEES', 'wallet taxes fees tds gst withdrawal checkout') && (
+        {isVisible('WALLET_FEES') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#e0e7ff' }]}>
@@ -436,85 +392,10 @@ export default function SettingPaymentShareSetup() {
           </View>
         )}
 
-        {/* 3. Granular Module Lockdowns */}
-        {isVisible('SUB_MAINTENANCE', 'lockdown maintenance storefront agri garden wallet trainer') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#fee2e2' }]}>
-                <Ionicons name="lock-closed" size={20} color="#dc2626" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Granular Module Lockdowns</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Isolate individual sections during targeted server maintenance</Text>
-              </View>
-            </View>
 
-            <View style={{ gap: 12 }}>
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Storefront Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause public checkout and cart actions</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.storefrontMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('storefrontMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Live Mandi Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause mandi bidding and live rate feeds</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.agriMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('agriMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Garden King Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause balcony plant and urban garden appointments</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.gardenMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('gardenMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Wallet Withdrawals Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause bank payouts and UPI fund withdrawals</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.walletMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('walletMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Technical Trainer Maintenance</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause onboarding and trainer exams</Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.trainerMaintenanceMode)}
-                  onValueChange={(v) => updateAppField('trainerMaintenanceMode', v)}
-                  trackColor={{ false: '#475569', true: '#dc2626' }}
-                />
-              </View>
-            </View>
-          </View>
-        )}
 
         {/* 4. Urban Garden & Platform Direct Sales */}
-        {isVisible('GARDEN_FEES', 'garden expert fee cards pro vip direct sales platform') && (
+        {isVisible('GARDEN_FEES') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#dcfce7' }]}>
@@ -571,7 +452,7 @@ export default function SettingPaymentShareSetup() {
         )}
 
         {/* 5. AgriStore Marketplace Rules */}
-        {isVisible('ECOMMERCE_RULES', 'ecommerce store shipping delivery threshold cod reviews kyc seller') && (
+        {isVisible('ECOMMERCE_RULES') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#ffedd5' }]}>
@@ -738,42 +619,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  bannerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 18,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: 16,
-    gap: 16,
-    flexWrap: 'wrap',
-  },
-  bannerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  bannerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: FONT.bold,
-  },
-  badgePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  bannerSub: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -788,25 +633,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  saveBtnTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+  },
+  saveBtnTopText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
   filterBar: {
-    padding: 12,
-    borderRadius: RADIUS.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 8,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     marginBottom: 16,
     gap: 10,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    height: 38,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
+    flexWrap: 'wrap',
   },
   categoryScroll: {
     flexDirection: 'row',

@@ -26,6 +26,7 @@ import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSe
 import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
 import SettingPaymentShareSetup from '@/components/settings/SettingPaymentShareSetup';
+import SettingPlanOffersSetup from '@/components/settings/SettingPlanOffersSetup';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -53,6 +54,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     label: 'Features',
     icon: 'sparkles-outline',
     description: 'Calls & WhatsApp automation, module lockdowns, OTP security & rate limiting',
+  },
+  {
+    id: 'PLAN_OFFERS',
+    label: 'Plan & Offers',
+    icon: 'pricetag-outline',
+    description: 'Subscription plans, free trials, membership passes, referral rewards & promotional offers',
   },
   {
     id: 'PAYMENT_SHARE',
@@ -89,6 +96,9 @@ export default function NewSettingsScreen() {
     if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
       return 'FEATURES';
     }
+    if (tabParam === 'PLAN_OFFERS' || tabParam === 'PLANS' || tabParam === 'OFFERS' || tabParam === 'PLAN' || tabParam === 'OFFER') {
+      return 'PLAN_OFFERS';
+    }
     if (tabParam === 'PAYMENT_SHARE' || tabParam === 'PAYMENT' || tabParam === 'SHARE') {
       return 'PAYMENT_SHARE';
     }
@@ -108,6 +118,8 @@ export default function NewSettingsScreen() {
       setActiveTab('ENTITY_SETUP');
     } else if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
       setActiveTab('FEATURES');
+    } else if (tabParam === 'PLAN_OFFERS' || tabParam === 'PLANS' || tabParam === 'OFFERS' || tabParam === 'PLAN' || tabParam === 'OFFER') {
+      setActiveTab('PLAN_OFFERS');
     } else if (tabParam === 'PAYMENT_SHARE' || tabParam === 'PAYMENT' || tabParam === 'SHARE') {
       setActiveTab('PAYMENT_SHARE');
     } else if (tabParam === 'TOOLS_API' || tabParam === 'TOOLS' || tabParam === 'SERVICES' || tabParam === 'API') {
@@ -216,9 +228,9 @@ export default function NewSettingsScreen() {
       >
         {activeTab === 'ABOUT' && (
           <View style={styles.aboutTabWrapper}>
-            {/* 1. Hero Company Banner - Compact Single-Line Glassmorphism Bar */}
+            {/* 1. Ultra-Compact Executive Hero Bar */}
             <LinearGradient
-              colors={isLight ? ['#312e81', '#1e1b4b'] : ['#0f172a', '#020617']}
+              colors={isLight ? ['#1e1b4b', '#312e81'] : ['#0f172a', '#020617']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.heroBanner}
@@ -226,7 +238,7 @@ export default function NewSettingsScreen() {
               <View style={styles.heroContent}>
                 <View style={styles.heroLeftWrap}>
                   <View style={styles.heroIconBadge}>
-                    <Ionicons name="business" size={17} color="#ffffff" />
+                    <Ionicons name="business" size={15} color="#ffffff" />
                   </View>
                   <Text style={styles.heroOrgTitle} numberOfLines={1}>
                     {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
@@ -244,185 +256,178 @@ export default function NewSettingsScreen() {
                       <View style={styles.liveGreenDot} />
                       <Text style={styles.heroStatusText}>MCA Incorporated</Text>
                     </View>
-                    <View style={styles.heroCinBadge}>
+                    <TouchableOpacity
+                      style={styles.heroCinBadge}
+                      onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294')}
+                    >
                       <Text style={styles.heroCinText}>
                         CIN: {masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294'}
                       </Text>
+                      <Ionicons name="copy-outline" size={11} color="rgba(255,255,255,0.7)" style={{ marginLeft: 4 }} />
+                    </TouchableOpacity>
+                    <View style={styles.versionChip}>
+                      <Text style={styles.versionChipText}>{aboutData.appVersion ? `v${aboutData.appVersion}` : 'v2.4.0'}</Text>
                     </View>
                   </View>
                 )}
               </View>
             </LinearGradient>
 
-            {/* 2. Executive KPI Telemetry Strip (4 Stat Cards) */}
+            {/* 2. Compact 4-KPI Metric Strip */}
             <View style={[styles.kpiRow, !isDesktop && styles.kpiRowMobile]}>
               <View style={[styles.kpiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
-                  <Ionicons name="shield-checkmark" size={18} color="#6366f1" />
+                  <Ionicons name="shield-checkmark" size={15} color="#6366f1" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.kpiLabel, { color: subTextColor }]}>STATUTORY REGISTRY</Text>
                   <Text style={[styles.kpiValue, { color: textColor }]}>Active & Verified</Text>
-                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>MCA SRN: {masterData.mcaSrn || 'AC6979718'} · ROC Chandigarh</Text>
+                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>SRN: {masterData.mcaSrn || 'AC6979718'} · ROC Chd</Text>
                 </View>
               </View>
 
               <View style={[styles.kpiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#ecfdf5' : '#064e3b' }]}>
-                  <Ionicons name="leaf" size={18} color="#10b981" />
+                  <Ionicons name="cash" size={15} color="#10b981" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>APPROVED SCOPE</Text>
-                  <Text style={[styles.kpiValue, { color: textColor }]}>Agritech & Mandi</Text>
-                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>e-MoA Objects (NIC: 01612, 62013)</Text>
+                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>AUTHORIZED CAPITAL</Text>
+                  <Text style={[styles.kpiValue, { color: textColor }]}>₹1,00,000 INR</Text>
+                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>1 Lakh Shares @ ₹1 (Clause V)</Text>
                 </View>
               </View>
 
               <View style={[styles.kpiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#f3e8ff' : '#3b0764' }]}>
-                  <Ionicons name="hardware-chip" size={18} color="#9333ea" />
+                  <Ionicons name="leaf" size={15} color="#9333ea" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>TECH ARCHITECTURE</Text>
-                  <Text style={[styles.kpiValue, { color: textColor }]}>NestJS 10 + React</Text>
-                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>Google Gemini AI · PostgreSQL 16</Text>
+                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>APPROVED SCOPE</Text>
+                  <Text style={[styles.kpiValue, { color: textColor }]}>Agritech & Mandi</Text>
+                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>NIC 01612 · 62013 · 63112</Text>
                 </View>
               </View>
 
               <View style={[styles.kpiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
-                  <Ionicons name="pulse" size={18} color="#f59e0b" />
+                  <Ionicons name="pulse" size={15} color="#f59e0b" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>PLATFORM STATUS</Text>
-                  <Text style={[styles.kpiValue, { color: '#10b981' }]}>100% Operational</Text>
-                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>{aboutData.appVersion ? `v${aboutData.appVersion}` : 'v2.4.0'} Live Production · SLA 99.9%</Text>
+                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>PLATFORM SLA</Text>
+                  <Text style={[styles.kpiValue, { color: '#10b981' }]}>99.9% Uptime</Text>
+                  <Text style={[styles.kpiSub, { color: subTextColor }]} numberOfLines={1}>Node 20 · Expo 52 · Prod</Text>
                 </View>
               </View>
             </View>
 
-            {/* 3. Row 1: Corporate Entity & Approved Business Scope */}
+            {/* 3. High-Density 2-Column Bento Grid */}
             <View style={[styles.gridRow, !isDesktop && styles.gridRowMobile]}>
-              {/* Card 1: Corporate Entity & Statutory Governance */}
+              {/* Left Column: Corporate & Statutory Governance */}
               <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
                 <View style={styles.cardHeader}>
                   <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#eff6ff' : '#1e293b' }]}>
-                    <Ionicons name="shield-checkmark" size={18} color="#3b82f6" />
+                    <Ionicons name="shield-checkmark" size={16} color="#3b82f6" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.cardTitle, { color: textColor }]}>Corporate & Statutory Entity</Text>
-                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
-                      Incorporated under Companies Act, 2013 · Ministry of Corporate Affairs, India
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                      Companies Act, 2013 · MCA CRC Manesar & ROC Punjab / Chandigarh
                     </Text>
+                  </View>
+                  <View style={styles.verifiedTag}>
+                    <Ionicons name="checkmark-seal" size={12} color="#10b981" />
+                    <Text style={styles.verifiedTagText}>Govt. Regd</Text>
                   </View>
                 </View>
 
-                {/* Legal Entity Overview Box */}
-                <View style={[styles.legalHeroCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-                    <Text style={[styles.legalHeroTitle, { color: textColor }]}>
-                      {masterData.companyLegalName || aboutData.companyName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED'}
-                    </Text>
-                    <View style={styles.verifiedTag}>
-                      <Ionicons name="checkmark-seal" size={13} color="#10b981" />
-                      <Text style={styles.verifiedTagText}>Govt. Registered</Text>
-                    </View>
-                  </View>
-                  <View style={styles.legalMetaRow}>
-                    <Text style={[styles.legalMetaItem, { color: subTextColor }]}>
-                      Brand Name: <Text style={{ color: textColor, fontWeight: '700' }}>{masterData.brandDisplayName || masterData.brandName || 'FarmsKing™'}</Text>
-                    </Text>
-                    <Text style={[styles.legalMetaDot, { color: subTextColor }]}>•</Text>
-                    <Text style={[styles.legalMetaItem, { color: subTextColor }]}>
-                      Authority: <Text style={{ color: textColor, fontWeight: '600' }}>{masterData.approvingAuthority || 'MCA CRC Manesar / ROC Chandigarh'}</Text>
-                    </Text>
-                  </View>
-                </View>
-
-                {/* 4-Item Statutory Identifier Badges */}
+                {/* 4-Item Statutory Codes (SRN, CIN, PAN, TAN) */}
                 <View style={styles.statCodeGrid}>
-                  <View style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                  <TouchableOpacity
+                    style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('MCA SRN', masterData.mcaSrn || 'AC6979718')}
+                  >
                     <Text style={[styles.statCodeLabel, { color: subTextColor }]}>MCA SRN</Text>
                     <View style={styles.statCodeValWrap}>
                       <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.mcaSrn || 'AC6979718'}</Text>
-                      <TouchableOpacity onPress={() => handleCopy('MCA SRN', masterData.mcaSrn || 'AC6979718')}>
-                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
-                      </TouchableOpacity>
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>CIN NUMBER</Text>
+                  <TouchableOpacity
+                    style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294')}
+                  >
+                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>CIN</Text>
                     <View style={styles.statCodeValWrap}>
                       <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294'}</Text>
-                      <TouchableOpacity onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294')}>
-                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
-                      </TouchableOpacity>
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>COMPANY PAN</Text>
+                  <TouchableOpacity
+                    style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('PAN', masterData.companyPan || (masterData as any).panNumber || 'AAJCF0540K')}
+                  >
+                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>PAN</Text>
                     <View style={styles.statCodeValWrap}>
-                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyPan || (masterData as any).panNumber || 'AABCF1234D'}</Text>
-                      <TouchableOpacity onPress={() => handleCopy('PAN', masterData.companyPan || (masterData as any).panNumber || 'AABCF1234D')}>
-                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
-                      </TouchableOpacity>
+                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyPan || (masterData as any).panNumber || 'AAJCF0540K'}</Text>
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
-                  <View style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>COMPANY TAN</Text>
+                  <TouchableOpacity
+                    style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('TAN', masterData.companyTan || 'ASRF04294G')}
+                  >
+                    <Text style={[styles.statCodeLabel, { color: subTextColor }]}>TAN</Text>
                     <View style={styles.statCodeValWrap}>
-                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyTan || 'PTLA12345B'}</Text>
-                      <TouchableOpacity onPress={() => handleCopy('TAN', masterData.companyTan || 'PTLA12345B')}>
-                        <Ionicons name="copy-outline" size={13} color="#6366f1" />
-                      </TouchableOpacity>
+                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyTan || 'ASRF04294G'}</Text>
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
-                  </View>
+                  </TouchableOpacity>
                 </View>
 
-                {/* Addresses */}
+                {/* Addresses - Compact Rows */}
                 <View style={[styles.addressBlock, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                   <View style={styles.addressHead}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="location-outline" size={15} color="#3b82f6" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Ionicons name="location-outline" size={13} color="#3b82f6" />
                       <Text style={[styles.addressLabel, { color: subTextColor }]}>REGISTERED OFFICE</Text>
                     </View>
                     <TouchableOpacity
                       style={styles.copyInlineBtn}
                       onPress={() => handleCopy('Registered Address', masterData.registeredAddress || masterData.registeredOfficeAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India')}
                     >
-                      <Ionicons name="copy-outline" size={12} color="#6366f1" />
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                       <Text style={styles.copyInlineText}>Copy</Text>
                     </TouchableOpacity>
                   </View>
-                  <Text style={[styles.addressText, { color: textColor }]}>
+                  <Text style={[styles.addressText, { color: textColor }]} numberOfLines={2}>
                     {masterData.registeredAddress || masterData.registeredOfficeAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India'}
                   </Text>
                 </View>
 
                 <View style={[styles.addressBlock, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                   <View style={styles.addressHead}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="business-outline" size={15} color="#10b981" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Ionicons name="business-outline" size={13} color="#10b981" />
                       <Text style={[styles.addressLabel, { color: subTextColor }]}>OPERATIONAL HEAD OFFICE</Text>
                     </View>
                     <TouchableOpacity
                       style={styles.copyInlineBtn}
                       onPress={() => handleCopy('Operational HQ', masterData.operationalHq || 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India')}
                     >
-                      <Ionicons name="copy-outline" size={12} color="#6366f1" />
+                      <Ionicons name="copy-outline" size={11} color="#6366f1" />
                       <Text style={styles.copyInlineText}>Copy</Text>
                     </TouchableOpacity>
                   </View>
-                  <Text style={[styles.addressText, { color: textColor }]}>
+                  <Text style={[styles.addressText, { color: textColor }]} numberOfLines={2}>
                     {masterData.operationalHq || 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India'}
                   </Text>
                 </View>
 
-                {/* Promoters & Directors */}
-                <View style={{ gap: 6 }}>
+                {/* Key Leadership & Promoters */}
+                <View style={{ gap: 4 }}>
                   <Text style={[styles.sectionMiniLabel, { color: subTextColor }]}>LEADERSHIP & FIRST DIRECTORS</Text>
                   <View style={styles.directorsRow}>
                     <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
@@ -454,399 +459,206 @@ export default function NewSettingsScreen() {
                         <Text style={[styles.directorRole, { color: subTextColor }]}>General Manager</Text>
                       </View>
                     </View>
+
+                    <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <View style={[styles.avatarInitials, { backgroundColor: '#8b5cf6' }]}>
+                        <Text style={styles.avatarText}>SS</Text>
+                      </View>
+                      <View>
+                        <Text style={[styles.directorName, { color: textColor }]}>Surinder Singh</Text>
+                        <Text style={[styles.directorRole, { color: '#8b5cf6' }]}>Grievance Officer</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
 
-                {/* Capital & Statutory Standards */}
-                <View style={[styles.capitalBlock, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={[styles.capitalLabel, { color: subTextColor }]}>AUTHORIZED EQUITY CAPITAL</Text>
-                    <Text style={[styles.capitalValue, { color: textColor }]}>₹1,00,000 INR</Text>
-                  </View>
-                  <Text style={[styles.capitalSub, { color: subTextColor }]}>
-                    1,00,000 Equity Shares @ ₹1 each · Clause V of e-MoA
-                  </Text>
+                {/* Quick Contacts Strip */}
+                <View style={styles.compactContactsRow}>
+                  <TouchableOpacity
+                    style={[styles.compactContactChip, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('Helpline', masterData.primaryMobile || masterData.officialPhone || '+91 95776 22000')}
+                  >
+                    <Ionicons name="call-outline" size={13} color="#6366f1" />
+                    <Text style={[styles.compactContactVal, { color: textColor }]}>{masterData.primaryMobile || '+91 95776 22000'}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.compactContactChip, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('Support Email', masterData.supportEmail || 'support@farmsking.in')}
+                  >
+                    <Ionicons name="mail-outline" size={13} color="#10b981" />
+                    <Text style={[styles.compactContactVal, { color: textColor }]}>{masterData.supportEmail || 'support@farmsking.in'}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.compactContactChip, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
+                    onPress={() => handleCopy('Legal Email', masterData.legalEmail || 'legal@farmsking.in')}
+                  >
+                    <Ionicons name="shield-outline" size={13} color="#8b5cf6" />
+                    <Text style={[styles.compactContactVal, { color: textColor }]}>{masterData.legalEmail || 'legal@farmsking.in'}</Text>
+                  </TouchableOpacity>
                 </View>
 
+                {/* Compliance & Standards Single Line */}
                 <View style={styles.compliancePillsRow}>
                   <View style={[styles.compPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
-                    <Ionicons name="document-text-outline" size={13} color="#6366f1" />
-                    <Text style={[styles.compPillText, { color: textColor }]}>Strict A4 Document Standard (210mm × 297mm)</Text>
+                    <Ionicons name="document-text-outline" size={12} color="#6366f1" />
+                    <Text style={[styles.compPillText, { color: textColor }]}>A4 Standard (210×297mm)</Text>
                   </View>
                   <View style={[styles.compPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
-                    <Ionicons name="lock-closed-outline" size={13} color="#10b981" />
-                    <Text style={[styles.compPillText, { color: textColor }]}>Statutory Confidentiality (Isolated KYC Records)</Text>
+                    <Ionicons name="lock-closed-outline" size={12} color="#10b981" />
+                    <Text style={[styles.compPillText, { color: textColor }]}>Isolated KYC Security</Text>
+                  </View>
+                  <View style={[styles.compPill, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
+                    <Ionicons name="sync-outline" size={12} color="#3b82f6" />
+                    <Text style={[styles.compPillText, { color: textColor }]}>MCA V3 Synced</Text>
                   </View>
                 </View>
               </View>
 
-              {/* Card 2: Approved Business Scope (e-MoA Objects) */}
+              {/* Right Column: Approved Business Scope & Technology Stack */}
               <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
                 <View style={styles.cardHeader}>
                   <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#ecfdf5' : '#064e3b' }]}>
-                    <Ionicons name="leaf" size={18} color="#10b981" />
+                    <Ionicons name="leaf" size={16} color="#10b981" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.cardTitle, { color: textColor }]}>Approved Business Scope</Text>
-                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
-                      Statutory Objects per MCA e-MoA · NIC: {masterData.nicCodes || '01612, 62013, 63112'}
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Approved Scope & Architecture</Text>
+                    <Text style={[styles.cardSubtitle, { color: subTextColor }]} numberOfLines={1}>
+                      e-MoA Objects · NIC {masterData.nicCodes || '01612, 62013, 63112'}
                     </Text>
                   </View>
-                </View>
-
-                {/* Official NIC Scope Banner */}
-                <View style={[styles.nicBanner, { backgroundColor: isLight ? '#f0fdf4' : '#022c22', borderColor: isLight ? '#bbf7d0' : '#065f46' }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
-                    <Text style={[styles.nicBannerTitle, { color: '#10b981' }]}>OFFICIAL MCA NIC CLASSIFICATION</Text>
-                    <View style={styles.nicPillsWrap}>
-                      <View style={styles.nicPill}><Text style={styles.nicPillText}>NIC 01612</Text></View>
-                      <View style={styles.nicPill}><Text style={styles.nicPillText}>NIC 62013</Text></View>
-                      <View style={styles.nicPill}><Text style={styles.nicPillText}>NIC 63112</Text></View>
-                    </View>
+                  <View style={styles.nicPill}>
+                    <Text style={styles.nicPillText}>MCA Approved</Text>
                   </View>
-                  <Text style={[styles.nicBannerDesc, { color: isLight ? '#166534' : '#a7f3d0' }]}>
-                    {masterData.activityDescription || 'Support activities for crop production, autonomous agricultural software development, and digital commodity marketplace operations.'}
-                  </Text>
                 </View>
 
-                {/* 4 Core Pillars */}
+                {/* 4 Core Pillars - 2x2 Bento Grid */}
                 <View style={styles.scopeGrid}>
                   <View style={[styles.scopeCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <View style={[styles.scopeBadge, { backgroundColor: isLight ? '#dcfce7' : '#064e3b' }]}>
-                      <Ionicons name="fitness" size={17} color="#10b981" />
+                      <Ionicons name="fitness" size={15} color="#10b981" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <View style={styles.scopeTitleRow}>
-                        <Text style={[styles.scopeTitle, { color: textColor }]}>AI Crop Doctor & Agronomy</Text>
-                        <Text style={[styles.scopeTag, { backgroundColor: isLight ? '#dcfce7' : '#064e3b', color: '#10b981' }]}>Pillar 01</Text>
-                      </View>
-                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
-                        Autonomous visual leaf analysis, plant pathology, dosage scheduling and live agronomist consultation with real-time severity scoring.
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>AI Crop Doctor</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]} numberOfLines={2}>
+                        Leaf computer vision, plant pathology & dosage guide
                       </Text>
                     </View>
                   </View>
 
                   <View style={[styles.scopeCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <View style={[styles.scopeBadge, { backgroundColor: isLight ? '#dbeafe' : '#1e3a8a' }]}>
-                      <Ionicons name="trending-up" size={17} color="#3b82f6" />
+                      <Ionicons name="trending-up" size={15} color="#3b82f6" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <View style={styles.scopeTitleRow}>
-                        <Text style={[styles.scopeTitle, { color: textColor }]}>Live Agricultural Mandi & Exchange</Text>
-                        <Text style={[styles.scopeTag, { backgroundColor: isLight ? '#dbeafe' : '#1e3a8a', color: '#3b82f6' }]}>Pillar 02</Text>
-                      </View>
-                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
-                        Direct farmer-to-buyer grain trading, APMC market rates, spot price bidding, quantity matching and instant digital settlement.
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Live Mandi Exchange</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]} numberOfLines={2}>
+                        Direct grain trading, APMC rates & spot settlement
                       </Text>
                     </View>
                   </View>
 
                   <View style={[styles.scopeCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <View style={[styles.scopeBadge, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
-                      <Ionicons name="cart" size={17} color="#f59e0b" />
+                      <Ionicons name="cart" size={15} color="#f59e0b" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <View style={styles.scopeTitleRow}>
-                        <Text style={[styles.scopeTitle, { color: textColor }]}>Agricultural E-Commerce Marketplace</Text>
-                        <Text style={[styles.scopeTag, { backgroundColor: isLight ? '#fef3c7' : '#78350f', color: '#f59e0b' }]}>Pillar 03</Text>
-                      </View>
-                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
-                        Certified hybrid seeds, fertilizers, organic nutrients, modern farm implements and verified agricultural input doorstep delivery.
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Agri E-Commerce</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]} numberOfLines={2}>
+                        Certified hybrid seeds, fertilizers & farm inputs
                       </Text>
                     </View>
                   </View>
 
                   <View style={[styles.scopeCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                     <View style={[styles.scopeBadge, { backgroundColor: isLight ? '#f3e8ff' : '#4c1d95' }]}>
-                      <Ionicons name="planet" size={17} color="#8b5cf6" />
+                      <Ionicons name="planet" size={15} color="#8b5cf6" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <View style={styles.scopeTitleRow}>
-                        <Text style={[styles.scopeTitle, { color: textColor }]}>Multispectral Satellite Telemetry</Text>
-                        <Text style={[styles.scopeTag, { backgroundColor: isLight ? '#f3e8ff' : '#4c1d95', color: '#8b5cf6' }]}>Pillar 04</Text>
-                      </View>
-                      <Text style={[styles.scopeDesc, { color: subTextColor }]}>
-                        Sentinel-2 Earth observation, NDVI vegetative indices, soil moisture radar and automated irrigation alerts.
+                      <Text style={[styles.scopeTitle, { color: textColor }]}>Satellite Telemetry</Text>
+                      <Text style={[styles.scopeDesc, { color: subTextColor }]} numberOfLines={2}>
+                        Sentinel-2 NDVI vegetative indices & soil moisture
                       </Text>
                     </View>
                   </View>
                 </View>
-              </View>
-            </View>
 
-            {/* 4. Row 2: Technology Stack & Official Contacts */}
-            <View style={[styles.gridRow, !isDesktop && styles.gridRowMobile]}>
-              {/* Card 3: Platform Architecture & Tech Stack */}
-              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#f3e8ff' : '#3b0764' }]}>
-                    <Ionicons name="hardware-chip" size={18} color="#9333ea" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.cardTitle, { color: textColor }]}>Technology Stack & Architecture</Text>
-                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
-                      High-Performance Enterprise Infrastructure & Frameworks
-                    </Text>
-                  </View>
-                </View>
+                {/* Technology Stack - 8 Compact Micro-Cards */}
+                <View style={{ gap: 4 }}>
+                  <Text style={[styles.sectionMiniLabel, { color: subTextColor }]}>ENTERPRISE STACK & INFRASTRUCTURE</Text>
+                  <View style={styles.techGrid}>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="sparkles" size={14} color="#ec4899" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>Gemini 1.5 Pro</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>AI Agronomy</Text>
+                      </View>
+                    </View>
 
-                <View style={styles.techGrid}>
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#fdf2f8' : '#831843' }]}>
-                      <Ionicons name="sparkles" size={17} color="#ec4899" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>AI Agronomy Engine</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>Google Gemini 1.5 Pro · Computer Vision & Pathology</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={[styles.liveGreenDot, { backgroundColor: '#ec4899' }]} />
-                        <Text style={[styles.techLiveText, { color: '#ec4899' }]}>Active ({config.ai?.activeProvider || 'GEMINI'})</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="code-slash" size={14} color="#6366f1" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>React Native Web</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Expo 52 Client</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
-                      <Ionicons name="code-slash" size={17} color="#6366f1" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Frontend Web & Admin</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>React Native Web, Expo Router v3, TypeScript</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>100% React Architecture</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="server" size={14} color="#10b981" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>NestJS 10</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Core API (3000)</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#ecfdf5' : '#064e3b' }]}>
-                      <Ionicons name="server" size={17} color="#10b981" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Backend Core API</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>NestJS 10 Enterprise Framework, Node.js, WebSockets</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>Port 3000 (Production)</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="layers" size={14} color="#3b82f6" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>PostgreSQL 16</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Prisma ORM v6</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#eff6ff' : '#1e293b' }]}>
-                      <Ionicons name="layers" size={17} color="#3b82f6" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Database & ORM</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>PostgreSQL 16 High-Performance, Prisma ORM v6</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>Relational Integrity</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="card" size={14} color="#10b981" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>PhonePe UPI</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Direct Payout</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#f0fdf4' : '#052e16' }]}>
-                      <Ionicons name="card" size={17} color="#10b981" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Payment Gateway</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>PhonePe UPI Direct Settlement & Cards</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>{config.gateway?.isSandbox ? 'Sandbox Mode' : 'Live Production'}</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="cloud" size={14} color="#f59e0b" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>Hostinger VPS</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Nginx Edge & PM2</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
-                      <Ionicons name="cloud" size={17} color="#f59e0b" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Cloud Infrastructure</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>Hostinger VPS (Ubuntu 24.04 LTS), Nginx, PM2, TLS 1.3</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>Live Edge Proxy</Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="chatbubbles" size={14} color="#0d9488" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>Fast2SMS & WA</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>DLT Approved</Text>
                       </View>
                     </View>
-                  </View>
 
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#ccfbf1' : '#134e4a' }]}>
-                      <Ionicons name="chatbubbles" size={17} color="#0d9488" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>SMS & WhatsApp</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>Fast2SMS (Govt. DLT Approved) & Meta WhatsApp API</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>Active ({config.sms?.activeProvider || 'FAST2SMS'})</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={[styles.techCard, !isDesktop && styles.techCardMobile, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={[styles.techIconBox, { backgroundColor: isLight ? '#e0f2fe' : '#0c4a6e' }]}>
-                      <Ionicons name="planet" size={17} color="#0284c7" />
-                    </View>
-                    <View style={styles.techContent}>
-                      <Text style={[styles.techName, { color: textColor }]}>Satellite Observation</Text>
-                      <Text style={[styles.techDetail, { color: subTextColor }]}>Sentinel-2 Multispectral & Agromonitoring APIs</Text>
-                      <View style={styles.techLiveChip}>
-                        <View style={styles.liveGreenDot} />
-                        <Text style={[styles.techLiveText, { color: '#10b981' }]}>Telemetry Active</Text>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              </View>
-
-              {/* Card 4: Official Contacts & Platform Telemetry */}
-              <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.gridCol]}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardHeaderIcon, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
-                    <Ionicons name="headset" size={18} color="#f59e0b" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.cardTitle, { color: textColor }]}>Official Contacts & Telemetry</Text>
-                    <Text style={[styles.cardSubtitle, { color: subTextColor }]}>
-                      Statutory Channels, Executive Helpdesk & Version Telemetry
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.contactList}>
-                  <View style={[styles.contactItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={styles.contactLeft}>
-                      <View style={[styles.contactIcon, { backgroundColor: isLight ? '#eef2ff' : '#1e1b4b' }]}>
-                        <Ionicons name="call" size={15} color="#6366f1" />
-                      </View>
-                      <View>
-                        <Text style={[styles.contactLabel, { color: subTextColor }]}>EXECUTIVE HELPDESK</Text>
-                        <Text style={[styles.contactVal, { color: textColor }]}>
-                          {masterData.primaryMobile || masterData.officialPhone || '+91 95776 22000'}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.copyInlineBtn}
-                      onPress={() => handleCopy('Helpline', masterData.primaryMobile || masterData.officialPhone || '+91 95776 22000')}
-                    >
-                      <Ionicons name="copy-outline" size={12} color="#6366f1" />
-                      <Text style={styles.copyInlineText}>Copy</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[styles.contactItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={styles.contactLeft}>
-                      <View style={[styles.contactIcon, { backgroundColor: isLight ? '#ecfdf5' : '#064e3b' }]}>
-                        <Ionicons name="mail" size={15} color="#10b981" />
-                      </View>
-                      <View>
-                        <Text style={[styles.contactLabel, { color: subTextColor }]}>OFFICIAL SUPPORT EMAIL</Text>
-                        <Text style={[styles.contactVal, { color: textColor }]}>
-                          {masterData.supportEmail || masterData.officialEmail || 'support@farmsking.in'}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.copyInlineBtn}
-                      onPress={() => handleCopy('Support Email', masterData.supportEmail || masterData.officialEmail || 'support@farmsking.in')}
-                    >
-                      <Ionicons name="copy-outline" size={12} color="#6366f1" />
-                      <Text style={styles.copyInlineText}>Copy</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[styles.contactItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={styles.contactLeft}>
-                      <View style={[styles.contactIcon, { backgroundColor: isLight ? '#f3e8ff' : '#4c1d95' }]}>
-                        <Ionicons name="shield" size={15} color="#8b5cf6" />
-                      </View>
-                      <View>
-                        <Text style={[styles.contactLabel, { color: subTextColor }]}>STATUTORY & LEGAL INQUIRIES</Text>
-                        <Text style={[styles.contactVal, { color: textColor }]}>
-                          {masterData.legalEmail || 'legal@farmsking.in'}
-                        </Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.copyInlineBtn}
-                      onPress={() => handleCopy('Legal Email', masterData.legalEmail || 'legal@farmsking.in')}
-                    >
-                      <Ionicons name="copy-outline" size={12} color="#6366f1" />
-                      <Text style={styles.copyInlineText}>Copy</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[styles.contactItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={styles.contactLeft}>
-                      <View style={[styles.contactIcon, { backgroundColor: isLight ? '#fef3c7' : '#78350f' }]}>
-                        <Ionicons name="person" size={15} color="#f59e0b" />
-                      </View>
-                      <View>
-                        <Text style={[styles.contactLabel, { color: subTextColor }]}>GRIEVANCE REDRESSAL OFFICER</Text>
-                        <Text style={[styles.contactVal, { color: textColor }]}>
-                          {masterData.grievanceOfficerName || 'Surinder Singh'} ({masterData.grievanceOfficerEmail || 'grievance@farmsking.in'})
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={[styles.contactItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                    <View style={styles.contactLeft}>
-                      <View style={[styles.contactIcon, { backgroundColor: isLight ? '#e0e7ff' : '#1e1b4b' }]}>
-                        <Ionicons name="globe" size={15} color="#6366f1" />
-                      </View>
-                      <View>
-                        <Text style={[styles.contactLabel, { color: subTextColor }]}>OFFICIAL WEB PORTAL</Text>
-                        <Text style={[styles.contactVal, { color: '#6366f1' }]}>
-                          {masterData.websiteUrl || 'https://farmsking.in'}
-                        </Text>
+                    <View style={[styles.techCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
+                      <Ionicons name="planet" size={14} color="#0284c7" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.techName, { color: textColor }]}>Sentinel-2</Text>
+                        <Text style={[styles.techDetail, { color: subTextColor }]}>Radar Telemetry</Text>
                       </View>
                     </View>
                   </View>
                 </View>
 
-                {/* System & Telemetry Specs */}
-                <View style={[styles.telemetryCard, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={[styles.telemetryCardTitle, { color: subTextColor }]}>SYSTEM TELEMETRY</Text>
-                    <View style={styles.telemetryLiveBadge}>
-                      <View style={styles.liveGreenDot} />
-                      <Text style={styles.telemetryLiveText}>99.9% Uptime SLA</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.telemetryGrid}>
-                    <View style={styles.telemetryItem}>
-                      <Text style={[styles.telemetryItemLabel, { color: subTextColor }]}>RELEASE</Text>
-                      <Text style={[styles.telemetryItemVal, { color: textColor }]}>{aboutData.appVersion ? `v${aboutData.appVersion}` : 'v2.4.0'}</Text>
-                    </View>
-                    <View style={styles.telemetryItem}>
-                      <Text style={[styles.telemetryItemLabel, { color: subTextColor }]}>ENVIRONMENT</Text>
-                      <Text style={[styles.telemetryItemVal, { color: '#10b981' }]}>Production</Text>
-                    </View>
-                    <View style={styles.telemetryItem}>
-                      <Text style={[styles.telemetryItemLabel, { color: subTextColor }]}>RUNTIME</Text>
-                      <Text style={[styles.telemetryItemVal, { color: textColor }]}>Node.js 20 LTS</Text>
-                    </View>
-                    <View style={styles.telemetryItem}>
-                      <Text style={[styles.telemetryItemLabel, { color: subTextColor }]}>CLIENT ENGINE</Text>
-                      <Text style={[styles.telemetryItemVal, { color: textColor }]}>Expo 52 Web</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Regulatory Verification Footer Note */}
+                {/* Footer Telemetry & Legal Strip */}
                 <View style={[styles.govVerificationCard, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b' }]}>
-                  <Ionicons name="checkmark-done-circle" size={17} color="#10b981" />
-                  <Text style={[styles.govVerificationText, { color: textColor }]}>
-                    Statutory corporate data synchronizes with Ministry of Corporate Affairs (MCA V3 Services) and GSTIN portals under Indian Companies Act, 2013.
+                  <Ionicons name="checkmark-done-circle" size={15} color="#10b981" />
+                  <Text style={[styles.govVerificationText, { color: textColor }]} numberOfLines={1}>
+                    Indian Companies Act, 2013 Verified · MCA V3 · High Availability Production SLA 99.9%
                   </Text>
                 </View>
               </View>
@@ -863,6 +675,12 @@ export default function NewSettingsScreen() {
         {activeTab === 'FEATURES' && (
           <View style={{ width: '100%' }}>
             <SettingFeaturesSetup />
+          </View>
+        )}
+
+        {activeTab === 'PLAN_OFFERS' && (
+          <View style={{ width: '100%' }}>
+            <SettingPlanOffersSetup />
           </View>
         )}
 
@@ -1026,12 +844,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   aboutTabWrapper: {
-    gap: 20,
+    gap: 10,
   },
   heroBanner: {
-    borderRadius: RADIUS.md,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
@@ -1040,51 +858,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   heroLeftWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     flex: 1,
-    minWidth: 260,
+    minWidth: 240,
   },
   heroIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroOrgTitle: {
-    fontSize: 14.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#ffffff',
     letterSpacing: 0.3,
   },
   heroBrandChip: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 6,
+    borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   heroBrandText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#ffffff',
   },
   heroRightWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   heroStatusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
     backgroundColor: 'rgba(16, 185, 129, 0.2)',
     borderWidth: 1,
@@ -1097,188 +915,176 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
   },
   heroStatusText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#34d399',
   },
   heroCinBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 6,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   heroCinText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '600',
+  },
+  versionChip: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  versionChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 
   // KPI Row
   kpiRow: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 8,
   },
   kpiRowMobile: {
     flexDirection: 'column',
-    gap: 10,
+    gap: 8,
   },
   kpiCard: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: RADIUS.md,
+    gap: 9,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: 8,
     borderWidth: 1,
   },
   kpiIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
   kpiLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   kpiValue: {
-    fontSize: 13.5,
+    fontSize: 12,
     fontWeight: '800',
     marginTop: 1,
   },
   kpiSub: {
-    fontSize: 11,
+    fontSize: 10,
     marginTop: 1,
   },
 
   // Grid
   gridRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 10,
   },
   gridRowMobile: {
     flexDirection: 'column',
-    gap: 16,
+    gap: 10,
   },
   gridCol: {
     flex: 1,
   },
   card: {
-    borderRadius: RADIUS.md,
+    borderRadius: 8,
     borderWidth: 1,
-    padding: 18,
-    gap: 14,
+    padding: 11,
+    gap: 9,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingBottom: 12,
+    gap: 8,
+    paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(150, 150, 150, 0.12)',
   },
   cardHeaderIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
   cardSubtitle: {
-    fontSize: 11.5,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-
-  // Legal Overview
-  legalHeroCard: {
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 6,
-  },
-  legalHeroTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 10.5,
+    marginTop: 1,
   },
   verifiedTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 999,
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
   },
   verifiedTagText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     color: '#10b981',
-  },
-  legalMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  legalMetaItem: {
-    fontSize: 11.5,
-  },
-  legalMetaDot: {
-    fontSize: 12,
   },
 
   // Stat Codes Grid
   statCodeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   statCodeItem: {
     flex: 1,
-    minWidth: 180,
+    minWidth: 115,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
   },
   statCodeLabel: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   statCodeValWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   statCodeValue: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
 
   // Address
   addressBlock: {
-    padding: 12,
-    borderRadius: 8,
+    padding: 7,
+    borderRadius: 6,
     borderWidth: 1,
-    gap: 6,
+    gap: 3,
   },
   addressHead: {
     flexDirection: 'row',
@@ -1286,315 +1092,191 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   addressLabel: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   addressText: {
-    fontSize: 12,
-    lineHeight: 18,
+    fontSize: 11,
+    lineHeight: 15,
   },
   copyInlineBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
     backgroundColor: 'rgba(99, 102, 241, 0.1)',
   },
   copyInlineText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#6366f1',
     fontWeight: '600',
   },
 
   // Directors
   sectionMiniLabel: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '700',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   directorsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   directorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 8,
+    gap: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 6,
     borderWidth: 1,
   },
   avatarInitials: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '800',
     color: '#ffffff',
   },
   directorName: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   directorRole: {
-    fontSize: 10.5,
+    fontSize: 9.5,
   },
 
-  // Capital & Compliance
-  capitalBlock: {
-    padding: 12,
-    borderRadius: 8,
+  // Contacts Strip
+  compactContactsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  compactContactChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
     borderWidth: 1,
-    gap: 4,
   },
-  capitalLabel: {
+  compactContactVal: {
     fontSize: 10.5,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontWeight: '600',
   },
-  capitalValue: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  capitalSub: {
-    fontSize: 11,
-  },
+
+  // Compliance
   compliancePillsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   compPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   compPillText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
   },
 
-  // NIC Banner
-  nicBanner: {
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 6,
-  },
-  nicBannerTitle: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  nicPillsWrap: {
-    flexDirection: 'row',
-    gap: 6,
-  },
+  // NIC Pill
   nicPill: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     backgroundColor: '#10b981',
   },
   nicPillText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontWeight: '800',
     color: '#ffffff',
-  },
-  nicBannerDesc: {
-    fontSize: 11.5,
-    lineHeight: 17,
   },
 
   // Scope Cards
   scopeGrid: {
-    gap: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   scopeCard: {
+    width: '48.8%',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 12,
-    borderRadius: 10,
+    alignItems: 'center',
+    gap: 7,
+    padding: 7,
+    borderRadius: 6,
     borderWidth: 1,
   },
   scopeBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
+    width: 26,
+    height: 26,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scopeTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginBottom: 3,
-  },
   scopeTitle: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
-    flex: 1,
-  },
-  scopeTag: {
-    fontSize: 10,
-    fontWeight: '800',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
   },
   scopeDesc: {
-    fontSize: 11.5,
-    lineHeight: 16.5,
+    fontSize: 9.5,
+    lineHeight: 13,
+    marginTop: 1,
   },
 
   // Tech Cards
   techGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 6,
   },
   techCard: {
-    width: '48.5%',
+    width: '23.8%',
+    minWidth: 105,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: 12,
-    borderRadius: 10,
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 6,
     borderWidth: 1,
   },
-  techCardMobile: {
-    width: '100%',
-  },
-  techIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  techContent: {
-    flex: 1,
-    gap: 2,
-  },
   techName: {
-    fontSize: 12.5,
+    fontSize: 10.5,
     fontWeight: '700',
   },
   techDetail: {
-    fontSize: 11,
-    lineHeight: 15,
-  },
-  techLiveChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  techLiveText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
+    marginTop: 0.5,
   },
 
-  // Contact list
-  contactList: {
-    gap: 8,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 10,
-  },
-  contactLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  contactIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  contactVal: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
-
-  // Telemetry
-  telemetryCard: {
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 8,
-  },
-  telemetryCardTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.7,
-  },
-  telemetryLiveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  telemetryLiveText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#10b981',
-  },
-  telemetryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  telemetryItem: {
-    minWidth: 100,
-  },
-  telemetryItemLabel: {
-    fontSize: 9.5,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  telemetryItemVal: {
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 1,
-  },
+  // Footer Verification Note
   govVerificationCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    padding: 10,
-    borderRadius: 8,
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
   govVerificationText: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: 10,
+    lineHeight: 14,
     flex: 1,
   },
   statutoryFooterBanner: {

@@ -61,9 +61,9 @@ const services = [
   {
     name: 'ADMIN   ',
     color: colors.magenta,
-    cwd: path.join(rootDir, 'admin'),
+    cwd: rootDir,
     command: nodeExe,
-    args: [fs.existsSync(adminCli) ? adminCli : 'node_modules/expo/bin/cli', 'start', '--web', '--port', '8082'],
+    args: ['scripts/serve-admin.js'],
     port: 8082,
     url: 'http://localhost:8082',
   },

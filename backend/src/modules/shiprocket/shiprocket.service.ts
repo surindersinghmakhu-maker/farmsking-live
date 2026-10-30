@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 import { CreateShiprocketOrderDto, GenerateAwbDto } from './dto/shiprocket.dto';
 import { ShipmentStatus, OrderStatus } from '@prisma/client';
 
@@ -14,6 +15,7 @@ export class ShiprocketService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
   /** Get active Shiprocket bearer auth token */
@@ -23,8 +25,15 @@ export class ShiprocketService {
       return this.token;
     }
 
-    const email = this.configService.get<string>('SHIPROCKET_EMAIL');
-    const password = this.configService.get<string>('SHIPROCKET_PASSWORD');
+    let email = this.configService.get<string>('SHIPROCKET_EMAIL');
+    let password = this.configService.get<string>('SHIPROCKET_PASSWORD');
+
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const shiprocket = integrations?.logistics?.providers?.shiprocket;
+      if (shiprocket?.email) email = shiprocket.email;
+      if (shiprocket?.password) password = shiprocket.password;
+    } catch {}
 
     if (!email || !password) {
       this.logger.warn('SHIPROCKET_EMAIL or SHIPROCKET_PASSWORD missing from .env');

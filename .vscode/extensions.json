@@ -1,8 +1,0 @@
-{
-    "recommendations": [
-        "anthropic.claude-code",
-        "philau2512.cursor-ai-activity-timer",
-        "hexmos.freedevtools",
-        "ms-azuretools.vscode-containers"
-    ]
-}

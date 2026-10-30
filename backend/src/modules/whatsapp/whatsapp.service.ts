@@ -2,6 +2,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 
 export interface WhatsAppMessageResult {
   success: boolean;
@@ -17,11 +18,19 @@ export class WhatsappBotService implements OnModuleInit {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
   async onModuleInit() {
-    const phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID');
-    const token = this.configService.get<string>('META_WHATSAPP_TOKEN');
+    let phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID');
+    let token = this.configService.get<string>('META_WHATSAPP_TOKEN');
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const meta = integrations?.whatsapp?.providers?.metaCloud;
+      if (meta?.phoneNumberId) phoneNumberId = meta.phoneNumberId;
+      if (meta?.accessToken) token = meta.accessToken;
+    } catch {}
+
     if (phoneNumberId && token) {
       this.logger.log(`WhatsApp Meta Cloud API initialized with Phone ID: ${phoneNumberId}`);
     } else {
@@ -40,12 +49,19 @@ export class WhatsappBotService implements OnModuleInit {
     return clean;
   }
 
-  getQrCodeStatus() {
+  async getQrCodeStatus() {
+    let activeProvider = 'META_CLOUD';
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      if (integrations?.whatsapp?.activeProvider) {
+        activeProvider = integrations.whatsapp.activeProvider;
+      }
+    } catch {}
     return {
       isConnected: true,
-      activeProvider: 'META_CLOUD',
+      activeProvider,
       verifiedSender: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
-      message: 'Official Meta WhatsApp Cloud API Ready (1,000 Free Monthly Conversations)',
+      message: `Active WhatsApp Provider: ${activeProvider} (Global System Integrations)`,
     };
   }
 
@@ -55,8 +71,15 @@ export class WhatsappBotService implements OnModuleInit {
 
   async sendDirectTextMessage(mobile: string, text: string): Promise<WhatsAppMessageResult> {
     const cleanRecipient = this.formatIndianMobile(mobile);
-    const phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID') || '9577622000';
-    const token = this.configService.get<string>('META_WHATSAPP_TOKEN');
+    let phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID') || '9577622000';
+    let token = this.configService.get<string>('META_WHATSAPP_TOKEN');
+
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const meta = integrations?.whatsapp?.providers?.metaCloud;
+      if (meta?.phoneNumberId) phoneNumberId = meta.phoneNumberId;
+      if (meta?.accessToken) token = meta.accessToken;
+    } catch {}
 
     if (!token) {
       this.logger.log(`[WhatsApp Sandbox Echo to ${cleanRecipient}]: ${text.slice(0, 80)}...`);

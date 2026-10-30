@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 
 export interface ChatMessageDto {
   role: 'user' | 'assistant' | 'system';
@@ -36,7 +37,10 @@ CRITICAL RULES:
 export class AiChatService {
   private readonly logger = new Logger(AiChatService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly appSettingsService: AppSettingsService,
+  ) {}
 
   async generateAiResponse(dto: AiChatRequestDto): Promise<{ answer: string; isFarming: boolean }> {
     // Basic input hygiene: this endpoint is public, so cap sizes to limit abuse / API cost.
@@ -55,9 +59,21 @@ export class AiChatService {
     };
     const isGarden = dto.mode === 'garden';
 
-    const openaiKey = this.configService.get<string>('OPENAI_API_KEY') || process.env.OPENAI_API_KEY;
+    let openaiKey = this.configService.get<string>('OPENAI_API_KEY') || process.env.OPENAI_API_KEY;
     // Server-side keys only. Never read EXPO_PUBLIC_* here: those values are bundled into the client app.
-    const rawGeminiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    let rawGeminiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const ai = integrations?.ai;
+      if (ai?.providers?.gemini?.apiKey && !ai.providers.gemini.apiKey.includes('your_')) {
+        rawGeminiKey = ai.providers.gemini.apiKey;
+      }
+      if (ai?.providers?.openai?.apiKey && !ai.providers.openai.apiKey.includes('your_')) {
+        openaiKey = ai.providers.openai.apiKey;
+      }
+    } catch {}
+
     const geminiKey = rawGeminiKey && !rawGeminiKey.includes('your_gemini_api_key') ? rawGeminiKey : undefined;
 
     const farmingSystemPrompt = `You are "Farmsking Kisan AI Doctor", an elite AI Agriculture & Farming Expert powered by Google Gemini 2.5 Flash with Live Google Search Grounding for National Farmers across all Indian states.

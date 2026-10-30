@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { GroupVoiceCallStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { StartGroupCallDto } from './dto/start-group-call.dto';
 
@@ -15,14 +16,22 @@ export class VoiceCallService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
 
   /**
    * Generates Agora RTC Token or fallback token if credentials not configured
    */
-  private generateAgoraToken(channelName: string, uid: string, role: 'publisher' | 'subscriber'): { token: string; appId: string } {
-    const appId = this.configService.get<string>('AGORA_APP_ID') || 'demo_agora_app_id';
-    const appCertificate = this.configService.get<string>('AGORA_APP_CERTIFICATE');
+  private async generateAgoraToken(channelName: string, uid: string, role: 'publisher' | 'subscriber'): Promise<{ token: string; appId: string }> {
+    let appId = this.configService.get<string>('AGORA_APP_ID') || 'demo_agora_app_id';
+    let appCertificate = this.configService.get<string>('AGORA_APP_CERTIFICATE');
+
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const agora = integrations?.telecom?.providers?.agora;
+      if (agora?.appId) appId = agora.appId;
+      if (agora?.appCertificate) appCertificate = agora.appCertificate;
+    } catch {}
 
     if (!appCertificate || appId === 'demo_agora_app_id') {
       // Fallback secure token format for development/testing
@@ -151,7 +160,7 @@ export class VoiceCallService {
       },
     });
 
-    const { token, appId } = this.generateAgoraToken(channelName, user.id, 'publisher');
+    const { token, appId } = await this.generateAgoraToken(channelName, user.id, 'publisher');
 
     return {
       call,
@@ -213,7 +222,7 @@ export class VoiceCallService {
     }
 
     const agoraRole = isHost ? 'publisher' : 'subscriber';
-    const { token, appId } = this.generateAgoraToken(call.channelName, user.id, agoraRole);
+    const { token, appId } = await this.generateAgoraToken(call.channelName, user.id, agoraRole);
 
     return {
       call,

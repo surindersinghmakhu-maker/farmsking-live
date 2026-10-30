@@ -188,5 +188,23 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsBoolean()
   walletTaxEnabled?: boolean;
+
+  @IsOptional()
+  advisorCertificationFee?: number;
+
+  @IsOptional()
+  advisorCertificationDiscount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  doctorMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  gardenAdvisorMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  accountsMaintenanceMode?: boolean;
 }
 

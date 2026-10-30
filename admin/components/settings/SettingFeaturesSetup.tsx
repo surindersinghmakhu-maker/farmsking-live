@@ -22,9 +22,15 @@ import {
   UpdateAppSettingsPayload,
   SystemIntegrationsConfig,
   mergeSystemIntegrationsWithDefaults,
+  DEFAULT_PROJECT_MASTER_DATA,
+  ProjectMasterDataConfig,
 } from '@/src/api/appSettings.api';
 
-type FeatureCategoryFilter = 'ALL' | 'WHATSAPP_CALLS' | 'SUB_MAINTENANCE' | 'OTP_RULES';
+type FeatureCategoryFilter =
+  | 'WHATSAPP_CALLS'
+  | 'SUB_MAINTENANCE'
+  | 'OTP_RULES'
+  | 'REGIONAL_FORMATS';
 
 interface FeatureCategoryPill {
   key: FeatureCategoryFilter;
@@ -33,10 +39,10 @@ interface FeatureCategoryPill {
 }
 
 const FEATURE_PILLS: FeatureCategoryPill[] = [
-  { key: 'ALL', label: 'All Features', icon: 'sparkles-outline' },
   { key: 'WHATSAPP_CALLS', label: 'Calls & WhatsApp Automation', icon: 'call-outline' },
   { key: 'SUB_MAINTENANCE', label: 'Granular Module Lockdowns', icon: 'lock-closed-outline' },
   { key: 'OTP_RULES', label: 'OTP Security & Rate Limiting', icon: 'key-outline' },
+  { key: 'REGIONAL_FORMATS', label: 'Regional & Currency', icon: 'globe-outline' },
 ];
 
 export default function SettingFeaturesSetup() {
@@ -58,8 +64,7 @@ export default function SettingFeaturesSetup() {
     mergeSystemIntegrationsWithDefaults(rawIntegrations)
   );
 
-  const [activeCategory, setActiveCategory] = useState<FeatureCategoryFilter>('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState<FeatureCategoryFilter>('WHATSAPP_CALLS');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -94,6 +99,16 @@ export default function SettingFeaturesSetup() {
     }));
   };
 
+  const updateMasterField = (field: keyof ProjectMasterDataConfig, val: any) => {
+    setIntForm((prev) => ({
+      ...prev,
+      projectMasterData: {
+        ...(prev.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
+        [field]: val,
+      },
+    }));
+  };
+
   const handleSaveAll = async () => {
     try {
       setIsSaving(true);
@@ -115,12 +130,16 @@ export default function SettingFeaturesSetup() {
         updateAppMutation.mutateAsync(appPayload),
         updateIntMutation.mutateAsync({
           otp: intForm.otp,
+          projectMasterData: intForm.projectMasterData,
         }),
       ]);
 
-      showToast('✅ Feature settings saved successfully!');
+      showToast('Feature settings saved successfully!');
     } catch (err: any) {
-      Alert.alert('Save Failed', err?.message || 'Could not save feature settings');
+      const errorDetail = err?.response?.data?.message || err?.message || 'Could not save feature settings';
+      const msg = Array.isArray(errorDetail) ? errorDetail.join(', ') : String(errorDetail);
+      showToast('Save failed: ' + msg);
+      Alert.alert('Save Failed', msg);
     } finally {
       setIsSaving(false);
     }
@@ -135,11 +154,10 @@ export default function SettingFeaturesSetup() {
     );
   }
 
-  const query = searchQuery.toLowerCase().trim();
-  const isVisible = (catKey: FeatureCategoryFilter, keywords: string) => {
-    const matchCategory = activeCategory === 'ALL' || activeCategory === catKey;
-    const matchQuery = !query || keywords.toLowerCase().includes(query);
-    return matchCategory && matchQuery;
+  const pm = intForm.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
+
+  const isVisible = (catKey: FeatureCategoryFilter) => {
+    return activeCategory === catKey;
   };
 
   return (
@@ -154,53 +172,8 @@ export default function SettingFeaturesSetup() {
         </View>
       )}
 
-      {/* Header Banner */}
-      <View style={[styles.bannerCard, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.08)', borderColor: isLight ? '#bbf7d0' : '#059669' }]}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.bannerTitleRow}>
-            <Ionicons name="sparkles" size={22} color="#10b981" />
-            <Text style={[styles.bannerTitle, { color: textColor }]}>Platform Operational Features</Text>
-            <View style={[styles.badgePill, { backgroundColor: isLight ? '#dcfce7' : '#064e3b' }]}>
-              <Text style={[styles.badgeText, { color: isLight ? '#166534' : '#6ee7b7' }]}>Active Controls</Text>
-            </View>
-          </View>
-          <Text style={[styles.bannerSub, { color: subTextColor }]}>
-            Manage automated communication, voice calls, emergency module lockdowns, and OTP anti-spam rate limiting.
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
-          onPress={handleSaveAll}
-          disabled={isSaving}
-          activeOpacity={0.8}
-        >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Ionicons name="save-outline" size={18} color="#ffffff" />
-          )}
-          <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save Features'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Category Pills & Search Bar */}
+      {/* Category Pills & Quick Save */}
       <View style={[styles.filterBar, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={[styles.searchBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-          <Ionicons name="search-outline" size={18} color={subTextColor} />
-          <TextInput
-            style={[styles.searchInput, { color: textColor }]}
-            placeholder="Search features (calls, whatsapp, lockdown, otp, rate limit)..."
-            placeholderTextColor={subTextColor}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color={subTextColor} />
-            </TouchableOpacity>
-          )}
-        </View>
-
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
           {FEATURE_PILLS.map((pill) => {
             const isActive = activeCategory === pill.key;
@@ -231,13 +204,27 @@ export default function SettingFeaturesSetup() {
             );
           })}
         </ScrollView>
+
+        <TouchableOpacity
+          style={[styles.saveBtnTop, isSaving && { opacity: 0.7 }]}
+          onPress={handleSaveAll}
+          disabled={isSaving}
+          activeOpacity={0.8}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Ionicons name="save-outline" size={14} color="#ffffff" />
+          )}
+          <Text style={styles.saveBtnTopText}>{isSaving ? 'Saving...' : 'Save Features'}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Feature Cards Grid */}
       <View style={[styles.grid, isDesktop && styles.gridDesktop]}>
         {/* 1. Calls & WhatsApp Automation */}
-        {isVisible('WHATSAPP_CALLS', 'group call voice whatsapp jid sync auto add remove otp channel') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
+        {isVisible('WHATSAPP_CALLS') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#dcfce7' }]}>
                 <Ionicons name="call" size={20} color="#15803d" />
@@ -323,8 +310,8 @@ export default function SettingFeaturesSetup() {
         )}
 
         {/* 2. Granular Module Lockdown Switches */}
-        {isVisible('SUB_MAINTENANCE', 'lockdown maintenance storefront agri garden wallet trainer') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
+        {isVisible('SUB_MAINTENANCE') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#fee2e2' }]}>
                 <Ionicons name="lock-closed" size={20} color="#dc2626" />
@@ -400,8 +387,8 @@ export default function SettingFeaturesSetup() {
         )}
 
         {/* 3. OTP Delivery & Anti-Spam Security Rules */}
-        {isVisible('OTP_RULES', 'otp delivery code length expiry rate limit spam') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
+        {isVisible('OTP_RULES') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <View style={styles.cardHeader}>
               <View style={[styles.iconBox, { backgroundColor: '#f1f5f9' }]}>
                 <Ionicons name="key" size={20} color="#0284c7" />
@@ -459,6 +446,74 @@ export default function SettingFeaturesSetup() {
                   value={Boolean(intForm.otp?.enableRateLimiting ?? true)}
                   onValueChange={(v) => updateOtpField('enableRateLimiting', v)}
                   trackColor={{ false: '#475569', true: '#0284c7' }}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 4. Regional Formatting & Currency Locale */}
+        {isVisible('REGIONAL_FORMATS') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: '#ecfdf5' }]}>
+                <Ionicons name="globe" size={20} color="#059669" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardTitle, { color: textColor }]}>Regional Formatting & Locale</Text>
+                <Text style={[styles.cardSub, { color: subTextColor }]}>Timezone, currency symbol, and date-time format standard</Text>
+              </View>
+            </View>
+
+            <View style={styles.fieldsGrid}>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Date Format</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={pm.dateFormat || 'DD/MM/YYYY'}
+                  onChangeText={(t) => updateMasterField('dateFormat', t)}
+                  placeholder="DD/MM/YYYY"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Time Format</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={pm.timeFormat || '12'}
+                  placeholder="12 or 24"
+                  placeholderTextColor={subTextColor}
+                  onChangeText={(t) => updateMasterField('timeFormat', t)}
+                />
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>System Timezone</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={pm.timezone || 'Asia/Kolkata'}
+                  onChangeText={(t) => updateMasterField('timezone', t)}
+                  placeholder="Asia/Kolkata"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Currency Code</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={pm.currency || 'INR'}
+                  onChangeText={(t) => updateMasterField('currency', t)}
+                  placeholder="INR"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Currency Symbol</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  value={pm.currencySymbol || '₹'}
+                  onChangeText={(t) => updateMasterField('currencySymbol', t)}
+                  placeholder="₹"
+                  placeholderTextColor={subTextColor}
                 />
               </View>
             </View>
@@ -534,42 +589,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
-  bannerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 18,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    marginBottom: 16,
-    gap: 16,
-    flexWrap: 'wrap',
-  },
-  bannerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  bannerTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    fontFamily: FONT.bold,
-  },
-  badgePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  bannerSub: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -584,25 +603,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  saveBtnTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+  },
+  saveBtnTopText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '700',
+    fontFamily: FONT.bold,
+  },
   filterBar: {
-    padding: 12,
-    borderRadius: RADIUS.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 8,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     marginBottom: 16,
     gap: 10,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    height: 38,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 13,
+    flexWrap: 'wrap',
   },
   categoryScroll: {
     flexDirection: 'row',

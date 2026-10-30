@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter | null = null;
 
-  constructor() {
+  constructor(private readonly appSettingsService: AppSettingsService) {
     this.initTransporter();
   }
 
@@ -38,6 +39,21 @@ export class EmailService {
   }
 
   async sendEmailOtp(toEmail: string, otpCode: string): Promise<boolean> {
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      const smtp = integrations?.projectMasterData?.smtp;
+      if (smtp?.host && smtp?.username && smtp?.password) {
+        this.transporter = nodemailer.createTransport({
+          host: smtp.host,
+          port: smtp.port || 465,
+          secure: (smtp.port || 465) === 465,
+          auth: {
+            user: smtp.username,
+            pass: smtp.password,
+          },
+        });
+      }
+    } catch {}
     if (!this.transporter) {
       this.initTransporter();
     }
@@ -47,10 +63,20 @@ export class EmailService {
       return false;
     }
 
-    const senderUser = process.env.SMTP_USER || 'farmskingindia@gmail.com';
+    let senderUser = process.env.SMTP_USER || 'farmskingindia@gmail.com';
+    let senderName = 'FarmsKing Official';
+    try {
+      const integrations = await this.appSettingsService.getIntegrations();
+      if (integrations?.projectMasterData?.smtp?.fromEmail) {
+        senderUser = integrations.projectMasterData.smtp.fromEmail;
+      }
+      if (integrations?.projectMasterData?.smtp?.fromName) {
+        senderName = integrations.projectMasterData.smtp.fromName;
+      }
+    } catch {}
 
     const mailOptions = {
-      from: `"FarmsKing Official" <${senderUser}>`,
+      from: `"${senderName}" <${senderUser}>`,
       to: toEmail.trim(),
       subject: `🔑 Your FarmsKing Account Verification OTP Code: ${otpCode}`,
       text: `Hello, Your FarmsKing verification OTP code is ${otpCode}. Valid for 10 minutes. Please do not share this OTP code with anyone. - FarmsKing India`,

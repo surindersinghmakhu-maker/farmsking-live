@@ -28,7 +28,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
-// ── Streamlined Top Navigation: Exactly 4 Core Links ──
+// ── Streamlined Top Navigation: Core Links ──
 const MAIN_NAV_LINKS = [
   {
     id: 'home',
@@ -48,6 +48,22 @@ const MAIN_NAV_LINKS = [
     isAction: 'home',
   },
   {
+    id: 'farming',
+    label: 'Farmers',
+    path: '/topic/Farming',
+    icon: 'leaf-outline',
+    activeIcon: 'leaf',
+    image: require('@/assets/images/icon_farming_3d_clean.png'),
+    color: '#10b981',
+    bg: 'rgba(16,185,129,0.1)',
+    bgNight: 'rgba(16,185,129,0.22)',
+    glow: ['rgba(16, 185, 129, 0.24)', 'rgba(5, 150, 105, 0.12)', 'rgba(16, 185, 129, 0.02)'],
+    glowNight: ['rgba(16, 185, 129, 0.35)', 'rgba(5, 150, 105, 0.20)', 'rgba(16, 185, 129, 0.06)'],
+    laser: ['#00ff87', '#10b981', '#059669'],
+    border: 'rgba(16, 185, 129, 0.5)',
+    shadow: '#10b981',
+  },
+  {
     id: 'doctors',
     label: 'Crop Doctors',
     path: '/topic/Crop-Doctors',
@@ -62,6 +78,22 @@ const MAIN_NAV_LINKS = [
     laser: ['#38bdf8', '#06b6d4', '#0284c7'],
     border: 'rgba(6, 182, 212, 0.5)',
     shadow: '#06b6d4',
+  },
+  {
+    id: 'gardening',
+    label: 'Gardening',
+    path: '/topic/Gardening',
+    icon: 'leaf-outline',
+    activeIcon: 'leaf',
+    image: require('@/assets/images/icon_gardening_3d_clean.png'),
+    color: '#e11d48',
+    bg: 'rgba(225,29,72,0.1)',
+    bgNight: 'rgba(225,29,72,0.22)',
+    glow: ['rgba(225, 29, 72, 0.24)', 'rgba(190, 18, 60, 0.12)', 'rgba(225, 29, 72, 0.02)'],
+    glowNight: ['rgba(225, 29, 72, 0.35)', 'rgba(190, 18, 60, 0.20)', 'rgba(225, 29, 72, 0.06)'],
+    laser: ['#fb7185', '#e11d48', '#be123c'],
+    border: 'rgba(225, 29, 72, 0.5)',
+    shadow: '#e11d48',
   },
   {
     id: 'store',
@@ -233,9 +265,11 @@ export default function PublicHeader({
     pathname === path || (path === '/' && (pathname === '/index' || pathname === ''));
 
   const getNavActiveIndex = () => {
-    if (helplineModalOpen) return 3;
-    if (pathname.startsWith('/topic/Crop-Doctors') || pathname.includes('Crop-Doctors')) return 1;
-    if (pathname.startsWith('/shop') || pathname.startsWith('/agristore')) return 2;
+    if (helplineModalOpen) return 5;
+    if (pathname.startsWith('/shop') || pathname.startsWith('/agristore')) return 4;
+    if (pathname.startsWith('/topic/Gardening') || pathname.includes('Gardening')) return 3;
+    if (pathname.startsWith('/topic/Crop-Doctors') || pathname.includes('Crop-Doctors')) return 2;
+    if (pathname.startsWith('/topic/Farming') || pathname.includes('Farming')) return 1;
     if (pathname === '/' || pathname === '/index' || pathname === '') return 0;
     return 0;
   };
@@ -438,21 +472,21 @@ export default function PublicHeader({
             />
           </TouchableOpacity>
 
-          {/* Desktop Nav: Exactly 4 Streamlined Links with Smooth Gliding Colorful Spring Pill */}
+          {/* Desktop Nav: Streamlined Links with Smooth Gliding Colorful Spring Pill */}
           {isDesktop && (
             <View style={styles.navLinks}>
-              {navMeasurements.length === 4 && (
+              {navMeasurements.length === MAIN_NAV_LINKS.length && (
                 <RNAnimated.View
                   style={[
                     styles.desktopGlidingPill,
                     {
                       left: navSlideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3],
+                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
                         outputRange: navMeasurements.map((m) => m?.x ?? 0),
                         extrapolate: 'clamp',
                       }),
                       width: navSlideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3],
+                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
                         outputRange: navMeasurements.map((m) => m?.width ?? 0),
                         extrapolate: 'clamp',
                       }),
@@ -825,7 +859,7 @@ export default function PublicHeader({
           </View>
         </View>
 
-        {/* Row 2 on Mobile/Tablet: 4 Core Pills with Continuous Spring Glider */}
+        {/* Row 2 on Mobile/Tablet: Core Pills with Continuous Spring Glider */}
         {!isDesktop && (
           <View style={styles.mobileNavRow}>
             <ScrollView
@@ -839,12 +873,12 @@ export default function PublicHeader({
                     styles.mobileGlidingPill,
                     {
                       left: navSlideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3],
+                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
                         outputRange: mobileMeasurements.map((m) => m?.x ?? 0),
                         extrapolate: 'clamp',
                       }),
                       width: navSlideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3],
+                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
                         outputRange: mobileMeasurements.map((m) => m?.width ?? 0),
                         extrapolate: 'clamp',
                       }),

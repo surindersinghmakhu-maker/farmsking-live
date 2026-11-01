@@ -42,42 +42,6 @@ const PUBLIC_NAV_LINKS = [
   { label: 'Crop Doctors', path: '/topic/Crop-Doctors', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
 ];
 
-// ─── Explore Other Modules Data (FarmsKing Ecosystem) ───────────────────────
-const EXPLORE_OTHER_MODULES = [
-  {
-    label: 'Agri Store',
-    subtitle: 'Certified Seeds & Direct Inputs',
-    path: '/shop',
-    image: require('@/assets/images/icon_agristore_3d_clean.png'),
-    color: '#f97316',
-    tag: 'STORE',
-  },
-  {
-    label: 'Farming OS',
-    subtitle: 'High-Yield Seeds & Crop Advisory',
-    path: '/topic/Farming',
-    image: require('@/assets/images/icon_farming_3d_clean.png'),
-    color: '#10b981',
-    tag: 'FARMING',
-  },
-  {
-    label: 'Gardening',
-    subtitle: 'Flora, Live Plants & Composts',
-    path: '/topic/Gardening',
-    image: require('@/assets/images/icon_gardening_3d_clean.png'),
-    color: '#e11d48',
-    tag: 'GARDENING',
-  },
-  {
-    label: 'Crop Doctors',
-    subtitle: '24/7 AI Crop Disease Diagnostics',
-    path: '/topic/Crop-Doctors',
-    image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
-    color: '#06b6d4',
-    tag: 'AI CARE',
-  },
-];
-
 // ─── Mobile Bottom Nav Tabs (Admin-Style Colorful Dynamic Indicator) ──────────
 const BOTTOM_NAV_TABS = [
   {
@@ -448,98 +412,98 @@ export interface CultivatorSuccessStory {
 const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
   {
     id: 'story-1',
-    name: 'S. Gurpreet Singh',
-    location: 'Ludhiana, Punjab',
-    cropRole: '38-Acre Progressive Cultivator • Basmati 1121 & Wheat',
+    name: 'Surinder Singh',
+    location: 'Firozpur, Punjab',
+    cropRole: 'King ID: 16656444 • Progressive Cultivator • Basmati 1121 & Wheat',
     metric: '+24% Yield Gain',
     metricColor: '#10b981',
     quote: 'The satellite moisture maps helped us calibrate canal water cycles with precision. Our Basmati 1121 yield crossed 24 quintals per acre with zero lodging.',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
-    initials: 'GS',
+    initials: 'SS',
     stars: 5,
   },
   {
     id: 'story-2',
-    name: 'Balwinder Singh',
-    location: 'Khanna Mandi Region, Punjab',
-    cropRole: 'Wheat & Mustard Cultivator • 26 Acres',
+    name: 'Gurnam Singh',
+    location: 'Firozpur, Punjab',
+    cropRole: 'King ID: 59091178 • Wheat & Mustard Cultivator • 26 Acres',
     metric: 'Zero Disease Spread',
     metricColor: '#0284c7',
     quote: 'We detected Yellow Rust at the earliest pinhead stage using the Crop Doctor scanner. The exact spray dosage saved our 14-acre wheat crop from devastation.',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
-    initials: 'BS',
+    initials: 'GS',
     stars: 5,
   },
   {
     id: 'story-3',
-    name: 'Harjinder Singh',
-    location: 'Sangrur, Punjab',
-    cropRole: 'Organic Rice & Potato Grower • 32 Acres',
+    name: 'Charanjeet Singh',
+    location: 'Firozpur, Punjab',
+    cropRole: 'King ID: 21683889 • Direct Mandi Member • 32 Acres',
     metric: '+₹140/q Higher Price',
     metricColor: '#d97706',
     quote: 'Instant mandi pricing allowed us to route our paddy directly to Khanna instead of local village arhtiyas, securing ₹140 more per quintal transparently.',
     avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&auto=format&fit=crop&q=80',
-    initials: 'HS',
+    initials: 'CS',
     stars: 5,
   },
   {
     id: 'story-4',
-    name: 'Sardar Amarjit Singh Dhillon',
-    location: 'Bathinda, Punjab',
-    cropRole: '52-Acre Progressive Farmer • Bt Cotton & Wheat',
+    name: 'Gagandeep Gill',
+    location: 'Firozpur, Punjab',
+    cropRole: 'King ID: 55725971 • Progressive Cultivator • Bt Cotton & Wheat',
     metric: '+₹2.85 Lakh Net Profit',
     metricColor: '#10b981',
     quote: 'Satellite NDVI canopy scans identified micro-nutrient zinc deficiency across our cotton blocks 18 days before visual yellowing, saving our bumper yield.',
     avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&auto=format&fit=crop&q=80',
-    initials: 'AD',
+    initials: 'GG',
     stars: 5,
   },
   {
     id: 'story-5',
-    name: 'Manpreet Kaur Brar',
+    name: 'Surinder Kumar',
     location: 'Moga, Punjab',
-    cropRole: 'Commercial Floriculture • Marigold & Vegetables',
+    cropRole: 'King ID: 35683108 • Organic Farm & Floriculture • 18 Acres',
     metric: '3.4x Revenue Growth',
     metricColor: '#f59e0b',
-    quote: 'Transitioning 4 acres to commercial Marigold with FarmsKing guidance and direct buyer linkages tripled our monthly cash flow compared to conventional farming.',
+    quote: 'Transitioning acreage to high-value crops with FarmsKing guidance and direct buyer linkages tripled our monthly cash flow compared to conventional farming.',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80',
-    initials: 'MK',
+    initials: 'SK',
     stars: 5,
   },
   {
     id: 'story-6',
-    name: 'Shamsher Singh Virk',
-    location: 'Karnal, Haryana',
-    cropRole: 'Smart Irrigation Cultivator • 45 Acres',
+    name: 'Chandra Mohan',
+    location: 'Jind, Haryana',
+    cropRole: 'King ID: 27633065 • Smart Irrigation Cultivator • 45 Acres',
     metric: '28% Water Saved',
     metricColor: '#06b6d4',
     quote: 'Precision weather alerts and laser moisture telemetry eliminated 3 redundant tubewell irrigation cycles, cutting electricity and diesel costs substantially.',
     avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=240&auto=format&fit=crop&q=80',
-    initials: 'SV',
+    initials: 'CM',
     stars: 5,
   },
   {
     id: 'story-7',
-    name: 'Jagtar Singh Sandhu',
-    location: 'Tarn Taran, Punjab',
-    cropRole: 'Direct Mandi Member • Basmati & Green Pea',
+    name: 'Satnam Singh',
+    location: 'Firozpur, Punjab',
+    cropRole: 'King ID: 50653620 • Verified Mandi Trader & Cultivator',
     metric: 'Zero Middleman Fee',
     metricColor: '#059669',
     quote: 'Sold 480 quintals through FarmsKing Live Mandi verified buyer network. Transparent weighment settlement arrived straight in our bank account within 24 hours.',
     avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&auto=format&fit=crop&q=80',
-    initials: 'JS',
+    initials: 'SS',
     stars: 5,
   },
   {
     id: 'story-8',
-    name: 'Rameshwar Dayal Sharma',
-    location: 'Meerut, Uttar Pradesh',
-    cropRole: 'Sugarcane & Mustard Cultivator • 28 Acres',
-    metric: '+19% Sugar Recovery',
+    name: 'Rahul Yadav',
+    location: 'Jaipur, Rajasthan',
+    cropRole: 'King ID: 20658895 • Mustard & Gram Cultivator • 24 Acres',
+    metric: '+19% Crop Recovery',
     metricColor: '#16a34a',
-    quote: 'Certified bio-organic vermicompost and calibrated nutrition schedules from FarmsKing Agri Store revived our soil biology and lifted sugar sucrose levels.',
+    quote: 'Certified bio-organic inputs and calibrated nutrition schedules from FarmsKing Agri Store revived our soil biology and lifted crop productivity significantly.',
     avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=240&auto=format&fit=crop&q=80',
-    initials: 'RS',
+    initials: 'RY',
     stars: 5,
   },
 ];
@@ -770,20 +734,31 @@ export default function PublicLandingPage() {
   // ── Verified Cultivator Field Success Stories State & Real Profile Sync ──
   const [showAllStories, setShowAllStories] = useState(false);
 
-  const realCultivatorStories = useMemo(() => {
-    const list: CultivatorSuccessStory[] = [...VERIFIED_CULTIVATOR_STORIES];
+  // Randomize real farmer login profiles on mount
+  const [shuffledBaseStories] = useState(() => {
+    const arr = [...VERIFIED_CULTIVATOR_STORIES];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  });
 
-    // If active user is logged in with an online photo/avatar or verified role, prepend their real story
-    if (user && user.name && user.name.trim() && user.photoUrl) {
-      const photo = user.photoUrl.startsWith('http')
-        ? user.photoUrl
-        : `/uploads/${user.photoUrl.replace(/^\/uploads\//, '')}`;
+  const realCultivatorStories = useMemo(() => {
+    const list: CultivatorSuccessStory[] = [...shuffledBaseStories];
+
+    // If active user is logged in with a name, prepend their real story at the top
+    if (user && user.name && user.name.trim()) {
+      const photo = user.photoUrl
+        ? (user.photoUrl.startsWith('http') ? user.photoUrl : `/uploads/${user.photoUrl.replace(/^\/uploads\//, '')}`)
+        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80';
       const loc = [user.village, user.district, user.state || 'Punjab'].filter(Boolean).join(', ');
+      const kingTag = (user as any).kingId ? `King ID: ${(user as any).kingId} • ` : '';
       list.unshift({
         id: `user-${user.id || 'real'}`,
         name: user.name,
         location: loc || 'Punjab, India',
-        cropRole: `${user.role === 'FARMER' ? 'Verified Cultivator' : 'Active Member'} • FarmsKing Network`,
+        cropRole: `${kingTag}${user.role === 'FARMER' ? 'Verified Cultivator' : 'Active Member'} • FarmsKing Network`,
         metric: 'Verified Member',
         metricColor: '#10b981',
         quote: 'FarmsKing digital tools and helpline support have made modern farm management transparent, precise, and highly profitable.',
@@ -794,7 +769,7 @@ export default function PublicLandingPage() {
     }
 
     return list;
-  }, [user?.id, user?.name, user?.photoUrl, user?.village, user?.district, user?.state, user?.role]);
+  }, [shuffledBaseStories, user?.id, user?.name, user?.photoUrl, user?.village, user?.district, user?.state, user?.role, (user as any)?.kingId]);
 
   const displayedStories = showAllStories ? realCultivatorStories : realCultivatorStories.slice(0, 3);
 
@@ -2820,91 +2795,6 @@ export default function PublicLandingPage() {
               {/* Soft Bottom Glow Flare */}
               <View style={[S.cardFlareBottom, { backgroundColor: '#14b8a6', shadowColor: '#14b8a6' }]} />
             </SpatialTiltCard>
-          </View>
-        </View>
-
-        {/* ══ EXPLORE OTHER MODULES ══ */}
-        <View style={S.exploreModulesSection}>
-          <View style={S.sectionHeader}>
-            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
-              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
-              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>FARMSKING ECOSYSTEM</Text>
-            </View>
-            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay]}>Explore Other Modules</Text>
-            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay]}>
-              Seamless access to certified agri products, precision farming tools, home gardening supplies, and 24/7 AI crop care.
-            </Text>
-          </View>
-
-          <View style={S.exploreModulesGrid}>
-            {EXPLORE_OTHER_MODULES.map((link) => (
-              <TouchableOpacity
-                key={link.path}
-                style={[
-                  S.exploreModuleCard,
-                  isTablet && S.exploreModuleCardTablet,
-                  isMobile && S.exploreModuleCardMobile,
-                  isDay ? S.exploreModuleCardDay : S.exploreModuleCardNight,
-                  { borderColor: isDay ? `${link.color}35` : `${link.color}45` },
-                  Platform.OS === 'web' ? ({ cursor: 'pointer', transition: 'all 0.22s ease' } as any) : {},
-                ]}
-                onPress={() => router.push(link.path as any)}
-                activeOpacity={0.88}
-              >
-                {/* 3D Digital Thumbnail */}
-                <View
-                  style={[
-                    S.exploreModuleImgFrame,
-                    {
-                      borderColor: `${link.color}40`,
-                      backgroundColor: isDay ? `${link.color}12` : `${link.color}1e`,
-                    },
-                  ]}
-                >
-                  <Image source={link.image} style={S.exploreModuleImg} resizeMode="contain" />
-                </View>
-
-                {/* Info Text */}
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <View
-                    style={[
-                      S.exploreModuleTag,
-                      { backgroundColor: isDay ? `${link.color}15` : `${link.color}25` },
-                    ]}
-                  >
-                    <Text style={[S.exploreModuleTagText, { color: link.color }]}>{link.tag}</Text>
-                  </View>
-                  <Text
-                    style={[
-                      S.exploreModuleTitle,
-                      { color: isDay ? '#0f172a' : '#f8fafc' },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {link.label}
-                  </Text>
-                  <Text
-                    style={[
-                      S.exploreModuleSub,
-                      { color: isDay ? '#64748b' : '#94a3b8' },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {link.subtitle}
-                  </Text>
-                </View>
-
-                {/* Arrow Forward Circle */}
-                <View
-                  style={[
-                    S.exploreModuleArrow,
-                    { backgroundColor: isDay ? `${link.color}15` : `${link.color}25` },
-                  ]}
-                >
-                  <Ionicons name="arrow-forward" size={15} color={link.color} />
-                </View>
-              </TouchableOpacity>
-            ))}
           </View>
         </View>
 
@@ -6246,99 +6136,6 @@ const S = StyleSheet.create({
   },
   featureDescDay: {
     color: '#475569',
-  },
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // EXPLORE OTHER MODULES (FARMSKING ECOSYSTEM)
-  // ══════════════════════════════════════════════════════════════════════════
-  exploreModulesSection: {
-    paddingTop: 48,
-    paddingBottom: 24,
-    paddingHorizontal: '5%',
-    maxWidth: 1360,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  exploreModulesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  exploreModuleCard: {
-    flex: 1,
-    minWidth: 260,
-    maxWidth: 310,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-  },
-  exploreModuleCardTablet: {
-    flexBasis: '47%',
-    minWidth: '47%',
-    maxWidth: '48%',
-  },
-  exploreModuleCardMobile: {
-    flexBasis: '100%',
-    minWidth: '100%',
-    maxWidth: '100%',
-  },
-  exploreModuleCardDay: {
-    backgroundColor: '#ffffff',
-    ...premiumShadow('rgba(15, 23, 42, 0.06)', 'sm'),
-  },
-  exploreModuleCardNight: {
-    backgroundColor: 'rgba(15, 23, 42, 0.78)',
-    ...premiumShadow('#000000', 'sm'),
-  },
-  exploreModuleImgFrame: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1.2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-  exploreModuleImg: {
-    width: 44,
-    height: 44,
-  },
-  exploreModuleTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-    marginBottom: 4,
-  },
-  exploreModuleTagText: {
-    fontSize: 9.5,
-    fontFamily: FONT.extraBold,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  exploreModuleTitle: {
-    fontSize: 15,
-    fontFamily: FONT.bold,
-    marginBottom: 2,
-  },
-  exploreModuleSub: {
-    fontSize: 11.5,
-    fontFamily: FONT.medium,
-  },
-  exploreModuleArrow: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
 
   // ══════════════════════════════════════════════════════════════════════════

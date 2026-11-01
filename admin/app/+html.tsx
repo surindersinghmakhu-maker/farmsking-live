@@ -10,7 +10,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         {/* Primary Page Title & Canonical SEO Tags */}
-        <title>FarmsKing - India's #1 Smart Farming & Crop Intelligence Platform | Surinder Agro Farm</title>
+        <title>FarmsKing - India's #1 Smart Farming & Crop Intelligence Platform | Smart Agriculture</title>
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 
@@ -23,19 +23,19 @@ export default function Root({ children }: PropsWithChildren) {
 
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
-        <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform founded by Surinder Singh (Surinder Academy / Surinder Agro Farm). AI crop intelligence, disease diagnosis, PAU advisory & farmer rewards." />
-        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Surinder Singh, Surinder Agro Farm, Surinder Academy, Surinder Computers, Exilent Web Solutions, Gurnam Singh FarmsKing, PAU Punjab Agricultural University FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, ਝੋਨੇ ਦੀ ਸਪਰੇਅ, ਕਣਕ ਦੀ ਬੀਜਾਈ, ਫਸਲ ਇਲਾਜ, ਗੋਭੀ ਸਪਰੇਅ, ਖੇਤੀਬਾੜੀ ਸਲਾਹ, ਕਿਸਾਨ ਮਦਦ, Crop Disease Scan, Reverse Sowing Engine" />
+        <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform. AI crop intelligence, disease diagnosis, APMC mandi rates, satellite telemetry & farmer accounting." />
+        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, Crop Disease Scan, Reverse Sowing Engine, Live Mandi Rates, Goindwal Sahib, Makhu, Punjab" />
         
         {/* OpenGraph & Social Cards */}
         <meta property="og:site_name" content="FarmsKing Smart Agriculture Platform" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
-        <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
+        <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform. AI crop care, live mandi rates, satellite telemetry and organic farm inputs." />
         <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
-        <meta name="twitter:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
+        <meta name="twitter:description" content="India's leading Smart Farming & Crop Advisory Platform. AI crop care, live mandi rates, satellite telemetry and organic farm inputs." />
         <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
         {/* WebSite Sitelinks SearchBox Schema for Google #1 Ranking */}
@@ -92,38 +92,11 @@ export default function Root({ children }: PropsWithChildren) {
                 "price": "0",
                 "priceCurrency": "INR"
               },
-              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform created by Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato.",
+              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform operated by FARMSKING TECHNOLOGIES PRIVATE LIMITED.",
               "author": {
                 "@type": "Organization",
-                "name": "FarmsKing Platform",
-                "url": "https://farmsking.in",
-                "founder": [
-                  {
-                    "@type": "Person",
-                    "name": "Surinder Singh",
-                    "jobTitle": "Lead Founder, Chief Architect & AI Expert",
-                    "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
-                    "description": "Computer Teacher, IT & AI Expert, vision founder of Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Led FarmsKing end-to-end from ideation, deep crop physiology research, programming, features development to field testing."
-                  }
-                ],
-                "director": [
-                  { "@type": "Person", "name": "Bakshish Singh", "jobTitle": "Director" },
-                  { "@type": "Person", "name": "Gagandeep Kaur", "jobTitle": "Director" }
-                ],
-                "contributor": [
-                  { "@type": "Person", "name": "Gurnam Singh", "description": "Field Testing & Practical Validation Lead" }
-                ],
-                "parentOrganization": {
-                  "@type": "EducationalOrganization",
-                  "name": "Surinder Academy Makhu Punjab India",
-                  "url": "https://surinderacademy.com",
-                  "foundingDate": "2001"
-                },
-                "subOrganization": [
-                  { "@type": "Organization", "name": "Exilent Web Solutions", "description": "International level Web & Software Engineering" },
-                  { "@type": "Organization", "name": "Surinder Computers Makhu", "description": "Hardware & Infrastructure Provider" },
-                  { "@type": "Organization", "name": "Surinder Agro Farm", "description": "Practical Agricultural R&D Laboratory for studying crop physiology, plant health, and ground-level farming challenges" }
-                ]
+                "name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+                "url": "https://farmsking.in"
               }
             })
           }}
@@ -146,36 +119,29 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "Question",
-                  "name": "Who is Surinder Singh and what is his contribution to FarmsKing?",
+                  "name": "Who operates FarmsKing and what is its corporate identity?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Surinder Singh is the primary visionary, Lead Founder, and Chief AI Architect of FarmsKing. A Computer Teacher with degrees in Computer Science Graduation, MBA, and LLB, he is an IT/AI expert, avid reader of general knowledge, and follower of motivational speakers. He single-handedly founded Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Surinder Singh spearheaded FarmsKing from conceptualization, deep agricultural research, software programming, feature architecture to testing, driven by a progressive mindset and commitment to public welfare."
+                    "text": "FarmsKing is operated by FARMSKING TECHNOLOGIES PRIVATE LIMITED, an incorporated private limited company under the Ministry of Corporate Affairs, ROC Chandigarh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Who created FarmsKing and what is its mission?",
+                  "name": "What are the core capabilities of FarmsKing?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing was founded by Surinder Singh, with registered entity FarmsKing Technologies Private Limited led by First Directors Bakshish Singh and Gagandeep Kaur, and practical field validation supported by Gurnam Singh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
+                    "text": "FarmsKing combines multimodal AI crop disease diagnosis, satellite field telemetry, daily APMC mandi rates across 50+ crops, certified organic inputs, and digital double-entry bahi-khata farm accounting."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Which organizations engineered FarmsKing software, hardware, and field R&D?",
+                  "name": "Where is FarmsKing registered and headquartered?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing is backed by Surinder Academy (Makhu, Punjab, India - surinderacademy.com, operating since 2001). Web software engineered by Exilent Web Solutions, hardware infrastructure by Surinder Computers Makhu, and practical crop R&D conducted at Surinder Agro Farm with field testing by Gurnam Singh."
+                    "text": "The Statutory Registered Office is located at VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India. The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
                   }
-                },
-                {
-                  "@type": "Question",
-                  "name": "What is Surinder Agro Farm's role in FarmsKing?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Surinder Agro Farm was established to practically study ground-level farming problems, deeply understand plant health and crop physiology, and test organic farming solutions directly in the field with testing supported by Gurnam Singh."
-                  }
-                },
+                }
+              ],
                 {
                   "@type": "Question",
                   "name": "What are the future launch and expansion plans for FarmsKing?",
@@ -376,12 +342,12 @@ export default function Root({ children }: PropsWithChildren) {
               </section>
 
               <section style={{ marginBottom: '25px' }}>
-                <h2 style={{ color: '#15803d', fontSize: '20px' }}>FarmsKing Founders & Vision (ਮਿਸ਼ਨ ਅਤੇ ਸੰਸਥਾਪਕ):</h2>
+                <h2 style={{ color: '#15803d', fontSize: '20px' }}>FarmsKing Corporate Governance &amp; Vision:</h2>
                 <p style={{ fontSize: '15px' }}>
-                  FarmsKing was founded by <strong>Surinder Singh</strong> (Computer Teacher, IT & AI Expert, founder of Surinder Academy, Exilent Web Solutions, and Surinder Agro Farm) with registered directors <strong>Bakshish Singh</strong> and <strong>Gagandeep Kaur</strong>, and practical field validation supported by Gurnam Singh.
+                  FarmsKing is operated by <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong>, dedicated to empowering Indian farmers with digital crop diagnostics, real-time APMC mandi pricing, and genuine certified agricultural inputs.
                 </p>
                 <p style={{ fontSize: '15px' }}>
-                  FarmsKing has been developed with deep practical agricultural R&D at Surinder Agro Farm to solve ground-level farming challenges, protect farmers from fake pesticides, and provide transparent mandi pricing.
+                  FarmsKing is developed with deep agricultural research to solve ground-level farming challenges, protect farmers from spurious inputs, and deliver complete digital ledger transparency.
                 </p>
               </section>
 

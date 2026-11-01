@@ -330,28 +330,6 @@ try {
           "postalCode": "142044",
           "addressCountry": "IN"
         }
-      ],
-      "director": [
-        { "@type": "Person", "name": "Bakshish Singh", "jobTitle": "Director" },
-        { "@type": "Person", "name": "Gagandeep Kaur", "jobTitle": "Director" }
-      ],
-      "employee": [
-        { "@type": "Person", "name": "Gurnam Singh", "jobTitle": "General Manager & Quality Assurance Lead" },
-        { "@type": "Person", "name": "Engg. Gurdit Singh", "jobTitle": "Technical Support Lead" },
-        {
-          "@type": "Person",
-          "name": "Charanjit Singh",
-          "jobTitle": "Backend Support Lead",
-          "description": "IT systems expert leading high-performance backend infrastructure, API gateways, database optimization, and cloud architecture for FarmsKing."
-        },
-        {
-          "@type": "Person",
-          "name": "Gurjant Singh",
-          "jobTitle": "Hardware Support Lead",
-          "description": "Hardware and edge telemetry expert managing server equipment, diagnostic hardware, rural kiosk devices, and networking infrastructure for FarmsKing."
-        },
-        { "@type": "Person", "name": "Sudhir Kumar Mahato", "jobTitle": "Marigold Farming Expert, Promotion Partner & Testing Advisor" },
-        { "@type": "Person", "name": "Manjeet Sra", "jobTitle": "Organic Products & Marketing Manager" }
       ]
     }
     </script>
@@ -421,10 +399,10 @@ try {
         },
         {
           "@type": "Question",
-          "name": "Who manages Technical, Backend and Hardware Support at FarmsKing?",
+          "name": "How is FarmsKing governed and administered?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Technical Support is led by Engg. Gurdit Singh. Backend Support is led by Charanjit Singh (Cloud Infrastructure). Hardware Support is led by Gurjant Singh (Telemetry & Systems). Operational Testing Advisors are Gurnam Singh and Sudhir Kumar Mahato."
+            "text": "FARMSKING TECHNOLOGIES PRIVATE LIMITED is governed by its Board of Directors and certified executive management team in strict compliance with the Companies Act, 2013 and statutory Ministry of Corporate Affairs regulations."
           }
         }
       ]
@@ -476,10 +454,10 @@ try {
               <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong> (CIN / Regd: Ministry of Corporate Affairs, ROC Chandigarh, India)
             </p>
             <p style="font-size: 14px; color: #334155; margin: 0;">
-              • <strong>Directors:</strong> Bakshish Singh &amp; Gagandeep Kaur<br />
-              • <strong>General Manager &amp; Operations Lead:</strong> Gurnam Singh<br />
-              • <strong>Engineering &amp; Support:</strong> Engg. Gurdit Singh (Tech Support Lead), Charanjit Singh (Backend Systems Lead), Gurjant Singh (Hardware Systems Lead)<br />
-              • <strong>Agronomy Specialists:</strong> Sudhir Kumar Mahato (Marigold Floriculture &amp; Testing Advisor), Manjeet Sra (Organic Products &amp; Marketing Manager)<br />
+              • <strong>Statutory Governance:</strong> Governed by the Board of Directors &amp; Executive Management Panel<br />
+              • <strong>Developer Company:</strong> Exilent Web Solutions (Software Platform &amp; Technology Architecture)<br />
+              • <strong>Technical &amp; Systems Engineering:</strong> Central Cloud Systems &amp; Field Telemetry Desk<br />
+              • <strong>Agronomy Advisory:</strong> Certified FarmsKing Agronomist Panel &amp; Soil Scientists<br />
               • <strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India<br />
               • <strong>Operational Headquarters:</strong> Makhu, Ferozepur, Punjab - 142044, India
             </p>

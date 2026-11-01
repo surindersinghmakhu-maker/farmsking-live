@@ -223,7 +223,7 @@ export default function DosePage() {
           <View style={styles.advisorHighlightBox}>
             <Ionicons name="shield-checkmark" size={16} color="#B45309" />
             <Text style={styles.advisorHighlightText}>
-              👨‍🌾 Advised By / ਸਲਾਹਕਾਰ: <Text style={{ fontWeight: '900', color: '#15803D' }}>Sudhir Kumar Mahato</Text>
+              👨‍🌾 Advised By: <Text style={{ fontWeight: '900', color: '#15803D' }}>Certified FarmsKing Agronomist Panel</Text>
             </Text>
           </View>
 

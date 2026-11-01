@@ -253,137 +253,68 @@ export default function ContactUsPage() {
             </TouchableOpacity>
           </View>
 
-          {/* Official Leadership & Operational Team Section */}
+          {/* Official Corporate Office & Administration Desk */}
           <View style={[styles.leadershipCard, isDay ? styles.leadershipCardDay : styles.leadershipCardNight]}>
             <View style={styles.leadershipHeader}>
               <View style={styles.leadershipHeaderIcon}>
-                <Ionicons name="people" size={20} color="#059669" />
+                <Ionicons name="business" size={20} color="#059669" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.leadershipTitle, isDay ? styles.leadershipTitleDay : styles.leadershipTitleNight]}>
-                  Official Leadership &amp; Operational Team
+                  Corporate Administration &amp; Grievance Redressal
                 </Text>
                 <Text style={[styles.leadershipSub, isDay ? styles.leadershipSubDay : styles.leadershipSubNight]}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED — Serving farmers, gardeners, organic consumers &amp; nature lovers nationwide.
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED — Governed under statutory Ministry of Corporate Affairs (ROC Chandigarh) regulations.
                 </Text>
               </View>
             </View>
 
             <View style={styles.leadershipGrid}>
-              {/* Director 1 */}
               <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
                 <View style={styles.leaderRolePill}>
-                  <Text style={styles.leaderRoleText}>DIRECTOR</Text>
+                  <Text style={styles.leaderRoleText}>CORPORATE GOVERNANCE</Text>
                 </View>
                 <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Bakshish Singh
+                  Board Secretariat &amp; Legal
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Board of Directors • Corporate Governance &amp; Strategy
+                  Statutory corporate filings, MCA compliance, and corporate affairs desk.
                 </Text>
               </View>
 
-              {/* Director 2 */}
-              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
-                <View style={styles.leaderRolePill}>
-                  <Text style={styles.leaderRoleText}>DIRECTOR</Text>
-                </View>
-                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Gagandeep Kaur
-                </Text>
-                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Board of Directors • Operations &amp; Commercial Partnerships
-                </Text>
-              </View>
-
-              {/* General Manager */}
               <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
                 <View style={[styles.leaderRolePill, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#0369a1' }]}>GENERAL MANAGER</Text>
+                  <Text style={[styles.leaderRoleText, { color: '#0369a1' }]}>OPERATIONS DESK</Text>
                 </View>
                 <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Gurnam Singh Ji
+                  Central Agronomy Operations
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  General Manager • Mandi Networks, Operations &amp; Quality
+                  National crop telemetry, APMC mandi intelligence, and field quality assurance.
                 </Text>
               </View>
 
-              {/* Technical Support Lead */}
               <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
                 <View style={[styles.leaderRolePill, { backgroundColor: '#f5f3ff', borderColor: '#ddd6fe' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#6d28d9' }]}>TECHNICAL SUPPORT</Text>
+                  <Text style={[styles.leaderRoleText, { color: '#6d28d9' }]}>DEVELOPER COMPANY</Text>
                 </View>
                 <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Engg. Gurdit Singh
+                  Exilent Web Solutions
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Lead Technical Support Engineer • Hardware, Telemetry &amp; Field Systems
+                  Official Developer Company • 24/7 AI crop scanner reliability, API infrastructure, and systems monitoring.
                 </Text>
               </View>
 
-              {/* Backend Support (IT Services) */}
-              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
-                <View style={[styles.leaderRolePill, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#1d4ed8' }]}>BACKEND IT SUPPORT</Text>
-                </View>
-                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Charanjit Singh
-                </Text>
-                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Backend Support Lead • Cloud Infrastructure &amp; IT Systems Desk
-                </Text>
-              </View>
-
-              {/* Hardware Support */}
-              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
-                <View style={[styles.leaderRolePill, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#15803d' }]}>HARDWARE SUPPORT</Text>
-                </View>
-                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Gurjant Singh
-                </Text>
-                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Hardware Support Lead • Telemetry &amp; Enterprise Systems Desk
-                </Text>
-              </View>
-
-              {/* Testing Advisors */}
-              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
-                <View style={[styles.leaderRolePill, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#b45309' }]}>TESTING ADVISORS</Text>
-                </View>
-                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Gurnam Singh &amp; Sudhir Kumar Mahato
-                </Text>
-                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Platform Testing, Field Agronomy &amp; Crop Diagnostic Validation
-                </Text>
-              </View>
-
-              {/* Marigold Floriculture Expert */}
-              <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
-                <View style={[styles.leaderRolePill, { backgroundColor: '#fff7ed', borderColor: '#fed7aa' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#c2410c' }]}>FLORICULTURE &amp; PROMOTION</Text>
-                </View>
-                <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Sudhir Kumar Mahato
-                </Text>
-                <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Marigold Farming Expert &amp; Commercial Promotion Partner
-                </Text>
-              </View>
-
-              {/* Organic Products & Marketing Manager */}
               <View style={[styles.leaderTile, isDay ? styles.leaderTileDay : styles.leaderTileNight]}>
                 <View style={[styles.leaderRolePill, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}>
-                  <Text style={[styles.leaderRoleText, { color: '#047857' }]}>ORGANIC &amp; MARKETING</Text>
+                  <Text style={[styles.leaderRoleText, { color: '#047857' }]}>QUALITY ASSURANCE</Text>
                 </View>
                 <Text style={[styles.leaderName, isDay ? styles.leaderNameDay : styles.leaderNameNight]}>
-                  Manjeet Sra
+                  Certified Agronomy Panel
                 </Text>
                 <Text style={[styles.leaderDesc, isDay ? styles.leaderDescDay : styles.leaderDescNight]}>
-                  Organic Products &amp; Marketing Manager • Pure Vermicompost &amp; Bio-Fertilizers
+                  100% genuine certified seeds, bio-organic fertilizers, and plant care validation.
                 </Text>
               </View>
             </View>

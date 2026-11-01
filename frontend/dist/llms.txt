@@ -1,16 +1,12 @@
 # FarmsKing - Smart Agriculture & Crop Intelligence Platform
 
-> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (CIN: U01100PB2026PTC063294, ROC Chandigarh) with Board of Directors **Bakshish Singh** and **Gagandeep Kaur**, and General Manager **Gurnam Singh**, supported by certified agronomists, software engineers, and progressive farmers across India.
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (CIN: U01100PB2026PTC063294, ROC Chandigarh), governed by its Board of Directors and certified executive management team, supported by certified agronomists, software engineers, and progressive farmers across India.
 
-## Corporate Governance & Core Team
-- **Board of Directors**: Bakshish Singh & Gagandeep Kaur (Corporate Governance, Operations, and Partnerships).
-- **General Manager & Field Quality Lead**: Gurnam Singh (Mandi Networks, Field Agronomy & Quality Assurance).
-- **Technical Support Lead**: Engg. Gurdit Singh (Cloud Telemetry, IoT & Technical Operations).
-- **Backend IT Support Lead**: Charanjit Singh (Cloud Infrastructure & Backend Systems).
-- **Hardware & Telemetry Lead**: Gurjant Singh (Edge Devices & Hardware Systems).
-- **Agronomy & Floriculture Specialists**:
-  - Sudhir Kumar Mahato (Marigold Floriculture & Agronomy Advisory).
-  - Manjeet Sra (Organic Products & Soil Fertility Manager).
+## Corporate Governance & Administration
+- **Statutory Administration**: Governed by the Board of Directors under the Companies Act, 2013 and ROC Chandigarh.
+- **Central Agronomy Operations**: Directing nationwide agronomic validation, mandi networks, and field quality assurance.
+- **Technical Support & Systems Engineering**: Managing 24/7 cloud reliability, IoT telemetry, and platform infrastructure.
+- **Specialist Agronomy Advisory**: Certified FarmsKing Agronomist Panel, soil scientists, and commercial floriculture experts.
 
 ## Corporate Offices
 - **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India.

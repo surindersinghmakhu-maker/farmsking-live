@@ -14,31 +14,11 @@
     "corporate": "farmskingindia@gmail.com",
     "grievance": "grievance@farmsking.in"
   },
-  "leadership": {
-    "board_of_directors": [
-      { "name": "Bakshish Singh", "role": "Director - Corporate Governance & Strategy" },
-      { "name": "Gagandeep Kaur", "role": "Director - Commercial Partnerships & Distribution" }
-    ],
-    "general_manager": {
-      "name": "Gurnam Singh",
-      "role": "General Manager & Field Quality Assurance Lead"
-    },
-    "technical_support": {
-      "name": "Engg. Gurdit Singh",
-      "role": "Technical Support Lead"
-    },
-    "backend_support": {
-      "name": "Charanjit Singh",
-      "role": "Backend IT Support Lead"
-    },
-    "hardware_support": {
-      "name": "Gurjant Singh",
-      "role": "Hardware & Telemetry Support Lead"
-    },
-    "agronomy_advisors": [
-      { "name": "Sudhir Kumar Mahato", "role": "Marigold Floriculture Expert & Agronomy Advisor" },
-      { "name": "Manjeet Sra", "role": "Organic Products & Marketing Manager" }
-    ]
+  "governance": {
+    "statutory_administration": "Governed by the Board of Directors under the Companies Act, 2013",
+    "operations_desk": "Central Agronomy Operations & Quality Assurance",
+    "technical_support": "Cloud Systems & AI Engineering Desk",
+    "agronomy_panel": "Certified FarmsKing Agronomist Panel & Soil Scientists"
   },
   "strict_boundaries": {
     "hardware_sales": false,

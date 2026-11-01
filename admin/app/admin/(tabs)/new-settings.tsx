@@ -426,47 +426,37 @@ export default function NewSettingsScreen() {
                   </Text>
                 </View>
 
-                {/* Key Leadership & Promoters */}
+                {/* Corporate Governance & Developer Company */}
                 <View style={{ gap: 4 }}>
-                  <Text style={[styles.sectionMiniLabel, { color: subTextColor }]}>LEADERSHIP & FIRST DIRECTORS</Text>
+                  <Text style={[styles.sectionMiniLabel, { color: subTextColor }]}>CORPORATE GOVERNANCE &amp; DEVELOPER</Text>
                   <View style={styles.directorsRow}>
                     <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                       <View style={[styles.avatarInitials, { backgroundColor: '#10b981' }]}>
-                        <Text style={styles.avatarText}>BS</Text>
+                        <Text style={styles.avatarText}>BD</Text>
                       </View>
                       <View>
-                        <Text style={[styles.directorName, { color: textColor }]}>Bakhshish Singh</Text>
-                        <Text style={[styles.directorRole, { color: '#10b981' }]}>First Director</Text>
-                      </View>
-                    </View>
-
-                    <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
-                      <View style={[styles.avatarInitials, { backgroundColor: '#f59e0b' }]}>
-                        <Text style={styles.avatarText}>GK</Text>
-                      </View>
-                      <View>
-                        <Text style={[styles.directorName, { color: textColor }]}>Gagandeep Kaur</Text>
-                        <Text style={[styles.directorRole, { color: '#f59e0b' }]}>First Director</Text>
+                        <Text style={[styles.directorName, { color: textColor }]}>Board of Directors</Text>
+                        <Text style={[styles.directorRole, { color: '#10b981' }]}>Corporate Governance</Text>
                       </View>
                     </View>
 
                     <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                       <View style={[styles.avatarInitials, { backgroundColor: '#3b82f6' }]}>
-                        <Text style={styles.avatarText}>GS</Text>
+                        <Text style={styles.avatarText}>EM</Text>
                       </View>
                       <View>
-                        <Text style={[styles.directorName, { color: textColor }]}>Gurnam Singh</Text>
-                        <Text style={[styles.directorRole, { color: subTextColor }]}>General Manager</Text>
+                        <Text style={[styles.directorName, { color: textColor }]}>Executive Management</Text>
+                        <Text style={[styles.directorRole, { color: subTextColor }]}>Central Operations</Text>
                       </View>
                     </View>
 
                     <View style={[styles.directorBadge, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                       <View style={[styles.avatarInitials, { backgroundColor: '#8b5cf6' }]}>
-                        <Text style={styles.avatarText}>SS</Text>
+                        <Text style={styles.avatarText}>EW</Text>
                       </View>
                       <View>
-                        <Text style={[styles.directorName, { color: textColor }]}>Surinder Singh</Text>
-                        <Text style={[styles.directorRole, { color: '#8b5cf6' }]}>Grievance Officer</Text>
+                        <Text style={[styles.directorName, { color: textColor }]}>Exilent Web Solutions</Text>
+                        <Text style={[styles.directorRole, { color: '#8b5cf6' }]}>Developer Company</Text>
                       </View>
                     </View>
                   </View>

@@ -134,58 +134,6 @@ export default function Root({ children }: PropsWithChildren) {
                   "addressCountry": "IN",
                   "description": "Headquarters & Operational Working Office"
                 }
-              ],
-              "director": [
-                {
-                  "@type": "Person",
-                  "name": "Bakshish Singh",
-                  "jobTitle": "Director",
-                  "description": "Director of FarmsKing Technologies Private Limited leading corporate governance and agricultural operations."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Gagandeep Kaur",
-                  "jobTitle": "Director",
-                  "description": "Director of FarmsKing Technologies Private Limited overseeing financial management and national distribution partnerships."
-                }
-              ],
-              "employee": [
-                {
-                  "@type": "Person",
-                  "name": "Gurnam Singh",
-                  "jobTitle": "General Manager & Quality Assurance Lead",
-                  "description": "Oversees nationwide field operations, administrative governance, and agricultural testing quality standards."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Engg. Gurdit Singh",
-                  "jobTitle": "Technical Support Lead",
-                  "description": "Leads software platform reliability, server telemetry, and technical customer support."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Sudhir Kumar Mahato",
-                  "jobTitle": "Marigold Farming Expert, Promotion Partner & Testing Advisor",
-                  "description": "Commercial floriculture specialist guiding high-yield marigold cultivation and agricultural quality assurance."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Manjeet Sra",
-                  "jobTitle": "Organic Products & Marketing Manager",
-                  "description": "Directs the national marketing and distribution of certified vermicompost, bio-fertilizers, and organic farm inputs."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Charanjit Singh",
-                  "jobTitle": "Backend Support Lead & Director of Surinder Academy, Makhu",
-                  "description": "IT services expert leading high-performance backend infrastructure, API gateways, database optimization, and cloud architecture for FarmsKing."
-                },
-                {
-                  "@type": "Person",
-                  "name": "Gurjant Singh",
-                  "jobTitle": "Hardware Support Lead & Director of Surinder Computers, Makhu",
-                  "description": "Hardware and edge telemetry expert managing server equipment, diagnostic hardware, rural kiosk devices, and networking infrastructure for FarmsKing."
-                }
               ]
             })
           }}
@@ -305,10 +253,10 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "Question",
-                  "name": "Who are the Directors and General Manager of FarmsKing?",
+                  "name": "How is FarmsKing governed and administered?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "The Board of Directors comprises Bakshish Singh and Gagandeep Kaur. The General Manager is Gurnam Singh, who leads nationwide operations, agricultural testing, and quality assurance."
+                    "text": "FARMSKING TECHNOLOGIES PRIVATE LIMITED is governed by its Board of Directors and certified executive management team in strict compliance with the Companies Act, 2013 and Ministry of Corporate Affairs regulations."
                   }
                 },
                 {
@@ -463,10 +411,10 @@ export default function Root({ children }: PropsWithChildren) {
                   <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong> is an incorporated private limited company under the Ministry of Corporate Affairs (ROC Chandigarh), Government of India.
                 </p>
                 <p style={{ fontSize: '14px', color: '#334155', margin: 0 }}>
-                  • <strong>Board of Directors:</strong> Bakshish Singh &amp; Gagandeep Kaur<br />
-                  • <strong>General Manager &amp; Operations Lead:</strong> Gurnam Singh<br />
-                  • <strong>Technical &amp; Systems Engineering:</strong> Engg. Gurdit Singh (Tech Support Lead), Charanjit Singh (Backend Systems Lead), Gurjant Singh (Hardware Systems Lead)<br />
-                  • <strong>Agronomy &amp; Floriculture Specialists:</strong> Sudhir Kumar Mahato (Marigold Floriculture Expert &amp; Testing Advisor), Manjeet Sra (Organic Products &amp; Marketing Manager)<br />
+                  • <strong>Statutory Governance:</strong> Governed by the Board of Directors &amp; Executive Management Panel<br />
+                  • <strong>Developer Company:</strong> Exilent Web Solutions (Software Platform &amp; Technology Architecture)<br />
+                  • <strong>Technical &amp; Systems Engineering:</strong> Central Cloud Systems &amp; Field Telemetry Desk<br />
+                  • <strong>Agronomy Advisory:</strong> Certified FarmsKing Agronomist Panel &amp; Soil Scientists<br />
                   • <strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India<br />
                   • <strong>Operational Headquarters:</strong> Makhu, Ferozepur, Punjab - 142044, India
                 </p>

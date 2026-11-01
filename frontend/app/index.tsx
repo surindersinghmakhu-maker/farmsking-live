@@ -412,62 +412,62 @@ export interface CultivatorSuccessStory {
 const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
   {
     id: 'story-1',
-    name: 'Surinder Singh',
-    location: 'Firozpur, Punjab',
+    name: 'Sardar Gurmeet Singh',
+    location: 'Ludhiana, Punjab',
     cropRole: 'King ID: 16656444 • Progressive Cultivator • Basmati 1121 & Wheat',
     metric: '+24% Yield Gain',
     metricColor: '#10b981',
     quote: 'The satellite moisture maps helped us calibrate canal water cycles with precision. Our Basmati 1121 yield crossed 24 quintals per acre with zero lodging.',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
-    initials: 'SS',
+    initials: 'GS',
     stars: 5,
   },
   {
     id: 'story-2',
-    name: 'Gurnam Singh',
-    location: 'Firozpur, Punjab',
+    name: 'Harpreet Singh Dhillon',
+    location: 'Khanna, Punjab',
     cropRole: 'King ID: 59091178 • Wheat & Mustard Cultivator • 26 Acres',
     metric: 'Zero Disease Spread',
     metricColor: '#0284c7',
     quote: 'We detected Yellow Rust at the earliest pinhead stage using the Crop Doctor scanner. The exact spray dosage saved our 14-acre wheat crop from devastation.',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
-    initials: 'GS',
+    initials: 'HD',
     stars: 5,
   },
   {
     id: 'story-3',
-    name: 'Charanjeet Singh',
-    location: 'Firozpur, Punjab',
+    name: 'Baljinder Singh Brar',
+    location: 'Bathinda, Punjab',
     cropRole: 'King ID: 21683889 • Direct Mandi Member • 32 Acres',
     metric: '+₹140/q Higher Price',
     metricColor: '#d97706',
     quote: 'Instant mandi pricing allowed us to route our paddy directly to Khanna instead of local village arhtiyas, securing ₹140 more per quintal transparently.',
     avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&auto=format&fit=crop&q=80',
-    initials: 'CS',
+    initials: 'BB',
     stars: 5,
   },
   {
     id: 'story-4',
-    name: 'Gagandeep Gill',
-    location: 'Firozpur, Punjab',
+    name: 'Amrinder Singh Sandhu',
+    location: 'Amritsar, Punjab',
     cropRole: 'King ID: 55725971 • Progressive Cultivator • Bt Cotton & Wheat',
     metric: '+₹2.85 Lakh Net Profit',
     metricColor: '#10b981',
     quote: 'Satellite NDVI canopy scans identified micro-nutrient zinc deficiency across our cotton blocks 18 days before visual yellowing, saving our bumper yield.',
     avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&auto=format&fit=crop&q=80',
-    initials: 'GG',
+    initials: 'AS',
     stars: 5,
   },
   {
     id: 'story-5',
-    name: 'Surinder Kumar',
-    location: 'Moga, Punjab',
+    name: 'Manmohan Singh Virk',
+    location: 'Karnal, Haryana',
     cropRole: 'King ID: 35683108 • Organic Farm & Floriculture • 18 Acres',
     metric: '3.4x Revenue Growth',
     metricColor: '#f59e0b',
     quote: 'Transitioning acreage to high-value crops with FarmsKing guidance and direct buyer linkages tripled our monthly cash flow compared to conventional farming.',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80',
-    initials: 'SK',
+    initials: 'MV',
     stars: 5,
   },
   {
@@ -484,14 +484,14 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
   },
   {
     id: 'story-7',
-    name: 'Satnam Singh',
-    location: 'Firozpur, Punjab',
+    name: 'Kulwant Singh Cheema',
+    location: 'Sangrur, Punjab',
     cropRole: 'King ID: 50653620 • Verified Mandi Trader & Cultivator',
     metric: 'Zero Middleman Fee',
     metricColor: '#059669',
     quote: 'Sold 480 quintals through FarmsKing Live Mandi verified buyer network. Transparent weighment settlement arrived straight in our bank account within 24 hours.',
     avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&auto=format&fit=crop&q=80',
-    initials: 'SS',
+    initials: 'KC',
     stars: 5,
   },
   {
@@ -3060,9 +3060,14 @@ export default function PublicLandingPage() {
 
           {/* Footer Bottom Bar */}
           <View style={[S.footerBottomRow, isDay && S.footerBottomRowDay]}>
-            <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay]}>
-              © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
-            </Text>
+            <View style={{ gap: 3 }}>
+              <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay]}>
+                © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
+              </Text>
+              <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay, { fontSize: 11 }]}>
+                Developer Company: <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>Exilent Web Solutions</Text>
+              </Text>
+            </View>
             <View style={S.securityBadgesRow}>
               <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🔒 256-Bit SSL</Text>
               <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🌱 ICAR Compliant</Text>
@@ -3491,6 +3496,9 @@ export default function PublicLandingPage() {
                 </Text>
                 <Text style={{ fontSize: 9.5, color: isDay ? '#64748b' : '#64748b', textAlign: 'center', marginTop: 3 }}>
                   All rights reserved • Regd: Goindwal Sahib, Tarn Taran, Punjab
+                </Text>
+                <Text style={{ fontSize: 10, color: isDay ? '#059669' : '#34d399', textAlign: 'center', marginTop: 3, fontWeight: '700' }}>
+                  Developer Company: Exilent Web Solutions
                 </Text>
               </View>
             </ScrollView>

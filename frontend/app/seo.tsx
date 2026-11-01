@@ -47,7 +47,7 @@ const SEO_PRESETS: SeoPreset[] = [
     title: 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform',
     desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
     keywords:
-      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Engg. Gurdit Singh, Charanjit Singh, Gurjant Singh, Sudhir Kumar Mahato, Manjeet Sra, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
+      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
   },
   {
     name: 'AI Crop Doctor & Live Mandi',
@@ -63,7 +63,7 @@ const SEO_PRESETS: SeoPreset[] = [
     title: 'FarmsKing Organic: Certified Vermicompost & Marigold Farming',
     desc: 'Pure microbial vermicompost bio-fertilizer and high-yield commercial marigold floriculture consultancy. Boost soil organic carbon and maximize seasonal crop profit.',
     keywords:
-      'Organic Vermicompost, Bio Fertilizers, Marigold Farming India, Gainda Kheti, Floriculture Consultancy, Soil Carbon, Manjeet Sra, Sudhir Kumar Mahato, FarmsKing Organic Store, Makhu Punjab',
+      'Organic Vermicompost, Bio Fertilizers, Marigold Farming India, Gainda Kheti, Floriculture Consultancy, Soil Carbon, FarmsKing Organic Store, Makhu Punjab',
   },
 ];
 
@@ -88,7 +88,7 @@ export default function SeoManagementScreen() {
     'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Board of Directors: Bakshish Singh and Gagandeep Kaur; General Manager: Gurnam Singh; Tech Support: Engg. Gurdit Singh; Backend Lead: Charanjit Singh; Hardware Lead: Gurjant Singh; Agronomy Advisors: Sudhir Kumar Mahato, Manjeet Sra."
+    "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Governed by the Board of Directors & Executive Management Panel."
   );
 
   useEffect(() => {
@@ -439,7 +439,7 @@ export default function SeoManagementScreen() {
                 onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={3}
-                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, Charanjit Singh, Gurjant Singh..."
+                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, AI Crop Doctor, Live Mandi..."
                 placeholderTextColor="#94a3b8"
               />
             </View>
@@ -460,7 +460,7 @@ export default function SeoManagementScreen() {
                 onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={5}
-                placeholder="Comprehensive text including Directors Bakshish Singh and Gagandeep Kaur, General Manager Gurnam Singh, Technical Support Engg. Gurdit Singh, Backend Support Charanjit Singh, Hardware Support Gurjant Singh..."
+                placeholder="Comprehensive text including statutory corporate registration, features, registered office, headquarters..."
                 placeholderTextColor="#94a3b8"
               />
             </View>

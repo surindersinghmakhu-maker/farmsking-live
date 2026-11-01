@@ -319,26 +319,11 @@ export default function ComplianceScreen() {
                 <View style={[styles.divider, isDay ? styles.dividerDay : styles.dividerNight]} />
 
                 <Text style={[styles.clauseHeading, isDay ? styles.clauseHeadingDay : styles.clauseHeadingNight]}>
-                  Board of Directors &amp; Management
+                  Corporate Governance &amp; Statutory Administration
                 </Text>
-                <View style={styles.subscriberList}>
-                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Bakshish Singh</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Director • FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
-                  </View>
-                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Gagandeep Kaur</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Director • FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
-                  </View>
-                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Gurnam Singh</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>General Manager &amp; Quality Assurance Lead</Text>
-                  </View>
-                  <View style={[styles.subCard, isDay ? styles.subCardDay : styles.subCardNight]}>
-                    <Text style={[styles.subName, isDay ? styles.subNameDay : styles.subNameNight]}>Executive &amp; Advisory Team</Text>
-                    <Text style={[styles.subRole, isDay ? styles.subRoleDay : styles.subRoleNight]}>Engg. Gurdit Singh (Tech Support Lead) • Charanjit Singh (Backend IT Support Lead) • Gurjant Singh (Hardware Systems Lead) • Sudhir Kumar Mahato (Floriculture &amp; Agronomy Advisor) • Manjeet Sra (Organic Products &amp; Marketing Manager)</Text>
-                  </View>
-                </View>
+                <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED is governed by its Board of Directors and certified executive management team in strict compliance with the Companies Act, 2013, Ministry of Corporate Affairs, and statutory corporate bylaws. Platform software architecture and technological systems are engineered by Developer Company: <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>Exilent Web Solutions</Text>.
+                </Text>
               </View>
             </>
           )}

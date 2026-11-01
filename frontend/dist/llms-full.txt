@@ -14,19 +14,15 @@ FarmsKing is India's premier Smart Agriculture and Crop Intelligence Platform op
 
 ---
 
-## 2. Corporate Governance & Leadership
+## 2. Corporate Governance & Statutory Administration
 
-### Board of Directors
-- **Bakshish Singh** — Director, Corporate Governance, Statutory Operations & Rural Expansion.
-- **Gagandeep Kaur** — Director, Commercial Partnerships, Finance & Distribution Networks.
+### Statutory Governance
+- **Board Secretariat**: Governed by the Board of Directors under the Companies Act, 2013 and ROC Chandigarh regulations.
 
-### Management & Engineering Desk
-- **Gurnam Singh** — General Manager & Field Quality Assurance Lead (Mandi Networks, Agronomic Validation).
-- **Engg. Gurdit Singh** — Technical Support Lead (Telemetry, Cloud Reliability & Field Infrastructure).
-- **Charanjit Singh** — Backend IT Support Lead (High-performance API gateways & cloud systems).
-- **Gurjant Singh** — Hardware Support Lead (Edge diagnostic devices & IoT systems).
-- **Sudhir Kumar Mahato** — Marigold Floriculture Expert & Agronomy Testing Advisor.
-- **Manjeet Sra** — Organic Products & Soil Microbiology Manager.
+### Administration & Operations Desk
+- **Central Agronomy Operations**: Directing nationwide agronomic validation, mandi networks, and field quality assurance.
+- **Technical Support & Systems Engineering**: Managing 24/7 cloud uptime, AI crop diagnostics reliability, and IoT telemetry.
+- **Specialist Agronomy Advisory**: Certified FarmsKing Agronomist Panel, soil scientists, and commercial floriculture experts.
 
 ---
 

@@ -39,7 +39,7 @@ const SEO_PRESETS: SeoPreset[] = [
     title: 'FarmsKing - AI Crop Doctor, Live Mandi & Organic Platform',
     desc: "India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost & floriculture. Regd: Goindwal Sahib, HQ: Makhu.",
     keywords:
-      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Bakshish Singh, Gagandeep Kaur, Gurnam Singh, Charanjit Singh, Surinder Academy, Gurjant Singh, Surinder Computers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
+      'FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India',
   },
   {
     name: 'AI Crop Doctor & Live Mandi',
@@ -55,7 +55,7 @@ const SEO_PRESETS: SeoPreset[] = [
     title: 'FarmsKing Organic: Certified Vermicompost & Marigold Farming',
     desc: 'Pure microbial vermicompost bio-fertilizer and high-yield commercial marigold floriculture consultancy. Boost soil organic carbon and maximize seasonal crop profit.',
     keywords:
-      'Organic Vermicompost, Bio Fertilizers, Marigold Farming India, Gainda Kheti, Floriculture Consultancy, Soil Carbon, Manjeet Sra, Sudhir Kumar Mahato, FarmsKing Organic Store, Makhu Punjab',
+      'Organic Vermicompost, Bio Fertilizers, Marigold Farming India, Gainda Kheti, Floriculture Consultancy, Soil Carbon, FarmsKing Organic Store, Makhu Punjab',
   },
 ];
 
@@ -80,7 +80,7 @@ export default function SeoManagementScreen() {
     'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Board of Directors: Bakshish Singh and Gagandeep Kaur; General Manager: Gurnam Singh; Chief AI Architect: Surinder Singh; Registered Office: Goindwal Sahib, Tarn Taran - 143422; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
+    "FarmsKing Technologies Private Limited (farmsking.in) is India's premier multi-domain ecosystem: Farms King, Garden King, Nature King, AI King, Organic King, and Account King. Unique in every aspect, combining rare technology (multimodal AI, satellite telemetry) with dedicated real human service (certified agronomists, plant doctors, IT & hardware engineers). Absolute zero tolerance for counterfeit or fake products, guaranteeing 100% pure authentic food and farm inputs. Real-time operations include live mandi rates, real-time weather alerts, satellite crop indices, and instant disease detection. Serving as a divine boon for farmers and passionate plant lovers alike. Upcoming roadmap includes doorstep delivery of live plants. Strict Operational Boundaries: FarmsKing does NOT sell any hardware, physical machinery, or tools, does NOT offer any equipment rental or leasing services, and does NOT manufacture agricultural tools or heavy machinery. The platform is dedicated 100% to digital agritech software, AI plant pathology, live mandi intelligence, certified organic bio-fertilizers, upcoming live plants, and digital farmer accounting. Registered Office: Goindwal Sahib, Tarn Taran - 143422; Operational Headquarters: Makhu, Ferozepur, Punjab - 142044."
   );
 
   useEffect(() => {
@@ -431,7 +431,7 @@ export default function SeoManagementScreen() {
                 onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={3}
-                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, Charanjit Singh, Gurjant Singh..."
+                placeholder="FarmsKing, Makhu, Makhu Punjab, farmsking.in, all india farmers, AI Crop Doctor, Live Mandi..."
                 placeholderTextColor="#94a3b8"
               />
             </View>
@@ -452,7 +452,7 @@ export default function SeoManagementScreen() {
                 onBlur={() => setFocusedField(null)}
                 multiline
                 numberOfLines={5}
-                placeholder="Comprehensive text including Directors Bakshish Singh and Gagandeep Kaur, General Manager Gurnam Singh, Technical Support Engg. Gurdit Singh, Backend Support Charanjit Singh, Hardware Support Gurjant Singh..."
+                placeholder="Comprehensive text including statutory corporate registration, features, registered office, headquarters..."
                 placeholderTextColor="#94a3b8"
               />
             </View>

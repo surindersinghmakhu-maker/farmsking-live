@@ -2993,18 +2993,28 @@ export default function PublicLandingPage() {
               </TouchableOpacity>
             </View>
 
-            {/* Column 4: 24/7 Helpline */}
+            {/* Column 4: Support & Assistance */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
-              <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>{t.farmerHelpline}</Text>
+              <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>Support & Assistance</Text>
               <TouchableOpacity
                 accessibilityRole="link"
-                {...(Platform.OS === 'web' ? { href: `tel:${supportContact.helplinePhone.replace(/[^0-9+]/g, '')}` } : {})}
-                onPress={() => Linking.openURL(`tel:${supportContact.helplinePhone.replace(/[^0-9+]/g, '')}`).catch(() => {})}
+                {...(Platform.OS === 'web' ? { href: '/contact-us' } : {})}
+                onPress={() => router.push('/contact-us')}
                 activeOpacity={0.8}
               >
-                <Text style={[S.helplineNum, isDay && S.helplineNumDay]}>{supportContact.helplinePhone}</Text>
+                <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Farmer Helpline Desk</Text>
               </TouchableOpacity>
-              <Text style={[S.helplineSub, isDay && S.helplineSubDay]}>{t.helplineHours}</Text>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/contact-us' } : {})}
+                onPress={() => router.push('/contact-us')}
+                activeOpacity={0.8}
+              >
+                <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Contact Support Team</Text>
+              </TouchableOpacity>
+              <Text style={[S.helplineSub, isDay && S.helplineSubDay, { marginTop: 4, marginBottom: 8 }]}>
+                {t.helplineHours}
+              </Text>
               <TouchableOpacity
                 accessibilityRole="link"
                 {...(Platform.OS === 'web' ? { href: `mailto:${supportContact.supportEmail}` } : {})}
@@ -3433,9 +3443,9 @@ export default function PublicLandingPage() {
                 onPress={() => router.push('/contact-us')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="call" size={16} color={isDay ? '#047857' : '#34d399'} />
+                <Ionicons name="headset" size={16} color={isDay ? '#047857' : '#34d399'} />
                 <Text style={[S.drawerHelplineText, isDay && S.drawerHelplineTextDay]}>
-                  {t.farmerHelpline}: {supportContact.helplinePhone}
+                  {t.farmerHelpline} &amp; Support Desk
                 </Text>
               </TouchableOpacity>
 

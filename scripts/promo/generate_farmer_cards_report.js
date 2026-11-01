@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const reportsDir = 'd:\\FarmsKing\\reports';
+const reportsDir = path.resolve(__dirname, '..', '..', 'reports');
 if (!fs.existsSync(reportsDir)) {
   fs.mkdirSync(reportsDir, { recursive: true });
 }

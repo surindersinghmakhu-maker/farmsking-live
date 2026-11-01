@@ -540,7 +540,48 @@ try {
     if (!fs.existsSync(adminSubDir)) fs.mkdirSync(adminSubDir, { recursive: true });
     fs.writeFileSync(path.join(adminSubDir, 'index.html'), indexHtml, 'utf8');
 
-    console.log('✅ Preserved and deployed static you.html, sk.html, dose.html, my.html, admin.html and route subdirectories');
+    // LOGIN & Official Routes Static HTML & Directories
+    const staticRoutes = [
+      'login',
+      'register',
+      'forgot-password',
+      'shop',
+      'compliance',
+      'contact-us',
+      'support',
+      'terms',
+      'privacy-policy',
+      'refund-policy',
+      'order-tracking',
+      'crop-intelligence',
+      'seller-dashboard',
+      'seller-payouts',
+      'admin-sellers',
+      'profile',
+      'notifications',
+      'topic/Farming',
+      'topic/Gardening',
+      'topic/Crop-Doctors',
+      'topic/Mandi-Rates',
+    ];
+
+    staticRoutes.forEach((route) => {
+      const parts = route.split('/');
+      let subDir = distDir;
+      for (const part of parts) {
+        subDir = path.join(subDir, part);
+      }
+      if (!fs.existsSync(subDir)) fs.mkdirSync(subDir, { recursive: true });
+      fs.writeFileSync(path.join(subDir, 'index.html'), indexHtml, 'utf8');
+
+      // Also create <route>.html for clean URL servers
+      if (parts.length === 1) {
+        const topHtmlPath = path.join(distDir, `${route}.html`);
+        fs.writeFileSync(topHtmlPath, indexHtml, 'utf8');
+      }
+    });
+
+    console.log(`✅ Preserved and deployed static HTML entrypoints for ${staticRoutes.length} official routes and subdirectories`);
   }
 
   console.log('✅ Expo Web build completed successfully!');

@@ -63,9 +63,17 @@ let WithdrawalsService = class WithdrawalsService {
         }
     }
     async create(user, dto) {
-        const CLIENT_ROLES = [client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.TRADER];
-        if (CLIENT_ROLES.includes(user.role)) {
-            throw new common_1.ForbiddenException('Client wallet balance cannot be withdrawn in cash. It is strictly reserved for billing adjustments and order discounts.');
+        const s = await this.appSettingsService.get();
+        const withdrawalEnabled = s.walletWithdrawalEnabled ?? false;
+        const maintenanceMode = s.walletMaintenanceMode ?? false;
+        if (!withdrawalEnabled || maintenanceMode) {
+            throw new common_1.ForbiddenException('Wallet balance withdrawals are currently disabled by administration.');
+        }
+        const allowedRoles = Array.isArray(s.allowedWithdrawalRoles)
+            ? s.allowedWithdrawalRoles
+            : [];
+        if (!allowedRoles.includes(user.role)) {
+            throw new common_1.ForbiddenException(`Wallet withdrawal is not permitted for your user role (${user.role}). Please contact support if you need assistance.`);
         }
         if (dto.requestedAmount < 50) {
             throw new common_1.BadRequestException('Minimum withdrawal limit is ₹50.');

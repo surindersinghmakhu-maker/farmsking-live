@@ -64,5 +64,6 @@ backups/
 
 # Statutory Private Legal & KYC Dossier (Never commit or upload to public repos)
 Govt/
+legal/
 data/statutory_promoters_master_data.json
 

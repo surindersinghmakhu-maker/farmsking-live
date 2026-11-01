@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -131,6 +131,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   commissionOverridePercentage?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isCodAllowed?: boolean;
 
   // Return & Replacement Policy Fields
   @IsOptional()

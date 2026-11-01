@@ -11,6 +11,7 @@ import {
   Modal,
   Linking,
   Animated as RNAnimated,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,10 +35,16 @@ const MAIN_NAV_LINKS = [
     label: 'Home',
     path: '/',
     icon: 'home-outline',
+    activeIcon: 'home',
     image: null,
     color: '#10b981',
     bg: 'rgba(16,185,129,0.1)',
     bgNight: 'rgba(16,185,129,0.22)',
+    glow: ['rgba(16, 185, 129, 0.24)', 'rgba(5, 150, 105, 0.12)', 'rgba(16, 185, 129, 0.02)'],
+    glowNight: ['rgba(16, 185, 129, 0.35)', 'rgba(5, 150, 105, 0.20)', 'rgba(16, 185, 129, 0.06)'],
+    laser: ['#00ff87', '#10b981', '#059669'],
+    border: 'rgba(16, 185, 129, 0.5)',
+    shadow: '#10b981',
     isAction: 'home',
   },
   {
@@ -45,30 +52,48 @@ const MAIN_NAV_LINKS = [
     label: 'Crop Doctors',
     path: '/topic/Crop-Doctors',
     icon: 'medkit-outline',
+    activeIcon: 'medkit',
     image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
     color: '#06b6d4',
     bg: 'rgba(6,182,212,0.1)',
     bgNight: 'rgba(6,182,212,0.22)',
+    glow: ['rgba(6, 182, 212, 0.24)', 'rgba(8, 145, 178, 0.12)', 'rgba(6, 182, 212, 0.02)'],
+    glowNight: ['rgba(6, 182, 212, 0.35)', 'rgba(8, 145, 178, 0.20)', 'rgba(6, 182, 212, 0.06)'],
+    laser: ['#38bdf8', '#06b6d4', '#0284c7'],
+    border: 'rgba(6, 182, 212, 0.5)',
+    shadow: '#06b6d4',
   },
   {
     id: 'store',
     label: 'Agri Store',
     path: '/shop',
     icon: 'storefront-outline',
+    activeIcon: 'storefront',
     image: require('@/assets/images/icon_agristore_3d_clean.png'),
     color: '#f97316',
     bg: 'rgba(249,115,22,0.1)',
     bgNight: 'rgba(249,115,22,0.22)',
+    glow: ['rgba(249, 115, 22, 0.24)', 'rgba(234, 88, 12, 0.12)', 'rgba(249, 115, 22, 0.02)'],
+    glowNight: ['rgba(249, 115, 22, 0.35)', 'rgba(234, 88, 12, 0.20)', 'rgba(249, 115, 22, 0.06)'],
+    laser: ['#fb923c', '#f97316', '#ea580c'],
+    border: 'rgba(249, 115, 22, 0.5)',
+    shadow: '#f97316',
   },
   {
     id: 'helpline',
     label: 'Helpline',
     path: '#helpline',
     icon: 'call-outline',
+    activeIcon: 'call',
     image: null,
     color: '#16a34a',
     bg: 'rgba(22,163,74,0.1)',
     bgNight: 'rgba(22,163,74,0.22)',
+    glow: ['rgba(22, 163, 74, 0.24)', 'rgba(21, 128, 61, 0.12)', 'rgba(22, 163, 74, 0.02)'],
+    glowNight: ['rgba(22, 163, 74, 0.35)', 'rgba(21, 128, 61, 0.20)', 'rgba(22, 163, 74, 0.06)'],
+    laser: ['#4ade80', '#16a34a', '#15803d'],
+    border: 'rgba(22, 163, 74, 0.5)',
+    shadow: '#16a34a',
     isAction: 'helpline',
   },
 ];
@@ -95,6 +120,7 @@ export default function PublicHeader({
   const { user } = useAuth();
 
   const [helplineModalOpen, setHelplineModalOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   // Synchronized Theme state
   const [internalTheme, setInternalTheme] = useState<'day' | 'night'>('day');
@@ -206,20 +232,61 @@ export default function PublicHeader({
   const isActive = (path: string) =>
     pathname === path || (path === '/' && (pathname === '/index' || pathname === ''));
 
+  const getNavActiveIndex = () => {
+    if (helplineModalOpen) return 3;
+    if (pathname.startsWith('/topic/Crop-Doctors') || pathname.includes('Crop-Doctors')) return 1;
+    if (pathname.startsWith('/shop') || pathname.startsWith('/agristore')) return 2;
+    if (pathname === '/' || pathname === '/index' || pathname === '') return 0;
+    return 0;
+  };
+
+  const navActiveIndex = getNavActiveIndex();
+  const initialIndex = typeof window !== 'undefined' && (window as any).__fk_nav_index !== undefined
+    ? (window as any).__fk_nav_index
+    : navActiveIndex;
+  const navSlideAnim = useRef(new RNAnimated.Value(initialIndex)).current;
+  const [navMeasurements, setNavMeasurements] = useState<{ x: number; width: number }[]>([]);
+  const [mobileMeasurements, setMobileMeasurements] = useState<{ x: number; width: number }[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__fk_nav_index = navActiveIndex;
+    }
+    RNAnimated.spring(navSlideAnim, {
+      toValue: navActiveIndex,
+      tension: 68,
+      friction: 10,
+      useNativeDriver: false,
+    }).start();
+  }, [navActiveIndex, helplineModalOpen]);
+
+  const handleNavLayout = (index: number, e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    setNavMeasurements((prev) => {
+      const next = [...prev];
+      next[index] = { x, width };
+      return next;
+    });
+  };
+
+  const handleMobileNavLayout = (index: number, e: LayoutChangeEvent) => {
+    const { x, width } = e.nativeEvent.layout;
+    setMobileMeasurements((prev) => {
+      const next = [...prev];
+      next[index] = { x, width };
+      return next;
+    });
+  };
+
   const goTo = (path: string) => {
     setMoreMenuOpen(false);
     try {
       router.push(path as any);
     } catch {
-      // fallback
-    }
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      setTimeout(() => {
-        if (window.location.pathname === '/' || window.location.pathname === '') {
-          const target = path.startsWith('/(auth)') ? path.replace('/(auth)', '') : path;
-          window.location.href = target || path;
-        }
-      }, 120);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const target = path.startsWith('/(auth)') ? path.replace('/(auth)', '') : path;
+        window.location.href = target || path;
+      }
     }
   };
 
@@ -238,21 +305,40 @@ export default function PublicHeader({
 
   const handleNavClick = (link: (typeof MAIN_NAV_LINKS)[0]) => {
     setMoreMenuOpen(false);
+    const targetIdx = MAIN_NAV_LINKS.findIndex((l) => l.id === link.id);
+
+    // Immediately trigger fluid spring glider animation to the clicked tab!
+    if (targetIdx !== -1) {
+      if (typeof window !== 'undefined') {
+        (window as any).__fk_nav_index = targetIdx;
+      }
+      RNAnimated.spring(navSlideAnim, {
+        toValue: targetIdx,
+        tension: 68,
+        friction: 10,
+        useNativeDriver: false,
+      }).start();
+    }
+
     if (link.isAction === 'home') {
+      setHelplineModalOpen(false);
       if (pathname === '/' || pathname === '/index' || pathname === '') {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
         }
       }
-      goTo('/');
+      setTimeout(() => goTo('/'), 160);
       return;
     }
+
     if (link.isAction === 'helpline') {
       setHelplineModalOpen(true);
       return;
     }
+
     if (link.isAction === 'mandi') {
+      setHelplineModalOpen(false);
       if (pathname === '/' || pathname === '/index' || pathname === '') {
         if (Platform.OS === 'web' && typeof document !== 'undefined') {
           const el = document.getElementById('mandi-rates') || document.querySelector('[data-mandi-rates="true"]');
@@ -262,10 +348,15 @@ export default function PublicHeader({
           }
         }
       }
-      router.push('/#mandi-rates' as any);
+      setTimeout(() => router.push('/#mandi-rates' as any), 160);
       return;
     }
-    goTo(link.path);
+
+    setHelplineModalOpen(false);
+    // Smooth visual glide buffer allows the organic spring motion to be fully seen
+    setTimeout(() => {
+      goTo(link.path);
+    }, 160);
   };
 
   const handleOpenWhatsApp = () => {
@@ -323,79 +414,142 @@ export default function PublicHeader({
             intensity={45}
             tint={isDay ? 'light' : 'dark'}
             pointerEvents="none"
-            style={[StyleSheet.absoluteFill, { borderRadius: isMobile ? 20 : 28 }]}
+            style={[StyleSheet.absoluteFill, { borderRadius: isMobile ? 20 : 28, pointerEvents: 'none' as any }]}
           />
         )}
 
         {/* Row 1: Logo, Streamlined Desktop Links & Right Controls */}
         <View style={[styles.topRow, isMobile && { flexWrap: 'nowrap' }]}>
-          {/* Logo */}
-          <TouchableOpacity style={[styles.logo, isMobile && { gap: width < 380 ? 4 : 6, flexShrink: 0 }]} onPress={() => goTo('/')} activeOpacity={0.8}>
+          {/* Logo (Official Brand Logo from Admin Settings) */}
+          <TouchableOpacity
+            style={[
+              styles.logo,
+              !isDay && styles.logoNightCapsule,
+              isMobile && { flexShrink: 0 },
+            ]}
+            onPress={() => goTo('/')}
+            activeOpacity={0.8}
+          >
             <BrandLogo
-              size={isMobile ? 28 : 36}
+              height={isMobile ? 32 : 40}
+              width={isMobile ? 104 : 132}
               useHdQuality={true}
+              resizeMode="contain"
             />
-            <View>
-              <Text
-                style={[
-                  styles.logoName,
-                  isDay ? styles.logoNameDay : styles.logoNameNight,
-                  isMobile && { fontSize: width < 380 ? 14.5 : 16 },
-                ]}
-              >
-                FarmsKing
-              </Text>
-              {!isMobile && (
-                <Text style={[styles.logoTag, isDay ? styles.logoTagDay : styles.logoTagNight]}>
-                  SMART FARMING PLATFORM
-                </Text>
-              )}
-            </View>
           </TouchableOpacity>
 
-          {/* Desktop Nav: Exactly 4 Streamlined Links + "More ▾" */}
+          {/* Desktop Nav: Exactly 4 Streamlined Links with Smooth Gliding Colorful Spring Pill */}
           {isDesktop && (
             <View style={styles.navLinks}>
-              {MAIN_NAV_LINKS.map((link) => {
-                const active = isActive(link.path);
+              {navMeasurements.length === 4 && (
+                <RNAnimated.View
+                  style={[
+                    styles.desktopGlidingPill,
+                    {
+                      left: navSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3],
+                        outputRange: navMeasurements.map((m) => m?.x ?? 0),
+                        extrapolate: 'clamp',
+                      }),
+                      width: navSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3],
+                        outputRange: navMeasurements.map((m) => m?.width ?? 0),
+                        extrapolate: 'clamp',
+                      }),
+                      borderColor: MAIN_NAV_LINKS[navActiveIndex]?.border || 'rgba(16, 185, 129, 0.45)',
+                      shadowColor: MAIN_NAV_LINKS[navActiveIndex]?.shadow || '#10b981',
+                    },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <LinearGradient
+                    colors={
+                      isDay
+                        ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
+                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <LinearGradient
+                    colors={MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.desktopLaserBar}
+                  />
+                </RNAnimated.View>
+              )}
+
+              {MAIN_NAV_LINKS.map((link, idx) => {
+                const active = navActiveIndex === idx;
                 return (
                   <TouchableOpacity
                     key={link.id}
                     onPress={() => handleNavClick(link)}
-                    activeOpacity={0.7}
+                    onLayout={(e) => handleNavLayout(idx, e)}
+                    activeOpacity={0.8}
                     style={styles.navLinkWrap}
                   >
                     <View
                       style={[
                         styles.navLink,
                         isDay ? styles.navLinkDay : styles.navLinkNight,
-                        active && (isDay ? styles.navLinkActiveDay : styles.navLinkActiveNight),
-                        active && {
-                          backgroundColor: isDay ? link.bg : link.bgNight,
-                        },
                         styles.navLinkInner,
+                        active && (isDay ? styles.navLinkActiveDay : styles.navLinkActiveNight),
                       ]}
                     >
                       {link.image ? (
-                        <Image source={link.image} style={styles.navLinkIconImg} resizeMode="contain" />
-                      ) : (
-                        <Ionicons
-                          name={link.icon as any}
-                          size={14}
-                          color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                        <Image
+                          source={link.image}
+                          style={[
+                            styles.navLinkIconImg,
+                            Platform.OS === 'web'
+                              ? ({
+                                  transform: active ? 'scale(1.15)' : 'scale(1)',
+                                  transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                } as any)
+                              : active
+                              ? { transform: [{ scale: 1.15 }] }
+                              : {},
+                          ]}
+                          resizeMode="contain"
                         />
+                      ) : (
+                        <View
+                          style={[
+                            Platform.OS === 'web'
+                              ? ({
+                                  transform: active ? 'scale(1.18)' : 'scale(1)',
+                                  transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                } as any)
+                              : active
+                              ? { transform: [{ scale: 1.15 }] }
+                              : {},
+                          ]}
+                        >
+                          <Ionicons
+                            name={(active && link.activeIcon ? link.activeIcon : link.icon) as any}
+                            size={15}
+                            color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                          />
+                        </View>
                       )}
                       <Text
                         style={[
                           styles.navLinkText,
                           isDay ? styles.navLinkTextDay : styles.navLinkTextNight,
                           active && { color: link.color, fontFamily: FONT.extraBold },
+                          Platform.OS === 'web'
+                            ? ({
+                                transition: 'color 0.3s ease',
+                              } as any)
+                            : {},
                         ]}
                       >
                         {link.label}
                       </Text>
                     </View>
-                    {active && <View style={[styles.navLinkBar, { backgroundColor: link.color }]} />}
                   </TouchableOpacity>
                 );
               })}
@@ -550,20 +704,20 @@ export default function PublicHeader({
             </View>
 
             {/* Cart */}
-            {onCartPress && (
-              <TouchableOpacity
-                style={[styles.iconBtn, isDay ? styles.iconBtnDay : styles.iconBtnNight]}
-                onPress={onCartPress}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="cart-outline" size={17} color={isDay ? '#334155' : '#e2e8f0'} />
-                {cartItemCount && cartItemCount > 0 ? (
-                  <View style={styles.cartBadge}>
-                    <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
-                  </View>
-                ) : null}
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={[styles.iconBtn, isDay ? styles.iconBtnDay : styles.iconBtnNight]}
+              onPress={onCartPress || (() => router.push('/shop'))}
+              activeOpacity={0.8}
+              accessibilityRole="link"
+              {...(Platform.OS === 'web' ? { href: '/shop' } : {})}
+            >
+              <Ionicons name="cart-outline" size={17} color={isDay ? '#334155' : '#e2e8f0'} />
+              {cartItemCount && cartItemCount > 0 ? (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+                </View>
+              ) : null}
+            </TouchableOpacity>
 
             {/* Login / Dashboard */}
             {user ? (
@@ -596,6 +750,9 @@ export default function PublicHeader({
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
+                accessibilityRole="link"
+                // @ts-ignore
+                href="/login"
                 style={[
                   styles.loginBtn,
                   isDay ? styles.loginBtnDay : styles.loginBtnNight,
@@ -604,17 +761,21 @@ export default function PublicHeader({
                 ]}
                 onPress={() => {
                   setMoreMenuOpen(false);
-                  try {
-                    router.push('/(auth)/login' as any);
-                  } catch (e) {
-                    console.warn('Navigation error:', e);
-                  }
                   if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    try {
+                      router.push('/(auth)/login' as any);
+                    } catch {}
                     setTimeout(() => {
-                      if (window.location.pathname === '/' || window.location.pathname === '') {
+                      if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
                         window.location.href = '/login';
                       }
-                    }, 120);
+                    }, 60);
+                  } else {
+                    try {
+                      router.push('/(auth)/login' as any);
+                    } catch {
+                      router.push('/login' as any);
+                    }
                   }
                 }}
                 activeOpacity={0.85}
@@ -664,7 +825,7 @@ export default function PublicHeader({
           </View>
         </View>
 
-        {/* Row 2 on Mobile/Tablet: 4 Core Pills + More ▾ Pill */}
+        {/* Row 2 on Mobile/Tablet: 4 Core Pills with Continuous Spring Glider */}
         {!isDesktop && (
           <View style={styles.mobileNavRow}>
             <ScrollView
@@ -672,36 +833,101 @@ export default function PublicHeader({
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.mobileNavScroll}
             >
-              {MAIN_NAV_LINKS.map((link) => {
-                const active = isActive(link.path);
+              {mobileMeasurements.length === MAIN_NAV_LINKS.length && (
+                <RNAnimated.View
+                  style={[
+                    styles.mobileGlidingPill,
+                    {
+                      left: navSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3],
+                        outputRange: mobileMeasurements.map((m) => m?.x ?? 0),
+                        extrapolate: 'clamp',
+                      }),
+                      width: navSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3],
+                        outputRange: mobileMeasurements.map((m) => m?.width ?? 0),
+                        extrapolate: 'clamp',
+                      }),
+                      borderColor: MAIN_NAV_LINKS[navActiveIndex]?.border || 'rgba(16, 185, 129, 0.45)',
+                      shadowColor: MAIN_NAV_LINKS[navActiveIndex]?.shadow || '#10b981',
+                    },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <LinearGradient
+                    colors={
+                      isDay
+                        ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
+                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <LinearGradient
+                    colors={MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.mobileLaserBar}
+                  />
+                </RNAnimated.View>
+              )}
+
+              {MAIN_NAV_LINKS.map((link, idx) => {
+                const active = navActiveIndex === idx;
                 return (
                   <TouchableOpacity
                     key={link.id}
                     onPress={() => handleNavClick(link)}
+                    onLayout={(e) => handleMobileNavLayout(idx, e)}
                     activeOpacity={0.8}
                     style={[
                       styles.mobileNavPill,
                       isDay ? styles.mobileNavPillDay : styles.mobileNavPillNight,
-                      active &&
-                        (isDay
-                          ? { backgroundColor: link.bg, borderColor: link.color }
-                          : { backgroundColor: link.bgNight, borderColor: link.color }),
                     ]}
                   >
                     {link.image ? (
-                      <Image source={link.image} style={{ width: 14, height: 14 }} resizeMode="contain" />
-                    ) : (
-                      <Ionicons
-                        name={link.icon as any}
-                        size={12}
-                        color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                      <Image
+                        source={link.image}
+                        style={[
+                          { width: 14, height: 14 },
+                          Platform.OS === 'web'
+                            ? ({
+                                transform: active ? 'scale(1.15)' : 'scale(1)',
+                                transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                              } as any)
+                            : active
+                            ? { transform: [{ scale: 1.15 }] }
+                            : {},
+                        ]}
+                        resizeMode="contain"
                       />
+                    ) : (
+                      <View
+                        style={[
+                          Platform.OS === 'web'
+                            ? ({
+                                transform: active ? 'scale(1.18)' : 'scale(1)',
+                                transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                              } as any)
+                            : active
+                            ? { transform: [{ scale: 1.15 }] }
+                            : {},
+                        ]}
+                      >
+                        <Ionicons
+                          name={(active && link.activeIcon ? link.activeIcon : link.icon) as any}
+                          size={12}
+                          color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                        />
+                      </View>
                     )}
                     <Text
                       style={[
                         styles.mobileNavPillText,
                         isDay ? styles.mobileNavPillTextDay : styles.mobileNavPillTextNight,
                         active && { color: link.color, fontFamily: FONT.extraBold },
+                        Platform.OS === 'web' ? ({ transition: 'color 0.3s ease' } as any) : {},
                       ]}
                     >
                       {link.label}
@@ -974,6 +1200,29 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingRight: 10,
   },
+  mobileGlidingPill: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+  },
+  mobileLaserBar: {
+    position: 'absolute',
+    top: 0,
+    left: 6,
+    right: 6,
+    height: 1.8,
+    borderRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 4,
+  },
   mobileNavPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -982,6 +1231,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
+    position: 'relative',
+    zIndex: 2,
   },
   mobileNavPillDay: {
     backgroundColor: '#f1f5f9',
@@ -1061,23 +1312,56 @@ const styles = StyleSheet.create({
   },
 
   // Logo
-  logo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoImg: { width: 34, height: 34 },
-  logoImgMobile: { width: 26, height: 26 },
-  logoName: { fontSize: 16.5, fontFamily: FONT.extraBold, letterSpacing: 0.3 },
-  logoNameDay: { color: '#0f172a' },
-  logoNameNight: { color: '#ffffff' },
-  logoTag: { fontSize: 7, fontFamily: FONT.bold, letterSpacing: 0.9, marginTop: -2 },
-  logoTagDay: { color: '#059669' },
-  logoTagNight: { color: '#34d399' },
+  logo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoNightCapsule: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
 
   // Desktop Nav Links
-  navLinks: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  navLinkWrap: { alignItems: 'center', justifyContent: 'center' },
+  navLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    position: 'relative',
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    borderRadius: 22,
+  },
+  desktopGlidingPill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+  },
+  desktopLaserBar: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 2,
+    borderRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+  },
+  navLinkWrap: { alignItems: 'center', justifyContent: 'center', zIndex: 2 },
   navLink: {
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: 20,
+    paddingHorizontal: 11,
+    paddingVertical: 5.5,
   },
   navLinkInner: {
     flexDirection: 'row',

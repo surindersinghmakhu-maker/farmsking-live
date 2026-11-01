@@ -39,7 +39,11 @@ export interface AppSettings {
   walletMaintenanceMode?: boolean;
   doctorMaintenanceMode?: boolean;
   gardenAdvisorMaintenanceMode?: boolean;
+  accountsMaintenanceMode?: boolean;
   trainerMaintenanceMode?: boolean;
+  activeLogisticsPartner?: string;
+  baseShippingCharge?: number;
+  freeDeliveryThreshold?: number;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
@@ -54,6 +58,8 @@ export interface AppSettings {
   walletUsagePlatformFeePercent?: number;
   walletUsageGstPercent?: number;
   walletTaxEnabled?: boolean;
+  walletWithdrawalEnabled?: boolean;
+  allowedWithdrawalRoles?: string[];
   otpDeliveryChannel?: string;
   updatedAt: string;
   updatedById: string | null;
@@ -116,12 +122,41 @@ export interface UpdateAppSettingsPayload {
   walletUsagePlatformFeePercent?: number;
   walletUsageGstPercent?: number;
   walletTaxEnabled?: boolean;
+  walletWithdrawalEnabled?: boolean;
+  allowedWithdrawalRoles?: string[];
   otpDeliveryChannel?: string;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
-  const { data } = await apiClient.get<AppSettings>('/app-settings');
-  return data;
+  try {
+    const { data } = await apiClient.get<AppSettings>('/app-settings');
+    return data;
+  } catch (err: any) {
+    try {
+      const { data } = await apiClient.get<any>('/public-contact/app-settings');
+      return data;
+    } catch {
+      try {
+        const { data } = await apiClient.get<any>('/public-contact/master-data');
+        return {
+          id: 'default',
+          appName: data.brandDisplayName || 'FarmsKing',
+          logoUrl: data.logoUrl || null,
+          faviconUrl: data.faviconUrl || null,
+          tagline: data.tagline || null,
+          ...data,
+        } as any;
+      } catch {
+        return {
+          id: 'default',
+          appName: 'FarmsKing',
+          logoUrl: '/brand_logo.png',
+          faviconUrl: '/favicon.png',
+          tagline: 'Farmer Products & Smart Farming Platform',
+        } as any;
+      }
+    }
+  }
 }
 
 export async function updateAppSettings(payload: UpdateAppSettingsPayload): Promise<AppSettings> {
@@ -282,7 +317,7 @@ export interface SystemIntegrationsConfig {
     };
   };
   logistics: {
-    activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO';
+    activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO' | 'ECOM_EXPRESS' | 'XPRESSBEES' | 'LOCAL';
     isEnabled: boolean;
     providers: {
       shiprocket: { email: string; password: string; token: string; autoAssignCourier: boolean };
@@ -320,6 +355,7 @@ export interface SystemIntegrationsConfig {
     defaultGstPercent: number;
     freeDeliveryThreshold: number;
     baseShippingCharge: number;
+    partnerDeliveryFees?: Record<string, number>;
     lowStockThreshold: number;
     returnReplacementDays: number;
     enableCod: boolean;
@@ -371,9 +407,15 @@ export interface SystemIntegrationsConfig {
 export interface ProjectMasterDataConfig {
   companyLegalName: string;
   brandDisplayName: string;
+  brandName?: string;
   shortName: string;
   tagline: string;
   mcaSrn: string;
+  cinNumber?: string;
+  cin?: string;
+  companyPan?: string;
+  panNumber?: string;
+  companyTan?: string;
   crcApprovalStatus: string;
   crcApprovalDate: string;
   approvingAuthority: string;
@@ -385,6 +427,7 @@ export interface ProjectMasterDataConfig {
   premisesName: string;
   landmark: string;
   registeredAddress: string;
+  registeredOfficeAddress?: string;
   operationalHq: string;
   city: string;
   state: string;
@@ -393,10 +436,12 @@ export interface ProjectMasterDataConfig {
   rocJurisdiction: string;
 
   primaryMobile: string;
+  officialPhone?: string;
   alternateMobile: string;
   contactEmail: string;
   govtEmail: string;
   supportEmail: string;
+  officialEmail?: string;
   grievanceOfficerName: string;
   grievanceOfficerEmail: string;
   websiteUrl: string;
@@ -531,9 +576,15 @@ export async function updateSystemIntegrations(payload: Partial<SystemIntegratio
 export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   companyLegalName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
   brandDisplayName: 'FarmsKing™',
+  brandName: 'FarmsKing™',
   shortName: 'FarmsKing',
   tagline: 'Farming Easy, Farming Smart | National Smart Farming Platform',
   mcaSrn: 'AC6979718',
+  cinNumber: 'U01100PB2026PTC063294',
+  cin: 'U01100PB2026PTC063294',
+  companyPan: 'AABCF1234D',
+  panNumber: 'AABCF1234D',
+  companyTan: 'PTLA12345B',
   crcApprovalStatus: 'OFFICIALLY APPROVED BY CRC MANESAR',
   crcApprovalDate: '22/10/2026',
   approvingAuthority: 'Assistant Registrar of Companies, CRC Manesar',
@@ -545,6 +596,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   premisesName: 'M/s GURU NANAK COMPUTER ACADEMY',
   landmark: 'Near Co-operative Bank',
   registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India',
+  registeredOfficeAddress: 'VPO Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India',
   operationalHq: 'Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
   city: 'Goindwal Sahib / Makhu',
   state: 'Punjab',
@@ -553,10 +605,12 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   rocJurisdiction: 'ROC Punjab and Chandigarh',
 
   primaryMobile: '+91 95776 22000',
+  officialPhone: '+91 95776 22000',
   alternateMobile: '+91 98720 66901',
   contactEmail: 'farmskingindia@gmail.com',
   govtEmail: 'compliance@farmsking.in',
   supportEmail: 'support@farmsking.in',
+  officialEmail: 'support@farmsking.in',
   grievanceOfficerName: 'Corporate Compliance Officer',
   grievanceOfficerEmail: 'grievance@farmsking.in',
   websiteUrl: 'https://farmsking.in',
@@ -912,7 +966,19 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     platformFeePercent: 5,
     defaultGstPercent: 0,
     freeDeliveryThreshold: 499,
-    baseShippingCharge: 40,
+    baseShippingCharge: 65,
+    partnerDeliveryFees: {
+      SHIPROCKET: 65,
+      DELHIVERY: 70,
+      ECOM_EXPRESS: 60,
+      XPRESSBEES: 55,
+      BLUEDART: 90,
+      SHADOWFAX: 50,
+      NIMBUSPOST: 60,
+      DTDC: 65,
+      BORZO: 45,
+      LOCAL: 40,
+    },
     lowStockThreshold: 10,
     returnReplacementDays: 7,
     enableCod: true,
@@ -1102,6 +1168,10 @@ export function mergeSystemIntegrationsWithDefaults(
     product: {
       ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.product,
       ...(remote.product || {}),
+      partnerDeliveryFees: {
+        ...(DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.product.partnerDeliveryFees || {}),
+        ...(remote.product?.partnerDeliveryFees || {}),
+      },
     },
     socialMedia: {
       ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.socialMedia,

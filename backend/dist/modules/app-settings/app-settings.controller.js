@@ -52,6 +52,12 @@ let AppSettingsController = class AppSettingsController {
     updateIntegrations(user, payload) {
         return this.appSettingsService.updateIntegrations(user, payload);
     }
+    getServiceConfig() {
+        return this.appSettingsService.getServiceConfig();
+    }
+    updateServiceConfig(user, body) {
+        return this.appSettingsService.updateServiceConfig(user, body);
+    }
     getPublicMasterData() {
         return this.appSettingsService.getPublicMasterData();
     }
@@ -70,6 +76,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getSupportContact", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
     (0, common_1.Patch)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -85,6 +92,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getFeatureFlags", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
     (0, common_1.Patch)('feature-flags'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -100,6 +108,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getSeo", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
     (0, common_1.Post)('seo'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -113,6 +123,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getIntegrations", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
     (0, common_1.Patch)('integrations'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -122,13 +133,30 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "updateIntegrations", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
+    (0, common_1.Get)('service-config'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "getServiceConfig", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
+    (0, common_1.Post)('service-config'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "updateServiceConfig", null);
+__decorate([
     (0, common_1.Get)('public-master-data'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getPublicMasterData", null);
 exports.AppSettingsController = AppSettingsController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('app-settings'),
     __metadata("design:paramtypes", [app_settings_service_1.AppSettingsService])
 ], AppSettingsController);
@@ -141,6 +169,9 @@ let PublicContactController = class PublicContactController {
     }
     getPublicMasterData() {
         return this.appSettingsService.getPublicMasterData();
+    }
+    getPublicAppSettings() {
+        return this.appSettingsService.get();
     }
 };
 exports.PublicContactController = PublicContactController;
@@ -156,6 +187,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PublicContactController.prototype, "getPublicMasterData", null);
+__decorate([
+    (0, common_1.Get)('app-settings'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PublicContactController.prototype, "getPublicAppSettings", null);
 exports.PublicContactController = PublicContactController = __decorate([
     (0, common_1.Controller)('public-contact'),
     __metadata("design:paramtypes", [app_settings_service_1.AppSettingsService])

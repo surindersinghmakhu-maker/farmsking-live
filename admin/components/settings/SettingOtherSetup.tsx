@@ -30,7 +30,6 @@ import {
 type OtherCategoryFilter =
   | 'ALL'
   | 'CROP_LEAF_SCANNER'
-  | 'CROP_SEASONS'
   | 'BACKUP_RECOVERY'
   | 'CERTIFICATES'
   | 'FRANCHISE_RULES'
@@ -45,7 +44,6 @@ interface CategoryPill {
 const CATEGORY_PILLS: CategoryPill[] = [
   { key: 'ALL', label: 'All Unexposed Settings', icon: 'apps-outline' },
   { key: 'CROP_LEAF_SCANNER', label: 'Scan Any Crop / Leaf Photo Directly', icon: 'scan-outline' },
-  { key: 'CROP_SEASONS', label: 'Crop Cycles & Seasons', icon: 'calendar-outline' },
   { key: 'BACKUP_RECOVERY', label: 'Backup & Recovery', icon: 'server-outline' },
   { key: 'CERTIFICATES', label: 'Certificates & QR', icon: 'shield-checkmark-outline' },
   { key: 'FRANCHISE_RULES', label: 'Mandi Franchise', icon: 'storefront-outline' },
@@ -113,7 +111,7 @@ export default function SettingOtherSetup() {
   };
 
   const updateMasterNested = (
-    section: 'cropSessions' | 'backupSettings' | 'certificateConfig' | 'franchiseRules' | 'promotersAndCapital' | 'themeColors' | 'smtp',
+    section: 'backupSettings' | 'certificateConfig' | 'franchiseRules' | 'promotersAndCapital' | 'themeColors' | 'smtp',
     field: string,
     val: any
   ) => {
@@ -507,86 +505,6 @@ export default function SettingOtherSetup() {
                     <Text style={{ fontSize: 11, color: textColor, fontWeight: '500' }}>{item.name}</Text>
                   </View>
                 ))}
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Crop Cycles & Farming Seasons */}
-        {isVisible('CROP_SEASONS') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="calendar" size={20} color="#b45309" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Crop Cycles & Farming Seasons</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Active season, sowing window, and crop life-cycles</Text>
-              </View>
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Active Season Name</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.cropSessions?.activeSessionName || 'Rabi 2026-27 (Winter Sowing)'}
-                  onChangeText={(t) => updateMasterNested('cropSessions', 'activeSessionName', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Season Type</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.cropSessions?.activeSeasonType || 'RABI'}
-                  placeholder="RABI / KHARIF / ZAID / ANNUAL"
-                  placeholderTextColor={subTextColor}
-                  onChangeText={(t) => updateMasterNested('cropSessions', 'activeSeasonType', t.toUpperCase())}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Season Start Date</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.cropSessions?.startDate || '01/10/2026'}
-                  onChangeText={(t) => updateMasterNested('cropSessions', 'startDate', t)}
-                />
-              </View>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Season End Date</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  value={pm.cropSessions?.endDate || '15/04/2027'}
-                  onChangeText={(t) => updateMasterNested('cropSessions', 'endDate', t)}
-                />
-              </View>
-            </View>
-
-            <View style={{ marginTop: 10 }}>
-              <Text style={[styles.label, { color: textColor }]}>Major Target Crops</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                value={pm.cropSessions?.majorCrops || 'Wheat, Mustard, Barley, Gram, Potato, Peas'}
-                onChangeText={(t) => updateMasterNested('cropSessions', 'majorCrops', t)}
-              />
-            </View>
-
-            <View style={{ gap: 10, marginTop: 12 }}>
-              <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: textColor }]}>Isolate Historical Records</Text>
-                <Switch
-                  value={Boolean(pm.cropSessions?.isDataIsolated ?? true)}
-                  onValueChange={(v) => updateMasterNested('cropSessions', 'isDataIsolated', v)}
-                  trackColor={{ false: '#475569', true: '#b45309' }}
-                />
-              </View>
-              <View style={styles.toggleRow}>
-                <Text style={[styles.toggleLabel, { color: textColor }]}>Auto-Switch Mandi Rates by Season</Text>
-                <Switch
-                  value={Boolean(pm.cropSessions?.autoSwitchMandiRates ?? true)}
-                  onValueChange={(v) => updateMasterNested('cropSessions', 'autoSwitchMandiRates', v)}
-                  trackColor={{ false: '#475569', true: '#b45309' }}
-                />
               </View>
             </View>
           </View>

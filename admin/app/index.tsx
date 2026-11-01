@@ -90,7 +90,24 @@ export default function AdminLandingPage() {
 
           <TouchableOpacity
             style={styles.ctaPrimary}
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => {
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                try {
+                  router.push('/(auth)/login' as any);
+                } catch {}
+                setTimeout(() => {
+                  if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
+                    window.location.href = '/login';
+                  }
+                }, 60);
+              } else {
+                try {
+                  router.push('/(auth)/login' as any);
+                } catch {
+                  router.push('/login' as any);
+                }
+              }
+            }}
             activeOpacity={0.85}
           >
             <LinearGradient colors={['#10b981', '#059669']} style={styles.ctaGradient} start={{x: 0, y: 0}} end={{x: 1, y: 0}}>

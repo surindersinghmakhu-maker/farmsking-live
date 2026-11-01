@@ -277,4 +277,14 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateAppSettingsDto.prototype, "accountsMaintenanceMode", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAppSettingsDto.prototype, "walletWithdrawalEnabled", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    __metadata("design:type", Array)
+], UpdateAppSettingsDto.prototype, "allowedWithdrawalRoles", void 0);
 //# sourceMappingURL=update-app-settings.dto.js.map

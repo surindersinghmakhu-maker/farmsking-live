@@ -48,6 +48,8 @@ export interface AppSettings {
   gardenExpertPlatformFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
+  walletWithdrawalEnabled?: boolean;
+  allowedWithdrawalRoles?: string[];
   updatedAt: string;
   updatedById: string | null;
 }
@@ -102,11 +104,40 @@ export interface UpdateAppSettingsPayload {
   gardenExpertPlatformFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
+  walletWithdrawalEnabled?: boolean;
+  allowedWithdrawalRoles?: string[];
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
-  const { data } = await apiClient.get<AppSettings>('/app-settings');
-  return data;
+  try {
+    const { data } = await apiClient.get<AppSettings>('/app-settings');
+    return data;
+  } catch (err: any) {
+    try {
+      const { data } = await apiClient.get<any>('/public-contact/app-settings');
+      return data;
+    } catch {
+      try {
+        const { data } = await apiClient.get<any>('/public-contact/master-data');
+        return {
+          id: 'default',
+          appName: data.brandDisplayName || 'FarmsKing',
+          logoUrl: data.logoUrl || null,
+          faviconUrl: data.faviconUrl || null,
+          tagline: data.tagline || null,
+          ...data,
+        } as any;
+      } catch {
+        return {
+          id: 'default',
+          appName: 'FarmsKing',
+          logoUrl: '/brand_logo.png',
+          faviconUrl: '/favicon.png',
+          tagline: 'Farmer Products & Smart Farming Platform',
+        } as any;
+      }
+    }
+  }
 }
 
 export async function updateAppSettings(payload: UpdateAppSettingsPayload): Promise<AppSettings> {

@@ -12,11 +12,11 @@ import { User } from '../types/api';
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<User>;
   sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
-  otpLogin: (payload: { mobile: string; otp: string }) => Promise<void>;
-  firebaseLogin: (idToken: string) => Promise<void>;
-  googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean }>;
+  otpLogin: (payload: { mobile: string; otp: string }) => Promise<User>;
+  firebaseLogin: (idToken: string) => Promise<User>;
+  googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean; user?: User }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
   unlinkGoogle: () => Promise<{ success: boolean; message: string }>;
   sendMobileLinkOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
@@ -154,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             );
           }
         }
+        return response.user;
       },
       sendLoginOtp: async (mobile) => {
         return sendLoginOtpApi(mobile);
@@ -164,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         await persistSession(response.accessToken, response.user);
+        return response.user;
       },
       firebaseLogin: async (idToken) => {
         const response = await firebaseLoginApi(idToken);
@@ -171,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         await persistSession(response.accessToken, response.user);
+        return response.user;
       },
       googleLogin: async (payload) => {
         const response = await googleLoginApi(payload);
@@ -178,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         await persistSession(response.accessToken, response.user);
-        return { isProfileIncomplete: response.isProfileIncomplete };
+        return { isProfileIncomplete: response.isProfileIncomplete, user: response.user };
       },
       linkGoogle: async (payload) => {
         const response = await linkGoogleApi(payload);

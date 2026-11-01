@@ -65,6 +65,12 @@ export function resolveMediaUrl(path?: string | null): string | undefined {
   const base = apiClient.defaults.baseURL || API_BASE_URL;
   const origin = base.replace(/\/api(\/v1)?\/?$/i, '').replace(/\/+$/, '');
 
+  // If the path contains /uploads/, always route through the active backend origin
+  if (url.includes('/uploads/')) {
+    const uploadPath = url.substring(url.indexOf('/uploads/'));
+    return `${origin}${uploadPath}`;
+  }
+
   // Replace localhost or 127.0.0.1 with active origin so mobile devices can reach backend images
   if (url.includes('localhost:3000') || url.includes('127.0.0.1:3000')) {
     url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, origin);

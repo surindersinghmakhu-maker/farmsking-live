@@ -118,6 +118,10 @@ export default function SettingFeaturesSetup() {
         gardenMaintenanceMode: Boolean(appForm.gardenMaintenanceMode),
         walletMaintenanceMode: Boolean(appForm.walletMaintenanceMode),
         trainerMaintenanceMode: Boolean(appForm.trainerMaintenanceMode),
+        doctorMaintenanceMode: Boolean(appForm.doctorMaintenanceMode),
+        gardenAdvisorMaintenanceMode: Boolean(appForm.gardenAdvisorMaintenanceMode),
+        accountsMaintenanceMode: Boolean(appForm.accountsMaintenanceMode),
+        allowDirectPlatformSales: Boolean(appForm.allowDirectPlatformSales),
         groupVoiceCallEnabled: Boolean(appForm.groupVoiceCallEnabled ?? true),
         whatsappGroupSyncEnabled: Boolean(appForm.whatsappGroupSyncEnabled ?? true),
         whatsappAutoAddEnabled: Boolean(appForm.whatsappAutoAddEnabled ?? true),
@@ -130,7 +134,10 @@ export default function SettingFeaturesSetup() {
         updateAppMutation.mutateAsync(appPayload),
         updateIntMutation.mutateAsync({
           otp: intForm.otp,
-          projectMasterData: intForm.projectMasterData,
+          projectMasterData: {
+            ...(rawIntegrations?.projectMasterData || {}),
+            ...(intForm.projectMasterData || {}),
+          } as any,
         }),
       ]);
 
@@ -251,7 +258,7 @@ export default function SettingFeaturesSetup() {
               <View style={styles.toggleRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.toggleLabel, { color: textColor }]}>WhatsApp Group Sync</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Synchronize farmer directory with official broadcast groups</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Synchronize users directory with official broadcast groups</Text>
                 </View>
                 <Switch
                   value={Boolean(appForm.whatsappGroupSyncEnabled ?? true)}
@@ -379,6 +386,42 @@ export default function SettingFeaturesSetup() {
                 <Switch
                   value={Boolean(appForm.trainerMaintenanceMode)}
                   onValueChange={(v) => updateAppField('trainerMaintenanceMode', v)}
+                  trackColor={{ false: '#475569', true: '#dc2626' }}
+                />
+              </View>
+
+              <View style={styles.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>AI Crop Doctor Maintenance</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause automated crop disease diagnosis</Text>
+                </View>
+                <Switch
+                  value={Boolean(appForm.doctorMaintenanceMode)}
+                  onValueChange={(v) => updateAppField('doctorMaintenanceMode', v)}
+                  trackColor={{ false: '#475569', true: '#dc2626' }}
+                />
+              </View>
+
+              <View style={styles.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>Garden Advisor Maintenance</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause urban gardening advisory sessions</Text>
+                </View>
+                <Switch
+                  value={Boolean(appForm.gardenAdvisorMaintenanceMode)}
+                  onValueChange={(v) => updateAppField('gardenAdvisorMaintenanceMode', v)}
+                  trackColor={{ false: '#475569', true: '#dc2626' }}
+                />
+              </View>
+
+              <View style={styles.toggleRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleLabel, { color: textColor }]}>Accounts & Ledger Maintenance</Text>
+                  <Text style={[styles.toggleSub, { color: subTextColor }]}>Pause accounting ledger synchronization</Text>
+                </View>
+                <Switch
+                  value={Boolean(appForm.accountsMaintenanceMode)}
+                  onValueChange={(v) => updateAppField('accountsMaintenanceMode', v)}
                   trackColor={{ false: '#475569', true: '#dc2626' }}
                 />
               </View>

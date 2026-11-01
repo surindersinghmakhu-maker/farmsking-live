@@ -56,4 +56,6 @@ export declare class UpdateAppSettingsDto {
     doctorMaintenanceMode?: boolean;
     gardenAdvisorMaintenanceMode?: boolean;
     accountsMaintenanceMode?: boolean;
+    walletWithdrawalEnabled?: boolean;
+    allowedWithdrawalRoles?: string[];
 }

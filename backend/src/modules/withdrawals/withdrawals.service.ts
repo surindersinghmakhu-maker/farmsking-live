@@ -71,14 +71,27 @@ export class WithdrawalsService {
   }
 
   async create(user: AuthUser, dto: CreateWithdrawalDto) {
-    // 0. Strict Technical Policy: Clients cannot make cash withdrawals.
-    // Client wallet balances are strictly reserved for billing adjustments and order checkout discounts.
-    const CLIENT_ROLES: Role[] = [Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.TRADER];
-    if (CLIENT_ROLES.includes(user.role)) {
+    const s = await this.appSettingsService.get();
+
+    // 1. Check if wallet withdrawals are enabled globally
+    const withdrawalEnabled = (s as any).walletWithdrawalEnabled ?? false;
+    const maintenanceMode = (s as any).walletMaintenanceMode ?? false;
+    if (!withdrawalEnabled || maintenanceMode) {
       throw new ForbiddenException(
-        'Client wallet balance cannot be withdrawn in cash. It is strictly reserved for billing adjustments and order discounts.',
+        'Wallet balance withdrawals are currently disabled by administration.',
       );
     }
+
+    // 2. Enforce Role-Based Withdrawal Permissions configured in Admin Settings
+    const allowedRoles: string[] = Array.isArray((s as any).allowedWithdrawalRoles)
+      ? (s as any).allowedWithdrawalRoles
+      : [];
+    if (!allowedRoles.includes(user.role)) {
+      throw new ForbiddenException(
+        `Wallet withdrawal is not permitted for your user role (${user.role}). Please contact support if you need assistance.`,
+      );
+    }
+
     if (dto.requestedAmount < 50) {
       throw new BadRequestException('Minimum withdrawal limit is ₹50.');
     }

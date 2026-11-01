@@ -251,53 +251,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     ],
   },
   {
-    id: 'PLAN_OFFERS',
-    title: 'Plan & Offers',
-    shortTitle: 'Plan & Offers',
-    icon: 'pricetags-outline',
-    iconFilled: 'pricetags',
-    badge: 'Plans & Deals',
-    color: '#9333ea',
-    subTabs: [
-      {
-        id: 'plans-overview',
-        title: 'Plan & Offers Setup',
-        shortTitle: 'Plan & Offers',
-        description: 'Subscription plans, free trials, membership passes, referral rewards & promo schemes',
-        icon: 'pricetags',
-        path: '/admin/(tabs)/new-settings',
-        params: { tab: 'PLAN_OFFERS', pillar: 'PLAN_OFFERS' },
-      },
-      {
-        id: 'coupons-vouchers',
-        title: 'Coupons & VIP Passes',
-        shortTitle: 'Coupons',
-        description: 'Discount vouchers, promo codes, gift passes & subscriber memberships',
-        icon: 'ticket',
-        path: '/admin/(tabs)/super-coupons',
-        params: { pillar: 'PLAN_OFFERS' },
-      },
-      {
-        id: 'market-deals',
-        title: 'Market Deals & Flash Offers',
-        shortTitle: 'Market Deals',
-        description: 'Store flash sales, bundle discounts & promotional banners',
-        icon: 'pricetag',
-        path: '/admin/(tabs)/admin-offers',
-        params: { pillar: 'PLAN_OFFERS' },
-      },
-      {
-        id: 'pricing-tiers',
-        title: 'Farmer Plan Pricing',
-        shortTitle: 'Pricing Rates',
-        description: 'Pro, Smart & Super card live duration rates and partner share',
-        icon: 'ribbon',
-        path: '/admin/(tabs)/super-coupons',
-        params: { tab: 'PRICING', pillar: 'PLAN_OFFERS' },
-      },
-    ],
-  },
-  {
     id: 'USERS',
     title: 'Users',
     shortTitle: 'Users',
@@ -441,7 +394,6 @@ export function normalizePillarId(pillarId?: string): string {
     case 'OFFERS':
     case 'PLAN':
     case 'OFFER':
-      return 'PLAN_OFFERS';
     case 'NEW_SETTINGS':
     case 'NEW-SETTINGS':
     case 'SETTINGS':
@@ -514,19 +466,13 @@ export function detectPillarFromRoute(
   const effectiveTab = searchParams?.tab || webTab;
   const effectiveFilter = searchParams?.filter || webFilter;
 
-  // 0. Plan & Offers route check (Direct top-level Hub)
+  // 0. Plan & Offers & Settings route check (Consolidate under PLATFORM / Setting)
   if (
     effectivePillar === 'PLAN_OFFERS' ||
     effectivePillar === 'PLAN-OFFERS' ||
     effectivePillar === 'PLANS' ||
     effectivePillar === 'OFFERS' ||
-    effectiveTab?.toUpperCase() === 'PLAN_OFFERS'
-  ) {
-    return 'PLAN_OFFERS';
-  }
-
-  // 0.1 Setting routes (all settings consolidate under PLATFORM)
-  if (
+    effectiveTab?.toUpperCase() === 'PLAN_OFFERS' ||
     pathname.includes('new-settings') ||
     pathname.includes('super-settings') ||
     pathname.includes('cpanel') ||

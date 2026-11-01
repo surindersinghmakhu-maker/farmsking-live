@@ -52,14 +52,20 @@ export default function LoginScreen() {
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const otpInputRef = useRef<TextInput>(null);
 
-  const handleSuccessNavigation = (isProfileIncomplete = false) => {
+  const handleSuccessNavigation = (isProfileIncomplete = false, loggedInUser?: any) => {
     if (isProfileIncomplete) {
       router.replace('/farmer-profile-setup');
-    } else if (redirect) {
-      router.replace(redirect as any);
-    } else {
-      router.replace('/(tabs)' as any);
+      return;
     }
+    if (redirect) {
+      router.replace(redirect as any);
+      return;
+    }
+    const targetUser = loggedInUser || user;
+    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
+      targetUser?.role || ''
+    );
+    router.replace(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
   };
 
   const [activeTab, setActiveTab] = useState<LoginTab>('password');
@@ -228,7 +234,7 @@ export default function LoginScreen() {
             accessToken: response.authentication!.accessToken,
           });
 
-          handleSuccessNavigation(Boolean(res?.isProfileIncomplete));
+          handleSuccessNavigation(Boolean(res?.isProfileIncomplete), (res as any)?.user);
         } catch (err: any) {
           setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
         } finally {
@@ -268,7 +274,7 @@ export default function LoginScreen() {
           accessToken,
         });
 
-        handleSuccessNavigation(Boolean(res?.isProfileIncomplete));
+        handleSuccessNavigation(Boolean(res?.isProfileIncomplete), (res as any)?.user);
         return;
       } catch (fbErr: any) {
         console.warn('[GoogleSignIn Web] Firebase popup error:', fbErr);
@@ -339,8 +345,8 @@ export default function LoginScreen() {
       if (confirmationResult) {
         const credential = await confirmationResult.confirm(cleanCode);
         const idToken = await credential.user.getIdToken();
-        await firebaseLogin(idToken);
-        handleSuccessNavigation();
+        const loggedInUser = await firebaseLogin(idToken);
+        handleSuccessNavigation(false, loggedInUser);
       } else {
         throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
       }
@@ -359,8 +365,8 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      await login({ mobile: mobile.trim(), password: password.trim() });
-      handleSuccessNavigation();
+      const loggedInUser = await login({ mobile: mobile.trim(), password: password.trim() });
+      handleSuccessNavigation(false, loggedInUser);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet ? 'Network error! Could not connect. Please check your internet.' : (err?.response?.data?.message ?? err?.message ?? 'Login failed.'));

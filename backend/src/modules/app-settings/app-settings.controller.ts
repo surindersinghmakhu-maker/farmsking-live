@@ -8,36 +8,37 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { AppSettingsService } from './app-settings.service';
 import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('app-settings')
 export class AppSettingsController {
   constructor(private readonly appSettingsService: AppSettingsService) {}
 
-  /** Any authenticated user — needed to build UPI payment links on order/plan screens. */
+  /** Any visitor / user — needed to load branding, logo, app settings, UPI payee name */
   @Get()
   get() {
     return this.appSettingsService.get();
   }
 
-  /** Any authenticated user — real contact details for the "Support"/"Contact Us" screens. */
+  /** Any visitor / user — real contact details for the "Support"/"Contact Us" screens */
   @Get('support-contact')
   getSupportContact() {
     return this.appSettingsService.getSupportContact();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Patch()
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateAppSettingsDto) {
     return this.appSettingsService.update(user, dto);
   }
 
-  /** Get live category & sub-category feature flags */
+  /** Get live category & sub-category feature flags (Public for shop & home catalogs) */
   @Get('feature-flags')
   getFeatureFlags() {
     return this.appSettingsService.getFeatureFlags();
   }
 
   /** Update feature flags (Super Admin / Admin only) */
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Patch('feature-flags')
   updateFeatureFlags(@CurrentUser() user: AuthUser, @Body() flags: any) {
@@ -51,6 +52,8 @@ export class AppSettingsController {
   }
 
   /** Update dynamic SEO settings */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Post('seo')
   updateSeo(@Body() dto: any) {
     return this.appSettingsService.updateSeo(dto);
@@ -63,13 +66,29 @@ export class AppSettingsController {
   }
 
   /** Update system integrations (Super Admin / Admin only) */
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Patch('integrations')
   updateIntegrations(@CurrentUser() user: AuthUser, @Body() payload: any) {
     return this.appSettingsService.updateIntegrations(user, payload);
   }
 
-  /** Get public project master data (any authenticated user) */
+  /** Get third-party service provider credentials & active providers */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Get('service-config')
+  getServiceConfig() {
+    return this.appSettingsService.getServiceConfig();
+  }
+
+  /** Update third-party service provider configuration */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Post('service-config')
+  updateServiceConfig(@CurrentUser() user: AuthUser, @Body() body: any) {
+    return this.appSettingsService.updateServiceConfig(user, body);
+  }
+
   @Get('public-master-data')
   getPublicMasterData() {
     return this.appSettingsService.getPublicMasterData();
@@ -90,6 +109,12 @@ export class PublicContactController {
   @Get('master-data')
   getPublicMasterData() {
     return this.appSettingsService.getPublicMasterData();
+  }
+
+  /** Public app settings for unauthenticated visitors */
+  @Get('app-settings')
+  getPublicAppSettings() {
+    return this.appSettingsService.get();
   }
 }
 

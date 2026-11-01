@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   useWindowDimensions,
   Modal,
   Linking,
+  Animated as RNAnimated,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +26,7 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import AdminWebPortalScreen from './admin';
 import { useAuth } from '@/src/store/auth-context';
+import { useCart } from '@/src/store/cart-context';
 import PublicHeader from '@/components/PublicHeader';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
@@ -37,6 +40,96 @@ const PUBLIC_NAV_LINKS = [
   { label: 'Farming', path: '/topic/Farming', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
   { label: 'Gardening', path: '/topic/Gardening', color: '#e11d48', bg: 'rgba(225,29,72,0.1)' },
   { label: 'Crop Doctors', path: '/topic/Crop-Doctors', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
+];
+
+// ─── Explore Other Modules Data (FarmsKing Ecosystem) ───────────────────────
+const EXPLORE_OTHER_MODULES = [
+  {
+    label: 'Agri Store',
+    subtitle: 'Certified Seeds & Direct Inputs',
+    path: '/shop',
+    image: require('@/assets/images/icon_agristore_3d_clean.png'),
+    color: '#f97316',
+    tag: 'STORE',
+  },
+  {
+    label: 'Farming OS',
+    subtitle: 'High-Yield Seeds & Crop Advisory',
+    path: '/topic/Farming',
+    image: require('@/assets/images/icon_farming_3d_clean.png'),
+    color: '#10b981',
+    tag: 'FARMING',
+  },
+  {
+    label: 'Gardening',
+    subtitle: 'Flora, Live Plants & Composts',
+    path: '/topic/Gardening',
+    image: require('@/assets/images/icon_gardening_3d_clean.png'),
+    color: '#e11d48',
+    tag: 'GARDENING',
+  },
+  {
+    label: 'Crop Doctors',
+    subtitle: '24/7 AI Crop Disease Diagnostics',
+    path: '/topic/Crop-Doctors',
+    image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
+    color: '#06b6d4',
+    tag: 'AI CARE',
+  },
+];
+
+// ─── Mobile Bottom Nav Tabs (Admin-Style Colorful Dynamic Indicator) ──────────
+const BOTTOM_NAV_TABS = [
+  {
+    id: 'home',
+    label: 'Home',
+    icon: 'home',
+    color: '#10b981',
+    glow: ['rgba(16, 185, 129, 0.28)', 'rgba(5, 150, 105, 0.16)', 'rgba(16, 185, 129, 0.05)'],
+    laser: ['#00ff87', '#10b981', '#059669'],
+    border: 'rgba(16, 185, 129, 0.45)',
+    shadow: '#10b981',
+  },
+  {
+    id: 'mandi',
+    label: 'Mandi',
+    icon: 'trending-up',
+    color: '#eab308',
+    glow: ['rgba(234, 179, 8, 0.28)', 'rgba(202, 138, 4, 0.16)', 'rgba(234, 179, 8, 0.05)'],
+    laser: ['#fde047', '#eab308', '#ca8a04'],
+    border: 'rgba(234, 179, 8, 0.45)',
+    shadow: '#eab308',
+  },
+  {
+    id: 'doctor',
+    label: 'AI Doctor',
+    icon: 'sparkles',
+    color: '#06b6d4',
+    glow: ['rgba(6, 182, 212, 0.28)', 'rgba(16, 185, 129, 0.16)', 'rgba(6, 182, 212, 0.05)'],
+    laser: ['#38bdf8', '#00ff87', '#10b981'],
+    border: 'rgba(6, 182, 212, 0.45)',
+    shadow: '#06b6d4',
+  },
+  {
+    id: 'store',
+    label: 'Store',
+    icon: 'bag-handle',
+    color: '#0ea5e9',
+    glow: ['rgba(14, 165, 233, 0.28)', 'rgba(2, 132, 199, 0.16)', 'rgba(14, 165, 233, 0.05)'],
+    laser: ['#38bdf8', '#0ea5e9', '#0284c7'],
+    border: 'rgba(14, 165, 233, 0.45)',
+    shadow: '#0ea5e9',
+  },
+  {
+    id: 'menu',
+    label: 'Menu',
+    icon: 'grid',
+    color: '#8b5cf6',
+    glow: ['rgba(139, 92, 246, 0.28)', 'rgba(124, 58, 237, 0.16)', 'rgba(139, 92, 246, 0.05)'],
+    laser: ['#c084fc', '#8b5cf6', '#7c3aed'],
+    border: 'rgba(139, 92, 246, 0.45)',
+    shadow: '#8b5cf6',
+  },
 ];
 
 // ─── FarmsKing Platform Verified Latest Entries Ticker Data ───────────────────
@@ -506,10 +599,27 @@ TRANSLATIONS.HI = TRANSLATIONS.EN;
 export default function PublicLandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { items: cartItems } = useCart();
+  const totalCartCount = useMemo(() => (cartItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0), [cartItems]);
   const { width } = useWindowDimensions();
   const isDesktop = width > 1024;
   const isTablet = width > 768 && width <= 1024;
   const isMobile = width <= 768;
+
+  // ── Bottom Docked Bar Animated Glider State (Admin Mobile Spring Style) ──
+  const [activeBottomTab, setActiveBottomTab] = useState(0);
+  const bottomSlideAnim = useRef(new RNAnimated.Value(0)).current;
+  const [bottomBarWidth, setBottomBarWidth] = useState(0);
+
+  const switchBottomTab = (index: number) => {
+    setActiveBottomTab(index);
+    RNAnimated.spring(bottomSlideAnim, {
+      toValue: index,
+      tension: 68,
+      friction: 10,
+      useNativeDriver: false,
+    }).start();
+  };
 
   // ── Farmers Audio Advisory Voice Assistant State ──
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -1507,7 +1617,12 @@ export default function PublicLandingPage() {
   return (
     <View style={[S.root, isDay && S.rootDay]}>
       {/* ══ UNIFIED PUBLIC FLOATING HEADER (IDENTICAL ACROSS ALL TABS) ══ */}
-      <PublicHeader themeMode={themeMode} onThemeToggle={toggleTheme} />
+      <PublicHeader
+        themeMode={themeMode}
+        onThemeToggle={toggleTheme}
+        onCartPress={() => router.push('/shop')}
+        cartItemCount={totalCartCount}
+      />
 
       <ScrollView
         contentContainerStyle={[
@@ -1519,10 +1634,10 @@ export default function PublicLandingPage() {
         {/* ══ HERO SECTION (SPLIT 2-COLUMN) ══ */}
         <View style={[S.heroSection, isDesktop ? S.heroDesktop : S.heroMobile]}>
           {/* Subtle Ambient Glowing Baby Light Orbs */}
-          <View style={[isDay ? S.glowOrbSunDay : S.glowOrbBabyMint, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim' } as any) : {}]} />
-          <View style={[isDay ? S.glowOrbSkyDay : S.glowOrbBabyBlue, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim' } as any) : {}]} />
-          <View style={[isDay ? S.glowOrbPastureDay : S.glowOrbBabyPink, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim' } as any) : {}]} />
-          <View style={[isDay ? S.glowOrbDawnDay : S.glowOrbBabyPeach, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim' } as any) : {}]} />
+          <View pointerEvents="none" style={[isDay ? S.glowOrbSunDay : S.glowOrbBabyMint, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim', pointerEvents: 'none' } as any) : {}]} />
+          <View pointerEvents="none" style={[isDay ? S.glowOrbSkyDay : S.glowOrbBabyBlue, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim', pointerEvents: 'none' } as any) : {}]} />
+          <View pointerEvents="none" style={[isDay ? S.glowOrbPastureDay : S.glowOrbBabyPink, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim', pointerEvents: 'none' } as any) : {}]} />
+          <View pointerEvents="none" style={[isDay ? S.glowOrbDawnDay : S.glowOrbBabyPeach, Platform.OS === 'web' ? ({ className: 'orb-breathe-anim', pointerEvents: 'none' } as any) : {}]} />
 
           {/* Left Column: Clean Headlines & Interactive Mandi Directory */}
           <View style={[S.heroLeft, isDesktop ? { flex: 6 } : { width: '100%' }]}>
@@ -1944,11 +2059,21 @@ export default function PublicLandingPage() {
                       style={S.officialModalPrimaryBtn}
                       onPress={() => {
                         setOfficialRatesModalVisible(false);
-                        try {
-                          router.push('/(auth)/login' as any);
-                        } catch {}
                         if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                          window.location.href = '/login';
+                          try {
+                            router.push('/(auth)/login' as any);
+                          } catch {}
+                          setTimeout(() => {
+                            if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
+                              window.location.href = '/login';
+                            }
+                          }, 60);
+                        } else {
+                          try {
+                            router.push('/(auth)/login' as any);
+                          } catch {
+                            router.push('/login' as any);
+                          }
                         }
                       }}
                       activeOpacity={0.88}
@@ -1981,6 +2106,9 @@ export default function PublicLandingPage() {
             {/* ══ HIGH-CONVERTING UNIFIED HERO CTA (MERGED WITH "LOGIN FOR LIVE PRICES") ══ */}
             <View style={[S.ctaRow, isMobile && { flexDirection: 'row', gap: 6, marginBottom: 6 }]}>
               <TouchableOpacity
+                accessibilityRole="link"
+                // @ts-ignore
+                href={user ? (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/login'}
                 onPress={() => {
                   if (user) {
                     if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
@@ -1989,11 +2117,21 @@ export default function PublicLandingPage() {
                       router.push('/(user)/(tabs)' as any);
                     }
                   } else {
-                    try {
-                      router.push('/(auth)/login' as any);
-                    } catch {}
                     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                      window.location.href = '/login';
+                      try {
+                        router.push('/(auth)/login' as any);
+                      } catch {}
+                      setTimeout(() => {
+                        if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
+                          window.location.href = '/login';
+                        }
+                      }, 60);
+                    } else {
+                      try {
+                        router.push('/(auth)/login' as any);
+                      } catch {
+                        router.push('/login' as any);
+                      }
                     }
                   }
                 }}
@@ -2017,7 +2155,7 @@ export default function PublicLandingPage() {
                   </View>
                   <View style={S.btnPrimaryTextBox}>
                     <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 12.5, lineHeight: 16 }]} numberOfLines={1}>
-                      {user ? 'Dashboard →' : 'Get Started Free'}
+                      {user ? 'Dashboard →' : 'Login / Get Started →'}
                     </Text>
                   </View>
                   <View style={[S.btnPrimaryArrowPill, isMobile && { width: 20, height: 20, borderRadius: 10 }]}>
@@ -2027,6 +2165,9 @@ export default function PublicLandingPage() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                accessibilityRole="link"
+                // @ts-ignore
+                href="/shop"
                 style={[
                   S.btnSecondary,
                   isDay && S.btnSecondaryDay,
@@ -2529,6 +2670,7 @@ export default function PublicLandingPage() {
               ]}
               glowColor={isDay ? 'rgba(16, 185, 129, 0.28)' : 'rgba(16, 185, 129, 0.45)'}
               tiltMax={7}
+              onPress={() => router.push('/topic/Crop-Doctors')}
             >
               {/* Luminous Neon Top Flare (Radiant Emerald) */}
               <View style={[S.cardFlareTop, { backgroundColor: '#10b981', shadowColor: '#10b981' }]} />
@@ -2681,6 +2823,91 @@ export default function PublicLandingPage() {
           </View>
         </View>
 
+        {/* ══ EXPLORE OTHER MODULES ══ */}
+        <View style={S.exploreModulesSection}>
+          <View style={S.sectionHeader}>
+            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
+              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>FARMSKING ECOSYSTEM</Text>
+            </View>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay]}>Explore Other Modules</Text>
+            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay]}>
+              Seamless access to certified agri products, precision farming tools, home gardening supplies, and 24/7 AI crop care.
+            </Text>
+          </View>
+
+          <View style={S.exploreModulesGrid}>
+            {EXPLORE_OTHER_MODULES.map((link) => (
+              <TouchableOpacity
+                key={link.path}
+                style={[
+                  S.exploreModuleCard,
+                  isTablet && S.exploreModuleCardTablet,
+                  isMobile && S.exploreModuleCardMobile,
+                  isDay ? S.exploreModuleCardDay : S.exploreModuleCardNight,
+                  { borderColor: isDay ? `${link.color}35` : `${link.color}45` },
+                  Platform.OS === 'web' ? ({ cursor: 'pointer', transition: 'all 0.22s ease' } as any) : {},
+                ]}
+                onPress={() => router.push(link.path as any)}
+                activeOpacity={0.88}
+              >
+                {/* 3D Digital Thumbnail */}
+                <View
+                  style={[
+                    S.exploreModuleImgFrame,
+                    {
+                      borderColor: `${link.color}40`,
+                      backgroundColor: isDay ? `${link.color}12` : `${link.color}1e`,
+                    },
+                  ]}
+                >
+                  <Image source={link.image} style={S.exploreModuleImg} resizeMode="contain" />
+                </View>
+
+                {/* Info Text */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View
+                    style={[
+                      S.exploreModuleTag,
+                      { backgroundColor: isDay ? `${link.color}15` : `${link.color}25` },
+                    ]}
+                  >
+                    <Text style={[S.exploreModuleTagText, { color: link.color }]}>{link.tag}</Text>
+                  </View>
+                  <Text
+                    style={[
+                      S.exploreModuleTitle,
+                      { color: isDay ? '#0f172a' : '#f8fafc' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {link.label}
+                  </Text>
+                  <Text
+                    style={[
+                      S.exploreModuleSub,
+                      { color: isDay ? '#64748b' : '#94a3b8' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {link.subtitle}
+                  </Text>
+                </View>
+
+                {/* Arrow Forward Circle */}
+                <View
+                  style={[
+                    S.exploreModuleArrow,
+                    { backgroundColor: isDay ? `${link.color}15` : `${link.color}25` },
+                  ]}
+                >
+                  <Ionicons name="arrow-forward" size={15} color={link.color} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* ══ VERIFIED CULTIVATOR FIELD SUCCESS STORIES ══ */}
         <View style={S.testimonialsSection}>
           <View style={S.sectionHeader}>
@@ -2775,9 +3002,8 @@ export default function PublicLandingPage() {
           <View style={S.footerColumnsGrid}>
             {/* Column 1: Brand & Mission */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
-              <View style={S.footerBrandRow}>
-                <BrandLogo size={36} useHdQuality style={S.footerLogoImg} />
-                <Text style={[S.footerBrandName, isDay && S.footerBrandNameDay]}>FarmsKing</Text>
+              <View style={[S.footerBrandRow, !isDay && { backgroundColor: '#ffffff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 12 }]}>
+                <BrandLogo height={38} width={128} useHdQuality resizeMode="contain" />
               </View>
               <Text style={[S.footerDesc, isDay && S.footerDescDay]}>
                 India's integrated agricultural intelligence platform uniting precision farming, urban gardening, AI plant pathology, and direct APMC mandi trade.
@@ -2791,45 +3017,88 @@ export default function PublicLandingPage() {
             {/* Column 2: Solutions */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
               <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>Ecosystem</Text>
-              <TouchableOpacity onPress={() => router.push('/topic/Farming')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/topic/Farming' } : {})}
+                onPress={() => router.push('/topic/Farming')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Precision Farming OS</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/topic/Gardening')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/topic/Gardening' } : {})}
+                onPress={() => router.push('/topic/Gardening')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Urban Gardening Kits</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/topic/Crop-Doctors')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/topic/Crop-Doctors' } : {})}
+                onPress={() => router.push('/topic/Crop-Doctors')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>AI Crop Doctor Diagnosis</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/shop')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/shop' } : {})}
+                onPress={() => router.push('/shop')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Certified Agri Store</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/crop-intelligence')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/crop-intelligence' } : {})}
+                onPress={() => router.push('/crop-intelligence')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Satellite Telemetry</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Column 3: Platform & Company */}
             {/* Column 3: Legal & Regulatory */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
               <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>Legal & Compliance</Text>
-              <TouchableOpacity onPress={() => router.push('/compliance' as any)}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/compliance' } : {})}
+                onPress={() => router.push('/compliance' as any)}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay, { color: isDay ? '#059669' : '#34d399', fontFamily: FONT.bold }]}>
                   MCA & Statutory Disclosures
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/privacy-policy' } : {})}
+                onPress={() => router.push('/privacy-policy')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Privacy Policy (DPDPA 2023)</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/terms' as any)}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/terms' } : {})}
+                onPress={() => router.push('/terms' as any)}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Terms of Service</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/refund-policy' as any)}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/refund-policy' } : {})}
+                onPress={() => router.push('/refund-policy' as any)}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Refund & Return Policy</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/contact-us')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/contact-us' } : {})}
+                onPress={() => router.push('/contact-us')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Grievance & Support Desk</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/(partner)/(tabs)')}>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/seller-dashboard' } : {})}
+                onPress={() => router.push(user ? '/(partner)/(tabs)' : '/seller-dashboard')}
+              >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Agronomist & Seller Portal</Text>
               </TouchableOpacity>
             </View>
@@ -2837,9 +3106,23 @@ export default function PublicLandingPage() {
             {/* Column 4: 24/7 Helpline */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
               <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>{t.farmerHelpline}</Text>
-              <Text style={[S.helplineNum, isDay && S.helplineNumDay]}>{supportContact.helplinePhone}</Text>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: `tel:${supportContact.helplinePhone.replace(/[^0-9+]/g, '')}` } : {})}
+                onPress={() => Linking.openURL(`tel:${supportContact.helplinePhone.replace(/[^0-9+]/g, '')}`).catch(() => {})}
+                activeOpacity={0.8}
+              >
+                <Text style={[S.helplineNum, isDay && S.helplineNumDay]}>{supportContact.helplinePhone}</Text>
+              </TouchableOpacity>
               <Text style={[S.helplineSub, isDay && S.helplineSubDay]}>{t.helplineHours}</Text>
-              <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: `mailto:${supportContact.supportEmail}` } : {})}
+                onPress={() => Linking.openURL(`mailto:${supportContact.supportEmail}`).catch(() => {})}
+                activeOpacity={0.8}
+              >
+                <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
+              </TouchableOpacity>
               <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran • Corp: Makhu, Punjab - 143422</Text>
             </View>
 
@@ -2889,82 +3172,125 @@ export default function PublicLandingPage() {
         </View>
       </ScrollView>
 
-      {/* ══ MOBILE DOCKED BOTTOM APP BAR ══ */}
+      {/* ══ MOBILE DOCKED BOTTOM APP BAR WITH ADMIN-STYLE SPRING GLIDER ══ */}
       {isMobile && (
         <View
           // @ts-ignore
           className="mobile-docked-bottom-bar"
           style={[S.mobileBottomBar, isDay && S.mobileBottomBarDay]}
+          onLayout={(e) => {
+            const w = e.nativeEvent.layout.width;
+            if (w > 0 && w !== bottomBarWidth) setBottomBarWidth(w);
+          }}
         >
-          {/* Tab 1: Home */}
-          <TouchableOpacity
-            style={S.bottomTabItem}
-            onPress={() => router.push('/')}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="home" size={20} color={isDay ? '#047857' : '#34d399'} />
-            <Text style={[S.bottomTabText, S.bottomTabTextActive, isDay && S.bottomTabTextActiveDay]}>Home</Text>
-            <View style={[S.bottomTabActiveDot, isDay && S.bottomTabActiveDotDay]} />
-          </TouchableOpacity>
-
-          {/* Tab 2: Mandi */}
-          <TouchableOpacity
-            style={S.bottomTabItem}
-            onPress={() => {
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                const el = document.getElementById('mandi-rates');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                  return;
-                }
-              }
-              router.push('/shop');
-            }}
-            activeOpacity={0.75}
-          >
-            <View style={S.tabIconWrapper}>
-              <Ionicons name="trending-up" size={20} color={isDay ? '#475569' : '#94a3b8'} />
-              <View style={S.mandiLiveBeaconDot} />
-            </View>
-            <Text style={[S.bottomTabText, isDay && S.bottomTabTextDay]}>Mandi</Text>
-          </TouchableOpacity>
-
-          {/* Tab 3: Center Elevated Action - AI Plant Doctor */}
-          <TouchableOpacity
-            style={S.bottomCenterActionTab}
-            onPress={() => router.push('/topic/Crop-Doctors')}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={isDay ? ['#10b981', '#059669'] : ['#34d399', '#059669']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={S.bottomCenterActionCircle}
+          {/* Continuous Sliding Glowing Pill Indicator */}
+          {bottomBarWidth > 0 && (
+            <RNAnimated.View
+              style={[
+                S.bottomGliderPill,
+                {
+                  width: Math.max(0, (bottomBarWidth / BOTTOM_NAV_TABS.length) - 8),
+                  transform: [
+                    {
+                      translateX: bottomSlideAnim.interpolate({
+                        inputRange: [0, 1, 2, 3, 4],
+                        outputRange: [0, 1, 2, 3, 4].map(
+                          (i) => i * (bottomBarWidth / BOTTOM_NAV_TABS.length) + 4
+                        ),
+                        extrapolate: 'clamp',
+                      }),
+                    },
+                  ],
+                  borderColor: BOTTOM_NAV_TABS[activeBottomTab]?.border || 'rgba(16,185,129,0.45)',
+                  shadowColor: BOTTOM_NAV_TABS[activeBottomTab]?.shadow || '#10b981',
+                },
+              ]}
+              pointerEvents="none"
             >
-              <Ionicons name="sparkles" size={22} color="#ffffff" />
-            </LinearGradient>
-            <Text style={[S.bottomCenterActionText, isDay && S.bottomCenterActionTextDay]}>AI Doctor</Text>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={BOTTOM_NAV_TABS[activeBottomTab]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={BOTTOM_NAV_TABS[activeBottomTab]?.laser || ['#00ff87', '#10b981']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={S.bottomGliderLaser}
+              />
+            </RNAnimated.View>
+          )}
 
-          {/* Tab 4: Agri Store */}
-          <TouchableOpacity
-            style={S.bottomTabItem}
-            onPress={() => router.push('/shop')}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="bag-handle-outline" size={20} color={isDay ? '#475569' : '#94a3b8'} />
-            <Text style={[S.bottomTabText, isDay && S.bottomTabTextDay]}>Store</Text>
-          </TouchableOpacity>
-
-          {/* Tab 5: App Menu */}
-          <TouchableOpacity
-            style={S.bottomTabItem}
-            onPress={() => setMobileMenuOpen(true)}
-            activeOpacity={0.75}
-          >
-            <Ionicons name="grid-outline" size={20} color={isDay ? '#475569' : '#94a3b8'} />
-            <Text style={[S.bottomTabText, isDay && S.bottomTabTextDay]}>Menu</Text>
-          </TouchableOpacity>
+          {/* 5 Tabs with Scale & Smooth Transitions */}
+          {BOTTOM_NAV_TABS.map((tab, idx) => {
+            const isTabActive = activeBottomTab === idx;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={S.bottomTabItem}
+                onPress={() => {
+                  switchBottomTab(idx);
+                  if (idx === 0) {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  } else if (idx === 1) {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      const el = document.getElementById('mandi-rates');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                        return;
+                      }
+                      router.push('/#mandi-rates' as any);
+                    }
+                  } else if (idx === 2) {
+                    setTimeout(() => {
+                      router.push('/topic/Crop-Doctors');
+                    }, 160);
+                  } else if (idx === 3) {
+                    setTimeout(() => {
+                      router.push('/shop');
+                    }, 160);
+                  } else if (idx === 4) {
+                    setMobileMenuOpen(true);
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    S.tabIconWrapper,
+                    Platform.OS === 'web'
+                      ? ({
+                          transform: isTabActive ? 'scale(1.18)' : 'scale(1)',
+                          transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        } as any)
+                      : isTabActive
+                      ? { transform: [{ scale: 1.15 }] }
+                      : {},
+                  ]}
+                >
+                  <Ionicons
+                    name={isTabActive ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
+                    size={20}
+                    color={isTabActive ? tab.color : isDay ? '#64748b' : '#94a3b8'}
+                  />
+                  {idx === 1 && <View style={S.mandiLiveBeaconDot} />}
+                </View>
+                <Text
+                  style={[
+                    S.bottomTabText,
+                    isDay && S.bottomTabTextDay,
+                    isTabActive && { color: tab.color, fontFamily: FONT.extraBold },
+                    Platform.OS === 'web' ? ({ transition: 'color 0.3s ease' } as any) : {},
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
 
@@ -2988,16 +3314,13 @@ export default function PublicLandingPage() {
 
             {/* Header: Brand & Close Button */}
             <View style={S.drawerHeaderRow}>
-              <View style={S.drawerBrandRow}>
+              <View style={[S.drawerBrandRow, !isDay && { backgroundColor: '#ffffff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }]}>
                 <BrandLogo
-                  size={38}
+                  height={36}
+                  width={120}
                   useHdQuality
-                  style={S.drawerLogoImg}
+                  resizeMode="contain"
                 />
-                <View>
-                  <Text style={[S.drawerBrandText, isDay && S.drawerBrandTextDay]}>FarmsKing</Text>
-                  <Text style={[S.drawerSubBrandText, isDay && S.drawerSubBrandTextDay]}>Smart Farming Platform OS</Text>
-                </View>
               </View>
               <TouchableOpacity
                 style={[S.drawerCloseBtn, isDay && S.drawerCloseBtnDay]}
@@ -3026,7 +3349,27 @@ export default function PublicLandingPage() {
                   style={[S.drawerUserActionBtn, isDay && S.drawerUserActionBtnDay]}
                   onPress={() => {
                     setMobileMenuOpen(false);
-                    router.push(user ? '/(user)/(tabs)' : '/(auth)/login');
+                    if (user) {
+                      const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+                      router.push(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
+                    } else {
+                      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                        try {
+                          router.push('/(auth)/login' as any);
+                        } catch {}
+                        setTimeout(() => {
+                          if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
+                            window.location.href = '/login';
+                          }
+                        }, 60);
+                      } else {
+                        try {
+                          router.push('/(auth)/login' as any);
+                        } catch {
+                          router.push('/login' as any);
+                        }
+                      }
+                    }
                   }}
                   activeOpacity={0.85}
                 >
@@ -3104,7 +3447,17 @@ export default function PublicLandingPage() {
                   // @ts-ignore
                   className="app-module-tile"
                   style={[S.appModuleTile, isDay && S.appModuleTileDay]}
-                  onPress={() => { setMobileMenuOpen(false); router.push('/shop'); }}
+                  onPress={() => {
+                    setMobileMenuOpen(false);
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      const el = document.getElementById('mandi-rates');
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                        return;
+                      }
+                    }
+                    router.push('/#mandi-rates' as any);
+                  }}
                   activeOpacity={0.8}
                 >
                   <View style={[S.appModuleIconBox, { backgroundColor: isDay ? '#fef08a' : 'rgba(234, 179, 8, 0.18)' }]}>
@@ -3201,7 +3554,27 @@ export default function PublicLandingPage() {
                 style={[S.drawerMainActionBtn, isDay && S.drawerMainActionBtnDay]}
                 onPress={() => {
                   setMobileMenuOpen(false);
-                  router.push(user ? '/(user)/(tabs)' : '/(auth)/login');
+                  if (user) {
+                    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+                    router.push(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
+                  } else {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      try {
+                        router.push('/(auth)/login' as any);
+                      } catch {}
+                      setTimeout(() => {
+                        if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
+                          window.location.href = '/login';
+                        }
+                      }, 60);
+                    } else {
+                      try {
+                        router.push('/(auth)/login' as any);
+                      } catch {
+                        router.push('/login' as any);
+                      }
+                    }
+                  }
                 }}
                 activeOpacity={0.88}
               >
@@ -3876,6 +4249,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(167, 243, 208, 0.12)',
     top: -90,
     left: -70,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(110px)' } as any) : {}),
   },
   glowOrbBabyBlue: {
@@ -3886,6 +4260,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(186, 230, 253, 0.1)',
     bottom: -40,
     right: -50,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(110px)' } as any) : {}),
   },
   glowOrbBabyPink: {
@@ -3896,6 +4271,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(251, 207, 232, 0.08)',
     top: 180,
     right: 80,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(90px)' } as any) : {}),
   },
   glowOrbBabyPeach: {
@@ -3906,6 +4282,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(253, 230, 138, 0.07)',
     bottom: 60,
     left: 80,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(90px)' } as any) : {}),
   },
   heroLeft: {
@@ -4996,6 +5373,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(254, 240, 138, 0.22)',
     top: -90,
     left: -70,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(100px)' } as any) : {}),
   },
   glowOrbSkyDay: {
@@ -5006,6 +5384,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(186, 230, 253, 0.25)',
     bottom: -40,
     right: -50,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(100px)' } as any) : {}),
   },
   glowOrbPastureDay: {
@@ -5016,6 +5395,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(187, 247, 208, 0.25)',
     top: 180,
     right: 80,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(80px)' } as any) : {}),
   },
   glowOrbDawnDay: {
@@ -5026,6 +5406,7 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(254, 215, 170, 0.2)',
     bottom: 60,
     left: 80,
+    pointerEvents: 'none' as any,
     ...(Platform.OS === 'web' ? ({ filter: 'blur(80px)' } as any) : {}),
   },
 
@@ -5372,6 +5753,29 @@ const S = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.96)',
     borderTopColor: '#e2e8f0',
     ...premiumShadow('#0f172a', 'md'),
+  },
+  bottomGliderPill: {
+    position: 'absolute',
+    top: 5,
+    bottom: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+  },
+  bottomGliderLaser: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 2.5,
+    borderRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
   },
   bottomTabItem: {
     flex: 1,
@@ -5842,6 +6246,99 @@ const S = StyleSheet.create({
   },
   featureDescDay: {
     color: '#475569',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // EXPLORE OTHER MODULES (FARMSKING ECOSYSTEM)
+  // ══════════════════════════════════════════════════════════════════════════
+  exploreModulesSection: {
+    paddingTop: 48,
+    paddingBottom: 24,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  exploreModulesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  exploreModuleCard: {
+    flex: 1,
+    minWidth: 260,
+    maxWidth: 310,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+  },
+  exploreModuleCardTablet: {
+    flexBasis: '47%',
+    minWidth: '47%',
+    maxWidth: '48%',
+  },
+  exploreModuleCardMobile: {
+    flexBasis: '100%',
+    minWidth: '100%',
+    maxWidth: '100%',
+  },
+  exploreModuleCardDay: {
+    backgroundColor: '#ffffff',
+    ...premiumShadow('rgba(15, 23, 42, 0.06)', 'sm'),
+  },
+  exploreModuleCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.78)',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  exploreModuleImgFrame: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1.2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  exploreModuleImg: {
+    width: 44,
+    height: 44,
+  },
+  exploreModuleTag: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    marginBottom: 4,
+  },
+  exploreModuleTagText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  exploreModuleTitle: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    marginBottom: 2,
+  },
+  exploreModuleSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+  },
+  exploreModuleArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
 
   // ══════════════════════════════════════════════════════════════════════════

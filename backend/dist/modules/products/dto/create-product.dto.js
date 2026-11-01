@@ -177,6 +177,11 @@ __decorate([
 ], CreateProductDto.prototype, "commissionOverridePercentage", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateProductDto.prototype, "isCodAllowed", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
 ], CreateProductDto.prototype, "isReturnable", void 0);
 __decorate([

@@ -74,14 +74,14 @@ export default function FarmersCommandHubScreen() {
 
   const farmerTools = [
     {
-      id: 'farmers-directory',
-      title: 'Farmers Directory',
-      badge: 'Growers',
-      description: 'View registered farmers, land acreage, King IDs, and passbooks',
+      id: 'users-directory',
+      title: 'Users Directory',
+      badge: 'All Accounts',
+      description: 'Unified user directory for farmers, crop doctors, partners, and staff',
       icon: 'people' as const,
       color: '#16a34a',
-      countText: `${totalFarmersCount} Active`,
-      action: () => navigateTo('/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' }),
+      countText: `${allUsers.length} Users`,
+      action: () => navigateTo('/admin/(tabs)/super-users'),
     },
     {
       id: 'crop-registry',

@@ -36,39 +36,59 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-type UserGroup = 'ADMINS' | 'PARTNERS' | 'CLIENTS';
+type UserGroup = 'ALL' | 'CLIENTS' | 'PARTNERS' | 'ADMINS';
 
 const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'ADMINS', label: 'Admins', icon: 'shield-checkmark' },
-  { value: 'PARTNERS', label: 'Partners', icon: 'briefcase' },
-  { value: 'CLIENTS', label: 'Clients', icon: 'people' },
+  { value: 'ALL', label: 'All Users', icon: 'people' },
+  { value: 'CLIENTS', label: 'Farmers & Clients', icon: 'leaf' },
+  { value: 'PARTNERS', label: 'Partners & Doctors', icon: 'briefcase' },
+  { value: 'ADMINS', label: 'Staff & Admins', icon: 'shield-checkmark' },
 ];
 
 type UserFilter =
+  | 'ALL'
   | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR' | 'TECHNICAL_TRAINER'
   | 'BUSINESS_PARTNER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
   | 'CUSTOMER' | 'FARMER' | 'GARDENER';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
-  ADMINS: [
+  ALL: [
+    { value: 'ALL', label: 'All Users', icon: 'people-outline' },
+    { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
+    { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
+    { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
+    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
-    { value: 'OPERATOR', label: 'Operator', icon: 'print-outline' },
+    { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
+    { value: 'OPERATOR', label: 'Operators', icon: 'print-outline' },
     { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
+    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
+    { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
+  ],
+  CLIENTS: [
+    { value: 'ALL', label: 'All Clients', icon: 'people-outline' },
+    { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
+    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
+    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
+    { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
   ],
   PARTNERS: [
+    { value: 'ALL', label: 'All Partners', icon: 'briefcase-outline' },
     { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
   ],
-  CLIENTS: [
-    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
-    { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
-    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
-    { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
+  ADMINS: [
+    { value: 'ALL', label: 'All Staff', icon: 'shield-outline' },
+    { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
+    { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
+    { value: 'OPERATOR', label: 'Operators', icon: 'print-outline' },
+    { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
   ],
 };
 
-function filterToBackendRole(filter: UserFilter): Role {
+function filterToBackendRole(filter: UserFilter): Role | undefined {
+  if (filter === 'ALL') return undefined;
   if (filter === 'TECHNICAL_TRAINER') return 'TECHNICAL_TRAINER' as Role;
   if (filter === 'TRADER') return 'TRADER' as Role;
   return filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR' ? 'ADVISOR' : (filter as Role);
@@ -81,12 +101,12 @@ export default function SuperUsersScreen() {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const parseSafeGroup = (rawGroup?: any): UserGroup => {
-    if (rawGroup === 'ADMINS' || rawGroup === 'PARTNERS' || rawGroup === 'CLIENTS') return rawGroup;
-    return 'CLIENTS';
+    if (rawGroup === 'ALL' || rawGroup === 'ADMINS' || rawGroup === 'PARTNERS' || rawGroup === 'CLIENTS') return rawGroup;
+    return 'ALL';
   };
 
   const [group, setGroup] = useState<UserGroup>(() => parseSafeGroup(initialGroup));
-  const [filter, setFilter] = useState<UserFilter>(initialFilter || 'FARMER');
+  const [filter, setFilter] = useState<UserFilter>(initialFilter || 'ALL');
 
   useEffect(() => {
     if (initialGroup) setGroup(parseSafeGroup(initialGroup));
@@ -137,7 +157,15 @@ export default function SuperUsersScreen() {
       if (statusTab === 'ACTIVE' ? !!u.deletedAt : !u.deletedAt) return false;
       const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
       const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
+      if (subFilter === 'ALL') {
+        if (group === 'ALL') return true;
+        if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'TRADER', 'GARDENER'].includes(r));
+        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR'].includes(r));
+        if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
+        return true;
+      }
       if (subFilter === 'SUPER_ADMIN') return activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN';
+      if (subFilter === 'ADMIN') return activeRoles.includes('ADMIN') || u.role === 'ADMIN';
       if (subFilter === 'OPERATOR') return activeRoles.includes('OPERATOR') || u.role === 'OPERATOR';
       if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
       if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
@@ -152,15 +180,20 @@ export default function SuperUsersScreen() {
   };
 
   const getGroupCount = (groupKey: UserGroup): number => {
+    if (groupKey === 'ALL') {
+      return statusTab === 'ACTIVE' ? totalActiveUsersCount : totalDeletedUsersCount;
+    }
     const filters = FILTERS_BY_GROUP[groupKey] || [];
     const uniqueUserIds = new Set<string>();
     filters.forEach((f) => {
+      if (f.value === 'ALL') return;
       allUsersList.forEach((u) => {
         if (statusTab === 'ACTIVE' ? !!u.deletedAt : !u.deletedAt) return;
         const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
         const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
         let matches = false;
         if (f.value === 'SUPER_ADMIN' && (activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN')) matches = true;
+        if (f.value === 'ADMIN' && (activeRoles.includes('ADMIN') || u.role === 'ADMIN')) matches = true;
         if (f.value === 'OPERATOR' && (activeRoles.includes('OPERATOR') || u.role === 'OPERATOR')) matches = true;
         if (f.value === 'TECHNICAL_TRAINER' && (activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER')) matches = true;
         if (f.value === 'BUSINESS_PARTNER' && (activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER')) matches = true;
@@ -194,28 +227,165 @@ export default function SuperUsersScreen() {
     setDeleteVerificationTarget(targetUser);
   };
 
-  const currentRoleRawUsers = (data?.items ?? []).filter((u) =>
-    filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
-  );
-  const currentRoleActiveUsers = currentRoleRawUsers.filter((u) => !u.deletedAt);
-  const currentRoleDeletedUsers = currentRoleRawUsers.filter((u) => !!u.deletedAt);
+  const currentRoleRawUsers = (data?.items ?? []).filter((u) => {
+    if (filter === 'ALL') {
+      if (group === 'ALL') return true;
+      const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
+      const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
+      if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'TRADER', 'GARDENER'].includes(r));
+      if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR'].includes(r));
+      if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
+      return true;
+    }
+    return filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true;
+  });
+
+  const filteredUsers = currentRoleRawUsers.filter((u) => {
+    if (!search.trim()) return true;
+    const q = search.trim().toLowerCase();
+    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '').replace(/_\d+$/i, '');
+    const location = [u.village, u.district, u.state].filter(Boolean).join(' ').toLowerCase();
+    const rolesStr = (Array.isArray(u.roles) ? u.roles.join(' ') : u.role || '').toLowerCase();
+    return (
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      u.mobile.toLowerCase().includes(q) ||
+      cleanMob.includes(q) ||
+      (u.kingId && u.kingId.toLowerCase().includes(q)) ||
+      location.includes(q) ||
+      rolesStr.includes(q)
+    );
+  });
+
+  const currentRoleActiveUsers = filteredUsers.filter((u) => !u.deletedAt);
+  const currentRoleDeletedUsers = filteredUsers.filter((u) => !!u.deletedAt);
 
   const allDeletedUsers = allUsersList.filter((u) => {
     if (!u.deletedAt) return false;
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
-    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '');
+    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '').replace(/_\d+$/i, '');
+    const location = [u.village, u.district, u.state].filter(Boolean).join(' ').toLowerCase();
+    const rolesStr = (Array.isArray(u.roles) ? u.roles.join(' ') : u.role || '').toLowerCase();
     return (
       (u.name && u.name.toLowerCase().includes(q)) ||
       u.mobile.toLowerCase().includes(q) ||
       cleanMob.includes(q) ||
-      (u.kingId && u.kingId.toLowerCase().includes(q))
+      (u.kingId && u.kingId.toLowerCase().includes(q)) ||
+      location.includes(q) ||
+      rolesStr.includes(q)
     );
   });
 
   const items = statusTab === 'ACTIVE'
     ? currentRoleActiveUsers
     : (deletedFilterMode === 'ALL_ROLES' ? allDeletedUsers : currentRoleDeletedUsers);
+
+  const farmersCount = allUsersList.filter(
+    (u) => !u.deletedAt && (u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER')))
+  ).length;
+
+  const doctorsCount = allUsersList.filter(
+    (u) => !u.deletedAt && ((u.role === 'ADVISOR' || (Array.isArray(u.roles) && u.roles.includes('ADVISOR'))) && u.advisorType !== 'GARDEN')
+  ).length;
+
+  const partnersCount = allUsersList.filter(
+    (u) => !u.deletedAt && (u.role === 'BUSINESS_PARTNER' || (Array.isArray(u.roles) && u.roles.includes('BUSINESS_PARTNER')))
+  ).length;
+
+  const tradersCount = allUsersList.filter(
+    (u) => !u.deletedAt && (u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER')))
+  ).length;
+
+  const staffCount = allUsersList.filter(
+    (u) => !u.deletedAt && ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].some((r) => u.role === r || (Array.isArray(u.roles) && u.roles.includes(r as any)))
+  ).length;
+
+  const telemetryStats = [
+    {
+      id: 'ALL',
+      title: 'Total Users',
+      count: totalActiveUsersCount,
+      icon: 'people' as const,
+      color: '#16a34a',
+      isSelected: group === 'ALL' && filter === 'ALL' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('ALL');
+        setFilter('ALL');
+      },
+    },
+    {
+      id: 'FARMERS',
+      title: 'Farmers',
+      count: farmersCount,
+      icon: 'leaf' as const,
+      color: '#15803d',
+      isSelected: filter === 'FARMER' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('CLIENTS');
+        setFilter('FARMER');
+      },
+    },
+    {
+      id: 'DOCTORS',
+      title: 'Crop Doctors',
+      count: doctorsCount,
+      icon: 'medical' as const,
+      color: '#0284c7',
+      isSelected: filter === 'FARM_ADVISOR' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('PARTNERS');
+        setFilter('FARM_ADVISOR');
+      },
+    },
+    {
+      id: 'PARTNERS',
+      title: 'Partners',
+      count: partnersCount,
+      icon: 'briefcase' as const,
+      color: '#8b5cf6',
+      isSelected: filter === 'BUSINESS_PARTNER' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('PARTNERS');
+        setFilter('BUSINESS_PARTNER');
+      },
+    },
+    {
+      id: 'TRADERS',
+      title: 'Store & Traders',
+      count: tradersCount,
+      icon: 'storefront' as const,
+      color: '#d97706',
+      isSelected: filter === 'TRADER' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('CLIENTS');
+        setFilter('TRADER');
+      },
+    },
+    {
+      id: 'STAFF',
+      title: 'Staff & Admins',
+      count: staffCount,
+      icon: 'shield-checkmark' as const,
+      color: '#6366f1',
+      isSelected: group === 'ADMINS' && filter === 'ALL' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('ADMINS');
+        setFilter('ALL');
+      },
+    },
+  ];
 
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -227,7 +397,9 @@ export default function SuperUsersScreen() {
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
-  const currentFilterLabel = Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
+  const currentFilterLabel = filter === 'ALL'
+    ? (group === 'ALL' ? 'All Users' : group === 'CLIENTS' ? 'All Clients' : group === 'PARTNERS' ? 'All Partners' : 'All Staff')
+    : Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -238,90 +410,102 @@ export default function SuperUsersScreen() {
           borderBottomColor: '#e2e8f0',
         },
       ]}>
-        <View style={[styles.premiumHeroContent, isDesktop && { maxWidth: 1240, width: '100%', alignSelf: 'center' }]}>
+        <View style={[styles.premiumHeroContent, isDesktop && { maxWidth: 1280, width: '100%', alignSelf: 'center' }]}>
+          {/* Top Row: Executive Title + Subtitle + Action Buttons */}
           <View style={styles.heroHeaderRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', flex: 1 }}>
-              <Text style={[styles.compactHeroTitle, isLight && { color: '#0f172a' }]} numberOfLines={1}>
-                {statusTab === 'DELETED'
-                  ? 'Deleted Users Archive'
-                  : `${currentFilterLabel} Directory`}
-              </Text>
-              <View style={[styles.compactCountBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
-                <Text style={[styles.compactCountBadgeText, isLight && { color: '#16a34a' }]}>{items.length}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 1 }}>
+              <View style={[styles.titleIconBadge, isLight && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                <Ionicons name="people" size={22} color={isLight ? '#16a34a' : '#00ff87'} />
               </View>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={[styles.compactHeroTitle, isLight && { color: '#0f172a' }]} numberOfLines={1}>
+                    Users Directory
+                  </Text>
+                  <View style={[styles.compactCountBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
+                    <Text style={[styles.compactCountBadgeText, isLight && { color: '#16a34a' }]}>
+                      {items.length} {items.length === 1 ? 'User' : 'Users'}
+                    </Text>
+                  </View>
+                  <View style={[styles.activeFilterPill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                    <Text style={[styles.activeFilterPillText, isLight && { color: '#475569' }]}>
+                      {statusTab === 'DELETED' ? '🗑️ Deleted Archive' : `View: ${currentFilterLabel}`}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.heroSubtitle, isLight && { color: '#64748b' }]}>
+                  Unified Enterprise Directory • Identity, Verification & Access Governance
+                </Text>
+              </View>
+            </View>
+
+            {/* Quick Actions Strip */}
+            <View style={styles.heroActionsRow}>
               <TouchableOpacity
                 style={styles.topAddUserBtn}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
                 onPress={() => {
                   tap();
                   setIsAddUserModalOpen(true);
                 }}
               >
-                <Ionicons name="person-add" size={12} color="#ffffff" />
-                <Text style={styles.topAddUserBtnText}>+ Add User</Text>
+                <Ionicons name="person-add" size={13} color="#ffffff" />
+                <Text style={styles.topAddUserBtnText}>+ Add New User</Text>
               </TouchableOpacity>
-            </View>
 
-            {/* Quick Stats Pill Strip & 1-Click Exports */}
-            <View style={styles.heroStatsContainer}>
-              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
-                <Ionicons name="people" size={11} color={isLight ? '#16a34a' : '#00ff87'} />
-                <Text style={[styles.heroStatsText, isLight && { color: '#475569' }]}>Total {allUsersList.length}</Text>
-              </View>
-              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' }, !isLight && { borderColor: 'rgba(16, 185, 129, 0.4)' }]}>
-                <Ionicons name="checkmark-circle" size={11} color="#10b981" />
-                <Text style={[styles.heroStatsText, { color: isLight ? '#16a34a' : '#10b981' }]}>Active {totalActiveUsersCount}</Text>
-              </View>
-              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.3)' }, !isLight && { borderColor: 'rgba(239, 68, 68, 0.4)' }]}>
-                <Ionicons name="trash" size={11} color="#ef4444" />
-                <Text style={[styles.heroStatsText, { color: '#f87171' }]}>Del {totalDeletedUsersCount}</Text>
-              </View>
-
-              {/* Inline Compact Export Buttons */}
               <TouchableOpacity
-                style={styles.compactExportBtn}
-                activeOpacity={0.8}
+                style={[styles.compactExportBtn, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
+                activeOpacity={0.85}
                 onPress={() => {
                   tap();
-                  exportUsersToExcel(items, `${currentFilterLabel}_Users`);
+                  exportUsersToExcel(items, `${currentFilterLabel}_Users_Export`);
                 }}
               >
-                <Ionicons name="download-outline" size={12} color="#00ff87" />
-                <Text style={styles.compactExportBtnText}>Export ({items.length})</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.compactExportBtn, { borderColor: 'rgba(16, 185, 129, 0.4)', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  const farmers = allUsersList.filter(
-                    (u) => u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER'))
-                  );
-                  exportUsersToExcel(farmers, 'All_Farmers');
-                }}
-              >
-                <Ionicons name="leaf" size={11} color="#10b981" />
-                <Text style={[styles.compactExportBtnText, { color: '#10b981' }]}>
-                  Farmers ({allUsersList.filter((u) => u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER'))).length})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.compactExportBtn, { borderColor: 'rgba(245, 158, 11, 0.4)', backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  const sellers = allUsersList.filter(
-                    (u) => u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER'))
-                  );
-                  exportUsersToExcel(sellers, 'All_Sellers');
-                }}
-              >
-                <Ionicons name="storefront" size={11} color="#f59e0b" />
-                <Text style={[styles.compactExportBtnText, { color: '#f59e0b' }]}>
-                  Sellers ({allUsersList.filter((u) => u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER'))).length})
+                <Ionicons name="download-outline" size={13} color={isLight ? '#16a34a' : '#00ff87'} />
+                <Text style={[styles.compactExportBtnText, isLight && { color: '#16a34a' }]}>
+                  Export Excel ({items.length})
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+
+          {/* Executive KPI Telemetry Metric Bar (Clickable 1-Click Role Filters) */}
+          <View style={styles.telemetryBarContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.telemetryBarContent}
+            >
+              {telemetryStats.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.telemetryCard,
+                    isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                    item.isSelected && (isLight
+                      ? { borderColor: item.color, backgroundColor: 'rgba(22, 163, 74, 0.08)', borderWidth: 1.5 }
+                      : { borderColor: item.color, backgroundColor: 'rgba(0, 255, 135, 0.1)', borderWidth: 1.5 }),
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={item.action}
+                >
+                  <View style={[styles.telemetryIconChip, { backgroundColor: item.color + '18' }]}>
+                    <Ionicons name={item.icon} size={15} color={item.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.telemetryCount, isLight && { color: '#0f172a' }]}>
+                      {item.count.toLocaleString()}
+                    </Text>
+                    <Text style={[styles.telemetryLabel, isLight && { color: '#64748b' }]} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                  </View>
+                  {item.isSelected && (
+                    <View style={[styles.telemetryActiveDot, { backgroundColor: item.color }]} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
           {/* Unified Compact Control Bar: Status Switch + Search + Group Chips */}
@@ -359,10 +543,10 @@ export default function SuperUsersScreen() {
 
             {/* Search Box */}
             <View style={[styles.compactSearchBox, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }]}>
-              <Ionicons name="search" size={13} color={isLight ? '#16a34a' : '#00ff87'} style={{ marginRight: 6 }} />
+              <Ionicons name="search" size={14} color={isLight ? '#16a34a' : '#00ff87'} style={{ marginRight: 6 }} />
               <TextInput
                 style={[styles.compactSearchInput, isLight && { color: '#0f172a' }]}
-                placeholder={`Search ${statusTab === 'DELETED' ? 'deleted accounts' : currentFilterLabel.toLowerCase()}...`}
+                placeholder={`Search by name, mobile, King ID, or location...`}
                 placeholderTextColor={isLight ? '#94a3b8' : 'rgba(148, 163, 184, 0.6)'}
                 value={search}
                 onChangeText={setSearch}
@@ -380,7 +564,7 @@ export default function SuperUsersScreen() {
               )}
             </View>
 
-            {/* Group Tabs (Clients, Partners, Admins) */}
+            {/* Group Tabs (All Users, Clients, Partners, Admins) */}
             <View style={styles.compactGroupRow}>
               {GROUPS.map((g) => {
                 const groupCount = getGroupCount(g.value);
@@ -447,7 +631,7 @@ export default function SuperUsersScreen() {
             style={{ marginTop: 6 }}
             contentContainerStyle={{ gap: 6, alignItems: 'center' }}
           >
-            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.CLIENTS).map((f) => {
+            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.ALL).map((f) => {
               const subCount = getSubCategoryCount(f.value);
               const isActive = filter === f.value;
               return (
@@ -554,21 +738,24 @@ export default function SuperUsersScreen() {
         ) : (
           <>
             <View style={[styles.usersGridContainer, isDesktop && styles.usersGridContainerDesktop]}>
-              {visibleItems.map((u) => (
-                <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
-                  <UserRow
-                    user={u}
-                    isDesktop={isDesktop}
-                    isOperator={filter === 'OPERATOR'}
-                    onDeactivate={() => deactivate.mutate(u.id)}
-                    onReactivate={() => reactivate.mutate(u.id)}
-                    onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
-                    onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
-                    onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
-                    onOpenDetail={() => setDetailTargetId(u.id)}
-                  />
-                </View>
-              ))}
+              {visibleItems.map((u) => {
+                const isUserOperator = u.role === 'OPERATOR' || (Array.isArray(u.roles) && u.roles.includes('OPERATOR'));
+                return (
+                  <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
+                    <UserRow
+                      user={u}
+                      isDesktop={isDesktop}
+                      isOperator={isUserOperator}
+                      onDeactivate={() => deactivate.mutate(u.id)}
+                      onReactivate={() => reactivate.mutate(u.id)}
+                      onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
+                      onEditPermissions={isUserOperator ? () => setPermissionsTarget(u) : undefined}
+                      onEditRoles={u.role !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
+                      onOpenDetail={() => setDetailTargetId(u.id)}
+                    />
+                  </View>
+                );
+              })}
             </View>
 
             {/* Pagination Controls Row with Page Size Selector Dropdown */}
@@ -1469,6 +1656,35 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
   );
 }
 
+const getRoleTheme = (role: string) => {
+  switch (role) {
+    case 'SUPER_ADMIN':
+      return { border: '#e11d48', bg: '#fff1f2', text: '#e11d48', darkBg: 'rgba(225, 29, 72, 0.15)', darkBorder: '#e11d48', darkText: '#fb7185' };
+    case 'ADMIN':
+      return { border: '#4f46e5', bg: '#eef2ff', text: '#4f46e5', darkBg: 'rgba(79, 70, 229, 0.15)', darkBorder: '#4f46e5', darkText: '#818cf8' };
+    case 'OPERATOR':
+      return { border: '#0891b2', bg: '#ecfeff', text: '#0891b2', darkBg: 'rgba(8, 145, 178, 0.15)', darkBorder: '#0891b2', darkText: '#38bdf8' };
+    case 'TECHNICAL_TRAINER':
+      return { border: '#ea580c', bg: '#fff7ed', text: '#ea580c', darkBg: 'rgba(234, 88, 12, 0.15)', darkBorder: '#ea580c', darkText: '#fb923c' };
+    case 'ADVISOR':
+    case 'FARM_ADVISOR':
+      return { border: '#0284c7', bg: '#f0f9ff', text: '#0284c7', darkBg: 'rgba(2, 132, 199, 0.15)', darkBorder: '#0284c7', darkText: '#38bdf8' };
+    case 'GARDEN_ADVISOR':
+      return { border: '#0d9488', bg: '#f0fdfa', text: '#0d9488', darkBg: 'rgba(13, 148, 136, 0.15)', darkBorder: '#0d9488', darkText: '#2dd4bf' };
+    case 'BUSINESS_PARTNER':
+      return { border: '#7c3aed', bg: '#faf5ff', text: '#7c3aed', darkBg: 'rgba(124, 58, 237, 0.15)', darkBorder: '#7c3aed', darkText: '#c084fc' };
+    case 'TRADER':
+      return { border: '#d97706', bg: '#fffbeb', text: '#d97706', darkBg: 'rgba(217, 119, 6, 0.15)', darkBorder: '#d97706', darkText: '#fbbf24' };
+    case 'FARMER':
+      return { border: '#16a34a', bg: '#f0fdf4', text: '#16a34a', darkBg: 'rgba(22, 163, 74, 0.15)', darkBorder: '#16a34a', darkText: '#4ade80' };
+    case 'GARDENER':
+      return { border: '#c026d3', bg: '#fdf4ff', text: '#c026d3', darkBg: 'rgba(192, 38, 211, 0.15)', darkBorder: '#c026d3', darkText: '#e879f9' };
+    case 'CUSTOMER':
+    default:
+      return { border: '#64748b', bg: '#f8fafc', text: '#475569', darkBg: 'rgba(71, 85, 105, 0.15)', darkBorder: '#64748b', darkText: '#94a3b8' };
+  }
+};
+
 function UserRow({
   user,
   isDesktop,
@@ -1534,11 +1750,18 @@ function UserRow({
           onPress={onOpenDetail}
           disabled={!onOpenDetail}
         >
-          <View style={[styles.userAvatarCompact, isDeactivated && styles.userAvatarDeactivated]}>
+          <View style={[
+            styles.userAvatarCompact,
+            { borderColor: isDeactivated ? '#ef4444' : (isLight ? getRoleTheme(user.role).border : getRoleTheme(user.role).darkBorder) },
+            isDeactivated && styles.userAvatarDeactivated,
+          ]}>
             {user.photoUrl ? (
               <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImageCompact} resizeMode="cover" />
             ) : (
-              <Text style={[styles.userAvatarTextCompact, isDeactivated && { color: '#ef4444' }]}>{initials}</Text>
+              <Text style={[
+                styles.userAvatarTextCompact,
+                { color: isDeactivated ? '#ef4444' : (isLight ? getRoleTheme(user.role).text : getRoleTheme(user.role).darkText) },
+              ]}>{initials}</Text>
             )}
           </View>
           <View style={[styles.statusDotCompact, isDeactivated ? styles.statusDotOffline : styles.statusDotOnline]} />
@@ -1670,13 +1893,32 @@ function UserRow({
 
         {/* Role Tags */}
         <View style={styles.rolesRowCompact}>
-          {activeAssignedRoles.map((r) => (
-            <View key={r} style={[styles.roleBadgeCompact, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.25)' }, isDeactivated && styles.roleBadgeDeactivated]}>
-              <Text style={[styles.roleBadgeTextCompact, isLight && { color: '#16a34a' }, isDeactivated && styles.roleBadgeTextDeactivated]}>
-                {r.replace('_', ' ')}
-              </Text>
-            </View>
-          ))}
+          {activeAssignedRoles.map((r) => {
+            const rTheme = getRoleTheme(r);
+            return (
+              <View
+                key={r}
+                style={[
+                  styles.roleBadgeCompact,
+                  {
+                    backgroundColor: isDeactivated ? 'rgba(239, 68, 68, 0.08)' : (isLight ? rTheme.bg : rTheme.darkBg),
+                    borderColor: isDeactivated ? 'rgba(239, 68, 68, 0.3)' : (isLight ? rTheme.border : rTheme.darkBorder),
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleBadgeTextCompact,
+                    {
+                      color: isDeactivated ? '#f87171' : (isLight ? rTheme.text : rTheme.darkText),
+                    },
+                  ]}
+                >
+                  {r.replace('_', ' ')}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* Joined Date */}
@@ -2091,6 +2333,88 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
 }
 
 const styles = StyleSheet.create({
+  titleIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#071f12',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroSubtitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  activeFilterPill: {
+    backgroundColor: '#071f12',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  activeFilterPillText: {
+    color: '#cbd5e1',
+    fontSize: 10.5,
+    fontFamily: FONT.semiBold,
+  },
+  heroActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  telemetryBarContainer: {
+    marginVertical: 8,
+  },
+  telemetryBarContent: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  telemetryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#04180d',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    minWidth: 130,
+    position: 'relative',
+  },
+  telemetryIconChip: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  telemetryCount: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    letterSpacing: -0.2,
+  },
+  telemetryLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  telemetryActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    top: 6,
+    right: 6,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#020d06',

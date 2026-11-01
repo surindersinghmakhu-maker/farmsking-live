@@ -24,6 +24,11 @@ export class WithdrawalsController {
     Role.SUPERVISOR,
     Role.LABOUR,
     Role.TECHNICAL_TRAINER,
+    Role.FARMER,
+    Role.CUSTOMER,
+    Role.GARDENER,
+    Role.SELLER,
+    Role.TRADER,
   )
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateWithdrawalDto) {
@@ -40,6 +45,11 @@ export class WithdrawalsController {
     Role.SUPERVISOR,
     Role.LABOUR,
     Role.TECHNICAL_TRAINER,
+    Role.FARMER,
+    Role.CUSTOMER,
+    Role.GARDENER,
+    Role.SELLER,
+    Role.TRADER,
   )
   @Get('mine')
   listMine(@CurrentUser() user: AuthUser) {

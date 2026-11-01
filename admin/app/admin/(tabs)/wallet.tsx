@@ -333,22 +333,16 @@ export default function WalletScreen() {
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
   const isAdvisorOrPartner = isAdvisor || isPartner;
 
-  // Strict Policy: Only Partners, Admin, and Employees can withdraw funds.
-  // Clients (Farmers, Customers, Gardeners, Traders) have billing-only wallet credits.
-  const WITHDRAWAL_ELIGIBLE_ROLES = [
-    'ADMIN',
-    'SUPER_ADMIN',
-    'BUSINESS_PARTNER',
-    'ADVISOR',
-    'FARM_ADVISOR',
-    'GARDEN_ADVISOR',
-    'MANAGER',
-    'OPERATOR',
-    'SUPERVISOR',
-    'LABOUR',
-    'TECHNICAL_TRAINER',
-  ];
-  const canWithdraw = WITHDRAWAL_ELIGIBLE_ROLES.some((r) => userRoles.includes(r) || currentRole === r);
+  // Dynamic Role-Based Withdrawal Permissions from App Settings
+  const isWithdrawalGloballyEnabled = Boolean(appSettings?.walletWithdrawalEnabled) && !appSettings?.walletMaintenanceMode;
+  const configuredWithdrawalRoles = Array.isArray(appSettings?.allowedWithdrawalRoles)
+    ? appSettings.allowedWithdrawalRoles
+    : [];
+
+  const canWithdraw =
+    isWithdrawalGloballyEnabled &&
+    (configuredWithdrawalRoles.some((r) => userRoles.includes(r) || currentRole === r) ||
+      (configuredWithdrawalRoles.includes('ADVISOR') && (userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR')));
   const isClient = !canWithdraw;
 
   const isWelcomeClaimed = (wallet?.transactions ?? []).some(

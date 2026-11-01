@@ -77,7 +77,7 @@ export default function AgriHubIndexScreen() {
           <View style={[styles.launchIconBox, { backgroundColor: '#eab308' }]}>
             <Ionicons name="people" size={22} color="#ffffff" />
           </View>
-          <Text style={styles.launchTitle}>Farmers Directory</Text>
+          <Text style={styles.launchTitle}>Users Directory</Text>
           <Text style={styles.launchSub}>Farmer profiles, land parcels & crops</Text>
         </TouchableOpacity>
 

@@ -1154,32 +1154,32 @@ let FarmerPlansService = class FarmerPlansService {
             master: [
                 path.join(process.cwd(), 'FARMSKING_MASTER_USER_GUIDE.md'),
                 path.join(process.cwd(), '..', 'FARMSKING_MASTER_USER_GUIDE.md'),
-                'd:\\FarmsKing\\FARMSKING_MASTER_USER_GUIDE.md',
+                path.join(process.cwd(), '..', 'FARMSKING_MASTER_USER_GUIDE.md'),
             ],
             admin: [
                 path.join(process.cwd(), 'docs', 'SUPER_ADMIN_MASTER_GOVERNANCE_GUIDE.md'),
                 path.join(process.cwd(), '..', 'docs', 'SUPER_ADMIN_MASTER_GOVERNANCE_GUIDE.md'),
-                'd:\\FarmsKing\\docs\\SUPER_ADMIN_MASTER_GOVERNANCE_GUIDE.md',
+                path.join(process.cwd(), '..', 'docs', 'SUPER_ADMIN_MASTER_GOVERNANCE_GUIDE.md'),
             ],
             farmer: [
                 path.join(process.cwd(), 'docs', 'FARMER_USER_GUIDE.md'),
                 path.join(process.cwd(), '..', 'docs', 'FARMER_USER_GUIDE.md'),
-                'd:\\FarmsKing\\docs\\FARMER_USER_GUIDE.md',
+                path.join(process.cwd(), '..', 'docs', 'FARMER_USER_GUIDE.md'),
             ],
             advisor: [
                 path.join(process.cwd(), 'docs', 'ADVISOR_USER_GUIDE.md'),
                 path.join(process.cwd(), '..', 'docs', 'ADVISOR_USER_GUIDE.md'),
-                'd:\\FarmsKing\\docs\\ADVISOR_USER_GUIDE.md',
+                path.join(process.cwd(), '..', 'docs', 'ADVISOR_USER_GUIDE.md'),
             ],
             partner: [
                 path.join(process.cwd(), 'docs', 'BUSINESS_PARTNER_GUIDE.md'),
                 path.join(process.cwd(), '..', 'docs', 'BUSINESS_PARTNER_GUIDE.md'),
-                'd:\\FarmsKing\\docs\\BUSINESS_PARTNER_GUIDE.md',
+                path.join(process.cwd(), '..', 'docs', 'BUSINESS_PARTNER_GUIDE.md'),
             ],
             coupons: [
                 path.join(process.cwd(), 'docs', 'PLAN_COUPONS_AND_HOW_TO_GET.md'),
                 path.join(process.cwd(), '..', 'docs', 'PLAN_COUPONS_AND_HOW_TO_GET.md'),
-                'd:\\FarmsKing\\docs\\PLAN_COUPONS_AND_HOW_TO_GET.md',
+                path.join(process.cwd(), '..', 'docs', 'PLAN_COUPONS_AND_HOW_TO_GET.md'),
             ],
         };
         let rawContent = '';

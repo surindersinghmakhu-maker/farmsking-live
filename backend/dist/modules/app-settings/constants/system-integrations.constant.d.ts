@@ -308,7 +308,7 @@ export interface SystemIntegrationsConfig {
         };
     };
     logistics: {
-        activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO';
+        activeProvider: 'SHIPROCKET' | 'DELHIVERY' | 'NIMBUSPOST' | 'SHADOWFAX' | 'BLUEDART' | 'DTDC' | 'BORZO' | 'ECOM_EXPRESS' | 'XPRESSBEES' | 'LOCAL';
         isEnabled: boolean;
         providers: {
             shiprocket: {
@@ -411,6 +411,7 @@ export interface SystemIntegrationsConfig {
         defaultGstPercent: number;
         freeDeliveryThreshold: number;
         baseShippingCharge: number;
+        partnerDeliveryFees?: Record<string, number>;
         lowStockThreshold: number;
         returnReplacementDays: number;
         enableCod: boolean;
@@ -465,9 +466,15 @@ export interface SystemIntegrationsConfig {
 export interface ProjectMasterDataConfig {
     companyLegalName: string;
     brandDisplayName: string;
+    brandName?: string;
     shortName: string;
     tagline: string;
     mcaSrn: string;
+    cinNumber?: string;
+    cin?: string;
+    companyPan?: string;
+    panNumber?: string;
+    companyTan?: string;
     crcApprovalStatus: string;
     crcApprovalDate: string;
     approvingAuthority: string;
@@ -478,6 +485,7 @@ export interface ProjectMasterDataConfig {
     premisesName: string;
     landmark: string;
     registeredAddress: string;
+    registeredOfficeAddress?: string;
     operationalHq: string;
     city: string;
     state: string;
@@ -485,10 +493,12 @@ export interface ProjectMasterDataConfig {
     pincode: string;
     rocJurisdiction: string;
     primaryMobile: string;
+    officialPhone?: string;
     alternateMobile: string;
     contactEmail: string;
     govtEmail: string;
     supportEmail: string;
+    officialEmail?: string;
     grievanceOfficerName: string;
     grievanceOfficerEmail: string;
     websiteUrl: string;

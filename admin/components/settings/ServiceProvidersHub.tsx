@@ -20,7 +20,7 @@
  * Keys are stored in DB via /api/v1/app-settings/service-config.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -693,6 +693,25 @@ export function ServiceProvidersHub() {
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [savedOk, setSavedOk] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let mounted = true;
+    apiClient.get('/app-settings/service-config').then((res) => {
+      if (mounted && res?.data) {
+        if (res.data.activeProviders) {
+          setActiveProviders((prev) => ({ ...prev, ...res.data.activeProviders }));
+        }
+        if (res.data.fieldValues) {
+          setFieldValues((prev) => ({ ...prev, ...res.data.fieldValues }));
+        }
+      }
+    }).catch((err) => {
+      console.warn('Could not load service provider config:', err?.message);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   const getFieldValue = (serviceId: string, fieldKey: string) =>

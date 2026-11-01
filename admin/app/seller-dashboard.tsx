@@ -19,6 +19,7 @@ import { MaterialCommunityIcons, Ionicons, FontAwesome5 } from '@expo/vector-ico
 import { apiClient } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
 import * as ImagePicker from 'expo-image-picker';
+import { BrandLogo } from '@/src/components/BrandLogo';
 import { RADIUS, FONT } from '@/constants/theme';
 
 export interface ProductVariantItem {
@@ -883,12 +884,8 @@ export default function SellerDashboardScreen() {
       <View style={[styles.centerContainer, { backgroundColor: '#0B0F17' }]}>
         <StatusBar barStyle="light-content" backgroundColor="#0B0F17" />
         <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-          {/* Official FarmsKing Brand Logo */}
-          <Image
-            source={require('@/assets/images/farmsking_logo_round_goldring.png')}
-            style={{ width: 110, height: 110, marginBottom: 20 }}
-            resizeMode="contain"
-          />
+          {/* Official FarmsKing Brand Logo from Settings */}
+          <BrandLogo size={110} style={{ marginBottom: 20 }} />
           <ActivityIndicator size="large" color="#10B981" style={{ marginVertical: 12 }} />
           <Text style={{ color: '#F9FAFB', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 }}>FarmsKing National Vendor Portal</Text>
           <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700', marginTop: 4, letterSpacing: 1.5, textTransform: 'uppercase' }}>

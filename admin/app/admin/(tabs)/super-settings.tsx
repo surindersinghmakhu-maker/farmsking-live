@@ -45,7 +45,6 @@ type MasterDataSubTab =
   | 'social'
   | 'smtp'
   | 'email-templates'
-  | 'crop-sessions'
   | 'certificates'
   | 'franchise'
   | 'backup'
@@ -90,7 +89,6 @@ const MASTER_DATA_TABS: MasterDataTabItem[] = [
   { key: 'social', label: 'Social Media & Maps', icon: 'share-social-outline' },
   { key: 'smtp', label: 'Email SMTP Settings', icon: 'mail-outline' },
   { key: 'email-templates', label: 'Email Templates', icon: 'document-text-outline' },
-  { key: 'crop-sessions', label: 'Crop Cycles & Seasons', icon: 'calendar-outline' },
   { key: 'certificates', label: 'Certificates & QR Portal', icon: 'ribbon-outline' },
   { key: 'franchise', label: 'Franchise & Mandi Agents', icon: 'storefront-outline' },
   { key: 'backup', label: 'Backup & Recovery', icon: 'server-outline' },

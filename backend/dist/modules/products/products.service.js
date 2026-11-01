@@ -32,7 +32,8 @@ let ProductsService = class ProductsService {
             }
         }
         const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
-        if (sellerStore) {
+        const isAdmin = creator?.role === client_1.Role.ADMIN || creator?.role === client_1.Role.SUPER_ADMIN;
+        if (sellerStore && !isAdmin) {
             if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('seed') || categorySlug === 'seeds' || categorySlug.includes('crop-protection')) {
                 if (!sellerStore.agriLicenseNo || !sellerStore.agriLicenseNo.trim()) {
                     throw new common_1.BadRequestException('Agri Inputs License No. (Seeds / Pesticide License) is required to list Seeds & Agrochemical Pesticides. Please update your Agri License in Store Settings.');
@@ -50,12 +51,12 @@ let ProductsService = class ProductsService {
         const heightCm = dto.heightCm ?? 10;
         const volumetricWeight = (lengthCm * widthCm * heightCm) / 5000;
         const billableWeight = Math.max(deadWeightKg, volumetricWeight);
-        let isCodAllowed = true;
+        let isCodAllowed = dto.isCodAllowed !== undefined ? dto.isCodAllowed : true;
         if (categorySlug === 'khad-spray' || categorySlug.includes('khad') || billableWeight >= 25) {
             isCodAllowed = false;
         }
         let moderationStatus = client_1.ProductModerationStatus.PENDING_REVIEW;
-        if (sellerStore?.catalogApprovalMode === client_1.CatalogApprovalMode.AUTO) {
+        if (isAdmin || sellerStore?.catalogApprovalMode === client_1.CatalogApprovalMode.AUTO) {
             moderationStatus = client_1.ProductModerationStatus.ACTIVE;
         }
         return this.prisma.product.create({

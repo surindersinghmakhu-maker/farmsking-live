@@ -224,7 +224,7 @@ export default function RegisterScreen() {
       if (searchParams.redirect) {
         router.replace(searchParams.redirect as any);
       } else if (accountType === 'CUSTOMER') {
-        router.replace('/(tabs)' as any);
+        router.replace('/(user)/(tabs)' as any);
       } else {
         router.replace('/(auth)/onboarding');
       }

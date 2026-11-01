@@ -83,44 +83,56 @@ export class AppSettingsService {
 
     const flags = ((settings as any).featureFlags as Record<string, any>) || {};
     let faviconUrl = flags.faviconUrl;
-    if (!faviconUrl || !logoUrl) {
-      try {
-        const integrations = await this.getIntegrations();
-        if (!faviconUrl) {
-          faviconUrl = integrations?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.ico';
-        }
-        if (!logoUrl) {
-          logoUrl = integrations?.projectMasterData?.logoUrl || logoUrl;
-        }
-      } catch {
-        if (!faviconUrl) faviconUrl = 'https://farmsking.in/favicon.ico';
-      }
+    const storedInt = flags.systemIntegrations as Partial<SystemIntegrationsConfig> | undefined;
+    if (!faviconUrl) {
+      faviconUrl = storedInt?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.ico';
     }
+    if (!logoUrl) {
+      logoUrl = storedInt?.projectMasterData?.logoUrl || logoUrl;
+    }
+    const activeLogistics = (storedInt?.logistics?.activeProvider || 'SHIPROCKET').toUpperCase();
+    const partnerFees = storedInt?.product?.partnerDeliveryFees || {
+      SHIPROCKET: 65,
+      DELHIVERY: 70,
+      ECOM_EXPRESS: 60,
+      XPRESSBEES: 55,
+      BLUEDART: 90,
+      SHADOWFAX: 50,
+      LOCAL: 40,
+    };
+    const baseShippingCharge = storedInt?.product?.baseShippingCharge ?? (partnerFees as any)[activeLogistics] ?? 65;
+    const freeDeliveryThreshold = storedInt?.product?.freeDeliveryThreshold ?? 499;
 
     const result = {
+      ...flags,
       ...settings,
+      ...flags,
       logoUrl,
       faviconUrl: faviconUrl || 'https://farmsking.in/favicon.ico',
       upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
       upiPayeeName: settings.upiPayeeName || 'Surinder Singh',
+      activeLogisticsPartner: activeLogistics,
+      baseShippingCharge,
+      freeDeliveryThreshold,
       referralSignupBonusAmount: (settings as any).referralSignupBonusAmount ?? 10,
       newUserSignupBonusAmount: (settings as any).newUserSignupBonusAmount ?? 10,
       referralPaidPlanBonusAmount: (settings as any).referralPaidPlanBonusAmount ?? 50,
-      partnerReferralCommissionAmount: (settings as any).partnerReferralCommissionAmount ?? 100,
-      partnerRefereeSignupBonusAmount: (settings as any).partnerRefereeSignupBonusAmount ?? 20,
-      partnerReferralPaidPlanBonusAmount: (settings as any).partnerReferralPaidPlanBonusAmount ?? 100,
-      referralOfferSchemeEnabled: (settings as any).referralOfferSchemeEnabled ?? false,
-      referralOfferExpiryDate: (settings as any).referralOfferExpiryDate || '2026-12-31',
-      referralOfferSchemeName: (settings as any).referralOfferSchemeName || 'Standard Welcome & Referral Offer',
-      referralOfferReferrerBonus: (settings as any).referralOfferReferrerBonus ?? 1,
-      referralOfferNewUserBonus: (settings as any).referralOfferNewUserBonus ?? 5,
-      referralOfferPaidPlanBonus: (settings as any).referralOfferPaidPlanBonus ?? 9,
-      partnerOfferSchemeEnabled: (settings as any).partnerOfferSchemeEnabled ?? false,
-      partnerOfferExpiryDate: (settings as any).partnerOfferExpiryDate || '2026-12-31',
-      partnerOfferSchemeName: (settings as any).partnerOfferSchemeName || 'Business Partner Referral Scheme',
-      partnerOfferReferrerBonus: (settings as any).partnerOfferReferrerBonus ?? 100,
-      partnerOfferNewUserBonus: (settings as any).partnerOfferNewUserBonus ?? 20,
-      partnerOfferPaidPlanBonus: (settings as any).partnerOfferPaidPlanBonus ?? 100,
+      partnerReferralCommissionAmount: flags.partnerReferralCommissionAmount ?? (settings as any).partnerReferralCommissionAmount ?? 100,
+      partnerRefereeSignupBonusAmount: flags.partnerRefereeSignupBonusAmount ?? (settings as any).partnerRefereeSignupBonusAmount ?? 20,
+      partnerReferralPaidPlanBonusAmount: flags.partnerReferralPaidPlanBonusAmount ?? (settings as any).partnerReferralPaidPlanBonusAmount ?? 100,
+      referralOfferSchemeEnabled: flags.referralOfferSchemeEnabled ?? (settings as any).referralOfferSchemeEnabled ?? false,
+      referralOfferExpiryDate: flags.referralOfferExpiryDate || (settings as any).referralOfferExpiryDate || '2026-12-31',
+      referralOfferSchemeName: flags.referralOfferSchemeName || (settings as any).referralOfferSchemeName || 'Standard Welcome & Referral Offer',
+      referralOfferReferrerBonus: flags.referralOfferReferrerBonus ?? (settings as any).referralOfferReferrerBonus ?? 1,
+      referralOfferNewUserBonus: flags.referralOfferNewUserBonus ?? (settings as any).referralOfferNewUserBonus ?? 5,
+      referralOfferPaidPlanBonus: flags.referralOfferPaidPlanBonus ?? (settings as any).referralOfferPaidPlanBonus ?? 9,
+      partnerOfferSchemeEnabled: flags.partnerOfferSchemeEnabled ?? (settings as any).partnerOfferSchemeEnabled ?? false,
+      partnerOfferExpiryDate: flags.partnerOfferExpiryDate || (settings as any).partnerOfferExpiryDate || '2026-12-31',
+      partnerOfferSchemeName: flags.partnerOfferSchemeName || (settings as any).partnerOfferSchemeName || 'Business Partner Referral Scheme',
+      partnerOfferReferrerBonus: flags.partnerOfferReferrerBonus ?? (settings as any).partnerOfferReferrerBonus ?? 100,
+      partnerOfferNewUserBonus: flags.partnerOfferNewUserBonus ?? (settings as any).partnerOfferNewUserBonus ?? 20,
+      partnerOfferPaidPlanBonus: flags.partnerOfferPaidPlanBonus ?? (settings as any).partnerOfferPaidPlanBonus ?? 100,
+      partnerOfferMinRegistrationBonus: flags.partnerOfferMinRegistrationBonus ?? (settings as any).partnerOfferMinRegistrationBonus ?? 10,
       storefrontMaintenanceMode: (settings as any).storefrontMaintenanceMode ?? false,
       agriMaintenanceMode: (settings as any).agriMaintenanceMode ?? false,
       gardenMaintenanceMode: (settings as any).gardenMaintenanceMode ?? false,
@@ -143,6 +155,8 @@ export class AppSettingsService {
       doctorMaintenanceMode: flags.doctorMaintenanceMode ?? false,
       gardenAdvisorMaintenanceMode: flags.gardenAdvisorMaintenanceMode ?? false,
       accountsMaintenanceMode: flags.accountsMaintenanceMode ?? false,
+      walletWithdrawalEnabled: flags.walletWithdrawalEnabled ?? false,
+      allowedWithdrawalRoles: Array.isArray(flags.allowedWithdrawalRoles) ? flags.allowedWithdrawalRoles : [],
     };
 
     this.cache = { data: result, timestamp: now };
@@ -321,6 +335,7 @@ export class AppSettingsService {
       'gardenMaintenanceMode',
       'walletMaintenanceMode',
       'trainerMaintenanceMode',
+      'allowDirectPlatformSales',
       'freeTrialEnabled',
       'freeTrialDays',
       'freeTrialPlan',
@@ -338,10 +353,12 @@ export class AppSettingsService {
       'doctorMaintenanceMode',
       'gardenAdvisorMaintenanceMode',
       'accountsMaintenanceMode',
+      'walletWithdrawalEnabled',
+      'allowedWithdrawalRoles',
     ];
 
-    for (const key of keys) {
-      if (dto[key] !== undefined) fields[key] = dto[key];
+    for (const [key, val] of Object.entries(dto)) {
+      if (val !== undefined) fields[key] = val;
     }
 
     if (dto.adminName !== undefined || dto.adminMobile !== undefined || dto.adminEmail !== undefined || dto.upiId !== undefined || dto.logoUrl !== undefined || dto.appName !== undefined || dto.tagline !== undefined) {
@@ -417,7 +434,6 @@ export class AppSettingsService {
       'referralSignupBonusAmount',
       'newUserSignupBonusAmount',
       'referralPaidPlanBonusAmount',
-      'partnerReferralCommissionAmount',
       'appDownloadUrl',
       'latestAppVersion',
       'storefrontMaintenanceMode',
@@ -425,6 +441,7 @@ export class AppSettingsService {
       'gardenMaintenanceMode',
       'walletMaintenanceMode',
       'trainerMaintenanceMode',
+      'allowDirectPlatformSales',
       'freeTrialEnabled',
       'freeTrialDays',
       'freeTrialPlan',
@@ -447,18 +464,11 @@ export class AppSettingsService {
       }
     }
 
-    const extraFlagKeys = [
-      'advisorCertificationFee',
-      'advisorCertificationDiscount',
-      'doctorMaintenanceMode',
-      'gardenAdvisorMaintenanceMode',
-      'accountsMaintenanceMode',
-    ];
     const extraFlags: Record<string, any> = {};
     let hasExtraFlags = false;
-    for (const ek of extraFlagKeys) {
-      if ((dto as any)[ek] !== undefined) {
-        extraFlags[ek] = (dto as any)[ek];
+    for (const [k, v] of Object.entries(fields)) {
+      if (!ALLOWED_PRISMA_FIELDS.has(k) && k !== 'faviconUrl') {
+        extraFlags[k] = v;
         hasExtraFlags = true;
       }
     }
@@ -492,11 +502,12 @@ export class AppSettingsService {
     }
 
     try {
-      return await this.prisma.appSetting.upsert({
+      await this.prisma.appSetting.upsert({
         where: { id: SINGLETON_ID },
         create: { id: SINGLETON_ID, ...prismaPayload, updatedById: admin?.id },
         update: { ...prismaPayload, updatedById: admin?.id },
       });
+      return await this.get();
     } catch (err: any) {
       if (err?.message?.includes('Unknown argument')) {
         console.warn('Handling Prisma Unknown argument in AppSetting upsert, falling back to safe payload:', err?.message);
@@ -506,11 +517,12 @@ export class AppSettingsService {
             safePayload[k] = v;
           }
         }
-        return this.prisma.appSetting.upsert({
+        await this.prisma.appSetting.upsert({
           where: { id: SINGLETON_ID },
           create: { id: SINGLETON_ID, ...safePayload, updatedById: admin?.id },
           update: { ...safePayload, updatedById: admin?.id },
         });
+        return await this.get();
       }
       throw err;
     }
@@ -678,6 +690,10 @@ export class AppSettingsService {
       product: {
         ...DEFAULT_INTEGRATIONS_CONFIG.product,
         ...(stored.product || {}),
+        partnerDeliveryFees: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.product.partnerDeliveryFees || {}),
+          ...(stored.product?.partnerDeliveryFees || {}),
+        },
       },
       socialMedia: {
         ...DEFAULT_INTEGRATIONS_CONFIG.socialMedia,
@@ -703,9 +719,43 @@ export class AppSettingsService {
         ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!,
         ...(stored.projectMasterData || {}),
         companyLegalName: stored.projectMasterData?.companyLegalName || stored.about?.companyName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.companyLegalName,
-        brandDisplayName: stored.projectMasterData?.brandDisplayName || stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.brandDisplayName,
+        brandDisplayName: stored.projectMasterData?.brandDisplayName || stored.projectMasterData?.brandName || stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.brandDisplayName,
+        brandName: stored.projectMasterData?.brandName || stored.projectMasterData?.brandDisplayName || stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.brandDisplayName,
         tagline: stored.projectMasterData?.tagline || stored.about?.tagline || settings.tagline || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.tagline,
         logoUrl: stored.projectMasterData?.logoUrl || stored.about?.logoUrl || settings.logoUrl || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.logoUrl,
+        cinNumber: stored.projectMasterData?.cinNumber || stored.projectMasterData?.cin || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cinNumber || 'U01100PB2026PTC063294',
+        cin: stored.projectMasterData?.cin || stored.projectMasterData?.cinNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cin || 'U01100PB2026PTC063294',
+        companyPan: stored.projectMasterData?.companyPan || stored.projectMasterData?.panNumber || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyPan || 'AABCF1234D',
+        panNumber: stored.projectMasterData?.panNumber || stored.projectMasterData?.companyPan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.panNumber || 'AABCF1234D',
+        companyTan: stored.projectMasterData?.companyTan || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.companyTan || 'PTLA12345B',
+        registeredAddress: stored.projectMasterData?.registeredAddress || stored.projectMasterData?.registeredOfficeAddress || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.registeredAddress,
+        registeredOfficeAddress: stored.projectMasterData?.registeredOfficeAddress || stored.projectMasterData?.registeredAddress || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.registeredAddress,
+        primaryMobile: stored.projectMasterData?.primaryMobile || stored.projectMasterData?.officialPhone || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.primaryMobile,
+        officialPhone: stored.projectMasterData?.officialPhone || stored.projectMasterData?.primaryMobile || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.primaryMobile,
+        supportEmail: stored.projectMasterData?.supportEmail || stored.projectMasterData?.officialEmail || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.supportEmail,
+        officialEmail: stored.projectMasterData?.officialEmail || stored.projectMasterData?.supportEmail || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.supportEmail,
+        operationalHq: stored.projectMasterData?.operationalHq || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.operationalHq,
+        mcaSrn: stored.projectMasterData?.mcaSrn || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.mcaSrn,
+        promotersAndCapital: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.promotersAndCapital || {}),
+          ...(stored.projectMasterData?.promotersAndCapital || {}),
+        } as any,
+        cropSessions: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cropSessions || {}),
+          ...(stored.projectMasterData?.cropSessions || {}),
+        } as any,
+        backupSettings: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.backupSettings || {}),
+          ...(stored.projectMasterData?.backupSettings || {}),
+        } as any,
+        certificateConfig: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.certificateConfig || {}),
+          ...(stored.projectMasterData?.certificateConfig || {}),
+        } as any,
+        franchiseRules: {
+          ...(DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.franchiseRules || {}),
+          ...(stored.projectMasterData?.franchiseRules || {}),
+        } as any,
         themeColors: {
           ...DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.themeColors,
           ...(stored.projectMasterData?.themeColors || {}),
@@ -876,6 +926,10 @@ export class AppSettingsService {
       product: {
         ...current.product,
         ...(payload.product || {}),
+        partnerDeliveryFees: {
+          ...(current.product?.partnerDeliveryFees || DEFAULT_INTEGRATIONS_CONFIG.product.partnerDeliveryFees || {}),
+          ...(payload.product?.partnerDeliveryFees || {}),
+        },
       },
       socialMedia: {
         ...current.socialMedia,
@@ -928,6 +982,26 @@ export class AppSettingsService {
           ...(current.projectMasterData?.taxGst || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData!.taxGst),
           ...(payload.projectMasterData?.taxGst || {}),
         },
+        promotersAndCapital: {
+          ...(current.projectMasterData?.promotersAndCapital || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.promotersAndCapital || {}),
+          ...(payload.projectMasterData?.promotersAndCapital || {}),
+        } as any,
+        cropSessions: {
+          ...(current.projectMasterData?.cropSessions || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.cropSessions || {}),
+          ...(payload.projectMasterData?.cropSessions || {}),
+        } as any,
+        backupSettings: {
+          ...(current.projectMasterData?.backupSettings || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.backupSettings || {}),
+          ...(payload.projectMasterData?.backupSettings || {}),
+        } as any,
+        certificateConfig: {
+          ...(current.projectMasterData?.certificateConfig || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.certificateConfig || {}),
+          ...(payload.projectMasterData?.certificateConfig || {}),
+        } as any,
+        franchiseRules: {
+          ...(current.projectMasterData?.franchiseRules || DEFAULT_INTEGRATIONS_CONFIG.projectMasterData?.franchiseRules || {}),
+          ...(payload.projectMasterData?.franchiseRules || {}),
+        } as any,
       },
     };
 
@@ -942,8 +1016,8 @@ export class AppSettingsService {
     };
 
     const topLevelUpdates: Record<string, any> = {};
-    if (merged.projectMasterData?.brandDisplayName || merged.projectMasterData?.companyLegalName) {
-      topLevelUpdates.appName = merged.projectMasterData.brandDisplayName || merged.projectMasterData.companyLegalName;
+    if (merged.projectMasterData?.brandDisplayName || merged.projectMasterData?.brandName || merged.projectMasterData?.companyLegalName) {
+      topLevelUpdates.appName = merged.projectMasterData.brandDisplayName || merged.projectMasterData.brandName || merged.projectMasterData.companyLegalName;
     } else if (merged.about?.brandName || merged.about?.companyName) {
       topLevelUpdates.appName = merged.about.brandName || merged.about.companyName;
     }
@@ -953,11 +1027,11 @@ export class AppSettingsService {
     if (merged.projectMasterData?.tagline || merged.about?.tagline) {
       topLevelUpdates.tagline = merged.projectMasterData?.tagline || merged.about?.tagline;
     }
-    if (merged.projectMasterData?.supportEmail || merged.about?.supportEmail) {
-      topLevelUpdates.adminEmail = merged.projectMasterData?.supportEmail || merged.about?.supportEmail;
+    if (merged.projectMasterData?.supportEmail || merged.projectMasterData?.officialEmail || merged.about?.supportEmail) {
+      topLevelUpdates.adminEmail = merged.projectMasterData?.supportEmail || merged.projectMasterData?.officialEmail || merged.about?.supportEmail;
     }
-    if (merged.projectMasterData?.primaryMobile || merged.about?.supportPhone) {
-      topLevelUpdates.adminMobile = merged.projectMasterData?.primaryMobile || merged.about?.supportPhone;
+    if (merged.projectMasterData?.primaryMobile || merged.projectMasterData?.officialPhone || merged.about?.supportPhone) {
+      topLevelUpdates.adminMobile = merged.projectMasterData?.primaryMobile || merged.projectMasterData?.officialPhone || merged.about?.supportPhone;
     }
     if (merged.gateway?.providers?.upiDirect?.upiId) {
       topLevelUpdates.upiId = merged.gateway.providers.upiDirect.upiId;
@@ -988,5 +1062,86 @@ export class AppSettingsService {
     this.clearCache();
     return merged;
   }
-}
 
+  async getServiceConfig() {
+    const settings = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
+    const flags = ((settings as any)?.featureFlags as Record<string, any>) || {};
+    return flags.serviceProvidersConfig || { activeProviders: {}, fieldValues: {} };
+  }
+
+  async updateServiceConfig(admin: AuthUser, body: { serviceId: string; activeProvider: string; config: Record<string, string> }) {
+    this.clearCache();
+    const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
+    const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};
+    const currentServiceConfig = currentFlags.serviceProvidersConfig || { activeProviders: {}, fieldValues: {} };
+
+    const activeProviders = {
+      ...(currentServiceConfig.activeProviders || {}),
+      ...(body.serviceId ? { [body.serviceId]: body.activeProvider } : {}),
+    };
+
+    const fieldValues = {
+      ...(currentServiceConfig.fieldValues || {}),
+      ...(body.serviceId ? {
+        [body.serviceId]: {
+          ...(currentServiceConfig.fieldValues?.[body.serviceId] || {}),
+          ...(body.config || {}),
+        },
+      } : {}),
+    };
+
+    const updatedServiceConfig = { activeProviders, fieldValues };
+
+    if (body.serviceId === 'logistics' && body.activeProvider) {
+      try {
+        const integrations = await this.getIntegrations();
+        const partnerKey = body.activeProvider.toUpperCase();
+        const partnerFees = integrations?.product?.partnerDeliveryFees || {
+          SHIPROCKET: 65,
+          DELHIVERY: 70,
+          ECOM_EXPRESS: 60,
+          XPRESSBEES: 55,
+          BLUEDART: 90,
+          SHADOWFAX: 50,
+          LOCAL: 40,
+        };
+        const fee = (partnerFees as any)[partnerKey] ?? (partnerKey === 'DELHIVERY' ? 70 : partnerKey === 'BLUEDART' ? 90 : 65);
+        await this.updateIntegrations(admin, {
+          ...integrations,
+          logistics: {
+            ...integrations.logistics,
+            activeProvider: partnerKey as any,
+          },
+          product: {
+            ...integrations.product,
+            baseShippingCharge: fee,
+          },
+        });
+      } catch (err) {
+        console.warn('Could not sync logistics provider to integrations:', err);
+      }
+    }
+
+    await this.prisma.appSetting.upsert({
+      where: { id: SINGLETON_ID },
+      create: {
+        id: SINGLETON_ID,
+        featureFlags: {
+          ...currentFlags,
+          serviceProvidersConfig: updatedServiceConfig,
+        },
+        updatedById: admin?.id,
+      },
+      update: {
+        featureFlags: {
+          ...currentFlags,
+          serviceProvidersConfig: updatedServiceConfig,
+        },
+        updatedById: admin?.id,
+      },
+    });
+
+    this.clearCache();
+    return { success: true, ...updatedServiceConfig };
+  }
+}

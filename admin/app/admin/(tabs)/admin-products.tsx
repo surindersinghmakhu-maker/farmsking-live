@@ -13,9 +13,12 @@ import {
   Pressable,
   Dimensions,
   useWindowDimensions,
+  Switch,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/src/api/client';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { Product } from '@/src/types/api';
 import {
@@ -36,15 +39,63 @@ const tap = () => {
 const CATEGORY_OPTIONS = [
   'All',
   'Fertilizers',
+  'Bio & Organics',
   'Seeds',
   'Pesticides',
-  'Organic Bio',
   'Garden Tools',
   'Irrigation',
+  'Animal & Cattle Feed',
+  'Food Products',
   'Other',
 ];
 
-const UNIT_OPTIONS = ['piece', 'kg', 'litre', 'bag', 'packet', 'quintal', 'box'];
+const BRAND_OPTIONS = [
+  'FarmsKing Certified',
+  'IFFCO',
+  'Bayer CropScience',
+  'Syngenta',
+  'UPL India',
+  'Tata Rallis',
+  'Dhanuka',
+  'Direct Farmer Produced',
+];
+
+const COMMON_HSN_CODES = [
+  { code: '310100', label: 'Bio / Organic Fertilizers' },
+  { code: '120991', label: 'Crop Seeds' },
+  { code: '380899', label: 'Agro Pesticides / Spray' },
+  { code: '842482', label: 'Irrigation & Sprayers' },
+];
+
+const GST_RATES = ['0', '5', '12', '18'];
+
+const ADD_PRODUCT_TABS = [
+  { id: 'STORE_BASIC', label: '1. Store & Basics', icon: 'storefront-outline' },
+  { id: 'PRICING_STOCK', label: '2. Pricing & Stock', icon: 'cash-outline' },
+  { id: 'LOGISTICS', label: '3. Package & Size', icon: 'cube-outline' },
+  { id: 'AGRI_SPECS', label: '4. Agri Technical', icon: 'leaf-outline' },
+  { id: 'PHOTOS', label: '5. Photos & Labels', icon: 'images-outline' },
+  { id: 'POLICIES', label: '6. Policies & Notes', icon: 'shield-checkmark-outline' },
+] as const;
+
+interface VerifiedSellerStore {
+  id: string;
+  storeName: string;
+  slug?: string;
+  sellerType?: string;
+  gstin?: string | null;
+  pickupCity?: string | null;
+  pickupState?: string | null;
+  kycStatus?: string;
+  seller?: {
+    id?: string;
+    name?: string;
+    mobile?: string;
+    email?: string;
+  };
+}
+
+const UNIT_OPTIONS = ['kg', 'litre', 'bag', 'packet', 'quintal', 'piece', 'box', 'bottle'];
 
 export default function AdminProductsScreen() {
   const { width } = useWindowDimensions();
@@ -66,22 +117,66 @@ export default function AdminProductsScreen() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
 
-  // New Product Form State
+  // Active Verified Sellers Query
+  const { data: verifiedStores = [], isLoading: isLoadingStores, refetch: refetchStores } = useQuery<VerifiedSellerStore[]>({
+    queryKey: ['admin-verified-stores'],
+    queryFn: async () => {
+      const res = await apiClient.get('/seller/admin/stores?kycStatus=VERIFIED');
+      return Array.isArray(res.data) ? res.data : [];
+    },
+  });
+
+  // Seller Selection State (Admin creates product on behalf of an active seller)
+  const [selectedSellerStoreId, setSelectedSellerStoreId] = useState<string>('');
+  const [sellerSearchQuery, setSellerSearchQuery] = useState('');
+  const [showSellerPickerModal, setShowSellerPickerModal] = useState(false);
+
+  // Seller Product Form State
   const [newName, setNewName] = useState('');
+  const [newBrand, setNewBrand] = useState('FarmsKing Certified');
   const [newCategory, setNewCategory] = useState('Fertilizers');
-  const [newPrice, setNewPrice] = useState('');
-  const [newStock, setNewStock] = useState('50');
   const [newUnit, setNewUnit] = useState('kg');
-  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newMrp, setNewMrp] = useState('600');
+  const [newPrice, setNewPrice] = useState('450');
+  const [newStock, setNewStock] = useState('50');
+  const [newSku, setNewSku] = useState(`FK-${Math.floor(100000 + Math.random() * 900000)}`);
+  const [newHsn, setNewHsn] = useState('310100');
+  const [newGstRate, setNewGstRate] = useState('18');
+  const [newDeadWeight, setNewDeadWeight] = useState('0.5');
+  const [newLength, setNewLength] = useState('10');
+  const [newWidth, setNewWidth] = useState('10');
+  const [newHeight, setNewHeight] = useState('10');
+  const [newTechnicalName, setNewTechnicalName] = useState('');
+  const [newDosageInstructions, setNewDosageInstructions] = useState('');
+  const [newSuitableCrops, setNewSuitableCrops] = useState('');
+  const [newTargetPests, setNewTargetPests] = useState('');
+  const [newBatchNumber, setNewBatchNumber] = useState('');
+  const [newExpiryDate, setNewExpiryDate] = useState('');
+  const [newImageFrontUrl, setNewImageFrontUrl] = useState('');
+  const [newImageBackUrl, setNewImageBackUrl] = useState('');
+  const [newImageDosageUrl, setNewImageDosageUrl] = useState('');
+  const [newIsCodAllowed, setNewIsCodAllowed] = useState(true);
+  const [newIsReturnable, setNewIsReturnable] = useState(true);
+  const [newReturnWindowDays, setNewReturnWindowDays] = useState('7');
   const [newDescription, setNewDescription] = useState('');
+
+  // Active Tab in Create Modal
+  const [addModalTab, setAddModalTab] = useState<typeof ADD_PRODUCT_TABS[number]['id']>('STORE_BASIC');
 
   // Edit Product Form State
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
 
-  // Seller Mock Helper (if store details not on product)
+  // Seller Store Helper (uses actual store if linked)
   const getProductSellerInfo = (p: Product, index: number) => {
+    if (p.sellerStore?.storeName) {
+      return {
+        name: p.sellerStore.storeName,
+        shop: p.sellerStore.pickupCity || p.sellerStore.pickupState || 'Verified Merchant',
+        verified: p.sellerStore.kycStatus === 'VERIFIED',
+      };
+    }
     const sellers = [
       { name: 'Punjab Agri Traders', shop: 'Ludhiana Mandi', verified: true },
       { name: 'Malwa Seed Suppliers', shop: 'Bathinda Hub', verified: true },
@@ -101,6 +196,7 @@ export default function AdminProductsScreen() {
         !q ||
         p.name.toLowerCase().includes(q) ||
         (p.category && p.category.toLowerCase().includes(q)) ||
+        (p.sellerStore?.storeName && p.sellerStore.storeName.toLowerCase().includes(q)) ||
         seller.name.toLowerCase().includes(q);
 
       if (!matchesSearch) return false;
@@ -177,36 +273,164 @@ export default function AdminProductsScreen() {
     setEditingProduct(null);
   };
 
-  // Submit Create Product
+  // Selected Store Object
+  const selectedStore = useMemo(() => {
+    return verifiedStores.find((s) => s.id === selectedSellerStoreId);
+  }, [verifiedStores, selectedSellerStoreId]);
+
+  // Filtered Active Sellers for Modal Selector
+  const filteredActiveSellers = useMemo(() => {
+    const q = sellerSearchQuery.trim().toLowerCase();
+    if (!q) return verifiedStores;
+    return verifiedStores.filter((s) => {
+      const matchStore = s.storeName && s.storeName.toLowerCase().includes(q);
+      const matchOwner = s.seller?.name && s.seller.name.toLowerCase().includes(q);
+      const matchMobile = s.seller?.mobile && s.seller.mobile.toLowerCase().includes(q);
+      const matchCity = s.pickupCity && s.pickupCity.toLowerCase().includes(q);
+      const matchState = s.pickupState && s.pickupState.toLowerCase().includes(q);
+      const matchGst = s.gstin && s.gstin.toLowerCase().includes(q);
+      return matchStore || matchOwner || matchMobile || matchCity || matchState || matchGst;
+    });
+  }, [verifiedStores, sellerSearchQuery]);
+
+  // Helpers for SKU and Sample Photos
+  const handleGenerateSku = () => {
+    tap();
+    setNewSku(`FK-${Math.floor(100000 + Math.random() * 900000)}`);
+  };
+
+  const handleAttachSamplePhoto = () => {
+    tap();
+    setNewImageFrontUrl('https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?q=80&w=600&auto=format&fit=crop');
+    setNewImageBackUrl('https://images.unsplash.com/photo-1574943320219-553eb213f72d?q=80&w=600&auto=format&fit=crop');
+    setNewImageDosageUrl('https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?q=80&w=600&auto=format&fit=crop');
+    showAdminToast('INFO', 'Sample Photos Attached', 'High-resolution agricultural product images loaded for testing.');
+  };
+
+  // Pricing & Logistics Computations
+  const mrpNum = parseFloat(newMrp) || 0;
+  const priceNum = parseFloat(newPrice) || 0;
+  const discountPercent = mrpNum > priceNum && mrpNum > 0 ? Math.round(((mrpNum - priceNum) / mrpNum) * 100) : 0;
+  const discountAmount = mrpNum > priceNum ? (mrpNum - priceNum).toFixed(0) : '0';
+
+  const lengthNum = parseFloat(newLength) || 10;
+  const widthNum = parseFloat(newWidth) || 10;
+  const heightNum = parseFloat(newHeight) || 10;
+  const deadWeightNum = parseFloat(newDeadWeight) || 0.5;
+  const volumetricWeight = ((lengthNum * widthNum * heightNum) / 5000).toFixed(2);
+  const billableWeight = Math.max(deadWeightNum, parseFloat(volumetricWeight)).toFixed(2);
+
+  // Tab Navigation Indices
+  const currentTabIndex = ADD_PRODUCT_TABS.findIndex((t) => t.id === addModalTab);
+  const hasPrevTab = currentTabIndex > 0;
+  const hasNextTab = currentTabIndex < ADD_PRODUCT_TABS.length - 1;
+
+  const goToPrevTab = () => {
+    tap();
+    if (hasPrevTab) setAddModalTab(ADD_PRODUCT_TABS[currentTabIndex - 1].id);
+  };
+  const goToNextTab = () => {
+    tap();
+    if (hasNextTab) setAddModalTab(ADD_PRODUCT_TABS[currentTabIndex + 1].id);
+  };
+
+  // Submit Create Product (Admin creates on behalf of selected active seller)
   const handleCreateProduct = async () => {
-    if (!newName.trim()) return;
-    const priceNum = parseFloat(newPrice) || 100;
-    const stockNum = parseInt(newStock, 10) || 10;
+    if (!selectedSellerStoreId) {
+      showAdminToast('WARNING', 'Seller Selection Required', 'Please select an active verified seller store to list this product.');
+      setAddModalTab('STORE_BASIC');
+      return;
+    }
+    if (!newName.trim()) {
+      showAdminToast('WARNING', 'Product Name Required', 'Please enter a product title or name.');
+      setAddModalTab('STORE_BASIC');
+      return;
+    }
+    if (!newPrice.trim()) {
+      showAdminToast('WARNING', 'Selling Price Required', 'Please enter a valid selling price.');
+      setAddModalTab('PRICING_STOCK');
+      return;
+    }
+
+    const priceVal = parseFloat(newPrice) || 100;
+    const mrpVal = parseFloat(newMrp) || priceVal;
+    const stockVal = parseInt(newStock, 10) || 10;
+    const deadWeightVal = parseFloat(newDeadWeight) || 0.5;
+    const lengthVal = parseFloat(newLength) || 10;
+    const widthVal = parseFloat(newWidth) || 10;
+    const heightVal = parseFloat(newHeight) || 10;
+    const gstVal = parseFloat(newGstRate) || 18;
+    const returnDaysVal = parseInt(newReturnWindowDays, 10) || 7;
+
     const createdName = newName.trim();
 
-    await createProduct.mutateAsync({
-      name: createdName,
-      category: newCategory,
-      price: priceNum,
-      stockQty: stockNum,
-      unit: newUnit,
-      description: newDescription.trim() || undefined,
-      imageUrl: newImageUrl.trim() || undefined,
-    });
+    try {
+      await createProduct.mutateAsync({
+        name: createdName,
+        title: createdName,
+        brand: newBrand.trim() || undefined,
+        category: newCategory,
+        categorySlug: newCategory.toLowerCase().replace(/\s+/g, '-'),
+        unit: newUnit,
+        price: priceVal,
+        sellingPrice: priceVal,
+        mrp: mrpVal,
+        stockQty: stockVal,
+        sellerStoreId: selectedSellerStoreId,
+        sku: newSku.trim() || undefined,
+        hsnCode: newHsn.trim() || undefined,
+        gstPercentage: gstVal,
+        deadWeightKg: deadWeightVal,
+        weightKg: deadWeightVal,
+        lengthCm: lengthVal,
+        widthCm: widthVal,
+        heightCm: heightVal,
+        technicalName: newTechnicalName.trim() || undefined,
+        dosageInstructions: newDosageInstructions.trim() || undefined,
+        suitableCrops: newSuitableCrops.trim() || undefined,
+        targetPests: newTargetPests.trim() || undefined,
+        batchNumber: newBatchNumber.trim() || undefined,
+        expiryDate: newExpiryDate.trim() || undefined,
+        imageUrl: newImageFrontUrl.trim() || undefined,
+        imageFrontUrl: newImageFrontUrl.trim() || undefined,
+        imageBackLabelUrl: newImageBackUrl.trim() || undefined,
+        imageDosageUrl: newImageDosageUrl.trim() || undefined,
+        imageProductUrl: newImageFrontUrl.trim() || undefined,
+        isCodAllowed: newIsCodAllowed,
+        isReturnable: newIsReturnable,
+        returnWindowDays: returnDaysVal,
+        description: newDescription.trim() || undefined,
+      });
 
-    showAdminToast(
-      'SUCCESS',
-      'Product Listed',
-      `${createdName} has been published to the store.`
-    );
+      const storeName = selectedStore ? selectedStore.storeName : 'Selected Merchant';
+      showAdminToast(
+        'SUCCESS',
+        'Product Listed Successfully',
+        `"${createdName}" published under seller: ${storeName}`
+      );
 
-    // Reset Form
-    setNewName('');
-    setNewPrice('');
-    setNewStock('50');
-    setNewDescription('');
-    setNewImageUrl('');
-    setShowAddModal(false);
+      // Reset Form
+      setNewName('');
+      setNewPrice('450');
+      setNewMrp('600');
+      setNewStock('50');
+      setNewDescription('');
+      setNewImageFrontUrl('');
+      setNewImageBackUrl('');
+      setNewImageDosageUrl('');
+      setNewTechnicalName('');
+      setNewDosageInstructions('');
+      setNewSuitableCrops('');
+      setNewTargetPests('');
+      setNewBatchNumber('');
+      setNewExpiryDate('');
+      setNewSku(`FK-${Math.floor(100000 + Math.random() * 900000)}`);
+      setShowAddModal(false);
+      setAddModalTab('STORE_BASIC');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to list product.';
+      showAdminToast('DANGER', 'Listing Failed', Array.isArray(msg) ? msg.join(', ') : msg);
+    }
   };
 
   // Confirm Delete
@@ -723,7 +947,7 @@ export default function AdminProductsScreen() {
         )}
       </ScrollView>
 
-      {/* ➕ Quick Add Product Modal */}
+      {/* ➕ Comprehensive Add Product Modal (Seller Mode with Active Seller Selection) */}
       <Modal
         visible={showAddModal}
         transparent
@@ -736,185 +960,880 @@ export default function AdminProductsScreen() {
         >
           <Pressable
             style={[
-              styles.modalContent,
-              isLight && { backgroundColor: '#ffffff' },
-              isDarkTheme && { backgroundColor: '#020b06', borderColor: 'rgba(56, 189, 248, 0.3)' },
+              styles.largeModalContent,
+              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+              isDarkTheme && { backgroundColor: '#020b06', borderColor: 'rgba(56, 189, 248, 0.35)' },
+              premiumShadow('#000000', 'lg') as any,
             ]}
             onPress={(e) => e.stopPropagation()}
           >
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {/* Modal Header */}
+            <View style={[styles.modalHeader, isLight && { borderBottomColor: '#e2e8f0' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                 <View style={[styles.modalIconWrap, isLight && { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="add-circle" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+                  <Ionicons name="storefront" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
                 </View>
-                <Text style={[styles.modalTitle, { color: textColor }]}>Add New Product</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalTitle, { color: textColor }]}>Add New Product (Seller Mode)</Text>
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 1 }}>
+                    {selectedStore ? `Listing under: ${selectedStore.storeName}` : 'Select an active verified seller to list catalog item'}
+                  </Text>
+                </View>
               </View>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={{ padding: 4 }}>
                 <Ionicons name="close" size={22} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              {/* Product Name */}
-              <Text style={[styles.inputLabel, { color: textColor }]}>Product Name *</Text>
-              <TextInput
-                style={[
-                  styles.formInput,
-                  isLight && styles.formInputLight,
-                  { color: textColor },
-                ]}
-                placeholder="e.g. Bio-Potash Granules 50kg"
-                placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                value={newName}
-                onChangeText={setNewName}
-              />
-
-              {/* Category Picker */}
-              <Text style={[styles.inputLabel, { color: textColor }]}>Category</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 6, marginBottom: 12 }}
-              >
-                {CATEGORY_OPTIONS.filter((c) => c !== 'All').map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.modalOptionPill,
-                      newCategory === cat && styles.modalOptionPillActive,
-                      isLight && newCategory !== cat && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
-                    ]}
-                    onPress={() => setNewCategory(cat)}
-                  >
-                    <Text
+            {/* 6 Wizard Tabs Ribbon */}
+            <View style={[styles.modalTabsBar, isLight && { backgroundColor: '#f8fafc', borderBottomColor: '#e2e8f0' }]}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingVertical: 8 }}>
+                {ADD_PRODUCT_TABS.map((tab) => {
+                  const isActive = addModalTab === tab.id;
+                  return (
+                    <TouchableOpacity
+                      key={tab.id}
                       style={[
-                        styles.modalOptionPillText,
-                        newCategory === cat && styles.modalOptionPillTextActive,
-                        isLight && newCategory !== cat && { color: '#475569' },
+                        styles.wizardTabPill,
+                        isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+                        isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.12)' },
+                        isActive && (isLight ? styles.wizardTabPillActiveLight : styles.wizardTabPillActive),
                       ]}
+                      onPress={() => {
+                        tap();
+                        setAddModalTab(tab.id);
+                      }}
                     >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Ionicons
+                        name={tab.icon as any}
+                        size={13}
+                        color={isActive ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')}
+                      />
+                      <Text
+                        style={[
+                          styles.wizardTabPillText,
+                          { color: isActive ? '#ffffff' : subTextColor },
+                          isActive && { fontFamily: FONT.bold },
+                        ]}
+                      >
+                        {tab.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
+            </View>
 
-              {/* Price & Stock Row */}
-              <View style={styles.formRow2}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Price (₹) *</Text>
-                  <TextInput
-                    style={[
-                      styles.formInput,
-                      isLight && styles.formInputLight,
-                      { color: textColor },
-                    ]}
-                    placeholder="450"
-                    placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                    keyboardType="numeric"
-                    value={newPrice}
-                    onChangeText={setNewPrice}
-                  />
+            {/* Modal Body */}
+            <ScrollView style={styles.modalBodyScroll} showsVerticalScrollIndicator={false}>
+              {/* TAB 1: STORE & BASICS */}
+              {addModalTab === 'STORE_BASIC' && (
+                <View style={{ gap: 12 }}>
+                  {/* Active Seller Store Card */}
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="business" size={16} color={isLight ? '#16a34a' : '#38bdf8'} />
+                        <Text style={[styles.cardSectionHeading, { color: textColor }]}>Select Active Seller *</Text>
+                      </View>
+                      <View style={[styles.verifiedCountBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)' }]}>
+                        <Text style={[styles.verifiedCountText, isLight && { color: '#16a34a' }]}>
+                          {verifiedStores.length} Active Sellers
+                        </Text>
+                      </View>
+                    </View>
+
+                    {selectedStore ? (
+                      <View style={[styles.selectedSellerCard, isLight && styles.selectedSellerCardLight]}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <Text style={[styles.selectedStoreName, { color: textColor }]}>{selectedStore.storeName}</Text>
+                            <View style={styles.kycVerifiedTag}>
+                              <Ionicons name="checkmark-circle" size={11} color="#16a34a" />
+                              <Text style={styles.kycVerifiedText}>Active Verified</Text>
+                            </View>
+                            <View style={[styles.sellerTypeTag, isLight && { backgroundColor: '#f1f5f9' }]}>
+                              <Text style={[styles.sellerTypeText, { color: subTextColor }]}>
+                                {selectedStore.sellerType || 'VENDOR'}
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={[styles.selectedStoreSub, { color: subTextColor }]}>
+                            Owner: {selectedStore.seller?.name || 'Seller'} • {selectedStore.seller?.mobile || 'No Mobile'}
+                          </Text>
+                          <Text style={[styles.selectedStoreSub, { color: subTextColor }]}>
+                            Location: {selectedStore.pickupCity || ''}{selectedStore.pickupCity && selectedStore.pickupState ? ', ' : ''}{selectedStore.pickupState || 'Punjab'} • GST: {selectedStore.gstin || 'Unregistered'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.changeSellerBtn, isLight && styles.changeSellerBtnLight]}
+                          onPress={() => {
+                            tap();
+                            setShowSellerPickerModal(true);
+                          }}
+                        >
+                          <Ionicons name="swap-horizontal" size={14} color={isLight ? '#0284c7' : '#38bdf8'} />
+                          <Text style={[styles.changeSellerBtnText, isLight && { color: '#0284c7' }]}>Change Seller</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.chooseSellerPrompt, isLight && styles.chooseSellerPromptLight]}
+                        onPress={() => {
+                          tap();
+                          setShowSellerPickerModal(true);
+                        }}
+                      >
+                        <View style={[styles.sellerPromptIconBox, isLight && { backgroundColor: '#fef3c7' }]}>
+                          <Ionicons name="storefront-outline" size={22} color="#f59e0b" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.chooseSellerPromptTitle, { color: textColor }]}>
+                            Click to Select Active Seller Store
+                          </Text>
+                          <Text style={[styles.chooseSellerPromptSub, { color: subTextColor }]}>
+                            Choose which verified merchant catalog this product belongs to.
+                          </Text>
+                        </View>
+                        <View style={[styles.pickSellerActionPill, isLight && { backgroundColor: '#16a34a' }]}>
+                          <Text style={styles.pickSellerActionText}>Select Seller</Text>
+                          <Ionicons name="chevron-forward" size={14} color="#ffffff" />
+                        </View>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {/* Product Title / Name */}
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Product Name / Title *</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="e.g. Bio-Potash Granules 50kg / Micro-Nutrient Mix"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newName}
+                      onChangeText={setNewName}
+                    />
+
+                    {/* Brand Selection */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Brand / Manufacturer</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                      {BRAND_OPTIONS.map((brand) => (
+                        <TouchableOpacity
+                          key={brand}
+                          style={[
+                            styles.modalOptionPill,
+                            newBrand === brand && styles.modalOptionPillActive,
+                            isLight && newBrand !== brand && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                          ]}
+                          onPress={() => {
+                            tap();
+                            setNewBrand(brand);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.modalOptionPillText,
+                              newBrand === brand && styles.modalOptionPillTextActive,
+                              isLight && newBrand !== brand && { color: '#475569' },
+                            ]}
+                          >
+                            {brand}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="Custom Brand Name (or selected above)"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newBrand}
+                      onChangeText={setNewBrand}
+                    />
+
+                    {/* Category Selection */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Category *</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                      {CATEGORY_OPTIONS.filter((c) => c !== 'All').map((cat) => (
+                        <TouchableOpacity
+                          key={cat}
+                          style={[
+                            styles.modalOptionPill,
+                            newCategory === cat && styles.modalOptionPillActive,
+                            isLight && newCategory !== cat && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                          ]}
+                          onPress={() => {
+                            tap();
+                            setNewCategory(cat);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.modalOptionPillText,
+                              newCategory === cat && styles.modalOptionPillTextActive,
+                              isLight && newCategory !== cat && { color: '#475569' },
+                            ]}
+                          >
+                            {cat}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                    {/* Unit Selection */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Unit of Measure</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                      {UNIT_OPTIONS.map((u) => (
+                        <TouchableOpacity
+                          key={u}
+                          style={[
+                            styles.modalOptionPill,
+                            newUnit === u && styles.modalOptionPillActive,
+                            isLight && newUnit !== u && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                          ]}
+                          onPress={() => {
+                            tap();
+                            setNewUnit(u);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.modalOptionPillText,
+                              newUnit === u && styles.modalOptionPillTextActive,
+                              isLight && newUnit !== u && { color: '#475569' },
+                            ]}
+                          >
+                            {u}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
                 </View>
+              )}
 
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.inputLabel, { color: textColor }]}>Stock Qty *</Text>
-                  <TextInput
-                    style={[
-                      styles.formInput,
-                      isLight && styles.formInputLight,
-                      { color: textColor },
-                    ]}
-                    placeholder="50"
-                    placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                    keyboardType="numeric"
-                    value={newStock}
-                    onChangeText={setNewStock}
-                  />
+              {/* TAB 2: PRICING & STOCK */}
+              {addModalTab === 'PRICING_STOCK' && (
+                <View style={{ gap: 12 }}>
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <View style={styles.formRow2}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>MRP / Maximum Retail Price (₹)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="600"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newMrp}
+                          onChangeText={setNewMrp}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>Selling / Offer Price (₹) *</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="450"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newPrice}
+                          onChangeText={setNewPrice}
+                        />
+                      </View>
+                    </View>
+
+                    {/* Discount Preview */}
+                    {discountPercent > 0 && (
+                      <View style={[styles.discountPreviewBanner, isLight && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                        <Ionicons name="pricetag" size={14} color="#16a34a" />
+                        <Text style={[styles.discountPreviewText, isLight && { color: '#16a34a' }]}>
+                          Farmer Offer Discount: Save ₹{discountAmount} ({discountPercent}% OFF)
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Stock Qty & SKU */}
+                    <View style={[styles.formRow2, { marginTop: 6 }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>Stock Quantity *</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="50"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newStock}
+                          onChangeText={setNewStock}
+                        />
+                      </View>
+                      <View style={{ flex: 1.3 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Text style={[styles.inputLabel, { color: textColor }]}>SKU Code</Text>
+                          <TouchableOpacity onPress={handleGenerateSku}>
+                            <Text style={{ fontSize: 10, color: isLight ? '#0284c7' : '#38bdf8', fontFamily: FONT.bold }}>
+                              Auto Generate
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="FK-100234"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          value={newSku}
+                          onChangeText={setNewSku}
+                        />
+                      </View>
+                    </View>
+
+                    {/* HSN Code & GST Rate */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Common Agricultural HSN Codes</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                      {COMMON_HSN_CODES.map((item) => (
+                        <TouchableOpacity
+                          key={item.code}
+                          style={[
+                            styles.modalOptionPill,
+                            newHsn === item.code && styles.modalOptionPillActive,
+                            isLight && newHsn !== item.code && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                          ]}
+                          onPress={() => {
+                            tap();
+                            setNewHsn(item.code);
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.modalOptionPillText,
+                              newHsn === item.code && styles.modalOptionPillTextActive,
+                              isLight && newHsn !== item.code && { color: '#475569' },
+                            ]}
+                          >
+                            {item.code} ({item.label})
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+
+                    <View style={styles.formRow2}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>HSN Code</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="310100"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          value={newHsn}
+                          onChangeText={setNewHsn}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>GST Rate (%)</Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
+                          {GST_RATES.map((rate) => (
+                            <TouchableOpacity
+                              key={rate}
+                              style={[
+                                styles.gstPill,
+                                newGstRate === rate && styles.gstPillActive,
+                                isLight && newGstRate !== rate && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                              ]}
+                              onPress={() => {
+                                tap();
+                                setNewGstRate(rate);
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.gstPillText,
+                                  newGstRate === rate && styles.gstPillTextActive,
+                                  isLight && newGstRate !== rate && { color: '#475569' },
+                                ]}
+                              >
+                                {rate}%
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
                 </View>
-              </View>
+              )}
 
-              {/* Unit Selection */}
-              <Text style={[styles.inputLabel, { color: textColor }]}>Unit of Measure</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 6, marginBottom: 12 }}
-              >
-                {UNIT_OPTIONS.map((u) => (
-                  <TouchableOpacity
-                    key={u}
-                    style={[
-                      styles.modalOptionPill,
-                      newUnit === u && styles.modalOptionPillActive,
-                      isLight && newUnit !== u && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
-                    ]}
-                    onPress={() => setNewUnit(u)}
-                  >
-                    <Text
-                      style={[
-                        styles.modalOptionPillText,
-                        newUnit === u && styles.modalOptionPillTextActive,
-                        isLight && newUnit !== u && { color: '#475569' },
-                      ]}
-                    >
-                      {u}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              {/* TAB 3: PACKAGE & SIZE */}
+              {addModalTab === 'LOGISTICS' && (
+                <View style={{ gap: 12 }}>
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Dead / Actual Weight (kg) *</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="0.5"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      keyboardType="numeric"
+                      value={newDeadWeight}
+                      onChangeText={setNewDeadWeight}
+                    />
 
-              {/* Image URL */}
-              <Text style={[styles.inputLabel, { color: textColor }]}>Image URL (Optional)</Text>
-              <TextInput
-                style={[
-                  styles.formInput,
-                  isLight && styles.formInputLight,
-                  { color: textColor },
-                ]}
-                placeholder="https://images.unsplash.com/..."
-                placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                value={newImageUrl}
-                onChangeText={setNewImageUrl}
-              />
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 6 }]}>Parcel Dimensions (cm)</Text>
+                    <View style={styles.formRow3}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.subLabel, { color: subTextColor }]}>Length (cm)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="10"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newLength}
+                          onChangeText={setNewLength}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.subLabel, { color: subTextColor }]}>Width (cm)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="10"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newWidth}
+                          onChangeText={setNewWidth}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.subLabel, { color: subTextColor }]}>Height (cm)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="10"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newHeight}
+                          onChangeText={setNewHeight}
+                        />
+                      </View>
+                    </View>
 
-              {/* Description */}
-              <Text style={[styles.inputLabel, { color: textColor }]}>Short Description</Text>
-              <TextInput
-                style={[
-                  styles.formInput,
-                  isLight && styles.formInputLight,
-                  { color: textColor, height: 60 },
-                ]}
-                placeholder="High-grade agricultural input..."
-                placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
-                multiline
-                value={newDescription}
-                onChangeText={setNewDescription}
-              />
+                    {/* Volumetric Weight Calculator Preview */}
+                    <View style={[styles.volumetricPreviewBox, isLight && styles.volumetricPreviewBoxLight]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <Ionicons name="cube" size={15} color={isLight ? '#0284c7' : '#38bdf8'} />
+                        <Text style={[styles.volumetricHeading, { color: textColor }]}>Courier Weight Matrix (Shiprocket Standard)</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                        <Text style={[styles.volumetricItem, { color: subTextColor }]}>Volumetric: <Text style={{ color: textColor, fontFamily: FONT.bold }}>{volumetricWeight} kg</Text></Text>
+                        <Text style={[styles.volumetricItem, { color: subTextColor }]}>Dead Weight: <Text style={{ color: textColor, fontFamily: FONT.bold }}>{deadWeightNum} kg</Text></Text>
+                        <Text style={[styles.volumetricItem, { color: isLight ? '#16a34a' : '#00ff87', fontFamily: FONT.bold }]}>Billable: {billableWeight} kg</Text>
+                      </View>
+                      <Text style={{ fontSize: 10, color: subTextColor, marginTop: 6 }}>
+                        Formula: (Length × Width × Height) / 5000. Logistics partners bill based on the greater of dead weight or volumetric weight.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* TAB 4: AGRI TECHNICAL */}
+              {addModalTab === 'AGRI_SPECS' && (
+                <View style={{ gap: 12 }}>
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Technical Formulation / Active Ingredient</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="e.g. Trichoderma Viride 1.5% WP / Chlorpyrifos 20% EC"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newTechnicalName}
+                      onChangeText={setNewTechnicalName}
+                    />
+
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Dosage & Application Instructions</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="e.g. 2-3 ml per litre of water or 1 kg per acre; spray during evening hours"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newDosageInstructions}
+                      onChangeText={setNewDosageInstructions}
+                    />
+
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Suitable Crops</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                      {['Wheat', 'Paddy / Rice', 'Cotton', 'Mustard', 'Tomato', 'Potato', 'Vegetables', 'Sugarcane'].map((crop) => (
+                        <TouchableOpacity
+                          key={crop}
+                          style={[
+                            styles.modalOptionPill,
+                            newSuitableCrops.includes(crop) && styles.modalOptionPillActive,
+                            isLight && !newSuitableCrops.includes(crop) && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                          ]}
+                          onPress={() => {
+                            tap();
+                            setNewSuitableCrops((prev) => (prev ? `${prev}, ${crop}` : crop));
+                          }}
+                        >
+                          <Text
+                            style={[
+                              styles.modalOptionPillText,
+                              newSuitableCrops.includes(crop) && styles.modalOptionPillTextActive,
+                              isLight && !newSuitableCrops.includes(crop) && { color: '#475569' },
+                            ]}
+                          >
+                            + {crop}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="e.g. Wheat, Paddy, Cotton, Mustard, Vegetables"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newSuitableCrops}
+                      onChangeText={setNewSuitableCrops}
+                    />
+
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 4 }]}>Target Pests / Diseases / Weeds</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="e.g. Stem Borer, Aphids, Yellow Rust, Leaf Blight"
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newTargetPests}
+                      onChangeText={setNewTargetPests}
+                    />
+
+                    <View style={[styles.formRow2, { marginTop: 4 }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>Batch Number</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="e.g. FK-2026-B01"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          value={newBatchNumber}
+                          onChangeText={setNewBatchNumber}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>Expiry Date (YYYY-MM-DD)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="2027-12-31"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          value={newExpiryDate}
+                          onChangeText={setNewExpiryDate}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* TAB 5: PHOTOS & MEDIA */}
+              {addModalTab === 'PHOTOS' && (
+                <View style={{ gap: 12 }}>
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <Text style={[styles.cardSectionHeading, { color: textColor }]}>Product Photos & Visual Labels</Text>
+                      <TouchableOpacity
+                        style={[styles.samplePhotoBtn, isLight && styles.samplePhotoBtnLight]}
+                        onPress={handleAttachSamplePhoto}
+                      >
+                        <Ionicons name="sparkles" size={13} color={isLight ? '#16a34a' : '#00ff87'} />
+                        <Text style={[styles.samplePhotoBtnText, isLight && { color: '#16a34a' }]}>Attach Sample Photos</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Front Photo */}
+                    <Text style={[styles.inputLabel, { color: textColor }]}>Primary / Front Pack Photo URL *</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newImageFrontUrl}
+                      onChangeText={setNewImageFrontUrl}
+                    />
+
+                    {/* Live Preview if Front URL */}
+                    {Boolean(newImageFrontUrl) && (
+                      <View style={[styles.photoPreviewCard, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+                        <Image source={{ uri: newImageFrontUrl }} style={styles.photoPreviewImg} resizeMode="contain" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: textColor }}>Front Photo Live Preview</Text>
+                          <Text style={{ fontSize: 10, color: subTextColor, marginTop: 2 }} numberOfLines={1}>{newImageFrontUrl}</Text>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Back Label URL */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 8 }]}>Back Label & Ingredients Photo URL</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newImageBackUrl}
+                      onChangeText={setNewImageBackUrl}
+                    />
+
+                    {/* Dosage Chart URL */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 8 }]}>Dosage Schedule & Application Chart URL</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      value={newImageDosageUrl}
+                      onChangeText={setNewImageDosageUrl}
+                    />
+                  </View>
+                </View>
+              )}
+
+              {/* TAB 6: POLICIES & NOTES */}
+              {addModalTab === 'POLICIES' && (
+                <View style={{ gap: 12 }}>
+                  <View style={[styles.formCardBox, isLight && styles.formCardBoxLight]}>
+                    {/* COD Switch */}
+                    <View style={[styles.toggleSettingRow, isLight && { borderBottomColor: '#f1f5f9' }]}>
+                      <View style={{ flex: 1, paddingRight: 10 }}>
+                        <Text style={[styles.toggleSettingTitle, { color: textColor }]}>Allow Cash on Delivery (COD)</Text>
+                        <Text style={[styles.toggleSettingDesc, { color: subTextColor }]}>
+                          Permit buyers to pay cash at delivery. Automatically restricted if weight is 25 kg or more.
+                        </Text>
+                      </View>
+                      <Switch
+                        value={newIsCodAllowed}
+                        onValueChange={setNewIsCodAllowed}
+                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+
+                    {/* Returnable Switch */}
+                    <View style={[styles.toggleSettingRow, isLight && { borderBottomColor: '#f1f5f9' }, { marginTop: 10 }]}>
+                      <View style={{ flex: 1, paddingRight: 10 }}>
+                        <Text style={[styles.toggleSettingTitle, { color: textColor }]}>Return & Replacement Policy</Text>
+                        <Text style={[styles.toggleSettingDesc, { color: subTextColor }]}>
+                          Allow farmers to request replacement or return if damaged/wrong batch received.
+                        </Text>
+                      </View>
+                      <Switch
+                        value={newIsReturnable}
+                        onValueChange={setNewIsReturnable}
+                        trackColor={{ false: '#64748b', true: '#10b981' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+
+                    {newIsReturnable && (
+                      <View style={{ marginTop: 8 }}>
+                        <Text style={[styles.inputLabel, { color: textColor }]}>Return Window (Days)</Text>
+                        <TextInput
+                          style={[styles.formInput, isLight && styles.formInputLight, { color: textColor }]}
+                          placeholder="7"
+                          placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                          keyboardType="numeric"
+                          value={newReturnWindowDays}
+                          onChangeText={setNewReturnWindowDays}
+                        />
+                      </View>
+                    )}
+
+                    {/* Detailed Description */}
+                    <Text style={[styles.inputLabel, { color: textColor, marginTop: 8 }]}>Full Product Description & Usage Guide</Text>
+                    <TextInput
+                      style={[styles.formInput, isLight && styles.formInputLight, { color: textColor, height: 80 }]}
+                      placeholder="Detailed features, active ingredients, safety precautions, farmer tips..."
+                      placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                      multiline
+                      value={newDescription}
+                      onChangeText={setNewDescription}
+                    />
+                  </View>
+                </View>
+              )}
             </ScrollView>
 
-            {/* Modal Actions */}
-            <View style={styles.modalFooter}>
+            {/* Modal Footer Navigation */}
+            <View style={[styles.modalFooter, isLight && { borderTopColor: '#e2e8f0' }]}>
               <TouchableOpacity
                 style={[styles.modalCancelBtn, isLight && styles.modalCancelBtnLight]}
                 onPress={() => setShowAddModal(false)}
               >
-                <Text style={[styles.modalCancelBtnText, isLight && { color: '#64748b' }]}>
-                  Cancel
-                </Text>
+                <Text style={[styles.modalCancelBtnText, isLight && { color: '#64748b' }]}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.modalSubmitBtn, isLight && styles.modalSubmitBtnLight]}
-                onPress={handleCreateProduct}
-                disabled={createProduct.isPending || !newName.trim()}
-              >
-                {createProduct.isPending ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <Text style={styles.modalSubmitBtnText}>Create Listing</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {hasPrevTab && (
+                  <TouchableOpacity
+                    style={[styles.modalNavBtn, isLight && styles.modalNavBtnLight]}
+                    onPress={goToPrevTab}
+                  >
+                    <Ionicons name="arrow-back" size={14} color={textColor} />
+                    <Text style={[styles.modalNavBtnText, { color: textColor }]}>Back</Text>
+                  </TouchableOpacity>
                 )}
+
+                {hasNextTab && (
+                  <TouchableOpacity
+                    style={[styles.modalNavBtn, isLight && styles.modalNavBtnLight]}
+                    onPress={goToNextTab}
+                  >
+                    <Text style={[styles.modalNavBtnText, { color: textColor }]}>Next</Text>
+                    <Ionicons name="arrow-forward" size={14} color={textColor} />
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[styles.modalSubmitBtn, isLight && styles.modalSubmitBtnLight]}
+                  onPress={handleCreateProduct}
+                  disabled={createProduct.isPending || !newName.trim() || !selectedSellerStoreId}
+                >
+                  {createProduct.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
+                      <Text style={styles.modalSubmitBtnText}>Publish Listing</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* 🏬 Dedicated Active Seller Store Picker Modal */}
+      <Modal
+        visible={showSellerPickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSellerPickerModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowSellerPickerModal(false)}
+        >
+          <Pressable
+            style={[
+              styles.sellerPickerModalContent,
+              isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+              isDarkTheme && { backgroundColor: '#020b06', borderColor: 'rgba(56, 189, 248, 0.35)' },
+              premiumShadow('#000000', 'lg') as any,
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Picker Header */}
+            <View style={[styles.modalHeader, isLight && { borderBottomColor: '#e2e8f0' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                <View style={[styles.modalIconWrap, isLight && { backgroundColor: '#f0fdf4' }]}>
+                  <Ionicons name="storefront" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalTitle, { color: textColor }]}>Select Active Verified Seller</Text>
+                  <Text style={{ fontSize: 11, color: subTextColor, marginTop: 1 }}>
+                    Only verified active sellers are eligible for product listings
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowSellerPickerModal(false)}>
+                <Ionicons name="close" size={22} color={subTextColor} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Active Sellers */}
+            <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
+              <View style={[styles.sellerSearchInputWrap, isLight && styles.sellerSearchInputWrapLight]}>
+                <Ionicons name="search" size={15} color={subTextColor} />
+                <TextInput
+                  style={[styles.sellerSearchInput, { color: textColor }]}
+                  placeholder="Search by store name, owner, or mobile..."
+                  placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
+                  value={sellerSearchQuery}
+                  onChangeText={setSellerSearchQuery}
+                />
+                {Boolean(sellerSearchQuery) && (
+                  <TouchableOpacity onPress={() => setSellerSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color={subTextColor} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+
+            {/* Active Sellers List */}
+            <ScrollView style={{ maxHeight: 380, paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
+              {isLoadingStores ? (
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={isLight ? '#16a34a' : '#00ff87'} />
+                  <Text style={{ marginTop: 8, fontSize: 12, color: subTextColor }}>Loading verified sellers...</Text>
+                </View>
+              ) : filteredActiveSellers.length === 0 ? (
+                <View style={{ padding: 24, alignItems: 'center' }}>
+                  <Ionicons name="storefront-outline" size={36} color={subTextColor} />
+                  <Text style={{ marginTop: 8, fontSize: 13, fontFamily: FONT.bold, color: textColor }}>
+                    No Active Sellers Found
+                  </Text>
+                  <Text style={{ marginTop: 4, fontSize: 11, color: subTextColor, textAlign: 'center' }}>
+                    {sellerSearchQuery
+                      ? 'No active seller matches your search. Try another keyword.'
+                      : 'No sellers with verified KYC currently active.'}
+                  </Text>
+                </View>
+              ) : (
+                filteredActiveSellers.map((store) => {
+                  const isSelected = store.id === selectedSellerStoreId;
+                  return (
+                    <TouchableOpacity
+                      key={store.id}
+                      style={[
+                        styles.sellerPickerRowItem,
+                        isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                        isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.03)', borderColor: 'rgba(255, 255, 255, 0.1)' },
+                        isSelected && (isLight ? styles.sellerPickerRowItemSelectedLight : styles.sellerPickerRowItemSelected),
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setSelectedSellerStoreId(store.id);
+                        setShowSellerPickerModal(false);
+                        showAdminToast('INFO', 'Seller Selected', `Product listing will be credited to ${store.storeName}`);
+                      }}
+                    >
+                      <View style={{ flex: 1, paddingRight: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <Text style={[styles.pickerStoreName, { color: textColor }]}>{store.storeName}</Text>
+                          <View style={styles.kycVerifiedTag}>
+                            <Ionicons name="checkmark-circle" size={10} color="#16a34a" />
+                            <Text style={styles.kycVerifiedText}>Verified</Text>
+                          </View>
+                          <View style={[styles.sellerTypeTag, isLight && { backgroundColor: '#e2e8f0' }]}>
+                            <Text style={[styles.sellerTypeText, { color: subTextColor }]}>
+                              {store.sellerType || 'VENDOR'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <Text style={[styles.pickerOwnerText, { color: subTextColor }]}>
+                          Owner: {store.seller?.name || 'Seller'} • {store.seller?.mobile || 'No Mobile'}
+                        </Text>
+                        <Text style={[styles.pickerOwnerText, { color: subTextColor }]}>
+                          Location: {store.pickupCity || ''}{store.pickupCity && store.pickupState ? ', ' : ''}{store.pickupState || 'Punjab'} • GST: {store.gstin || 'Unregistered'}
+                        </Text>
+                      </View>
+
+                      <View
+                        style={[
+                          styles.selectSellerRadio,
+                          isSelected && styles.selectSellerRadioActive,
+                          isLight && !isSelected && { borderColor: '#cbd5e1' },
+                        ]}
+                      >
+                        {isSelected && <View style={styles.selectSellerRadioInner} />}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            {/* Picker Footer */}
+            <View style={[styles.modalFooter, isLight && { borderTopColor: '#e2e8f0' }, { justifyContent: 'space-between' }]}>
+              <Text style={{ fontSize: 11, color: subTextColor }}>
+                {verifiedStores.length} Active Sellers Loaded
+              </Text>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, isLight && styles.modalCancelBtnLight]}
+                onPress={() => setShowSellerPickerModal(false)}
+              >
+                <Text style={[styles.modalCancelBtnText, isLight && { color: '#64748b' }]}>Close</Text>
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -1779,5 +2698,398 @@ const styles = StyleSheet.create({
   statusToggleBarText: {
     fontSize: 11.5,
     fontFamily: FONT.bold,
+  },
+
+  /* Upgraded Large Modal & Seller Mode Styles */
+  largeModalContent: {
+    width: '100%',
+    maxWidth: 860,
+    maxHeight: '92%',
+    backgroundColor: '#04140a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    overflow: 'hidden',
+  },
+  modalTabsBar: {
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  wizardTabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  wizardTabPillActive: {
+    backgroundColor: '#059669',
+    borderColor: '#00ff87',
+  },
+  wizardTabPillActiveLight: {
+    backgroundColor: '#16a34a',
+    borderColor: '#15803d',
+  },
+  wizardTabPillText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+  },
+  modalBodyScroll: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    maxHeight: 520,
+  },
+  formCardBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 14,
+  },
+  formCardBoxLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  cardSectionHeading: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  verifiedCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  },
+  verifiedCountText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+  },
+  selectedSellerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 255, 135, 0.06)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    padding: 12,
+    marginTop: 6,
+    gap: 10,
+  },
+  selectedSellerCardLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  selectedStoreName: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+  },
+  selectedStoreSub: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  kycVerifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(22, 163, 74, 0.15)',
+  },
+  kycVerifiedText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  sellerTypeTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  sellerTypeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    textTransform: 'uppercase',
+  },
+  changeSellerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  changeSellerBtnLight: {
+    backgroundColor: '#e0f2fe',
+    borderColor: '#bae6fd',
+  },
+  changeSellerBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+  },
+  chooseSellerPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(245, 158, 11, 0.05)',
+    marginTop: 6,
+  },
+  chooseSellerPromptLight: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#f59e0b',
+  },
+  sellerPromptIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chooseSellerPromptTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  chooseSellerPromptSub: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  pickSellerActionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 6,
+    backgroundColor: '#059669',
+  },
+  pickSellerActionText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  discountPreviewBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    marginTop: 6,
+  },
+  discountPreviewText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  gstPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gstPillActive: {
+    backgroundColor: '#059669',
+    borderColor: '#00ff87',
+  },
+  gstPillText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  gstPillTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+  },
+  formRow3: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  subLabel: {
+    fontSize: 10,
+    marginBottom: 3,
+  },
+  volumetricPreviewBox: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.2)',
+    marginTop: 8,
+  },
+  volumetricPreviewBoxLight: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd',
+  },
+  volumetricHeading: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  volumetricItem: {
+    fontSize: 11,
+  },
+  samplePhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  samplePhotoBtnLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  samplePhotoBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  photoPreviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 10,
+  },
+  photoPreviewImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    backgroundColor: '#000000',
+  },
+  toggleSettingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  toggleSettingTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+  },
+  toggleSettingDesc: {
+    fontSize: 10.5,
+    marginTop: 2,
+  },
+  modalNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalNavBtnLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  modalNavBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  sellerPickerModalContent: {
+    width: '100%',
+    maxWidth: 620,
+    backgroundColor: '#04140a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    overflow: 'hidden',
+  },
+  sellerSearchInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  sellerSearchInputWrapLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+  },
+  sellerSearchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    padding: 0,
+  },
+  sellerPickerRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  sellerPickerRowItemSelected: {
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderColor: '#00ff87',
+  },
+  sellerPickerRowItemSelectedLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+  },
+  pickerStoreName: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  pickerOwnerText: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  selectSellerRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#64748b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectSellerRadioActive: {
+    borderColor: '#10b981',
+  },
+  selectSellerRadioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10b981',
   },
 });

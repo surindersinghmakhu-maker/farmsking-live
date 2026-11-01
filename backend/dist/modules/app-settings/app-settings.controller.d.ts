@@ -20,48 +20,7 @@ export declare class AppSettingsController {
         appDownloadUrl: any;
         mcaSrn: string;
     }>;
-    update(user: AuthUser, dto: UpdateAppSettingsDto): Promise<{
-        id: string;
-        whatsappGroupJid: string | null;
-        upiId: string | null;
-        updatedAt: Date;
-        updatedById: string | null;
-        appName: string;
-        logoUrl: string | null;
-        tagline: string | null;
-        upiPayeeName: string | null;
-        adminName: string | null;
-        adminMobile: string | null;
-        adminEmail: string | null;
-        groupVoiceCallEnabled: boolean;
-        whatsappGroupSyncEnabled: boolean;
-        whatsappAutoAddEnabled: boolean;
-        whatsappAutoRemoveEnabled: boolean;
-        otpDeliveryChannel: string;
-        referralSignupBonusAmount: number;
-        newUserSignupBonusAmount: number;
-        referralPaidPlanBonusAmount: number;
-        appDownloadUrl: string | null;
-        latestAppVersion: string | null;
-        storefrontMaintenanceMode: boolean;
-        agriMaintenanceMode: boolean;
-        gardenMaintenanceMode: boolean;
-        walletMaintenanceMode: boolean;
-        trainerMaintenanceMode: boolean;
-        freeTrialEnabled: boolean;
-        freeTrialDays: number;
-        freeTrialPlan: string;
-        gardenExpertPlatformFeePercent: number;
-        gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
-        gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
-        allowDirectPlatformSales: boolean;
-        withdrawalPlatformFeePercent: number;
-        withdrawalGstPercent: number;
-        walletUsagePlatformFeePercent: number;
-        walletUsageGstPercent: number;
-        walletTaxEnabled: boolean;
-        featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
-    }>;
+    update(user: AuthUser, dto: UpdateAppSettingsDto): Promise<any>;
     getFeatureFlags(): Promise<import("../../common/constants/feature-flags.constant").FeatureFlagsMap>;
     updateFeatureFlags(user: AuthUser, flags: any): Promise<{
         id: string;
@@ -156,6 +115,12 @@ export declare class AppSettingsController {
     }>;
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     updateIntegrations(user: AuthUser, payload: any): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
+    getServiceConfig(): Promise<any>;
+    updateServiceConfig(user: AuthUser, body: any): Promise<{
+        activeProviders: any;
+        fieldValues: any;
+        success: boolean;
+    }>;
     getPublicMasterData(): Promise<{
         companyLegalName: string;
         brandDisplayName: string;
@@ -357,4 +322,5 @@ export declare class PublicContactController {
             lastBackupTimestamp: string | undefined;
         };
     }>;
+    getPublicAppSettings(): Promise<any>;
 }

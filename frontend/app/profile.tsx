@@ -500,7 +500,7 @@ export default function ProfileScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)' as never);
+      router.replace('/(user)/(tabs)' as never);
     }
   };
 

@@ -33,7 +33,6 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 
 export type MasterDataSubTab =
   | 'basic-details'
-  | 'brand-assets'
   | 'social'
   | 'email-templates'
   | 'tax-gst';
@@ -53,12 +52,6 @@ export const MASTER_DATA_TABS: MasterDataTabItem[] = [
     label: 'Company Profile',
     icon: 'business-outline',
     description: 'Legal identity, capital & leadership',
-  },
-  {
-    key: 'brand-assets',
-    label: 'Brand Assets',
-    icon: 'images-outline',
-    description: 'Official logo & browser favicon',
   },
   {
     key: 'social',
@@ -989,31 +982,7 @@ export default function SettingEntitySetup() {
               </View>
             </View>
 
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {/* TAB 2: Brand Assets (Brand Logo & Website Favicon) */}
-        {masterSubTab === 'brand-assets' && (
-          <View style={styles.masterTabPane}>
+            {/* Group 5: Official Brand Assets */}
             <View style={[styles.groupSection, { borderColor: cardBorder }]}>
               <View style={styles.groupHeader}>
                 <View style={styles.groupHeaderLeft}>
@@ -1303,7 +1272,7 @@ export default function SettingEntitySetup() {
                     <Ionicons name="checkmark-done" size={15} color="#ffffff" />
                   )}
                   <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save All Brand Assets'}
+                    {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>

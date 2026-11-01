@@ -31,6 +31,7 @@ export declare class CreateProductDto {
     imageDosageUrl?: string;
     imageProductUrl?: string;
     commissionOverridePercentage?: number;
+    isCodAllowed?: boolean;
     isReturnable?: boolean;
     returnWindowDays?: number;
     isReplaceable?: boolean;

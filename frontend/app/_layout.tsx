@@ -65,7 +65,23 @@ function RootNavigation() {
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
     const isAtRootOrIndex = !currentGroup || currentGroup === '' || currentGroup === 'index';
-    const isPublicRoute = isAtRootOrIndex || ['seo', 'support', 'contact-us', 'shop', 'dose', 'you', 'seller-dashboard', 'topic', 'privacy-policy', 'terms', 'refund-policy', 'account-deletion'].includes(currentGroup);
+    const isPublicRoute = isAtRootOrIndex || [
+      'seo',
+      'support',
+      'contact-us',
+      'shop',
+      'dose',
+      'you',
+      'seller-dashboard',
+      'topic',
+      'compliance',
+      'crop-intelligence',
+      'privacy-policy',
+      'terms',
+      'refund-policy',
+      'order-tracking',
+      'account-deletion',
+    ].includes(currentGroup);
     const isStaffSetupRoute = segmentsPath === 'staff-profile-setup';
     const isSubdomainAdmin = Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'));
 
@@ -126,6 +142,11 @@ function RootNavigation() {
         <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
         <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
         <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
+        <Stack.Screen name="compliance" options={{ headerShown: false, title: 'MCA & Statutory Compliance • FarmsKing' }} />
+        <Stack.Screen name="privacy-policy" options={{ headerShown: false, title: 'Privacy Policy (DPDPA 2023) • FarmsKing' }} />
+        <Stack.Screen name="terms" options={{ headerShown: false, title: 'Terms of Service • FarmsKing' }} />
+        <Stack.Screen name="refund-policy" options={{ headerShown: false, title: 'Refund & Return Policy • FarmsKing' }} />
+        <Stack.Screen name="order-tracking" options={{ headerShown: false, title: 'Order Tracking • FarmsKing' }} />
         <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
       </Stack>
       <PublicBottomNav />

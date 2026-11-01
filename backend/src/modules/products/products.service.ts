@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductModerationStatus, CatalogApprovalMode, SellerType } from '@prisma/client';
+import { ProductModerationStatus, CatalogApprovalMode, SellerType, Role } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
@@ -27,7 +27,9 @@ export class ProductsService {
 
     const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
 
-    if (sellerStore) {
+    const isAdmin = creator?.role === Role.ADMIN || creator?.role === Role.SUPER_ADMIN;
+
+    if (sellerStore && !isAdmin) {
       // 1. Category Restriction: Seeds & Pesticides strictly require Agri Inputs License No.
       if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('seed') || categorySlug === 'seeds' || categorySlug.includes('crop-protection')) {
         if (!sellerStore.agriLicenseNo || !sellerStore.agriLicenseNo.trim()) {
@@ -53,14 +55,14 @@ export class ProductsService {
     const billableWeight = Math.max(deadWeightKg, volumetricWeight);
 
     // 4. COD Rule Engine: Auto-disable COD for khad-spray OR weight >= 25 kg
-    let isCodAllowed = true;
+    let isCodAllowed = dto.isCodAllowed !== undefined ? dto.isCodAllowed : true;
     if (categorySlug === 'khad-spray' || categorySlug.includes('khad') || billableWeight >= 25) {
       isCodAllowed = false;
     }
 
     // 5. Catalog Moderation Mode
     let moderationStatus: ProductModerationStatus = ProductModerationStatus.PENDING_REVIEW;
-    if (sellerStore?.catalogApprovalMode === CatalogApprovalMode.AUTO) {
+    if (isAdmin || sellerStore?.catalogApprovalMode === CatalogApprovalMode.AUTO) {
       moderationStatus = ProductModerationStatus.ACTIVE;
     }
 

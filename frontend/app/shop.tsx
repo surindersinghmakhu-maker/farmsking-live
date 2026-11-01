@@ -2461,6 +2461,14 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           isActive && styles.categoryChipActive,
                           isHiddenCat && styles.categoryChipHidden,
                           isHiddenCat && isActive && styles.categoryChipHiddenActive,
+                          Platform.OS === 'web'
+                            ? ({
+                                transform: isActive ? 'scale(1.06)' : 'scale(1)',
+                                transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                              } as any)
+                            : isActive
+                            ? { transform: [{ scale: 1.05 }] }
+                            : {},
                         ]}
                         onPress={() => {
                           tap();
@@ -6210,7 +6218,7 @@ const styles = StyleSheet.create({
   categoryChipsBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   categoryChipsScroll: { gap: 8, paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center', maxWidth: 1240, alignSelf: 'center' },
   categoryChip: { paddingHorizontal: 15, paddingVertical: 7, borderRadius: 99, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
-  categoryChipActive: { backgroundColor: '#059669', borderColor: '#047857', ...premiumShadow('#059669', 'sm') },
+  categoryChipActive: { backgroundColor: '#059669', borderColor: '#00ff87', borderWidth: 1.5, ...premiumShadow('#059669', 'sm') },
   categoryChipHidden: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
   categoryChipHiddenActive: { backgroundColor: '#dc2626', borderColor: '#b91c1c' },
   categoryChipText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#475569' },

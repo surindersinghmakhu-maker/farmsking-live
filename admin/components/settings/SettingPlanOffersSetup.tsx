@@ -29,11 +29,10 @@ import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { formatInr } from '@/src/utils/formatInr';
 
 type PlanOffersCategoryFilter =
-  | 'ALL'
   | 'SUBSCRIPTION_PLANS'
   | 'MEMBERSHIP_PASSES'
+  | 'URBAN_GARDEN'
   | 'REFERRAL_REWARDS'
-  | 'PARTNER_SCHEMES'
   | 'DISCOUNT_COUPONS';
 
 interface CategoryPill {
@@ -43,11 +42,10 @@ interface CategoryPill {
 }
 
 const CATEGORY_PILLS: CategoryPill[] = [
-  { key: 'ALL', label: 'All Plans & Offers', icon: 'grid-outline' },
   { key: 'SUBSCRIPTION_PLANS', label: 'Subscription Plans & Trial', icon: 'ribbon-outline' },
   { key: 'MEMBERSHIP_PASSES', label: 'Membership Passes', icon: 'card-outline' },
+  { key: 'URBAN_GARDEN', label: 'Urban Garden & Direct Sales', icon: 'flower-outline' },
   { key: 'REFERRAL_REWARDS', label: 'Referral Rewards', icon: 'gift-outline' },
-  { key: 'PARTNER_SCHEMES', label: 'Partner Schemes', icon: 'people-outline' },
   { key: 'DISCOUNT_COUPONS', label: 'Coupons & Market Deals', icon: 'pricetag-outline' },
 ];
 
@@ -69,7 +67,7 @@ export default function SettingPlanOffersSetup() {
 
   // Local state
   const [appForm, setAppForm] = useState<Partial<AppSettings>>({});
-  const [activeCategory, setActiveCategory] = useState<PlanOffersCategoryFilter>('ALL');
+  const [activeCategory, setActiveCategory] = useState<PlanOffersCategoryFilter>('SUBSCRIPTION_PLANS');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -110,6 +108,10 @@ export default function SettingPlanOffersSetup() {
         gardenerVipCardPrice: Number(appForm.gardenerVipCardPrice ?? 999),
         advisorCertificationFee: Number(appForm.advisorCertificationFee ?? 999),
         advisorCertificationDiscount: Number(appForm.advisorCertificationDiscount ?? 0),
+
+        // Urban Garden & Platform Direct Sales
+        allowDirectPlatformSales: Boolean(appForm.allowDirectPlatformSales ?? false),
+        gardenExpertPlatformFeePercent: Number(appForm.gardenExpertPlatformFeePercent ?? 20.0),
 
         // Farmer Referral Rewards
         newUserSignupBonusAmount: Number(appForm.newUserSignupBonusAmount ?? 10),
@@ -182,7 +184,7 @@ export default function SettingPlanOffersSetup() {
   };
 
   const isVisible = (cat: PlanOffersCategoryFilter) => {
-    return activeCategory === 'ALL' || activeCategory === cat;
+    return activeCategory === cat;
   };
 
   const totalCouponsCount = (couponsList?.length || 0) + (farmerCouponsList?.length || 0);
@@ -467,6 +469,66 @@ export default function SettingPlanOffersSetup() {
           </View>
         )}
 
+        {/* 3. Urban Garden & Platform Direct Sales */}
+        {isVisible('URBAN_GARDEN') && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="flower" size={20} color="#16a34a" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardTitle, { color: textColor }]}>Urban Garden & Platform Direct Sales</Text>
+                <Text style={[styles.cardSub, { color: subTextColor }]}>Consultation commission, VIP cards & inventory dispatch</Text>
+              </View>
+            </View>
+
+            <View style={[styles.toggleRow, { borderBottomColor: cardBorder, borderBottomWidth: 1, paddingBottom: 12 }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.toggleLabel, { color: textColor }]}>Allow Direct Platform Sales</Text>
+                <Text style={[styles.toggleSub, { color: subTextColor }]}>Allow platform inventory sales alongside vendor products</Text>
+              </View>
+              <Switch
+                value={Boolean(appForm.allowDirectPlatformSales ?? false)}
+                onValueChange={(v) => updateAppField('allowDirectPlatformSales', v)}
+                trackColor={{ false: '#475569', true: '#16a34a' }}
+              />
+            </View>
+
+            <View style={styles.fieldsGrid}>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Garden Expert Fee Share (%)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  keyboardType="numeric"
+                  value={String(appForm.gardenExpertPlatformFeePercent ?? 20.0)}
+                  onChangeText={(t) => updateAppField('gardenExpertPlatformFeePercent', parseFloat(t) || 0)}
+                />
+                <Text style={styles.fieldHint}>Platform commission deducted from urban garden bookings</Text>
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Gardener Pro Card (₹)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  keyboardType="numeric"
+                  value={String(appForm.gardenerProCardPrice ?? 299.0)}
+                  onChangeText={(t) => updateAppField('gardenerProCardPrice', parseFloat(t) || 0)}
+                />
+                <Text style={styles.fieldHint}>Annual membership card for urban home garden care</Text>
+              </View>
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Gardener VIP Card (₹)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  keyboardType="numeric"
+                  value={String(appForm.gardenerVipCardPrice ?? 999.0)}
+                  onChangeText={(t) => updateAppField('gardenerVipCardPrice', parseFloat(t) || 0)}
+                />
+                <Text style={styles.fieldHint}>VIP membership with priority doctor appointments</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* 3. Farmer Referral Rewards */}
         {isVisible('REFERRAL_REWARDS') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -579,119 +641,7 @@ export default function SettingPlanOffersSetup() {
           </View>
         )}
 
-        {/* 4. Business Partner Schemes */}
-        {isVisible('PARTNER_SCHEMES') && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.iconBox, { backgroundColor: '#eff6ff' }]}>
-                <Ionicons name="briefcase" size={20} color="#2563eb" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.cardTitle, { color: textColor }]}>Business Partner & Franchise Schemes</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>
-                  Commissions, onboarding rewards and paid plan conversions for business partners
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.fieldsGrid}>
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Partner Referee Welcome Bonus (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.partnerRefereeSignupBonusAmount ?? 20)}
-                  onChangeText={(t) => updateAppField('partnerRefereeSignupBonusAmount', parseFloat(t) || 0)}
-                />
-                <Text style={styles.fieldHint}>Credited to client joining through partner referral link</Text>
-              </View>
-
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Partner Referral Commission (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.partnerReferralCommissionAmount ?? 100)}
-                  onChangeText={(t) => updateAppField('partnerReferralCommissionAmount', parseFloat(t) || 0)}
-                />
-                <Text style={styles.fieldHint}>Commission paid to partner on client registration</Text>
-              </View>
-
-              <View style={styles.fieldItem}>
-                <Text style={[styles.label, { color: textColor }]}>Partner Paid Plan Conversion Bonus (₹)</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                  keyboardType="numeric"
-                  value={String(appForm.partnerReferralPaidPlanBonusAmount ?? 100)}
-                  onChangeText={(t) => updateAppField('partnerReferralPaidPlanBonusAmount', parseFloat(t) || 0)}
-                />
-                <Text style={styles.fieldHint}>Additional commission on subscriber conversion</Text>
-              </View>
-            </View>
-
-            {/* Seasonal Partner Campaign */}
-            <View style={[styles.subSchemeBox, { backgroundColor: isLight ? '#f0f9ff' : '#082f49', borderColor: '#bae6fd' }]}>
-              <View style={styles.toggleRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, { color: textColor }]}>Seasonal Partner Incentive Campaign</Text>
-                  <Text style={[styles.toggleSub, { color: subTextColor }]}>
-                    Special incentive scheme for partners and franchise holders
-                  </Text>
-                </View>
-                <Switch
-                  value={Boolean(appForm.partnerOfferSchemeEnabled)}
-                  onValueChange={(v) => updateAppField('partnerOfferSchemeEnabled', v)}
-                  trackColor={{ false: '#475569', true: '#2563eb' }}
-                />
-              </View>
-
-              {appForm.partnerOfferSchemeEnabled && (
-                <View style={[styles.fieldsGrid, { marginTop: 12 }]}>
-                  <View style={styles.fieldItem}>
-                    <Text style={[styles.label, { color: textColor }]}>Campaign Scheme Name</Text>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                      value={appForm.partnerOfferSchemeName || ''}
-                      placeholder="e.g. Master Franchise Accelerator"
-                      placeholderTextColor={subTextColor}
-                      onChangeText={(t) => updateAppField('partnerOfferSchemeName', t)}
-                    />
-                  </View>
-                  <View style={styles.fieldItem}>
-                    <Text style={[styles.label, { color: textColor }]}>Campaign Expiry Date</Text>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                      value={appForm.partnerOfferExpiryDate || ''}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor={subTextColor}
-                      onChangeText={(t) => updateAppField('partnerOfferExpiryDate', t)}
-                    />
-                  </View>
-                  <View style={styles.fieldItem}>
-                    <Text style={[styles.label, { color: textColor }]}>Campaign Partner Bonus (₹)</Text>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                      keyboardType="numeric"
-                      value={String(appForm.partnerOfferReferrerBonus ?? 100)}
-                      onChangeText={(t) => updateAppField('partnerOfferReferrerBonus', parseFloat(t) || 0)}
-                    />
-                  </View>
-                  <View style={styles.fieldItem}>
-                    <Text style={[styles.label, { color: textColor }]}>Campaign Client Bonus (₹)</Text>
-                    <TextInput
-                      style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
-                      keyboardType="numeric"
-                      value={String(appForm.partnerOfferNewUserBonus ?? 20)}
-                      onChangeText={(t) => updateAppField('partnerOfferNewUserBonus', parseFloat(t) || 0)}
-                    />
-                  </View>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* 5. Discount Coupons & Market Deals Central Hub */}
+        {/* 4. Discount Coupons & Market Deals Central Hub */}
         {isVisible('DISCOUNT_COUPONS') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             <View style={styles.cardHeader}>

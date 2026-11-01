@@ -52,7 +52,10 @@ export default function OnboardingScreen() {
     }).start();
   };
 
-  const finish = () => router.replace('/(tabs)' as any);
+  const finish = () => {
+    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+    router.replace(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
+  };
 
   useEffect(() => {
     if (user?.role === 'CUSTOMER' && (!user.roles || user.roles.length <= 1 || (user.roles.length === 1 && user.roles[0] === 'CUSTOMER'))) {

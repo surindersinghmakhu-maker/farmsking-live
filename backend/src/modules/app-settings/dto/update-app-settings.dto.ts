@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class UpdateAppSettingsDto {
   @IsOptional()
@@ -206,5 +206,13 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsBoolean()
   accountsMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  walletWithdrawalEnabled?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  allowedWithdrawalRoles?: string[];
 }
 

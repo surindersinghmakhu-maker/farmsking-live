@@ -55,7 +55,11 @@ schema_dump.prisma
 
 # Runtime data
 whatsapp_auth_session/
-uploads/
+/uploads/
+/backend/uploads/
+admin/public/uploads/
+frontend/dist/uploads/
+frontend/public/uploads/
 scratch/
 reports/
 videos/

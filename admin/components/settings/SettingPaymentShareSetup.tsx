@@ -189,6 +189,7 @@ export default function SettingPaymentShareSetup() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 860 && (Platform.OS !== 'web' || (typeof window !== 'undefined' && window.innerWidth >= 860));
   const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
+  const isDark = !isLight;
 
   // Queries
   const { data: rawAppSettings, isLoading: isAppLoading } = useAppSettings();

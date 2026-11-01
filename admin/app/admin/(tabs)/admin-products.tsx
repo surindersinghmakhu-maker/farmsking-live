@@ -429,7 +429,7 @@ export default function AdminProductsScreen() {
       setAddModalTab('STORE_BASIC');
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Failed to list product.';
-      showAdminToast('DANGER', 'Listing Failed', Array.isArray(msg) ? msg.join(', ') : msg);
+      showAdminToast('ALERT', 'Listing Failed', Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 

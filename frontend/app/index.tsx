@@ -3113,13 +3113,13 @@ export default function PublicLandingPage() {
               pointerEvents="none"
             >
               <LinearGradient
-                colors={BOTTOM_NAV_TABS[activeBottomTab]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']}
+                colors={(BOTTOM_NAV_TABS[activeBottomTab]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']) as [string, string, ...string[]]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFill}
               />
               <LinearGradient
-                colors={BOTTOM_NAV_TABS[activeBottomTab]?.laser || ['#00ff87', '#10b981']}
+                colors={(BOTTOM_NAV_TABS[activeBottomTab]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={S.bottomGliderLaser}

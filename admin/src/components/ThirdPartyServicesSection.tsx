@@ -1108,7 +1108,14 @@ export function ThirdPartyServicesSection() {
                                       ...prev,
                                       gateway: {
                                         ...prev.gateway,
-                                        routing: { ...(prev.gateway.routing || {}), [mod.routingKey]: gwOption },
+                                        routing: {
+                                          farmerPlanGateway: prev.gateway.routing?.farmerPlanGateway ?? 'RAZORPAY',
+                                          advisorBookingGateway: prev.gateway.routing?.advisorBookingGateway ?? 'RAZORPAY',
+                                          gardenStoreGateway: prev.gateway.routing?.gardenStoreGateway ?? 'RAZORPAY',
+                                          ecommerceStoreGateway: prev.gateway.routing?.ecommerceStoreGateway ?? 'RAZORPAY',
+                                          ...(prev.gateway.routing || {}),
+                                          [mod.routingKey]: gwOption,
+                                        },
                                       },
                                     }));
                                     showToast(`⚡ ${mod.title.split(' ')[1]} routed to ${gwOption}`);
@@ -1796,7 +1803,7 @@ export function ThirdPartyServicesSection() {
                       onPress={() => {
                         setLocalConfig({
                           ...localConfig,
-                          sms: { ...localConfig.sms, activeProvider: s.key },
+                          sms: { ...localConfig.sms, activeProvider: s.key as any },
                         });
                         showToast(`⚡ Switched SMS Provider to ${s.name}`);
                       }}
@@ -2007,7 +2014,7 @@ export function ThirdPartyServicesSection() {
                       onPress={() => {
                         setLocalConfig({
                           ...localConfig,
-                          whatsapp: { ...localConfig.whatsapp, activeProvider: wa.key },
+                          whatsapp: { ...localConfig.whatsapp, activeProvider: wa.key as any },
                         });
                         showToast(`⚡ Switched WhatsApp Engine to ${wa.name}`);
                       }}
@@ -2201,7 +2208,7 @@ export function ThirdPartyServicesSection() {
                       onPress={() => {
                         setLocalConfig({
                           ...localConfig,
-                          logistics: { ...localConfig.logistics, activeProvider: l.key },
+                          logistics: { ...localConfig.logistics, activeProvider: l.key as any },
                         });
                         showToast(`⚡ Switched Logistics to ${l.name}`);
                       }}
@@ -2358,7 +2365,7 @@ export function ThirdPartyServicesSection() {
                       onPress={() => {
                         setLocalConfig({
                           ...localConfig,
-                          storage: { ...localConfig.storage, activeProvider: st.key },
+                          storage: { ...localConfig.storage, activeProvider: st.key as any },
                         });
                         showToast(`⚡ Switched Storage to ${st.name}`);
                       }}

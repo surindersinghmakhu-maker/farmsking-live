@@ -46,7 +46,7 @@ const discovery = {
 type LoginTab = 'password' | 'otp';
 
 export default function LoginScreen() {
-  const { login, firebaseLogin, googleLogin } = useAuth();
+  const { user, login, firebaseLogin, googleLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();

@@ -129,7 +129,7 @@ export default function AdminSellersScreen() {
       fertilizer: existing.fertilizer !== undefined ? String(existing.fertilizer) : '2.0',
       seeds: existing.seeds !== undefined ? String(existing.seeds) : '5.0',
       spray: existing.spray !== undefined ? String(existing.spray) : '4.0',
-      machinery: existing.livePlants !== undefined ? String(existing.livePlants) : (existing.machinery !== undefined ? String(existing.machinery) : '3.0'),
+      livePlants: existing.livePlants !== undefined ? String(existing.livePlants) : (existing.machinery !== undefined ? String(existing.machinery) : '3.0'),
       feed: existing.feed !== undefined ? String(existing.feed) : '2.0',
       general: store.commissionRate !== undefined ? String(store.commissionRate) : '5.0',
     });

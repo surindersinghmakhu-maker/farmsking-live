@@ -498,16 +498,16 @@ export default function PublicHeader({
                 >
                   <LinearGradient
                     colors={
-                      isDay
+                      (isDay
                         ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
-                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']
+                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']) as [string, string, ...string[]]
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
                   <LinearGradient
-                    colors={MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']}
+                    colors={(MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.desktopLaserBar}
@@ -890,16 +890,16 @@ export default function PublicHeader({
                 >
                   <LinearGradient
                     colors={
-                      isDay
+                      (isDay
                         ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
-                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']
+                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']) as [string, string, ...string[]]
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 1 }}
                     style={StyleSheet.absoluteFill}
                   />
                   <LinearGradient
-                    colors={MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']}
+                    colors={(MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.mobileLaserBar}

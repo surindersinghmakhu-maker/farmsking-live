@@ -7,6 +7,7 @@ export const RADIUS = {
   lg: 24,
   xl: 32,
   pill: 999,
+  full: 9999,
 };
 
 export const SPACING = {

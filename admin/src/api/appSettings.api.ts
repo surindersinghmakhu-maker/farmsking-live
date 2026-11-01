@@ -346,6 +346,7 @@ export interface SystemIntegrationsConfig {
       supabase: { projectUrl: string; anonKey: string; bucketName: string };
       awsS3: { region: string; accessKeyId: string; secretAccessKey: string; bucketName: string };
       googleGcs?: { bucketName: string; clientEmail: string; privateKey: string };
+      neonS3?: { endpoint: string; accessKey: string; secretKey: string; bucketName: string };
       minio?: { endpoint: string; accessKey: string; secretKey: string; bucketName: string };
       bunnyCdn?: { storageZoneName: string; accessKey: string; pullZoneUrl: string };
     };
@@ -442,6 +443,7 @@ export interface ProjectMasterDataConfig {
   govtEmail: string;
   supportEmail: string;
   officialEmail?: string;
+  legalEmail?: string;
   grievanceOfficerName: string;
   grievanceOfficerEmail: string;
   websiteUrl: string;
@@ -467,6 +469,11 @@ export interface ProjectMasterDataConfig {
     googleBusinessUrl: string;
     twitterUrl: string;
     linkedinUrl: string;
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    twitter?: string;
+    linkedin?: string;
   };
 
   smtp: {
@@ -513,6 +520,8 @@ export interface ProjectMasterDataConfig {
     invoicePrefix: string;
     panNumber: string;
     hsnSacCode: string;
+    gstin?: string;
+    defaultGstRate?: number;
   };
 
   promotersAndCapital?: {
@@ -1048,10 +1057,10 @@ export function mergeSystemIntegrationsWithDefaults(
       ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway,
       ...(remote.gateway || {}),
       routing: {
-        farmerPlanGateway: remote.gateway?.routing?.farmerPlanGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing.farmerPlanGateway,
-        advisorBookingGateway: remote.gateway?.routing?.advisorBookingGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing.advisorBookingGateway,
-        gardenStoreGateway: remote.gateway?.routing?.gardenStoreGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing.gardenStoreGateway,
-        ecommerceStoreGateway: remote.gateway?.routing?.ecommerceStoreGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing.ecommerceStoreGateway,
+        farmerPlanGateway: remote.gateway?.routing?.farmerPlanGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing!.farmerPlanGateway,
+        advisorBookingGateway: remote.gateway?.routing?.advisorBookingGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing!.advisorBookingGateway,
+        gardenStoreGateway: remote.gateway?.routing?.gardenStoreGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing!.gardenStoreGateway,
+        ecommerceStoreGateway: remote.gateway?.routing?.ecommerceStoreGateway ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.routing!.ecommerceStoreGateway,
       },
       moduleRules: {
         ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.gateway.moduleRules,

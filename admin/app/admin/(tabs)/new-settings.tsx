@@ -335,7 +335,7 @@ export default function NewSettingsScreen() {
                     </Text>
                   </View>
                   <View style={styles.verifiedTag}>
-                    <Ionicons name="checkmark-seal" size={12} color="#10b981" />
+                    <Ionicons name="checkmark-circle" size={12} color="#10b981" />
                     <Text style={styles.verifiedTagText}>Govt. Regd</Text>
                   </View>
                 </View>

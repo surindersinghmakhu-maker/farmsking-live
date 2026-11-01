@@ -140,8 +140,7 @@ export default function Root({ children }: PropsWithChildren) {
                     "@type": "Answer",
                     "text": "The Statutory Registered Office is located at VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India. The Corporate Headquarters and Operational Office is located at Makhu, Ferozepur, Punjab - 142044, India."
                   }
-                }
-              ],
+                },
                 {
                   "@type": "Question",
                   "name": "What are the future launch and expansion plans for FarmsKing?",

@@ -203,13 +203,13 @@ export default function PublicHeader({
                 pointerEvents="none"
               >
                 <LinearGradient
-                  colors={currentNavTab.glow}
+                  colors={currentNavTab.glow as [string, string, ...string[]]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   style={StyleSheet.absoluteFill}
                 />
                 <LinearGradient
-                  colors={currentNavTab.laser}
+                  colors={currentNavTab.laser as [string, string, ...string[]]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.desktopLaserBar}

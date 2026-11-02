@@ -55,7 +55,7 @@ const getCleanMobile = (mobile?: string | null) => {
 export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { user, updateUser, refreshUser, linkGoogle, unlinkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
+  const { user, logout, updateUser, refreshUser, linkGoogle, unlinkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
   const updateAddress = useUpdateMyAddress();
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
@@ -1162,6 +1162,54 @@ export default function ProfileScreen() {
             </View>
             <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
               <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
+            </View>
+          </TouchableOpacity>
+        
+          {/* 🚪 Account Sign Out / Logout Card */}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: '#fef2f2',
+              borderRadius: RADIUS.lg,
+              borderWidth: 1.5,
+              borderColor: '#fecaca',
+              padding: 12,
+              marginTop: 12,
+              marginBottom: 24,
+              width: '100%',
+              maxWidth: 460,
+            }}
+            onPress={() => {
+              tap();
+              if (Platform.OS === 'web') {
+                const confirmed = window.confirm('Are you sure you want to log out of FarmsKing Admin?');
+                if (confirmed) {
+                  logout();
+                }
+              } else {
+                Alert.alert(
+                  'Log Out',
+                  'Are you sure you want to log out of FarmsKing Admin?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+                  ]
+                );
+              }
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="log-out" size={20} color="#dc2626" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#991b1b' }}>🚪 Sign Out of Account</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#b91c1c' }}>End your current admin session safely</Text>
+            </View>
+            <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Logout</Text>
             </View>
           </TouchableOpacity>
         </ScrollView>

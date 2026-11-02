@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
@@ -9,6 +9,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useAuth } from '@/src/store/auth-context';
 import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
 
 interface RoleHeaderProps {
@@ -60,6 +61,25 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const { colors, themeMode, setThemeMode } = useExecutiveTheme();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to log out of FarmsKing Admin?');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out of FarmsKing Admin?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+        ]
+      );
+    }
+  };
   const isLight = themeMode === 'LIGHT';
   const isDarkTheme = themeMode === 'DARK';
   const router = useRouter();
@@ -275,6 +295,60 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
+  adminHeaderActionsBlock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 'auto',
+  },
+  adminQuickBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  adminQuickBtnLight: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd',
+  },
+  adminQuickBtnDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+  },
+  adminQuickBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+  },
+  adminLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  adminLogoutBtnLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  adminLogoutBtnDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  adminLogoutBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#ef4444',
+  },
   pillarsMenuTrigger: {
     flexDirection: 'row',
     alignItems: 'center',

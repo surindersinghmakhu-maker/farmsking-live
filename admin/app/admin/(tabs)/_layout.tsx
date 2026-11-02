@@ -1,6 +1,6 @@
 import { Tabs, useRouter, usePathname, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView, Animated, Pressable } from 'react-native';
+import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView, Animated, Pressable, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -222,7 +222,25 @@ export default function TabLayout() {
 
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to log out of FarmsKing Admin?');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out of FarmsKing Admin?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+        ]
+      );
+    }
+  };
   const { colors, themeMode, setThemeMode } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.OPERATOR;
   const visible = new Set(config ? config.tabs : ['index', 'admin_more']);
@@ -438,7 +456,7 @@ export default function TabLayout() {
             </TouchableOpacity>
 
             {/* Center: Domain Pillar Selector Button (Global on mobile for admins) */}
-            {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
+            {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'OPERATOR' || role === 'TECHNICAL_TRAINER' || role === 'MARKET_MANAGER') && (
               <TouchableOpacity
                 style={[
                   mobileStyles.pillarSelectorPill,
@@ -529,6 +547,21 @@ export default function TabLayout() {
                 />
               </TouchableOpacity>
             </View>
+
+            {/* 🚪 Mobile Header Quick Logout Button */}
+            <TouchableOpacity
+              style={[
+                mobileStyles.actionBtn,
+                isLight && { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
+                isDarkTheme && { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)' },
+              ]}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Sign out of Admin session"
+            >
+              <Ionicons name="log-out-outline" size={15} color="#ef4444" />
+            </TouchableOpacity>
           </View>
         )}
 
@@ -609,7 +642,8 @@ export default function TabLayout() {
 
               <View style={{ flex: 1 }} />
 
-              {/* 🎨 Global Theme Switcher Pill (Visible on Desktop Header) */}
+              <View style={desktopStyles.topHeaderRightGroup}>
+                {/* 🎨 Global Theme Switcher Pill (Visible on Desktop Header) */}
               {isDesktop && (
                 <View
                   style={[
@@ -665,6 +699,47 @@ export default function TabLayout() {
                   </TouchableOpacity>
                 </View>
               )}
+            
+                {/* 👤 Admin Profile Quick Link (Desktop) */}
+                {isDesktop && (
+                  <TouchableOpacity
+                    style={[
+                      desktopStyles.topProfileBtn,
+                      isLight && desktopStyles.topProfileBtnLight,
+                      isDarkTheme && desktopStyles.topProfileBtnDark,
+                    ]}
+                    onPress={() => router.push('/profile')}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Admin Profile Settings"
+                  >
+                    <View style={[desktopStyles.topProfileAvatar, isLight && { backgroundColor: '#e0f2fe' }]}>
+                      <Ionicons name="person" size={12} color={isLight ? '#0284c7' : '#38bdf8'} />
+                    </View>
+                    <Text style={[desktopStyles.topProfileName, isLight && { color: '#0f172a' }]} numberOfLines={1}>
+                      {user?.name || (role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* 🚪 Top Bar Logout Button (Desktop) */}
+                {isDesktop && (
+                  <TouchableOpacity
+                    style={[
+                      desktopStyles.topLogoutBtn,
+                      isLight && desktopStyles.topLogoutBtnLight,
+                      isDarkTheme && desktopStyles.topLogoutBtnDark,
+                    ]}
+                    onPress={handleLogout}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Log out of FarmsKing Admin"
+                  >
+                    <Ionicons name="log-out-outline" size={14} color="#ef4444" />
+                    <Text style={[desktopStyles.topLogoutBtnText, isLight && { color: '#dc2626' }]}>
+                      Logout
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -1066,6 +1141,68 @@ const desktopStyles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.semiBold,
     color: '#94a3b8',
+  },
+  topHeaderRightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  topProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  topProfileBtnLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: 'rgba(22, 163, 74, 0.2)',
+  },
+  topProfileBtnDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  topProfileAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topProfileName: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+    maxWidth: 110,
+  },
+  topLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 18,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  topLogoutBtnLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  topLogoutBtnDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  topLogoutBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ef4444',
   },
 
   sidebar: {

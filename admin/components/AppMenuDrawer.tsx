@@ -10,6 +10,7 @@ import {
   Pressable,
   Animated,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -33,7 +34,25 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
 }) => {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to log out of FarmsKing Admin?');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out of FarmsKing Admin?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+        ]
+      );
+    }
+  };
   const { role } = useRole();
   const { themeMode, setThemeMode, isLight, isDarkTheme } = useExecutiveTheme();
 
@@ -414,6 +433,65 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
               </TouchableOpacity>
             </View>
 
+            {/* 🚪 User Profile & Session Logout */}
+            <View
+              style={[
+                styles.userSessionCard,
+                isLight && styles.userSessionCardLight,
+                isDarkTheme && styles.userSessionCardDark,
+              ]}
+            >
+              <View style={styles.userSessionInfo}>
+                <View
+                  style={[
+                    styles.userSessionAvatar,
+                    isLight && { backgroundColor: 'rgba(22, 163, 74, 0.12)' },
+                    isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.15)' },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.userSessionAvatarText,
+                      isLight && { color: '#16a34a' },
+                      isDarkTheme && { color: '#38bdf8' },
+                    ]}
+                  >
+                    {(user?.name || user?.mobile || 'Admin').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.userSessionMeta}>
+                  <Text style={[styles.userSessionName, isLight && { color: '#0f172a' }]} numberOfLines={1}>
+                    {user?.name || 'Administrator'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.userSessionRole,
+                      isLight && { color: '#16a34a' },
+                      isDarkTheme && { color: '#38bdf8' },
+                    ]}
+                  >
+                    {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : '🛡️ Admin'}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.drawerLogoutBtn,
+                  isLight && styles.drawerLogoutBtnLight,
+                  isDarkTheme && styles.drawerLogoutBtnDark,
+                ]}
+                onPress={() => {
+                  onClose();
+                  handleLogout();
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="log-out-outline" size={15} color="#ef4444" />
+                <Text style={styles.drawerLogoutBtnText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Quick Dismiss Link */}
             <TouchableOpacity
               style={styles.closeBottomBtn}
@@ -716,6 +794,85 @@ const styles = StyleSheet.create({
   closeBottomBtn: {
     alignItems: 'center',
     paddingVertical: 2,
+  },
+  userSessionCard: {
+    marginTop: 8,
+    marginBottom: 6,
+    padding: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+    gap: 8,
+  },
+  userSessionCardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  userSessionCardDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderColor: 'rgba(56, 189, 248, 0.18)',
+  },
+  userSessionInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  userSessionAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userSessionAvatarText: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  userSessionMeta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  userSessionName: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  userSessionRole: {
+    fontSize: 9.5,
+    fontFamily: FONT.semiBold,
+    color: '#00ff87',
+  },
+  drawerLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  drawerLogoutBtnLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  drawerLogoutBtnDark: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  drawerLogoutBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#ef4444',
   },
   closeBottomText: {
     fontSize: 10,

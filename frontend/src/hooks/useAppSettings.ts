@@ -10,7 +10,7 @@ export function updateWebFavicon(url?: string | null) {
     if (rawUrl.includes('localhost:3000') || rawUrl.includes('192.168.1.79') || rawUrl.includes('/uploads/')) {
       rawUrl = '/favicon.png';
     }
-    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=3`;
+    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=4`;
     const resolvedUrl = versionedPng.startsWith('http') || versionedPng.startsWith('blob:') || versionedPng.startsWith('data:')
       ? versionedPng
       : `${window.location.origin}${versionedPng.startsWith('/') ? '' : '/'}${versionedPng}`;

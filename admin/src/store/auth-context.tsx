@@ -227,7 +227,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         disconnectChatSocket();
         queryClient.clear();
-        router.replace('/');
+        try {
+          router.replace('/(auth)/login' as any);
+        } catch {
+          router.replace('/');
+        }
       },
       updateUser: async (patch) => {
         if (!userRef.current) return;

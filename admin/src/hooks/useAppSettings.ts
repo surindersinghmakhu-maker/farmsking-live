@@ -5,10 +5,14 @@ import * as api from '../api/appSettings.api';
 export function updateWebFavicon(url?: string | null) {
   if (typeof document === 'undefined') return;
   try {
-    const rawUrl = url || '/favicon.png';
-    const resolvedUrl = rawUrl.startsWith('http') || rawUrl.startsWith('blob:') || rawUrl.startsWith('data:')
-      ? rawUrl
-      : `${window.location.origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+    let rawUrl = url || '/favicon.png';
+    if (rawUrl.includes('localhost:3000') || rawUrl.includes('192.168.1.79') || rawUrl.includes('/uploads/')) {
+      rawUrl = '/favicon.png';
+    }
+    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=4`;
+    const resolvedUrl = versionedPng.startsWith('http') || versionedPng.startsWith('blob:') || versionedPng.startsWith('data:')
+      ? versionedPng
+      : `${window.location.origin}${versionedPng.startsWith('/') ? '' : '/'}${versionedPng}`;
 
     const pngUrl = resolvedUrl.endsWith('.ico') ? resolvedUrl.replace('.ico', '.png') : resolvedUrl;
 

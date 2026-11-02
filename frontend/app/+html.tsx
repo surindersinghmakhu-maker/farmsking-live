@@ -274,12 +274,13 @@ export default function Root({ children }: PropsWithChildren) {
 
 
         {/* App Favicon & Official FarmsKing Logo Icons - High-DPI Sharpness */}
-        <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=4" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=4" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=4" />
-        <link rel="shortcut icon" href="/favicon.png?v=4" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=4" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png?v=4" />
+        <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=5" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=5" />
+        <link rel="shortcut icon" href="/favicon.ico?v=5" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=5" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=5" />
 
         {/* 🌟 100% Reliable Production Web Fonts & Vector Icons CDN Fallbacks */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -560,6 +560,70 @@ TRANSLATIONS.HI = TRANSLATIONS.EN;
 // Sourced from @/constants/liveFarmerFeed (240+ diverse Indian cultivators & 16 active seasonal crops)
 
 
+// ─── Super Premium Interactive AI Crop Doctor Demo Data ───────────────────
+const AI_DEMO_DATA = {
+  wheat: {
+    crop: 'Wheat (Triticum aestivum)',
+    shortName: 'Wheat',
+    icon: '🌾',
+    disease: 'Yellow Rust (Puccinia striiformis)',
+    confidence: '99.2%',
+    severity: 'Stage 2 • Foliar Pustules Detected',
+    remedy: 'Bio-Fungicide (Trichoderma viride 2.5g/L) + Cold-Pressed Neem Oil 1500 PPM',
+    yieldImpact: '+18–22% Estimated Yield Recovery',
+    mandiPrice: '₹2,425 / Qtl',
+    status: 'High Recovery Likelihood',
+    statusColor: '#10b981',
+    leafBg: '#064e3b',
+    accentColor: '#f59e0b',
+  },
+  paddy: {
+    crop: 'Paddy / Rice (Oryza sativa)',
+    shortName: 'Paddy',
+    icon: '🌱',
+    disease: 'Bacterial Leaf Blight (Xanthomonas)',
+    confidence: '98.7%',
+    severity: 'Stage 1 • Early Leaf Streaks',
+    remedy: 'Copper Oxychloride 50% WP (2.5g/L) + Streptocycline (6g / 120L Water)',
+    yieldImpact: '+20–25% Estimated Yield Protection',
+    mandiPrice: '₹3,150 / Qtl',
+    status: 'Early Detection • 100% Curable',
+    statusColor: '#10b981',
+    leafBg: '#0f766e',
+    accentColor: '#38bdf8',
+  },
+  cotton: {
+    crop: 'Cotton (Gossypium)',
+    shortName: 'Cotton',
+    icon: '☁️',
+    disease: 'Pink Bollworm (Pectinophora)',
+    confidence: '99.5%',
+    severity: 'Stage 2 • Early Larval Entry',
+    remedy: 'Pheromone Funnel Traps (5/acre) + Beauveria bassiana 1kg/acre Foliar Spray',
+    yieldImpact: '+30% Boll Retention Rate',
+    mandiPrice: '₹7,450 / Qtl',
+    status: 'Targeted Bio-Control Ready',
+    statusColor: '#10b981',
+    leafBg: '#1e3a8a',
+    accentColor: '#ec4899',
+  },
+  mustard: {
+    crop: 'Mustard / Sarson (Brassica)',
+    shortName: 'Mustard',
+    icon: '🌼',
+    disease: 'White Rust (Albugo candida)',
+    confidence: '98.9%',
+    severity: 'Stage 1 • White Pustules Underleaf',
+    remedy: 'Mancozeb 75% WP @ 2g/L or Micronized Wettable Sulphur (3g/L)',
+    yieldImpact: '+15–18% Oil Content Safeguard',
+    mandiPrice: '₹5,820 / Qtl',
+    status: 'Optimal Spray Window Open',
+    statusColor: '#10b981',
+    leafBg: '#713f12',
+    accentColor: '#eab308',
+  },
+};
+
 export default function PublicLandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
@@ -571,6 +635,7 @@ export default function PublicLandingPage() {
   const isMobile = width <= 768;
 
   // ── Bottom Docked Bar Animated Glider State (Admin Mobile Spring Style) ──
+  const [selectedDemoCrop, setSelectedDemoCrop] = useState<'wheat' | 'paddy' | 'cotton' | 'mustard'>('wheat');
   const [activeBottomTab, setActiveBottomTab] = useState(0);
   const bottomSlideAnim = useRef(new RNAnimated.Value(0)).current;
   const [bottomBarWidth, setBottomBarWidth] = useState(0);
@@ -1095,14 +1160,16 @@ export default function PublicLandingPage() {
             background-color: rgba(255, 255, 255, 0.22) !important;
           }
           .orig-glass-card {
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            background: linear-gradient(180deg, rgba(28, 38, 54, 0.8) 0%, rgba(18, 26, 40, 0.86) 100%) !important;
-            box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            background: linear-gradient(180deg, rgba(28, 38, 54, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%) !important;
+            box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
           }
           .orig-glass-card:hover {
-            border-color: rgba(255, 255, 255, 0.35) !important;
-            box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.85), inset 0 1px 2px rgba(255, 255, 255, 0.35) !important;
+            transform: translateY(-8px) scale(1.015) !important;
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 25px rgba(16, 185, 129, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
           }
           .holo-day-title {
             background: linear-gradient(135deg, #0f172a 0%, #15803d 35%, #0369a1 70%, #0f172a 100%);
@@ -1112,15 +1179,17 @@ export default function PublicLandingPage() {
             animation: holoNightTextFlow 7s ease infinite;
           }
           .orig-glass-card-day {
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(246, 250, 248, 0.9) 100%) !important;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
+            backdrop-filter: blur(24px) !important;
+            -webkit-backdrop-filter: blur(24px) !important;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%) !important;
             box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1) !important;
             border-color: rgba(226, 232, 240, 0.95) !important;
           }
           .orig-glass-card-day:hover {
-            border-color: rgba(16, 185, 129, 0.4) !important;
-            box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.14), inset 0 1px 3px rgba(255, 255, 255, 1) !important;
+            transform: translateY(-8px) scale(1.015) !important;
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            box-shadow: 0 28px 56px -14px rgba(16, 185, 129, 0.22), 0 0 20px rgba(16, 185, 129, 0.15), inset 0 1px 3px rgba(255, 255, 255, 1) !important;
           }
           .orig-pill-btn-day {
             transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -1619,7 +1688,7 @@ export default function PublicLandingPage() {
 
             {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP ══ */}
             {/* ══ SOCIAL PROOF STARS BADGE (4.9/5 RATING) & AUDIO ADVISORY CHIP (SINGLE TIGHT ROW) ══ */}
-            <View style={[S.heroBadgesRow, { gap: 6, marginBottom: isMobile ? 3 : 5, flexWrap: isMobile ? 'nowrap' : 'wrap' }]}>
+            <View style={[S.heroBadgesRow, { gap: 6, marginBottom: isMobile ? 3 : 5, flexWrap: 'wrap' }]}>
               <View
                 style={[
                   S.socialProofBadge,
@@ -1701,8 +1770,8 @@ export default function PublicLandingPage() {
               style={[
                 S.heroMainTitle,
                 isTablet && { fontSize: 22, lineHeight: 28, marginBottom: 3 },
-                isMobile && { fontSize: width < 380 ? 15.5 : 17.5, lineHeight: width < 380 ? 20 : 22, marginBottom: 3 },
-                !isMobile && !isTablet && { fontSize: 26, lineHeight: 32, marginBottom: 3 },
+                isMobile && { fontSize: width < 380 ? 22 : 26, lineHeight: width < 380 ? 28 : 32, marginBottom: 8, letterSpacing: -0.5 },
+                !isMobile && !isTablet && { fontSize: 44, lineHeight: 52, marginBottom: 12, letterSpacing: -1 },
                 isDay && S.heroMainTitleDay,
                 Platform.OS === 'web' ? ({ className: isDay ? 'holo-day-title' : 'holo-night-title' } as any) : {},
               ]}
@@ -1714,8 +1783,8 @@ export default function PublicLandingPage() {
             <Text
               style={[
                 S.heroSubTitle,
-                isMobile && { fontSize: width < 380 ? 10.5 : 11.5, lineHeight: width < 380 ? 14 : 15.5, marginBottom: 6 },
-                !isMobile && { fontSize: 13, lineHeight: 18, marginBottom: 6 },
+                isMobile && { fontSize: width < 380 ? 12.5 : 13.5, lineHeight: width < 380 ? 18 : 20, marginBottom: 12 },
+                !isMobile && { fontSize: 16.5, lineHeight: 26, marginBottom: 18, maxWidth: 640 },
                 isDay && S.heroSubTitleDay,
               ]}
             >
@@ -2798,6 +2867,260 @@ export default function PublicLandingPage() {
           </View>
         </View>
 
+        
+        {/* ══ AI_CROP_DOCTOR_LIVE_DEMO: INTERACTIVE AI PATHOLOGY SCANNER ══ */}
+        <View style={[S.aiDemoSection, isMobile && S.aiDemoSectionMobile]}>
+          <View style={S.sectionHeader}>
+            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
+              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>NEURAL PLANT PATHOLOGY</Text>
+            </View>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay, isMobile && S.sectionHeadlineMobile]}>
+              Experience AI Crop Doctor in Action
+            </Text>
+            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
+              Select any major crop below to preview how FarmsKing instantly scans foliar tissue, identifies pathogens with 98%+ precision, and prescribes bio-certified cures.
+            </Text>
+          </View>
+
+          {/* Interactive Crop Selector Tabs */}
+          <View style={[S.aiDemoTabsRow, isDay && S.aiDemoTabsRowDay, isMobile && S.aiDemoTabsRowMobile]}>
+            {(['wheat', 'paddy', 'cotton', 'mustard'] as const).map((cropKey) => {
+              const active = selectedDemoCrop === cropKey;
+              const data = AI_DEMO_DATA[cropKey];
+              return (
+                <TouchableOpacity
+                  key={cropKey}
+                  style={[
+                    S.aiDemoTabBtn,
+                    isDay && S.aiDemoTabBtnDay,
+                    active && (isDay ? S.aiDemoTabBtnActiveDay : S.aiDemoTabBtnActiveNight),
+                    isMobile && S.aiDemoTabBtnMobile,
+                  ]}
+                  onPress={() => setSelectedDemoCrop(cropKey)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 16 }}>{data.icon}</Text>
+                  <Text
+                    style={[
+                      S.aiDemoTabText,
+                      isDay && S.aiDemoTabTextDay,
+                      active && S.aiDemoTabTextActive,
+                      isMobile && S.aiDemoTabTextMobile,
+                    ]}
+                  >
+                    {data.shortName}
+                  </Text>
+                  {active && <View style={S.aiDemoTabActiveDot} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Interactive 2-Column AI Pathology Showcase Box */}
+          {(() => {
+            const activeData = AI_DEMO_DATA[selectedDemoCrop];
+            return (
+              <View style={[S.aiDemoDisplayCard, isDay && S.aiDemoDisplayCardDay, isMobile && S.aiDemoDisplayCardMobile]}>
+                {/* Left Column: Live AI Viewfinder HUD */}
+                <View style={[S.aiDemoViewfinder, isMobile && S.aiDemoViewfinderMobile]}>
+                  <View style={[S.aiDemoScreenGlow, { backgroundColor: activeData.leafBg }]} />
+                  
+                  {/* Top HUD Telemetry */}
+                  <View style={S.aiDemoHudHeader}>
+                    <View style={S.aiDemoLiveIndicator}>
+                      <View style={S.aiDemoLivePulse} />
+                      <Text style={S.aiDemoHudTitle}>NEURAL SCAN • 0.8s LATENCY</Text>
+                    </View>
+                    <View style={S.aiDemoHudConfidence}>
+                      <Ionicons name="sparkles" size={12} color="#10b981" />
+                      <Text style={S.aiDemoHudConfidenceText}>{activeData.confidence}</Text>
+                    </View>
+                  </View>
+
+                  {/* Leaf Focus Area with Dynamic Laser Sweep & Targets */}
+                  <View style={S.aiDemoLeafContainer}>
+                    <Text style={{ fontSize: 72 }}>{activeData.icon}</Text>
+
+                    {/* Cyber Laser Scanner Sweep */}
+                    {Platform.OS === 'web' && (
+                      <div
+                        className="cyber-laser-beam"
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          height: '2px',
+                          background: 'linear-gradient(90deg, transparent, #10b981, #38bdf8, transparent)',
+                          boxShadow: '0 0 14px #10b981',
+                        }}
+                      />
+                    )}
+
+                    {/* Reticle Target 1 */}
+                    <View style={[S.aiDemoTargetPin, { top: '25%', left: '20%' }]}>
+                      <View style={S.aiDemoTargetBox} />
+                      <Text style={S.aiDemoTargetLabel}>Foliar Stress Zone</Text>
+                    </View>
+
+                    {/* Reticle Target 2 */}
+                    <View style={[S.aiDemoTargetPin, { bottom: '28%', right: '18%' }]}>
+                      <View style={[S.aiDemoTargetBox, { borderColor: '#f59e0b' }]} />
+                      <Text style={[S.aiDemoTargetLabel, { color: '#f59e0b' }]}>Pathogen Match</Text>
+                    </View>
+                  </View>
+
+                  {/* Bottom Viewfinder Telemetry Strip */}
+                  <View style={S.aiDemoHudFooter}>
+                    <Text style={S.aiDemoHudFooterText}>Sensor: Optical + Multispectral</Text>
+                    <Text style={[S.aiDemoHudFooterText, { color: '#10b981' }]}>Status: Analyzed</Text>
+                  </View>
+                </View>
+
+                {/* Right Column: Instant Diagnostic Clinical Report */}
+                <View style={[S.aiDemoReport, isMobile && S.aiDemoReportMobile]}>
+                  <View style={[S.aiDemoReportHeader, isMobile && S.aiDemoReportHeaderMobile]}>
+                    <View style={S.aiDemoCropMeta}>
+                      <Text style={[S.aiDemoCropTitle, isDay && S.aiDemoCropTitleDay, isMobile && S.aiDemoCropTitleMobile]}>{activeData.crop}</Text>
+                      <View style={S.aiDemoSeverityBadge}>
+                        <View style={[S.aiDemoSeverityDot, { backgroundColor: activeData.statusColor }]} />
+                        <Text style={S.aiDemoSeverityText}>{activeData.severity}</Text>
+                      </View>
+                    </View>
+                    <View style={S.aiDemoAccuracyPill}>
+                      <Text style={S.aiDemoAccuracyText}>{activeData.confidence} Precision</Text>
+                    </View>
+                  </View>
+
+                  {/* Disease Diagnostic */}
+                  <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
+                    <Text style={S.aiDemoFieldLabel}>DIAGNOSED PATHOLOGY</Text>
+                    <Text style={[S.aiDemoFieldValue, { color: isDay ? '#b91c1c' : '#f87171' }]}>
+                      {activeData.disease}
+                    </Text>
+                  </View>
+
+                  {/* Certified Treatment Protocol */}
+                  <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
+                    <Text style={S.aiDemoFieldLabel}>CERTIFIED BIO-ORGANIC PRESCRIPTION</Text>
+                    <Text style={[S.aiDemoFieldValue, isDay && { color: '#0f172a' }]}>
+                      {activeData.remedy}
+                    </Text>
+                  </View>
+
+                  {/* Economic Yield & Mandi Benchmark */}
+                  <View style={[S.aiDemoStatsGrid, isMobile && S.aiDemoStatsGridMobile]}>
+                    <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
+                      <Text style={S.aiDemoMiniStatLabel}>Estimated Recovery</Text>
+                      <Text style={[S.aiDemoMiniStatVal, { color: '#10b981' }]}>{activeData.yieldImpact}</Text>
+                    </View>
+                    <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
+                      <Text style={S.aiDemoMiniStatLabel}>APMC Market Benchmark</Text>
+                      <Text style={[S.aiDemoMiniStatVal, { color: isDay ? '#0369a1' : '#38bdf8' }]}>{activeData.mandiPrice}</Text>
+                    </View>
+                  </View>
+
+                  {/* Action Button: Launch AI Doctor */}
+                  <TouchableOpacity
+                    style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
+                    onPress={() => router.push('/crop-intelligence')}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="camera-outline" size={17} color="#ffffff" />
+                    <Text style={S.aiDemoActionBtnText}>Launch Free Live AI Crop Doctor</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })()}
+        </View>
+
+        {/* ══ SMART_FARM_APP_SHOWCASE: MOBILE LUXURY ECOSYSTEM ══ */}
+        <View style={[S.appShowcaseSection, isMobile && S.appShowcaseSectionMobile]}>
+          <View style={[S.appShowcaseCard, isDay && S.appShowcaseCardDay, isMobile && S.appShowcaseCardMobile]}>
+            <View style={S.appShowcaseLeftCol}>
+              <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+                <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
+                <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>PORTABLE AGRONOMY</Text>
+              </View>
+              <Text style={[S.appShowcaseTitle, isDay && S.appShowcaseTitleDay, isMobile && S.appShowcaseTitleMobile]}>
+                Smart Farming in Your Pocket
+              </Text>
+              <Text style={[S.appShowcaseSubtitle, isDay && S.appShowcaseSubtitleDay, isMobile && S.appShowcaseSubtitleMobile]}>
+                Engineered specifically for Indian cultivators. Operates with zero lag, instant pathology diagnosis, and live mandi price alerts even in low-bandwidth rural fields.
+              </Text>
+
+              {/* 4 App Highlights */}
+              <View style={[S.appPerksGrid, isMobile && S.appPerksGridMobile]}>
+                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
+                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#ecfdf5' }]}>
+                    <Ionicons name="flash-outline" size={16} color="#10b981" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Offline Diagnostic Engine</Text>
+                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>Diagnose crops and view advisory with no internet.</Text>
+                  </View>
+                </View>
+
+                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
+                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#f0f9ff' }]}>
+                    <Ionicons name="planet-outline" size={16} color="#0284c7" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Satellite Canopy Moisture</Text>
+                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>NDVI crop vegetation and moisture tracking.</Text>
+                  </View>
+                </View>
+
+                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
+                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#fefce8' }]}>
+                    <Ionicons name="trending-up" size={16} color="#d97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>50+ Live APMC Mandis</Text>
+                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>Real-time auction rates across wheat, cotton and paddy.</Text>
+                  </View>
+                </View>
+
+                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
+                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#fdf2f8' }]}>
+                    <Ionicons name="shield-checkmark-outline" size={16} color="#db2777" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Zero-Fake Guarantee</Text>
+                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>100% verified bio-fertilizers and organic seeds.</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Download Buttons */}
+              <View style={[S.appDownloadBtnRow, isMobile && S.appDownloadBtnRowMobile]}>
+                <TouchableOpacity
+                  style={[S.appDownloadPrimaryBtn, isDay && S.appDownloadPrimaryBtnDay, isMobile && S.appDownloadPrimaryBtnMobile]}
+                  onPress={() => {
+                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                      window.open('https://farmsking.in/download/farmsking.apk', '_blank');
+                    }
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="logo-android" size={18} color="#ffffff" />
+                  <View>
+                    <Text style={S.appDownloadBtnSub}>DIRECT DOWNLOAD</Text>
+                    <Text style={S.appDownloadBtnTitle}>Get FarmsKing APK (~18.5 MB)</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <View style={[S.appRatingPill, isDay && S.appRatingPillDay, isMobile && S.appRatingPillMobile]}>
+                  <Ionicons name="star" size={14} color="#f59e0b" />
+                  <Text style={[S.appRatingText, isDay && { color: '#0f172a' }]}>4.9/5 Rating • 14,200+ Cultivators</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* ══ VERIFIED CULTIVATOR FIELD SUCCESS STORIES ══ */}
         <View style={S.testimonialsSection}>
           <View style={S.sectionHeader}>
@@ -3639,8 +3962,8 @@ const S = StyleSheet.create({
     paddingBottom: 40,
   },
   scrollContainerMobile: {
-    paddingTop: 104,
-    paddingBottom: 110,
+    paddingTop: 84,
+    paddingBottom: 100,
   },
 
   // Mandi Rate Scrolling Strip (Inside Instant Mandi Directory)
@@ -4141,7 +4464,9 @@ const S = StyleSheet.create({
   heroDesktop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 36,
+    gap: 40,
+    paddingTop: 32,
+    paddingBottom: 44,
   },
   heroMobile: {
     flexDirection: 'column',
@@ -7737,4 +8062,567 @@ const S = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 1,
   },
+
+  // ─── Super Premium Interactive AI Demo & App Showcase Styles ───────────────
+  aiDemoSection: {
+    paddingVertical: 56,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  aiDemoTabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 28,
+    flexWrap: 'wrap',
+  },
+  aiDemoTabsRowDay: {},
+  aiDemoTabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  aiDemoTabBtnDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  aiDemoTabBtnActiveNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderColor: '#10b981',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  aiDemoTabBtnActiveDay: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  aiDemoTabText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  aiDemoTabTextDay: {
+    color: '#64748b',
+  },
+  aiDemoTabTextActive: {
+    color: '#10b981',
+    fontFamily: FONT.extraBold,
+  },
+  aiDemoTabActiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+    marginLeft: 2,
+  },
+  aiDemoDisplayCard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(20, 28, 42, 0.85)',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+    overflow: 'hidden',
+    ...premiumShadow('#000000', 'xl'),
+  },
+  aiDemoDisplayCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: 'rgba(16, 185, 129, 0.12)',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 28,
+    elevation: 6,
+  },
+  aiDemoViewfinder: {
+    flex: 5,
+    backgroundColor: '#05130b',
+    padding: 20,
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 360,
+    justifyContent: 'space-between',
+  },
+  aiDemoScreenGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.22,
+  },
+  aiDemoHudHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+  aiDemoLiveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  aiDemoLivePulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  aiDemoHudTitle: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#a7f3d0',
+    letterSpacing: 0.8,
+  },
+  aiDemoHudConfidence: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+  },
+  aiDemoHudConfidenceText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+  },
+  aiDemoLeafContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 28,
+    position: 'relative',
+    zIndex: 10,
+  },
+  aiDemoTargetPin: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    zIndex: 15,
+  },
+  aiDemoTargetBox: {
+    width: 22,
+    height: 22,
+    borderWidth: 1.5,
+    borderColor: '#10b981',
+    borderStyle: 'dashed',
+    borderRadius: 4,
+  },
+  aiDemoTargetLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 3,
+  },
+  aiDemoHudFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    paddingTop: 10,
+  },
+  aiDemoHudFooterText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  aiDemoReport: {
+    flex: 6,
+    padding: 28,
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  aiDemoReportHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  aiDemoCropMeta: {
+    flex: 1,
+  },
+  aiDemoCropTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  aiDemoCropTitleDay: {
+    color: '#0f172a',
+  },
+  aiDemoSeverityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  aiDemoSeverityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  aiDemoSeverityText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  aiDemoAccuracyPill: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  aiDemoAccuracyText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  aiDemoFieldBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    gap: 4,
+  },
+  aiDemoFieldBoxDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  aiDemoFieldLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    letterSpacing: 0.8,
+  },
+  aiDemoFieldValue: {
+    fontSize: 13.5,
+    fontFamily: FONT.semiBold,
+    color: '#e2e8f0',
+    lineHeight: 19,
+  },
+  aiDemoStatsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  aiDemoMiniStat: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  aiDemoMiniStatDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  aiDemoMiniStatLabel: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  aiDemoMiniStatVal: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    marginTop: 2,
+  },
+  aiDemoActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#059669',
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: RADIUS.pill,
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  aiDemoActionBtnDay: {
+    backgroundColor: '#16a34a',
+  },
+  aiDemoActionBtnText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+
+  // App Showcase Section
+  appShowcaseSection: {
+    paddingVertical: 48,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  appShowcaseCard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    padding: 36,
+    ...premiumShadow('#000000', 'xl'),
+  },
+  appShowcaseCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    shadowColor: 'rgba(0, 0, 0, 0.08)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 5,
+  },
+  appShowcaseLeftCol: {
+    width: '100%',
+    maxWidth: 820,
+  },
+  appShowcaseTitle: {
+    fontSize: 32,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 10,
+    letterSpacing: -0.6,
+  },
+  appShowcaseTitleDay: {
+    color: '#0f172a',
+  },
+  appShowcaseSubtitle: {
+    fontSize: 15,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 23,
+    marginBottom: 24,
+  },
+  appShowcaseSubtitleDay: {
+    color: '#64748b',
+  },
+  appPerksGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginBottom: 28,
+  },
+  appPerkItem: {
+    width: '47%',
+    minWidth: 260,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  appPerkIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  appPerkTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+    marginBottom: 2,
+  },
+  appPerkDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    lineHeight: 15,
+  },
+  appDownloadBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flexWrap: 'wrap',
+  },
+  appDownloadPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#0284c7',
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: RADIUS.pill,
+    shadowColor: '#0284c7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  appDownloadPrimaryBtnDay: {
+    backgroundColor: '#0284c7',
+  },
+  appDownloadBtnSub: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: 'rgba(255, 255, 255, 0.8)',
+    letterSpacing: 0.8,
+  },
+  appDownloadBtnTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  appRatingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  appRatingPillDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  appRatingText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+  },
+  sectionHeadlineMobile: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  sectionSubheadMobile: {
+    fontSize: 12.5,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  aiDemoSectionMobile: {
+    paddingVertical: 28,
+    paddingHorizontal: 12,
+  },
+  aiDemoTabsRowMobile: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  aiDemoTabBtnMobile: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    gap: 5,
+  },
+  aiDemoTabTextMobile: {
+    fontSize: 12,
+  },
+  aiDemoDisplayCardMobile: {
+    flexDirection: 'column',
+    borderRadius: 18,
+  },
+  aiDemoViewfinderMobile: {
+    flex: 0,
+    width: '100%',
+    minHeight: 220,
+    padding: 14,
+  },
+  aiDemoReportMobile: {
+    flex: 0,
+    width: '100%',
+    padding: 16,
+    gap: 12,
+  },
+  aiDemoReportHeaderMobile: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  aiDemoCropTitleMobile: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  aiDemoStatsGridMobile: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  aiDemoActionBtnMobile: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+  },
+  appShowcaseSectionMobile: {
+    paddingVertical: 24,
+    paddingHorizontal: 12,
+  },
+  appShowcaseCardMobile: {
+    padding: 18,
+    borderRadius: 18,
+  },
+  appShowcaseTitleMobile: {
+    fontSize: 22,
+    lineHeight: 28,
+    marginBottom: 8,
+  },
+  appShowcaseSubtitleMobile: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  appPerksGridMobile: {
+    flexDirection: 'column',
+    gap: 10,
+    marginBottom: 18,
+  },
+  appPerkItemMobile: {
+    width: '100%',
+    minWidth: '100%',
+  },
+  appDownloadBtnRowMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 10,
+  },
+  appDownloadPrimaryBtnMobile: {
+    width: '100%',
+    justifyContent: 'center',
+    paddingVertical: 13,
+  },
+  appRatingPillMobile: {
+    alignSelf: 'center',
+  },
+
+
 });

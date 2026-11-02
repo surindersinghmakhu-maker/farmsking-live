@@ -224,11 +224,13 @@ try {
     <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
     <!-- 🌟 Global Official FarmsKing Brand Favicons & Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=5" />
+    <link rel="shortcut icon" href="/favicon.ico?v=5" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=5" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=5" />
 
     <!-- Google & AI Search Engine Structured Data (JSON-LD) -->
     <script type="application/ld+json">

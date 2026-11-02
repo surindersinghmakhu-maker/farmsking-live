@@ -396,7 +396,11 @@ export default function LoginScreen() {
 
             <View style={styles.leftContent}>
               <View style={styles.logoBadgeContainer}>
-                <BrandLogo size={68} useHdQuality />
+                <Image
+                  source={require('@/assets/favicon.png')}
+                  style={styles.faviconBadgeImg}
+                  resizeMode="contain"
+                />
                 <View style={styles.livePulseDot} />
               </View>
               <Text style={styles.leftTitle}>FarmsKing</Text>
@@ -448,7 +452,13 @@ export default function LoginScreen() {
           {/* Logo (mobile only) */}
           {!isDesktop && (
             <View style={styles.mobileBrand}>
-              <BrandLogo size={46} useHdQuality />
+              <View style={styles.mobileFaviconCircle}>
+                <Image
+                  source={require('@/assets/favicon.png')}
+                  style={{ width: 34, height: 34, borderRadius: 17 }}
+                  resizeMode="contain"
+                />
+              </View>
               <View style={{ marginLeft: 12 }}>
                 <Text style={styles.mobileBrandName}>FarmsKing</Text>
                 <Text style={styles.mobileBrandTag}>Smart Farming & Agri Intelligence</Text>
@@ -755,26 +765,32 @@ const styles = StyleSheet.create({
   leftContent: { flex: 1, padding: 44, justifyContent: 'center' },
   logoBadgeContainer: {
     position: 'relative',
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 22,
-    borderWidth: 1.5,
-    borderColor: 'rgba(52, 211, 153, 0.4)',
+    borderWidth: 2.5,
+    borderColor: '#10b981',
+    ...premiumShadow('rgba(0, 0, 0, 0.16)', 'md'),
+  },
+  faviconBadgeImg: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
   },
   livePulseDot: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#34d399',
+    top: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10b981',
     borderWidth: 2,
-    borderColor: '#064e3b',
+    borderColor: '#ffffff',
   },
   leftTitle: { fontSize: 34, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.3 },
   leftSub: { fontSize: 13.5, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.85)', marginTop: 8, marginBottom: 18, lineHeight: 20 },
@@ -834,6 +850,17 @@ const styles = StyleSheet.create({
 
   // Mobile brand
   mobileBrand: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  mobileFaviconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#10b981',
+    ...premiumShadow('rgba(16, 185, 129, 0.15)', 'xs'),
+  },
   mobileBrandName: { fontSize: 21, fontFamily: FONT.extraBold, color: '#0f172a' },
   mobileBrandTag: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
 

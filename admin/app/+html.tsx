@@ -14,12 +14,13 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 
-        {/* App Favicon & Official FarmsKing Logo Icons */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+        {/* App Favicon & Official FarmsKing Logo Icons - High-DPI Sharpness */}
+        <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=3" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=3" />
+        <link rel="shortcut icon" href="/favicon.png?v=3" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png?v=3" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png?v=3" />
 
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />

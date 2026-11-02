@@ -96,6 +96,10 @@ export function BrandLogo({
           height: finalHeight as any, 
           backgroundColor: 'transparent',
           borderRadius: finalBorderRadius,
+          ...(Platform.OS === 'web' ? ({
+            imageRendering: '-webkit-optimize-contrast',
+            WebkitBackfaceVisibility: 'hidden',
+          } as any) : {}),
         }, 
         style as StyleProp<ImageStyle>
       ]}

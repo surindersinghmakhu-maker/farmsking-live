@@ -5,12 +5,17 @@ import * as api from '../api/appSettings.api';
 export function updateWebFavicon(url?: string | null) {
   if (typeof document === 'undefined') return;
   try {
-    const rawUrl = url || '/favicon.png';
-    const resolvedUrl = rawUrl.startsWith('http') || rawUrl.startsWith('blob:') || rawUrl.startsWith('data:')
-      ? rawUrl
-      : `${window.location.origin}${rawUrl.startsWith('/') ? '' : '/'}${rawUrl}`;
+    let rawUrl = url || '/favicon.png';
+    // Guard against heavy 5MB uploads or legacy dev URLs
+    if (rawUrl.includes('localhost:3000') || rawUrl.includes('192.168.1.79') || rawUrl.includes('/uploads/')) {
+      rawUrl = '/favicon.png';
+    }
+    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=3`;
+    const resolvedUrl = versionedPng.startsWith('http') || versionedPng.startsWith('blob:') || versionedPng.startsWith('data:')
+      ? versionedPng
+      : `${window.location.origin}${versionedPng.startsWith('/') ? '' : '/'}${versionedPng}`;
 
-    const pngUrl = resolvedUrl.endsWith('.ico') ? resolvedUrl.replace('.ico', '.png') : resolvedUrl;
+    const pngUrl = resolvedUrl;
 
     // 1. Standard rel="icon" PNG
     let linkPng = document.querySelector("link[rel='icon'][type='image/png']") as HTMLLinkElement | null;
@@ -29,7 +34,7 @@ export function updateWebFavicon(url?: string | null) {
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.href = resolvedUrl;
+    link.href = pngUrl;
 
     // 3. rel="shortcut icon"
     let shortcutLink = document.querySelector("link[rel='shortcut icon']") as HTMLLinkElement | null;
@@ -38,7 +43,7 @@ export function updateWebFavicon(url?: string | null) {
       shortcutLink.rel = 'shortcut icon';
       document.head.appendChild(shortcutLink);
     }
-    shortcutLink.href = resolvedUrl;
+    shortcutLink.href = pngUrl;
 
     // 4. rel="apple-touch-icon"
     let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
@@ -67,6 +72,10 @@ export function useAppSettings() {
   const query = useQuery({
     queryKey: ['app-settings'],
     queryFn: api.getAppSettings,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   useEffect(() => {

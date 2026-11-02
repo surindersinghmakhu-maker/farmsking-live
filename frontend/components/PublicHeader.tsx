@@ -465,8 +465,8 @@ export default function PublicHeader({
             activeOpacity={0.8}
           >
             <BrandLogo
-              height={isMobile ? 32 : 40}
-              width={isMobile ? 104 : 132}
+              height={isMobile ? 34 : 44}
+              width={isMobile ? 116 : 152}
               useHdQuality={true}
               resizeMode="contain"
             />

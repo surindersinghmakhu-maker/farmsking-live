@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 
 export interface ChatMessageDto {
@@ -10,8 +11,16 @@ export interface ChatMessageDto {
 export type AiChatMode = 'agri' | 'garden';
 
 export class AiChatRequestDto {
+  @IsString()
+  @IsNotEmpty()
   message: string;
+
+  @IsOptional()
+  @IsArray()
   history?: ChatMessageDto[];
+
+  @IsOptional()
+  @IsString()
   mode?: AiChatMode;
 }
 

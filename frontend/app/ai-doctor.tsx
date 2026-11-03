@@ -426,7 +426,7 @@ export default function AiDoctorScreen() {
 
   const handlePickFromCamera = async () => {
     if (Platform.OS === 'web') {
-      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+      if (typeof navigator !== 'undefined' && typeof navigator?.mediaDevices?.getUserMedia === 'function') {
         setIsWebcamOpen(true);
         setTimeout(() => {
           startWebcam(webcamFacing);

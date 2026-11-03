@@ -28,6 +28,7 @@ import AdminWebPortalScreen from './admin';
 import { useAuth } from '@/src/store/auth-context';
 import { useCart } from '@/src/store/cart-context';
 import PublicHeader from '@/components/PublicHeader';
+import { MobileHomeView } from '@/components/mobile/MobileHomeView';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import FarmsKingQRCode from '@/components/FarmsKingQRCode';
 import { getSupportContact } from '@/src/api/appSettings.api';
@@ -1656,6 +1657,16 @@ export default function PublicLandingPage() {
     (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'))
   ) {
     return <AdminWebPortalScreen />;
+  }
+
+  if (isMobile) {
+    return (
+      <MobileHomeView
+        themeMode={themeMode}
+        onToggleTheme={() => toggleTheme(themeMode === 'day' ? 'night' : 'day')}
+        cartCount={totalCartCount}
+      />
+    );
   }
 
   return (
@@ -6839,7 +6850,7 @@ const S = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 10,
   },
-  appDownloadPrimaryBtn: {
+  appDownloadHeaderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

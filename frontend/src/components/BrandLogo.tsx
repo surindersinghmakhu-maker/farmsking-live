@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
+import { Image, ImageStyle, Platform, StyleProp, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { resolveMediaUrl } from '@/src/api/client';

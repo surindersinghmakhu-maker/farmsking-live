@@ -1,9 +1,40 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Image, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 
 export function SplashView() {
+  const progressAnim = useRef(new Animated.Value(0.12)).current;
+  const logoScale = useRef(new Animated.Value(0.92)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 90,
+        useNativeDriver: true,
+      }),
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 560,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [logoOpacity, logoScale, progressAnim]);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['12%', '100%'],
+  });
+
   return (
     <LinearGradient
       colors={['#022c22', '#0f172a', '#064e3b']}
@@ -12,7 +43,15 @@ export function SplashView() {
       style={styles.container}
     >
       {/* Brand Logo & Favicon Cluster */}
-      <View style={styles.logoCluster}>
+      <Animated.View
+        style={[
+          styles.logoCluster,
+          {
+            opacity: logoOpacity,
+            transform: [{ scale: logoScale }],
+          },
+        ]}
+      >
         <View style={[styles.logoCard, premiumShadow('#000000', 'lg')]}>
           <Image
             source={require('@/assets/images/farmsking_logo_round_goldring.png')}
@@ -28,7 +67,7 @@ export function SplashView() {
             />
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Brand Title */}
       <View style={styles.titleRow}>
@@ -46,7 +85,7 @@ export function SplashView() {
       {/* Luxury Loading Indicator */}
       <View style={styles.loadingWrap}>
         <View style={styles.loadingTrack}>
-          <View style={styles.loadingFill} />
+          <Animated.View style={[styles.loadingFill, { width: progressWidth }]} />
         </View>
         <Text style={styles.loadingText}>Authenticating Executive Console…</Text>
         <Text style={styles.securitySub}>FarmsKing Technologies Private Limited</Text>
@@ -151,7 +190,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   loadingFill: {
-    width: '70%',
     height: '100%',
     borderRadius: 2,
     backgroundColor: '#facc15',

@@ -11,7 +11,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import 'react-native-reanimated';
 
@@ -168,13 +168,27 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
   useEffect(() => {
-    if (loaded || fontError) {
+    // Calibrated 650ms minimum duration:
+    // Ensures the FarmsKing logo and favicon are clearly visible,
+    // while keeping user wait time to the absolute minimum (~0.65s).
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 650);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const isReady = (loaded || fontError) && minTimeElapsed;
+
+  useEffect(() => {
+    if (isReady) {
       SplashScreen.hideAsync().catch(() => { });
     }
-  }, [loaded, fontError]);
+  }, [isReady]);
 
-  if (!loaded && !fontError) {
+  if (!isReady) {
     return (
       <QueryClientProvider client={queryClient}>
         <SplashView />

@@ -2194,7 +2194,7 @@ export default function PublicLandingPage() {
               <TouchableOpacity
                 accessibilityRole="link"
                 // @ts-ignore
-                href={user ? (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/login'}
+                href={user ? (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/ai-doctor'}
                 onPress={() => {
                   if (user) {
                     if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
@@ -2203,7 +2203,7 @@ export default function PublicLandingPage() {
                       router.push('/(user)/(tabs)' as any);
                     }
                   } else {
-                    router.push('/topic/Crop-Doctors');
+                    router.push('/ai-doctor');
                   }
                 }}
                 activeOpacity={0.88}
@@ -3051,19 +3051,9 @@ export default function PublicLandingPage() {
                   <TouchableOpacity
                     accessibilityRole="link"
                     // @ts-ignore
-                    href="/topic/Crop-Doctors"
+                    href="/ai-doctor"
                     style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
-                    onPress={() => {
-                      if (user) {
-                        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
-                          router.push('/(partner)/(tabs)/crop-disease-scanner' as any);
-                        } else {
-                          router.push('/(user)/(tabs)/crop-disease-scanner' as any);
-                        }
-                      } else {
-                        router.push('/topic/Crop-Doctors');
-                      }
-                    }}
+                    onPress={() => router.push('/ai-doctor')}
                     activeOpacity={0.85}
                   >
                     <Ionicons name="camera-outline" size={17} color="#ffffff" />
@@ -3286,8 +3276,8 @@ export default function PublicLandingPage() {
               </TouchableOpacity>
               <TouchableOpacity
                 accessibilityRole="link"
-                {...(Platform.OS === 'web' ? { href: '/topic/Crop-Doctors' } : {})}
-                onPress={() => router.push('/topic/Crop-Doctors')}
+                {...(Platform.OS === 'web' ? { href: '/ai-doctor' } : {})}
+                onPress={() => router.push('/ai-doctor')}
               >
                 <Text style={[S.footerLink, isDay && S.footerLinkDay]}>AI Crop Doctor Diagnosis</Text>
               </TouchableOpacity>
@@ -3689,7 +3679,7 @@ export default function PublicLandingPage() {
                   // @ts-ignore
                   className="app-module-tile"
                   style={[S.appModuleTile, isDay && S.appModuleTileDay]}
-                  onPress={() => { setMobileMenuOpen(false); router.push('/topic/Crop-Doctors'); }}
+                  onPress={() => { setMobileMenuOpen(false); router.push('/ai-doctor'); }}
                   activeOpacity={0.8}
                 >
                   <View style={[S.appModuleIconBox, { backgroundColor: isDay ? '#d1fae5' : 'rgba(16, 185, 129, 0.18)' }]}>

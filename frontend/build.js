@@ -535,6 +535,8 @@ try {
       'refund-policy',
       'order-tracking',
       'crop-intelligence',
+      'ai-doctor',
+      'crop-disease-scanner',
       'seller-dashboard',
       'seller-payouts',
       'admin-sellers',

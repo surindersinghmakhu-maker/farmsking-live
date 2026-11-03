@@ -3049,8 +3049,21 @@ export default function PublicLandingPage() {
 
                   {/* Action Button: Launch AI Doctor */}
                   <TouchableOpacity
+                    accessibilityRole="link"
+                    // @ts-ignore
+                    href="/topic/Crop-Doctors"
                     style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
-                    onPress={() => router.push('/crop-intelligence')}
+                    onPress={() => {
+                      if (user) {
+                        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                          router.push('/(partner)/(tabs)/crop-disease-scanner' as any);
+                        } else {
+                          router.push('/(user)/(tabs)/crop-disease-scanner' as any);
+                        }
+                      } else {
+                        router.push('/topic/Crop-Doctors');
+                      }
+                    }}
                     activeOpacity={0.85}
                   >
                     <Ionicons name="camera-outline" size={17} color="#ffffff" />

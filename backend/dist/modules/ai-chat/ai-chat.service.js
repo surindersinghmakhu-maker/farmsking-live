@@ -13,10 +13,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiChatService = exports.AiChatRequestDto = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const class_validator_1 = require("class-validator");
 const app_settings_service_1 = require("../app-settings/app-settings.service");
 class AiChatRequestDto {
 }
 exports.AiChatRequestDto = AiChatRequestDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], AiChatRequestDto.prototype, "message", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    __metadata("design:type", Array)
+], AiChatRequestDto.prototype, "history", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AiChatRequestDto.prototype, "mode", void 0);
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY_ITEM_LENGTH = 2000;
 const GARDEN_SYSTEM_PROMPT = `You are "FarmsKing Garden Expert AI" — a premium, highly knowledgeable assistant exclusively for VIP Gardeners on the FarmsKing platform.

@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
@@ -218,12 +219,21 @@ export default function SettingFeaturesSetup() {
           disabled={isSaving}
           activeOpacity={0.8}
         >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Ionicons name="save-outline" size={14} color="#ffffff" />
-          )}
-          <Text style={styles.saveBtnTopText}>{isSaving ? 'Saving...' : 'Save Features'}</Text>
+          <LinearGradient
+            colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.saveBtnTopGradient}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
+            ) : (
+              <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
+            )}
+            <Text style={[styles.saveBtnTopText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+              {isSaving ? 'Saving...' : 'Save Features'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -563,29 +573,6 @@ export default function SettingFeaturesSetup() {
           </View>
         )}
       </View>
-
-      {/* Floating Bottom Bar for Fast Desktop Saving */}
-      <View style={[styles.bottomSaveBar, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.bottomSaveTitle, { color: textColor }]}>Changes ready to save</Text>
-          <Text style={[styles.bottomSaveSub, { color: subTextColor }]}>
-            Saves directly to database AppSettings and SystemIntegrations OTP schema
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && { opacity: 0.7 }]}
-          onPress={handleSaveAll}
-          disabled={isSaving}
-          activeOpacity={0.8}
-        >
-          {isSaving ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Ionicons name="save-outline" size={18} color="#ffffff" />
-          )}
-          <Text style={styles.saveBtnText}>{isSaving ? 'Saving Changes...' : 'Save Features'}</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -647,17 +634,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   saveBtnTop: {
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+  },
+  saveBtnTopGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#16a34a',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: RADIUS.md,
   },
   saveBtnTopText: {
     color: '#ffffff',
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: '700',
     fontFamily: FONT.bold,
   },

@@ -592,14 +592,14 @@ export default function SettingEntitySetup() {
             disabled={updateMutation.isPending}
             activeOpacity={0.8}
           >
-            <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.topSaveGradient}>
+            <LinearGradient colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']} style={styles.topSaveGradient}>
               {updateMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
               ) : (
-                <Ionicons name="checkmark-done" size={15} color="#ffffff" />
+                <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
               )}
-              <Text style={styles.topSaveText}>
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+              <Text style={[styles.topSaveText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                {updateMutation.isPending ? 'Saving...' : 'Save FK Setting'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -1073,52 +1073,7 @@ export default function SettingEntitySetup() {
                       </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 5,
-                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 7,
-                        borderWidth: 1,
-                        borderColor: cardBorder,
-                      }}
-                      onPress={async () => {
-                        setIsSavingLogo(true);
-                        try {
-                          await updateMutation.mutateAsync({
-                            projectMasterData: {
-                              ...(localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA),
-                              logoUrl: masterData.logoUrl,
-                            },
-                            about: {
-                              ...(localConfig.about || {}),
-                              logoUrl: masterData.logoUrl,
-                            },
-                          });
-                          await updateAppSettings({ logoUrl: masterData.logoUrl || '' });
-                          showToast('✅ Brand Logo saved globally!');
-                        } catch (err: any) {
-                          Alert.alert('Save Failed', err?.message || 'Could not save logo');
-                        } finally {
-                          setIsSavingLogo(false);
-                        }
-                      }}
-                      disabled={isSavingLogo}
-                      activeOpacity={0.8}
-                    >
-                      {isSavingLogo ? (
-                        <ActivityIndicator size="small" color="#10b981" />
-                      ) : (
-                        <Ionicons name="checkmark-done" size={15} color="#10b981" />
-                      )}
-                      <Text style={{ color: textColor, fontSize: 12, fontWeight: '700' }}>
-                        {isSavingLogo ? 'Saving...' : 'Save Logo'}
-                      </Text>
-                    </TouchableOpacity>
+                    {/* Upload and Reset buttons */}
                   </View>
 
                   <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, height: 34 }]}>
@@ -1211,32 +1166,7 @@ export default function SettingEntitySetup() {
                       </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 5,
-                        backgroundColor: isLight ? '#f1f5f9' : '#1e293b',
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 7,
-                        borderWidth: 1,
-                        borderColor: cardBorder,
-                      }}
-                      onPress={handleSaveFaviconOnly}
-                      disabled={isSavingFavicon}
-                      activeOpacity={0.8}
-                    >
-                      {isSavingFavicon ? (
-                        <ActivityIndicator size="small" color="#10b981" />
-                      ) : (
-                        <Ionicons name="checkmark-done" size={15} color="#10b981" />
-                      )}
-                      <Text style={{ color: textColor, fontSize: 12, fontWeight: '700' }}>
-                        {isSavingFavicon ? 'Saving...' : 'Save Favicon'}
-                      </Text>
-                    </TouchableOpacity>
+                    {/* Upload and Reset buttons */}
                   </View>
 
                   {/* Direct URL Input - matches Brand Logo Card */}
@@ -1256,26 +1186,6 @@ export default function SettingEntitySetup() {
                   </View>
                 </View>
               </View>
-            </View>
-
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Profile'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -1477,26 +1387,6 @@ export default function SettingEntitySetup() {
                 </View>
               </View>
             </View>
-
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Social & App'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
 
@@ -1636,26 +1526,6 @@ export default function SettingEntitySetup() {
                 </View>
               </View>
             )}
-
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Templates'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
 
@@ -1780,26 +1650,6 @@ export default function SettingEntitySetup() {
                   Wholesale agricultural produce transacted through APMC Mandis is exempt from GST. Software platforms and value-added agri services are billed at the configured rate above.
                 </Text>
               </View>
-            </View>
-
-            <View style={styles.paneFooterRight}>
-              <TouchableOpacity
-                style={[styles.saveActionBtn, updateMutation.isPending && { opacity: 0.7 }]}
-                onPress={handleSaveMasterData}
-                disabled={updateMutation.isPending}
-                activeOpacity={0.8}
-              >
-                <LinearGradient colors={['#6366f1', '#4f46e5']} style={styles.saveActionGradient}>
-                  {updateMutation.isPending ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : (
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                  )}
-                  <Text style={styles.saveActionText}>
-                    {updateMutation.isPending ? 'Saving...' : 'Save Tax Rules'}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
             </View>
           </View>
         )}

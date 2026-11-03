@@ -418,7 +418,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '+24% Yield Gain',
     metricColor: '#10b981',
     quote: 'The satellite moisture maps helped us calibrate canal water cycles with precision. Our Basmati 1121 yield crossed 24 quintals per acre with zero lodging.',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'GS',
     stars: 5,
   },
@@ -430,7 +430,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: 'Zero Disease Spread',
     metricColor: '#0284c7',
     quote: 'We detected Yellow Rust at the earliest pinhead stage using the Crop Doctor scanner. The exact spray dosage saved our 14-acre wheat crop from devastation.',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'HD',
     stars: 5,
   },
@@ -442,7 +442,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '+₹140/q Higher Price',
     metricColor: '#d97706',
     quote: 'Instant mandi pricing allowed us to route our paddy directly to Khanna instead of local village arhtiyas, securing ₹140 more per quintal transparently.',
-    avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'BB',
     stars: 5,
   },
@@ -454,7 +454,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '+₹2.85 Lakh Net Profit',
     metricColor: '#10b981',
     quote: 'Satellite NDVI canopy scans identified micro-nutrient zinc deficiency across our cotton blocks 18 days before visual yellowing, saving our bumper yield.',
-    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'AS',
     stars: 5,
   },
@@ -466,7 +466,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '3.4x Revenue Growth',
     metricColor: '#f59e0b',
     quote: 'Transitioning acreage to high-value crops with FarmsKing guidance and direct buyer linkages tripled our monthly cash flow compared to conventional farming.',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'MV',
     stars: 5,
   },
@@ -478,7 +478,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '28% Water Saved',
     metricColor: '#06b6d4',
     quote: 'Precision weather alerts and laser moisture telemetry eliminated 3 redundant tubewell irrigation cycles, cutting electricity and diesel costs substantially.',
-    avatarUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'CM',
     stars: 5,
   },
@@ -490,7 +490,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: 'Zero Middleman Fee',
     metricColor: '#059669',
     quote: 'Sold 480 quintals through FarmsKing Live Mandi verified buyer network. Transparent weighment settlement arrived straight in our bank account within 24 hours.',
-    avatarUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'KC',
     stars: 5,
   },
@@ -502,7 +502,7 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
     metric: '+19% Crop Recovery',
     metricColor: '#16a34a',
     quote: 'Certified bio-organic inputs and calibrated nutrition schedules from FarmsKing Agri Store revived our soil biology and lifted crop productivity significantly.',
-    avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=240&auto=format&fit=crop&q=80',
+    avatarUrl: '',
     initials: 'RY',
     stars: 5,
   },
@@ -816,7 +816,7 @@ export default function PublicLandingPage() {
     if (user && user.name && user.name.trim()) {
       const photo = user.photoUrl
         ? (user.photoUrl.startsWith('http') ? user.photoUrl : `/uploads/${user.photoUrl.replace(/^\/uploads\//, '')}`)
-        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&auto=format&fit=crop&q=80';
+        : '';
       const loc = [user.village, user.district, user.state || 'Punjab'].filter(Boolean).join(', ');
       const kingTag = (user as any).kingId ? `King ID: ${(user as any).kingId} • ` : '';
       list.unshift({
@@ -3190,11 +3190,17 @@ export default function PublicLandingPage() {
                 </Text>
                 <View style={S.testiAuthorRow}>
                   <View style={S.testiAvatarWrapper}>
-                    <Image
-                      source={{ uri: story.avatarUrl }}
-                      style={S.testiAvatarImg}
-                      resizeMode="cover"
-                    />
+                    {story.avatarUrl && story.avatarUrl.trim().length > 0 ? (
+                      <Image
+                        source={{ uri: story.avatarUrl }}
+                        style={S.testiAvatarImg}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[S.testiAvatarBlank, isDay && S.testiAvatarBlankDay]}>
+                        <Ionicons name="person" size={20} color={isDay ? '#94a3b8' : '#64748b'} />
+                      </View>
+                    )}
                     <View style={S.testiVerifiedBadge}>
                       <Ionicons name="checkmark-circle" size={13} color="#10b981" />
                     </View>
@@ -6608,6 +6614,20 @@ const S = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#10b981',
     backgroundColor: '#0f172a',
+  },
+  testiAvatarBlank: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testiAvatarBlankDay: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
   },
   testiVerifiedBadge: {
     position: 'absolute',

@@ -530,10 +530,10 @@ function AboutSettingsSection({
           </View>
           <View style={styles.colHalf}>
             <InputField
-              label="Favicon / Icon URL"
+              label="Website Favicon URL"
               value={data.faviconUrl}
               onChangeText={(val) => onChange({ ...data, faviconUrl: val })}
-              placeholder="https://farmsking.in/favicon.ico"
+              placeholder="https://farmsking.in/favicon.png"
             />
           </View>
         </View>

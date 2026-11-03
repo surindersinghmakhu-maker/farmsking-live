@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -257,7 +258,11 @@ export default function SeoManagementScreen() {
           <View style={styles.googleSnippetBox}>
             <View style={styles.googleUrlRow}>
               <View style={styles.googleFaviconCircle}>
-                <Ionicons name="leaf" size={12} color="#166534" />
+                <Image
+                  source={require('../assets/images/favicon.png')}
+                  style={{ width: 16, height: 16, borderRadius: 8 }}
+                  resizeMode="contain"
+                />
               </View>
               <View>
                 <Text style={styles.googleBrandText}>FarmsKing Technologies</Text>

@@ -10,6 +10,7 @@ import {
   Alert,
   SafeAreaView,
   Linking,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -255,7 +256,34 @@ export default function CropDiseaseScannerScreen() {
     }
   };
 
+  const triggerWebInput = (isCamera: boolean) => {
+    if (typeof document === 'undefined') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if (isCamera) {
+      input.capture = 'environment';
+    }
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (typeof event.target?.result === 'string') {
+            runAiScannerInference(event.target.result);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
   const handlePickFromCamera = async () => {
+    if (Platform.OS === 'web') {
+      triggerWebInput(true);
+      return;
+    }
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
@@ -279,6 +307,10 @@ export default function CropDiseaseScannerScreen() {
   };
 
   const handlePickFromGallery = async () => {
+    if (Platform.OS === 'web') {
+      triggerWebInput(false);
+      return;
+    }
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {

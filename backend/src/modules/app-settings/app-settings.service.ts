@@ -85,7 +85,7 @@ export class AppSettingsService {
     let faviconUrl = flags.faviconUrl;
     const storedInt = flags.systemIntegrations as Partial<SystemIntegrationsConfig> | undefined;
     if (!faviconUrl) {
-      faviconUrl = storedInt?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.ico';
+      faviconUrl = storedInt?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.png';
     }
     if (!logoUrl) {
       logoUrl = storedInt?.projectMasterData?.logoUrl || logoUrl;
@@ -224,7 +224,7 @@ export class AppSettingsService {
       shortName: pm.shortName,
       tagline: pm.tagline,
       logoUrl: pm.logoUrl || 'https://farmsking.in/brand_logo.png',
-      faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.ico',
+      faviconUrl: pm.faviconUrl || 'https://farmsking.in/favicon.png',
       mcaSrn: pm.mcaSrn,
       crcApprovalStatus: pm.crcApprovalStatus,
       crcApprovalDate: pm.crcApprovalDate,

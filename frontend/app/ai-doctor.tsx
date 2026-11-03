@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -312,7 +312,131 @@ export default function AiDoctorScreen() {
     }
   };
 
+  // Web Live Camera Scanner States
+  const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
+  const [webcamFacing, setWebcamFacing] = useState<'environment' | 'user'>('environment');
+  const [webcamLoading, setWebcamLoading] = useState<boolean>(false);
+  const [webcamError, setWebcamError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stopWebcam = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
+
+  const startWebcam = async (facing: 'environment' | 'user' = 'environment') => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      triggerWebFileInput(true);
+      return;
+    }
+    try {
+      setWebcamLoading(true);
+      setWebcamError(null);
+      stopWebcam();
+
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback without constraints for desktop webcams
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
+      setWebcamLoading(false);
+    } catch (err: any) {
+      console.warn('Webcam stream error:', err);
+      setWebcamError('Unable to access camera directly. Please grant browser camera permissions or upload a leaf photo.');
+      setWebcamLoading(false);
+    }
+  };
+
+  const triggerWebFileInput = (isCameraCapture: boolean = false) => {
+    if (typeof document === 'undefined') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    if (isCameraCapture) {
+      input.capture = 'environment';
+    }
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (typeof event.target?.result === 'string') {
+            runAiDiagnostic(event.target.result, selectedCropFilter === 'AUTO' ? undefined : selectedCropFilter);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  };
+
+  const handleCaptureSnapshot = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      stopWebcam();
+      setIsWebcamOpen(false);
+      runAiDiagnostic(dataUrl, selectedCropFilter === 'AUTO' ? undefined : selectedCropFilter);
+    }
+  };
+
+  const handleCloseWebcam = () => {
+    stopWebcam();
+    setIsWebcamOpen(false);
+  };
+
+  const handleFlipWebcam = () => {
+    const nextFacing = webcamFacing === 'environment' ? 'user' : 'environment';
+    setWebcamFacing(nextFacing);
+    startWebcam(nextFacing);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+    };
+  }, []);
+
   const handlePickFromCamera = async () => {
+    if (Platform.OS === 'web') {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        setIsWebcamOpen(true);
+        setTimeout(() => {
+          startWebcam(webcamFacing);
+        }, 80);
+      } else {
+        triggerWebFileInput(true);
+      }
+      return;
+    }
+
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
@@ -336,6 +460,11 @@ export default function AiDoctorScreen() {
   };
 
   const handlePickFromGallery = async () => {
+    if (Platform.OS === 'web') {
+      triggerWebFileInput(false);
+      return;
+    }
+
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
@@ -1029,6 +1158,258 @@ export default function AiDoctorScreen() {
           </View>
         </View>
       </ScrollView>
+      {/* Live Camera Scanner Web Modal */}
+      {Platform.OS === 'web' && isWebcamOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            zIndex: 99999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 620,
+              backgroundColor: '#0f172a',
+              borderRadius: 20,
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: '#064e3b',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>🌿</span>
+                <span style={{ color: '#ffffff', fontWeight: 700, fontSize: 16 }}>
+                  Live Leaf Scanner Camera
+                </span>
+              </div>
+              <button
+                onClick={handleCloseWebcam}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: '50%',
+                  width: 32,
+                  height: 32,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Video Viewfinder Area */}
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: 380,
+                backgroundColor: '#000000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+
+              {/* Viewfinder Target Reticle Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 24,
+                  border: '2px dashed rgba(16, 185, 129, 0.85)',
+                  borderRadius: 16,
+                  pointerEvents: 'none',
+                  boxShadow: 'inset 0 0 20px rgba(16, 185, 129, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                    padding: '6px 14px',
+                    borderRadius: 20,
+                    color: '#6ee7b7',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  ALIGN LEAF IN CENTER
+                </div>
+              </div>
+
+              {webcamLoading && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: '#0f172a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#10b981',
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  Starting Camera Stream...
+                </div>
+              )}
+
+              {webcamError && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 24,
+                    textAlign: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <p style={{ color: '#f87171', fontSize: 14, margin: 0 }}>{webcamError}</p>
+                  <button
+                    onClick={() => {
+                      handleCloseWebcam();
+                      triggerWebFileInput(true);
+                    }}
+                    style={{
+                      backgroundColor: '#059669',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '10px 18px',
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Select Leaf Photo from Computer
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Controls Bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                backgroundColor: '#0f172a',
+                gap: 12,
+              }}
+            >
+              <button
+                onClick={handleFlipWebcam}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#ffffff',
+                  padding: '10px 16px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                🔄 Flip Camera
+              </button>
+
+              <button
+                onClick={handleCaptureSnapshot}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: 12,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                📸 Capture &amp; Scan Leaf
+              </button>
+
+              <button
+                onClick={() => {
+                  handleCloseWebcam();
+                  triggerWebFileInput(false);
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#ffffff',
+                  padding: '10px 16px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                📁 Upload File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </SafeAreaView>
   );
 }

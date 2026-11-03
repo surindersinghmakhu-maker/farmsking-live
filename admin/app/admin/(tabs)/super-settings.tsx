@@ -406,6 +406,18 @@ export default function SuperSettingsScreen() {
     }
   };
 
+  const handleSaveAllToolsAndMaster = async () => {
+    try {
+      await updateMutation.mutateAsync({
+        ...localConfig,
+        projectMasterData: localConfig.projectMasterData || DEFAULT_PROJECT_MASTER_DATA,
+      });
+      showToast('✅ All tool settings & configurations saved successfully to database!');
+    } catch (err: any) {
+      Alert.alert('Save Failed', err?.message || 'Could not save settings');
+    }
+  };
+
   const handleSaveTool = async (category: keyof SystemIntegrationsConfig, toolName: string) => {
     try {
       await updateMutation.mutateAsync({
@@ -432,23 +444,49 @@ export default function SuperSettingsScreen() {
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       {/* ── Top Header ─────────────────────────────────────────── */}
       <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderBottomColor: cardBorder }]}>
-        <View style={styles.headerInfo}>
-          <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
-            <Ionicons
-              name="hardware-chip-outline"
-              size={15}
-              color={isLight ? '#16a34a' : '#00ff87'}
-            />
-            <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
-              PLATFORM TOOLS & SERVICES
+        <View style={styles.headerRow}>
+          <View style={styles.headerInfo}>
+            <View style={[styles.badge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.25)' : 'rgba(0, 255, 135, 0.25)' }]}>
+              <Ionicons
+                name="hardware-chip-outline"
+                size={15}
+                color={isLight ? '#16a34a' : '#00ff87'}
+              />
+              <Text style={[styles.badgeText, { color: isLight ? '#16a34a' : '#00ff87' }]}>
+                PLATFORM TOOLS & SERVICES
+              </Text>
+            </View>
+            <Text style={[styles.headerTitle, { color: textColor }]}>
+              Platform Tools & Services
+            </Text>
+            <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
+              Third-party API providers, credentials, and live telemetry toggles for AI, Payments, SMS, WhatsApp, Satellite, Weather, Logistics, and Push Notifications.
             </Text>
           </View>
-          <Text style={[styles.headerTitle, { color: textColor }]}>
-            Platform Tools & Services
-          </Text>
-          <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
-            Third-party API providers, credentials, and live telemetry toggles for AI, Payments, SMS, WhatsApp, Satellite, Weather, Logistics, and Push Notifications.
-          </Text>
+
+          {/* Master Unified Save Button */}
+          <TouchableOpacity
+            style={[styles.headerMasterSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+            onPress={handleSaveAllToolsAndMaster}
+            disabled={updateMutation.isPending}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerMasterSaveGradient}
+            >
+              {updateMutation.isPending ? (
+                <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
+              ) : (
+                <Ionicons name="checkmark-done" size={16} color={isLight ? '#ffffff' : '#020d06'} />
+              )}
+              <Text style={[styles.headerMasterSaveText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                {updateMutation.isPending ? 'Saving...' : 'Save All Settings'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -653,27 +691,6 @@ export default function SuperSettingsScreen() {
                   </View>
                 </View>
               )}
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('ai', 'AI Vision & Crop Doctor')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
-                    <Text style={[styles.toolSaveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
-                      Save AI Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -888,27 +905,6 @@ export default function SuperSettingsScreen() {
                   </View>
                 </View>
               )}
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('gateway', 'Payment Gateway')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#0284c7', '#0369a1']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save Payment Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -1019,27 +1015,6 @@ export default function SuperSettingsScreen() {
                   </Text>
                 </View>
               )}
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('sms', 'SMS & OTP Service')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#6366f1', '#4f46e5']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save SMS Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -1139,27 +1114,6 @@ export default function SuperSettingsScreen() {
                   </View>
                 </View>
               </View>
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('whatsapp', 'WhatsApp Business Bot')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#16a34a', '#15803d']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save WhatsApp Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -1241,27 +1195,6 @@ export default function SuperSettingsScreen() {
                     />
                   </TouchableOpacity>
                 </View>
-              </View>
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('satellite', 'Satellite Farm Radar')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
-                    <Text style={[styles.toolSaveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
-                      Save Satellite Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -1345,27 +1278,6 @@ export default function SuperSettingsScreen() {
                   </>
                 )}
               </View>
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('weather', 'Weather Telemetry')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#059669', '#047857']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save Weather Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -1448,27 +1360,6 @@ export default function SuperSettingsScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('logistics', 'Logistics & Couriers')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#d97706', '#b45309']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save Logistics Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
             </View>
           )}
 
@@ -1521,27 +1412,6 @@ export default function SuperSettingsScreen() {
                     />
                   </TouchableOpacity>
                 </View>
-              </View>
-
-              {/* Dedicated Save Button */}
-              <View style={styles.cardFooter}>
-                <TouchableOpacity
-                  style={[styles.toolSaveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
-                  onPress={() => handleSaveTool('push', 'Push Notifications')}
-                  disabled={updateMutation.isPending}
-                >
-                  <LinearGradient
-                    colors={['#ef4444', '#dc2626']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.toolSaveGradient}
-                  >
-                    <Ionicons name="checkmark-done" size={15} color="#ffffff" />
-                    <Text style={[styles.toolSaveBtnText, { color: '#ffffff' }]}>
-                      Save Push Settings
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -1601,11 +1471,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 14,
+  },
+  headerMasterSaveBtn: {
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerMasterSaveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+  headerMasterSaveText: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
   },
   headerInfo: {
     flex: 1,

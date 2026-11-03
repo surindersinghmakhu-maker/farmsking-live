@@ -600,7 +600,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   nicCodes: '62013, 01619',
   activityDescription: 'Providing software support and maintenance to clients, supporting activities for crop production & smart farming',
   logoUrl: 'https://farmsking.in/brand_logo.png',
-  faviconUrl: 'https://farmsking.in/favicon.ico',
+  faviconUrl: 'https://farmsking.in/favicon.png',
 
   premisesName: 'M/s GURU NANAK COMPUTER ACADEMY',
   landmark: 'Near Co-operative Bank',
@@ -1018,7 +1018,7 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     brandName: 'FarmsKing',
     tagline: 'National Agritech Platform | AI Crop Doctor, Live Mandi, Organic Fertilizers & Floriculture',
     logoUrl: 'https://farmsking.in/brand_logo.png',
-    faviconUrl: 'https://farmsking.in/favicon.ico',
+    faviconUrl: 'https://farmsking.in/favicon.png',
     registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India',
     headquarters: 'Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India',
     gstin: '',

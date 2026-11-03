@@ -484,6 +484,32 @@ export function ThirdPartyServicesSection() {
                 {testingService === activeCategory ? 'Pinging...' : 'Test Connection'}
               </Text>
             </TouchableOpacity>
+
+            {/* Master Header Save Button */}
+            <TouchableOpacity
+              style={[styles.saveBtnHeader, isSaving && { opacity: 0.6 }]}
+              onPress={handleSave}
+              disabled={isSaving}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.saveBtnGradientHeader}
+              >
+                {isSaving ? (
+                  <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-done" size={15} color={isLight ? '#ffffff' : '#020d06'} />
+                    <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
+                      Save Tools API
+                    </Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -3040,39 +3066,14 @@ export function ThirdPartyServicesSection() {
           </View>
         )}
 
-        {/* ── Card Footer with Save Button ─────────────────────────────── */}
+        {/* ── Card Footer Security Notice ─────────────────────────────── */}
         <View style={[styles.cardFooter, { borderTopColor: cardBorder }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="shield-checkmark" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
             <Text style={[styles.cardFooterText, { color: subTextColor }]}>
-              All API keys and credentials are encrypted securely with AES-256-GCM.
+              All API keys and credentials are encrypted securely with AES-256-GCM and saved directly to the database.
             </Text>
           </View>
-
-          <TouchableOpacity
-            style={[styles.saveBtnBottom, isSaving && { opacity: 0.6 }]}
-            onPress={handleSave}
-            disabled={isSaving}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.saveBtnGradientBottom}
-            >
-              {isSaving ? (
-                <ActivityIndicator size="small" color={isLight ? '#ffffff' : '#020d06'} />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-done" size={16} color={isLight ? '#ffffff' : '#020d06'} />
-                  <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>
-                    Save Changes
-                  </Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -3165,6 +3166,23 @@ const styles = StyleSheet.create({
   saveBtnTop: {
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  saveBtnHeader: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveBtnGradientHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 8,
   },
   saveBtnGradient: {
     flexDirection: 'row',

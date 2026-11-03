@@ -93,58 +93,53 @@ CRITICAL INSTRUCTIONS:
 4. If asked a non-farming query, reject politely with: "⚠️ Agricultural Questions Only: I can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates."`;
         const systemPrompt = isGarden ? GARDEN_SYSTEM_PROMPT : farmingSystemPrompt;
         if (geminiKey) {
-            try {
-                const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-                const contentsPayload = [];
-                if (dto.history && Array.isArray(dto.history)) {
-                    dto.history.slice(-6).forEach((msg) => {
-                        contentsPayload.push({
-                            role: msg.role === 'user' ? 'user' : 'model',
-                            parts: [{ text: msg.content }],
-                        });
+            const candidateModels = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+            const contentsPayload = [];
+            if (dto.history && Array.isArray(dto.history)) {
+                dto.history.slice(-6).forEach((msg) => {
+                    contentsPayload.push({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.content }],
                     });
-                }
-                contentsPayload.push({
-                    role: 'user',
-                    parts: [{ text: dto.message }],
                 });
-                const res = await fetch(geminiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        system_instruction: {
-                            parts: [{ text: systemPrompt }],
-                        },
-                        contents: contentsPayload,
-                        tools: [{ google_search: {} }],
-                        generationConfig: {
-                            temperature: 0.3,
-                            maxOutputTokens: 600,
-                        },
-                    }),
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-                    if (text) {
-                        return { answer: text, isFarming: true };
+            }
+            contentsPayload.push({
+                role: 'user',
+                parts: [{ text: dto.message }],
+            });
+            for (const modelName of candidateModels) {
+                try {
+                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+                    const res = await fetch(geminiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            system_instruction: {
+                                parts: [{ text: systemPrompt }],
+                            },
+                            contents: contentsPayload,
+                            generationConfig: {
+                                temperature: 0.3,
+                                maxOutputTokens: 600,
+                            },
+                        }),
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                        if (text) {
+                            return { answer: text, isFarming: true };
+                        }
+                    }
+                    else if (res.status === 429) {
+                        return {
+                            answer: "⚠️ **FarmsKing Kisan AI Doctor is temporarily unavailable due to daily Google AI quota limits.**\n\nPlease try again shortly or contact FarmsKing support for assistance.",
+                            isFarming: true,
+                        };
                     }
                 }
-                else if (res.status === 429 || res.status === 403) {
-                    return {
-                        answer: "⚠️ **FarmsKing Kisan AI Doctor is temporarily unavailable due to daily Google AI quota limits.**\n\nPlease try again shortly or contact FarmsKing support for assistance.",
-                        isFarming: true,
-                    };
-                }
-            }
-            catch (err) {
-                this.logger.error('Gemini API query failed', err?.stack || err);
-                const errStr = (err?.message || '') + JSON.stringify(err || '');
-                if (errStr.toLowerCase().includes('429') || errStr.toLowerCase().includes('quota')) {
-                    return {
-                        answer: "⚠️ **FarmsKing Kisan AI Doctor is temporarily unavailable due to daily Google AI quota limits.**\n\nPlease try again shortly or contact FarmsKing support for assistance.",
-                        isFarming: true,
-                    };
+                catch (err) {
+                    this.logger.warn(`Gemini model ${modelName} failed: ${err?.message}`);
                 }
             }
         }

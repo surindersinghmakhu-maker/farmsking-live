@@ -9,9 +9,11 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { apiClient } from '../src/api/client';
 import { getDefaultApiUrl } from '../src/constants/config';
 import { useAuth } from '../src/store/auth-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../constants/theme';
@@ -129,26 +131,16 @@ export default function SeoManagementScreen() {
     };
 
     try {
-      const baseUrl = getDefaultApiUrl();
-      const res = await fetch(`${baseUrl}/app-settings/seo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setSuccessMessage('✅ Online SEO & Metadata Updated Successfully!');
-        if (Platform.OS === 'web') {
-          alert('✅ Online SEO & Metadata Updated Successfully!\nGoogle Search crawlers and visitors will receive the new SEO info.');
-        } else {
-          Alert.alert('Success', 'Online SEO & Metadata Updated Successfully!');
-        }
+      await apiClient.post('/app-settings/seo', payload);
+      setSuccessMessage('✅ Online SEO & Metadata Saved Directly to Database!');
+      if (Platform.OS === 'web') {
+        alert('✅ Online SEO & Metadata Saved Directly to Database!\nGoogle Search crawlers and visitors will receive the new SEO info.');
       } else {
-        setSuccessMessage('✅ Local SEO Settings Saved!');
+        Alert.alert('Success', 'Online SEO & Metadata Saved Successfully!');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Error updating online SEO settings:', err);
-      setSuccessMessage('✅ Saved locally. Server will sync on deployment!');
+      Alert.alert('Save Failed', err?.response?.data?.message || err?.message || 'Failed to save SEO settings to database');
     } finally {
       setSaving(false);
     }
@@ -213,17 +205,40 @@ export default function SeoManagementScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Banner */}
+        {/* Header Banner with Prominent Save Button */}
         <View style={styles.banner}>
-          <View style={styles.bannerIconCircle}>
-            <Ionicons name="globe-outline" size={24} color="#166534" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, minWidth: 260 }}>
+            <View style={styles.bannerIconCircle}>
+              <Ionicons name="globe-outline" size={24} color="#166534" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle}>FarmsKing Live SEO & Metadata Manager</Text>
+              <Text style={styles.bannerSubtitle}>
+                Real-time Google Search tags, Meta Descriptions, AI Search (ChatGPT, Perplexity, Gemini) indexing, and SERP optimization.
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bannerTitle}>FarmsKing Live SEO & Metadata Manager</Text>
-            <Text style={styles.bannerSubtitle}>
-              Real-time Google Search tags, Meta Descriptions, AI Search (ChatGPT, Perplexity, Gemini) indexing, and SERP optimization.
-            </Text>
-          </View>
+
+          {/* Master Unified Save Button */}
+          <TouchableOpacity
+            style={[
+              styles.saveBtnTop,
+              saving && { opacity: 0.7 },
+              Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+            ]}
+            onPress={handleSaveSeo}
+            disabled={saving}
+            activeOpacity={0.85}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                <Ionicons name="cloud-upload-outline" size={18} color="#ffffff" />
+                <Text style={styles.saveBtnTopText}>Update Online SEO Live</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
         {successMessage ? (
@@ -249,7 +264,11 @@ export default function SeoManagementScreen() {
           <View style={styles.googleSnippetBox}>
             <View style={styles.googleUrlRow}>
               <View style={styles.googleFaviconCircle}>
-                <Ionicons name="leaf" size={12} color="#166534" />
+                <Image
+                  source={require('../assets/images/favicon.png')}
+                  style={{ width: 16, height: 16, borderRadius: 8 }}
+                  resizeMode="contain"
+                />
               </View>
               <View>
                 <Text style={styles.googleBrandText}>FarmsKing Technologies</Text>
@@ -456,27 +475,6 @@ export default function SeoManagementScreen() {
                 placeholderTextColor="#94a3b8"
               />
             </View>
-
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[
-                styles.saveBtn,
-                saving && { opacity: 0.7 },
-                Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
-              ]}
-              onPress={handleSaveSeo}
-              disabled={saving}
-              activeOpacity={0.85}
-            >
-              {saving ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="cloud-upload-outline" size={20} color="#ffffff" />
-                  <Text style={styles.saveBtnText}>Update Online SEO Live</Text>
-                </>
-              )}
-            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
@@ -754,6 +752,26 @@ const styles = StyleSheet.create({
   textAreaLarge: {
     minHeight: 110,
     textAlignVertical: 'top',
+  },
+  saveBtnTop: {
+    backgroundColor: '#166534',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: RADIUS.md,
+    gap: 8,
+    shadowColor: '#166534',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveBtnTopText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontWeight: 'bold',
   },
   saveBtn: {
     backgroundColor: '#166534',

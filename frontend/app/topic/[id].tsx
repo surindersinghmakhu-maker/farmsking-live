@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -891,12 +891,68 @@ const GARDENING_ALL_FEATURES: GardeningFeatureItem[] = [
   },
 ];
 
+const CROP_DISEASE_SAMPLES = [
+  {
+    crop: 'Wheat',
+    emoji: '🌾',
+    disease: 'Stripe / Yellow Rust',
+    pathogen: 'Puccinia striiformis',
+    confidence: '99.4% Match',
+    severity: 'High (Immediate Action Required)',
+    severityColor: '#ef4444',
+    symptoms: 'Linear yellow/orange fungal pustules along leaf veins, chlorosis and impaired photosynthesis.',
+    treatment: 'Propiconazole 25% EC (Tilt) @ 200 ml in 200 Litres of water per acre.',
+    phi: '30 Days Pre-Harvest Interval • CIB&RC Registered',
+    shopQuery: '/shop',
+  },
+  {
+    crop: 'Basmati Paddy',
+    emoji: '🍚',
+    disease: 'Bacterial Leaf Blight (BLB)',
+    pathogen: 'Xanthomonas oryzae pv. oryzae',
+    confidence: '98.9% Match',
+    severity: 'Moderate to High',
+    severityColor: '#f59e0b',
+    symptoms: 'Translucent water-soaked streaks on leaf margins turning yellow-white, bacterial exudate droplets.',
+    treatment: 'Streptocycline 6g + Copper Oxychloride 50% WP (500g) in 200 Litres water per acre.',
+    phi: '15 Days Pre-Harvest Interval • ICAR Validated',
+    shopQuery: '/shop',
+  },
+  {
+    crop: 'Cotton',
+    emoji: '🌿',
+    disease: 'Cotton Leaf Curl Virus (CLCuV)',
+    pathogen: 'Begomovirus (Whitefly Vector)',
+    confidence: '97.8% Match',
+    severity: 'Critical (Vector Management)',
+    severityColor: '#ef4444',
+    symptoms: 'Upward leaf curling, vein swelling, downward cup-shape enation on lower leaf lamina.',
+    treatment: 'Diafenthiuron 50% WP @ 250g/acre or Pyriproxyfen 10% EC @ 400ml/acre for whitefly vector control.',
+    phi: '21 Days Pre-Harvest Interval • Certified IPM Protocol',
+    shopQuery: '/shop',
+  },
+  {
+    crop: 'Mustard',
+    emoji: '🌱',
+    disease: 'White Rust / Staghead',
+    pathogen: 'Albugo candida',
+    confidence: '99.1% Match',
+    severity: 'Moderate',
+    severityColor: '#f59e0b',
+    symptoms: 'Creamy white blister-like pustules on lower leaf surface, floral malformation and hypertrophy.',
+    treatment: 'Metalaxyl 8% + Mancozeb 64% WP (Ridomil Gold) @ 500g in 200 Litres water per acre.',
+    phi: '20 Days Pre-Harvest Interval • FCO Laboratory Certified',
+    shopQuery: '/shop',
+  },
+];
+
 export default function TopicPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isMobile = width <= 768;
   const { user } = useAuth();
+  const [selectedDiseaseIdx, setSelectedDiseaseIdx] = useState(0);
 
   const title = id ? id.replace('-', ' ') : 'Topic';
   const cfg = TOPIC_CONFIG[id || ''] || DEFAULT_CONFIG;
@@ -1204,6 +1260,120 @@ export default function TopicPage() {
         {/* ── ALL CROP DOCTORS FEATURES SHOWCASE (WHEN ID IS CROP-DOCTORS) ── */}
         {(id === 'Crop-Doctors' || id === 'Crop Doctors') && (
           <View style={styles.featuresSection}>
+            {/* Interactive Live AI Diagnostic Station */}
+            <View style={styles.diagnosticStationCard}>
+              <View style={styles.diagHeaderRow}>
+                <View style={styles.diagIconWrap}>
+                  <Ionicons name="scan-circle" size={24} color="#06b6d4" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.diagStationTitle}>Interactive AI Plant Diagnostic Station</Text>
+                  <Text style={styles.diagStationSub}>
+                    Tap any sample crop below to simulate instant &lt;820ms multimodal leaf pathology scanning:
+                  </Text>
+                </View>
+              </View>
+
+              {/* 4 Crop Sample Selector Pills */}
+              <View style={styles.diagCropSelectorRow}>
+                {CROP_DISEASE_SAMPLES.map((sample, sIdx) => (
+                  <TouchableOpacity
+                    key={`crop-sample-${sIdx}`}
+                    onPress={() => setSelectedDiseaseIdx(sIdx)}
+                    activeOpacity={0.75}
+                    style={[
+                      styles.diagCropBtn,
+                      {
+                        backgroundColor:
+                          selectedDiseaseIdx === sIdx
+                            ? 'rgba(6,182,212,0.15)'
+                            : '#f8fafc',
+                        borderColor:
+                          selectedDiseaseIdx === sIdx ? '#06b6d4' : '#e2e8f0',
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 13 }}>{sample.emoji}</Text>
+                    <Text
+                      style={[
+                        styles.diagCropBtnText,
+                        {
+                          color:
+                            selectedDiseaseIdx === sIdx
+                              ? '#0891b2'
+                              : '#475569',
+                        },
+                      ]}
+                    >
+                      {sample.crop}: {sample.disease}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Active Diagnostic Result HUD */}
+              {(() => {
+                const cur = CROP_DISEASE_SAMPLES[selectedDiseaseIdx];
+                return (
+                  <View
+                    style={[
+                      styles.diagResultHUD,
+                      {
+                        backgroundColor: '#f0fdfa',
+                        borderColor: 'rgba(6,182,212,0.3)',
+                      },
+                    ]}
+                  >
+                    <View style={styles.diagResultTop}>
+                      <View style={{ flex: 1, minWidth: 200 }}>
+                        <Text style={[styles.diagDiseaseName, { color: '#0f172a' }]}>
+                          {cur.emoji} {cur.crop} • {cur.disease}
+                        </Text>
+                        <Text style={styles.diagPathogen}>Pathogen: {cur.pathogen}</Text>
+                      </View>
+                      <View style={styles.diagConfidenceBadge}>
+                        <Ionicons name="checkmark-done" size={13} color="#059669" />
+                        <Text style={styles.diagConfidenceText}>{cur.confidence}</Text>
+                      </View>
+                    </View>
+
+                    {/* Symptoms Identified */}
+                    <View style={[styles.diagBoxItem, { backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }]}>
+                      <Text style={[styles.diagBoxLabel, { color: '#64748b' }]}>Symptoms Identified by Multi-Spectral AI</Text>
+                      <Text style={[styles.diagBoxValue, { color: '#334155' }]}>{cur.symptoms}</Text>
+                    </View>
+
+                    {/* Calibrated Scientific Treatment */}
+                    <View style={[styles.diagBoxItem, { backgroundColor: '#ffffff', borderColor: '#bbf7d0', borderWidth: 1 }]}>
+                      <Text style={[styles.diagBoxLabel, { color: '#166534' }]}>Recommended Treatment &amp; Calibrated Tank Dosage</Text>
+                      <Text style={[styles.diagBoxValue, { color: '#14532d', fontFamily: FONT.bold }]}>{cur.treatment}</Text>
+                      <Text style={{ fontSize: 11, color: '#059669', marginTop: 2 }}>{cur.phi}</Text>
+                    </View>
+
+                    {/* Action CTA Row */}
+                    <View style={styles.diagBtnRow}>
+                      <TouchableOpacity
+                        style={[styles.diagPrimaryBtn, { backgroundColor: '#0284c7' }]}
+                        onPress={() => router.push('/shop')}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="cart" size={16} color="#ffffff" />
+                        <Text style={styles.diagPrimaryBtnText}>Order Treatment from Agri Store →</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.diagSecondaryBtn}
+                        onPress={() => Linking.openURL('tel:9577622000').catch(() => {})}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="call" size={14} color="#059669" />
+                        <Text style={styles.diagSecondaryBtnText}>Consult Plant Pathologist</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })()}
+            </View>
             <View style={styles.sectionHeaderRow}>
               <View style={[styles.sectionBadge, { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}35` }]}>
                 <Ionicons name="medkit" size={13} color={cfg.color} />
@@ -1781,5 +1951,156 @@ const styles = StyleSheet.create({
   backHomeText: {
     fontFamily: FONT.extraBold,
     fontSize: 13,
+  },
+
+  // Live AI Diagnostic Station Styles
+  diagnosticStationCard: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#38bdf8',
+    marginBottom: 24,
+    ...premiumShadow('rgba(2,132,199,0.12)', 'md'),
+    gap: 14,
+  },
+  diagHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  diagIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(6,182,212,0.12)',
+  },
+  diagStationTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  diagStationSub: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    color: '#475569',
+    marginTop: 2,
+    lineHeight: 18,
+  },
+  diagCropSelectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  diagCropBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  diagCropBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  diagResultHUD: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    gap: 12,
+  },
+  diagResultTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  diagDiseaseName: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+  },
+  diagPathogen: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    fontStyle: 'italic',
+    color: '#64748b',
+    marginTop: 1,
+  },
+  diagConfidenceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  diagConfidenceText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
+  diagBoxItem: {
+    padding: 10,
+    borderRadius: 10,
+    gap: 3,
+  },
+  diagBoxLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  diagBoxValue: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    lineHeight: 18,
+  },
+  diagBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 4,
+  },
+  diagPrimaryBtn: {
+    flex: 1,
+    minWidth: 180,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: RADIUS.pill,
+  },
+  diagPrimaryBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  diagSecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#f8fafc',
+  },
+  diagSecondaryBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#334155',
   },
 });

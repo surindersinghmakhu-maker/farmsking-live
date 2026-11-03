@@ -511,9 +511,9 @@ const VERIFIED_CULTIVATOR_STORIES: CultivatorSuccessStory[] = [
 const TRANSLATIONS = {
   EN: {
     badge: 'FarmsKing (Smart Farming Platform)',
-    heroTitle: 'Revolutionizing Indian Agriculture',
-    heroSub: 'Your Integrated Platform for All Crops - From Seed to Harvest.',
-    getStarted: 'Get Started Free',
+    heroTitle: 'India’s Intelligent Agriculture Ecosystem',
+    heroSub: 'Multimodal AI Crop Doctor • Real-Time APMC Mandi Intelligence • 100% Certified Farm Inputs Delivered Direct.',
+    getStarted: 'Scan Crop Leaf Free',
     exploreStore: 'Explore Agri Store',
     cultivators: 'Cultivators',
     traded: 'Traded',
@@ -1839,6 +1839,48 @@ export default function PublicLandingPage() {
                 </TouchableOpacity>
               </View>
 
+              {/* ── Quick Commodity 1-Tap Filter Pills ── */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8, marginTop: 2 }}>
+                {ALL_INDIA_LIVE_MANDI_FEED.slice(0, 5).map((mItem, mIdx) => (
+                  <TouchableOpacity
+                    key={`quick-mandi-${mIdx}`}
+                    onPress={() => setActiveMandiRollIdx(mIdx)}
+                    activeOpacity={0.75}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: isMobile ? 8 : 10,
+                      paddingVertical: isMobile ? 3.5 : 4.5,
+                      borderRadius: RADIUS.pill,
+                      backgroundColor:
+                        mIdx === activeMandiRollIdx
+                          ? (isDay ? 'rgba(5,150,105,0.14)' : 'rgba(52,211,153,0.22)')
+                          : (isDay ? '#f1f5f9' : 'rgba(255,255,255,0.06)'),
+                      borderWidth: 1,
+                      borderColor:
+                        mIdx === activeMandiRollIdx
+                          ? (isDay ? '#059669' : '#34d399')
+                          : (isDay ? '#e2e8f0' : 'rgba(255,255,255,0.08)'),
+                    }}
+                  >
+                    <Text style={{ fontSize: isMobile ? 11 : 12 }}>{mItem.emoji}</Text>
+                    <Text
+                      style={{
+                        fontSize: isMobile ? 10.5 : 11.5,
+                        fontFamily: mIdx === activeMandiRollIdx ? FONT.bold : FONT.medium,
+                        color:
+                          mIdx === activeMandiRollIdx
+                            ? (isDay ? '#059669' : '#34d399')
+                            : (isDay ? '#475569' : '#94a3b8'),
+                      }}
+                    >
+                      {mItem.crop}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               {/* ── Single Crop 5-Second Splash APMC Mandi Rate Board ── */}
               <TouchableOpacity
                 style={[
@@ -2161,22 +2203,7 @@ export default function PublicLandingPage() {
                       router.push('/(user)/(tabs)' as any);
                     }
                   } else {
-                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                      try {
-                        router.push('/(auth)/login' as any);
-                      } catch {}
-                      setTimeout(() => {
-                        if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
-                          window.location.href = '/login';
-                        }
-                      }, 60);
-                    } else {
-                      try {
-                        router.push('/(auth)/login' as any);
-                      } catch {
-                        router.push('/login' as any);
-                      }
-                    }
+                    router.push('/topic/Crop-Doctors');
                   }
                 }}
                 activeOpacity={0.88}
@@ -2199,7 +2226,7 @@ export default function PublicLandingPage() {
                   </View>
                   <View style={S.btnPrimaryTextBox}>
                     <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 12.5, lineHeight: 16 }]} numberOfLines={1}>
-                      {user ? 'Dashboard →' : 'Login / Get Started →'}
+                      {user ? 'Dashboard →' : 'Scan Crop Leaf Free →'}
                     </Text>
                   </View>
                   <View style={[S.btnPrimaryArrowPill, isMobile && { width: 20, height: 20, borderRadius: 10 }]}>
@@ -3383,18 +3410,22 @@ export default function PublicLandingPage() {
 
           {/* Footer Bottom Bar */}
           <View style={[S.footerBottomRow, isDay && S.footerBottomRowDay]}>
-            <View style={{ gap: 3 }}>
+            <View style={{ gap: 4, maxWidth: 640 }}>
               <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay]}>
                 © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
               </Text>
               <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay, { fontSize: 11 }]}>
-                Developer Company: <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>Exilent Web Solutions</Text>
+                Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 • CIN: U01100PB2026PTC063294
+              </Text>
+              <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay, { fontSize: 11 }]}>
+                Platform Technology Partner: <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>Exilent Web Solutions</Text>
               </Text>
             </View>
             <View style={S.securityBadgesRow}>
-              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🔒 256-Bit SSL</Text>
-              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🌱 ICAR Compliant</Text>
-              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🇮🇳 Made for Indian Cultivators</Text>
+              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🏛️ MCA Govt. of India</Text>
+              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🔒 256-Bit SSL Bank-Grade</Text>
+              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🌱 ICAR Aligned</Text>
+              <Text style={[S.securityBadgeItem, isDay && { color: '#64748b' }]}>🇮🇳 Made in Punjab, India</Text>
             </View>
           </View>
         </View>

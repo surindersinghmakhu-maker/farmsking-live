@@ -252,14 +252,14 @@ try {
     <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
     <!-- 🌟 Global Official FarmsKing Brand Favicons & Icons -->
-    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=5" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=5" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=5" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=5" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=5" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=6" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=6" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=6" />
+    <link rel="shortcut icon" href="/favicon.ico?v=6" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=6" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=6" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=6" />
 
     <!-- Google WebSite Schema for Site Name & Brand Authority -->
     <script type="application/ld+json">

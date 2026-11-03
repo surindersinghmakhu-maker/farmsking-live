@@ -458,7 +458,7 @@ export default function AdminProductsScreen() {
       >
         <View style={styles.headerTitleCol}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-            <Text style={[styles.headerTitle, { color: textColor }]}>Market Products</Text>
+            <Text style={[styles.headerTitle, { color: textColor }]}>Store Products</Text>
             <View
               style={[
                 styles.marketBadge,
@@ -683,7 +683,7 @@ export default function AdminProductsScreen() {
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color={isLight ? '#16a34a' : '#00ff87'} />
             <Text style={[styles.loadingText, { color: subTextColor }]}>
-              Loading market products...
+              Loading store products...
             </Text>
           </View>
         ) : filteredProducts.length === 0 ? (
@@ -699,7 +699,7 @@ export default function AdminProductsScreen() {
             <Text style={[styles.emptySubtitle, { color: subTextColor }]}>
               {searchQuery || filter !== 'ALL' || selectedCategory !== 'All'
                 ? 'No items match your active search or filters. Clear them to see all catalog items.'
-                : 'Your market catalog is currently empty. Tap "New Product" to add your first listing.'}
+                : 'Your store catalog is currently empty. Tap "New Product" to add your first listing.'}
             </Text>
             {(searchQuery || filter !== 'ALL' || selectedCategory !== 'All') && (
               <TouchableOpacity
@@ -1983,7 +1983,7 @@ export default function AdminProductsScreen() {
             </View>
             <Text style={[styles.deleteModalTitle, { color: textColor }]}>Delete Product?</Text>
             <Text style={[styles.deleteModalDesc, { color: subTextColor }]}>
-              Are you sure you want to permanently remove "{deletingProduct?.name}" from the market catalog?
+              Are you sure you want to permanently remove "{deletingProduct?.name}" from the store catalog?
             </Text>
 
             <View style={styles.deleteModalBtnRow}>

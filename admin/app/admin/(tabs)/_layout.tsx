@@ -126,7 +126,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
-  'admin-products': { key: 'tabMarket' as any, title: 'Market', icon: 'storefront-outline', iconFilled: 'storefront' },
+  'admin-products': { key: 'tabMarket' as any, title: 'Store', icon: 'storefront-outline', iconFilled: 'storefront' },
   'crop-disease-scanner': { key: 'tabCrops' as any, title: 'Agri-Hub', icon: 'leaf-outline', iconFilled: 'leaf' },
   'super-users': { key: 'tabUsers', title: 'Users', icon: 'people-outline', iconFilled: 'people' },
   'super-coupons': { key: 'tabCoupons', title: 'Coupons', icon: 'ticket-outline', iconFilled: 'ticket' },
@@ -261,7 +261,7 @@ export default function TabLayout() {
     if (name === 'more' || name === 'admin_more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
-    if (name === 'admin-products') return 'Market';
+    if (name === 'admin-products') return 'Store';
     if (name === 'super-accounts') return 'Finance';
     if (name === 'crop-disease-scanner') return 'Agri-Hub';
     if (name === 'super-settings') return 'Setting';
@@ -865,8 +865,8 @@ export default function TabLayout() {
                   key={name}
                   name="admin-products"
                   options={{
-                    title: 'Market',
-                    tabBarLabel: 'Market',
+                    title: 'Store',
+                    tabBarLabel: 'Store',
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <Ionicons size={23} name={focused ? 'storefront' : 'storefront-outline'} color={color} />

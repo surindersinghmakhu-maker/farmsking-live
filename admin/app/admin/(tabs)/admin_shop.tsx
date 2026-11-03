@@ -265,7 +265,7 @@ export default function AdminShopScreen() {
               <View style={styles.actionGrid}>
                 <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
                   <Ionicons name="storefront-outline" size={18} color="#16a34a" />
-                  <Text style={styles.actionPillText}>Market Catalog</Text>
+                  <Text style={styles.actionPillText}>Store Catalog</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-sellers' as any)}>

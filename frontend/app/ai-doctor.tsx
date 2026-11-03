@@ -235,6 +235,24 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
   },
 };
 
+export interface SavedClinicalReport {
+  id: string;
+  timestamp: string;
+  cropName: string;
+  diseaseName: string;
+  latinName: string;
+  severity: string;
+  confidenceScore: number;
+  symptoms: string;
+  firstAidSpray: string;
+  dosageInstructions: string;
+  organicRemedy: string;
+  precautions: string[];
+  recommendedProductName: string;
+  recommendedPrice: number;
+  imageUri?: string;
+}
+
 export default function AiDoctorScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -247,6 +265,27 @@ export default function AiDoctorScreen() {
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanResult, setScanResult] = useState<AiDiseaseDiagnostic | null>(null);
   const [cartSuccessNotice, setCartSuccessNotice] = useState<string | null>(null);
+  const [savedReports, setSavedReports] = useState<SavedClinicalReport[]>([]);
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState<string | null>(null);
+  const [isCurrentSaved, setIsCurrentSaved] = useState<boolean>(false);
+  const [showSavedSection, setShowSavedSection] = useState<boolean>(true);
+
+  // Load saved clinical reports from localStorage on mount
+  React.useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('farmsking_saved_doctor_reports');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setSavedReports(parsed);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not load saved doctor reports:', err);
+    }
+  }, []);
 
   const convertAssetToBase64 = async (asset: ImagePicker.ImagePickerAsset): Promise<string> => {
     if (asset.base64) {
@@ -324,6 +363,8 @@ export default function AiDoctorScreen() {
     setIsScanning(true);
     setScanResult(null);
     setCartSuccessNotice(null);
+    setSaveSuccessNotice(null);
+    setIsCurrentSaved(false);
 
     // Deep Neural Inference Simulation (800ms - 1.2s response time)
     setTimeout(() => {
@@ -337,6 +378,94 @@ export default function AiDoctorScreen() {
       const diagnostic = DISEASE_KNOWLEDGE_BASE[targetKey] || DISEASE_KNOWLEDGE_BASE.Wheat;
       setScanResult(diagnostic);
     }, 1200);
+  };
+
+  const handleSaveReport = () => {
+    if (!scanResult) return;
+    const newReport: SavedClinicalReport = {
+      id: `report-${Date.now()}`,
+      timestamp: new Date().toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      cropName: scanResult.cropName,
+      diseaseName: scanResult.diseaseName,
+      latinName: scanResult.latinName,
+      severity: scanResult.severity,
+      confidenceScore: scanResult.confidenceScore,
+      symptoms: scanResult.symptoms,
+      firstAidSpray: scanResult.firstAidSpray,
+      dosageInstructions: scanResult.dosageInstructions,
+      organicRemedy: scanResult.organicRemedy,
+      precautions: scanResult.precautions,
+      recommendedProductName: scanResult.recommendedProductName,
+      recommendedPrice: scanResult.recommendedPrice,
+      imageUri: selectedImage || undefined,
+    };
+
+    const updated = [newReport, ...savedReports.filter((r) => r.id !== newReport.id)];
+    setSavedReports(updated);
+    setIsCurrentSaved(true);
+
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('farmsking_saved_doctor_reports', JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.warn('Failed to save to localStorage:', err);
+    }
+
+    setSaveSuccessNotice('✅ Clinical Report Saved Successfully to My Farm Records!');
+    setTimeout(() => setSaveSuccessNotice(null), 3500);
+  };
+
+  const handleDeleteSavedReport = (id: string) => {
+    const updated = savedReports.filter((r) => r.id !== id);
+    setSavedReports(updated);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('farmsking_saved_doctor_reports', JSON.stringify(updated));
+      }
+    } catch (err) {
+      console.warn('Failed to delete report:', err);
+    }
+    setSaveSuccessNotice('Report removed from saved records.');
+    setTimeout(() => setSaveSuccessNotice(null), 2500);
+  };
+
+  const handleLoadSavedReport = (report: SavedClinicalReport) => {
+    setScanResult({
+      cropName: report.cropName,
+      diseaseName: report.diseaseName,
+      latinName: report.latinName,
+      confidenceScore: report.confidenceScore,
+      category: 'FUNGAL',
+      severity: (report.severity as any) || 'HIGH',
+      symptoms: report.symptoms,
+      firstAidSpray: report.firstAidSpray,
+      dosageInstructions: report.dosageInstructions,
+      organicRemedy: report.organicRemedy,
+      precautions: report.precautions || [],
+      recommendedProductName: report.recommendedProductName,
+      recommendedPrice: report.recommendedPrice,
+    });
+    if (report.imageUri) {
+      setSelectedImage(report.imageUri);
+    }
+    setIsCurrentSaved(true);
+    setSaveSuccessNotice(`Loaded: ${report.cropName} - ${report.diseaseName}`);
+    setTimeout(() => setSaveSuccessNotice(null), 2500);
+  };
+
+  const handlePrintA4Report = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.print();
+    } else {
+      Alert.alert('Print Report', 'Report can be printed from your web browser or shared on WhatsApp.');
+    }
   };
 
   const handleAddToCartAndBuy = () => {
@@ -585,6 +714,14 @@ export default function AiDoctorScreen() {
                     </View>
                   )}
 
+                  {/* Save Success Notice Banner */}
+                  {saveSuccessNotice && (
+                    <View style={styles.saveNoticeBanner}>
+                      <Ionicons name="checkmark-circle" size={18} color="#059669" />
+                      <Text style={styles.saveNoticeBannerText}>{saveSuccessNotice}</Text>
+                    </View>
+                  )}
+
                   {/* Header: Detected Crop & Disease */}
                   <View style={styles.reportTopBar}>
                     <View style={{ flex: 1 }}>
@@ -700,6 +837,36 @@ export default function AiDoctorScreen() {
 
                   {/* Action CTA Buttons */}
                   <View style={styles.reportCtaRow}>
+                    {/* Primary Save & Print Row */}
+                    <View style={styles.savePrintRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.saveReportBtn,
+                          isCurrentSaved && styles.saveReportBtnSaved,
+                        ]}
+                        onPress={handleSaveReport}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons
+                          name={isCurrentSaved ? 'checkmark-circle' : 'save-outline'}
+                          size={18}
+                          color="#ffffff"
+                        />
+                        <Text style={styles.saveReportBtnText}>
+                          {isCurrentSaved ? 'Report Saved to Farm Records ✓' : 'Save Report to Farm Records'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.printReportBtn}
+                        onPress={handlePrintA4Report}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="print-outline" size={17} color="#059669" />
+                        <Text style={styles.printReportBtnText}>Print / A4</Text>
+                      </TouchableOpacity>
+                    </View>
+
                     <TouchableOpacity
                       style={styles.orderMedicineBtn}
                       onPress={handleAddToCartAndBuy}
@@ -750,6 +917,97 @@ export default function AiDoctorScreen() {
                 </View>
               )}
             </View>
+          </View>
+
+          {/* Saved Clinical Reports Section */}
+          <View style={styles.savedSectionCard}>
+            <View style={styles.savedSectionHeader}>
+              <View style={styles.savedSectionTitleRow}>
+                <View style={styles.savedIconCircle}>
+                  <Ionicons name="folder-open" size={18} color="#059669" />
+                </View>
+                <View>
+                  <Text style={styles.savedSectionTitle}>
+                    My Saved Clinical Reports ({savedReports.length})
+                  </Text>
+                  <Text style={styles.savedSectionSub}>
+                    Permanent history of scanned crops, detected diseases, and prescribed dosages.
+                  </Text>
+                </View>
+              </View>
+              {savedReports.length > 0 && (
+                <TouchableOpacity
+                  style={styles.toggleSavedBtn}
+                  onPress={() => setShowSavedSection(!showSavedSection)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.toggleSavedBtnText}>
+                    {showSavedSection ? 'Hide' : 'Show All'}
+                  </Text>
+                  <Ionicons
+                    name={showSavedSection ? 'chevron-up' : 'chevron-down'}
+                    size={15}
+                    color="#059669"
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {savedReports.length === 0 ? (
+              <View style={styles.emptySavedBox}>
+                <Ionicons name="bookmark-outline" size={24} color="#94a3b8" />
+                <Text style={styles.emptySavedText}>
+                  No saved reports yet. Scan any leaf photo above and tap "Save Report to Farm Records" to save it permanently.
+                </Text>
+              </View>
+            ) : showSavedSection ? (
+              <View style={styles.savedListGrid}>
+                {savedReports.map((item) => (
+                  <View key={item.id} style={styles.savedItemCard}>
+                    <View style={styles.savedItemTop}>
+                      {item.imageUri ? (
+                        <Image source={{ uri: item.imageUri }} style={styles.savedThumb} resizeMode="cover" />
+                      ) : (
+                        <View style={styles.savedThumbPlaceholder}>
+                          <Ionicons name="leaf" size={20} color="#059669" />
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.savedItemCrop}>{item.cropName}</Text>
+                        <Text style={styles.savedItemDisease}>{item.diseaseName}</Text>
+                        <Text style={styles.savedItemDate}>{item.timestamp}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.savedDosageSnippet}>
+                      <Text style={styles.savedDosageSnippetLabel}>Recommended Treatment:</Text>
+                      <Text style={styles.savedDosageSnippetVal} numberOfLines={2}>
+                        {item.firstAidSpray}
+                      </Text>
+                    </View>
+
+                    <View style={styles.savedActionsRow}>
+                      <TouchableOpacity
+                        style={styles.savedViewBtn}
+                        onPress={() => handleLoadSavedReport(item)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="eye" size={14} color="#047857" />
+                        <Text style={styles.savedViewBtnText}>View Full Report</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.savedDeleteBtn}
+                        onPress={() => handleDeleteSavedReport(item.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="trash-outline" size={14} color="#dc2626" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
 
           {/* Interactive Agri AI & Agronomy Doctor Chatbot */}
@@ -1440,6 +1698,220 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     maxWidth: 360,
   },
+  saveNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ecfdf5',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#6ee7b7',
+  },
+  saveNoticeBannerText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#065f46',
+    flex: 1,
+  },
+  savePrintRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  saveReportBtn: {
+    flex: 1.8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#047857',
+    paddingVertical: 12,
+    borderRadius: 10,
+    ...premiumShadow('#047857', 'xs'),
+  },
+  saveReportBtnSaved: {
+    backgroundColor: '#15803d',
+  },
+  saveReportBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  printReportBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#059669',
+  },
+  printReportBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
+  savedSectionCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 12,
+    marginTop: 4,
+    ...premiumShadow('#059669', 'xs'),
+  },
+  savedSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  savedSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  savedIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(5, 150, 105, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savedSectionTitle: {
+    fontSize: 14.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  savedSectionSub: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  toggleSavedBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#f1f5f9',
+  },
+  toggleSavedBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
+  emptySavedBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 6,
+  },
+  emptySavedText: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    textAlign: 'center',
+    maxWidth: 420,
+  },
+  savedListGrid: {
+    gap: 10,
+  },
+  savedItemCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  savedItemTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  savedThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+  },
+  savedThumbPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  savedItemCrop: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#047857',
+  },
+  savedItemDisease: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+    color: '#0f172a',
+  },
+  savedItemDate: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  savedDosageSnippet: {
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  savedDosageSnippetLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  savedDosageSnippetVal: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#334155',
+    marginTop: 1,
+  },
+  savedActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+  },
+  savedViewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(4, 120, 87, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  savedViewBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#047857',
+  },
+  savedDeleteBtn: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+  },
   chatbotSection: {
     backgroundColor: '#ffffff',
     borderRadius: 16,
@@ -1481,3 +1953,4 @@ const styles = StyleSheet.create({
     minHeight: 380,
   },
 });
+

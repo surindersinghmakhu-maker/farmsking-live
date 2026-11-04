@@ -33,7 +33,7 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
       `2️⃣ *AI Disease Scanner*: Take a leaf photo and get instant diagnostic advice.\n` +
       `3️⃣ *Live Doctor Consultation*: Direct phone/voice consultation with verified crop experts.\n` +
       `4️⃣ *Satellite Field Monitoring*: Monitor crop health (NDVI heatmaps) remotely.\n\n` +
-      `📲 *Download FarmsKing App today for free crop advisory!*`;
+      `🌐 *Visit https://farmsking.in today for free crop advisory!*`;
 
     const url = `whatsapp://send?text=${encodeURIComponent(promoText)}`;
     Linking.openURL(url).catch(() => {

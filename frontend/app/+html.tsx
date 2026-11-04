@@ -8,6 +8,30 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        {/* Modern High-End Emerald & Slate Scrollbar */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          html, body {
+            overflow-x: hidden !important;
+            scrollbar-width: thin;
+            scrollbar-color: #10b981 #090e17;
+          }
+          ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
+          ::-webkit-scrollbar-track {
+            background: #090e17;
+          }
+          ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 99px;
+            border: 2px solid #090e17;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+          }
+        `}} />
+
 
         {/* Primary Page Title & Canonical SEO Tags */}
         <title>FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)</title>

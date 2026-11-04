@@ -10,6 +10,22 @@ export declare class AiChatRequestDto {
     history?: ChatMessageDto[];
     mode?: AiChatMode;
 }
+export interface LeafDiagnosisResult {
+    cropRecognized: boolean;
+    cropName: string;
+    diseaseName: string;
+    latinName: string;
+    category: 'FUNGAL' | 'BACTERIAL' | 'VIRAL' | 'PEST_ATTACK' | 'DEFICIENCY' | 'HEALTHY';
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    confidenceScore: number;
+    symptoms: string;
+    firstAidSpray: string;
+    dosageInstructions: string;
+    organicRemedy: string;
+    precautions: string[];
+    recommendedProductName: string;
+    recommendedPrice: number;
+}
 export declare class AiChatService {
     private readonly configService;
     private readonly appSettingsService;
@@ -19,4 +35,6 @@ export declare class AiChatService {
         answer: string;
         isFarming: boolean;
     }>;
+    diagnoseLeaf(imageBase64: string): Promise<LeafDiagnosisResult>;
+    private getFallbackDiagnosis;
 }

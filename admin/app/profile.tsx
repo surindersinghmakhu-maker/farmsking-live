@@ -1121,50 +1121,6 @@ export default function ProfileScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color="#059669" />
           </TouchableOpacity>
-
-          {/* APK Download Card */}
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-              backgroundColor: '#f0f9ff',
-              borderRadius: RADIUS.lg,
-              borderWidth: 1.5,
-              borderColor: '#bae6fd',
-              padding: 12,
-              marginTop: 12,
-              marginBottom: 20,
-              width: '100%',
-              maxWidth: 460,
-            }}
-            onPress={() => {
-              tap();
-              const url = 'https://farmsking.in/download/farmsking.apk';
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', 'farmsking.apk');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                return;
-              }
-              Linking.openURL(url).catch(() => { });
-            }}
-            activeOpacity={0.85}
-          >
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="logo-android" size={20} color="#0284c7" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK) · ~18.5 MB</Text>
-            </View>
-            <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
-              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
-            </View>
-          </TouchableOpacity>
-        
           {/* 🚪 Account Sign Out / Logout Card */}
           <TouchableOpacity
             style={{

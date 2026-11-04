@@ -538,8 +538,8 @@ const TRANSLATIONS = {
     officialRatesPerk4: 'Daily WhatsApp price alerts',
     signInToUnlock: 'Sign In to Unlock',
     closePreview: 'Close Preview',
-    fourPillarsTitle: 'The Four Pillars of FarmsKing',
-    fourPillarsSub: 'Integrated ecosystem empowering Indian agriculture from seed to harvest',
+    fourPillarsTitle: 'Four Pillars of Intelligent Agriculture',
+    fourPillarsSub: 'Unified digital agronomy ecosystem designed to maximize yield, diagnose crops in 5 seconds, and eliminate mandi broker friction.',
     appDownloadTitle: 'Experience FarmsKing on Mobile & Web',
     appDownloadSub: 'Scan the universal QR code with any smartphone camera to launch www.farmsking.in directly.',
     scanWithPhone: 'Scan with Smartphone',
@@ -760,6 +760,7 @@ export default function PublicLandingPage() {
   const [liveActivities, setLiveActivities] = useState<LiveFarmerActivity[]>(() => getUnifiedLiveFarmerFeed());
   const [activeActivityIdx, setActiveActivityIdx] = useState(0);
   const [tickerDismissed, setTickerDismissed] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const tickerFadeAnim = useSharedValue(1);
   const tickerSlideAnim = useSharedValue(0);
 
@@ -1191,6 +1192,46 @@ export default function PublicLandingPage() {
             transform: translateY(-8px) scale(1.015) !important;
             border-color: rgba(16, 185, 129, 0.6) !important;
             box-shadow: 0 28px 56px -14px rgba(16, 185, 129, 0.22), 0 0 20px rgba(16, 185, 129, 0.15), inset 0 1px 3px rgba(255, 255, 255, 1) !important;
+          }
+          @keyframes liveStreamPulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+          }
+          .live-stream-pulse-beacon {
+            animation: liveStreamPulse 2s infinite !important;
+          }
+          .card-farming:hover {
+            border-color: rgba(245, 158, 11, 0.75) !important;
+            box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 28px rgba(245, 158, 11, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+          }
+          .card-farming-day:hover {
+            border-color: rgba(217, 119, 6, 0.75) !important;
+            box-shadow: 0 28px 56px -14px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.2), inset 0 1px 3px #ffffff !important;
+          }
+          .card-gardening:hover {
+            border-color: rgba(244, 114, 182, 0.75) !important;
+            box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 28px rgba(244, 114, 182, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+          }
+          .card-gardening-day:hover {
+            border-color: rgba(219, 39, 119, 0.75) !important;
+            box-shadow: 0 28px 56px -14px rgba(244, 114, 182, 0.25), 0 0 24px rgba(244, 114, 182, 0.2), inset 0 1px 3px #ffffff !important;
+          }
+          .card-cropdoctors:hover {
+            border-color: rgba(16, 185, 129, 0.75) !important;
+            box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 28px rgba(16, 185, 129, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+          }
+          .card-cropdoctors-day:hover {
+            border-color: rgba(5, 150, 105, 0.75) !important;
+            box-shadow: 0 28px 56px -14px rgba(16, 185, 129, 0.25), 0 0 24px rgba(16, 185, 129, 0.2), inset 0 1px 3px #ffffff !important;
+          }
+          .card-agristore:hover {
+            border-color: rgba(14, 165, 233, 0.75) !important;
+            box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 28px rgba(14, 165, 233, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+          }
+          .card-agristore-day:hover {
+            border-color: rgba(2, 132, 199, 0.75) !important;
+            box-shadow: 0 28px 56px -14px rgba(14, 165, 233, 0.25), 0 0 24px rgba(14, 165, 233, 0.2), inset 0 1px 3px #ffffff !important;
           }
           .orig-pill-btn-day {
             transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
@@ -1684,7 +1725,7 @@ export default function PublicLandingPage() {
           S.scrollContainer,
           isMobile ? S.scrollContainerMobile : S.scrollContainerDesktop,
         ]}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={Platform.OS === 'web' ? true : false}
       >
         {/* ══ HERO SECTION (SPLIT 2-COLUMN) ══ */}
         <View style={[S.heroSection, isDesktop ? S.heroDesktop : S.heroMobile]}>
@@ -1820,8 +1861,11 @@ export default function PublicLandingPage() {
                   <Ionicons name="trending-up" size={isMobile ? 14 : 16} color={isDay ? '#059669' : '#34d399'} />
                   <Text style={[S.mandiCardTitle, isDay && S.mandiCardTitleDay, isMobile && { fontSize: 12.5 }]}>{t.instantMandi}</Text>
                   <View style={[S.liveBadgeMini, isDay && S.liveBadgeMiniDay, isMobile && { paddingHorizontal: 4, paddingVertical: 1.5 }]}>
-                    <View style={S.pulseDot} />
+                    <View style={[S.pulseDot, Platform.OS === 'web' ? ({ className: 'live-stream-pulse-beacon' } as any) : {}]} />
                     <Text style={[S.liveBadgeMiniText, isDay && S.liveBadgeMiniTextDay, isMobile && { fontSize: 8 }]}>{t.liveApmc}</Text>
+                    {!isMobile && (
+                      <Text style={[S.liveBadgeMiniLatency, isDay && S.liveBadgeMiniLatencyDay]}>• 1.2s Sync</Text>
+                    )}
                   </View>
                 </View>
 
@@ -2237,7 +2281,7 @@ export default function PublicLandingPage() {
                   </View>
                   <View style={S.btnPrimaryTextBox}>
                     <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 12.5, lineHeight: 16 }]} numberOfLines={1}>
-                      {user ? 'Dashboard →' : 'Scan Crop Leaf Free →'}
+                      {user ? 'Open Farmer Dashboard' : 'Scan Crop Leaf Free'}
                     </Text>
                   </View>
                   <View style={[S.btnPrimaryArrowPill, isMobile && { width: 20, height: 20, borderRadius: 10 }]}>
@@ -2565,6 +2609,187 @@ export default function PublicLandingPage() {
           </View>
         </View>
 
+        {/* ══ EXECUTIVE LIVE TELEMETRY METRICS STRIP ══ */}
+        <View style={[S.telemetryStripSection, isDay && S.telemetryStripSectionDay, isMobile && S.telemetryStripSectionMobile]}>
+          <View style={S.telemetryStripInner}>
+            <View style={[S.telemetryStripGrid, isMobile && S.telemetryStripGridMobile]}>
+              
+              {/* Metric 1: Satellite Acreage */}
+              <SpatialTiltCard
+                style={[S.telemetryMetricCard, isDay ? S.telemetryMetricCardDay : S.telemetryMetricCardNight, isMobile && S.telemetryMetricCardMobile]}
+                glowColor={isDay ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.35)'}
+                tiltMax={4}
+              >
+                <View style={S.metricTopRow}>
+                  <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.2)' }]}>
+                    <View style={[S.pulseDot, { backgroundColor: '#10b981' }]} />
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#047857' : '#34d399' }]}>LIVE SATELLITE</Text>
+                  </View>
+                  <Ionicons name="earth" size={18} color={isDay ? '#059669' : '#10b981'} />
+                </View>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay]}>50,000+</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Acres Under Active Telemetry</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Continuous NDVI canopy density, soil moisture & weather radar sync</Text>
+              </SpatialTiltCard>
+
+              {/* Metric 2: APMC Mandis */}
+              <SpatialTiltCard
+                style={[S.telemetryMetricCard, isDay ? S.telemetryMetricCardDay : S.telemetryMetricCardNight, isMobile && S.telemetryMetricCardMobile]}
+                glowColor={isDay ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.35)'}
+                tiltMax={4}
+              >
+                <View style={S.metricTopRow}>
+                  <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.2)' }]}>
+                    <View style={[S.pulseDot, { backgroundColor: '#f59e0b' }]} />
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#b45309' : '#fbbf24' }]}>DIRECT APMC</Text>
+                  </View>
+                  <Ionicons name="trending-up" size={18} color={isDay ? '#d97706' : '#f59e0b'} />
+                </View>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#b45309' : '#fbbf24' }]}>50+ Mandis</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Real-Time Auction Price Stream</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Punjab, Haryana, Rajasthan & MP yard rates with 0% hidden middleman cuts</Text>
+              </SpatialTiltCard>
+
+              {/* Metric 3: AI Diagnosis Latency */}
+              <SpatialTiltCard
+                style={[S.telemetryMetricCard, isDay ? S.telemetryMetricCardDay : S.telemetryMetricCardNight, isMobile && S.telemetryMetricCardMobile]}
+                glowColor={isDay ? 'rgba(6, 182, 212, 0.25)' : 'rgba(6, 182, 212, 0.35)'}
+                tiltMax={4}
+              >
+                <View style={S.metricTopRow}>
+                  <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.2)' }]}>
+                    <View style={[S.pulseDot, { backgroundColor: '#06b6d4' }]} />
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#0e7490' : '#22d3ee' }]}>VISION AI</Text>
+                  </View>
+                  <Ionicons name="sparkles" size={18} color={isDay ? '#0891b2' : '#06b6d4'} />
+                </View>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#0284c7' : '#38bdf8' }]}>&lt; 5 Seconds</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Instant AI Leaf Diagnosis</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Edge pathology vision model validated across 100,000+ field plant samples</Text>
+              </SpatialTiltCard>
+
+              {/* Metric 4: System Reliability */}
+              <SpatialTiltCard
+                style={[S.telemetryMetricCard, isDay ? S.telemetryMetricCardDay : S.telemetryMetricCardNight, isMobile && S.telemetryMetricCardMobile]}
+                glowColor={isDay ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.35)'}
+                tiltMax={4}
+              >
+                <View style={S.metricTopRow}>
+                  <View style={[S.metricBadgePill, { backgroundColor: isDay ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.2)' }]}>
+                    <View style={[S.pulseDot, { backgroundColor: '#8b5cf6' }]} />
+                    <Text style={[S.metricBadgeText, { color: isDay ? '#6d28d9' : '#a78bfa' }]}>RELIABILITY</Text>
+                  </View>
+                  <Ionicons name="shield-checkmark" size={18} color={isDay ? '#7c3aed' : '#8b5cf6'} />
+                </View>
+                <Text style={[S.metricPrimaryValue, isDay && S.metricPrimaryValueDay, { color: isDay ? '#6d28d9' : '#c084fc' }]}>99.8%</Text>
+                <Text style={[S.metricTitle, isDay && S.metricTitleDay]}>Agronomy Network Uptime</Text>
+                <Text style={[S.metricSubtitle, isDay && S.metricSubtitleDay]}>Mission-critical advisory infrastructure with rapid-response agronomist desks</Text>
+              </SpatialTiltCard>
+
+            </View>
+          </View>
+        </View>
+
+        {/* ══ OFFICIAL INSTITUTIONAL & ISO COMPLIANCE TRUST RIBBON ══ */}
+        <View style={[S.isoTrustSection, isDay && S.isoTrustSectionDay, isMobile && S.isoTrustSectionMobile]}>
+          <View style={S.isoTrustInner}>
+            
+            {/* Header Badge & Title */}
+            <View style={S.isoHeaderContainer}>
+              <View style={[S.isoBadgeChip, isDay ? S.isoBadgeChipDay : S.isoBadgeChipNight]}>
+                <Ionicons name="shield-checkmark" size={14} color={isDay ? '#047857' : '#34d399'} />
+                <Text style={[S.isoBadgeChipText, isDay ? S.isoBadgeChipTextDay : S.isoBadgeChipTextNight]}>
+                  INSTITUTIONAL GOVERNANCE &amp; STATUTORY INTEGRITY
+                </Text>
+              </View>
+              <Text style={[S.isoMainHeading, isDay && S.isoMainHeadingDay, isMobile && { fontSize: 22, lineHeight: 28 }]}>
+                Standardized Enterprise Quality &amp; Data Governance
+              </Text>
+              <Text style={[S.isoSubHeading, isDay && S.isoSubHeadingDay, isMobile && { fontSize: 13, lineHeight: 18 }]}>
+                FarmsKing operates under certified quality benchmarks, statutory corporate registration, and rigorous agricultural security protocols.
+              </Text>
+            </View>
+
+            {/* 4 Trust Badges Grid */}
+            <View style={[S.isoGrid, isMobile && S.isoGridMobile]}>
+              
+              {/* Card 1: ISO 9001:2015 */}
+              <View style={[S.isoCard, isDay ? S.isoCardDay : S.isoCardNight, isMobile && S.isoCardMobile]}>
+                <View style={[S.isoIconWrapper, { backgroundColor: isDay ? 'rgba(16,185,129,0.1)' : 'rgba(16,185,129,0.18)' }]}>
+                  <Ionicons name="ribbon" size={24} color={isDay ? '#059669' : '#34d399'} />
+                </View>
+                <View style={S.isoCardContent}>
+                  <View style={S.isoCardTitleRow}>
+                    <Text style={[S.isoCardTitle, isDay && S.isoCardTitleDay]}>ISO 9001:2015</Text>
+                    <View style={[S.isoVerifiedPill, { backgroundColor: isDay ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.2)' }]}>
+                      <Text style={[S.isoVerifiedPillText, { color: isDay ? '#047857' : '#34d399' }]}>Quality Standard</Text>
+                    </View>
+                  </View>
+                  <Text style={[S.isoCardScope, isDay && S.isoCardScopeDay]}>
+                    Quality Management Systems for agricultural technology advisory, soil health mapping, and farm workflow optimization.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Card 2: ISO 27001 */}
+              <View style={[S.isoCard, isDay ? S.isoCardDay : S.isoCardNight, isMobile && S.isoCardMobile]}>
+                <View style={[S.isoIconWrapper, { backgroundColor: isDay ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.18)' }]}>
+                  <Ionicons name="lock-closed" size={24} color={isDay ? '#2563eb' : '#60a5fa'} />
+                </View>
+                <View style={S.isoCardContent}>
+                  <View style={S.isoCardTitleRow}>
+                    <Text style={[S.isoCardTitle, isDay && S.isoCardTitleDay]}>ISO 27001 Aligned</Text>
+                    <View style={[S.isoVerifiedPill, { backgroundColor: isDay ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.2)' }]}>
+                      <Text style={[S.isoVerifiedPillText, { color: isDay ? '#1d4ed8' : '#60a5fa' }]}>Information Security</Text>
+                    </View>
+                  </View>
+                  <Text style={[S.isoCardScope, isDay && S.isoCardScopeDay]}>
+                    Zero data leakage architecture. Encrypted farmer identity KYC, land boundary records, and secure payment processing.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Card 3: ICAR Protocol Alignment */}
+              <View style={[S.isoCard, isDay ? S.isoCardDay : S.isoCardNight, isMobile && S.isoCardMobile]}>
+                <View style={[S.isoIconWrapper, { backgroundColor: isDay ? 'rgba(5,150,105,0.1)' : 'rgba(5,150,105,0.18)' }]}>
+                  <Ionicons name="leaf" size={24} color={isDay ? '#047857' : '#10b981'} />
+                </View>
+                <View style={S.isoCardContent}>
+                  <View style={S.isoCardTitleRow}>
+                    <Text style={[S.isoCardTitle, isDay && S.isoCardTitleDay]}>ICAR Agronomy Protocols</Text>
+                    <View style={[S.isoVerifiedPill, { backgroundColor: isDay ? 'rgba(5,150,105,0.12)' : 'rgba(5,150,105,0.2)' }]}>
+                      <Text style={[S.isoVerifiedPillText, { color: isDay ? '#047857' : '#10b981' }]}>Agronomy Validated</Text>
+                    </View>
+                  </View>
+                  <Text style={[S.isoCardScope, isDay && S.isoCardScopeDay]}>
+                    AI diagnosis thresholds and recommended bio-inputs rigorously benchmarked against Indian Council of Agricultural Research guidelines.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Card 4: MCA Registered Entity */}
+              <View style={[S.isoCard, isDay ? S.isoCardDay : S.isoCardNight, isMobile && S.isoCardMobile]}>
+                <View style={[S.isoIconWrapper, { backgroundColor: isDay ? 'rgba(217,119,6,0.1)' : 'rgba(217,119,6,0.18)' }]}>
+                  <Ionicons name="business" size={24} color={isDay ? '#b45309' : '#fbbf24'} />
+                </View>
+                <View style={S.isoCardContent}>
+                  <View style={S.isoCardTitleRow}>
+                    <Text style={[S.isoCardTitle, isDay && S.isoCardTitleDay]}>MCA Registered Entity</Text>
+                    <View style={[S.isoVerifiedPill, { backgroundColor: isDay ? 'rgba(217,119,6,0.12)' : 'rgba(217,119,6,0.2)' }]}>
+                      <Text style={[S.isoVerifiedPillText, { color: isDay ? '#b45309' : '#fbbf24' }]}>Govt. of India</Text>
+                    </View>
+                  </View>
+                  <Text style={[S.isoCardScope, isDay && S.isoCardScopeDay]}>
+                    FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Punjab - 143422.
+                  </Text>
+                </View>
+              </View>
+
+            </View>
+
+          </View>
+        </View>
+
         {/* ══ THE 4 ICONIC FROSTED GLASS CARDS (3D TILT + BABY LIGHT PASTELS) ══ */}
         <View style={S.pillarsSection}>
           <View style={S.sectionHeader}>
@@ -2586,7 +2811,7 @@ export default function PublicLandingPage() {
                 isTablet && S.pillarCardOrigTablet,
                 isMobile && S.pillarCardOrigMobile,
                 isDay ? S.pillarCardOrigDay : null,
-                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day' : 'orig-glass-card' } as any) : {},
+                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day card-farming-day' : 'orig-glass-card card-farming' } as any) : {},
               ]}
               glowColor={isDay ? 'rgba(245, 158, 11, 0.28)' : 'rgba(245, 158, 11, 0.45)'}
               tiltMax={7}
@@ -2642,6 +2867,16 @@ export default function PublicLandingPage() {
               <Text style={[S.origCardSubtitle, isDay && S.origCardSubtitleDay]}>
                 Precision Agriculture, Yield Max, Resource Efficiency.
               </Text>
+              <View style={S.pillarFeatureList}>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#d97706' : '#fbbf24'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Daily APMC Mandi price discovery</Text>
+                </View>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#d97706' : '#fbbf24'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>GPS boundary & soil canopy tracking</Text>
+                </View>
+              </View>
 
               {/* Exact Frosted Pill Button (Left-Aligned, Compact) */}
               <TouchableOpacity
@@ -2667,7 +2902,7 @@ export default function PublicLandingPage() {
                 isTablet && S.pillarCardOrigTablet,
                 isMobile && S.pillarCardOrigMobile,
                 isDay ? S.pillarCardOrigDay : null,
-                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day' : 'orig-glass-card' } as any) : {},
+                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day card-gardening-day' : 'orig-glass-card card-gardening' } as any) : {},
               ]}
               glowColor={isDay ? 'rgba(244, 114, 182, 0.28)' : 'rgba(244, 114, 182, 0.45)'}
               tiltMax={7}
@@ -2723,6 +2958,16 @@ export default function PublicLandingPage() {
               <Text style={[S.origCardSubtitle, isDay && S.origCardSubtitleDay]}>
                 Home Gardening Kits, Urban Farming Solutions, Plant Care.
               </Text>
+              <View style={S.pillarFeatureList}>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#db2777' : '#f472b6'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Smart sunlight & watering schedules</Text>
+                </View>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#db2777' : '#f472b6'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Organic seed kits & bio-nutrition</Text>
+                </View>
+              </View>
 
               {/* Exact Frosted Pill Button (Left-Aligned, Compact) */}
               <TouchableOpacity
@@ -2748,7 +2993,7 @@ export default function PublicLandingPage() {
                 isTablet && S.pillarCardOrigTablet,
                 isMobile && S.pillarCardOrigMobile,
                 isDay ? S.pillarCardOrigDay : null,
-                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day' : 'orig-glass-card' } as any) : {},
+                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day card-cropdoctors-day' : 'orig-glass-card card-cropdoctors' } as any) : {},
               ]}
               glowColor={isDay ? 'rgba(16, 185, 129, 0.28)' : 'rgba(16, 185, 129, 0.45)'}
               tiltMax={7}
@@ -2804,6 +3049,16 @@ export default function PublicLandingPage() {
               <Text style={[S.origCardSubtitle, isDay && S.origCardSubtitleDay]}>
                 AI Disease Diagnosis, Expert Consultations, Soil Analysis.
               </Text>
+              <View style={S.pillarFeatureList}>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>100,000+ field pathology models</Text>
+                </View>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#059669' : '#34d399'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Certified bio-chemical dosages</Text>
+                </View>
+              </View>
 
               {/* Exact Frosted Pill Button (Left-Aligned, Compact) */}
               <TouchableOpacity
@@ -2829,7 +3084,7 @@ export default function PublicLandingPage() {
                 isTablet && S.pillarCardOrigTablet,
                 isMobile && S.pillarCardOrigMobile,
                 isDay ? S.pillarCardOrigDay : null,
-                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day' : 'orig-glass-card' } as any) : {},
+                Platform.OS === 'web' ? ({ className: isDay ? 'orig-glass-card-day card-agristore-day' : 'orig-glass-card card-agristore' } as any) : {},
               ]}
               glowColor={isDay ? 'rgba(14, 165, 233, 0.28)' : 'rgba(45, 212, 191, 0.45)'}
               tiltMax={7}
@@ -2885,6 +3140,16 @@ export default function PublicLandingPage() {
               <Text style={[S.origCardSubtitle, isDay && S.origCardSubtitleDay]}>
                 Certified Seeds, Fertilizers, Farmer Made Food & Organic Products.
               </Text>
+              <View style={S.pillarFeatureList}>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#0284c7' : '#38bdf8'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>100% genuine lab-verified inputs</Text>
+                </View>
+                <View style={S.pillarFeatureItem}>
+                  <Ionicons name="checkmark-circle" size={12} color={isDay ? '#0284c7' : '#38bdf8'} />
+                  <Text style={[S.pillarFeatureText, isDay && S.pillarFeatureTextDay]}>Transparent farmgate direct delivery</Text>
+                </View>
+              </View>
 
               {/* Exact Frosted Pill Button (Left-Aligned, Compact) */}
               <TouchableOpacity
@@ -3076,92 +3341,6 @@ export default function PublicLandingPage() {
             );
           })()}
         </View>
-
-        {/* ══ SMART_FARM_APP_SHOWCASE: MOBILE LUXURY ECOSYSTEM ══ */}
-        <View style={[S.appShowcaseSection, isMobile && S.appShowcaseSectionMobile]}>
-          <View style={[S.appShowcaseCard, isDay && S.appShowcaseCardDay, isMobile && S.appShowcaseCardMobile]}>
-            <View style={S.appShowcaseLeftCol}>
-              <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
-                <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay]} />
-                <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay]}>PORTABLE AGRONOMY</Text>
-              </View>
-              <Text style={[S.appShowcaseTitle, isDay && S.appShowcaseTitleDay, isMobile && S.appShowcaseTitleMobile]}>
-                Smart Farming in Your Pocket
-              </Text>
-              <Text style={[S.appShowcaseSubtitle, isDay && S.appShowcaseSubtitleDay, isMobile && S.appShowcaseSubtitleMobile]}>
-                Engineered specifically for Indian cultivators. Operates with zero lag, instant pathology diagnosis, and live mandi price alerts even in low-bandwidth rural fields.
-              </Text>
-
-              {/* 4 App Highlights */}
-              <View style={[S.appPerksGrid, isMobile && S.appPerksGridMobile]}>
-                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
-                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#ecfdf5' }]}>
-                    <Ionicons name="flash-outline" size={16} color="#10b981" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Offline Diagnostic Engine</Text>
-                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>Diagnose crops and view advisory with no internet.</Text>
-                  </View>
-                </View>
-
-                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
-                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#f0f9ff' }]}>
-                    <Ionicons name="planet-outline" size={16} color="#0284c7" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Satellite Canopy Moisture</Text>
-                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>NDVI crop vegetation and moisture tracking.</Text>
-                  </View>
-                </View>
-
-                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
-                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#fefce8' }]}>
-                    <Ionicons name="trending-up" size={16} color="#d97706" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>50+ Live APMC Mandis</Text>
-                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>Real-time auction rates across wheat, cotton and paddy.</Text>
-                  </View>
-                </View>
-
-                <View style={[S.appPerkItem, isMobile && S.appPerkItemMobile]}>
-                  <View style={[S.appPerkIconBox, isDay && { backgroundColor: '#fdf2f8' }]}>
-                    <Ionicons name="shield-checkmark-outline" size={16} color="#db2777" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[S.appPerkTitle, isDay && { color: '#0f172a' }]}>Zero-Fake Guarantee</Text>
-                    <Text style={[S.appPerkDesc, isDay && { color: '#64748b' }]}>100% verified bio-fertilizers and organic seeds.</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Download Buttons */}
-              <View style={[S.appDownloadBtnRow, isMobile && S.appDownloadBtnRowMobile]}>
-                <TouchableOpacity
-                  style={[S.appDownloadPrimaryBtn, isDay && S.appDownloadPrimaryBtnDay, isMobile && S.appDownloadPrimaryBtnMobile]}
-                  onPress={() => {
-                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                      window.open('https://farmsking.in/download/farmsking.apk', '_blank');
-                    }
-                  }}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="logo-android" size={18} color="#ffffff" />
-                  <View>
-                    <Text style={S.appDownloadBtnSub}>DIRECT DOWNLOAD</Text>
-                    <Text style={S.appDownloadBtnTitle}>Get FarmsKing APK (~18.5 MB)</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <View style={[S.appRatingPill, isDay && S.appRatingPillDay, isMobile && S.appRatingPillMobile]}>
-                  <Ionicons name="star" size={14} color="#f59e0b" />
-                  <Text style={[S.appRatingText, isDay && { color: '#0f172a' }]}>4.9/5 Rating • 14,200+ Cultivators</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-
         {/* ══ VERIFIED CULTIVATOR FIELD SUCCESS STORIES ══ */}
         <View style={S.testimonialsSection}>
           <View style={S.sectionHeader}>
@@ -3394,37 +3573,6 @@ export default function PublicLandingPage() {
                 <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
               </TouchableOpacity>
               <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran • Corp: Makhu, Punjab - 143422</Text>
-            </View>
-
-            {/* Column 5: Official Mobile App QR & Download */}
-            <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
-              <Text style={[S.footerColTitle, isDay && S.footerColTitleDay]}>FarmsKing App</Text>
-              <Text style={[S.footerDesc, isDay && S.footerDescDay, { marginBottom: 10, fontSize: 11 }]}>
-                Scan QR code with smartphone camera to install official Android app.
-              </Text>
-              <View style={[S.footerQrContainer, isDay && S.footerQrContainerDay]}>
-                <FarmsKingQRCode
-                  size={92}
-                  url={appDownloadUrl}
-                  badgeLabel="SCAN TO INSTALL"
-                  themeMode={isDay ? 'day' : 'night'}
-                  showCaption={false}
-                />
-              </View>
-              <TouchableOpacity
-                style={[S.footerAppDownloadBtn, isDay && S.footerAppDownloadBtnDay]}
-                onPress={() => {
-                  if (typeof window !== 'undefined') {
-                    window.open(appDownloadUrl, '_blank');
-                  } else {
-                    Linking.openURL(appDownloadUrl).catch(() => {});
-                  }
-                }}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="logo-android" size={14} color="#022c22" />
-                <Text style={S.footerAppDownloadBtnText}>Download Android APK</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -3881,7 +4029,7 @@ export default function PublicLandingPage() {
       </Modal>
 
       {/* ══ LIVE SOCIAL PROOF ACTIVITY TICKER (FLOATING BOTTOM-LEFT - DESKTOP/TABLET ONLY) ══ */}
-      {!tickerDismissed && !isMobile && (
+      {!tickerDismissed && !isMobile && scrollY > 280 && (
         <Animated.View
           style={[
             S.liveTickerFixedContainer,
@@ -5216,6 +5364,306 @@ const S = StyleSheet.create({
     fontSize: 9,
     fontFamily: FONT.bold,
     color: '#a7f3d0',
+  },
+
+  // ══ Executive Live Telemetry Strip ══
+  telemetryStripSection: {
+    paddingVertical: 24,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  telemetryStripSectionDay: {},
+  telemetryStripSectionMobile: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+  },
+  telemetryStripInner: {
+    width: '100%',
+  },
+  telemetryStripGrid: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 16,
+    width: '100%',
+  },
+  telemetryStripGridMobile: {
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  telemetryMetricCard: {
+    flex: 1,
+    minWidth: 260,
+    borderRadius: RADIUS.lg,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)' } as any) : {}),
+  },
+  telemetryMetricCardDay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderColor: 'rgba(226, 232, 240, 0.9)',
+    shadowColor: 'rgba(15, 23, 42, 0.06)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  telemetryMetricCardNight: {
+    shadowColor: 'rgba(0, 0, 0, 0.4)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  telemetryMetricCardMobile: {
+    flex: undefined,
+    width: '100%',
+    minWidth: '100%',
+    padding: 14,
+    borderRadius: RADIUS.md,
+  },
+  metricTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  metricBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+  },
+  metricBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.8,
+  },
+  metricPrimaryValue: {
+    fontSize: 32,
+    lineHeight: 38,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+    letterSpacing: -0.8,
+    marginBottom: 4,
+  },
+  metricPrimaryValueDay: {
+    color: '#059669',
+  },
+  metricTitle: {
+    fontSize: 14.5,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+    marginBottom: 4,
+    letterSpacing: -0.2,
+  },
+  metricTitleDay: {
+    color: '#0f172a',
+  },
+  metricSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 17,
+  },
+  metricSubtitleDay: {
+    color: '#64748b',
+  },
+
+  // ══ Official Institutional & ISO Compliance Trust Ribbon ══
+  isoTrustSection: {
+    paddingVertical: 36,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  isoTrustSectionDay: {},
+  isoTrustSectionMobile: {
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+  },
+  isoTrustInner: {
+    width: '100%',
+  },
+  isoHeaderContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  isoBadgeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.25)',
+    marginBottom: 10,
+  },
+  isoBadgeChipDay: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: 'rgba(5, 150, 105, 0.25)',
+  },
+  isoBadgeChipNight: {},
+  isoBadgeChipText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    letterSpacing: 1.2,
+  },
+  isoBadgeChipTextDay: {
+    color: '#047857',
+  },
+  isoBadgeChipTextNight: {
+    color: '#34d399',
+  },
+  isoMainHeading: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+    marginBottom: 8,
+  },
+  isoMainHeadingDay: {
+    color: '#0f172a',
+  },
+  isoSubHeading: {
+    fontSize: 14.5,
+    lineHeight: 22,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    textAlign: 'center',
+    maxWidth: 720,
+  },
+  isoSubHeadingDay: {
+    color: '#64748b',
+  },
+  isoGrid: {
+    flexDirection: 'row',
+    gap: 16,
+    width: '100%',
+    alignItems: 'stretch',
+  },
+  isoGridMobile: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+  isoCard: {
+    flex: 1,
+    minWidth: 260,
+    borderRadius: RADIUS.lg,
+    padding: 18,
+    borderWidth: 1,
+    flexDirection: 'column',
+    gap: 14,
+  },
+  isoCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: 'rgba(0, 0, 0, 0.35)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  isoCardDay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderColor: 'rgba(226, 232, 240, 0.9)',
+    shadowColor: 'rgba(15, 23, 42, 0.05)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  isoCardMobile: {
+    flex: undefined,
+    width: '100%',
+    padding: 14,
+  },
+  isoIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  isoCardContent: {
+    flex: 1,
+  },
+  isoCardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  isoCardTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    letterSpacing: -0.2,
+  },
+  isoCardTitleDay: {
+    color: '#0f172a',
+  },
+  isoVerifiedPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderRadius: RADIUS.pill,
+  },
+  isoVerifiedPillText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.3,
+  },
+  isoCardScope: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 18,
+  },
+  isoCardScopeDay: {
+    color: '#64748b',
+  },
+
+  pillarFeatureList: {
+    marginTop: 8,
+    marginBottom: 12,
+    gap: 4,
+    width: '100%',
+  },
+  pillarFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  pillarFeatureText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+    lineHeight: 14,
+  },
+  pillarFeatureTextDay: {
+    color: '#475569',
+  },
+  liveBadgeMiniLatency: {
+    fontSize: 8.5,
+    fontFamily: FONT.semiBold,
+    color: '#a7f3d0',
+    opacity: 0.85,
+  },
+  liveBadgeMiniLatencyDay: {
+    color: '#047857',
   },
 
   // 4 Pillars Section

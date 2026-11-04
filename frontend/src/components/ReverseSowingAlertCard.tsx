@@ -83,7 +83,7 @@ export const ReverseSowingAlertCard: React.FC = () => {
 
   const handleShareWhatsapp = () => {
     tap();
-    const shareText = `🌾 *FarmsKing Reverse Sowing Alert (${activeEvent.state})*\n\n🎉 Event: ${activeEvent.eventName}\n⏳ Countdown: ${activeEvent.daysToEvent} Days to Harvest\n\n${activeEvent.sowAlertTitle}:\n• ${activeEvent.sowCrops.join('\n• ')}\n\n💡 Advice: ${activeEvent.sowAdvice}\n\n📈 High Demand Surge:\n${activeEvent.highDemand.join('\n')}\n\n📲 Download FarmsKing App for Daily Market Rates & Reverse Sowing Alerts!`;
+    const shareText = `🌾 *FarmsKing Reverse Sowing Alert (${activeEvent.state})*\n\n🎉 Event: ${activeEvent.eventName}\n⏳ Countdown: ${activeEvent.daysToEvent} Days to Harvest\n\n${activeEvent.sowAlertTitle}:\n• ${activeEvent.sowCrops.join('\n• ')}\n\n💡 Advice: ${activeEvent.sowAdvice}\n\n📈 High Demand Surge:\n${activeEvent.highDemand.join('\n')}\n\n🌐 Visit https://farmsking.in for Daily Market Rates & Reverse Sowing Alerts!`;
     const url = `whatsapp://send?text=${encodeURIComponent(shareText)}`;
     Linking.openURL(url).catch(() => {
       if (Platform.OS === 'web') alert(shareText);

@@ -6,4 +6,7 @@ export declare class AiChatController {
         answer: string;
         isFarming: boolean;
     }>;
+    diagnoseLeaf(body: {
+        imageBase64: string;
+    }): Promise<import("./ai-chat.service").LeafDiagnosisResult>;
 }

@@ -1366,7 +1366,7 @@ export default function SettingEntitySetup() {
                       style={[styles.input, { color: textColor }]}
                       value={masterData.appDownloadUrl || ''}
                       onChangeText={(txt) => handleUpdateMasterField('appDownloadUrl', txt)}
-                      placeholder="https://farmsking.in/download/farmsking.apk"
+                      placeholder="https://www.farmsking.in"
                       placeholderTextColor={subTextColor}
                     />
                   </View>

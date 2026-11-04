@@ -644,7 +644,7 @@
     function shareWhatsApp() {
       const event = FESTIVAL_DATA[currentEventIndex] || FESTIVAL_DATA[0];
       const t = event.translations[currentLang] || event.translations['en'];
-      const text = `🌾 *FarmsKing Reverse Sowing Alert (${event.state})*\n\n🎉 Event: ${t.eventName}\n⏳ Days to Harvest: ${event.daysToEvent} Days\n\n${t.sowAlertTitle}:\n• ${t.sowCrops.join('\n• ')}\n\n💡 Advice: ${t.sowAdvice}\n\n📲 Download FarmsKing App for Reverse Sowing Alerts!`;
+      const text = `🌾 *FarmsKing Reverse Sowing Alert (${event.state})*\n\n🎉 Event: ${t.eventName}\n⏳ Days to Harvest: ${event.daysToEvent} Days\n\n${t.sowAlertTitle}:\n• ${t.sowCrops.join('\n• ')}\n\n💡 Advice: ${t.sowAdvice}\n\n🌐 Visit www.farmsking.in for Reverse Sowing Alerts!`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
 

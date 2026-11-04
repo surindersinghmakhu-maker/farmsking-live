@@ -623,7 +623,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   grievanceOfficerName: 'Corporate Compliance Officer',
   grievanceOfficerEmail: 'grievance@farmsking.in',
   websiteUrl: 'https://farmsking.in',
-  appDownloadUrl: 'https://farmsking.in/download/farmsking.apk',
+  appDownloadUrl: 'https://www.farmsking.in',
   latestAppVersion: '2.1.0',
 
   dateFormat: 'DD/MM/YYYY',

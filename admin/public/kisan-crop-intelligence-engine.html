@@ -435,7 +435,7 @@
         emptyText: "ਇਸ ਟੈਬ ਵਿੱਚ ਕੋਈ ਫ਼ਸਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ। ਉੱਪਰ ਰਾਜ ਜਾਂ ਫ਼ਸਲ ਚੋਣ ਬਦਲੋ!"
       },
       hi: {
-        appTitle: "किसान फस�    // Unified Crop Dataset with English Base Properties and Full Translations
+        appTitle: "किसान फस�    // Unified Crop Dataset with English Base Properties and Full Translations
     const CROP_INTELLIGENCE_DATA = [
       {
         cropName: {
@@ -1111,7 +1111,7 @@
       const titleText = activeMainTab === 'DEMAND_PRICE' ? t.tabA : t.tabB;
       const text = `🌾 *${titleText}*\n\n` + 
         list.map(c => `• ${c.cropName[currentLang] || c.cropName.en} (${c.priceChange[currentLang] || c.priceChange.en})\n  📅 Dates (Left First): ${c.eventDate[currentLang] || c.eventDate.en} | Sowing: ${c.sowDates[currentLang] || c.sowDates.en}\n  States: ${c.statesListText[currentLang] || c.statesListText.en}\n  Advice: ${c.farmerAdvice[currentLang] || c.farmerAdvice.en}`).join('\n\n') +
-        `\n\n📲 Download FarmsKing App!`;
+        `\n\n🌐 Visit www.farmsking.in`;
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
 

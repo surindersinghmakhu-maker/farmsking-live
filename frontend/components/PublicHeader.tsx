@@ -111,24 +111,7 @@ const MAIN_NAV_LINKS = [
     border: 'rgba(249, 115, 22, 0.5)',
     shadow: '#f97316',
   },
-  {
-    id: 'helpline',
-    label: 'Helpline',
-    path: '#helpline',
-    icon: 'call-outline',
-    activeIcon: 'call',
-    image: null,
-    color: '#16a34a',
-    bg: 'rgba(22,163,74,0.1)',
-    bgNight: 'rgba(22,163,74,0.22)',
-    glow: ['rgba(22, 163, 74, 0.24)', 'rgba(21, 128, 61, 0.12)', 'rgba(22, 163, 74, 0.02)'],
-    glowNight: ['rgba(22, 163, 74, 0.35)', 'rgba(21, 128, 61, 0.20)', 'rgba(22, 163, 74, 0.06)'],
-    laser: ['#4ade80', '#16a34a', '#15803d'],
-    border: 'rgba(22, 163, 74, 0.5)',
-    shadow: '#16a34a',
-    isAction: 'helpline',
-  },
-];
+  ];
 
 
 
@@ -146,8 +129,8 @@ export default function PublicHeader({
   const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 1160;
-  const isTablet = width > 768 && width <= 1160;
+  const isDesktop = width > 1024;
+  const isTablet = width > 768 && width <= 1024;
   const isMobile = width <= 768;
   const { user } = useAuth();
 
@@ -773,7 +756,7 @@ export default function PublicHeader({
                   </View>
                   <View style={styles.userBtnTextBox}>
                     <Text style={styles.userBtnName} numberOfLines={1}>
-                      {user.name || user.mobile || 'My Account'}
+                      {user.name ? user.name.split(' ')[0] : (user.mobile || 'Account')}
                     </Text>
                     <View style={styles.dashboardCueRow}>
                       <Text style={styles.dashboardCueText}>Dashboard</Text>
@@ -1097,34 +1080,6 @@ export default function PublicHeader({
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
-
-              {/* Option 3: Official Mobile App */}
-              <TouchableOpacity
-                style={styles.modalActionCardApp}
-                activeOpacity={0.88}
-                onPress={handleDownloadApp}
-              >
-                <LinearGradient
-                  colors={['#0284c7', '#0369a1']}
-                  style={styles.modalActionGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                >
-                  <View style={styles.modalActionIconWrap}>
-                    <Ionicons name="phone-portrait-outline" size={24} color="#ffffff" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.modalActionTitle}>Official Mobile App</Text>
-                    <Text style={styles.modalActionDesc}>
-                      Download Android APK directly or scan QR code on homepage footer
-                    </Text>
-                    <View style={styles.modalActionPill}>
-                      <Text style={styles.modalActionPillText}>Download APK</Text>
-                      <Ionicons name="download-outline" size={10} color="#ffffff" />
-                    </View>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
             </View>
 
             {/* Support Details Info Footer */}
@@ -1184,8 +1139,8 @@ const styles = StyleSheet.create({
     right: 0,
     marginHorizontal: 'auto',
     alignSelf: 'center',
-    width: '94%',
-    maxWidth: 1320,
+    width: '97%',
+    maxWidth: 1420,
     flexDirection: 'column',
     paddingHorizontal: 16,
     paddingVertical: 7,
@@ -1502,7 +1457,7 @@ const styles = StyleSheet.create({
   },
 
   // Right side
-  rightActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rightActions: { flexDirection: 'row', alignItems: 'center', gap: 5 },
 
   // Sticky Quick Helpline Button
   stickyHelplineBtn: {
@@ -1799,9 +1754,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    minWidth: 110,
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    minWidth: 85,
     maxWidth: 165,
   },
   userAvatarCircle: {

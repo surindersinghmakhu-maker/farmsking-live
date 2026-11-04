@@ -1718,7 +1718,7 @@ function getEnglishGuideContent(docKey: string, fallbackPa: string): string {
 ---
 
 ## 📱 1. How to Install & Setup
-1. **Download App**: Open Google Play Store, search for **FarmsKing** and install.
+1. **Access Web**: Open browser and visit **farmsking.in** to sign in directly.
 2. **Sign Up**: Enter your 10-digit mobile number + 4-digit OTP.
 3. **King ID**: Get your unique Universal King ID (e.g. \`FK-100238\`) automatically!
 

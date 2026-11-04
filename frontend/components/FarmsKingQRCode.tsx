@@ -65,14 +65,14 @@ export default function FarmsKingQRCode({
           <View style={[styles.scanBadge, isDay ? styles.scanBadgeDay : styles.scanBadgeNight]}>
             <Ionicons name="qr-code-outline" size={13} color={isDay ? '#059669' : '#34d399'} />
             <Text style={[styles.scanBadgeText, isDay ? styles.scanBadgeTextDay : styles.scanBadgeTextNight]}>
-              {badgeLabel || 'SCAN TO DOWNLOAD APP'}
+              {badgeLabel || 'SCAN TO VISIT FARMSKING'}
             </Text>
           </View>
           <Text style={[styles.captionTitle, isDay ? styles.captionTitleDay : styles.captionTitleNight]} numberOfLines={1}>
             {captionTitle || (url ? url.replace(/^https?:\/\//i, '').split('/')[0] : 'www.farmsking.in')}
           </Text>
           <Text style={[styles.captionSub, isDay ? styles.captionSubDay : styles.captionSubNight]}>
-            {captionSub || 'Direct Mobile App Installation'}
+            {captionSub || 'Direct Web & Digital Agri Portal'}
           </Text>
         </View>
       )}

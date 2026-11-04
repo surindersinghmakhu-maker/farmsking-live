@@ -23,6 +23,9 @@ let AiChatController = class AiChatController {
     async askAi(dto) {
         return this.aiChatService.generateAiResponse(dto);
     }
+    async diagnoseLeaf(body) {
+        return this.aiChatService.diagnoseLeaf(body?.imageBase64 || '');
+    }
 };
 exports.AiChatController = AiChatController;
 __decorate([
@@ -33,6 +36,14 @@ __decorate([
     __metadata("design:paramtypes", [ai_chat_service_1.AiChatRequestDto]),
     __metadata("design:returntype", Promise)
 ], AiChatController.prototype, "askAi", null);
+__decorate([
+    (0, common_1.Post)('diagnose-leaf'),
+    (0, throttler_1.Throttle)({ default: { limit: 30, ttl: 60000 } }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AiChatController.prototype, "diagnoseLeaf", null);
 exports.AiChatController = AiChatController = __decorate([
     (0, common_1.Controller)('ai-chat'),
     (0, common_1.UseGuards)(throttler_1.ThrottlerGuard),

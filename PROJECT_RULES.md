@@ -363,3 +363,30 @@ Every document generator, printable report, PDF exporter, receipt renderer, lab 
      - Government statutory dossiers, board resolutions, and CA/MCA compliance checklists.
      - Partner certificates, franchise agreements, and official company circulars.
 
+
+---
+
+## 07. 💎 Super-Premium UI/UX, ISO Model & "Oh Wow" Professional Experience Standard
+> **ਸੁਪਰ-ਪ੍ਰੀਮੀਅਮ, ISO ਮਾਡਲ ਅਤੇ "Oh Wow" ਪ੍ਰੋਫੈਸ਼ਨਲ UI/UX ਨਿਯਮ**
+
+Every developer, designer, and AI agent working on FarmsKing MUST strictly uphold the following visual, architectural, and user-experience standards:
+
+1. **100% Pure React Native Web Architecture**:
+   - Every single component, screen, dashboard, modal, telemetry card, and navigation bar must be engineered in 100% pure React / Expo React Native Web mode.
+   - Smooth 60fps hardware-accelerated animations, zero jarring layout shifts, and modular reusable tokens.
+
+2. **"Oh Wow" Executive Aesthetics**:
+   - Deliver a visually breathtaking first-impression on PC/laptop screens using luxury obsidian/slate backgrounds (`#090e17`, `#0f172a`), refined glassmorphism, neon-rim micro-glow laser borders, and crisp Manrope typography.
+   - Every element must communicate elite institutional quality and technological supremacy.
+
+3. **Institutional ISO Compliance Standard**:
+   - Align every view with ISO 9001 (Quality Management) and ISO 27001 (Security) standards.
+   - Prominently feature verified MCA corporate registration (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`, CIN: `U01100PB2026PTC063294`), official ICAR protocol seals, and real-time synchronized telemetry.
+
+4. **Primary PC/Website View & Zero Desktop Truncation**:
+   - The primary testing and evaluation canvas is the laptop/PC screen.
+   - No button, profile indicator, dashboard metric, or live ticker may ever be clipped, truncated, squeezed, or covered by overlapping fixed elements.
+   - High-contrast custom scrollbars guarantee effortless exploration of all deep content below the fold.
+
+5. **100% Pure English & Easy Wording**:
+   - All user-facing text must remain 100% pure professional English with simple, crystal-clear phrasing so cultivators and partners understand every feature immediately without confusion.

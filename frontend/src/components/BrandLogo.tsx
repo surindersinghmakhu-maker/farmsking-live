@@ -76,11 +76,9 @@ export function BrandLogo({
   // Optimal bundled fallback asset (light vs dark mode aware)
   const bundledAsset = isDarkMode
     ? LOGO_DARK
-    : useHdQuality
-    ? LOGO_HD
-    : (size && size <= 58)
-    ? LOGO_ICON_FAST
-    : LOGO_STANDARD;
+    : (round || useGoldRing)
+    ? LOGO_ROUND_GOLDRING
+    : LOGO_HD;
 
   // Guard against known broken legacy URLs, remote JPEGs with white boxes, or invalid schemes
   const isInvalidRemoteLogo =
@@ -97,9 +95,10 @@ export function BrandLogo({
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 
-  // Compute responsive dimensions
+  // Compute responsive dimensions (preserve 3.0 aspect ratio for wide logo unless round)
   const finalHeight = height ?? size ?? 36;
-  const finalWidth = width ?? (aspectRatio && typeof finalHeight === 'number' ? finalHeight * aspectRatio : (size ?? 36));
+  const defaultAspectRatio = round ? 1 : (aspectRatio ?? 3.0);
+  const finalWidth = width ?? (typeof finalHeight === 'number' ? Math.round(finalHeight * defaultAspectRatio) : finalHeight);
   const finalBorderRadius = round ? (typeof finalHeight === 'number' ? finalHeight / 2 : 18) : 0;
 
   return (

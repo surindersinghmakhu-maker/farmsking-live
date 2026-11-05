@@ -127,8 +127,13 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
       {!isDesktop && (
         <View style={styles.topRow}>
           <View style={styles.brandRow}>
-            <BrandLogo size={28} iconColor={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#059669'} />
-            <Text style={[styles.brandNameText, isLight && { color: '#0f172a' }]}>{settings?.appName || 'FarmsKing'}</Text>
+            <BrandLogo
+              height={30}
+              width={104}
+              useHdQuality={true}
+              dark={true}
+              resizeMode="contain"
+            />
           </View>
 
           <View style={styles.actionsRight}>

@@ -78,7 +78,7 @@ const BUNDLED_BILL_LOGO_ICON = require('@/assets/images/farmsking_logo_icon.png'
 
 /** Super Admin's uploaded logo, falling back to the bundled FarmsKing HD logo when none is set. */
 export function BillLogo({ size = 32 }: { size?: number }) {
-  return <BrandLogo size={size} useHdQuality />;
+  return <BrandLogo size={size} round={true} useGoldRing={true} useHdQuality />;
 }
 
 /** Compact inline side-by-side Brand Logo (32x32) + App Name + Tagline */

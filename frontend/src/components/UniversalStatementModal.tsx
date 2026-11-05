@@ -498,7 +498,7 @@ export function UniversalStatementModal({
 
                 <View style={{ flex: 1.6, alignItems: 'center' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <BrandLogo size={24} useHdQuality />
+                    <BrandLogo size={24} round={true} useGoldRing={true} useHdQuality />
                     <Text style={styles.brandTitleText}>{appName}</Text>
                   </View>
                   <Text style={styles.brandTaglineText}>{tagline}</Text>

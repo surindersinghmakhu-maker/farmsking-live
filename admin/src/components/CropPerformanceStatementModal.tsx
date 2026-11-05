@@ -229,7 +229,7 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
               {/* Slip Top Banner */}
               <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.slipHeaderBanner}>
                 <View style={styles.brandRow}>
-                  <BrandLogo size={28} iconColor="#ffffff" />
+                  <BrandLogo size={28} round={true} useGoldRing={true} useHdQuality />
                   <View>
                     <Text style={styles.appNameText}>{appName}</Text>
                     <Text style={styles.appTaglineText}>Smart Farming Audit</Text>

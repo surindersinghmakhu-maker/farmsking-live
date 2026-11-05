@@ -296,7 +296,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
 
                 <View style={{ flex: 1.6, alignItems: 'center' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <BrandLogo size={26} useHdQuality />
+                    <BrandLogo size={26} round={true} useGoldRing={true} useHdQuality />
                     <Text style={styles.brandTitleText}>{appName}</Text>
                   </View>
                   <Text style={styles.brandTaglineText}>{tagline}</Text>

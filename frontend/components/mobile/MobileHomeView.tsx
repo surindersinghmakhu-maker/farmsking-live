@@ -268,13 +268,13 @@ export const MobileHomeView: React.FC<MobileHomeViewProps> = ({
     <View style={[styles.root, isDay ? styles.rootDay : styles.rootNight]}>
       {/* ══ STICKY TOP MOBILE APP BAR ══ */}
       <View style={[styles.topBar, isDay ? styles.topBarDay : styles.topBarNight]}>
-        {/* Brand Logo */}
+        {/* Brand Logo: Compact Jewel Emblem on Mobile */}
         <TouchableOpacity
           onPress={() => router.push('/')}
           activeOpacity={0.8}
           style={styles.logoWrap}
         >
-          <BrandLogo height={32} width={105} useHdQuality resizeMode="contain" />
+          <BrandLogo size={32} emblem={true} dark={!isDay} />
         </TouchableOpacity>
 
         {/* Right Header Actions */}

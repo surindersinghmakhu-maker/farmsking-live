@@ -4,13 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { resolveMediaUrl } from '@/src/api/client';
 
-const LOGO_ICON_FAST = require('@/assets/images/farmsking_logo_icon.png');
-const LOGO_STANDARD = require('@/assets/images/farmsking_logo.png');
 const LOGO_HD = require('@/assets/images/farmsking_logo_hd.png');
 const LOGO_DARK = require('@/assets/images/farmsking_logo_dark.png');
 const LOGO_ROUND_GOLDRING = require('@/assets/images/farmsking_logo_round_goldring.png');
+const LOGO_FAVICON = require('@/assets/images/favicon.png');
 
-interface BrandLogoProps {
+export interface BrandLogoProps {
   size?: number;
   width?: number | string;
   height?: number | string;
@@ -25,6 +24,8 @@ interface BrandLogoProps {
   round?: boolean;
   dark?: boolean;
   isNight?: boolean;
+  useFavicon?: boolean;
+  emblem?: boolean;
   resizeMode?: 'contain' | 'cover' | 'stretch' | 'center';
 }
 
@@ -52,18 +53,21 @@ export function BrandLogo({
   iconColor = '#facc15',
   style,
   useCrownFallback = false,
-  useHdQuality = false,
+  useHdQuality = true,
   useFastBundledOnly = false,
   useGoldRing = false,
   round = false,
   dark = false,
   isNight = false,
+  useFavicon = false,
+  emblem = false,
   resizeMode = 'contain',
 }: BrandLogoProps) {
   const { data: settings } = useAppSettings();
 
   const [imageError, setImageError] = useState(false);
   const isDarkMode = dark || isNight;
+  const isEmblemMode = round || useGoldRing || useFavicon || emblem;
 
   // Highest priority: The official Brand Logo saved in Settings
   const rawLogo = settings?.logoUrl || '/brand_logo.png';
@@ -73,33 +77,40 @@ export function BrandLogo({
     setImageError(false);
   }, [logoUri]);
 
-  // Optimal bundled fallback asset (light vs dark mode aware)
-  const bundledAsset = isDarkMode
+  // Optimal bundled master asset: 1254x1254 Emblem or 1600x533 Wide Banner
+  const bundledAsset = isEmblemMode
+    ? LOGO_FAVICON
+    : isDarkMode
     ? LOGO_DARK
-    : (round || useGoldRing)
-    ? LOGO_ROUND_GOLDRING
     : LOGO_HD;
 
   // Guard against known broken legacy URLs, remote JPEGs with white boxes, or invalid schemes
   const isInvalidRemoteLogo =
     !logoUri ||
+    isEmblemMode ||
     logoUri.includes('farmsking.in/assets/logo.png') ||
     logoUri.includes('farmsking.in/brand_logo.png') ||
     logoUri.includes('farmsking.in/brand_logo.jpeg') ||
     imageError;
 
-  // When dark mode is active or bundled HD is requested, prefer the 100% transparent bundled asset
-  const shouldUseBundled = useFastBundledOnly || isDarkMode || useHdQuality || isInvalidRemoteLogo;
+  // When dark mode, emblem mode, or bundled HD is requested, prefer the 100% transparent bundled master asset
+  const shouldUseBundled = useFastBundledOnly || isDarkMode || isEmblemMode || useHdQuality || isInvalidRemoteLogo;
 
   const finalSource = !shouldUseBundled && !isInvalidRemoteLogo
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 
-  // Compute responsive dimensions (preserve 3.0 aspect ratio for wide logo unless round)
+  // Compute responsive dimensions:
+  // - Emblem / Round / Favicon: Strictly 1:1 square / circle
+  // - Wide Brand Banner: Natural 3.0 ratio (1600:533)
   const finalHeight = height ?? size ?? 36;
-  const defaultAspectRatio = round ? 1 : (aspectRatio ?? 3.0);
+  const defaultAspectRatio = isEmblemMode ? 1.0 : (aspectRatio ?? 3.0);
   const finalWidth = width ?? (typeof finalHeight === 'number' ? Math.round(finalHeight * defaultAspectRatio) : finalHeight);
-  const finalBorderRadius = round ? (typeof finalHeight === 'number' ? finalHeight / 2 : 18) : 0;
+  const finalBorderRadius = round
+    ? (typeof finalHeight === 'number' ? finalHeight / 2 : 18)
+    : isEmblemMode
+    ? (typeof finalHeight === 'number' ? Math.round(finalHeight * 0.22) : 8)
+    : 0;
 
   return (
     <Image
@@ -113,6 +124,7 @@ export function BrandLogo({
           ...(Platform.OS === 'web' ? ({
             imageRendering: '-webkit-optimize-contrast',
             WebkitBackfaceVisibility: 'hidden',
+            transform: 'translateZ(0)',
           } as any) : {}),
         }, 
         style as StyleProp<ImageStyle>

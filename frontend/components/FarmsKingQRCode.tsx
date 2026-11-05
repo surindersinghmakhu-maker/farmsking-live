@@ -56,7 +56,7 @@ export default function FarmsKingQRCode({
 
         {/* Center FarmsKing Verified Badge */}
         <View style={styles.centerLogoBadge}>
-          <BrandLogo size={Math.round(size * 0.16)} />
+          <BrandLogo size={Math.round(size * 0.18)} round={true} useGoldRing={true} />
         </View>
       </TouchableOpacity>
 

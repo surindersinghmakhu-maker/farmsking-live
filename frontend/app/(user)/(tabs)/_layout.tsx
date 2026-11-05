@@ -97,7 +97,7 @@ type TabName =
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
-  CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
+  CUSTOMER: { tabs: ['index', 'shop', 'cart', 'wallet', 'more'] },
   ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },

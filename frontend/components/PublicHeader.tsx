@@ -643,105 +643,142 @@ export default function PublicHeader({
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Day / Night Theme Toggle with Spring Gliding Pill */}
-            <View
-              style={[
-                styles.themeToggleBox,
-                isDay ? styles.themeToggleBoxDay : styles.themeToggleBoxNight,
-              ]}
-            >
-              <RNAnimated.View
-                style={[
-                  styles.slidingThemePill,
-                  isDay ? styles.slidingThemePillDay : styles.slidingThemePillNight,
-                  {
-                    left: themeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['2%', '51%'],
-                    }),
-                  },
-                ]}
-              />
+            {/* Day / Night Theme Toggle */}
+            {isMobile ? (
               <TouchableOpacity
-                style={styles.themeSegment}
-                onPress={() => handleToggleTheme('day')}
-                activeOpacity={0.85}
+                style={[
+                  styles.themeMobileBtn,
+                  isDay ? styles.themeMobileBtnDay : styles.themeMobileBtnNight,
+                ]}
+                onPress={() => handleToggleTheme(isDay ? 'night' : 'day')}
+                activeOpacity={0.8}
+                accessibilityLabel="Toggle Day or Night theme"
               >
-                <Ionicons name="sunny" size={11} color={isDay ? '#b45309' : '#94a3b8'} />
-                {!isMobile && (
+                <Ionicons
+                  name={isDay ? 'sunny' : 'moon'}
+                  size={13}
+                  color={isDay ? '#d97706' : '#38bdf8'}
+                />
+              </TouchableOpacity>
+            ) : (
+              <View
+                style={[
+                  styles.themeToggleBox,
+                  isDay ? styles.themeToggleBoxDay : styles.themeToggleBoxNight,
+                ]}
+              >
+                <RNAnimated.View
+                  style={[
+                    styles.slidingThemePill,
+                    isDay ? styles.slidingThemePillDay : styles.slidingThemePillNight,
+                    {
+                      left: themeAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['2%', '51%'],
+                      }),
+                    },
+                  ]}
+                />
+                <TouchableOpacity
+                  style={styles.themeSegment}
+                  onPress={() => handleToggleTheme('day')}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="sunny" size={11} color={isDay ? '#b45309' : '#94a3b8'} />
                   <Text style={[styles.themeSegmentText, isDay && styles.themeSegmentTextActiveDay]}>
                     Day
                   </Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.themeSegment}
-                onPress={() => handleToggleTheme('night')}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="moon" size={10.5} color={!isDay ? '#38bdf8' : '#94a3b8'} />
-                {!isMobile && (
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.themeSegment}
+                  onPress={() => handleToggleTheme('night')}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="moon" size={10.5} color={!isDay ? '#38bdf8' : '#94a3b8'} />
                   <Text style={[styles.themeSegmentText, !isDay && styles.themeSegmentTextActiveNight]}>
                     Night
                   </Text>
-                )}
-              </TouchableOpacity>
-            </View>
+                </TouchableOpacity>
+              </View>
+            )}
 
-            {/* Language Selector with Spring Gliding Pill */}
-            <View
-              style={[
-                styles.langPicker,
-                isDay ? styles.langPickerDay : styles.langPickerNight,
-                isMobile && styles.langPickerMobile,
-              ]}
-            >
-              <RNAnimated.View
+            {/* Language Selector */}
+            {isMobile ? (
+              <TouchableOpacity
                 style={[
-                  styles.slidingLangPill,
-                  isDay ? styles.slidingLangPillDay : styles.slidingLangPillNight,
-                  {
-                    left: langAnim.interpolate({
-                      inputRange: [0, 1, 2],
-                      outputRange: ['2%', '35%', '68%'],
-                    }),
-                  },
+                  styles.langMobileBtn,
+                  isDay ? styles.langMobileBtnDay : styles.langMobileBtnNight,
                 ]}
-              />
-              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('EN')} activeOpacity={0.85}>
+                onPress={() => {
+                  const nextLang = lang === 'EN' ? 'PA' : lang === 'PA' ? 'HI' : 'EN';
+                  handleLanguageChange(nextLang);
+                }}
+                activeOpacity={0.8}
+                accessibilityLabel="Switch language"
+              >
                 <Text
                   style={[
-                    styles.langOption,
-                    isDay ? styles.langOptionDay : styles.langOptionNight,
-                    lang === 'EN' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                    styles.langMobileText,
+                    isDay ? styles.langMobileTextDay : styles.langMobileTextNight,
                   ]}
                 >
-                  {isMobile ? 'EN' : 'English'}
+                  {lang}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('PA')} activeOpacity={0.85}>
-                <Text
+            ) : (
+              <View
+                style={[
+                  styles.langPicker,
+                  isDay ? styles.langPickerDay : styles.langPickerNight,
+                ]}
+              >
+                <RNAnimated.View
                   style={[
-                    styles.langOption,
-                    isDay ? styles.langOptionDay : styles.langOptionNight,
-                    lang === 'PA' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                    styles.slidingLangPill,
+                    isDay ? styles.slidingLangPillDay : styles.slidingLangPillNight,
+                    {
+                      left: langAnim.interpolate({
+                        inputRange: [0, 1, 2],
+                        outputRange: ['2%', '35%', '68%'],
+                      }),
+                    },
                   ]}
-                >
-                  {isMobile ? 'PA' : 'ਪੰਜਾਬੀ'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('HI')} activeOpacity={0.85}>
-                <Text
-                  style={[
-                    styles.langOption,
-                    isDay ? styles.langOptionDay : styles.langOptionNight,
-                    lang === 'HI' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
-                  ]}
-                >
-                  {isMobile ? 'HI' : 'हिंदी'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+                />
+                <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('EN')} activeOpacity={0.85}>
+                  <Text
+                    style={[
+                      styles.langOption,
+                      isDay ? styles.langOptionDay : styles.langOptionNight,
+                      lang === 'EN' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                    ]}
+                  >
+                    English
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('PA')} activeOpacity={0.85}>
+                  <Text
+                    style={[
+                      styles.langOption,
+                      isDay ? styles.langOptionDay : styles.langOptionNight,
+                      lang === 'PA' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                    ]}
+                  >
+                    ਪੰਜਾਬੀ
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.langSegment} onPress={() => handleLanguageChange('HI')} activeOpacity={0.85}>
+                  <Text
+                    style={[
+                      styles.langOption,
+                      isDay ? styles.langOptionDay : styles.langOptionNight,
+                      lang === 'HI' && (isDay ? styles.langOptionActiveDay : styles.langOptionActiveNight),
+                    ]}
+                  >
+                    हिंदी
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Cart */}
             <TouchableOpacity
@@ -1448,6 +1485,48 @@ const styles = StyleSheet.create({
   },
 
   // Theme Toggle Switch
+  themeMobileBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  themeMobileBtnDay: {
+    backgroundColor: '#fef3c7',
+    borderColor: '#fcd34d',
+  },
+  themeMobileBtnNight: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+  },
+  langMobileBtn: {
+    paddingHorizontal: 7,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  langMobileBtnDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  langMobileBtnNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+  },
+  langMobileText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  langMobileTextDay: {
+    color: '#047857',
+  },
+  langMobileTextNight: {
+    color: '#34d399',
+  },
   themeToggleBox: {
     position: 'relative',
     overflow: 'hidden',

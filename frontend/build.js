@@ -488,11 +488,11 @@ try {
     }
 
     const webSplashHtml = `
-    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #022c22; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #070c18; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
       <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 16px;" />
       <div style="color: #fef08a; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 10px;">Smart Farming</div>
       <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
-        🌾 India’s Intelligent Agriculture Platform
+        🌱 India’s Intelligent Agriculture Platform
       </div>
     </div>
     `;

@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.92)',
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.4)',
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.pill,
     paddingVertical: 5,
     paddingHorizontal: 12,
     backdropFilter: 'blur(8px)',

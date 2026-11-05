@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { FONT, RADIUS } from '@/constants/theme';
 
 export function SplashView() {
+  const imgSrc = Platform.OS === 'web' ? { uri: '/favicon.png?v=6' } : require('@/assets/images/favicon.png');
+
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/favicon.png')}
+        source={imgSrc}
         style={[
           styles.faviconImg,
           Platform.OS === 'web'
@@ -23,7 +25,7 @@ export function SplashView() {
 
       {/* Sub-Pill: India's Intelligent Agriculture Platform */}
       <View style={styles.subPill}>
-        <Text style={styles.subPillText}>🌾 India’s Intelligent Agriculture Platform</Text>
+        <Text style={styles.subPillText}>🌱 India’s Intelligent Agriculture Platform</Text>
       </View>
     </View>
   );
@@ -34,7 +36,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#022c22',
+    backgroundColor: '#070c18',
     padding: 20,
   },
   faviconImg: {

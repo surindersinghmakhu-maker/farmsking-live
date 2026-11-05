@@ -34,8 +34,20 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const USER_KEY = 'farmsking_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Synchronous initial state on Web to eliminate splash flicker & delay
+  const getInitialUser = (): User | null => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const stored = window.localStorage.getItem(USER_KEY);
+        const token = window.localStorage.getItem(TOKEN_KEY);
+        if (stored && token) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  };
+
+  const [user, setUser] = useState<User | null>(getInitialUser);
+  const [isLoading, setIsLoading] = useState<boolean>(Platform.OS !== 'web');
   const userRef = useRef<User | null>(null);
   userRef.current = user;
   const queryClient = useQueryClient();

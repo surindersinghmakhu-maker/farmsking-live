@@ -4686,6 +4686,9 @@ const S = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: '#040a17',
+    overflow: 'hidden',
+    width: '100%',
+    maxWidth: '100%',
   },
   scrollContainer: {
     paddingBottom: 40,
@@ -9400,7 +9403,8 @@ const S = StyleSheet.create({
   },
   allocCard: {
     flex: 1,
-    minWidth: 320,
+    minWidth: 260,
+    maxWidth: '100%',
     borderRadius: 24,
     borderWidth: 1.2,
     padding: 28,

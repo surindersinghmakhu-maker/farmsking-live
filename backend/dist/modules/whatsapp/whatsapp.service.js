@@ -72,8 +72,8 @@ let WhatsappBotService = WhatsappBotService_1 = class WhatsappBotService {
     }
     async sendDirectTextMessage(mobile, text) {
         const cleanRecipient = this.formatIndianMobile(mobile);
-        let phoneNumberId = this.configService.get('META_PHONE_NUMBER_ID') || '9577622000';
-        let token = this.configService.get('META_WHATSAPP_TOKEN');
+        let phoneNumberId = this.configService.get('META_PHONE_NUMBER_ID') || this.configService.get('META_WA_PHONE_ID') || '9577622000';
+        let token = this.configService.get('META_WHATSAPP_TOKEN') || this.configService.get('META_WA_TOKEN');
         try {
             const integrations = await this.appSettingsService.getIntegrations();
             const meta = integrations?.whatsapp?.providers?.metaCloud;

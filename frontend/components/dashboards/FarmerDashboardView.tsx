@@ -253,41 +253,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           </SafeAreaView>
         </Modal>
 
-        {/* 🌿 AI CROP DOCTOR & LEAF PATHOLOGY SCANNER BANNER 🌿 */}
-        <View style={[styles.aiDoctorBannerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-          <View style={styles.aiDoctorBannerLeft}>
-            <LinearGradient
-              colors={['#10b981', '#059669', '#047857']}
-              style={styles.aiDoctorIconBox}
-            >
-              <Ionicons name="camera" size={26} color="#ffffff" />
-            </LinearGradient>
-            <View style={{ flex: 1 }}>
-              <View style={styles.aiDoctorBadgeRow}>
-                <View style={styles.aiDoctorPulseDot} />
-                <Text style={styles.aiDoctorBadgeText}>INSTANT 5-SECOND AI PATHOLOGY</Text>
-              </View>
-              <Text style={[styles.aiDoctorBannerTitle, { color: colors.text }]}>
-                AI Leaf Doctor & Disease Scanner
-              </Text>
-              <Text style={[styles.aiDoctorBannerSub, { color: colors.textMuted }]}>
-                Snap or upload a leaf photo from your field to instantly diagnose Yellow Rust, Blast, Leaf Curl, or Blight and get ICAR bio-sprays.
-              </Text>
-            </View>
-          </View>
 
-          <TouchableOpacity
-            style={styles.aiDoctorScanBtn}
-            onPress={() => {
-              tap();
-              router.push('/crop-disease-scanner' as any);
-            }}
-            activeOpacity={0.88}
-          >
-            <Ionicons name="scan" size={18} color="#ffffff" />
-            <Text style={styles.aiDoctorScanBtnText}>Scan Crop Leaf Now →</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />

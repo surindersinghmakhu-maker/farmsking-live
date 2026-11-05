@@ -387,6 +387,22 @@ export default function MoreScreen() {
               ) : null}
 
 
+              {/* Terms and Conditions Row */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/terms')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
+                  <Ionicons name="document-text-outline" size={18} color="#2563eb" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>Terms and Conditions</Text>
+                  <Text style={styles.rowSubLabel}>Official Terms of Service & User Agreement</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
               {/* Privacy Policy Row */}
               <TouchableOpacity
                 style={styles.row}
@@ -399,6 +415,38 @@ export default function MoreScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
                   <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* Refund Policy Row */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/refund-policy')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name="refresh-circle-outline" size={18} color="#d97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>Refund & Return Policy</Text>
+                  <Text style={styles.rowSubLabel}>100% Genuine, Zero Fake Products Guarantee</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* MCA Compliance Row */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/compliance')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#f3e8ff' }]}>
+                  <Ionicons name="business-outline" size={18} color="#9333ea" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>MCA Statutory Compliance</Text>
+                  <Text style={styles.rowSubLabel}>CIN: U01100PB2026PTC063294 • Regd. Office</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>

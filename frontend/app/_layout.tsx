@@ -120,7 +120,7 @@ function RootNavigation() {
     }
   }, [user, isLoading, segmentsPath]);
 
-  if (isLoading) {
+  if (isLoading && Platform.OS !== 'web') {
     return <SplashView />;
   }
 
@@ -183,7 +183,7 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
-  const isReady = (loaded || fontError) && minTimeElapsed;
+  const isReady = Platform.OS === 'web' || ((loaded || fontError) && minTimeElapsed);
 
   useEffect(() => {
     if (isReady) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -78,8 +78,8 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 
   return (
     <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop]}>
-      {/* Top Banner Row: ONLY show on Mobile (<768px) where desktop top navbar is absent */}
-      {!isDesktop && (
+      {/* Top Banner Row: ALWAYS visible on both Mobile and Desktop */}
+      {(
         <View style={styles.topRow}>
           <TouchableOpacity
             style={styles.brandRow}
@@ -146,9 +146,29 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             <Text style={styles.greetingText}>{greeting}</Text>
             <Text style={styles.nameText} numberOfLines={1}>{profileName}</Text>
             
-            {/* 🏷️ Role Tag Badge directly under user's name */}
-            <View style={styles.roleTagPill}>
-              <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
+            {/* 🏷️ Role Tag Badge & Always-Visible Quick Logout Chip */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 3, flexWrap: 'wrap' }}>
+              <View style={styles.roleTagPill}>
+                <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.userBlockLogoutChip}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (Platform.OS === 'web') {
+                    if (window.confirm('Are you sure you want to log out from FarmsKing?')) logout();
+                  } else {
+                    Alert.alert('Log Out', 'Are you sure you want to log out from FarmsKing?', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+                    ]);
+                  }
+                }}
+              >
+                <Ionicons name="power" size={11} color="#fca5a5" />
+                <Text style={styles.userBlockLogoutText}>Log Out</Text>
+              </TouchableOpacity>
             </View>
 
             {!isRedundantSubtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
@@ -340,6 +360,22 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: FONT.extraBold,
     letterSpacing: 0.2,
+  },
+  userBlockLogoutChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.45)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  userBlockLogoutText: {
+    color: '#fecaca',
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
   },
   subtitleText: {
     color: 'rgba(255,255,255,0.95)',

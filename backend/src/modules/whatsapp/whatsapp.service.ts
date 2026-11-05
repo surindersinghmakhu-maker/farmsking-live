@@ -71,8 +71,8 @@ export class WhatsappBotService implements OnModuleInit {
 
   async sendDirectTextMessage(mobile: string, text: string): Promise<WhatsAppMessageResult> {
     const cleanRecipient = this.formatIndianMobile(mobile);
-    let phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID') || '9577622000';
-    let token = this.configService.get<string>('META_WHATSAPP_TOKEN');
+    let phoneNumberId = this.configService.get<string>('META_PHONE_NUMBER_ID') || this.configService.get<string>('META_WA_PHONE_ID') || '9577622000';
+    let token = this.configService.get<string>('META_WHATSAPP_TOKEN') || this.configService.get<string>('META_WA_TOKEN');
 
     try {
       const integrations = await this.appSettingsService.getIntegrations();

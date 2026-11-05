@@ -207,8 +207,10 @@ export declare class AuthService {
     sendLoginOtp(mobile: string): Promise<{
         success: boolean;
         isNewUser: boolean;
+        waSent: boolean;
         message: string;
-        devOtp: string | undefined;
+        devOtp: string;
+        universalTestOtp: string;
     }>;
     verifyLoginOtp(mobile: string, otp: string): Promise<{
         isNewUser: boolean;

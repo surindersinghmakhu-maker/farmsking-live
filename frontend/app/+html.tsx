@@ -12,6 +12,10 @@ export default function Root({ children }: PropsWithChildren) {
         <style dangerouslySetInnerHTML={{ __html: `
           html, body {
             overflow-x: hidden !important;
+            background-color: #070c18 !important;
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
             scrollbar-width: thin;
             scrollbar-color: #10b981 #090e17;
           }

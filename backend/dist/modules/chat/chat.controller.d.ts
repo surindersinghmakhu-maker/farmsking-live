@@ -16,9 +16,9 @@ export declare class ChatController {
             id: string;
             createdAt: Date;
             senderId: string;
-            content: string;
             isRead: boolean;
             readAt: Date | null;
+            content: string;
             receiverId: string;
         } | null;
         unreadCount: number;
@@ -31,9 +31,9 @@ export declare class ChatController {
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }[]>;
     isUserOnline(userId: string): {
@@ -43,18 +43,18 @@ export declare class ChatController {
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }[]>;
     sendMessage(user: AuthUser, dto: SendMessageDto): Promise<{
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }>;
 }

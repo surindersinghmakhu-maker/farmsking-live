@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -13,8 +13,9 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<User>;
-  sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
-  otpLogin: (payload: { mobile: string; otp: string }) => Promise<User>;
+  sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>;
+  otpLogin: (payload: { mobile: string; otp: string }) => Promise<any>;
+  completeOtpRegistration: (payload: CompleteOtpRegistrationPayload) => Promise<User>;
   firebaseLogin: (idToken: string) => Promise<User>;
   googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean; user?: User }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
@@ -161,6 +162,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       otpLogin: async (payload) => {
         const response = await verifyLoginOtpApi(payload);
+        if (response.isNewUser) {
+          return response;
+        }
+        if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
+          throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
+        }
+        await persistSession(response.accessToken, response.user);
+        return response.user;
+      },
+      completeOtpRegistration: async (payload) => {
+        const response = await completeOtpRegistrationApi(payload);
         if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }

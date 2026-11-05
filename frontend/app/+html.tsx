@@ -42,13 +42,13 @@ export default function Root({ children }: PropsWithChildren) {
 
 
         {/* Primary Page Title & Canonical SEO Tags */}
-        <title>FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)</title>
+        <title>FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)</title>
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvPcjQP-UuD3FKtdXKH2o9DZik2o" />
-        <meta name="description" content="FarmsKing (farmsking.in) is India's premier Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India." />
+        <meta name="description" content="FarmsKing (farmsking.in) is India's premier Smart Farming platform. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India." />
         <meta name="keywords" content="FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab" />
         
         {/* Geospatial Indexing for Local & National Search */}
@@ -58,15 +58,15 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="ICBM" content="31.1400, 75.3400" />
 
         {/* OpenGraph & Social Cards */}
-        <meta property="og:site_name" content="FarmsKing - Smart Farming Platform &amp; Agriculture App India" />
+        <meta property="og:site_name" content="FarmsKing - Smart Farming" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)" />
-        <meta property="og:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
+        <meta property="og:title" content="FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)" />
+        <meta property="og:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming platform. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
         <meta property="og:image" content="https://farmsking.in/brand_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)" />
-        <meta name="twitter:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
+        <meta name="twitter:title" content="FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)" />
+        <meta name="twitter:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming platform. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
         <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
         {/* WebSite Sitelinks SearchBox Schema for Google Ranking */}
@@ -365,10 +365,10 @@ export default function Root({ children }: PropsWithChildren) {
           <div style={{ fontFamily: 'Arial, sans-serif', padding: '24px', lineHeight: '1.65', maxWidth: '960px', margin: '0 auto', color: '#1e293b' }}>
             <header style={{ borderBottom: '3px solid #166534', paddingBottom: '18px', marginBottom: '24px' }}>
               <h1 style={{ color: '#166534', fontSize: '26px', margin: '0 0 8px 0' }}>
-                🌾 FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)
+                🌾 FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)
               </h1>
               <p style={{ fontSize: '15px', color: '#475569', margin: '0' }}>
-                India's National Smart Farming Platform &amp; Agriculture App | Farming Easy, Farming Smart | AI Crop Doctor | Live Mandi Rates | Satellite Telemetry | Pure Organic Inputs
+                India's National Smart Farming Platform | Farming Easy, Farming Smart | AI Crop Doctor | Live Mandi Rates | Satellite Telemetry | Pure Organic Inputs
               </p>
             </header>
 

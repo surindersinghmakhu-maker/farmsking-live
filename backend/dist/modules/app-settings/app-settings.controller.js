@@ -49,6 +49,9 @@ let AppSettingsController = class AppSettingsController {
     getIntegrations() {
         return this.appSettingsService.getIntegrations();
     }
+    requestAdminActionOtp(user) {
+        return this.appSettingsService.requestAdminActionOtp(user);
+    }
     updateIntegrations(user, payload) {
         return this.appSettingsService.updateIntegrations(user, payload);
     }
@@ -122,6 +125,15 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getIntegrations", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
+    (0, common_1.Post)('request-admin-action-otp'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "requestAdminActionOtp", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),

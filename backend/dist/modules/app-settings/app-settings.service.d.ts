@@ -7,6 +7,14 @@ export declare class AppSettingsService {
     private readonly prisma;
     private cache;
     private readonly CACHE_TTL_MS;
+    private readonly adminActionOtpStore;
+    requestAdminActionOtp(admin: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
+    verifyAdminActionOtp(adminId: string, otp?: string): boolean;
     constructor(prisma: PrismaService);
     clearCache(): void;
     getSeo(): Promise<{
@@ -216,12 +224,15 @@ export declare class AppSettingsService {
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     getIntegrations(): Promise<SystemIntegrationsConfig>;
-    updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig>): Promise<SystemIntegrationsConfig>;
+    updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig> & {
+        adminConfirmationOtp?: string;
+    }): Promise<SystemIntegrationsConfig>;
     getServiceConfig(): Promise<any>;
     updateServiceConfig(admin: AuthUser, body: {
         serviceId: string;
         activeProvider: string;
         config: Record<string, string>;
+        adminConfirmationOtp?: string;
     }): Promise<{
         activeProviders: any;
         fieldValues: any;

@@ -7,6 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersModule = void 0;
+const whatsapp_module_1 = require("../whatsapp/whatsapp.module");
 const common_1 = require("@nestjs/common");
 const notifications_module_1 = require("../notifications/notifications.module");
 const coupons_module_1 = require("../coupons/coupons.module");
@@ -31,6 +32,7 @@ exports.OrdersModule = OrdersModule = __decorate([
             phonepe_module_1.PhonePeModule,
             shiprocket_module_1.ShiprocketModule,
             cashfree_module_1.CashfreeModule,
+            whatsapp_module_1.WhatsappBotModule,
         ],
         controllers: [orders_controller_1.OrdersController],
         providers: [orders_service_1.OrdersService, billing_service_1.BillingService],

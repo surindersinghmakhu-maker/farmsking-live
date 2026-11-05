@@ -25,6 +25,7 @@ import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { SplashView } from '@/components/SplashView';
 import PublicBottomNav from '@/components/PublicBottomNav';
 import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
+import { StaffSessionGuardian } from '@/src/components/StaffSessionGuardian';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -125,6 +126,7 @@ function RootNavigation() {
 
   return (
     <View style={{ flex: 1 }}>
+      <StaffSessionGuardian />
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
         <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />

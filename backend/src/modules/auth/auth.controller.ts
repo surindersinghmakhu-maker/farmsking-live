@@ -14,6 +14,7 @@ import {
   SendWhatsAppOtpDto,
   SendEmailOtpDto,
   SendMobileLinkOtpDto,
+  CompleteOtpRegistrationDto,
 } from './dto/otp.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
@@ -45,6 +46,13 @@ export class AuthController {
   @Post('verify-login-otp')
   verifyLoginOtp(@Body() body: VerifyLoginOtpDto) {
     return this.authService.verifyLoginOtp(body.mobile, body.otp);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('complete-otp-registration')
+  completeOtpRegistration(@Body() body: CompleteOtpRegistrationDto) {
+    return this.authService.completeOtpRegistration(body);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

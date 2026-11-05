@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
@@ -11,6 +11,61 @@ const SINGLETON_ID = 'default';
 export class AppSettingsService {
   private cache: { data: any; timestamp: number } | null = null;
   private readonly CACHE_TTL_MS = 15000;
+  private readonly adminActionOtpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+  /** Step-up 2FA: Request OTP for critical Admin API / System configuration changes */
+  async requestAdminActionOtp(admin: AuthUser) {
+    if (!admin || !['ADMIN', 'SUPER_ADMIN'].includes(admin.role)) {
+      throw new UnauthorizedException('Only authorized Admin or Super Admin can request action confirmation OTP.');
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.adminActionOtpStore.set(admin.id, {
+      otp: otpCode,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes validity
+    });
+
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    return {
+      success: true,
+      message: 'Admin authorization code generated for critical change confirmation.',
+      devOtp: isDev ? otpCode : undefined,
+      expiresInSeconds: 300,
+    };
+  }
+
+  /** Validates step-up 2FA OTP before saving sensitive admin changes */
+  verifyAdminActionOtp(adminId: string, otp?: string) {
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    // Allow universal test code '123456' in dev/localhost mode
+    if (isDev && otp?.trim() === '123456') {
+      return true;
+    }
+
+    if (!otp) {
+      throw new UnauthorizedException('Admin Confirmation OTP is required to save critical system API changes. Please request and enter the 6-digit confirmation code.');
+    }
+
+    const stored = this.adminActionOtpStore.get(adminId);
+    if (!stored) {
+      if (isDev) return true; // dev tolerance
+      throw new UnauthorizedException('Admin authorization OTP expired or not requested. Please request a new OTP.');
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      this.adminActionOtpStore.delete(adminId);
+      throw new UnauthorizedException('Admin authorization OTP has expired. Please request a new OTP.');
+    }
+
+    if (stored.otp !== otp.trim()) {
+      throw new UnauthorizedException('Invalid Admin authorization code. Confirmation failed.');
+    }
+
+    this.adminActionOtpStore.delete(adminId);
+    return true;
+  }
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -799,7 +854,8 @@ export class AppSettingsService {
     };
   }
 
-  async updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig>): Promise<SystemIntegrationsConfig> {
+  async updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig> & { adminConfirmationOtp?: string }): Promise<SystemIntegrationsConfig> {
+    this.verifyAdminActionOtp(admin?.id, payload?.adminConfirmationOtp);
     this.clearCache();
     const current = await this.getIntegrations();
     const merged: SystemIntegrationsConfig = {
@@ -1069,7 +1125,8 @@ export class AppSettingsService {
     return flags.serviceProvidersConfig || { activeProviders: {}, fieldValues: {} };
   }
 
-  async updateServiceConfig(admin: AuthUser, body: { serviceId: string; activeProvider: string; config: Record<string, string> }) {
+  async updateServiceConfig(admin: AuthUser, body: { serviceId: string; activeProvider: string; config: Record<string, string>; adminConfirmationOtp?: string }) {
+    this.verifyAdminActionOtp(admin?.id, body?.adminConfirmationOtp);
     this.clearCache();
     const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
     const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};

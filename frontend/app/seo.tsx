@@ -27,10 +27,10 @@ interface SeoPreset {
 
 const SEO_PRESETS: SeoPreset[] = [
   {
-    name: 'Smart Farming Platform & Agriculture App India (farmsking.in)',
+    name: 'Smart Farming (farmsking.in)',
     badge: 'Supreme Master 60/160',
-    title: 'FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in)',
-    desc: "FarmsKing (farmsking.in) is India's premier Smart Farming Platform & Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India.",
+    title: 'FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)',
+    desc: "FarmsKing (farmsking.in) is India's premier Smart Farming Platform. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India.",
     keywords:
       'FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab',
   },
@@ -77,10 +77,10 @@ export default function SeoManagementScreen() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [seoTitle, setSeoTitle] = useState(
-    'FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in)'
+    'FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)'
   );
   const [metaDescription, setMetaDescription] = useState(
-    "FarmsKing (farmsking.in) is India's premier Smart Farming Platform & Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India."
+    "FarmsKing (farmsking.in) is India's premier Smart Farming Platform. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India."
   );
   const [metaKeywords, setMetaKeywords] = useState(
     'FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab'
@@ -89,7 +89,7 @@ export default function SeoManagementScreen() {
     'Registered Office: Goindwal Sahib, Tarn Taran - 143422 | Operational Office: Makhu, Ferozepur, Punjab - 142044'
   );
   const [noscriptHtmlContent, setNoscriptHtmlContent] = useState(
-    "🌾 FarmsKing: Smart Farming Platform & Agriculture App India | Farming Easy, Farming Smart (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming Platform and Agriculture App. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Governed by the Board of Directors & Executive Management Panel."
+    "🌾 FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in). FarmsKing Technologies Private Limited is India's leading Smart Farming platform. Guided by the motto 'Farming Easy, Farming Smart', FarmsKing empowers Indian farmers and plant lovers with multimodal AI Crop Doctor pathology, live APMC wholesale mandi rates across 50+ crops, 6-constellation satellite remote sensing, certified organic bio-fertilizers, and transparent digital bahi-khata accounting. Headquartered in Makhu (Punjab) with registered office in Goindwal Sahib. Governed by the Board of Directors & Executive Management Panel."
   );
 
   useEffect(() => {

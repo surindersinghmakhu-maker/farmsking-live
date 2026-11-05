@@ -65,6 +65,14 @@ export class AppSettingsController {
     return this.appSettingsService.getIntegrations();
   }
 
+  /** Request Step-up 2FA OTP before saving critical API/service configuration */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Post('request-admin-action-otp')
+  requestAdminActionOtp(@CurrentUser() user: AuthUser) {
+    return this.appSettingsService.requestAdminActionOtp(user);
+  }
+
   /** Update system integrations (Super Admin / Admin only) */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)

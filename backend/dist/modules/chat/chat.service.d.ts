@@ -13,18 +13,18 @@ export declare class ChatService {
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }>;
     getMessages(user: AuthUser, otherUserId: string): Promise<{
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }[]>;
     listConversations(user: AuthUser): Promise<{
@@ -39,9 +39,9 @@ export declare class ChatService {
             id: string;
             createdAt: Date;
             senderId: string;
-            content: string;
             isRead: boolean;
             readAt: Date | null;
+            content: string;
             receiverId: string;
         } | null;
         unreadCount: number;
@@ -55,9 +55,9 @@ export declare class ChatService {
         id: string;
         createdAt: Date;
         senderId: string;
-        content: string;
         isRead: boolean;
         readAt: Date | null;
+        content: string;
         receiverId: string;
     }[]>;
 }

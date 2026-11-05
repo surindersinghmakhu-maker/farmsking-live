@@ -111,32 +111,31 @@ export default function ProfileScreen() {
   };
 
 
+  const [profileDevOtp, setProfileDevOtp] = useState<string | null>(null);
+
   const handleSendOtp = async () => {
     const num = userMobile.replace(/\D/g, '').slice(-10);
     if (num.length !== 10) {
       Alert.alert('Invalid Mobile', 'Please enter a valid 10-digit mobile number.');
       return;
     }
+    if (num === getCleanMobile(user?.mobile)) {
+      Alert.alert('Notice', 'This is already your current registered mobile number.');
+      setIsEditingMobile(false);
+      return;
+    }
     setIsSendingOtp(true);
     setOtpError(null);
+    setProfileDevOtp(null);
     try {
-      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifierProfile) {
-        (window as any).recaptchaVerifierProfile = new RecaptchaVerifier(
-          auth,
-          'recaptcha-container-profile',
-          { size: 'invisible' }
-        );
+      const res = await sendMobileLinkOtp(num);
+      if (res.devOtp) {
+        setProfileDevOtp(res.devOtp);
       }
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${num}`,
-        (window as any).recaptchaVerifierProfile
-      );
-      setConfirmationResult(confirmation);
       setIsOtpModalOpen(true);
-      Alert.alert('📲 OTP Sent', 'OTP sent via Firebase SMS!');
+      Alert.alert('📲 OTP Sent', res.message || 'Verification OTP code has been sent to your new mobile number!');
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Could not send OTP.');
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Could not send verification OTP.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -150,22 +149,18 @@ export default function ProfileScreen() {
     setIsVerifyingOtp(true);
     setOtpError(null);
     try {
-      if (!confirmationResult) throw new Error('OTP session expired. Request a new OTP.');
-      const resFirebase = await confirmationResult.confirm(otpCode.trim());
-      const idToken = await resFirebase.user.getIdToken();
-
       const res = await verifyMobileLinkOtp({
         mobile: userMobile,
-        otp: idToken,
-        password: loginPassword.trim() || undefined,
+        otp: otpCode.trim(),
       });
       setIsOtpModalOpen(false);
+      setIsEditingMobile(false);
       setOtpCode('');
-      setLoginPassword('');
+      setProfileDevOtp(null);
       await refreshUser();
       Alert.alert(
-        res.isMerged ? '✅ Accounts Combined' : '✅ Mobile Linked',
-        res.message || 'Mobile number verified successfully!'
+        '✅ Mobile Verified & Updated',
+        res.message || 'Your new mobile number has been verified and updated successfully!'
       );
     } catch (err: any) {
       setOtpError(err?.response?.data?.message || err?.message || 'Failed to verify OTP.');
@@ -254,27 +249,52 @@ export default function ProfileScreen() {
     }
   };
 
+  const formatMaskedMobile = (rawMobile?: string | null): string => {
+    if (!rawMobile) return 'xx*****xxx';
+    const clean = rawMobile.replace(/\D/g, '').slice(-10);
+    if (clean.length === 10) {
+      return `${clean.slice(0, 2)}xxxxx${clean.slice(-3)}`;
+    }
+    return clean.length >= 5 ? `${clean.slice(0, 2)}xxxxx${clean.slice(-2)}` : 'xxxxx';
+  };
+
   const handleUnlinkGoogle = async () => {
     Alert.alert(
-      'Unlink Google Account',
-      'Are you sure you want to unlink your Google account?',
+      'Disconnect Google Account',
+      `Are you sure you want to disconnect ${user?.email || 'your Google account'} from mobile ${formatMaskedMobile(user?.mobile)}?\n\nA security disconnect notice will be sent to your email, and you will continue logging in via Mobile OTP.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Unlink',
+          text: 'Disconnect Account',
           style: 'destructive',
           onPress: async () => {
             setGoogleLoading(true);
             try {
               const res = await unlinkGoogle();
               if (res.success) {
-                Alert.alert('✅ Success', res.message || 'Google account unlinked.');
+                Alert.alert('✅ Account Disconnected', res.message || 'Google account disconnected successfully.');
               }
             } catch (err: any) {
-              Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to unlink Google account.');
+              Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to disconnect Google account.');
             } finally {
               setGoogleLoading(false);
             }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSwitchGoogle = async () => {
+    Alert.alert(
+      'Switch Google Account',
+      `Your mobile (${formatMaskedMobile(user?.mobile)}) is currently linked to: \n📧 ${user?.email || 'Current Google Account'}\n\nDisconnecting will send a security alert to your old email, and your new Google account will be attached. Do you want to continue?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue & Switch',
+          onPress: () => {
+            handleLinkGoogle();
           },
         },
       ]
@@ -872,22 +892,72 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
-                {/* Link/Unlink Google */}
-                <View style={{ marginTop: 8 }}>
-                  <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: user?.googleId ? '#fef2f2' : '#eff6ff', borderColor: user?.googleId ? '#fecaca' : '#bfdbfe', borderWidth: 1, paddingVertical: 10, borderRadius: RADIUS.md }}
-                    onPress={user?.googleId ? handleUnlinkGoogle : handleLinkGoogle}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? <ActivityIndicator size="small" color={user?.googleId ? '#dc2626' : '#2563eb'} /> : (
-                      <>
-                        <Ionicons name="logo-google" size={16} color={user?.googleId ? '#dc2626' : '#2563eb'} />
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: user?.googleId ? '#b91c1c' : '#1d4ed8' }}>
-                          {user?.googleId ? `Unlink Google: ${user.email}` : 'Securely Link Google Account'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                {/* Link/Unlink/Switch Google Account Security Card */}
+                <View style={{ marginTop: 10, padding: 12, borderRadius: RADIUS.md, backgroundColor: user?.googleId ? '#f0fdf4' : '#f8fafc', borderWidth: 1, borderColor: user?.googleId ? '#bbf7d0' : '#e2e8f0', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="logo-google" size={17} color={user?.googleId ? '#16a34a' : '#64748b'} />
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: user?.googleId ? '#166534' : '#334155' }}>
+                        {user?.googleId ? 'Google Account Connected' : 'Google Account Not Connected'}
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: user?.googleId ? '#dcfce7' : '#f1f5f9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 }}>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: user?.googleId ? '#15803d' : '#64748b' }}>
+                        {user?.googleId ? 'ACTIVE' : 'OPTIONAL'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {user?.googleId ? (
+                    <>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#374151' }}>
+                        Connected: <Text style={{ fontFamily: FONT.bold, color: '#111827' }}>{user.email}</Text>
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#6b7280' }}>
+                        Attached to Mobile: <Text style={{ fontFamily: FONT.bold, color: '#166534' }}>{formatMaskedMobile(user.mobile)}</Text>
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                        <TouchableOpacity
+                          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#fef2f2', borderColor: '#fca5a5', borderWidth: 1, paddingVertical: 8, borderRadius: RADIUS.sm }}
+                          onPress={handleUnlinkGoogle}
+                          disabled={googleLoading}
+                        >
+                          {googleLoading ? <ActivityIndicator size="small" color="#dc2626" /> : (
+                            <>
+                              <Ionicons name="close-circle-outline" size={15} color="#dc2626" />
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#b91c1c' }}>Disconnect</Text>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#eff6ff', borderColor: '#93c5fd', borderWidth: 1, paddingVertical: 8, borderRadius: RADIUS.sm }}
+                          onPress={handleSwitchGoogle}
+                          disabled={googleLoading}
+                        >
+                          <Ionicons name="swap-horizontal-outline" size={15} color="#2563eb" />
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1d4ed8' }}>Switch Account</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', lineHeight: 16 }}>
+                        Connect your Google account for seamless 1-click login. A security verification email will confirm attachment to mobile {formatMaskedMobile(user?.mobile)}.
+                      </Text>
+                      <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderWidth: 1, paddingVertical: 8, borderRadius: RADIUS.sm, marginTop: 2 }}
+                        onPress={handleLinkGoogle}
+                        disabled={googleLoading}
+                      >
+                        {googleLoading ? <ActivityIndicator size="small" color="#2563eb" /> : (
+                          <>
+                            <Ionicons name="logo-google" size={15} color="#4285F4" />
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1e293b' }}>Connect Google Account</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               </View>
 
@@ -915,13 +985,12 @@ export default function ProfileScreen() {
                   />
                 </View>
 
-                <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f8fafc', borderColor: '#e2e8f0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginTop: 4 }}
-                  onPress={() => setIsPasswordModalOpen(true)}
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginTop: 4 }}
                 >
-                  <Ionicons name="key" size={16} color="#475569" />
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>Change Account Password</Text>
-                </TouchableOpacity>
+                  <Ionicons name="shield-checkmark" size={16} color="#16a34a" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#166534' }}>Passwordless Mobile OTP Login Active</Text>
+                </View>
               </View>
 
               {isSaved && (
@@ -970,11 +1039,24 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
 
-                <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 12 }}>
-                  We sent a 6-digit OTP to WhatsApp number <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{userMobile}</Text>.
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 10 }}>
+                  Enter the 6-digit verification code sent to: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>+91 {userMobile}</Text>
                 </Text>
 
-                {/* Dev OTP message removed so users do not see it on screen */}
+                {/* Dev Mode Auto-Fill Helper (Localhost / Testing Only) */}
+                {(profileDevOtp || (typeof window !== 'undefined' && window.location.hostname === 'localhost')) ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ecfdf5', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#a7f3d0', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#047857' }}>
+                      Test Code: {profileDevOtp || '123456'}
+                    </Text>
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#10b981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
+                      onPress={() => setOtpCode(profileDevOtp || '123456')}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Auto-Fill</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
 
                 <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
                 <TextInput
@@ -989,29 +1071,19 @@ export default function ProfileScreen() {
                   maxLength={6}
                 />
 
-                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Create Account Password (Optional)</Text>
-                <TextInput
-                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
-                  value={loginPassword}
-                  onChangeText={setLoginPassword}
-                  placeholder="Create/Set Mobile Password"
-                  placeholderTextColor="#cbd5e1"
-                  secureTextEntry
-                />
-
                 {otpError ? (
                   <Text style={{ color: '#ef4444', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 }}>{otpError}</Text>
                 ) : null}
 
                 <TouchableOpacity
-                  style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a' }]}
+                  style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a', marginTop: 14 }]}
                   onPress={handleVerifyOtp}
                   disabled={isVerifyingOtp}
                 >
                   {isVerifyingOtp ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
-                    <Text style={styles.modalSubmitText}>Verify & Link Mobile</Text>
+                    <Text style={styles.modalSubmitText}>Confirm & Update Mobile</Text>
                   )}
                 </TouchableOpacity>
 

@@ -5,7 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { FirebaseLoginDto } from './dto/firebase-login.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
-import { SendLoginOtpDto, VerifyLoginOtpDto, SendWhatsAppOtpDto, SendEmailOtpDto, SendMobileLinkOtpDto } from './dto/otp.dto';
+import { SendLoginOtpDto, VerifyLoginOtpDto, SendWhatsAppOtpDto, SendEmailOtpDto, SendMobileLinkOtpDto, CompleteOtpRegistrationDto } from './dto/otp.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
@@ -19,10 +19,15 @@ export declare class AuthController {
     }>;
     sendLoginOtp(body: SendLoginOtpDto): Promise<{
         success: boolean;
+        isNewUser: boolean;
         message: string;
         devOtp: string | undefined;
     }>;
     verifyLoginOtp(body: VerifyLoginOtpDto): Promise<{
+        isNewUser: boolean;
+        mobile: string;
+        message: string;
+    } | {
         accessToken: string;
         user: {
             id: string;
@@ -36,6 +41,25 @@ export declare class AuthController {
             warningMessage: string | undefined;
             evictedOldest: boolean;
         };
+        isNewUser: boolean;
+        mobile?: undefined;
+        message?: undefined;
+    }>;
+    completeOtpRegistration(body: CompleteOtpRegistrationDto): Promise<{
+        accessToken: string;
+        user: {
+            id: string;
+            mobile: string;
+            role: import(".prisma/client").Role;
+        } & Record<string, unknown>;
+        sessionMeta: {
+            sessionId: string;
+            totalActiveSessions: number;
+            hasMultipleLogins: boolean;
+            warningMessage: string | undefined;
+            evictedOldest: boolean;
+        };
+        isNewUser: boolean;
     }>;
     sendEmailOtp(body: SendEmailOtpDto): Promise<{
         success: boolean;

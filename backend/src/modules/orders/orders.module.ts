@@ -1,3 +1,4 @@
+import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 import { Module } from '@nestjs/common';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { CouponsModule } from '../coupons/coupons.module';
@@ -19,6 +20,7 @@ import { BillingService } from './billing.service';
     PhonePeModule,
     ShiprocketModule,
     CashfreeModule,
+    WhatsappBotModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, BillingService],

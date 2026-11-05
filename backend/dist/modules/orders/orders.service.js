@@ -10,6 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
+const email_service_1 = require("../email/email.service");
+const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
 const crypto_1 = require("crypto");
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
@@ -34,7 +36,7 @@ function generateOrderNumber() {
     return `ORD-${Date.now().toString(36).toUpperCase()}-${(0, crypto_1.randomBytes)(2).toString('hex').toUpperCase()}`;
 }
 let OrdersService = class OrdersService {
-    constructor(prisma, notificationsService, couponsService, walletService, appSettingsService, phonePeService, shiprocketService, cashfreeService, billingService) {
+    constructor(prisma, notificationsService, couponsService, walletService, appSettingsService, phonePeService, shiprocketService, cashfreeService, billingService, emailService, whatsappBotService) {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
         this.couponsService = couponsService;
@@ -44,6 +46,8 @@ let OrdersService = class OrdersService {
         this.shiprocketService = shiprocketService;
         this.cashfreeService = cashfreeService;
         this.billingService = billingService;
+        this.emailService = emailService;
+        this.whatsappBotService = whatsappBotService;
     }
     async create(customer, dto) {
         const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
@@ -370,9 +374,45 @@ let OrdersService = class OrdersService {
         }
         return { paymentStatus };
     }
-    async notifyCustomer(customerId, title, body, orderId, eventType) {
+    async notifyCustomer(customerId, title, body, orderId, eventType, meta) {
         await this.notificationsService.create(customerId, client_1.NotificationType.SYSTEM, title, body, { orderId, eventType });
-        console.log(`[Firebase Text SMS Service] Sent ${eventType || 'ORDER_ALERT'} to User ${customerId}: "${title} - ${body}"`);
+        try {
+            const [customer, order] = await Promise.all([
+                this.prisma.user.findUnique({
+                    where: { id: customerId },
+                    select: { name: true, mobile: true, email: true },
+                }),
+                this.prisma.customerOrder.findUnique({
+                    where: { id: orderId },
+                    select: { orderNumber: true, totalAmount: true },
+                }),
+            ]);
+            if (customer) {
+                const orderNum = order?.orderNumber || orderId.slice(-8).toUpperCase();
+                const orderTotal = Number(order?.totalAmount ?? 0);
+                if (customer.email && !customer.email.includes('placeholder')) {
+                    this.emailService
+                        .sendOrderLifecycleEmail(customer.email, customer.name || 'Valued Customer', {
+                        orderNumber: orderNum,
+                        statusTitle: title,
+                        statusDescription: body,
+                        totalAmount: orderTotal,
+                        courierName: meta?.courierName,
+                        trackingNumber: meta?.trackingNumber,
+                    })
+                        .catch((err) => console.warn('[OrdersService] Email notification error:', err?.message));
+                }
+                if (customer.mobile && !customer.mobile.startsWith('G_')) {
+                    const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total: ₹${orderTotal}\n` : ''}\nTrack your order anytime at https://farmsking.com/order-tracking\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`;
+                    this.whatsappBotService
+                        .sendDirectTextMessage(customer.mobile, waText)
+                        .catch((err) => console.warn('[OrdersService] WhatsApp alert error:', err?.message));
+                }
+            }
+        }
+        catch (notifyErr) {
+            console.warn('[OrdersService] notifyCustomer multi-channel notice:', notifyErr?.message);
+        }
     }
     async confirm(user, id) {
         const order = await this.findOneOrThrow(user, id);
@@ -443,11 +483,13 @@ let OrdersService = class OrdersService {
             throw new common_1.ConflictException('This order is not ready to be marked as packed.');
         }
         await this.prisma.subOrder.updateMany({ where: { orderId: id }, data: { orderStatus: client_1.SubOrderStatus.PACKED } });
-        return this.prisma.customerOrder.update({
+        const packedOrder = await this.prisma.customerOrder.update({
             where: { id },
             data: { status: client_1.OrderStatus.PACKED, packedById: operator.id, packedAt: new Date() },
             include: DETAIL_INCLUDE,
         });
+        await this.notifyCustomer(order.customerId, '🎁 Order Ready & Packed', `Your FarmsKing Order #${order.orderNumber} is packed and ready for dispatch.`, id, 'ORDER_PACKED_SMS');
+        return packedOrder;
     }
     async dispatch(operator, id, dto) {
         const order = await this.findOneOrThrow(operator, id);
@@ -590,6 +632,8 @@ exports.OrdersService = OrdersService = __decorate([
         phonepe_service_1.PhonePeService,
         shiprocket_service_1.ShiprocketService,
         cashfree_service_1.CashfreeService,
-        billing_service_1.BillingService])
+        billing_service_1.BillingService,
+        email_service_1.EmailService,
+        whatsapp_service_1.WhatsappBotService])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

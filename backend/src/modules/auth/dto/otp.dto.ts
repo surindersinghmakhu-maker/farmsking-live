@@ -50,3 +50,20 @@ export class SendMobileLinkOtpDto {
   @IsString()
   mobile: string;
 }
+
+export class CompleteOtpRegistrationDto {
+  @ApiProperty({ description: '10-digit mobile number' })
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+
+  @ApiPropertyOptional({ description: 'User full name' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ description: 'Selected role: CUSTOMER, FARMER, or GARDENER', enum: ['CUSTOMER', 'FARMER', 'GARDENER'] })
+  @IsNotEmpty()
+  @IsString()
+  role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+}

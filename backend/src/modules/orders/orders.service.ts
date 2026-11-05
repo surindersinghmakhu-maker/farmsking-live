@@ -1,3 +1,5 @@
+import { EmailService } from '../email/email.service';
+import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { randomBytes } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationType, OrderStatus, OrderPaymentMode, OrderPaymentStatus, Role, SellerType, SubOrderStatus, RtoBearer } from '@prisma/client';
@@ -40,6 +42,8 @@ export class OrdersService {
     private readonly shiprocketService: ShiprocketService,
     private readonly cashfreeService: CashfreeService,
     private readonly billingService: BillingService,
+    private readonly emailService: EmailService,
+    private readonly whatsappBotService: WhatsappBotService,
   ) {}
 
   async create(customer: AuthUser, dto: CreateOrderDto) {
@@ -450,12 +454,59 @@ export class OrdersService {
     return { paymentStatus };
   }
 
-  private async notifyCustomer(customerId: string, title: string, body: string, orderId: string, eventType?: string) {
+  private async notifyCustomer(
+    customerId: string,
+    title: string,
+    body: string,
+    orderId: string,
+    eventType?: string,
+    meta?: { courierName?: string; trackingNumber?: string },
+  ) {
     // 1. Create in-app notification record
     await this.notificationsService.create(customerId, NotificationType.SYSTEM, title, body, { orderId, eventType });
 
-    // 2. Log Firebase / SMS Text Notification Trigger
-    console.log(`[Firebase Text SMS Service] Sent ${eventType || 'ORDER_ALERT'} to User ${customerId}: "${title} - ${body}"`);
+    // 2. Fetch Customer and Order details
+    try {
+      const [customer, order] = await Promise.all([
+        this.prisma.user.findUnique({
+          where: { id: customerId },
+          select: { name: true, mobile: true, email: true },
+        }),
+        this.prisma.customerOrder.findUnique({
+          where: { id: orderId },
+          select: { orderNumber: true, totalAmount: true },
+        }),
+      ]);
+
+      if (customer) {
+        const orderNum = order?.orderNumber || orderId.slice(-8).toUpperCase();
+        const orderTotal = Number(order?.totalAmount ?? 0);
+
+        // 3. Email Notification (if email is linked)
+        if (customer.email && !customer.email.includes('placeholder')) {
+          this.emailService
+            .sendOrderLifecycleEmail(customer.email, customer.name || 'Valued Customer', {
+              orderNumber: orderNum,
+              statusTitle: title,
+              statusDescription: body,
+              totalAmount: orderTotal,
+              courierName: meta?.courierName,
+              trackingNumber: meta?.trackingNumber,
+            })
+            .catch((err: any) => console.warn('[OrdersService] Email notification error:', err?.message));
+        }
+
+        // 4. WhatsApp / Mobile Text Alert
+        if (customer.mobile && !customer.mobile.startsWith('G_')) {
+          const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total: ₹${orderTotal}\n` : ''}\nTrack your order anytime at https://farmsking.com/order-tracking\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`;
+          this.whatsappBotService
+            .sendDirectTextMessage(customer.mobile, waText)
+            .catch((err: any) => console.warn('[OrdersService] WhatsApp alert error:', err?.message));
+        }
+      }
+    } catch (notifyErr: any) {
+      console.warn('[OrdersService] notifyCustomer multi-channel notice:', notifyErr?.message);
+    }
   }
 
   async confirm(user: AuthUser, id: string) {
@@ -553,11 +604,19 @@ export class OrdersService {
       throw new ConflictException('This order is not ready to be marked as packed.');
     }
     await this.prisma.subOrder.updateMany({ where: { orderId: id }, data: { orderStatus: SubOrderStatus.PACKED } });
-    return this.prisma.customerOrder.update({
+    const packedOrder = await this.prisma.customerOrder.update({
       where: { id },
       data: { status: OrderStatus.PACKED, packedById: operator.id, packedAt: new Date() },
       include: DETAIL_INCLUDE,
     });
+    await this.notifyCustomer(
+      order.customerId,
+      '🎁 Order Ready & Packed',
+      `Your FarmsKing Order #${order.orderNumber} is packed and ready for dispatch.`,
+      id,
+      'ORDER_PACKED_SMS',
+    );
+    return packedOrder;
   }
 
   async dispatch(operator: AuthUser, id: string, dto: DispatchOrderDto) {

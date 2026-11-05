@@ -111,8 +111,21 @@ export async function sendLoginOtpApi(mobile: string): Promise<{ success: boolea
   return data;
 }
 
-export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/verify-login-otp', payload);
+export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse & { isNewUser?: boolean; mobile?: string }> {
+  const { data } = await apiClient.post<AuthResponse & { isNewUser?: boolean; mobile?: string }>('/auth/verify-login-otp', payload);
+  return data;
+}
+
+export interface CompleteOtpRegistrationPayload {
+  mobile: string;
+  name?: string;
+  role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+}
+
+export async function completeOtpRegistrationApi(
+  payload: CompleteOtpRegistrationPayload
+): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>('/auth/complete-otp-registration', payload);
   return data;
 }
 

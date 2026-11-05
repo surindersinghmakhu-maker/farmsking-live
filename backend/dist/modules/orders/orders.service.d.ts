@@ -1,3 +1,5 @@
+import { EmailService } from '../email/email.service';
+import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -21,7 +23,9 @@ export declare class OrdersService {
     private readonly shiprocketService;
     private readonly cashfreeService;
     private readonly billingService;
-    constructor(prisma: PrismaService, notificationsService: NotificationsService, couponsService: CouponsService, walletService: WalletService, appSettingsService: AppSettingsService, phonePeService: PhonePeService, shiprocketService: ShiprocketService, cashfreeService: CashfreeService, billingService: BillingService);
+    private readonly emailService;
+    private readonly whatsappBotService;
+    constructor(prisma: PrismaService, notificationsService: NotificationsService, couponsService: CouponsService, walletService: WalletService, appSettingsService: AppSettingsService, phonePeService: PhonePeService, shiprocketService: ShiprocketService, cashfreeService: CashfreeService, billingService: BillingService, emailService: EmailService, whatsappBotService: WhatsappBotService);
     create(customer: AuthUser, dto: CreateOrderDto): Promise<{
         customer: {
             id: string;

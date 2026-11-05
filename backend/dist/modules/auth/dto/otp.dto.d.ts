@@ -16,3 +16,8 @@ export declare class SendEmailOtpDto {
 export declare class SendMobileLinkOtpDto {
     mobile: string;
 }
+export declare class CompleteOtpRegistrationDto {
+    mobile: string;
+    name?: string;
+    role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+}

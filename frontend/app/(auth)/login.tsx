@@ -1,56 +1,53 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
   useWindowDimensions,
-  Image,
-  Animated,
+  Modal,
 } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import {
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
+import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
+import * as Haptics from 'expo-haptics';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { BlurView } from 'expo-blur';
 
-WebBrowser.maybeCompleteAuthSession();
+if (Platform.OS !== 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 
-const discovery = {
-  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-  tokenEndpoint: 'https://oauth2.googleapis.com/token',
-  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-};
-
-type LoginTab = 'password' | 'otp';
-
 export default function LoginScreen() {
-  const { user, login, firebaseLogin, googleLogin } = useAuth();
+  const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const otpInputRef = useRef<TextInput>(null);
+
+  // Check if current runtime is localhost / local dev
+  const isLocalhost =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('192.168.'));
 
   const handleSuccessNavigation = (isProfileIncomplete = false, loggedInUser?: any) => {
     if (isProfileIncomplete) {
@@ -68,59 +65,8 @@ export default function LoginScreen() {
     router.replace(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
   };
 
-  const [activeTab, setActiveTab] = useState<LoginTab>('password');
-  const [tabRowWidth, setTabRowWidth] = useState(0);
-  const tabSlideAnim = useRef(new Animated.Value(0)).current;
-  const formFadeAnim = useRef(new Animated.Value(1)).current;
-  const formTranslateY = useRef(new Animated.Value(0)).current;
-
-  const handleTabSwitch = (tab: LoginTab) => {
-    if (tab === activeTab) return;
-    setActiveTab(tab);
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Animated.parallel([
-      Animated.spring(tabSlideAnim, {
-        toValue: tab === 'password' ? 0 : 1,
-        tension: 90,
-        friction: 9.5,
-        useNativeDriver: false,
-      }),
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(formFadeAnim, {
-            toValue: 0.35,
-            duration: 70,
-            useNativeDriver: true,
-          }),
-          Animated.timing(formTranslateY, {
-            toValue: 8,
-            duration: 70,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.parallel([
-          Animated.spring(formFadeAnim, {
-            toValue: 1,
-            tension: 85,
-            friction: 9,
-            useNativeDriver: true,
-          }),
-          Animated.spring(formTranslateY, {
-            toValue: 0,
-            tension: 85,
-            friction: 9,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]),
-    ]).start();
-  };
   const [mobile, setMobile] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<'mobile' | 'password' | 'otp' | null>(null);
+  const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -131,168 +77,102 @@ export default function LoginScreen() {
   const [otpSending, setOtpSending] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+
+  // New User Role Selection State
+  const [isNewUserModal, setIsNewUserModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
+  const [isCompletingReg, setIsCompletingReg] = useState(false);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer(v => v - 1), 1000);
+    const t = setTimeout(() => setResendTimer((v) => v - 1), 1000);
     return () => clearTimeout(t);
   }, [resendTimer]);
 
-  const initRecaptcha = () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const container = document.getElementById('recaptcha-container');
-      if (!container) return;
-      const existing = (window as any).recaptchaVerifier;
-      if (existing && (window as any).recaptchaContainer === container) return;
-      if (existing) {
-        try { existing.clear(); } catch (e) {}
-        (window as any).recaptchaVerifier = null;
-      }
-      container.innerHTML = '';
-      (window as any).recaptchaContainer = container;
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
-        size: 'invisible',
-        callback: () => {},
-      });
-    } catch (e) {
-      console.warn('ReCaptcha init error:', e);
-    }
-  };
-
-  const resetRecaptcha = async () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const verifier = (window as any).recaptchaVerifier;
-      if (!verifier) return;
-      const widgetId = await verifier.render();
-      (window as any).grecaptcha?.reset(widgetId);
-    } catch (e) {
-      console.warn('ReCaptcha reset error:', e);
-    }
-  };
-
-  useEffect(() => {
-    initRecaptcha();
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      const existingV3 = document.getElementById('recaptcha-v3-script');
-      if (existingV3) existingV3.remove();
-      const badge = document.querySelector('.grecaptcha-badge') as HTMLElement;
-      if (badge) badge.style.display = 'none';
-    }
-  }, []);
-
-  useEffect(() => {
-    setOtpSent(false);
-    setOtpCode('');
-    setDevOtp(null);
-    setResendTimer(0);
-    setError(null);
-    setConfirmationResult(null);
-  }, [activeTab]);
-
-  const redirectUri = AuthSession.makeRedirectUri(
-    Platform.OS === 'web' ? ({ useProxy: false } as any) : { scheme: 'farmsking', path: 'auth' }
-  );
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: ['openid', 'email', 'profile'],
-      responseType: AuthSession.ResponseType.Token,
-      redirectUri,
-      prompt: AuthSession.Prompt.SelectAccount,
-      usePKCE: false,
-    },
-    discovery
-  );
+  // Google OAuth setup
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'farmsking' });
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_CLIENT_ID,
+    clientId: GOOGLE_CLIENT_ID,
+    scopes: ['openid', 'profile', 'email'],
+    redirectUri,
+    responseType: AuthSession.ResponseType.Token,
+    prompt: AuthSession.Prompt.SelectAccount,
+    usePKCE: false,
+  });
 
   useEffect(() => {
     if (!response) return;
-
-    const handleResponse = async () => {
-      if (response.type === 'success' && response.authentication?.accessToken) {
+    if (response.type === 'success') {
+      const { authentication } = response;
+      if (authentication?.accessToken) {
         setGoogleLoading(true);
-        setError(null);
-        try {
-          const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${response.authentication!.accessToken}` },
-          });
-          const userInfo = await userInfoRes.json();
-
-          if (!userInfo?.email) {
-            setError('Google account email not found. Please try again.');
-            return;
-          }
-
-          const res = await googleLogin({
-            email: userInfo.email,
-            name: userInfo.name || userInfo.given_name || userInfo.email.split('@')[0],
-            photoUrl: userInfo.picture,
-            googleId: userInfo.sub,
-            accessToken: response.authentication!.accessToken,
-          });
-
-          handleSuccessNavigation(Boolean(res?.isProfileIncomplete), (res as any)?.user);
-        } catch (err: any) {
-          setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
-        } finally {
-          setGoogleLoading(false);
-        }
-      } else if (response.type === 'error') {
-        setError('Google Sign-In failed: ' + (response.error?.message || 'Unknown error'));
-        setGoogleLoading(false);
-      } else if (response.type === 'cancel' || response.type === 'dismiss') {
-        setGoogleLoading(false);
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${authentication.accessToken}` },
+        })
+          .then((res) => res.json())
+          .then(async (userInfo) => {
+            if (!userInfo?.email) {
+              setError('Google login failed: Email not provided.');
+              return;
+            }
+            const loggedInUser = await googleLogin({
+              email: userInfo.email,
+              name: userInfo.name || userInfo.given_name || userInfo.email.split('@')[0],
+              photoUrl: userInfo.picture,
+              googleId: userInfo.sub,
+              accessToken: authentication.accessToken,
+            });
+            handleSuccessNavigation(loggedInUser.isProfileIncomplete, loggedInUser.user);
+          })
+          .catch((err) => {
+            setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
+          })
+          .finally(() => setGoogleLoading(false));
       }
-    };
-
-    handleResponse();
+    } else if (response.type === 'error') {
+      setError('Google Sign-In error: ' + (response.error?.message || 'Please retry.'));
+    }
   }, [response]);
 
   const handleGoogleSignIn = async () => {
     setError(null);
-    setGoogleLoading(true);
-
-    if (Platform.OS === 'web') {
-      try {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
-        const result = await signInWithPopup(auth, provider);
-        const fbUser = result.user;
-        const idToken = await fbUser.getIdToken();
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const accessToken = credential?.accessToken || (result as any)?._tokenResponse?.oauthAccessToken;
-
-        const res = await googleLogin({
-          email: fbUser.email || undefined,
-          name: fbUser.displayName || undefined,
-          photoUrl: fbUser.photoURL || undefined,
-          googleId: fbUser.uid,
-          idToken,
-          accessToken,
-        });
-
-        handleSuccessNavigation(Boolean(res?.isProfileIncomplete), (res as any)?.user);
-        return;
-      } catch (fbErr: any) {
-        console.warn('[GoogleSignIn Web] Firebase popup error:', fbErr);
-        if (
-          fbErr?.code === 'auth/popup-closed-by-user' ||
-          fbErr?.code === 'auth/cancelled-popup-request'
-        ) {
-          setGoogleLoading(false);
-          return;
-        }
-        // If popup was blocked or failed, fall through to promptAsync fallback
-      }
-    }
-
     try {
-      const result = await promptAsync({ showInRecents: true });
-      if (result?.type !== 'success') {
-        setGoogleLoading(false);
+      if (Platform.OS === 'web') {
+        setGoogleLoading(true);
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          const cred = await signInWithPopup(auth, provider);
+          const idToken = await cred.user.getIdToken();
+          const res = await googleLogin({
+            idToken,
+            email: cred.user.email || undefined,
+            name: cred.user.displayName || undefined,
+            photoUrl: cred.user.photoURL || undefined,
+            googleId: cred.user.uid,
+          });
+          handleSuccessNavigation(res.isProfileIncomplete, res.user);
+        } catch (fbErr: any) {
+          if (fbErr?.code === 'auth/popup-closed-by-user') {
+            setGoogleLoading(false);
+            return;
+          }
+          if (request) {
+            await promptAsync();
+          } else {
+            setError('Google Sign-In error: ' + (fbErr?.message || 'Please retry.'));
+          }
+        } finally {
+          setGoogleLoading(false);
+        }
+      } else {
+        if (request) {
+          await promptAsync();
+        } else {
+          setError('Google Sign-In is initializing. Please tap again.');
+        }
       }
     } catch (err: any) {
       setError('Google Sign-In failed: ' + (err?.message || 'Please retry.'));
@@ -300,6 +180,7 @@ export default function LoginScreen() {
     }
   };
 
+  // Step 1: Request Mobile OTP
   const handleSendOtp = async () => {
     setError(null);
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
@@ -309,383 +190,312 @@ export default function LoginScreen() {
     }
     setOtpSending(true);
     try {
-      if (Platform.OS === 'web') {
-        const fullPhone = `+91${cleanNum}`;
-        try {
-          initRecaptcha();
-          const verifier = (window as any).recaptchaVerifier;
-          const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
-          setConfirmationResult(result);
-        } catch (firebaseErr: any) {
-          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
-          await resetRecaptcha();
-          throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
-        }
-      }
+      const res = await sendLoginOtp(cleanNum);
       setOtpSent(true);
       setResendTimer(60);
+      if (res?.devOtp) {
+        setDevOtp(res.devOtp);
+      } else if (isLocalhost) {
+        setDevOtp('123456');
+      }
       setTimeout(() => otpInputRef.current?.focus(), 300);
     } catch (err: any) {
-      const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet ? 'Network error! Please check your internet connection.' : (err?.response?.data?.message ?? err?.message ?? 'Failed to send OTP. Please try again.'));
+      console.warn('[sendLoginOtp error]:', err);
+      if (isLocalhost) {
+        // Fallback gracefully on localhost so developer is never blocked
+        setOtpSent(true);
+        setDevOtp('123456');
+        setResendTimer(60);
+      } else {
+        const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
+        setError(
+          isNet
+            ? 'Network error! Please check your internet connection.'
+            : err?.response?.data?.message ?? err?.message ?? 'Failed to send OTP. Please try again.'
+        );
+      }
     } finally {
       setOtpSending(false);
     }
   };
 
+  // Step 2: Verify Mobile OTP
   const handleOtpLogin = async () => {
     setError(null);
     const cleanCode = otpCode.trim();
     if (!cleanCode || cleanCode.length < 6) {
-      setError('Please enter the 6-digit OTP code.');
+      setError('Please enter the 6-digit verification code.');
       return;
     }
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
     try {
-      if (confirmationResult) {
-        const credential = await confirmationResult.confirm(cleanCode);
-        const idToken = await credential.user.getIdToken();
-        const loggedInUser = await firebaseLogin(idToken);
-        handleSuccessNavigation(false, loggedInUser);
+      const res = await otpLogin({ mobile: cleanNum, otp: cleanCode });
+      if (res?.isNewUser) {
+        // New user! Present role selection
+        setIsNewUserModal(true);
       } else {
-        throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
+        // Existing user -> route to their role dashboard
+        handleSuccessNavigation(false, res);
       }
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet ? 'Network error! Please check your internet connection.' : (err?.response?.data?.message ?? err?.message ?? 'OTP verification failed.'));
+      setError(
+        isNet
+          ? 'Network error! Please check your internet connection.'
+          : err?.response?.data?.message ?? err?.message ?? 'Verification failed. Please check code.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onSubmit = async () => {
+  // Step 3: Complete Role Selection for New Users
+  const handleCompleteRegistration = async () => {
     setError(null);
-    if (!mobile.trim()) { setError('Please enter your Mobile Number or King ID.'); return; }
-    if (!password.trim()) { setError('Please enter your password.'); return; }
-    setIsSubmitting(true);
-
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
+    setIsCompletingReg(true);
     try {
-      const loggedInUser = await login({ mobile: mobile.trim(), password: password.trim() });
+      const loggedInUser = await completeOtpRegistration({
+        mobile: cleanNum,
+        name: newUserName.trim() || undefined,
+        role: selectedRole,
+      });
+      setIsNewUserModal(false);
       handleSuccessNavigation(false, loggedInUser);
     } catch (err: any) {
-      const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet ? 'Network error! Could not connect. Please check your internet.' : (err?.response?.data?.message ?? err?.message ?? 'Login failed.'));
+      setError(err?.response?.data?.message ?? err?.message ?? 'Registration failed. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setIsCompletingReg(false);
     }
   };
 
-  const { width } = useWindowDimensions();
-  const isDesktop = width > 900;
-  const isMobile = width <= 768;
+  const autoFillDevOtp = () => {
+    const codeToFill = devOtp || '123456';
+    setOtpCode(codeToFill);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* Subtle Ambient Glowing Baby Light Orbs */}
-      <View style={styles.glowOrbBabyMint} />
-      <View style={styles.glowOrbBabyBlue} />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      {/* Ambient Breathing Laser Glow Orbs */}
+      <View style={styles.glowOrbTopLeft} pointerEvents="none" />
+      <View style={styles.glowOrbBottomRight} pointerEvents="none" />
 
-      <ScrollView contentContainerStyle={[styles.scroll, isDesktop && styles.scrollDesktop]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-        {/* ── LEFT BRAND PANEL (desktop only) ── */}
-        {isDesktop && (
-          <View style={styles.leftPanel}>
-            <LinearGradient colors={['#042f2e', '#064e3b', '#065f46']} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-            {/* Subtle Grid Pattern Overlay */}
-            <View style={styles.leftGridOverlay} />
-
-            <View style={styles.leftContent}>
-              <View style={styles.logoBadgeContainer}>
-                <Image
-                  source={require('@/assets/favicon.png')}
-                  style={styles.faviconBadgeImg}
-                  resizeMode="contain"
-                />
-                <View style={styles.livePulseDot} />
-              </View>
-              <Text style={styles.leftTitle}>FarmsKing</Text>
-              <Text style={styles.leftSub}>India's Leading Digital Agriculture & Farm Intelligence Platform</Text>
-              
-              <View style={styles.trustBadgeStrip}>
-                <Ionicons name="shield-checkmark" size={13} color="#34d399" />
-                <Text style={styles.trustBadgeStripText}>ISO 27001 SECURED • eNAM ALIGNED</Text>
-              </View>
-
-              <View style={styles.leftDivider} />
-              
-              {[
-                { icon: 'scan-outline', text: 'AI Crop Pathology & 5-Second Diagnostics' },
-                { icon: 'trending-up-outline', text: 'Live APMC Mandi Rates & 4D Market Telemetry' },
-                { icon: 'storefront-outline', text: 'Certified Agri Inputs Delivered Directly to Farm' },
-                { icon: 'calendar-outline', text: 'Digital Farm Records & Scientific Spray Calendars' },
-              ].map((item, i) => (
-                <View key={i} style={styles.leftFeature}>
-                  <View style={styles.leftFeatureIcon}>
-                    <Ionicons name={item.icon as any} size={16} color="#34d399" />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.cardWrapper}>
+          
+          {/* Super-Premium Executive Glassmorphic Card */}
+          <View style={[styles.card, premiumShadow('#10b981', 'lg')]}>
+            
+            {/* Brand Header */}
+            <View style={styles.brandRow}>
+              <BrandLogo size={46} useHdQuality round useGoldRing />
+              <View style={{ marginLeft: 14, flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.brandTitle}>FarmsKing</Text>
+                  <View style={styles.laserBadge}>
+                    <Text style={styles.laserBadgeText}>ISO 27001 SECURE</Text>
                   </View>
-                  <Text style={styles.leftFeatureText}>{item.text}</Text>
                 </View>
-              ))}
-
-              <View style={styles.leftSocialProofBox}>
-                <View style={styles.leftStarsRow}>
-                  {[1, 2, 3, 4, 5].map((_, i) => (
-                    <Ionicons key={i} name="star" size={12} color="#f59e0b" style={{ marginRight: 1 }} />
-                  ))}
-                  <Text style={styles.leftStarsRating}>4.9/5</Text>
-                </View>
-                <Text style={styles.leftFooter}>Trusted by 50,000+ Cultivators & Agronomists across India</Text>
+                <Text style={styles.brandTagline}>Smart Farming</Text>
               </View>
             </View>
-          </View>
-        )}
 
-        {/* ── RIGHT FORM PANEL ── */}
-        <View style={[styles.rightPanel, isDesktop && styles.rightPanelDesktop]}>
-
-          {/* Back to Home Button */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')} activeOpacity={0.8}>
-            <Ionicons name="arrow-back" size={15} color="#059669" />
-            <Text style={styles.backBtnText}>Back to FarmsKing</Text>
-          </TouchableOpacity>
-
-          {/* Logo (mobile only) */}
-          {!isDesktop && (
-            <View style={styles.mobileBrand}>
-              <View style={styles.mobileFaviconCircle}>
-                <Image
-                  source={require('@/assets/favicon.png')}
-                  style={{ width: 34, height: 34, borderRadius: 17 }}
-                  resizeMode="contain"
-                />
-              </View>
-              <View style={{ marginLeft: 12 }}>
-                <Text style={styles.mobileBrandName}>FarmsKing</Text>
-                <Text style={styles.mobileBrandTag}>Smart Farming & Agri Intelligence</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Frosted Glass Card */}
-          <View style={[styles.card, premiumShadow('rgba(16,185,129,0.12)', 'lg')]}>
-            {redirect ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 }}>
-                <Ionicons name="cart" size={22} color="#059669" />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#065f46' }}>
-                    Your shopping cart is safely saved!
-                  </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857', marginTop: 1 }}>
-                    Please login or create an account to proceed with your order.
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-            <Text style={styles.title}>Welcome Back 👋</Text>
-            <Text style={styles.subtitle}>Sign in to continue to your account</Text>
-
-            <div id="recaptcha-container" />
-
-            {/* Movement Animated Tabs */}
-            <View
-              style={styles.tabRow}
-              onLayout={(e) => setTabRowWidth(e.nativeEvent.layout.width)}
-            >
-              {tabRowWidth > 0 && (
-                <Animated.View
-                  style={[
-                    styles.slidingActivePill,
-                    {
-                      width: (tabRowWidth - 8) / 2,
-                      transform: [
-                        {
-                          translateX: tabSlideAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0, (tabRowWidth - 8) / 2],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                />
-              )}
-
-              {(['password', 'otp'] as const).map((tab) => {
-                const isSelected = activeTab === tab;
-                return (
-                  <TouchableOpacity
-                    key={tab}
-                    style={styles.tab}
-                    onPress={() => handleTabSwitch(tab)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons
-                      name={tab === 'password' ? 'lock-closed' : 'phone-portrait-outline'}
-                      size={14}
-                      color={isSelected ? '#059669' : '#64748b'}
-                    />
-                    <Text style={[styles.tabText, isSelected && styles.tabTextActive]}>
-                      {tab === 'password' ? 'Password' : 'OTP'}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.headingBox}>
+              <Text style={styles.title}>Instant Mobile Sign In</Text>
+              <Text style={styles.subtitle}>
+                Zero passwords required. Enter your 10-digit mobile number for verified access.
+              </Text>
             </View>
 
-            {/* Form Canvas with Spring Slide-and-Fade Motion */}
-            <Animated.View style={{ opacity: formFadeAnim, transform: [{ translateY: formTranslateY }] }}>
-
-            {/* Mobile Input */}
-            <Text style={styles.label}>{activeTab === 'password' ? 'Mobile / King ID' : 'Mobile Number'}</Text>
+            {/* Mobile Input Section */}
+            <Text style={styles.label}>Mobile Number</Text>
             <View style={[styles.inputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
-              <Ionicons name={activeTab === 'password' ? 'person-outline' : 'call-outline'} size={17} color={focusedField === 'mobile' ? '#10b981' : '#94a3b8'} style={styles.inputIcon} />
+              <View style={styles.countryCodeBox}>
+                <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
+              </View>
               <TextInput
                 style={styles.input}
-                keyboardType={activeTab === 'password' ? 'default' : 'phone-pad'}
-                maxLength={activeTab === 'otp' ? 10 : 30}
-                placeholder={activeTab === 'password' ? 'Mobile number or King ID' : '10-digit mobile'}
-                placeholderTextColor="#cbd5e1"
+                keyboardType="phone-pad"
+                maxLength={10}
+                placeholder="10-digit mobile number"
+                placeholderTextColor="#64748b"
                 value={mobile}
-                onChangeText={(t) => { setMobile(t); if (otpSent) { setOtpSent(false); setOtpCode(''); setDevOtp(null); } }}
+                onChangeText={(t) => {
+                  setMobile(t);
+                  if (otpSent) {
+                    setOtpSent(false);
+                    setOtpCode('');
+                    setDevOtp(null);
+                  }
+                }}
                 onFocus={() => setFocusedField('mobile')}
                 onBlur={() => setFocusedField(null)}
-                returnKeyType="next"
-                editable={!(activeTab === 'otp' && otpSent)}
+                returnKeyType="done"
+                editable={!otpSent}
                 autoCapitalize="none"
               />
-              {activeTab === 'otp' && otpSent && (
-                <TouchableOpacity onPress={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); }} style={{ padding: 4 }}>
-                  <Ionicons name="pencil" size={15} color="#10b981" />
+              {otpSent && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setOtpSent(false);
+                    setOtpCode('');
+                    setDevOtp(null);
+                  }}
+                  style={styles.editPencilBtn}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="pencil" size={14} color="#10b981" />
+                  <Text style={styles.editText}>Change</Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            {/* Password Tab */}
-            {activeTab === 'password' && (
-              <>
-                <Text style={styles.label}>Password</Text>
-                <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
-                  <Ionicons name="lock-closed-outline" size={17} color={focusedField === 'password' ? '#10b981' : '#94a3b8'} style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    secureTextEntry={!showPassword}
-                    placeholder="Password"
-                    placeholderTextColor="#cbd5e1"
-                    value={password}
-                    onChangeText={setPassword}
-                    onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField(null)}
-                    returnKeyType="done"
-                    onSubmitEditing={onSubmit}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
-                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity style={styles.forgotLink} onPress={() => router.push('/(auth)/forgot-password')}>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {/* OTP Tab */}
-            {activeTab === 'otp' && (
-              <>
-                {!otpSent ? (
-                  <TouchableOpacity
-                    onPress={handleSendOtp}
-                    disabled={otpSending || !mobile.trim()}
-                    activeOpacity={0.85}
-                    style={[styles.sendOtpBtn, (!mobile.trim() || otpSending) && { opacity: 0.5 }]}
-                  >
-                    <LinearGradient colors={['#0ea5e9', '#0284c7']} style={styles.gradientBtn}>
-                      {otpSending ? <ActivityIndicator color="#fff" /> : (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Ionicons name="paper-plane" size={16} color="#fff" />
-                          <Text style={styles.buttonText}>Send OTP</Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ) : (
-                  <>
-                    <Text style={styles.otpSentMsg}>✅ OTP sent to +91 {mobile}</Text>
-                    {devOtp && (
-                      <View style={styles.devOtpBox}>
-                        <Text style={styles.devOtpLabel}>🧪 Test OTP:</Text>
-                        <Text style={styles.devOtpCode}>{devOtp}</Text>
-                      </View>
-                    )}
-                    <Text style={styles.label}>6-Digit OTP</Text>
-                    <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
-                      <Ionicons name="keypad-outline" size={17} color={focusedField === 'otp' ? '#10b981' : '#94a3b8'} style={styles.inputIcon} />
-                      <TextInput
-                        ref={otpInputRef}
-                        style={[styles.input, { letterSpacing: 8, fontSize: 20, fontFamily: FONT.extraBold, textAlign: 'center' }]}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        placeholder="● ● ● ● ● ●"
-                        placeholderTextColor="#cbd5e1"
-                        value={otpCode}
-                        onChangeText={setOtpCode}
-                        onFocus={() => setFocusedField('otp')}
-                        onBlur={() => setFocusedField(null)}
-                        returnKeyType="done"
-                        onSubmitEditing={handleOtpLogin}
-                      />
-                    </View>
-                    <View style={styles.resendRow}>
-                      {resendTimer > 0 ? (
-                        <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
-                      ) : (
-                        <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                          <Text style={styles.resendLink}>🔄 Resend OTP</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </>
-                )}
-              </>
-            )}
-
-            {/* Error */}
-            {error ? (
-              <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={18} color="#dc2626" />
-                <Text style={styles.error}>{error}</Text>
-              </View>
-            ) : null}
-
-            {/* Submit */}
-            {activeTab === 'password' || otpSent ? (
-              <TouchableOpacity onPress={activeTab === 'password' ? onSubmit : handleOtpLogin} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-                <LinearGradient colors={['#10b981', '#059669']} style={styles.gradientBtn}>
-                  {isSubmitting ? <ActivityIndicator color="#fff" /> : (
+            {/* OTP Flow */}
+            {!otpSent ? (
+              <TouchableOpacity
+                onPress={handleSendOtp}
+                disabled={otpSending || mobile.trim().length < 10}
+                activeOpacity={0.88}
+                style={[styles.primaryActionBtn, (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 }]}
+              >
+                <LinearGradient
+                  colors={['#10b981', '#059669']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.gradientBtn}
+                >
+                  {otpSending ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={styles.buttonText}>{activeTab === 'password' ? 'Secure Login' : 'Verify & Login'}</Text>
-                      <Ionicons name="arrow-forward" size={16} color="#fff" />
+                      <Ionicons name="paper-plane" size={16} color="#fff" />
+                      <Text style={styles.buttonText}>Get Verification Code</Text>
                     </View>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
+            ) : (
+              <>
+                <View style={styles.otpSentBanner}>
+                  <Ionicons name="checkmark-circle" size={18} color="#10b981" />
+                  <Text style={styles.otpSentMsg}>Code dispatched to +91 {mobile.slice(-10)}</Text>
+                </View>
+
+                {/* Localhost Development Helper Banner (Only visible on localhost / dev mode) */}
+                {isLocalhost && (
+                  <View style={styles.devOtpContainer}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.devOtpHeader}>💻 Localhost Testing Mode</Text>
+                      <Text style={styles.devOtpSub}>
+                        Test Code: <Text style={{ fontFamily: FONT.bold, color: '#34d399' }}>{devOtp || '123456'}</Text>
+                      </Text>
+                    </View>
+                    <TouchableOpacity style={styles.autoFillBtn} onPress={autoFillDevOtp} activeOpacity={0.85}>
+                      <Text style={styles.autoFillBtnText}>Auto-Fill Code</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                <Text style={[styles.label, { marginTop: 14 }]}>6-Digit Verification Code</Text>
+                <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
+                  <Ionicons
+                    name="keypad-outline"
+                    size={18}
+                    color={focusedField === 'otp' ? '#10b981' : '#94a3b8'}
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    ref={otpInputRef}
+                    style={[
+                      styles.input,
+                      { letterSpacing: 8, fontSize: 20, fontFamily: FONT.extraBold, textAlign: 'center' },
+                    ]}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    placeholder="● ● ● ● ● ●"
+                    placeholderTextColor="#475569"
+                    value={otpCode}
+                    onChangeText={setOtpCode}
+                    onFocus={() => setFocusedField('otp')}
+                    onBlur={() => setFocusedField(null)}
+                    returnKeyType="done"
+                    onSubmitEditing={handleOtpLogin}
+                  />
+                </View>
+
+                {/* Resend Row */}
+                <View style={styles.resendRow}>
+                  {resendTimer > 0 ? (
+                    <Text style={styles.resendTimer}>Resend available in {resendTimer}s</Text>
+                  ) : (
+                    <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
+                      <Text style={styles.resendLink}>🔄 Resend Code</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Submit OTP */}
+                <TouchableOpacity
+                  onPress={handleOtpLogin}
+                  disabled={isSubmitting || otpCode.trim().length < 6}
+                  activeOpacity={0.88}
+                  style={[styles.primaryActionBtn, (isSubmitting || otpCode.trim().length < 6) && { opacity: 0.6 }]}
+                >
+                  <LinearGradient
+                    colors={['#10b981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientBtn}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={styles.buttonText}>Verify & Enter Dashboard</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#fff" />
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Error Banner */}
+            {error ? (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle" size={18} color="#ef4444" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
             ) : null}
-            </Animated.View>
 
             {/* Divider */}
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR</Text>
+              <Text style={styles.dividerText}>OR SECURE ALTERNATIVE</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Google */}
+            {/* Google Sign-In */}
             <TouchableOpacity
               style={[styles.googleIconBtn, (!request || googleLoading) && styles.googleBtnDisabled]}
               onPress={handleGoogleSignIn}
               disabled={!request || googleLoading || isSubmitting}
               activeOpacity={0.88}
             >
-              {googleLoading ? <ActivityIndicator color="#4285F4" /> : (
+              {googleLoading ? (
+                <ActivityIndicator color="#4285F4" size="small" />
+              ) : (
                 <>
                   <Ionicons name="logo-google" size={18} color="#4285F4" />
                   <Text style={styles.googleText}>Continue with Google</Text>
@@ -693,18 +503,144 @@ export default function LoginScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Register */}
-            <TouchableOpacity
-              style={styles.registerRow}
-              onPress={() => router.push({ pathname: '/(auth)/register', params: redirect ? { redirect } : undefined } as any)}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.registerText}>Don't have an account? </Text>
-              <Text style={styles.registerLink}>Create one →</Text>
-            </TouchableOpacity>
+            {/* Statutory Corporate Identity Footer */}
+            <View style={styles.statutoryFooter}>
+              <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+              <Text style={styles.statutoryFooterText}>
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+              </Text>
+            </View>
+
           </View>
         </View>
       </ScrollView>
+
+      {/* NEW USER ONBOARDING MODAL: Choose Role (Customer, Farmer, Gardener) */}
+      <Modal visible={isNewUserModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, premiumShadow('#10b981', 'lg')]}>
+            
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconWrap}>
+                <Ionicons name="person-add" size={24} color="#10b981" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={styles.modalTitle}>Welcome to FarmsKing!</Text>
+                <Text style={styles.modalSubtitle}>Choose your primary workspace role to personalize your tools</Text>
+              </View>
+            </View>
+
+            {/* Name Input */}
+            <Text style={styles.modalLabel}>Your Full Name (Optional)</Text>
+            <View style={[styles.inputWrap, focusedField === 'name' && styles.inputWrapFocused]}>
+              <Ionicons name="person-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Gurpreet Singh"
+                placeholderTextColor="#64748b"
+                value={newUserName}
+                onChangeText={setNewUserName}
+                onFocus={() => setFocusedField('name')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+
+            {/* Role Cards Selection */}
+            <Text style={[styles.modalLabel, { marginTop: 16 }]}>Select Account Type</Text>
+
+            <View style={styles.roleGrid}>
+              
+              {/* Farmer Option */}
+              <TouchableOpacity
+                style={[styles.roleCard, selectedRole === 'FARMER' && styles.roleCardActive]}
+                onPress={() => setSelectedRole('FARMER')}
+                activeOpacity={0.88}
+              >
+                <View style={styles.roleCardTop}>
+                  <Text style={styles.roleCardIcon}>🌾</Text>
+                  {selectedRole === 'FARMER' ? (
+                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  ) : (
+                    <View style={styles.unselectedCircle} />
+                  )}
+                </View>
+                <Text style={styles.roleCardTitle}>Farmer</Text>
+                <Text style={styles.roleCardDesc}>Crops, Mandi rates, AI crop doctor & bahi-khata</Text>
+              </TouchableOpacity>
+
+              {/* Gardener Option */}
+              <TouchableOpacity
+                style={[styles.roleCard, selectedRole === 'GARDENER' && styles.roleCardActive]}
+                onPress={() => setSelectedRole('GARDENER')}
+                activeOpacity={0.88}
+              >
+                <View style={styles.roleCardTop}>
+                  <Text style={styles.roleCardIcon}>🏡</Text>
+                  {selectedRole === 'GARDENER' ? (
+                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  ) : (
+                    <View style={styles.unselectedCircle} />
+                  )}
+                </View>
+                <Text style={styles.roleCardTitle}>Gardener</Text>
+                <Text style={styles.roleCardDesc}>Home plants, pots & terrace gardening</Text>
+              </TouchableOpacity>
+
+              {/* Customer Option */}
+              <TouchableOpacity
+                style={[styles.roleCard, selectedRole === 'CUSTOMER' && styles.roleCardActive]}
+                onPress={() => setSelectedRole('CUSTOMER')}
+                activeOpacity={0.88}
+              >
+                <View style={styles.roleCardTop}>
+                  <Text style={styles.roleCardIcon}>🛒</Text>
+                  {selectedRole === 'CUSTOMER' ? (
+                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                  ) : (
+                    <View style={styles.unselectedCircle} />
+                  )}
+                </View>
+                <Text style={styles.roleCardTitle}>Customer</Text>
+                <Text style={styles.roleCardDesc}>Shop inputs, direct farm produce & orders</Text>
+              </TouchableOpacity>
+
+            </View>
+
+            <View style={styles.roleNoticeBox}>
+              <Ionicons name="information-circle" size={16} color="#38bdf8" />
+              <Text style={styles.roleNoticeText}>
+                Customer shopping access is automatically included with every role.
+              </Text>
+            </View>
+
+            {/* Complete Button */}
+            <TouchableOpacity
+              onPress={handleCompleteRegistration}
+              disabled={isCompletingReg}
+              activeOpacity={0.88}
+              style={[styles.primaryActionBtn, { marginTop: 18 }]}
+            >
+              <LinearGradient
+                colors={['#10b981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientBtn}
+              >
+                {isCompletingReg ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={styles.buttonText}>Complete & Enter My Dashboard</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#fff" />
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </KeyboardAvoidingView>
   );
 }
@@ -712,290 +648,420 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#090e17',
     position: 'relative',
-    overflow: 'hidden',
   },
-
-  // Subtle Ambient Glowing Orbs
-  glowOrbBabyMint: {
+  glowOrbTopLeft: {
     position: 'absolute',
-    width: 520,
-    height: 520,
-    borderRadius: 260,
-    backgroundColor: 'rgba(167, 243, 208, 0.35)',
     top: -120,
-    right: -100,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+    left: -120,
+    width: 380,
+    height: 380,
+    borderRadius: 190,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    filter: 'blur(90px)',
   },
-  glowOrbBabyBlue: {
+  glowOrbBottomRight: {
     position: 'absolute',
-    width: 480,
-    height: 480,
-    borderRadius: 240,
-    backgroundColor: 'rgba(186, 230, 253, 0.35)',
-    bottom: -100,
-    left: -100,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(120px)', pointerEvents: 'none' } as any) : {}),
+    bottom: -120,
+    right: -120,
+    width: 420,
+    height: 420,
+    borderRadius: 210,
+    backgroundColor: 'rgba(6, 182, 212, 0.08)',
+    filter: 'blur(100px)',
   },
-
-  // Layouts
-  scroll: { flexGrow: 1 },
-  scrollDesktop: { flexDirection: 'row', minHeight: '100%' },
-
-  // Left green brand panel (desktop)
-  leftPanel: {
-    width: 440,
-    overflow: 'hidden',
-    position: 'relative',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.12)',
-  },
-  leftGridOverlay: {
-    ...StyleSheet.absoluteFill,
-    opacity: 0.08,
-    ...(Platform.OS === 'web'
-      ? ({
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)',
-          backgroundSize: '24px 24px',
-        } as any)
-      : {}),
-  },
-  leftContent: { flex: 1, padding: 44, justifyContent: 'center' },
-  logoBadgeContainer: {
-    position: 'relative',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
+  scroll: {
+    flexGrow: 1,
     justifyContent: 'center',
-    marginBottom: 22,
-    borderWidth: 2.5,
-    borderColor: '#10b981',
-    ...premiumShadow('rgba(0, 0, 0, 0.16)', 'md'),
+    alignItems: 'center',
+    padding: 24,
+    minHeight: '100%',
   },
-  faviconBadgeImg: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+  cardWrapper: {
+    width: '100%',
+    maxWidth: 460,
   },
-  livePulseDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#10b981',
-    borderWidth: 2,
-    borderColor: '#ffffff',
+  card: {
+    backgroundColor: 'rgba(15, 23, 42, 0.88)',
+    borderRadius: RADIUS.xl,
+    padding: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.28)',
+    backdropFilter: 'blur(16px)',
   },
-  leftTitle: { fontSize: 34, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.3 },
-  leftSub: { fontSize: 13.5, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.85)', marginTop: 8, marginBottom: 18, lineHeight: 20 },
-  trustBadgeStrip: {
+  brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
     marginBottom: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(52,211,153,0.3)',
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  trustBadgeStripText: {
-    fontSize: 10.5,
+  brandTitle: {
+    fontSize: 22,
     fontFamily: FONT.extraBold,
-    color: '#a7f3d0',
+    color: '#ffffff',
     letterSpacing: 0.5,
   },
-  leftDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.18)', marginBottom: 22 },
-  leftFeature: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 15 },
-  leftFeatureIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
-  leftFeatureText: { fontSize: 13, fontFamily: FONT.bold, color: '#f8fafc', flex: 1, lineHeight: 18 },
-  leftSocialProofBox: {
-    marginTop: 26,
-    paddingTop: 18,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.15)',
-  },
-  leftStarsRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  leftStarsRating: { fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff', marginLeft: 4 },
-  leftFooter: { fontSize: 11.5, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.75)', lineHeight: 16 },
-
-  // Right form panel
-  rightPanel: { flex: 1, justifyContent: 'center', padding: 20, paddingTop: 40, paddingBottom: 32, zIndex: 10 },
-  rightPanelDesktop: { maxWidth: 500, alignSelf: 'center', width: '100%' },
-
-  // Back button
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
-    alignSelf: 'flex-start',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-    borderRadius: RADIUS.pill,
+  laserBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(16,185,129,0.25)',
-    ...premiumShadow('rgba(0,0,0,0.05)', 'xs'),
+    borderColor: 'rgba(16, 185, 129, 0.45)',
+    paddingVertical: 2,
+    paddingHorizontal: 7,
+    borderRadius: RADIUS.sm,
   },
-  backBtnText: { color: '#059669', fontSize: 12, fontFamily: FONT.bold },
-
-  // Mobile brand
-  mobileBrand: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  mobileFaviconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#10b981',
-    ...premiumShadow('rgba(16, 185, 129, 0.15)', 'xs'),
+  laserBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    letterSpacing: 0.5,
   },
-  mobileBrandName: { fontSize: 21, fontFamily: FONT.extraBold, color: '#0f172a' },
-  mobileBrandTag: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-
-  // Card
-  card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderRadius: 24,
-    padding: 26,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.22)',
-    ...(Platform.OS === 'web'
-      ? ({
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 20px 40px -12px rgba(16, 185, 129, 0.14), 0 0 1px rgba(0,0,0,0.06)',
-        } as any)
-      : {
-          ...premiumShadow('rgba(16,185,129,0.15)', 'lg'),
-        }),
+  brandTagline: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+    color: '#10b981',
+    letterSpacing: 0.4,
+    marginTop: 2,
   },
-
-  title: { fontSize: 24, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#64748b', fontFamily: FONT.medium, marginBottom: 18 },
-
-  // Tabs
-  tabRow: {
-    position: 'relative',
-    flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 14,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+  headingBox: {
+    marginBottom: 22,
   },
-  slidingActivePill: {
-    position: 'absolute',
-    left: 4,
-    top: 4,
-    bottom: 4,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.35)',
-    shadowColor: '#10b981',
-    shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 3,
-    zIndex: 1,
+  title: {
+    fontSize: 22,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+    marginBottom: 6,
   },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    zIndex: 2,
+  subtitle: {
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 19,
   },
-  tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
-  tabTextActive: { color: '#059669', fontFamily: FONT.extraBold },
-
-  // Inputs
-  label: { fontSize: 11, color: '#475569', fontFamily: FONT.bold, marginBottom: 5, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#cbd5e1',
+    marginBottom: 6,
+    letterSpacing: 0.3,
+  },
   inputWrap: {
-    width: '100%',
-    height: 48,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: RADIUS.lg,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    borderRadius: 14,
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 13,
+    borderColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 14,
+    height: 52,
+    transition: 'all 0.2s ease',
   },
   inputWrapFocused: {
-    borderColor: '#059669',
-    backgroundColor: '#ffffff',
-    shadowColor: '#10b981',
-    shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    boxShadow: '0 0 15px rgba(16, 185, 129, 0.2)',
   },
-  inputIcon: { marginRight: 9 },
-  input: { flex: 1, fontSize: 14.5, fontFamily: FONT.medium, color: '#0f172a' },
-
-  forgotLink: { alignSelf: 'flex-end', marginTop: 8 },
-  forgotText: { color: '#059669', fontSize: 12, fontFamily: FONT.bold },
-
-  sendOtpBtn: { width: '100%', marginTop: 14, borderRadius: 14, overflow: 'hidden' },
-  otpSentMsg: { fontSize: 12, fontFamily: FONT.bold, color: '#059669', backgroundColor: 'rgba(16,185,129,0.08)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', borderRadius: 12, padding: 10, marginTop: 10, textAlign: 'center' },
-  devOtpBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(245,158,11,0.08)', borderWidth: 1, borderColor: 'rgba(245,158,11,0.2)', borderRadius: 10, padding: 8, marginTop: 8 },
-  devOtpLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#d97706' },
-  devOtpCode: { fontSize: 18, fontFamily: FONT.extraBold, color: '#d97706', letterSpacing: 4 },
-  resendRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 },
-  resendTimer: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' },
-  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#0284c7' },
-
-  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: 'rgba(220,38,38,0.06)', borderWidth: 1, borderColor: 'rgba(220,38,38,0.18)', padding: 10, borderRadius: 12 },
-  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12, lineHeight: 16, flex: 1 },
-
-  button: {
-    width: '100%',
-    marginTop: 16,
-    borderRadius: 14,
+  countryCodeBox: {
+    paddingRight: 12,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.14)',
+    marginRight: 12,
+  },
+  countryCodeText: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 15,
+    fontFamily: FONT.medium,
+    outlineStyle: 'none',
+  },
+  editPencilBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.sm,
+  },
+  editText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  primaryActionBtn: {
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    ...premiumShadow('rgba(16,185,129,0.35)', 'md'),
+    marginTop: 18,
+    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
   },
-  gradientBtn: { paddingVertical: 13.5, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { color: '#ffffff', fontSize: 14.5, fontFamily: FONT.bold },
-
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 10 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
-  dividerText: { color: '#94a3b8', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 0.5 },
-
+  gradientBtn: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 14.5,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.3,
+  },
+  otpSentBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderColor: 'rgba(16,185,129,0.35)',
+    borderWidth: 1,
+    padding: 12,
+    borderRadius: RADIUS.md,
+    marginTop: 14,
+  },
+  otpSentMsg: {
+    color: '#34d399',
+    fontSize: 13,
+    fontFamily: FONT.medium,
+  },
+  devOtpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#064e3b',
+    borderWidth: 1.5,
+    borderColor: '#059669',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 12,
+  },
+  devOtpHeader: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#a7f3d0',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  devOtpSub: {
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#ffffff',
+    marginTop: 3,
+  },
+  autoFillBtn: {
+    backgroundColor: '#10b981',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.sm,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  },
+  autoFillBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#064e3b',
+  },
+  resendRow: {
+    alignItems: 'flex-end',
+    marginTop: 10,
+  },
+  resendTimer: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+  },
+  resendLink: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(239,68,68,0.12)',
+    borderColor: 'rgba(239,68,68,0.35)',
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 14,
+    gap: 8,
+  },
+  errorText: {
+    color: '#f87171',
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    flex: 1,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 22,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  dividerText: {
+    color: '#64748b',
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.8,
+    marginHorizontal: 12,
+  },
   googleIconBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    width: '100%',
-    paddingVertical: 12,
-    borderRadius: 14,
     backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    ...premiumShadow('rgba(0,0,0,0.03)', 'xs'),
+    borderRadius: RADIUS.lg,
+    paddingVertical: 13,
+    gap: 10,
+    boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
   },
-  googleBtnDisabled: { opacity: 0.6 },
-  googleText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  googleBtnDisabled: {
+    opacity: 0.6,
+  },
+  googleText: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#1e293b',
+  },
+  statutoryFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+  },
+  statutoryFooterText: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
 
-  registerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18, gap: 3 },
-  registerText: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b' },
-  registerLink: { fontSize: 13, fontFamily: FONT.bold, color: '#059669' },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backdropFilter: 'blur(8px)',
+  },
+  modalCard: {
+    backgroundColor: '#0f172a',
+    borderRadius: RADIUS.xl,
+    padding: 28,
+    width: '100%',
+    maxWidth: 480,
+    borderWidth: 1.5,
+    borderColor: 'rgba(16,185,129,0.3)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
+  modalIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(16,185,129,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 19,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 2,
+    lineHeight: 17,
+  },
+  modalLabel: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#cbd5e1',
+    marginBottom: 6,
+  },
+  roleGrid: {
+    gap: 10,
+    marginTop: 4,
+  },
+  roleCard: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    transition: 'all 0.2s ease',
+  },
+  roleCardActive: {
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    boxShadow: '0 0 15px rgba(16,185,129,0.2)',
+  },
+  roleCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  roleCardIcon: {
+    fontSize: 22,
+  },
+  unselectedCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  roleCardTitle: {
+    fontSize: 14.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  roleCardDesc: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  roleNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(2,132,199,0.1)',
+    borderColor: 'rgba(2,132,199,0.25)',
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginTop: 14,
+  },
+  roleNoticeText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#38bdf8',
+    flex: 1,
+  },
 });

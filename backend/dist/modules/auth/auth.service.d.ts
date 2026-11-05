@@ -206,10 +206,15 @@ export declare class AuthService {
     }>;
     sendLoginOtp(mobile: string): Promise<{
         success: boolean;
+        isNewUser: boolean;
         message: string;
         devOtp: string | undefined;
     }>;
     verifyLoginOtp(mobile: string, otp: string): Promise<{
+        isNewUser: boolean;
+        mobile: string;
+        message: string;
+    } | {
         accessToken: string;
         user: {
             id: string;
@@ -223,6 +228,29 @@ export declare class AuthService {
             warningMessage: string | undefined;
             evictedOldest: boolean;
         };
+        isNewUser: boolean;
+        mobile?: undefined;
+        message?: undefined;
+    }>;
+    completeOtpRegistration(dto: {
+        mobile: string;
+        name?: string;
+        role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+    }): Promise<{
+        accessToken: string;
+        user: {
+            id: string;
+            mobile: string;
+            role: Role;
+        } & Record<string, unknown>;
+        sessionMeta: {
+            sessionId: string;
+            totalActiveSessions: number;
+            hasMultipleLogins: boolean;
+            warningMessage: string | undefined;
+            evictedOldest: boolean;
+        };
+        isNewUser: boolean;
     }>;
     firebaseLogin(idToken: string): Promise<{
         accessToken: string;

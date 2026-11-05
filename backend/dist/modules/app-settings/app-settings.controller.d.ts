@@ -114,6 +114,12 @@ export declare class AppSettingsController {
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
+    requestAdminActionOtp(user: AuthUser): Promise<{
+        success: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
     updateIntegrations(user: AuthUser, payload: any): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     getServiceConfig(): Promise<any>;
     updateServiceConfig(user: AuthUser, body: any): Promise<{

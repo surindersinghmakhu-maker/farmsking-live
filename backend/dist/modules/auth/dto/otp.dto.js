@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
+exports.CompleteOtpRegistrationDto = exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class SendLoginOtpDto {
@@ -75,4 +75,25 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendMobileLinkOtpDto.prototype, "mobile", void 0);
+class CompleteOtpRegistrationDto {
+}
+exports.CompleteOtpRegistrationDto = CompleteOtpRegistrationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User full name' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Selected role: CUSTOMER, FARMER, or GARDENER', enum: ['CUSTOMER', 'FARMER', 'GARDENER'] }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "role", void 0);
 //# sourceMappingURL=otp.dto.js.map

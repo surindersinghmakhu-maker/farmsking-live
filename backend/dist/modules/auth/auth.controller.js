@@ -42,6 +42,9 @@ let AuthController = class AuthController {
     verifyLoginOtp(body) {
         return this.authService.verifyLoginOtp(body.mobile, body.otp);
     }
+    completeOtpRegistration(body) {
+        return this.authService.completeOtpRegistration(body);
+    }
     sendEmailOtp(body) {
         return this.authService.sendEmailOtp(body.email, body.otp);
     }
@@ -116,6 +119,15 @@ __decorate([
     __metadata("design:paramtypes", [otp_dto_1.VerifyLoginOtpDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyLoginOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('complete-otp-registration'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [otp_dto_1.CompleteOtpRegistrationDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "completeOtpRegistration", null);
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
     (0, common_1.Post)('send-email-otp'),

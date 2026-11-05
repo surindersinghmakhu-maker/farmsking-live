@@ -164,6 +164,7 @@ export default function TabLayout() {
   const { data: unreadNotifData } = useUnreadNotificationCount();
   const unreadNotifCount = unreadNotifData?.count ?? 0;
   const { colors } = useExecutiveTheme();
+  const isDark = colors?.isDark ?? true;
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
 

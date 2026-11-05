@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, Animated, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, useWindowDimensions, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
@@ -126,15 +126,24 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
       {/* Top Banner Row: Only show brand on Mobile where sidebar is hidden */}
       {!isDesktop && (
         <View style={styles.topRow}>
-          <View style={styles.brandRow}>
-            <BrandLogo
-              height={30}
-              width={104}
-              useHdQuality={true}
-              dark={true}
+          <TouchableOpacity
+            style={styles.brandRow}
+            activeOpacity={0.8}
+            onPress={() => router.push('/')}
+          >
+            <Image
+              source={require('@/assets/images/favicon.png')}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 9,
+                ...(Platform.OS === 'web' ? ({
+                  filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.45))',
+                } as any) : {}),
+              }}
               resizeMode="contain"
             />
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.actionsRight}>
             {/* 🎨 Mobile 2-Way Theme Switcher (Light · Dark) */}

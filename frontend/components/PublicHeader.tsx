@@ -437,28 +437,45 @@ export default function PublicHeader({
 
         {/* Row 1: Logo, Streamlined Desktop Links & Right Controls */}
         <View style={[styles.topRow, isMobile && { flexWrap: 'nowrap' }]}>
-          {/* Logo (Official Brand Logo from Admin Settings) */}
+          {/* Logo (Compact Favicon on Mobile to save space, Full Brand Logo on Desktop) */}
           <TouchableOpacity
             style={[
               styles.logo,
               !isDay && styles.logoNightPill,
-              isMobile && { flexShrink: 0 },
+              isMobile && { flexShrink: 0, paddingHorizontal: 4, paddingVertical: 2 },
             ]}
             onPress={() => goTo('/')}
             activeOpacity={0.8}
           >
-            <BrandLogo
-              height={isMobile ? 34 : 44}
-              width={isMobile ? 116 : 152}
-              useHdQuality={true}
-              dark={!isDay}
-              resizeMode="contain"
-              style={[
-                !isDay && Platform.OS === 'web' ? ({
-                  filter: 'drop-shadow(0 2px 10px rgba(16, 185, 129, 0.28)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.16))',
-                } as any) : {},
-              ]}
-            />
+            {isMobile ? (
+              <Image
+                source={require('@/assets/images/favicon.png')}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 9,
+                  ...(Platform.OS === 'web' ? ({
+                    filter: !isDay
+                      ? 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.45))'
+                      : 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15))',
+                  } as any) : {}),
+                }}
+                resizeMode="contain"
+              />
+            ) : (
+              <BrandLogo
+                height={44}
+                width={152}
+                useHdQuality={true}
+                dark={!isDay}
+                resizeMode="contain"
+                style={[
+                  !isDay && Platform.OS === 'web' ? ({
+                    filter: 'drop-shadow(0 2px 10px rgba(16, 185, 129, 0.28)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.16))',
+                  } as any) : {},
+                ]}
+              />
+            )}
           </TouchableOpacity>
 
           {/* Desktop Nav: Streamlined Links with Smooth Gliding Colorful Spring Pill */}

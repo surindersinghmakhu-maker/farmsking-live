@@ -441,6 +441,7 @@ export default function PublicHeader({
           <TouchableOpacity
             style={[
               styles.logo,
+              !isDay && styles.logoNightPill,
               isMobile && { flexShrink: 0 },
             ]}
             onPress={() => goTo('/')}
@@ -1200,6 +1201,14 @@ const styles = StyleSheet.create({
   },
   logoNightCapsule: {
     backgroundColor: 'transparent',
+  },
+  logoNightPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.09)',
   },
 
   // Desktop Nav Links

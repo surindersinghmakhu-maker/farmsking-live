@@ -206,8 +206,7 @@ export default function TabLayout() {
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
             <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)' as any)}>
-              <BrandLogo size={36} useFastBundledOnly={true} />
-              <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
+              <BrandLogo height={34} width={116} useFastBundledOnly={true} dark={colors.isDark} resizeMode="contain" />
             </TouchableOpacity>
           </View>
 

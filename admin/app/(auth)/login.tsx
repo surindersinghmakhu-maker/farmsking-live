@@ -313,7 +313,7 @@ export default function LoginScreen() {
           
           {/* Logo & Brand Header */}
           <View style={styles.brandBox}>
-            <BrandLogo size={60} useHdQuality style={{ marginBottom: 10 }} />
+            <BrandLogo size={52} emblem={true} useGoldRing={true} useHdQuality style={{ marginBottom: 10 }} />
             <Text style={styles.brandName}>FarmsKing</Text>
             <Text style={styles.brandTagline}>Smart Agriculture & Farm Management</Text>
           </View>

@@ -223,7 +223,7 @@ export default function RegisterScreen() {
         <View style={styles.cardContainer}>
           {/* Top Brand Header */}
           <View style={styles.headerRow}>
-            <BrandLogo size={36} useHdQuality />
+            <BrandLogo size={38} emblem={true} useGoldRing={true} useHdQuality />
             <View>
               <Text style={styles.brandName}>FarmsKing</Text>
               <Text style={styles.brandSub}>Smart Farming Platform</Text>

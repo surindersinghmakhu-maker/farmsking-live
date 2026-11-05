@@ -207,7 +207,7 @@ export default function ForgotPasswordScreen() {
         <View style={[styles.card, isMobile && styles.cardMobile]}>
           {/* Header */}
           <View style={styles.logoRow}>
-            <BrandLogo size={42} useHdQuality />
+            <BrandLogo size={42} emblem={true} useGoldRing={true} useHdQuality />
             <View>
               <Text style={styles.brandTitle}>FarmsKing</Text>
               <Text style={styles.brandSubtitle}>Secure Account Recovery</Text>

@@ -421,37 +421,34 @@ export default function TabLayout() {
               onPress={() => router.push('/admin/(tabs)')}
               activeOpacity={0.8}
             >
-              <View
-                style={[
-                  mobileStyles.logoSquircle,
-                  {
-                    backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
-                  },
-                ]}
-              >
-                <BrandLogo size={18} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
-              </View>
-              <View style={{ marginLeft: 7 }}>
+              <BrandLogo size={28} emblem={true} dark={!isLight} />
+              <View style={{ marginLeft: 6, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                 <Text style={[mobileStyles.brandTitle, isLight && { color: '#0f172a' }]}>
-                  FarmsKing{' '}
+                  FarmsKing
+                </Text>
+                <View
+                  style={[
+                    mobileStyles.brandBadgeBox,
+                    isLight && {
+                      backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                      borderColor: 'rgba(22, 163, 74, 0.35)',
+                    },
+                    isDarkTheme && {
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      borderColor: 'rgba(56, 189, 248, 0.4)',
+                    },
+                  ]}
+                >
                   <Text
                     style={[
                       mobileStyles.brandBadge,
-                      isLight && {
-                        color: '#16a34a',
-                        backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                        borderColor: 'rgba(234, 179, 8, 0.4)',
-                      },
-                      isDarkTheme && {
-                        color: '#38bdf8',
-                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                        borderColor: 'rgba(56, 189, 248, 0.4)',
-                      },
+                      isLight && { color: '#16a34a' },
+                      isDarkTheme && { color: '#38bdf8' },
                     ]}
                   >
                     4D
                   </Text>
-                </Text>
+                </View>
               </View>
             </TouchableOpacity>
 
@@ -608,34 +605,36 @@ export default function TabLayout() {
                     onPress={() => router.push('/admin/(tabs)')}
                     activeOpacity={0.8}
                   >
+                    <BrandLogo
+                      height={28}
+                      width={96}
+                      useHdQuality={true}
+                      dark={!isLight}
+                      resizeMode="contain"
+                    />
                     <View
                       style={[
-                        desktopStyles.desktopLogoBox,
-                        { backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87' },
+                        desktopStyles.desktopBrandBadgeBox,
+                        isLight && {
+                          backgroundColor: 'rgba(22, 163, 74, 0.10)',
+                          borderColor: 'rgba(22, 163, 74, 0.3)',
+                        },
+                        isDarkTheme && {
+                          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                          borderColor: 'rgba(56, 189, 248, 0.4)',
+                        },
                       ]}
                     >
-                      <BrandLogo size={18} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
-                    </View>
-                    <Text style={[desktopStyles.desktopBrandText, isLight && { color: '#0f172a' }]}>
-                      FarmsKing{' '}
                       <Text
                         style={[
                           desktopStyles.desktopBrandBadge,
-                          isLight && {
-                            color: '#16a34a',
-                            backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                            borderColor: 'rgba(234, 179, 8, 0.4)',
-                          },
-                          isDarkTheme && {
-                            color: '#38bdf8',
-                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
-                            borderColor: 'rgba(56, 189, 248, 0.4)',
-                          },
+                          isLight && { color: '#16a34a' },
+                          isDarkTheme && { color: '#38bdf8' },
                         ]}
                       >
                         4D
                       </Text>
-                    </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1072,6 +1071,15 @@ const desktopStyles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.2,
+  },
+  desktopBrandBadgeBox: {
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    marginLeft: 3,
   },
   desktopBrandBadge: {
     fontSize: 8.5,
@@ -1718,6 +1726,14 @@ const mobileStyles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.3,
+  },
+  brandBadgeBox: {
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
   },
   brandBadge: {
     fontSize: 8,

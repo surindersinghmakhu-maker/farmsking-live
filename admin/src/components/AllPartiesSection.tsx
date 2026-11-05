@@ -819,7 +819,7 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
               {/* 1. TOP HEADING: FarmsKing Logo & Title */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <BrandLogo size={34} useHdQuality />
+                  <BrandLogo size={34} round={true} useGoldRing={true} useHdQuality />
                   <View>
                     <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
                     <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>WORKER ACCOUNT STATEMENT</Text>
@@ -1259,7 +1259,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                   {/* 1. TOP HEADING: Compact FarmsKing Logo & Title */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2, borderBottomColor: '#16a34a', paddingBottom: 6, marginBottom: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <BrandLogo size={28} useHdQuality />
+                      <BrandLogo size={28} round={true} useGoldRing={true} useHdQuality />
                       <View>
                         <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
                         <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>PARTY ACCOUNT STATEMENT</Text>

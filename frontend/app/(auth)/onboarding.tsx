@@ -93,7 +93,7 @@ export default function OnboardingScreen() {
         {/* Card Container */}
         <View style={[styles.card, isMobile && styles.cardMobile]}>
           <View style={styles.headerRow}>
-            <BrandLogo size={46} useHdQuality />
+            <BrandLogo size={46} emblem={true} useGoldRing={true} useHdQuality />
             <View>
               <Text style={styles.brandName}>FarmsKing</Text>
               <Text style={styles.brandSubtitle}>Farm Profile Setup</Text>

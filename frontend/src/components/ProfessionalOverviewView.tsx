@@ -733,7 +733,7 @@ function CropStatementModal({
             {/* 1. TOP HEADING: FarmsKing Logo & Title */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <BrandLogo size={34} useHdQuality />
+                <BrandLogo size={34} round={true} useGoldRing={true} useHdQuality />
                 <View>
                   <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>CROP STATEMENT</Text>

@@ -40,7 +40,8 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
 
   const isSuperOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
-  if (!isSuperOrAdmin && assignedRoles.length <= 1 && (role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'FARMER')) {
+  // Non-admins (Farmers, Gardeners, Advisors, Partners) never have a dashboard switcher
+  if (!isSuperOrAdmin) {
     return null;
   }
   const becomeFarmer = useBecomeFarmer();

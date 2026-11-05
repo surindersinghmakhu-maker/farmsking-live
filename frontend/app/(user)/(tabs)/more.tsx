@@ -11,7 +11,6 @@ import { useLanguage } from '@/src/store/language-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { LanguagePickerModal } from '@/src/components/LanguagePickerModal';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { TranslationKey, LANGUAGE_OPTIONS } from '@/src/constants/translations';
 import { useAppSettings, useSupportContact, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { useAdminDocsList, useDownloadAdminDoc } from '@/src/hooks/useFarmerPlan';
@@ -192,19 +191,7 @@ export default function MoreScreen() {
 
         <View style={styles.body}>
           {/* 🌾 FARMER / REGULAR USER MORE MENU */}
-          <SwitchDashboardSection
-            extraRows={
-              showAdvisorBusinessSection
-                ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
-                  key: item.key,
-                  label: t(item.key, item.label),
-                  icon: item.icon,
-                  onPress: () => item.href && router.push(item.href as any),
-                }))
-                : undefined
-            }
-          />
-
+          
 
 
               {/* Account Section */}

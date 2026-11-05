@@ -38,7 +38,10 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const { role, setRole, assignedRoles } = useRole();
   const { user, updateUser } = useAuth();
 
-  if (role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'FARMER') {
+  const isSuperOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  // Non-admins (Farmers, Gardeners, Advisors, Partners) never have a dashboard switcher
+  if (!isSuperOrAdmin) {
     return null;
   }
   const becomeFarmer = useBecomeFarmer();
@@ -214,35 +217,34 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: SPACING.md, marginBottom: SPACING.xs },
-  sectionTitle: { fontSize: 11, fontFamily: FONT.extraBold, color: '#059669', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.8 },
-  userRolesText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: -4, marginBottom: 8 },
-  userRolesBracket: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  section: { marginTop: SPACING.lg },
+  sectionTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 },
+  userRolesText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff', marginTop: -4, marginBottom: 8 },
+  userRolesBracket: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' },
   dropdownTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     padding: SPACING.md,
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.xl,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    ...premiumShadow('#64748b', 'xs'),
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   activeTagText: {
     fontSize: 11,
     fontFamily: FONT.bold,
     marginTop: 1,
-    color: '#059669',
   },
   dropdownMenu: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     marginTop: 6,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    ...premiumShadow('#64748b', 'sm'),
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#00ff87', 'lg'),
   },
   dropdownMenuItem: {
     flexDirection: 'row',
@@ -251,14 +253,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
   },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' },
+  card: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: SPACING.md },
-  rowDivider: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
   iconBg: { width: 34, height: 34, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { flex: 1, fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
-  rowSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  activeBadge: { backgroundColor: '#d1fae5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#a7f3d0' },
-  activeBadgeText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: '#047857' },
+  rowLabel: { flex: 1, fontSize: 14, fontFamily: FONT.semiBold, color: '#ffffff' },
+  rowSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  activeBadge: { backgroundColor: 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
+  activeBadgeText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#00ff87' },
 });

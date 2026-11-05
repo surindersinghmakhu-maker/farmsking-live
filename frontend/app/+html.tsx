@@ -30,6 +30,14 @@ export default function Root({ children }: PropsWithChildren) {
           ::-webkit-scrollbar-thumb:hover {
             background: #059669;
           }
+          @keyframes centerScanPulse {
+            0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.6); }
+            70% { transform: scale(1.18); opacity: 0; box-shadow: 0 0 0 12px rgba(0, 255, 135, 0); }
+            100% { transform: scale(0.95); opacity: 0; box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
+          }
+          .center-scan-pulse {
+            animation: centerScanPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+          }
         `}} />
 
 

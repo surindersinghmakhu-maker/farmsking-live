@@ -169,6 +169,42 @@ export const GardenerDashboardView: React.FC = () => {
           </LinearGradient>
         </LinearGradient>
 
+        {/* 🪴 AI PLANT DOCTOR & LEAF SCANNER BANNER 🪴 */}
+        <View style={styles.aiGardenScanCard}>
+          <View style={styles.aiGardenScanLeft}>
+            <LinearGradient
+              colors={['#e11d48', '#be123c', '#881337']}
+              style={styles.aiGardenScanIconBox}
+            >
+              <Ionicons name="scan" size={24} color="#ffffff" />
+            </LinearGradient>
+            <View style={{ flex: 1 }}>
+              <View style={styles.aiGardenBadgeRow}>
+                <View style={styles.aiGardenPulseDot} />
+                <Text style={styles.aiGardenBadgeText}>100% ORGANIC GARDEN CARE</Text>
+              </View>
+              <Text style={styles.aiGardenScanTitle}>
+                AI Plant Doctor & Leaf Disease Scanner
+              </Text>
+              <Text style={styles.aiGardenScanSub}>
+                Detect leaf fungus, yellowing, mealybugs, and plant nutrient deficiencies with 1-click photo diagnosis.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.aiGardenScanBtn}
+            onPress={() => {
+              tap();
+              router.push('/crop-disease-scanner' as any);
+            }}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="camera" size={17} color="#ffffff" />
+            <Text style={styles.aiGardenScanBtnText}>Scan Plant Leaf →</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Quick Stats Metrics Row */}
         <View style={[styles.metricsRow, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.metricItem}>
@@ -386,6 +422,79 @@ export const GardenerDashboardView: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, gap: SPACING.lg, paddingBottom: SPACING.xxl },
+  aiGardenScanCard: {
+    borderRadius: 20,
+    borderWidth: 1.2,
+    borderColor: '#fecdd3',
+    backgroundColor: '#ffffff',
+    padding: 18,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+    ...premiumShadow('rgba(225, 29, 72, 0.08)', 'sm'),
+  },
+  aiGardenScanLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 260,
+  },
+  aiGardenScanIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  aiGardenBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  aiGardenPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e11d48',
+  },
+  aiGardenBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#e11d48',
+    letterSpacing: 0.5,
+  },
+  aiGardenScanTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    marginBottom: 2,
+  },
+  aiGardenScanSub: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    lineHeight: 17,
+  },
+  aiGardenScanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#e11d48',
+    ...premiumShadow('#e11d48', 'md'),
+  },
+  aiGardenScanBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
   bannerCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   bannerTextCol: { flex: 1, paddingRight: 12 },
   bannerLabel: { fontSize: 13, color: '#94a3b8', fontFamily: FONT.semiBold },

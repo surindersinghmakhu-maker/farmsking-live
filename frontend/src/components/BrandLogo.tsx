@@ -7,6 +7,7 @@ import { resolveMediaUrl } from '@/src/api/client';
 const LOGO_ICON_FAST = require('@/assets/images/farmsking_logo_icon.png');
 const LOGO_STANDARD = require('@/assets/images/farmsking_logo.png');
 const LOGO_HD = require('@/assets/images/farmsking_logo_hd.png');
+const LOGO_DARK = require('@/assets/images/farmsking_logo_dark.png');
 const LOGO_ROUND_GOLDRING = require('@/assets/images/farmsking_logo_round_goldring.png');
 
 interface BrandLogoProps {
@@ -22,6 +23,8 @@ interface BrandLogoProps {
   useFastBundledOnly?: boolean;
   useGoldRing?: boolean;
   round?: boolean;
+  dark?: boolean;
+  isNight?: boolean;
   resizeMode?: 'contain' | 'cover' | 'stretch' | 'center';
 }
 
@@ -53,11 +56,14 @@ export function BrandLogo({
   useFastBundledOnly = false,
   useGoldRing = false,
   round = false,
+  dark = false,
+  isNight = false,
   resizeMode = 'contain',
 }: BrandLogoProps) {
   const { data: settings } = useAppSettings();
 
   const [imageError, setImageError] = useState(false);
+  const isDarkMode = dark || isNight;
 
   // Highest priority: The official Brand Logo saved in Settings
   const rawLogo = settings?.logoUrl || '/brand_logo.png';
@@ -67,18 +73,27 @@ export function BrandLogo({
     setImageError(false);
   }, [logoUri]);
 
-  // Optimal bundled fallback asset
-  const bundledAsset = useHdQuality
+  // Optimal bundled fallback asset (light vs dark mode aware)
+  const bundledAsset = isDarkMode
+    ? LOGO_DARK
+    : useHdQuality
     ? LOGO_HD
     : (size && size <= 58)
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  // Guard against known broken legacy URLs or invalid schemes
-  const isInvalidRemoteLogo = !logoUri || logoUri.includes('farmsking.in/assets/logo.png') || imageError;
+  // Guard against known broken legacy URLs, remote JPEGs with white boxes, or invalid schemes
+  const isInvalidRemoteLogo =
+    !logoUri ||
+    logoUri.includes('farmsking.in/assets/logo.png') ||
+    logoUri.includes('farmsking.in/brand_logo.png') ||
+    logoUri.includes('farmsking.in/brand_logo.jpeg') ||
+    imageError;
 
-  // Always use the official Brand Logo saved in settings; gracefully fall back to local emblem
-  const finalSource = (!isInvalidRemoteLogo && !useFastBundledOnly)
+  // When dark mode is active or bundled HD is requested, prefer the 100% transparent bundled asset
+  const shouldUseBundled = useFastBundledOnly || isDarkMode || useHdQuality || isInvalidRemoteLogo;
+
+  const finalSource = !shouldUseBundled && !isInvalidRemoteLogo
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 

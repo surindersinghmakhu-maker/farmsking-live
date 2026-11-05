@@ -253,6 +253,42 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           </SafeAreaView>
         </Modal>
 
+        {/* 🌿 AI CROP DOCTOR & LEAF PATHOLOGY SCANNER BANNER 🌿 */}
+        <View style={[styles.aiDoctorBannerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+          <View style={styles.aiDoctorBannerLeft}>
+            <LinearGradient
+              colors={['#10b981', '#059669', '#047857']}
+              style={styles.aiDoctorIconBox}
+            >
+              <Ionicons name="camera" size={26} color="#ffffff" />
+            </LinearGradient>
+            <View style={{ flex: 1 }}>
+              <View style={styles.aiDoctorBadgeRow}>
+                <View style={styles.aiDoctorPulseDot} />
+                <Text style={styles.aiDoctorBadgeText}>INSTANT 5-SECOND AI PATHOLOGY</Text>
+              </View>
+              <Text style={[styles.aiDoctorBannerTitle, { color: colors.text }]}>
+                AI Leaf Doctor & Disease Scanner
+              </Text>
+              <Text style={[styles.aiDoctorBannerSub, { color: colors.textMuted }]}>
+                Snap or upload a leaf photo from your field to instantly diagnose Yellow Rust, Blast, Leaf Curl, or Blight and get ICAR bio-sprays.
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.aiDoctorScanBtn}
+            onPress={() => {
+              tap();
+              router.push('/crop-disease-scanner' as any);
+            }}
+            activeOpacity={0.88}
+          >
+            <Ionicons name="scan" size={18} color="#ffffff" />
+            <Text style={styles.aiDoctorScanBtnText}>Scan Crop Leaf Now →</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
@@ -1120,12 +1156,75 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#334155',
   },
+  aiDoctorIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  aiDoctorBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  aiDoctorPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  aiDoctorBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#10b981',
+    letterSpacing: 0.5,
+  },
+  aiDoctorBannerTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    marginBottom: 2,
+  },
+  aiDoctorBannerSub: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    lineHeight: 17,
+  },
+  aiDoctorBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 260,
+  },
+  aiDoctorScanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#10b981',
+    ...premiumShadow('#10b981', 'md'),
+  },
+  aiDoctorScanBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
   aiDoctorBannerCard: {
-    backgroundColor: '#14532d',
-    borderRadius: RADIUS.lg,
-    padding: 12,
-    marginVertical: 2,
-    ...premiumShadow('#16a34a', 'sm'),
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+    ...premiumShadow('#000000', 'sm'),
   },
   aiBannerHeader: {
     flexDirection: 'row',

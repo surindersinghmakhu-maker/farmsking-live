@@ -14,12 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { useAuth } from '@/src/store/auth-context';
 import { useCart } from '@/src/store/cart-context';
 import { FONT, RADIUS } from '@/constants/theme';
 
-// ─── Public Bottom Navigation Tabs Configuration ─────────────────────────
-const PUBLIC_NAV_TABS = [
+// ── Mobile Bottom Navigation: Exact 5 Core Menu Pillars from Desktop ──
+// 1. Home | 2. Farmers | 3. Crop Doctors (Center Hero) | 4. Gardening | 5. Agri Store
+const MOBILE_NAV_TABS = [
   {
     key: 'home',
     label: 'Home',
@@ -27,59 +27,59 @@ const PUBLIC_NAV_TABS = [
     iconOutline: 'home-outline',
     path: '/',
     color: '#10b981',
-    glow: ['rgba(16, 185, 129, 0.28)', 'rgba(5, 150, 105, 0.16)', 'rgba(16, 185, 129, 0.05)'],
+    glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
     laser: ['#00ff87', '#10b981', '#059669'],
-    border: 'rgba(16, 185, 129, 0.45)',
+    border: 'rgba(16, 185, 129, 0.50)',
     shadow: '#10b981',
   },
   {
-    key: 'store',
-    label: 'Store',
-    icon: 'cart',
-    iconOutline: 'cart-outline',
-    path: '/shop',
-    color: '#3b82f6',
-    glow: ['rgba(59, 130, 246, 0.28)', 'rgba(37, 99, 235, 0.16)', 'rgba(59, 130, 246, 0.05)'],
-    laser: ['#60a5fa', '#3b82f6', '#2563eb'],
-    border: 'rgba(59, 130, 246, 0.45)',
-    shadow: '#3b82f6',
-  },
-  {
-    key: 'scan',
-    label: 'AI Scan',
-    icon: 'scan',
-    iconOutline: 'scan-outline',
-    path: '/crop-intelligence',
-    color: '#00ff87',
-    glow: ['rgba(0, 255, 135, 0.32)', 'rgba(16, 185, 129, 0.18)', 'rgba(0, 255, 135, 0.06)'],
-    laser: ['#34d399', '#00ff87', '#059669'],
-    border: 'rgba(0, 255, 135, 0.50)',
-    shadow: '#00ff87',
-    isSpecial: true,
+    key: 'farming',
+    label: 'Farmers',
+    icon: 'leaf',
+    iconOutline: 'leaf-outline',
+    path: '/topic/Farming',
+    color: '#10b981',
+    glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
+    laser: ['#00ff87', '#10b981', '#059669'],
+    border: 'rgba(16, 185, 129, 0.50)',
+    shadow: '#10b981',
   },
   {
     key: 'doctors',
-    label: 'Doctors',
+    label: 'Crop Doctors',
     icon: 'medkit',
     iconOutline: 'medkit-outline',
-    path: '/topic/Crop-Doctors',
-    color: '#8b5cf6',
-    glow: ['rgba(139, 92, 246, 0.28)', 'rgba(109, 40, 217, 0.16)', 'rgba(139, 92, 246, 0.05)'],
-    laser: ['#a78bfa', '#8b5cf6', '#6d28d9'],
-    border: 'rgba(139, 92, 246, 0.45)',
-    shadow: '#8b5cf6',
+    path: '/ai-doctor',
+    color: '#06b6d4',
+    glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
+    laser: ['#38bdf8', '#06b6d4', '#0284c7'],
+    border: 'rgba(6, 182, 212, 0.60)',
+    shadow: '#06b6d4',
+    isSpecial: true,
   },
   {
-    key: 'account',
-    label: 'Account',
-    icon: 'person-circle',
-    iconOutline: 'person-circle-outline',
-    path: '/login',
-    color: '#f59e0b',
-    glow: ['rgba(245, 158, 11, 0.28)', 'rgba(217, 119, 6, 0.16)', 'rgba(245, 158, 11, 0.05)'],
-    laser: ['#fbbf24', '#f59e0b', '#d97706'],
-    border: 'rgba(245, 158, 11, 0.45)',
-    shadow: '#f59e0b',
+    key: 'gardening',
+    label: 'Gardening',
+    icon: 'flower',
+    iconOutline: 'flower-outline',
+    path: '/topic/Gardening',
+    color: '#e11d48',
+    glow: ['rgba(225, 29, 72, 0.32)', 'rgba(190, 18, 60, 0.18)', 'rgba(225, 29, 72, 0.05)'],
+    laser: ['#fb7185', '#e11d48', '#be123c'],
+    border: 'rgba(225, 29, 72, 0.50)',
+    shadow: '#e11d48',
+  },
+  {
+    key: 'store',
+    label: 'Agri Store',
+    icon: 'cart',
+    iconOutline: 'cart-outline',
+    path: '/shop',
+    color: '#f97316',
+    glow: ['rgba(249, 115, 22, 0.32)', 'rgba(234, 88, 12, 0.18)', 'rgba(249, 115, 22, 0.05)'],
+    laser: ['#fb923c', '#f97316', '#ea580c'],
+    border: 'rgba(249, 115, 22, 0.50)',
+    shadow: '#f97316',
   },
 ];
 
@@ -88,17 +88,16 @@ export default function PublicBottomNav() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const isMobile = width <= 768;
-  const { user } = useAuth();
   const { items } = useCart();
 
   const totalCartCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Compute active index based on route
   const getActiveIndex = () => {
-    if (pathname.startsWith('/shop')) return 1;
-    if (pathname.startsWith('/crop-intelligence') || pathname.startsWith('/crop-disease-scanner')) return 2;
-    if (pathname.startsWith('/topic')) return 3;
-    if (pathname.startsWith('/(user)') || pathname.startsWith('/(partner)') || pathname === '/login' || pathname === '/profile') return 4;
+    if (pathname.startsWith('/topic/Farming') || pathname.startsWith('/farmers')) return 1;
+    if (pathname.startsWith('/ai-doctor') || pathname.startsWith('/topic/Crop-Doctors') || pathname.startsWith('/crop-intelligence') || pathname.startsWith('/crop-disease-scanner')) return 2;
+    if (pathname.startsWith('/topic/Gardening') || pathname.startsWith('/gardening')) return 3;
+    if (pathname.startsWith('/shop') || pathname.startsWith('/store')) return 4;
     return 0; // Home default
   };
 
@@ -121,8 +120,10 @@ export default function PublicBottomNav() {
     }).start();
   }, [activeIndex]);
 
-  // Only render on mobile view
-  if (!isMobile) return null;
+  // STRICT RULE: Only render on Mobile View (Width <= 768px). PC / Desktop uses top header menu exclusively.
+  if (!isMobile) {
+    return null;
+  }
 
   // Do not render inside authenticated tabs or auth flows
   const inAuthGroup = pathname.startsWith('/(auth)') || pathname === '/login' || pathname === '/register';
@@ -145,43 +146,12 @@ export default function PublicBottomNav() {
       useNativeDriver: false,
     }).start();
 
-    if (tabIndex === 4) {
-      setTimeout(() => handleUserTabPress(), 160);
-      return;
-    }
     setTimeout(() => {
       router.push(targetPath as any);
     }, 160);
   };
 
-  const handleUserTabPress = () => {
-    if (user) {
-      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role || '')) {
-        router.push('/(partner)/(tabs)' as any);
-      } else {
-        router.push('/(user)/(tabs)' as any);
-      }
-    } else {
-      if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        try {
-          router.push('/(auth)/login' as any);
-        } catch {}
-        setTimeout(() => {
-          if (window.location.pathname === '/' || window.location.pathname === '' || window.location.pathname === '/index') {
-            window.location.href = '/login';
-          }
-        }, 60);
-      } else {
-        try {
-          router.push('/(auth)/login' as any);
-        } catch {
-          router.push('/login' as any);
-        }
-      }
-    }
-  };
-
-  const currentTab = PUBLIC_NAV_TABS[activeIndex] || PUBLIC_NAV_TABS[0];
+  const currentTab = MOBILE_NAV_TABS[activeIndex] || MOBILE_NAV_TABS[0];
 
   return (
     <View style={styles.fixedWrapper} pointerEvents="box-none">
@@ -199,13 +169,13 @@ export default function PublicBottomNav() {
             style={[
               styles.bottomGliderPill,
               {
-                width: Math.max(0, (barWidth / PUBLIC_NAV_TABS.length) - 8),
+                width: Math.max(0, (barWidth / MOBILE_NAV_TABS.length) - 8),
                 transform: [
                   {
                     translateX: slideAnim.interpolate({
                       inputRange: [0, 1, 2, 3, 4],
                       outputRange: [0, 1, 2, 3, 4].map(
-                        (i) => i * (barWidth / PUBLIC_NAV_TABS.length) + 4
+                        (i) => i * (barWidth / MOBILE_NAV_TABS.length) + 4
                       ),
                       extrapolate: 'clamp',
                     }),
@@ -255,10 +225,10 @@ export default function PublicBottomNav() {
           </Text>
         </TouchableOpacity>
 
-        {/* 2. Store Tab */}
+        {/* 2. Farmers Tab */}
         <TouchableOpacity
           style={styles.tabBtn}
-          onPress={() => handleTabPress(1, '/shop')}
+          onPress={() => handleTabPress(1, '/topic/Farming')}
           activeOpacity={0.8}
         >
           <View
@@ -268,52 +238,51 @@ export default function PublicBottomNav() {
             ]}
           >
             <Ionicons
-              name={activeIndex === 1 ? 'cart' : 'cart-outline'}
-              size={22}
-              color={activeIndex === 1 ? '#3b82f6' : '#94a3b8'}
+              name={activeIndex === 1 ? 'leaf' : 'leaf-outline'}
+              size={21}
+              color={activeIndex === 1 ? '#10b981' : '#94a3b8'}
             />
-            {totalCartCount > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>
-                  {totalCartCount > 99 ? '99+' : totalCartCount}
-                </Text>
-              </View>
-            )}
           </View>
-          <Text style={[styles.tabLabel, activeIndex === 1 && { color: '#3b82f6', fontWeight: '800' }]}>
-            Store
+          <Text style={[styles.tabLabel, activeIndex === 1 && { color: '#10b981', fontWeight: '800' }]}>
+            Farmers
           </Text>
         </TouchableOpacity>
 
-        {/* 3. Center AI Scanner Button */}
+        {/* 3. Center Elevated Crop Doctors Scanner Tab */}
         <TouchableOpacity
           style={styles.centerScanWrap}
-          onPress={() => handleTabPress(2, '/crop-intelligence')}
+          onPress={() => handleTabPress(2, '/ai-doctor')}
           activeOpacity={0.88}
         >
+          <View
+            style={[
+              styles.centerScanGlowAura,
+              Platform.OS === 'web' ? ({ className: 'center-scan-pulse' } as any) : {},
+            ]}
+          />
           <LinearGradient
-            colors={activeIndex === 2 ? ['#00ff87', '#059669', '#047857'] : ['#10b981', '#059669', '#047857']}
+            colors={activeIndex === 2 ? ['#06b6d4', '#0891b2', '#0e7490'] : ['#06b6d4', '#059669', '#047857']}
             style={[styles.centerScanInner, activeIndex === 2 && styles.centerScanActive]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name="scan" size={24} color="#02120a" />
+            <Ionicons name="medkit" size={22} color="#ffffff" />
           </LinearGradient>
           <Text
             style={[
               styles.tabLabel,
               { marginTop: 2 },
-              activeIndex === 2 && { color: '#00ff87', fontWeight: '800' },
+              activeIndex === 2 && { color: '#06b6d4', fontWeight: '800' },
             ]}
           >
-            AI Scan
+            Crop Doctors
           </Text>
         </TouchableOpacity>
 
-        {/* 4. Doctors / Topics Tab */}
+        {/* 4. Gardening Tab */}
         <TouchableOpacity
           style={styles.tabBtn}
-          onPress={() => handleTabPress(3, '/topic/Crop-Doctors')}
+          onPress={() => handleTabPress(3, '/topic/Gardening')}
           activeOpacity={0.8}
         >
           <View
@@ -323,20 +292,20 @@ export default function PublicBottomNav() {
             ]}
           >
             <Ionicons
-              name={activeIndex === 3 ? 'medkit' : 'medkit-outline'}
+              name={activeIndex === 3 ? 'flower' : 'flower-outline'}
               size={21}
-              color={activeIndex === 3 ? '#8b5cf6' : '#94a3b8'}
+              color={activeIndex === 3 ? '#e11d48' : '#94a3b8'}
             />
           </View>
-          <Text style={[styles.tabLabel, activeIndex === 3 && { color: '#8b5cf6', fontWeight: '800' }]}>
-            Doctors
+          <Text style={[styles.tabLabel, activeIndex === 3 && { color: '#e11d48', fontWeight: '800' }]}>
+            Gardening
           </Text>
         </TouchableOpacity>
 
-        {/* 5. Account / Login Tab */}
+        {/* 5. Agri Store Tab (with Live Cart Counter Badge) */}
         <TouchableOpacity
           style={styles.tabBtn}
-          onPress={() => handleTabPress(4, '/login')}
+          onPress={() => handleTabPress(4, '/shop')}
           activeOpacity={0.8}
         >
           <View
@@ -346,16 +315,20 @@ export default function PublicBottomNav() {
             ]}
           >
             <Ionicons
-              name={user ? (activeIndex === 4 ? 'grid' : 'grid-outline') : (activeIndex === 4 ? 'person-circle' : 'person-circle-outline')}
-              size={22}
-              color={activeIndex === 4 ? '#f59e0b' : '#94a3b8'}
+              name={activeIndex === 4 ? 'cart' : 'cart-outline'}
+              size={21}
+              color={activeIndex === 4 ? '#f97316' : '#94a3b8'}
             />
+            {totalCartCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>
+                  {totalCartCount > 99 ? '99+' : totalCartCount}
+                </Text>
+              </View>
+            )}
           </View>
-          <Text
-            style={[styles.tabLabel, activeIndex === 4 && { color: '#f59e0b', fontWeight: '800' }]}
-            numberOfLines={1}
-          >
-            {user ? 'Dashboard' : 'Login'}
+          <Text style={[styles.tabLabel, activeIndex === 4 && { color: '#f97316', fontWeight: '800' }]}>
+            Agri Store
           </Text>
         </TouchableOpacity>
       </View>
@@ -373,17 +346,10 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   barContainer: {
-    flexDirection: 'row',
-    height: 64,
-    maxWidth: 540,
     width: '100%',
-    backgroundColor: 'rgba(2, 13, 6, 0.96)',
-    borderTopWidth: 1.5,
-    borderTopColor: 'rgba(0, 255, 135, 0.28)',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderLeftColor: 'rgba(0, 255, 135, 0.15)',
-    borderRightColor: 'rgba(0, 255, 135, 0.15)',
+    backgroundColor: 'rgba(10, 16, 26, 0.94)',
+    borderTopWidth: 1.2,
+    borderTopColor: 'rgba(16, 185, 129, 0.35)',
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingTop: 4,
@@ -392,8 +358,10 @@ const styles = StyleSheet.create({
     shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.18,
-    shadowRadius: 14,
+    shadowRadius: 12,
     elevation: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     overflow: 'hidden',
   },
   bottomGliderPill: {
@@ -413,11 +381,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: '18%',
     right: '18%',
-    height: 2.5,
-    borderRadius: 2,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.95,
-    shadowRadius: 6,
+    height: 1.5,
+    borderRadius: 1,
+    opacity: 0.85,
   },
   tabBtn: {
     flex: 1,
@@ -444,47 +410,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
-    borderWidth: 1.5,
-    borderColor: '#020d06',
+    borderWidth: 1,
+    borderColor: '#ffffff',
   },
   cartBadgeText: {
     color: '#ffffff',
     fontSize: 9,
     fontFamily: FONT.extraBold,
-    lineHeight: 11,
   },
   centerScanWrap: {
-    flex: 1,
+    flex: 1.15,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -16,
     zIndex: 3,
   },
   centerScanInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00ff87',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    shadowColor: '#06b6d4',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 8,
-    borderWidth: 2,
-    borderColor: '#020d06',
   },
   centerScanActive: {
-    shadowOpacity: 0.8,
-    shadowRadius: 12,
-    borderWidth: 2.2,
-    borderColor: '#00ff87',
+    borderColor: '#ffffff',
+    shadowOpacity: 0.65,
+    shadowRadius: 14,
+  },
+  centerScanGlowAura: {
+    position: 'absolute',
+    top: 0,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(6, 182, 212, 0.25)',
   },
   tabLabel: {
     fontSize: 10,
-    fontFamily: FONT.bold,
+    fontFamily: FONT.semiBold,
     color: '#94a3b8',
-    letterSpacing: -0.2,
-    textAlign: 'center',
+    letterSpacing: 0.2,
   },
 });

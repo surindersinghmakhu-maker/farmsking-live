@@ -52,6 +52,27 @@ export default function GardensScreen() {
 
   return (
     <View style={styles.container}>
+      {/* 🪴 AI Leaf Disease Scanner Banner */}
+      <TouchableOpacity
+        style={styles.aiPlantDoctorBanner}
+        onPress={() => router.push('/crop-disease-scanner' as any)}
+        activeOpacity={0.88}
+      >
+        <View style={styles.aiPlantDoctorLeft}>
+          <View style={styles.aiPlantDoctorIconCircle}>
+            <Ionicons name="camera" size={20} color="#e11d48" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiPlantDoctorTitle}>Instant AI Plant Doctor & Leaf Scan</Text>
+            <Text style={styles.aiPlantDoctorSub}>Diagnose terrace & balcony plant diseases in 5 seconds</Text>
+          </View>
+        </View>
+        <View style={styles.aiPlantDoctorBtn}>
+          <Text style={styles.aiPlantDoctorBtnText}>Scan Leaf →</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Hero */}
       <View style={styles.hero}>
         <Text style={styles.heroTitle}>My Gardens</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowAdd(true)}>
@@ -186,6 +207,58 @@ export default function GardensScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
+  aiPlantDoctorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#fff1f2',
+    borderWidth: 1.2,
+    borderColor: '#fecdd3',
+  },
+  aiPlantDoctorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  aiPlantDoctorIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fecdd3',
+  },
+  aiPlantDoctorTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#9f1239',
+    marginBottom: 2,
+  },
+  aiPlantDoctorSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#be123c',
+  },
+  aiPlantDoctorBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#e11d48',
+  },
+  aiPlantDoctorBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
   hero: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: SPACING.xl, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a' },
   addBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.pill, gap: 4 },

@@ -129,7 +129,7 @@ export default function PublicHeader({
   const router = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 1024;
+  const isDesktop = width > 768;
   const isTablet = width > 768 && width <= 1024;
   const isMobile = width <= 768;
   const { user } = useAuth();
@@ -441,7 +441,6 @@ export default function PublicHeader({
           <TouchableOpacity
             style={[
               styles.logo,
-              !isDay && styles.logoNightCapsule,
               isMobile && { flexShrink: 0 },
             ]}
             onPress={() => goTo('/')}
@@ -451,7 +450,13 @@ export default function PublicHeader({
               height={isMobile ? 34 : 44}
               width={isMobile ? 116 : 152}
               useHdQuality={true}
+              dark={!isDay}
               resizeMode="contain"
+              style={[
+                !isDay && Platform.OS === 'web' ? ({
+                  filter: 'drop-shadow(0 2px 10px rgba(16, 185, 129, 0.28)) drop-shadow(0 0 16px rgba(245, 158, 11, 0.16))',
+                } as any) : {},
+              ]}
             />
           </TouchableOpacity>
 
@@ -842,120 +847,7 @@ export default function PublicHeader({
           </View>
         </View>
 
-        {/* Row 2 on Mobile/Tablet: Core Pills with Continuous Spring Glider */}
-        {!isDesktop && (
-          <View style={styles.mobileNavRow}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.mobileNavScroll}
-            >
-              {mobileMeasurements.length === MAIN_NAV_LINKS.length && (
-                <RNAnimated.View
-                  style={[
-                    styles.mobileGlidingPill,
-                    {
-                      left: navSlideAnim.interpolate({
-                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
-                        outputRange: mobileMeasurements.map((m) => m?.x ?? 0),
-                        extrapolate: 'clamp',
-                      }),
-                      width: navSlideAnim.interpolate({
-                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
-                        outputRange: mobileMeasurements.map((m) => m?.width ?? 0),
-                        extrapolate: 'clamp',
-                      }),
-                      borderColor: MAIN_NAV_LINKS[navActiveIndex]?.border || 'rgba(16, 185, 129, 0.45)',
-                      shadowColor: MAIN_NAV_LINKS[navActiveIndex]?.shadow || '#10b981',
-                    },
-                  ]}
-                  pointerEvents="none"
-                >
-                  <LinearGradient
-                    colors={
-                      (isDay
-                        ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
-                        : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']) as [string, string, ...string[]]
-                    }
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <LinearGradient
-                    colors={(MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.mobileLaserBar}
-                  />
-                </RNAnimated.View>
-              )}
-
-              {MAIN_NAV_LINKS.map((link, idx) => {
-                const active = navActiveIndex === idx;
-                return (
-                  <TouchableOpacity
-                    key={link.id}
-                    onPress={() => handleNavClick(link)}
-                    onLayout={(e) => handleMobileNavLayout(idx, e)}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.mobileNavPill,
-                      isDay ? styles.mobileNavPillDay : styles.mobileNavPillNight,
-                    ]}
-                  >
-                    {link.image ? (
-                      <Image
-                        source={link.image}
-                        style={[
-                          { width: 14, height: 14 },
-                          Platform.OS === 'web'
-                            ? ({
-                                transform: active ? 'scale(1.15)' : 'scale(1)',
-                                transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              } as any)
-                            : active
-                            ? { transform: [{ scale: 1.15 }] }
-                            : {},
-                        ]}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          Platform.OS === 'web'
-                            ? ({
-                                transform: active ? 'scale(1.18)' : 'scale(1)',
-                                transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              } as any)
-                            : active
-                            ? { transform: [{ scale: 1.15 }] }
-                            : {},
-                        ]}
-                      >
-                        <Ionicons
-                          name={(active && link.activeIcon ? link.activeIcon : link.icon) as any}
-                          size={12}
-                          color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
-                        />
-                      </View>
-                    )}
-                    <Text
-                      style={[
-                        styles.mobileNavPillText,
-                        isDay ? styles.mobileNavPillTextDay : styles.mobileNavPillTextNight,
-                        active && { color: link.color, fontFamily: FONT.extraBold },
-                        Platform.OS === 'web' ? ({ transition: 'color 0.3s ease' } as any) : {},
-                      ]}
-                    >
-                      {link.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
-      </View>
+              </View>
 
       {/* ── Farmer 1-Tap Emergency Helpline Modal ── */}
       <Modal
@@ -1307,10 +1199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoNightCapsule: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    backgroundColor: 'transparent',
   },
 
   // Desktop Nav Links
@@ -1742,6 +1631,7 @@ const styles = StyleSheet.create({
     borderRadius: 99,
     overflow: 'hidden',
     borderWidth: 1,
+    flexShrink: 0,
     ...premiumShadow('rgba(16,185,129,0.2)', 'sm'),
   },
   userBtnDay: {
@@ -1768,7 +1658,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   userAvatarInitials: { color: '#047857', fontSize: 12, fontFamily: FONT.extraBold },
-  userBtnTextBox: { flex: 1, justifyContent: 'center' },
+  userBtnTextBox: { justifyContent: 'center', paddingRight: 4 },
   userBtnName: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold, lineHeight: 13 },
   dashboardCueRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   dashboardCueText: { color: '#a7f3d0', fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.3 },

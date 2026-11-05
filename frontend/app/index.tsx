@@ -637,6 +637,17 @@ export default function PublicLandingPage() {
 
   // ── Bottom Docked Bar Animated Glider State (Admin Mobile Spring Style) ──
   const [selectedDemoCrop, setSelectedDemoCrop] = useState<'wheat' | 'paddy' | 'cotton' | 'mustard'>('wheat');
+  
+  // Auto-cycle through crops in AI Leaf Scanner to keep live animation running continuously
+  useEffect(() => {
+    const crops: ('wheat' | 'paddy' | 'cotton' | 'mustard')[] = ['wheat', 'paddy', 'cotton', 'mustard'];
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx = (idx + 1) % crops.length;
+      setSelectedDemoCrop(crops[idx]);
+    }, 3800);
+    return () => clearInterval(interval);
+  }, []);
   const [activeBottomTab, setActiveBottomTab] = useState(0);
   const bottomSlideAnim = useRef(new RNAnimated.Value(0)).current;
   const [bottomBarWidth, setBottomBarWidth] = useState(0);
@@ -1205,6 +1216,48 @@ export default function PublicLandingPage() {
             border-color: rgba(245, 158, 11, 0.75) !important;
             box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8), 0 0 28px rgba(245, 158, 11, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
           }
+          
+          .organic-card-hover {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+          .organic-card-hover:hover {
+            transform: translateY(-6px) scale(1.015) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 24px rgba(16, 185, 129, 0.25) !important;
+          }
+          .organic-card-hover-day:hover {
+            transform: translateY(-6px) scale(1.015) !important;
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.15), 0 0 20px rgba(16, 185, 129, 0.18) !important;
+          }
+          .card-oils:hover {
+            border-color: rgba(245, 158, 11, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 24px rgba(245, 158, 11, 0.35) !important;
+          }
+          .card-honey:hover {
+            border-color: rgba(234, 88, 12, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 24px rgba(234, 88, 12, 0.35) !important;
+          }
+          .card-grains:hover {
+            border-color: rgba(16, 185, 129, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 24px rgba(16, 185, 129, 0.35) !important;
+          }
+          .card-spices:hover {
+            border-color: rgba(225, 29, 72, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 24px rgba(225, 29, 72, 0.35) !important;
+          }
+          .alloc-card-hover {
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+          .alloc-card-hover:hover {
+            transform: translateY(-6px) scale(1.01) !important;
+          }
+          .card-agronomist:hover {
+            border-color: rgba(6, 182, 212, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 28px rgba(6, 182, 212, 0.35) !important;
+          }
+          .card-gardener:hover {
+            border-color: rgba(225, 29, 72, 0.8) !important;
+            box-shadow: 0 28px 56px -14px rgba(0, 0, 0, 0.8), 0 0 28px rgba(225, 29, 72, 0.35) !important;
+          }
           .card-farming-day:hover {
             border-color: rgba(217, 119, 6, 0.75) !important;
             box-shadow: 0 28px 56px -14px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.2), inset 0 1px 3px #ffffff !important;
@@ -1700,15 +1753,7 @@ export default function PublicLandingPage() {
     return <AdminWebPortalScreen />;
   }
 
-  if (isMobile) {
-    return (
-      <MobileHomeView
-        themeMode={themeMode}
-        onToggleTheme={() => toggleTheme(themeMode === 'day' ? 'night' : 'day')}
-        cartCount={totalCartCount}
-      />
-    );
-  }
+  // Mobile and Desktop now both render the full web platform with responsive app adaptations
 
   return (
     <View style={[S.root, isDay && S.rootDay]}>
@@ -2308,6 +2353,25 @@ export default function PublicLandingPage() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* Quick Hero Login Assistance Pill */}
+            <TouchableOpacity
+              style={[S.heroLoginPill, isDay ? S.heroLoginPillDay : S.heroLoginPillNight]}
+              onPress={() => {
+                if (user) {
+                  router.push('/(user)/(tabs)');
+                } else {
+                  router.push('/login');
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <View style={S.heroLoginPulseDot} />
+              <Ionicons name="phone-portrait-outline" size={13} color={isDay ? '#047857' : '#34d399'} />
+              <Text style={[S.heroLoginPillText, isDay && S.heroLoginPillTextDay]}>
+                {user ? `Signed in as ${user.name || user.mobile} • Open Dashboard →` : 'Instant Sign In: Log in with 10-digit mobile number & OTP →'}
+              </Text>
+            </TouchableOpacity>
 
             {/* Trust Stats Bar */}
             <View style={[S.trustStatsBar, isDay && S.trustStatsBarDay, isMobile && { justifyContent: 'space-around', gap: 4, paddingTop: 4, marginBottom: 4 }]}>
@@ -3171,7 +3235,336 @@ export default function PublicLandingPage() {
         </View>
 
         
-        {/* ══ AI_CROP_DOCTOR_LIVE_DEMO: INTERACTIVE AI PATHOLOGY SCANNER ══ */}
+                {/* ══ FARM-DIRECT NATURAL & ORGANIC FOOD PAVILION ══ */}
+        <View style={[S.organicSection, isDay ? S.organicSectionDay : null, isMobile && S.organicSectionMobile]}>
+          <View style={S.sectionHeader}>
+            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay, { backgroundColor: '#10b981' }]} />
+              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay, { color: isDay ? '#047857' : '#34d399' }]}>
+                100% CHEMICAL-FREE & ARTISANAL
+              </Text>
+            </View>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay, isMobile && S.sectionHeadlineMobile]}>
+              Natural Farmer-Made Food Pavilion
+            </Text>
+            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
+              Authentic organic staples handcrafted by verified Indian cultivators. Zero chemical adulteration, zero industrial bleaching, and 100% fair direct farm earnings.
+            </Text>
+          </View>
+
+          {/* Trust Guarantees Bar */}
+          <View style={[S.organicTrustRow, isMobile && S.organicTrustRowMobile]}>
+            <View style={[S.organicTrustItem, isDay ? S.organicTrustItemDay : S.organicTrustItemNight]}>
+              <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+              <Text style={[S.organicTrustText, isDay && S.organicTrustTextDay]}>Zero Chemical Residue</Text>
+            </View>
+            <View style={[S.organicTrustItem, isDay ? S.organicTrustItemDay : S.organicTrustItemNight]}>
+              <Ionicons name="git-commit" size={14} color="#0ea5e9" />
+              <Text style={[S.organicTrustText, isDay && S.organicTrustTextDay]}>Farm-to-Kitchen Traceability</Text>
+            </View>
+            <View style={[S.organicTrustItem, isDay ? S.organicTrustItemDay : S.organicTrustItemNight]}>
+              <Ionicons name="sparkles" size={14} color="#f59e0b" />
+              <Text style={[S.organicTrustText, isDay && S.organicTrustTextDay]}>Cold & Wood Pressed</Text>
+            </View>
+            <View style={[S.organicTrustItem, isDay ? S.organicTrustItemDay : S.organicTrustItemNight]}>
+              <Ionicons name="heart" size={14} color="#ec4899" />
+              <Text style={[S.organicTrustText, isDay && S.organicTrustTextDay]}>100% Cultivator Earnings</Text>
+            </View>
+          </View>
+
+          {/* Direct Agri Store & Cultivator Listing Banner */}
+          
+          <View style={[S.organicFarmerBanner, isDay ? S.organicFarmerBannerDay : S.organicFarmerBannerNight]}>
+            <View style={S.organicFarmerBannerLeft}>
+              <View style={S.organicFarmerBannerIconBox}>
+                <Ionicons name="leaf" size={22} color="#f59e0b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[S.organicFarmerBannerTitle, isDay && S.organicFarmerBannerTitleDay]}>
+                  Pure Organic Produce & Farmer-Made Staples
+                </Text>
+                <Text style={[S.organicFarmerBannerSub, isDay && S.organicFarmerBannerSubDay]}>
+                  Browse certified cold-pressed virgin oils, raw honey, unpolished pulses, and heirloom flours directly from verified Indian cultivators, or register to list your own produce.
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+              <TouchableOpacity
+                style={[S.organicFarmerBannerBtn, { backgroundColor: '#10b981' }]}
+                onPress={() => router.push('/shop')}
+                activeOpacity={0.85}
+              >
+                <Text style={S.organicFarmerBannerBtnText}>Explore Organic Store →</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[S.organicFarmerBannerBtn, isDay ? S.organicFarmerBannerBtnDay : S.organicFarmerBannerBtnNight]}
+                onPress={() => router.push('/seller-dashboard')}
+                activeOpacity={0.85}
+              >
+                <Text style={S.organicFarmerBannerBtnText}>List Your Produce →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* ══ DEDICATED PERSONAL AGRONOMIST & GARDEN DOCTOR ALLOCATION ══ */}
+        <View style={[S.advisorAllocSection, isDay ? S.advisorAllocSectionDay : null, isMobile && S.advisorAllocSectionMobile]}>
+          <View style={S.sectionHeader}>
+            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay, { backgroundColor: '#06b6d4' }]} />
+              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay, { color: isDay ? '#0891b2' : '#22d3ee' }]}>
+                1-ON-1 PERSONAL AGRONOMY CARE
+              </Text>
+            </View>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay, isMobile && S.sectionHeadlineMobile]}>
+              Dedicated Agronomist &amp; Garden Doctor Allocation
+            </Text>
+            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
+              Beyond instant AI diagnostics, FarmsKing pairs every registered farmer and urban gardener with an assigned, certified agricultural specialist who provides personal, season-long care.
+            </Text>
+          </View>
+
+          {/* Allocation Process Trust Ticker */}
+          <View style={[S.allocTrustRow, isMobile && S.allocTrustRowMobile]}>
+            <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
+              <Ionicons name="person-circle" size={15} color="#06b6d4" />
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>Assigned Human Agronomist</Text>
+            </View>
+            <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
+              <Ionicons name="ribbon" size={15} color="#10b981" />
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>ICAR &amp; State University Certified</Text>
+            </View>
+            <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
+              <Ionicons name="chatbubbles" size={15} color="#8b5cf6" />
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>Direct 1-on-1 Call &amp; WhatsApp</Text>
+            </View>
+            <View style={[S.allocTrustItem, isDay ? S.allocTrustItemDay : S.allocTrustItemNight]}>
+              <Ionicons name="checkmark-done-circle" size={15} color="#f59e0b" />
+              <Text style={[S.allocTrustText, isDay && S.allocTrustTextDay]}>100% Free for Registered Users</Text>
+            </View>
+          </View>
+
+          {/* Dual Allocation Showcase Grid: 2 Large Responsive Cards */}
+          <View style={[S.allocGrid, isMobile && S.allocGridMobile]}>
+            {/* Card 1: Dedicated Farm Agronomist (Crop Doctor for Cultivators) */}
+            <SpatialTiltCard
+              style={[
+                S.allocCard,
+                isDay ? S.allocCardDay : S.allocCardNight,
+                isMobile && S.allocCardMobile,
+                Platform.OS === 'web' ? ({ className: 'alloc-card-hover card-agronomist' } as any) : {},
+              ]}
+              glowColor={isDay ? 'rgba(6, 182, 212, 0.2)' : 'rgba(6, 182, 212, 0.3)'}
+              tiltMax={4}
+            >
+              {/* Header with Icon, Tag and Status */}
+              <View style={S.allocCardHeader}>
+                <View style={[S.allocIconCircle, { backgroundColor: isDay ? '#ecfeff' : 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4' }]}>
+                  <Ionicons name="shield-checkmark" size={26} color="#06b6d4" />
+                </View>
+                <View style={S.allocCardHeaderMeta}>
+                  <View style={[S.allocCardBadge, { backgroundColor: isDay ? '#e0f2fe' : 'rgba(14, 165, 233, 0.15)', borderColor: '#0284c7' }]}>
+                    <View style={[S.allocLivePulseDot, { backgroundColor: '#0284c7' }]} />
+                    <Text style={[S.allocCardBadgeText, { color: isDay ? '#0369a1' : '#38bdf8' }]}>
+                      COMMERCIAL CULTIVATORS &amp; FARMS
+                    </Text>
+                  </View>
+                  <Text style={[S.allocCardTitle, isDay && S.allocCardTitleDay]}>
+                    Dedicated Farm Agronomist
+                  </Text>
+                  <Text style={[S.allocCardSubtitle, isDay && S.allocCardSubtitleDay]}>
+                    Personal Crop Doctor Assigned to Your Field
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[S.allocCardDesc, isDay && S.allocCardDescDay]}>
+                When you register your land and crop on FarmsKing, a certified farm agronomist is assigned directly to you. Your personal advisor continuously tracks satellite telemetry, interprets soil lab results, and delivers custom stage-wise spray and nutrition plans.
+              </Text>
+
+              {/* 4 Feature Highlights */}
+              <View style={S.allocFeatureGrid}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="planet" size={16} color="#06b6d4" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Satellite Telemetry</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Continuous NDVI crop health and soil moisture telemetry monitored weekly.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="flask" size={16} color="#10b981" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Custom Nutrition Plans</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Precision spray and fertilizer schedules based on soil pH and crop stage.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="call" size={16} color="#f59e0b" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Direct 1-on-1 Contact</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Instant call and WhatsApp desk with your assigned agronomist anytime.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="checkmark-done" size={16} color="#3b82f6" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Zero Overdose Guarantee</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    ICAR-aligned bio-solutions that stop unnecessary chemical expenses.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Assigned Specialist Showcase Badge */}
+              <View style={[S.allocSpecialistPill, isDay ? S.allocSpecialistPillDay : S.allocSpecialistPillNight]}>
+                <View style={[S.allocSpecialistAvatar, { backgroundColor: '#0284c7' }]}>
+                  <Text style={S.allocSpecialistAvatarText}>👨‍🌾</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.allocSpecialistName, isDay && S.allocSpecialistNameDay]}>
+                    Assigned Certified Agronomist
+                  </Text>
+                  <Text style={[S.allocSpecialistRole, isDay && S.allocSpecialistRoleDay]}>
+                    ICAR / State Agricultural University Certified • Active in Your Region
+                  </Text>
+                </View>
+                <View style={S.allocVerifiedTag}>
+                  <Ionicons name="shield-checkmark" size={12} color="#10b981" />
+                  <Text style={S.allocVerifiedTagText}>VERIFIED</Text>
+                </View>
+              </View>
+
+              {/* Action Button */}
+              <TouchableOpacity
+                style={[S.allocCardBtn, S.allocCardBtnAgronomist, isDay && S.allocCardBtnAgronomistDay]}
+                onPress={() => router.push(user ? '/farmer-profile-setup' : '/topic/Crop-Doctors')}
+                activeOpacity={0.85}
+              >
+                <Text style={S.allocCardBtnText}>Register Land &amp; Get My Crop Doctor →</Text>
+              </TouchableOpacity>
+            </SpatialTiltCard>
+
+            {/* Card 2: Dedicated Urban Garden Doctor (For Home & Terrace Gardeners) */}
+            <SpatialTiltCard
+              style={[
+                S.allocCard,
+                isDay ? S.allocCardDay : S.allocCardNight,
+                isMobile && S.allocCardMobile,
+                Platform.OS === 'web' ? ({ className: 'alloc-card-hover card-gardener' } as any) : {},
+              ]}
+              glowColor={isDay ? 'rgba(225, 29, 72, 0.2)' : 'rgba(225, 29, 72, 0.3)'}
+              tiltMax={4}
+            >
+              {/* Header with Icon, Tag and Status */}
+              <View style={S.allocCardHeader}>
+                <View style={[S.allocIconCircle, { backgroundColor: isDay ? '#fff1f2' : 'rgba(225, 29, 72, 0.15)', borderColor: '#e11d48' }]}>
+                  <Ionicons name="leaf" size={26} color="#e11d48" />
+                </View>
+                <View style={S.allocCardHeaderMeta}>
+                  <View style={[S.allocCardBadge, { backgroundColor: isDay ? '#ffe4e6' : 'rgba(225, 29, 72, 0.15)', borderColor: '#e11d48' }]}>
+                    <View style={[S.allocLivePulseDot, { backgroundColor: '#e11d48' }]} />
+                    <Text style={[S.allocCardBadgeText, { color: isDay ? '#be123c' : '#fb7185' }]}>
+                      HOME &amp; TERRACE GARDENERS
+                    </Text>
+                  </View>
+                  <Text style={[S.allocCardTitle, isDay && S.allocCardTitleDay]}>
+                    Dedicated Urban Garden Doctor
+                  </Text>
+                  <Text style={[S.allocCardSubtitle, isDay && S.allocCardSubtitleDay]}>
+                    Personal Plant Doctor for Your Terrace &amp; Balcony
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[S.allocCardDesc, isDay && S.allocCardDescDay]}>
+                Grow thriving balcony plants, lush terrace flowerbeds, and clean organic vegetables with dedicated support from an assigned urban horticulturist. Get customized potting soil recipes, sunlight placement guidance, and organic pest cures.
+              </Text>
+
+              {/* 4 Feature Highlights */}
+              <View style={S.allocFeatureGrid}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="layers" size={16} color="#e11d48" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Potting Soil Recipes</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Balanced cocopeat, vermicompost, and neem cake mix tailored to each plant.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="sunny" size={16} color="#f59e0b" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Sunlight Orientation</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Optimal light orientation and watering frequency for balconies and terraces.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="heart-circle" size={16} color="#10b981" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Pet &amp; Child Safe Bio-Cures</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    100% non-toxic herbal sprays, organic tonics, and natural pest repellents.
+                  </Text>
+                </View>
+
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                  <View style={S.allocFeatureIconRow}>
+                    <Ionicons name="camera" size={16} color="#8b5cf6" />
+                    <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Instant Leaf Photo Reviews</Text>
+                  </View>
+                  <Text style={[S.allocFeatureDesc, isDay && S.allocFeatureDescDay]}>
+                    Snap photos of yellowing leaves or dropping buds for instant expert advice.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Assigned Specialist Showcase Badge */}
+              <View style={[S.allocSpecialistPill, isDay ? S.allocSpecialistPillDay : S.allocSpecialistPillNight]}>
+                <View style={[S.allocSpecialistAvatar, { backgroundColor: '#e11d48' }]}>
+                  <Text style={S.allocSpecialistAvatarText}>🪴</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.allocSpecialistName, isDay && S.allocSpecialistNameDay]}>
+                    Assigned Urban Garden Doctor
+                  </Text>
+                  <Text style={[S.allocSpecialistRole, isDay && S.allocSpecialistRoleDay]}>
+                    Urban Horticulture &amp; Botany Specialist • Available for 1-on-1 Guidance
+                  </Text>
+                </View>
+                <View style={S.allocVerifiedTag}>
+                  <Ionicons name="shield-checkmark" size={12} color="#10b981" />
+                  <Text style={S.allocVerifiedTagText}>VERIFIED</Text>
+                </View>
+              </View>
+
+              {/* Action Button */}
+              <TouchableOpacity
+                style={[S.allocCardBtn, S.allocCardBtnGardener, isDay && S.allocCardBtnGardenerDay]}
+                onPress={() => router.push('/topic/Gardening')}
+                activeOpacity={0.85}
+              >
+                <Text style={S.allocCardBtnText}>Connect with a Garden Doctor →</Text>
+              </TouchableOpacity>
+            </SpatialTiltCard>
+          </View>
+        </View>
+
+{/* ══ AI_CROP_DOCTOR_LIVE_DEMO: INTERACTIVE AI PATHOLOGY SCANNER ══ */}
         <View style={[S.aiDemoSection, isMobile && S.aiDemoSectionMobile]}>
           <View style={S.sectionHeader}>
             <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
@@ -3182,42 +3575,8 @@ export default function PublicLandingPage() {
               Experience AI Crop Doctor in Action
             </Text>
             <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
-              Select any major crop below to preview how FarmsKing instantly scans foliar tissue, identifies pathogens with 98%+ precision, and prescribes bio-certified cures.
+              FarmsKing multimodal neural scanner detects foliar pathogens, tissue blight, and nutrient deficiencies in 0.8 seconds with 98%+ precision. Sign in free to scan your own crop leaves.
             </Text>
-          </View>
-
-          {/* Interactive Crop Selector Tabs */}
-          <View style={[S.aiDemoTabsRow, isDay && S.aiDemoTabsRowDay, isMobile && S.aiDemoTabsRowMobile]}>
-            {(['wheat', 'paddy', 'cotton', 'mustard'] as const).map((cropKey) => {
-              const active = selectedDemoCrop === cropKey;
-              const data = AI_DEMO_DATA[cropKey];
-              return (
-                <TouchableOpacity
-                  key={cropKey}
-                  style={[
-                    S.aiDemoTabBtn,
-                    isDay && S.aiDemoTabBtnDay,
-                    active && (isDay ? S.aiDemoTabBtnActiveDay : S.aiDemoTabBtnActiveNight),
-                    isMobile && S.aiDemoTabBtnMobile,
-                  ]}
-                  onPress={() => setSelectedDemoCrop(cropKey)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={{ fontSize: 16 }}>{data.icon}</Text>
-                  <Text
-                    style={[
-                      S.aiDemoTabText,
-                      isDay && S.aiDemoTabTextDay,
-                      active && S.aiDemoTabTextActive,
-                      isMobile && S.aiDemoTabTextMobile,
-                    ]}
-                  >
-                    {data.shortName}
-                  </Text>
-                  {active && <View style={S.aiDemoTabActiveDot} />}
-                </TouchableOpacity>
-              );
-            })}
           </View>
 
           {/* Interactive 2-Column AI Pathology Showcase Box */}
@@ -3323,18 +3682,22 @@ export default function PublicLandingPage() {
                     </View>
                   </View>
 
-                  {/* Action Button: Launch AI Doctor */}
+                  {/* Action Button: Sign Up / Sign In to use Free Leaf Scanner */}
                   <TouchableOpacity
-                    accessibilityRole="link"
-                    // @ts-ignore
-                    href="/ai-doctor"
                     style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
-                    onPress={() => router.push('/ai-doctor')}
-                    activeOpacity={0.85}
+                    onPress={() => {
+                      if (user) {
+                        router.push('/crop-disease-scanner');
+                      } else {
+                        router.push('/login');
+                      }
+                    }}
+                    activeOpacity={0.88}
                   >
-                    <Ionicons name="camera-outline" size={17} color="#ffffff" />
-                    <Text style={S.aiDemoActionBtnText}>Launch Free Live AI Crop Doctor</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+                    <Ionicons name={user ? "scan-circle" : "log-in-outline"} size={19} color="#ffffff" />
+                    <Text style={S.aiDemoActionBtnText}>
+                      {user ? 'Open AI Leaf Doctor & Scan Leaf →' : 'Sign Up / Sign In to Use Free Leaf Scanner →'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -3436,12 +3799,183 @@ export default function PublicLandingPage() {
           )}
         </View>
 
+        {/* ══ HOW TO LOG IN & ACCESS YOUR FARMSKING ACCOUNT ══ */}
+        <View style={[S.loginGuideSection, isDay ? S.loginGuideSectionDay : null, isMobile && S.loginGuideSectionMobile]}>
+          <View style={S.sectionHeader}>
+            <View style={[S.sectionBadgeRow, isDay && S.sectionBadgeRowDay]}>
+              <View style={[S.sectionBadgeDot, isDay && S.sectionBadgeDotDay, { backgroundColor: '#10b981' }]} />
+              <Text style={[S.sectionEyebrow, isDay && S.sectionEyebrowDay, { color: isDay ? '#047857' : '#34d399' }]}>
+                INSTANT 10-SECOND ACCESS • ZERO PASSWORD HASSLE
+              </Text>
+            </View>
+            <Text style={[S.sectionHeadline, isDay && S.sectionHeadlineDay, isMobile && S.sectionHeadlineMobile]}>
+              How to Log In & Access Your Account
+            </Text>
+            <Text style={[S.sectionSubhead, isDay && S.sectionSubheadDay, isMobile && S.sectionSubheadMobile]}>
+              FarmsKing uses instant mobile OTP verification. No long forms or complicated passwords — simply enter your 10-digit phone number to securely access your personal dashboard.
+            </Text>
+          </View>
+
+          {/* 3-Step Visual Process (Desktop 3 Columns, Mobile Stacked) */}
+          <View style={[S.loginStepsGrid, isMobile && S.loginStepsGridMobile]}>
+            {/* Step 1 */}
+            <View style={[S.loginStepCard, isDay ? S.loginStepCardDay : S.loginStepCardNight]}>
+              <View style={[S.loginStepNumBadge, { backgroundColor: isDay ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981' }]}>
+                <Ionicons name="phone-portrait" size={22} color="#10b981" />
+              </View>
+              <View style={S.loginStepIndexPill}>
+                <Text style={S.loginStepIndexText}>STEP 1</Text>
+              </View>
+              <Text style={[S.loginStepTitle, isDay && S.loginStepTitleDay]}>
+                Enter 10-Digit Mobile
+              </Text>
+              <Text style={[S.loginStepDesc, isDay && S.loginStepDescDay]}>
+                Type your active Indian mobile number. Both existing users and new farmers use the same single screen.
+              </Text>
+            </View>
+
+            {/* Step 2 */}
+            <View style={[S.loginStepCard, isDay ? S.loginStepCardDay : S.loginStepCardNight]}>
+              <View style={[S.loginStepNumBadge, { backgroundColor: isDay ? '#ecfeff' : 'rgba(6, 182, 212, 0.15)', borderColor: '#06b6d4' }]}>
+                <Ionicons name="keypad" size={22} color="#06b6d4" />
+              </View>
+              <View style={[S.loginStepIndexPill, { backgroundColor: 'rgba(6, 182, 212, 0.2)' }]}>
+                <Text style={[S.loginStepIndexText, { color: '#06b6d4' }]}>STEP 2</Text>
+              </View>
+              <Text style={[S.loginStepTitle, isDay && S.loginStepTitleDay]}>
+                Receive Instant SMS OTP
+              </Text>
+              <Text style={[S.loginStepDesc, isDay && S.loginStepDescDay]}>
+                A secure 4-digit one-time passcode arrives on your phone within seconds. Zero passwords to remember or reset.
+              </Text>
+            </View>
+
+            {/* Step 3 */}
+            <View style={[S.loginStepCard, isDay ? S.loginStepCardDay : S.loginStepCardNight]}>
+              <View style={[S.loginStepNumBadge, { backgroundColor: isDay ? '#fef3c7' : 'rgba(245, 158, 11, 0.15)', borderColor: '#f59e0b' }]}>
+                <Ionicons name="speedometer" size={22} color="#f59e0b" />
+              </View>
+              <View style={[S.loginStepIndexPill, { backgroundColor: 'rgba(245, 158, 11, 0.2)' }]}>
+                <Text style={[S.loginStepIndexText, { color: '#f59e0b' }]}>STEP 3</Text>
+              </View>
+              <Text style={[S.loginStepTitle, isDay && S.loginStepTitleDay]}>
+                Open Your Custom Portal
+              </Text>
+              <Text style={[S.loginStepDesc, isDay && S.loginStepDescDay]}>
+                Instantly enter your tailored workspace — with your land telemetry, assigned crop doctor, or store payouts ready.
+              </Text>
+            </View>
+          </View>
+
+          {/* 4 Roles Card Container */}
+          <View style={[S.loginRolesContainer, isDay ? S.loginRolesContainerDay : S.loginRolesContainerNight, isMobile && S.loginRolesContainerMobile]}>
+            <View style={S.loginRolesHeader}>
+              <Ionicons name="people" size={18} color="#10b981" />
+              <Text style={[S.loginRolesHeading, isDay && S.loginRolesHeadingDay]}>
+                Who Can Log In & What You Access:
+              </Text>
+            </View>
+
+            <View style={[S.loginRolesGrid, isMobile && S.loginRolesGridMobile]}>
+              {/* Role 1: Farmers */}
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+                <Text style={S.loginRoleEmoji}>👨‍🌾</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Farmers & Cultivators</Text>
+                  <Text style={[S.loginRoleDesc, isDay && S.loginRoleDescDay]}>
+                    Access farm passbook, satellite field telemetry, crop spray schedules & your assigned personal agronomist.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Role 2: Gardeners */}
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+                <Text style={S.loginRoleEmoji}>🪴</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Home & Terrace Gardeners</Text>
+                  <Text style={[S.loginRoleDesc, isDay && S.loginRoleDescDay]}>
+                    Get plant clinic reviews, potting soil recipes & 1-on-1 urban garden doctor assistance.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Role 3: Crop Doctors & Advisors */}
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+                <Text style={S.loginRoleEmoji}>🩺</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Agronomists & Staff</Text>
+                  <Text style={[S.loginRoleDesc, isDay && S.loginRoleDescDay]}>
+                    Manage assigned farmer rosters, review crop tickets, prescribe bio-cures & update APMC market rates.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Role 4: Sellers */}
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+                <Text style={S.loginRoleEmoji}>🏪</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Agri Sellers & Artisans</Text>
+                  <Text style={[S.loginRoleDesc, isDay && S.loginRoleDescDay]}>
+                    List natural farmer-made foods, certified seeds & manage orders with 0% middleman deduction.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Main Action Bar */}
+            <View style={[S.loginActionBanner, isDay ? S.loginActionBannerDay : S.loginActionBannerNight]}>
+              <View style={{ flex: 1, minWidth: 260 }}>
+                <Text style={[S.loginActionBannerTitle, isDay && S.loginActionBannerTitleDay]}>
+                  {user ? `Welcome back, ${user.name || user.mobile}!` : 'Ready to access your smart farming portal?'}
+                </Text>
+                <Text style={[S.loginActionBannerSub, isDay && S.loginActionBannerSubDay]}>
+                  {user
+                    ? 'You are currently authenticated. Click below to jump straight to your dashboard.'
+                    : 'Enter your 10-digit mobile number on the login screen to sign in or create an account in 10 seconds.'}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[S.loginActionBtn, user && { backgroundColor: '#0284c7' }]}
+                onPress={() => {
+                  if (user) {
+                    router.push('/(user)/(tabs)');
+                  } else {
+                    router.push('/login');
+                  }
+                }}
+                activeOpacity={0.88}
+              >
+                <Ionicons name={user ? 'speedometer' : 'log-in'} size={18} color="#ffffff" />
+                <Text style={S.loginActionBtnText}>
+                  {user ? 'Open My Account Dashboard →' : 'Login with Mobile Number →'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Helpline Support Note */}
+            <View style={S.loginHelplineRow}>
+              <Ionicons name="help-circle-outline" size={14} color={isDay ? '#64748b' : '#94a3b8'} />
+              <Text style={[S.loginHelplineText, isDay && S.loginHelplineTextDay]}>
+                Need help signing in? Call our Farmer Desk:{' '}
+                <Text
+                  style={{ color: isDay ? '#059669' : '#34d399', fontFamily: FONT.bold }}
+                  onPress={() => Linking.openURL('tel:9577622000')}
+                >
+                  95776-22000
+                </Text>{' '}
+                (Mon – Sat, 10 AM – 5 PM IST)
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* ══ COMPREHENSIVE MULTI-COLUMN RESPONSIVE FOOTER ══ */}
         <View style={[S.footer, isDay && S.footerDay]}>
           <View style={S.footerColumnsGrid}>
             {/* Column 1: Brand & Mission */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
-              <View style={[S.footerBrandRow, !isDay && { backgroundColor: '#ffffff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 12 }]}>
+              <View style={[S.footerBrandRow, { alignSelf: 'flex-start', marginBottom: 12 }]}>
                 <BrandLogo height={38} width={128} useHdQuality resizeMode="contain" />
               </View>
               <Text style={[S.footerDesc, isDay && S.footerDescDay]}>
@@ -3741,7 +4275,7 @@ export default function PublicLandingPage() {
 
             {/* Header: Brand & Close Button */}
             <View style={S.drawerHeaderRow}>
-              <View style={[S.drawerBrandRow, !isDay && { backgroundColor: '#ffffff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }]}>
+              <View style={S.drawerBrandRow}>
                 <BrandLogo
                   height={36}
                   width={120}
@@ -4158,7 +4692,7 @@ const S = StyleSheet.create({
   },
   scrollContainerDesktop: {
     paddingTop: 72,
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   scrollContainerMobile: {
     paddingTop: 84,
@@ -7877,7 +8411,7 @@ const S = StyleSheet.create({
   // ── Floating Live Social Proof Activity Ticker ──
   liveTickerFixedContainer: {
     position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any,
-    bottom: 24,
+    bottom: 82,
     left: 20,
     zIndex: 900,
     maxWidth: 380,
@@ -8574,6 +9108,780 @@ const S = StyleSheet.create({
     height: 10,
     backgroundColor: '#ffffff',
     borderRadius: 1,
+  },
+
+
+  // ─── Farm-Direct Natural & Organic Pavilion Styles ───────────────────────────
+  organicSection: {
+    paddingVertical: 52,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  organicSectionDay: {},
+  organicSectionMobile: {
+    paddingVertical: 36,
+  },
+  organicTrustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 32,
+  },
+  organicTrustRowMobile: {
+    gap: 6,
+    marginBottom: 24,
+  },
+  organicTrustItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  organicTrustItemNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  organicTrustItemDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.04)', 'sm'),
+  },
+  organicTrustText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  organicTrustTextDay: {
+    color: '#334155',
+  },
+  organicCard: {
+    flex: 1,
+    minWidth: 230,
+    maxWidth: 270,
+    borderRadius: 22,
+    borderWidth: 1.2,
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 18,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  organicCardTablet: {
+    minWidth: '46%',
+    maxWidth: '48%',
+  },
+  organicCardMobile: {
+    minWidth: '100%',
+    maxWidth: '100%',
+  },
+  organicCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...premiumShadow('#000000', 'lg'),
+  },
+  organicCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'lg'),
+  },
+  organicIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  organicMicroTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  organicMicroTagText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  organicCardTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  organicCardTitleDay: {
+    color: '#0f172a',
+  },
+  organicCardDesc: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  organicCardDescDay: {
+    color: '#64748b',
+  },
+  organicFeatureList: {
+    gap: 6,
+    marginBottom: 18,
+  },
+  organicFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  organicFeatureText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+  },
+  organicFeatureTextDay: {
+    color: '#475569',
+  },
+  organicCardBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    marginTop: 'auto',
+  },
+  organicCardBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  // Cultivator banner
+  organicFarmerBanner: {
+    marginTop: 36,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  organicFarmerBannerNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    ...premiumShadow('#000000', 'md'),
+  },
+  organicFarmerBannerDay: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+    ...premiumShadow('rgba(245, 158, 11, 0.1)', 'md'),
+  },
+  organicFarmerBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flex: 1,
+    minWidth: 260,
+  },
+  organicFarmerBannerIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  organicFarmerBannerTitle: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 2,
+  },
+  organicFarmerBannerTitleDay: {
+    color: '#92400e',
+  },
+  organicFarmerBannerSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    lineHeight: 17,
+  },
+  organicFarmerBannerSubDay: {
+    color: '#b45309',
+  },
+  organicFarmerBannerBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+  },
+  organicFarmerBannerBtnNight: {
+    backgroundColor: '#f59e0b',
+  },
+  organicFarmerBannerBtnDay: {
+    backgroundColor: '#d97706',
+  },
+  organicFarmerBannerBtnText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+  },
+
+  // ─── Dedicated Agronomist & Garden Doctor Allocation Showcase Styles ───────────
+  advisorAllocSection: {
+    paddingVertical: 56,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  advisorAllocSectionDay: {},
+  advisorAllocSectionMobile: {
+    paddingVertical: 36,
+  },
+  allocTrustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 32,
+  },
+  allocTrustRowMobile: {
+    gap: 6,
+    marginBottom: 24,
+  },
+  allocTrustItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  allocTrustItemNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  allocTrustItemDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.04)', 'sm'),
+  },
+  allocTrustText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  allocTrustTextDay: {
+    color: '#334155',
+  },
+  allocGrid: {
+    flexDirection: 'row',
+    gap: 24,
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  allocGridMobile: {
+    flexDirection: 'column',
+    gap: 20,
+  },
+  allocCard: {
+    flex: 1,
+    minWidth: 320,
+    borderRadius: 24,
+    borderWidth: 1.2,
+    padding: 28,
+    position: 'relative',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  allocCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...premiumShadow('#000000', 'xl'),
+  },
+  allocCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'xl'),
+  },
+  allocCardMobile: {
+    minWidth: '100%',
+    padding: 20,
+  },
+  allocCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+    marginBottom: 16,
+  },
+  allocIconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1.2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  allocCardHeaderMeta: {
+    flex: 1,
+  },
+  allocCardBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  allocLivePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  allocCardBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.5,
+  },
+  allocCardTitle: {
+    fontSize: 21,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    lineHeight: 26,
+    marginBottom: 2,
+  },
+  allocCardTitleDay: {
+    color: '#0f172a',
+  },
+  allocCardSubtitle: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+    color: '#38bdf8',
+  },
+  allocCardSubtitleDay: {
+    color: '#0284c7',
+  },
+  allocCardDesc: {
+    fontSize: 13,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  allocCardDescDay: {
+    color: '#475569',
+  },
+  allocFeatureGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  allocFeatureBox: {
+    flex: 1,
+    minWidth: '47%',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  allocFeatureBoxNight: {
+    backgroundColor: 'rgba(2, 6, 23, 0.4)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  allocFeatureBoxDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  allocFeatureIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  allocFeatureTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+  },
+  allocFeatureTitleDay: {
+    color: '#1e293b',
+  },
+  allocFeatureDesc: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 15,
+  },
+  allocFeatureDescDay: {
+    color: '#64748b',
+  },
+  allocSpecialistPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 22,
+    marginTop: 'auto',
+  },
+  allocSpecialistPillNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  allocSpecialistPillDay: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
+  },
+  allocSpecialistAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  allocSpecialistAvatarText: {
+    fontSize: 18,
+  },
+  allocSpecialistName: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  allocSpecialistNameDay: {
+    color: '#0f172a',
+  },
+  allocSpecialistRole: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  allocSpecialistRoleDay: {
+    color: '#64748b',
+  },
+  allocVerifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10b981',
+    borderWidth: 1,
+  },
+  allocVerifiedTagText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+  },
+  allocCardBtn: {
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: RADIUS.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  allocCardBtnAgronomist: {
+    backgroundColor: '#0284c7',
+    ...premiumShadow('#0284c7', 'md'),
+  },
+  allocCardBtnAgronomistDay: {
+    backgroundColor: '#0284c7',
+  },
+  allocCardBtnGardener: {
+    backgroundColor: '#e11d48',
+    ...premiumShadow('#e11d48', 'md'),
+  },
+  allocCardBtnGardenerDay: {
+    backgroundColor: '#e11d48',
+  },
+  // ─── Quick Hero Login Pill Styles ───────────
+  heroLoginPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    marginTop: 8,
+    marginBottom: 10,
+  },
+  heroLoginPillNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  heroLoginPillDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  heroLoginPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  heroLoginPillText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+  },
+  heroLoginPillTextDay: {
+    color: '#047857',
+  },
+
+  // ─── Login & Account Access Guide Styles ───────────
+  loginGuideSection: {
+    paddingVertical: 56,
+    paddingHorizontal: '5%',
+    maxWidth: 1360,
+    alignSelf: 'center',
+    width: '100%',
+  },
+  loginGuideSectionDay: {},
+  loginGuideSectionMobile: {
+    paddingVertical: 36,
+  },
+  loginStepsGrid: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 28,
+  },
+  loginStepsGridMobile: {
+    flexDirection: 'column',
+    gap: 14,
+  },
+  loginStepCard: {
+    flex: 1,
+    minWidth: 260,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    padding: 22,
+    position: 'relative',
+  },
+  loginStepCardNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...premiumShadow('#000000', 'lg'),
+  },
+  loginStepCardDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.05)', 'lg'),
+  },
+  loginStepNumBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  loginStepIndexPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    marginBottom: 8,
+  },
+  loginStepIndexText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#10b981',
+    letterSpacing: 0.5,
+  },
+  loginStepTitle: {
+    fontSize: 17,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  loginStepTitleDay: {
+    color: '#0f172a',
+  },
+  loginStepDesc: {
+    fontSize: 12.5,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 18,
+  },
+  loginStepDescDay: {
+    color: '#64748b',
+  },
+  loginRolesContainer: {
+    borderRadius: 24,
+    borderWidth: 1.2,
+    padding: 26,
+  },
+  loginRolesContainerNight: {
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    ...premiumShadow('#000000', 'xl'),
+  },
+  loginRolesContainerDay: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'xl'),
+  },
+  loginRolesContainerMobile: {
+    padding: 16,
+  },
+  loginRolesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 18,
+  },
+  loginRolesHeading: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  loginRolesHeadingDay: {
+    color: '#0f172a',
+  },
+  loginRolesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 14,
+    marginBottom: 22,
+  },
+  loginRolesGridMobile: {
+    flexDirection: 'column',
+    gap: 10,
+  },
+  loginRoleItem: {
+    flex: 1,
+    minWidth: 260,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  loginRoleItemNight: {
+    backgroundColor: 'rgba(2, 6, 23, 0.45)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  loginRoleItemDay: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  loginRoleEmoji: {
+    fontSize: 22,
+  },
+  loginRoleTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+    marginBottom: 3,
+  },
+  loginRoleTitleDay: {
+    color: '#0f172a',
+  },
+  loginRoleDesc: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    lineHeight: 16,
+  },
+  loginRoleDescDay: {
+    color: '#64748b',
+  },
+  loginActionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    flexWrap: 'wrap',
+    padding: 20,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  loginActionBannerNight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  loginActionBannerDay: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
+  },
+  loginActionBannerTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginBottom: 3,
+  },
+  loginActionBannerTitleDay: {
+    color: '#065f46',
+  },
+  loginActionBannerSub: {
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#a7f3d0',
+  },
+  loginActionBannerSubDay: {
+    color: '#047857',
+  },
+  loginActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#10b981',
+    ...premiumShadow('#10b981', 'md'),
+  },
+  loginActionBtnText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  loginHelplineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 16,
+  },
+  loginHelplineText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  loginHelplineTextDay: {
+    color: '#64748b',
+  },
+
+  allocCardBtnText: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.2,
   },
 
   // ─── Super Premium Interactive AI Demo & App Showcase Styles ───────────────

@@ -168,15 +168,16 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(Platform.OS === 'web');
 
   useEffect(() => {
-    // Calibrated 650ms minimum duration:
-    // Ensures the FarmsKing logo and favicon are clearly visible,
-    // while keeping user wait time to the absolute minimum (~0.65s).
+    if (Platform.OS === 'web') {
+      setMinTimeElapsed(true);
+      return;
+    }
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 650);
+    }, 450);
     return () => clearTimeout(timer);
   }, []);
 

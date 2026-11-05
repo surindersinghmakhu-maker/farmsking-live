@@ -488,27 +488,12 @@ try {
     }
 
     const webSplashHtml = `
-    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #047857 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <div style="position: relative; width: 104px; height: 104px; border-radius: 52px; background: #ffffff; display: flex; align-items: center; justify-content: center; border: 2.5px solid #facc15; box-shadow: 0 10px 30px rgba(0,0,0,0.4); margin-bottom: 20px;">
-        <img src="/brand_logo.png" alt="FarmsKing Brand Logo" style="width: 86px; height: 86px; border-radius: 43px; object-fit: contain;" />
-        <div style="position: absolute; bottom: -4px; right: -4px; width: 34px; height: 34px; border-radius: 17px; background: #ffffff; border: 2px solid #047857; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25);">
-          <img src="/favicon.png?v=6" alt="FarmsKing Favicon" style="width: 22px; height: 22px; border-radius: 11px; object-fit: contain;" />
-        </div>
+    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #022c22; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 16px;" />
+      <div style="color: #fef08a; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 10px;">Smart Farming</div>
+      <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
+        🌾 India’s Intelligent Agriculture Platform
       </div>
-      <div style="color: #ffffff; font-size: 34px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 6px;">FarmsKing</div>
-      <div style="color: #fef08a; font-size: 15px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 12px;">Farming Easy, Farming Smart</div>
-      <div style="background: rgba(255,255,255,0.12); padding: 5px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); color: #d1fae5; font-size: 12px; font-weight: 600; margin-bottom: 30px;">
-        🌾 India's Intelligent Agriculture Platform
-      </div>
-      <div style="width: 220px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; position: relative;">
-        <div style="width: 45%; height: 100%; background: #facc15; border-radius: 2px; animation: splashPulse 1.2s ease-in-out infinite alternate;"></div>
-      </div>
-      <style>
-        @keyframes splashPulse {
-          0% { transform: translateX(0); width: 30%; }
-          100% { transform: translateX(150px); width: 50%; }
-        }
-      </style>
     </div>
     `;
 

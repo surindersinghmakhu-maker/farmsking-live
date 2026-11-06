@@ -118,6 +118,8 @@ export declare class AuthController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -148,6 +150,94 @@ export declare class AuthController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            referredById: string | null;
+            createdAt: Date;
+        };
+    }>;
+    sendEmailVerification(user: AuthUser, body: {
+        email: string;
+        origin?: string;
+    }, headerOrigin?: string): Promise<{
+        success: boolean;
+        message: string;
+        pendingEmail: string;
+    }>;
+    verifyEmail(body: {
+        token: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        email?: undefined;
+        user?: undefined;
+    } | {
+        success: boolean;
+        message: string;
+        email: string | null;
+        user: {
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            referredById: string | null;
+            createdAt: Date;
+        };
+    }>;
+    verifyEmailGet(token: string): Promise<{
+        success: boolean;
+        message: string;
+        email?: undefined;
+        user?: undefined;
+    } | {
+        success: boolean;
+        message: string;
+        email: string | null;
+        user: {
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;

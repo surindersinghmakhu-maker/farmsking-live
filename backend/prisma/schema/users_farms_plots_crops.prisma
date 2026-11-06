@@ -14,6 +14,10 @@ model User {
   deactivatedRoles        Role[]       @default([])
   name                    String
   email                   String?
+  isEmailVerified         Boolean      @default(false)
+  pendingEmail            String?
+  emailVerifyToken        String?
+  emailVerifyExpires      DateTime?
   googleId                String?      @unique
   village                 String?
   district                String?

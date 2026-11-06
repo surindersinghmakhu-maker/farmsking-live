@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException, 
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { provisionInviteCoupon } from '../../common/utils/invite-coupon.util';
@@ -34,6 +35,8 @@ const SAFE_USER_SELECT = {
   deactivatedRoles: true,
   name: true,
   email: true,
+  isEmailVerified: true,
+  pendingEmail: true,
   googleId: true,
   village: true,
   district: true,
@@ -166,12 +169,18 @@ export class AuthService {
           role: Role.CUSTOMER,
           roles: [Role.CUSTOMER],
           isPhoneVerified: true,
+          isEmailVerified: true,
         },
       });
     } else if (!user.googleId && dto.googleId) {
       user = await this.prisma.user.update({
         where: { id: user.id },
-        data: { googleId: dto.googleId },
+        data: { googleId: dto.googleId, isEmailVerified: true },
+      });
+    } else if (user.isEmailVerified !== true) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { isEmailVerified: true },
       });
     } else if (verifiedPhoto && !user.photoUrl) {
       user = await this.prisma.user.update({
@@ -226,6 +235,7 @@ export class AuthService {
       where: { id: currentUser.id },
       data: {
         email: cleanEmail,
+        isEmailVerified: true,
         ...(dto.googleId ? { googleId: dto.googleId } : {}),
         ...(dto.photoUrl && !dbUser.photoUrl ? { photoUrl: dto.photoUrl } : {}),
       },
@@ -278,6 +288,7 @@ export class AuthService {
       where: { id: currentUser.id },
       data: {
         email: null,
+        isEmailVerified: false,
         googleId: null,
       },
       select: SAFE_USER_SELECT,
@@ -1453,6 +1464,145 @@ export class AuthService {
         warningMessage: sessionInfo.warningMessage,
         evictedOldest: sessionInfo.evictedOldest,
       },
+    };
+  }
+
+  /**
+   * Send a verification link to update / verify user's email address
+   */
+  async sendEmailVerificationLink(userId: string, targetEmail: string, origin?: string) {
+    if (!targetEmail || !targetEmail.includes('@') || !targetEmail.includes('.')) {
+      throw new BadRequestException('Please provide a valid email address.');
+    }
+
+    const cleanEmail = targetEmail.trim().toLowerCase();
+
+    // Check if another active user is already using this email
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        email: cleanEmail,
+        id: { not: userId },
+        deletedAt: null,
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException('This email address is already registered to another account.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    // Generate secure token (24-hour expiration)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        pendingEmail: cleanEmail,
+        emailVerifyToken: token,
+        emailVerifyExpires: expires,
+      },
+    });
+
+    // Compute base URL
+    let baseUrl = 'https://farmsking.in';
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      baseUrl = origin.replace(/\/$/, '');
+    } else if (process.env.LIVE_SITE_URL) {
+      baseUrl = process.env.LIVE_SITE_URL.replace(/\/$/, '');
+    }
+    const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
+
+    const sent = await this.emailService.sendEmailVerificationLink(
+      cleanEmail,
+      user.name || 'FarmsKing Member',
+      verifyUrl,
+    );
+
+    if (!sent) {
+      throw new BadRequestException('Failed to deliver verification email. Please check SMTP settings.');
+    }
+
+    return {
+      success: true,
+      message: `Verification link sent to ${cleanEmail}. Please check your inbox and click the link to activate.`,
+      pendingEmail: cleanEmail,
+    };
+  }
+
+  /**
+   * Verify token from email link, activate the email, and mark verified
+   */
+  async verifyEmailToken(token: string) {
+    if (!token || typeof token !== 'string') {
+      throw new BadRequestException('Verification token is missing.');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        emailVerifyToken: token.trim(),
+        emailVerifyExpires: { gte: new Date() },
+      },
+    });
+
+    if (!user || !user.pendingEmail) {
+      return {
+        success: false,
+        message: 'This verification link is invalid, expired, or has already been used.',
+      };
+    }
+
+    const newVerifiedEmail = user.pendingEmail;
+
+    // Check conflict again
+    const conflict = await this.prisma.user.findFirst({
+      where: {
+        email: newVerifiedEmail,
+        id: { not: user.id },
+        deletedAt: null,
+      },
+    });
+
+    if (conflict) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          pendingEmail: null,
+          emailVerifyToken: null,
+          emailVerifyExpires: null,
+        },
+      });
+      return {
+        success: false,
+        message: 'This email is already in use by another account.',
+      };
+    }
+
+    // Activate email and set isEmailVerified: true
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: newVerifiedEmail,
+        isEmailVerified: true,
+        pendingEmail: null,
+        emailVerifyToken: null,
+        emailVerifyExpires: null,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    return {
+      success: true,
+      message: 'Email address verified and activated successfully!',
+      email: updated.email,
+      user: updated,
     };
   }
 }

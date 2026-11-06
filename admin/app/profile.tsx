@@ -24,7 +24,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
-import { verifyAccountPassword } from '@/src/api/auth.api';
+import { verifyAccountPassword, sendEmailVerificationApi } from '@/src/api/auth.api';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -126,6 +126,33 @@ export default function ProfileScreen() {
       Alert.alert('Error', err?.response?.data?.message || err?.message || 'Could not send OTP.');
     } finally {
       setIsSendingOtp(false);
+    }
+  };
+
+  const handleSendEmailVerification = async (targetEmail?: string) => {
+    const toSend = (targetEmail || email).trim().toLowerCase();
+    if (!toSend || !toSend.includes('@') || !toSend.includes('.')) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+    setIsSendingEmailVerification(true);
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+      const res = await sendEmailVerificationApi(toSend, origin);
+      if (res.success) {
+        setIsEditingEmail(false);
+        Alert.alert(
+          '✉️ Verification Link Sent',
+          `We sent an email verification link to:\n${toSend}\n\nPlease click the link in your inbox to verify and activate this email.`,
+        );
+        await refreshUser();
+      } else {
+        Alert.alert('Verification Failed', res.message || 'Could not send verification email.');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to send verification email.');
+    } finally {
+      setIsSendingEmailVerification(false);
     }
   };
 
@@ -284,6 +311,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState(user?.email ?? '');
   const [isEditingMobile, setIsEditingMobile] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isSendingEmailVerification, setIsSendingEmailVerification] = useState(false);
   const [farmName, setFarmName] = useState(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState(
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
@@ -433,11 +461,15 @@ export default function ProfileScreen() {
       const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
       const finalUpiId = upiId.trim();
 
+      const isEmailChanged = Boolean(
+        email.trim() &&
+        email.trim().toLowerCase() !== (user?.email || '').trim().toLowerCase()
+      );
+
       const payload = {
         name: trimmedName,
         mobile: userMobile.trim() || undefined,
         password: loginPassword.trim() || undefined,
-        email: email.trim() || undefined,
         photoUrl: finalPhotoUrl ?? undefined,
         pincode: pincode.trim() || undefined,
         postOffice: postOffice.trim() || undefined,
@@ -451,6 +483,10 @@ export default function ProfileScreen() {
       };
 
       const updated = await updateAddress.mutateAsync(payload);
+
+      if (isEmailChanged) {
+        handleSendEmailVerification(email.trim());
+      }
 
       await updateUser({
         ...(user || {}),
@@ -827,33 +863,119 @@ export default function ProfileScreen() {
                 </View>
 
                 {/* Email */}
-                <View style={{ marginBottom: 6 }}>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Email Address</Text>
-                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                    <View style={[styles.input, { flex: 1, height: 40, paddingVertical: 0, paddingHorizontal: 10, backgroundColor: isEditingEmail ? '#ffffff' : '#f8fafc', borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center' }]}>
-                      <Ionicons name="mail-outline" size={16} color="#94a3b8" style={{ marginRight: 6 }} />
-                      <TextInput
-                        style={{ flex: 1, fontSize: 13, color: '#0f172a' }}
-                        value={email}
-                        onChangeText={setEmail}
-                        placeholder="yourname@domain.com"
-                        placeholderTextColor="#94a3b8"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        editable={isEditingEmail}
-                      />
-                      {user?.googleId && email && email.toLowerCase() === user.email?.toLowerCase() ? <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} /> : null}
+                {(() => {
+                  const isEmailVerified = Boolean(user?.isEmailVerified || (user?.googleId && user?.email && email.toLowerCase() === user?.email?.toLowerCase()));
+                  return (
+                    <View style={{ marginBottom: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>Email Address</Text>
+                        {isEmailVerified ? (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                            <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>VERIFIED</Text>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                            <Ionicons name="alert-circle-outline" size={13} color="#b45309" />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>UNVERIFIED</Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                        <View style={[styles.input, { flex: 1, height: 40, paddingVertical: 0, paddingHorizontal: 10, backgroundColor: isEditingEmail ? '#ffffff' : '#f8fafc', borderColor: isEditingEmail ? '#16a34a' : '#e2e8f0', flexDirection: 'row', alignItems: 'center' }]}>
+                          <Ionicons name="mail-outline" size={16} color="#94a3b8" style={{ marginRight: 6 }} />
+                          <TextInput
+                            style={{ flex: 1, fontSize: 13, color: '#0f172a' }}
+                            value={email}
+                            onChangeText={setEmail}
+                            placeholder="yourname@domain.com"
+                            placeholderTextColor="#94a3b8"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            editable={isEditingEmail}
+                          />
+                          {isEmailVerified && !isEditingEmail ? (
+                            <Ionicons name="checkmark-circle" size={18} color="#16a34a" style={{ marginLeft: 4 }} />
+                          ) : null}
+                        </View>
+
+                        {!isEditingEmail ? (
+                          <View style={{ flexDirection: 'row', gap: 4 }}>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                              onPress={() => setIsEditingEmail(true)}
+                            >
+                              <Text style={{ color: '#475569', fontSize: 11.5, fontFamily: FONT.bold }}>Update</Text>
+                            </TouchableOpacity>
+                            {!isEmailVerified && email ? (
+                              <TouchableOpacity
+                                style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center' }}
+                                onPress={() => handleSendEmailVerification(email)}
+                                disabled={isSendingEmailVerification}
+                              >
+                                {isSendingEmailVerification ? (
+                                  <ActivityIndicator size="small" color="#ffffff" />
+                                ) : (
+                                  <Text style={{ color: '#ffffff', fontSize: 11, fontFamily: FONT.bold }}>Verify</Text>
+                                )}
+                              </TouchableOpacity>
+                            ) : null}
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection: 'row', gap: 4 }}>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#16a34a', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center' }}
+                              onPress={() => handleSendEmailVerification(email)}
+                              disabled={isSendingEmailVerification}
+                            >
+                              {isSendingEmailVerification ? (
+                                <ActivityIndicator size="small" color="#ffffff" />
+                              ) : (
+                                <Text style={{ color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold }}>Send Link</Text>
+                              )}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                              onPress={() => {
+                                setEmail(user?.email || '');
+                                setIsEditingEmail(false);
+                              }}
+                            >
+                              <Text style={{ color: '#64748b', fontSize: 11.5, fontFamily: FONT.bold }}>Cancel</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Pending Email Verification Notice */}
+                      {user?.pendingEmail ? (
+                        <View style={{ backgroundColor: '#fffbeb', borderWidth: 1.5, borderColor: '#fde68a', borderRadius: RADIUS.md, padding: 10, marginTop: 8 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                              <Ionicons name="mail-unread" size={16} color="#d97706" />
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>
+                                Verification Link Sent
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              onPress={() => handleSendEmailVerification(user.pendingEmail!)}
+                              disabled={isSendingEmailVerification}
+                              style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}
+                            >
+                              <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#b45309' }}>
+                                {isSendingEmailVerification ? 'Sending...' : 'Resend Link'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#78350f', marginTop: 4, lineHeight: 16 }}>
+                            A verification link was sent to <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{user.pendingEmail}</Text>. Please click the link to activate. Your current email remains active until confirmed.
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
-                    {!isEditingEmail && (
-                      <TouchableOpacity
-                        style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
-                        onPress={() => setIsEditingEmail(true)}
-                      >
-                        <Text style={{ color: '#475569', fontSize: 11.5, fontFamily: FONT.bold }}>Update</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
+                  );
+                })()}
 
                 {/* Link/Unlink Google */}
                 <View style={{ marginTop: 8 }}>

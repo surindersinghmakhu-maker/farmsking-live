@@ -11,6 +11,7 @@ export declare class EmailService {
     sendWelcomeEmail(toEmail: string, userName: string, roleName?: string, kingId?: string): Promise<boolean>;
     sendEmailLinkedNotification(toEmail: string, userName: string, rawMobile: string): Promise<boolean>;
     sendEmailDisconnectedNotification(oldEmail: string, userName: string, rawMobile: string, newEmail?: string): Promise<boolean>;
+    sendEmailVerificationLink(toEmail: string, userName: string, verifyUrl: string): Promise<boolean>;
     sendMobileUpdatedEmailNotification(toEmail: string, userName: string, oldMobile: string, newMobile: string): Promise<boolean>;
     sendOrderLifecycleEmail(toEmail: string, userName: string, orderData: {
         orderNumber: string;

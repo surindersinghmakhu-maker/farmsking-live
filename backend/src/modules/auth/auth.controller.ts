@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -90,6 +90,28 @@ export class AuthController {
   @Post('unlink-google')
   unlinkGoogleAccount(@CurrentUser() user: AuthUser) {
     return this.authService.unlinkGoogleAccount(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('send-email-verification')
+  sendEmailVerification(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { email: string; origin?: string },
+    @Headers('origin') headerOrigin?: string,
+  ) {
+    return this.authService.sendEmailVerificationLink(user.id, body.email, body.origin || headerOrigin);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-email')
+  verifyEmail(@Body() body: { token: string }) {
+    return this.authService.verifyEmailToken(body.token);
+  }
+
+  @Get('verify-email')
+  verifyEmailGet(@Query('token') token: string) {
+    return this.authService.verifyEmailToken(token);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -36,6 +36,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -125,6 +127,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -195,6 +199,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -265,6 +271,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -345,6 +353,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -415,6 +425,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -511,6 +523,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -600,6 +614,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -693,6 +709,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -763,6 +781,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -846,6 +866,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -917,6 +939,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -990,6 +1014,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1062,6 +1088,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -1133,6 +1161,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1206,6 +1236,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1279,6 +1311,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1352,6 +1386,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1424,6 +1460,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -1495,6 +1533,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1622,6 +1662,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -1698,6 +1740,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -1771,6 +1815,8 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -1842,6 +1888,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -1912,6 +1960,10 @@ export declare class UsersController {
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            emailVerifyToken: string | null;
+            emailVerifyExpires: Date | null;
             googleId: string | null;
             village: string | null;
             district: string | null;
@@ -2030,6 +2082,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2100,6 +2154,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2170,6 +2226,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2240,6 +2298,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2319,6 +2379,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2389,6 +2451,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2459,6 +2523,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2529,6 +2595,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;
@@ -2599,6 +2667,8 @@ export declare class UsersController {
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
         name: string;
         email: string | null;
+        isEmailVerified: boolean;
+        pendingEmail: string | null;
         googleId: string | null;
         village: string | null;
         district: string | null;

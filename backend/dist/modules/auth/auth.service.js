@@ -47,6 +47,7 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const client_1 = require("@prisma/client");
 const argon2 = __importStar(require("argon2"));
+const crypto = __importStar(require("crypto"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const king_id_util_1 = require("../../common/utils/king-id.util");
 const invite_coupon_util_1 = require("../../common/utils/invite-coupon.util");
@@ -67,6 +68,8 @@ const SAFE_USER_SELECT = {
     deactivatedRoles: true,
     name: true,
     email: true,
+    isEmailVerified: true,
+    pendingEmail: true,
     googleId: true,
     village: true,
     district: true,
@@ -172,13 +175,20 @@ let AuthService = class AuthService {
                     role: client_1.Role.CUSTOMER,
                     roles: [client_1.Role.CUSTOMER],
                     isPhoneVerified: true,
+                    isEmailVerified: true,
                 },
             });
         }
         else if (!user.googleId && dto.googleId) {
             user = await this.prisma.user.update({
                 where: { id: user.id },
-                data: { googleId: dto.googleId },
+                data: { googleId: dto.googleId, isEmailVerified: true },
+            });
+        }
+        else if (user.isEmailVerified !== true) {
+            user = await this.prisma.user.update({
+                where: { id: user.id },
+                data: { isEmailVerified: true },
             });
         }
         else if (verifiedPhoto && !user.photoUrl) {
@@ -225,6 +235,7 @@ let AuthService = class AuthService {
             where: { id: currentUser.id },
             data: {
                 email: cleanEmail,
+                isEmailVerified: true,
                 ...(dto.googleId ? { googleId: dto.googleId } : {}),
                 ...(dto.photoUrl && !dbUser.photoUrl ? { photoUrl: dto.photoUrl } : {}),
             },
@@ -260,6 +271,7 @@ let AuthService = class AuthService {
             where: { id: currentUser.id },
             data: {
                 email: null,
+                isEmailVerified: false,
                 googleId: null,
             },
             select: SAFE_USER_SELECT,
@@ -1210,6 +1222,111 @@ let AuthService = class AuthService {
                 warningMessage: sessionInfo.warningMessage,
                 evictedOldest: sessionInfo.evictedOldest,
             },
+        };
+    }
+    async sendEmailVerificationLink(userId, targetEmail, origin) {
+        if (!targetEmail || !targetEmail.includes('@') || !targetEmail.includes('.')) {
+            throw new common_1.BadRequestException('Please provide a valid email address.');
+        }
+        const cleanEmail = targetEmail.trim().toLowerCase();
+        const existing = await this.prisma.user.findFirst({
+            where: {
+                email: cleanEmail,
+                id: { not: userId },
+                deletedAt: null,
+            },
+        });
+        if (existing) {
+            throw new common_1.ConflictException('This email address is already registered to another account.');
+        }
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found.');
+        }
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                pendingEmail: cleanEmail,
+                emailVerifyToken: token,
+                emailVerifyExpires: expires,
+            },
+        });
+        let baseUrl = 'https://farmsking.in';
+        if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+            baseUrl = origin.replace(/\/$/, '');
+        }
+        else if (process.env.LIVE_SITE_URL) {
+            baseUrl = process.env.LIVE_SITE_URL.replace(/\/$/, '');
+        }
+        const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
+        const sent = await this.emailService.sendEmailVerificationLink(cleanEmail, user.name || 'FarmsKing Member', verifyUrl);
+        if (!sent) {
+            throw new common_1.BadRequestException('Failed to deliver verification email. Please check SMTP settings.');
+        }
+        return {
+            success: true,
+            message: `Verification link sent to ${cleanEmail}. Please check your inbox and click the link to activate.`,
+            pendingEmail: cleanEmail,
+        };
+    }
+    async verifyEmailToken(token) {
+        if (!token || typeof token !== 'string') {
+            throw new common_1.BadRequestException('Verification token is missing.');
+        }
+        const user = await this.prisma.user.findFirst({
+            where: {
+                emailVerifyToken: token.trim(),
+                emailVerifyExpires: { gte: new Date() },
+            },
+        });
+        if (!user || !user.pendingEmail) {
+            return {
+                success: false,
+                message: 'This verification link is invalid, expired, or has already been used.',
+            };
+        }
+        const newVerifiedEmail = user.pendingEmail;
+        const conflict = await this.prisma.user.findFirst({
+            where: {
+                email: newVerifiedEmail,
+                id: { not: user.id },
+                deletedAt: null,
+            },
+        });
+        if (conflict) {
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    pendingEmail: null,
+                    emailVerifyToken: null,
+                    emailVerifyExpires: null,
+                },
+            });
+            return {
+                success: false,
+                message: 'This email is already in use by another account.',
+            };
+        }
+        const updated = await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                email: newVerifiedEmail,
+                isEmailVerified: true,
+                pendingEmail: null,
+                emailVerifyToken: null,
+                emailVerifyExpires: null,
+            },
+            select: SAFE_USER_SELECT,
+        });
+        return {
+            success: true,
+            message: 'Email address verified and activated successfully!',
+            email: updated.email,
+            user: updated,
         };
     }
 };

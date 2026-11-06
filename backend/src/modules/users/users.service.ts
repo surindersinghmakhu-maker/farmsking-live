@@ -40,6 +40,8 @@ const SAFE_USER_SELECT = {
   deactivatedRoles: true,
   name: true,
   email: true,
+  isEmailVerified: true,
+  pendingEmail: true,
   googleId: true,
   village: true,
   district: true,

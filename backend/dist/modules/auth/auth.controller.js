@@ -60,6 +60,15 @@ let AuthController = class AuthController {
     unlinkGoogleAccount(user) {
         return this.authService.unlinkGoogleAccount(user);
     }
+    sendEmailVerification(user, body, headerOrigin) {
+        return this.authService.sendEmailVerificationLink(user.id, body.email, body.origin || headerOrigin);
+    }
+    verifyEmail(body) {
+        return this.authService.verifyEmailToken(body.token);
+    }
+    verifyEmailGet(token) {
+        return this.authService.verifyEmailToken(token);
+    }
     sendMobileLinkOtp(user, body) {
         return this.authService.sendMobileLinkOtp(user, body.mobile);
     }
@@ -173,6 +182,32 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "unlinkGoogleAccount", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('send-email-verification'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('origin')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendEmailVerification", null);
+__decorate([
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('verify-email'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyEmail", null);
+__decorate([
+    (0, common_1.Get)('verify-email'),
+    __param(0, (0, common_1.Query)('token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyEmailGet", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

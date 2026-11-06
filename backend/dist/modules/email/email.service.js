@@ -299,6 +299,60 @@ let EmailService = EmailService_1 = class EmailService {
             return false;
         }
     }
+    async sendEmailVerificationLink(toEmail, userName, verifyUrl) {
+        const { transporter, senderUser, senderName } = await this.getActiveTransporterAndSender();
+        if (!transporter) {
+            this.logger.warn('SMTP Transporter not configured.');
+            return false;
+        }
+        const mailOptions = {
+            from: `"${senderName}" <${senderUser}>`,
+            to: toEmail.trim(),
+            subject: `✉️ Verify Your Email Address - FarmsKing`,
+            text: `Hello ${userName},\n\nPlease verify your email address on FarmsKing by clicking this link:\n${verifyUrl}\n\nThis verification link is valid for 24 hours.\n\nFarmsKing Technologies Private Limited`,
+            html: `
+        <div style="font-family: Arial, sans-serif; background-color: #064E3B; padding: 28px; border-radius: 14px; color: #ffffff; max-width: 520px; margin: auto;">
+          <h1 style="color: #34D399; margin-bottom: 4px; font-size: 22px;">🌱 FarmsKing Email Verification</h1>
+          <p style="font-size: 14px; color: #a7f3d0; margin-top: 0;">Official Verification Request</p>
+          <hr style="border-color: #065F46; margin: 16px 0;" />
+          <p style="font-size: 15px; color: #E5E7EB;">Dear <b>${userName}</b>,</p>
+          <p style="font-size: 14px; color: #D1D5DB; line-height: 1.5;">
+            We received a request to update or verify your email address (<b>${toEmail}</b>) on your FarmsKing account.
+          </p>
+          <div style="text-align: center; margin: 26px 0;">
+            <a href="${verifyUrl}" style="background-color: #10B981; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
+              ✅ Verify Email Address
+            </a>
+          </div>
+          <p style="font-size: 12.5px; color: #9CA3AF; line-height: 1.5; text-align: center;">
+            Or copy and paste this verification URL into your browser:<br/>
+            <a href="${verifyUrl}" style="color: #6EE7B7; word-break: break-all; font-size: 12px;">${verifyUrl}</a>
+          </p>
+          <div style="background-color: #065F46; padding: 10px 14px; border-radius: 6px; margin: 18px 0;">
+            <p style="margin: 0; font-size: 12px; color: #E5E7EB;">
+              ⏱️ This link is valid for <b>24 hours</b>. If you did not request this update, you can safely ignore this email.
+            </p>
+          </div>
+          <hr style="border-color: #065F46; margin-top: 24px;" />
+          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+          </p>
+          <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
+            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+          </p>
+        </div>
+      `,
+        };
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            this.logger.log(`Email verification link sent to ${toEmail}. Message ID: ${info.messageId}`);
+            return true;
+        }
+        catch (error) {
+            this.logger.error(`Error sending email verification link to ${toEmail}:`, error.message);
+            return false;
+        }
+    }
     async sendMobileUpdatedEmailNotification(toEmail, userName, oldMobile, newMobile) {
         const { transporter, senderUser, senderName } = await this.getActiveTransporterAndSender();
         if (!transporter)

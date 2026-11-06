@@ -117,3 +117,24 @@ export async function firebaseLoginApi(idToken: string): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/firebase-login', { idToken });
   return data;
 }
+
+export async function sendEmailVerificationApi(
+  email: string,
+  origin?: string,
+): Promise<{ success: boolean; message: string; pendingEmail?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; pendingEmail?: string }>(
+    '/auth/send-email-verification',
+    { email, origin },
+  );
+  return data;
+}
+
+export async function verifyEmailApi(
+  token: string,
+): Promise<{ success: boolean; message: string; email?: string; user?: any }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; email?: string; user?: any }>(
+    '/auth/verify-email',
+    { token },
+  );
+  return data;
+}

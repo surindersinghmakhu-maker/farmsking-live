@@ -224,24 +224,18 @@ export default function LoginScreen() {
     setOtpSending(true);
 
     if (isLocalhost) {
-      // 💻 LOCALHOST ONLY: Fast test mode / dev OTP
+      // 💻 LOCALHOST ONLY: Standard 123456 test mode
       try {
-        const res = await sendLoginOtp(cleanNum);
-        setOtpSent(true);
-        setResendTimer(60);
-        const codeToUse = res?.devOtp || '123456';
-        setDevOtp(codeToUse);
-        setOtpDigits(codeToUse.split(''));
-        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
+        await sendLoginOtp(cleanNum);
       } catch (err: any) {
         console.warn('[sendLoginOtp fallback]:', err);
+      } finally {
         setOtpSent(true);
         setDevOtp('123456');
-        setOtpDigits(['1', '2', '3', '4', '5', '6']);
+        setOtpDigits(['', '', '', '', '', '']);
         setResendTimer(60);
-        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } finally {
         setOtpSending(false);
+        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       }
     } else {
       // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS
@@ -418,7 +412,7 @@ export default function LoginScreen() {
   };
 
   const autoFillDevOtp = () => {
-    const code = (devOtp || '123456').slice(0, 6);
+    const code = '123456';
     setOtpDigits(code.split(''));
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -590,7 +584,7 @@ export default function LoginScreen() {
                   <View>
                     <Text style={styles.devBannerTitle}>Localhost Testing Mode</Text>
                     <Text style={styles.devBannerSubtitle}>
-                      Dev OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>{devOtp || '123456'}</Text>
+                      Standard Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
                     </Text>
                   </View>
                 </View>
@@ -709,23 +703,17 @@ export default function LoginScreen() {
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                         <Ionicons name="key" size={14} color="#f59e0b" />
-                        <Text style={styles.testOtpLabel}>Verification Code (Testing / SMS Gateway):</Text>
+                        <Text style={styles.testOtpLabel}>Standard Test Code:</Text>
                       </View>
-                      <Text style={styles.testOtpCode}>
-                        {devOtp || '123456'}
-                      </Text>
+                      <Text style={styles.testOtpCode}>123456</Text>
                     </View>
                     <TouchableOpacity
-                      onPress={() => {
-                        const code = (devOtp || '123456').slice(0, 6);
-                        setOtpDigits(code.split(''));
-                        handleOtpLogin(code);
-                      }}
+                      onPress={autoFillDevOtp}
                       style={styles.quickFillButton}
                       activeOpacity={0.8}
                     >
                       <Ionicons name="flash" size={13} color="#10b981" />
-                      <Text style={styles.quickFillText}>Auto-Fill Code</Text>
+                      <Text style={styles.quickFillText}>Auto-Fill 123456</Text>
                     </TouchableOpacity>
                   </View>
                 )}

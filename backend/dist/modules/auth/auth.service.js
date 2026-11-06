@@ -303,18 +303,32 @@ let AuthService = class AuthService {
         if (existingMobileUser) {
             throw new common_1.BadRequestException(`This mobile number is already attached to King ID: ${existingMobileUser.kingId}. Please use a different number.`);
         }
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const isDev = process.env.NODE_ENV !== 'production';
+        const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
         this.mobileLinkOtpStore.set(user.id, {
             otp: otpCode,
             mobile: cleanMobile,
             expiresAt: Date.now() + 10 * 60 * 1000,
             userId: user.id,
         });
-        const sent = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+        let sent = false;
+        if (!isDev) {
+            try {
+                const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+                sent = Boolean(waRes?.success);
+            }
+            catch {
+                sent = false;
+            }
+        }
         return {
             success: true,
-            message: sent ? 'OTP sent via WhatsApp successfully!' : 'OTP generated (WhatsApp bot offline).',
-            devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined,
+            message: isDev
+                ? 'Localhost test mode active. Use code: 123456'
+                : sent
+                    ? 'OTP sent via WhatsApp successfully!'
+                    : 'OTP generated (WhatsApp bot offline).',
+            devOtp: isDev ? '123456' : undefined,
         };
     }
     async verifyMobileLinkOtp(user, dto) {
@@ -1026,28 +1040,32 @@ let AuthService = class AuthService {
             const minutesLeft = Math.ceil(msLeft / (1000 * 60));
             throw new common_1.UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
         }
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const isDev = process.env.NODE_ENV !== 'production';
+        const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
         this.loginOtpStore.set(cleanMobile, {
             otp: otpCode,
             expiresAt: Date.now() + 10 * 60 * 1000,
         });
         let waSent = false;
-        try {
-            const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-            waSent = Boolean(waResult?.success);
+        if (!isDev) {
+            try {
+                const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+                waSent = Boolean(waResult?.success);
+            }
+            catch {
+                waSent = false;
+            }
         }
-        catch {
-            waSent = false;
-        }
-        const isDev = process.env.NODE_ENV !== 'production';
         return {
             success: true,
             isNewUser: !user,
             waSent,
-            message: waSent
-                ? 'OTP sent via WhatsApp!'
-                : 'Verification code generated. Please verify to continue.',
-            devOtp: isDev ? otpCode : undefined,
+            message: isDev
+                ? 'Localhost test mode active. Use code: 123456'
+                : waSent
+                    ? 'OTP sent via WhatsApp!'
+                    : 'Verification code generated. Please verify to continue.',
+            devOtp: isDev ? '123456' : undefined,
             universalTestOtp: isDev ? '123456' : undefined,
         };
     }

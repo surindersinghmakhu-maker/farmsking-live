@@ -453,7 +453,7 @@ export default function TabLayout() {
             </TouchableOpacity>
 
             {/* Center: Domain Pillar Selector Button (Global on mobile for admins) */}
-            {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'OPERATOR' || role === 'TECHNICAL_TRAINER' || role === 'MARKET_MANAGER') && (
+            {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'OPERATOR' || role === 'TECHNICAL_TRAINER' || (role as string) === 'MARKET_MANAGER') && (
               <TouchableOpacity
                 style={[
                   mobileStyles.pillarSelectorPill,

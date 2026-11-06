@@ -99,6 +99,7 @@ export default function LoginScreen() {
   const [isNewUserModal, setIsNewUserModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
   const [newUserName, setNewUserName] = useState('');
+  const [modalError, setModalError] = useState<string | null>(null);
   const [isCompletingReg, setIsCompletingReg] = useState(false);
 
   // Guarantee pitch dark body background on Web to eliminate any bottom blank/white gap
@@ -393,19 +394,24 @@ export default function LoginScreen() {
 
   // Step 3: Complete Role Selection for New Users
   const handleCompleteRegistration = async () => {
-    setError(null);
+    setModalError(null);
+    const trimmedName = newUserName.trim();
+    if (!trimmedName) {
+      setModalError('Please enter your full name to proceed.');
+      return;
+    }
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsCompletingReg(true);
     try {
       const loggedInUser = await completeOtpRegistration({
         mobile: cleanNum,
-        name: newUserName.trim() || undefined,
+        name: trimmedName,
         role: selectedRole,
       });
       setIsNewUserModal(false);
       handleSuccessNavigation(false, loggedInUser);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? err?.message ?? 'Registration failed. Please try again.');
+      setModalError(err?.response?.data?.message ?? err?.message ?? 'Registration failed. Please try again.');
     } finally {
       setIsCompletingReg(false);
     }
@@ -845,16 +851,31 @@ export default function LoginScreen() {
               </Text>
             </View>
 
-            {/* Optional Full Name Input */}
+            {/* Error Message inside Modal */}
+            {modalError ? (
+              <View style={[styles.errorBox, { marginBottom: 14 }]}>
+                <Ionicons name="alert-circle" size={16} color="#ef4444" />
+                <Text style={styles.errorText}>{modalError}</Text>
+              </View>
+            ) : null}
+
+            {/* Mandatory Full Name Input */}
             <View style={{ marginBottom: 16 }}>
-              <Text style={styles.fieldLabel}>Your Full Name (Optional)</Text>
+              <Text style={styles.fieldLabel}>
+                Your Full Name <Text style={{ color: '#ef4444' }}>*</Text>
+              </Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Enter your name"
+                placeholder="Enter your full name"
                 placeholderTextColor="#64748b"
                 value={newUserName}
-                onChangeText={setNewUserName}
+                onChangeText={(t) => {
+                  setNewUserName(t);
+                  if (modalError) setModalError(null);
+                }}
                 autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={handleCompleteRegistration}
               />
             </View>
 
@@ -875,7 +896,7 @@ export default function LoginScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.roleCardTitle, selectedRole === 'CUSTOMER' && styles.roleCardTitleActive]}>
-                    Customer / Buyer
+                    Customer / Buyer Only
                   </Text>
                   <Text style={styles.roleCardDesc}>
                     Purchase certified seeds, crop protection, tools & fresh farm produce
@@ -903,7 +924,7 @@ export default function LoginScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.roleCardTitle, selectedRole === 'FARMER' && styles.roleCardTitleActive]}>
-                    Farmer / Cultivator
+                    Farmer + Buyer
                   </Text>
                   <Text style={styles.roleCardDesc}>
                     AI crop doctor scanner, live mandi prices, farm logs & precision schedules
@@ -948,9 +969,9 @@ export default function LoginScreen() {
             {/* Confirm & Launch Dashboard */}
             <TouchableOpacity
               onPress={handleCompleteRegistration}
-              disabled={isCompletingReg}
+              disabled={isCompletingReg || !newUserName.trim()}
               activeOpacity={0.88}
-              style={[styles.primaryActionBtn, isCompletingReg && { opacity: 0.6 }]}
+              style={[styles.primaryActionBtn, (isCompletingReg || !newUserName.trim()) && { opacity: 0.6 }]}
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}

@@ -24,7 +24,9 @@ import { useCreateOrder, useInitiateCashfreePayment } from '@/src/hooks/useOrder
 import { useCouponPreview } from '@/src/hooks/useCoupons';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
-import { useMyAddresses } from '@/src/hooks/useAddresses';
+import { useMyAddresses, useSetDefaultAddress } from '@/src/hooks/useAddresses';
+import type { CustomerAddress } from '@/src/api/addresses.api';
+import AddAddressModal from '@/src/components/AddAddressModal';
 
 const tap = () => {
   if (Platform.OS !== 'web') {
@@ -40,6 +42,7 @@ export default function CartScreen() {
   const { data: wallet } = useMyWallet();
   const { data: settings } = useAppSettings();
   const { data: addresses } = useMyAddresses();
+  const setDefaultAddressMutation = useSetDefaultAddress();
 
   const createOrder = useCreateOrder();
   const initiateCashfree = useInitiateCashfreePayment();
@@ -50,14 +53,43 @@ export default function CartScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number } | null>(null);
 
+  // Address & modal state
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<CustomerAddress | null>(null);
+
+  const composeAddress = (addr: CustomerAddress) => {
+    const parts = [];
+    const mob = addr.mobile || user?.mobile || (user as any)?.phone;
+    parts.push(addr.line);
+    if (addr.postOffice) parts.push(`PO: ${addr.postOffice}`);
+    if (addr.district) parts.push(addr.district);
+    if (addr.state) parts.push(addr.state);
+    if (addr.pincode) parts.push(`PIN: ${addr.pincode}`);
+    if (mob) parts.push(`📞 ${mob}`);
+    return parts.join(', ');
+  };
+
   // Delivery & payment state
-  const [deliveryAddress, setDeliveryAddress] = useState(
-    [user?.village, user?.district, user?.state].filter(Boolean).join(', ')
-  );
+  const [deliveryAddress, setDeliveryAddress] = useState('');
   const [useWalletBalance, setUseWalletBalance] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'ONLINE'>('COD');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (Array.isArray(addresses) && addresses.length > 0) {
+      const currentExists = selectedAddressId ? addresses.find((a) => a.id === selectedAddressId) : null;
+      if (!currentExists) {
+        const target = addresses.find((a) => a.isDefault) || addresses[0];
+        setSelectedAddressId(target.id);
+        setDeliveryAddress(composeAddress(target));
+      }
+    } else {
+      setSelectedAddressId(null);
+      setDeliveryAddress('');
+    }
+  }, [addresses, selectedAddressId]);
 
   const walletBalance = Number(wallet?.balance || 0);
 
@@ -98,8 +130,10 @@ export default function CartScreen() {
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) return;
-    if (!deliveryAddress.trim()) {
-      setCheckoutError('Please enter your delivery address to proceed.');
+    if (!Array.isArray(addresses) || addresses.length === 0 || !deliveryAddress.trim()) {
+      setCheckoutError('Please add a delivery address to place your order.');
+      setEditingAddress(null);
+      setIsAddressModalOpen(true);
       return;
     }
     setCheckoutError(null);
@@ -313,49 +347,124 @@ export default function CartScreen() {
               {couponError ? <Text style={styles.couponErrorText}>{couponError}</Text> : null}
             </View>
 
-            {/* 📍 Delivery Address Box */}
+            {/* 📍 Delivery Destination Address Box */}
             <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="location-outline" size={18} color="#15803d" />
-                <Text style={styles.sectionTitle}>Delivery Destination Address</Text>
+              <View style={[styles.sectionHeader, { justifyContent: 'space-between' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="location-outline" size={18} color="#15803d" />
+                  <Text style={styles.sectionTitle}>Delivery Destination Address</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    tap();
+                    setEditingAddress(null);
+                    setIsAddressModalOpen(true);
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>+ Add New</Text>
+                </TouchableOpacity>
               </View>
 
-              {Array.isArray(addresses) && addresses.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    {addresses.map((addr) => {
-                      const fullAddr = `${addr.streetAddress}, ${addr.village || ''}, ${addr.district}, ${addr.state} - ${addr.pincode}`;
-                      const isSelected = deliveryAddress.trim() === fullAddr.trim();
-                      return (
-                        <TouchableOpacity
-                          key={addr.id}
-                          style={[styles.savedAddrChip, isSelected && styles.savedAddrChipSelected]}
-                          onPress={() => setDeliveryAddress(fullAddr)}
-                        >
-                          <Ionicons
-                            name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                            size={14}
-                            color={isSelected ? '#15803d' : '#64748b'}
-                          />
-                          <Text style={[styles.savedAddrText, isSelected && styles.savedAddrTextSelected]}>
-                            {addr.tag || 'Address'} ({addr.pincode})
+              {Array.isArray(addresses) && addresses.length > 0 ? (
+                <View style={{ gap: 8, marginTop: 4 }}>
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr.id;
+                    return (
+                      <TouchableOpacity
+                        key={addr.id}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          padding: 10,
+                          borderRadius: RADIUS.md,
+                          borderWidth: 1.5,
+                          borderColor: isSelected ? '#15803d' : '#cbd5e1',
+                          backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                        }}
+                        onPress={() => {
+                          tap();
+                          setSelectedAddressId(addr.id);
+                          setDeliveryAddress(composeAddress(addr));
+                        }}
+                      >
+                        <Ionicons
+                          name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={20}
+                          color={isSelected ? '#15803d' : '#94a3b8'}
+                          style={{ marginTop: 2 }}
+                        />
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#0f172a' }}>
+                              🏷️ {addr.tag || 'Address'}
+                            </Text>
+                            {addr.isDefault && (
+                              <View style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#b45309' }}>⭐ DEFAULT</Text>
+                              </View>
+                            )}
+                            {isSelected && (
+                              <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d' }}>SELECTED</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginTop: 2, lineHeight: 16 }}>
+                            {composeAddress(addr)}
                           </Text>
+                          {!addr.isDefault && (
+                            <TouchableOpacity
+                              style={{ marginTop: 6, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }}
+                              onPress={async (e) => {
+                                e.stopPropagation();
+                                tap();
+                                await setDefaultAddressMutation.mutateAsync(addr.id);
+                                setSelectedAddressId(addr.id);
+                                setDeliveryAddress(composeAddress(addr));
+                              }}
+                            >
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0369a1' }}>⭐ Set as Default</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          style={{ padding: 4 }}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            tap();
+                            setEditingAddress(addr);
+                            setIsAddressModalOpen(true);
+                          }}
+                        >
+                          <Ionicons name="pencil" size={16} color={isSelected ? '#15803d' : '#64748b'} />
                         </TouchableOpacity>
-                      );
-                    })}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View style={{ padding: 14, backgroundColor: '#fef2f2', borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#fca5a5', gap: 8, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="alert-circle" size={18} color="#dc2626" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#991b1b' }}>No Delivery Address Added</Text>
                   </View>
-                </ScrollView>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#7f1d1d' }}>
+                    Please add your delivery address before confirming the order.
+                  </Text>
+                  <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#15803d', borderRadius: RADIUS.sm, marginTop: 4 }}
+                    onPress={() => {
+                      tap();
+                      setEditingAddress(null);
+                      setIsAddressModalOpen(true);
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={18} color="#ffffff" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Add Delivery Address Now</Text>
+                  </TouchableOpacity>
+                </View>
               )}
-
-              <TextInput
-                style={styles.addressInput}
-                placeholder="Village / Town, District, State, Pincode"
-                placeholderTextColor="#94a3b8"
-                multiline
-                numberOfLines={3}
-                value={deliveryAddress}
-                onChangeText={setDeliveryAddress}
-              />
             </View>
 
             {/* 💳 Payment Method Box */}
@@ -501,6 +610,19 @@ export default function CartScreen() {
           </View>
         )}
       </View>
+
+      <AddAddressModal
+        visible={isAddressModalOpen}
+        editingAddress={editingAddress}
+        onClose={() => {
+          setIsAddressModalOpen(false);
+          setEditingAddress(null);
+        }}
+        onSaved={(newAddr) => {
+          setSelectedAddressId(newAddr.id);
+          setDeliveryAddress(composeAddress(newAddr));
+        }}
+      />
     </ScrollView>
   );
 }

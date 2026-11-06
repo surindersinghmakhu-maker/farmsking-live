@@ -27,6 +27,11 @@ export class AddressesController {
     return this.addressesService.update(user, id, dto);
   }
 
+  @Patch(':id/set-default')
+  setDefault(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.addressesService.setDefault(user, id);
+  }
+
   @Delete(':id')
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.addressesService.remove(user, id);

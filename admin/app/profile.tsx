@@ -23,7 +23,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
-import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
+import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress, useSetDefaultAddress } from '@/src/hooks/useAddresses';
 import { verifyAccountPassword, sendEmailVerificationApi } from '@/src/api/auth.api';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
@@ -1299,6 +1299,7 @@ export default function ProfileScreen() {
 function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
   const { data: addresses = [], isLoading } = useMyAddresses();
   const deleteAddress = useDeleteAddress();
+  const setDefaultAddress = useSetDefaultAddress();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<CustomerAddress | null>(null);
 
@@ -1327,8 +1328,25 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
           addresses.map((addr) => (
             <View key={addr.id} style={[styles.addressCard, premiumShadow('#0f172a', 'sm')]}>
               <View style={styles.addressCardHeader}>
-                <View style={styles.addressTagBadge}>
-                  <Text style={styles.addressTagText}>{addr.tag}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={styles.addressTagBadge}>
+                    <Text style={styles.addressTagText}>{addr.tag}</Text>
+                  </View>
+                  {addr.isDefault ? (
+                    <View style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#b45309' }}>⭐ DEFAULT</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}
+                      onPress={() => {
+                        tap();
+                        setDefaultAddress.mutate(addr.id);
+                      }}
+                    >
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0369a1' }}>Set as Default</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <TouchableOpacity onPress={() => { tap(); setEditingAddress(addr); setIsAddOpen(true); }}>

@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class CreateAddressDto {
   @IsIn(['HOME', 'FARM', 'WORK'])
@@ -26,4 +26,8 @@ export class CreateAddressDto {
 
   @Matches(/^\d{6}$/, { message: 'PIN code must be exactly 6 digits.' })
   pincode: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
 }

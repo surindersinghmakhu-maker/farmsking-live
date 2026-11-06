@@ -47,4 +47,9 @@ __decorate([
     (0, class_validator_1.Matches)(/^\d{6}$/, { message: 'PIN code must be exactly 6 digits.' }),
     __metadata("design:type", String)
 ], CreateAddressDto.prototype, "pincode", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateAddressDto.prototype, "isDefault", void 0);
 //# sourceMappingURL=create-address.dto.js.map

@@ -101,6 +101,7 @@ model CustomerAddress {
   district   String
   state      String
   pincode    String
+  isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
 
   @@index([ownerId])

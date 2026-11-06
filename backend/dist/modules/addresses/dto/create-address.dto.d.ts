@@ -6,4 +6,5 @@ export declare class CreateAddressDto {
     district: string;
     state: string;
     pincode: string;
+    isDefault?: boolean;
 }

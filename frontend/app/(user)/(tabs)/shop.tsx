@@ -42,7 +42,7 @@ import {
   useMarkOrderDelivered,
 } from '@/src/hooks/useOrders';
 import { useCouponPreview } from '@/src/hooks/useCoupons';
-import { useMyAddresses, useCreateAddress, useUpdateAddress } from '@/src/hooks/useAddresses';
+import { useMyAddresses, useCreateAddress, useUpdateAddress, useSetDefaultAddress } from '@/src/hooks/useAddresses';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { CustomerAddress } from '@/src/api/addresses.api';
@@ -506,6 +506,7 @@ export default function ShopScreen() {
   const { data: savedAddresses = [] } = useMyAddresses();
   const createAddressMutation = useCreateAddress();
   const updateAddressMutation = useUpdateAddress();
+  const setDefaultAddressMutation = useSetDefaultAddress();
 
   const [isEditAddressModalOpen, setIsEditAddressModalOpen] = useState(false);
   const [editingAddressItem, setEditingAddressItem] = useState<CustomerAddress | null>(null);
@@ -598,9 +599,16 @@ export default function ShopScreen() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (savedAddresses.length > 0 && !selectedAddressId) {
-      setSelectedAddressId(savedAddresses[0].id);
-      setDeliveryAddress(composeAddress(savedAddresses[0]));
+    if (savedAddresses.length > 0) {
+      const currentExists = selectedAddressId ? savedAddresses.find((a) => a.id === selectedAddressId) : null;
+      if (!currentExists) {
+        const target = savedAddresses.find((a) => a.isDefault) || savedAddresses[0];
+        setSelectedAddressId(target.id);
+        setDeliveryAddress(composeAddress(target));
+      }
+    } else {
+      setSelectedAddressId(null);
+      setDeliveryAddress('');
     }
   }, [savedAddresses, selectedAddressId]);
   const [couponCode, setCouponCode] = useState('');
@@ -2749,10 +2757,15 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                                   style={{ marginTop: 2 }}
                                 />
                                 <View style={{ flex: 1 }}>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                     <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#0f172a' }}>
                                       🏷️ {addr.tag || 'Address'}
                                     </Text>
+                                    {addr.isDefault && (
+                                      <View style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                                        <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#b45309' }}>⭐ DEFAULT</Text>
+                                      </View>
+                                    )}
                                     {isSelected && (
                                       <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
                                         <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d' }}>SELECTED</Text>
@@ -2762,6 +2775,20 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                                   <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginTop: 2, lineHeight: 16 }}>
                                     {composeAddress(addr)}
                                   </Text>
+                                  {!addr.isDefault && (
+                                    <TouchableOpacity
+                                      style={{ marginTop: 6, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }}
+                                      onPress={async (e) => {
+                                        e.stopPropagation();
+                                        tap();
+                                        await setDefaultAddressMutation.mutateAsync(addr.id);
+                                        setSelectedAddressId(addr.id);
+                                        setDeliveryAddress(composeAddress(addr));
+                                      }}
+                                    >
+                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0369a1' }}>⭐ Set as Default</Text>
+                                    </TouchableOpacity>
+                                  )}
                                 </View>
                                 <TouchableOpacity
                                   style={{ padding: 4 }}
@@ -2777,13 +2804,22 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           })}
                         </View>
                       ) : (
-                        <TouchableOpacity
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 1, borderColor: '#15803d', borderStyle: 'dashed' }}
-                          onPress={() => handleOpenEditAddressModal(null)}
-                        >
-                          <Ionicons name="location-sharp" size={20} color="#15803d" />
-                          <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add Registered Delivery Address</Text>
-                        </TouchableOpacity>
+                        <View style={{ padding: 14, backgroundColor: '#fef2f2', borderRadius: 8, borderWidth: 1.5, borderColor: '#fca5a5', gap: 8 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="alert-circle" size={18} color="#dc2626" />
+                            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#991b1b' }}>No Delivery Address Added</Text>
+                          </View>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#7f1d1d' }}>
+                            Please add a delivery address to place your order.
+                          </Text>
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#15803d', borderRadius: 6, marginTop: 4 }}
+                            onPress={() => handleOpenEditAddressModal(null)}
+                          >
+                            <Ionicons name="add-circle" size={18} color="#ffffff" />
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Add Delivery Address Now</Text>
+                          </TouchableOpacity>
+                        </View>
                       )}
                     </View>
 
@@ -2941,8 +2977,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         style={[styles.placeOrderBtn, { flex: 2.5, backgroundColor: '#15803d', paddingVertical: 14, borderRadius: RADIUS.md }]}
                         activeOpacity={0.88}
                         onPress={() => {
-                          if (!deliveryAddress.trim()) {
-                            setCheckoutError('Please select or add a delivery address.');
+                          if (savedAddresses.length === 0 || !deliveryAddress.trim()) {
+                            setCheckoutError('Please add a delivery address before confirming your order.');
+                            handleOpenEditAddressModal(null);
                             return;
                           }
                           setCheckoutError(null);

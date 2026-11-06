@@ -32,6 +32,9 @@ let AddressesController = class AddressesController {
     update(user, id, dto) {
         return this.addressesService.update(user, id, dto);
     }
+    setDefault(user, id) {
+        return this.addressesService.setDefault(user, id);
+    }
     remove(user, id) {
         return this.addressesService.remove(user, id);
     }
@@ -61,6 +64,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], AddressesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Patch)(':id/set-default'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AddressesController.prototype, "setDefault", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

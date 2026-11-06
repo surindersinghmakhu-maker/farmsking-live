@@ -10,6 +10,7 @@ export interface CustomerAddress {
   district: string;
   state: string;
   pincode: string;
+  isDefault?: boolean;
   createdAt: string;
 }
 
@@ -21,6 +22,7 @@ export interface CreateAddressPayload {
   district: string;
   state: string;
   pincode: string;
+  isDefault?: boolean;
 }
 
 export async function createAddress(payload: CreateAddressPayload): Promise<CustomerAddress> {
@@ -38,6 +40,11 @@ export async function updateAddress(
   payload: Partial<CreateAddressPayload>
 ): Promise<CustomerAddress> {
   const { data } = await apiClient.patch<CustomerAddress>(`/addresses/${id}`, payload);
+  return data;
+}
+
+export async function setDefaultAddress(id: string): Promise<CustomerAddress> {
+  const { data } = await apiClient.patch<CustomerAddress>(`/addresses/${id}/set-default`);
   return data;
 }
 

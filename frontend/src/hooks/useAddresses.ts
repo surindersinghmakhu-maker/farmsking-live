@@ -29,6 +29,16 @@ export function useUpdateAddress() {
   });
 }
 
+export function useSetDefaultAddress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.setDefaultAddress(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['addresses'] });
+    },
+  });
+}
+
 export function useDeleteAddress() {
   const queryClient = useQueryClient();
   return useMutation({

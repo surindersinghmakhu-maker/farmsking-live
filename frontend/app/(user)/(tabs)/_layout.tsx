@@ -97,7 +97,7 @@ type TabName =
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
-  CUSTOMER: { tabs: ['index', 'shop', 'cart', 'wallet', 'more'] },
+  CUSTOMER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
   ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
@@ -215,7 +215,7 @@ export default function TabLayout() {
                 isDark && desktopStyles.brandLogoNightPill,
               ]}
               activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)' as any)}
+              onPress={() => router.push(userRole === 'CUSTOMER' ? ('/(user)/(tabs)/shop' as any) : ('/(tabs)' as any))}
             >
               <BrandLogo
                 height={36}

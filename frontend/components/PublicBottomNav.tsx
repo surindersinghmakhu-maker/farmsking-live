@@ -259,18 +259,6 @@ export default function PublicBottomNav() {
     if (role === 'CUSTOMER' || user.role === 'CUSTOMER') {
       return [
         {
-          key: 'home',
-          label: 'Home',
-          icon: 'home',
-          iconOutline: 'home-outline',
-          path: '/',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
           key: 'store',
           label: 'Store',
           icon: 'cart',

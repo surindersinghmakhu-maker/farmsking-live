@@ -1091,36 +1091,7 @@ export default function ProfileScreen() {
             </View>
           </Modal>
 
-          {/* Privacy Policy & Google Play Store Compliance Button */}
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-              backgroundColor: '#ecfdf5',
-              borderRadius: RADIUS.lg,
-              borderWidth: 1.5,
-              borderColor: '#a7f3d0',
-              padding: 12,
-              marginTop: 12,
-              width: '100%',
-              maxWidth: 460,
-            }}
-            onPress={() => {
-              tap();
-              router.push('/privacy-policy');
-            }}
-            activeOpacity={0.85}
-          >
-            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="shield-checkmark" size={20} color="#059669" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#065f46' }}>🛡️ Privacy Policy & Play Store Terms</Text>
-              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857' }}>Privacy & Data Security Policy • Auto-Dynamic</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#059669" />
-          </TouchableOpacity>
+
           {/* 🚪 Account Sign Out / Logout Card */}
           <TouchableOpacity
             style={{

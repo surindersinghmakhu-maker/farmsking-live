@@ -21,7 +21,7 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -419,7 +419,24 @@ export default function ShopScreen() {
   const { addItem, items, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>('CATALOG');
+  const params = useLocalSearchParams<{ tab?: string; subTab?: string }>();
+  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>(() => {
+    const target = (params?.subTab || params?.tab || '').toLowerCase();
+    if (target === 'checkout' || target === 'cart') return 'CHECKOUT';
+    if (target === 'orders') return 'ORDERS';
+    return 'CATALOG';
+  });
+
+  useEffect(() => {
+    const target = (params?.subTab || params?.tab || '').toLowerCase();
+    if (target === 'checkout' || target === 'cart') {
+      setActiveSubTab('CHECKOUT');
+    } else if (target === 'orders') {
+      setActiveSubTab('ORDERS');
+    } else if (target === 'catalog' || target === 'products') {
+      setActiveSubTab('CATALOG');
+    }
+  }, [params?.tab, params?.subTab]);
   const [storeLayoutMode, setStoreLayoutMode] = useState<'GRID' | 'COMPACT_LIST'>('GRID');
 
 

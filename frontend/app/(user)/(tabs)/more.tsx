@@ -157,13 +157,20 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection =
     role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'ADVISOR';
 
+  const isOnlyCustomer =
+    role === 'CUSTOMER' ||
+    (user?.role === 'CUSTOMER' &&
+      (!Array.isArray(user?.roles) ||
+        user.roles.length === 0 ||
+        user.roles.every((r: any) => r === 'CUSTOMER')));
+
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
     NOTIFICATIONS_ITEM,
     ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' ? [ADVISOR_PROFILE_ITEM] : []),
     FARMER_WALLET_ITEM,
-    LABOUR_ITEM,
+    ...(!isOnlyCustomer ? [LABOUR_ITEM] : []),
   ];
 
   return (
@@ -215,25 +222,27 @@ export default function MoreScreen() {
                   ))}
 
                   {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setShowSupervisorModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.rowLabel}>Supervisor Management</Text>
-                        <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
-                          <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
-                        </View>
+                  {!isOnlyCustomer && (
+                    <TouchableOpacity
+                      style={styles.row}
+                      activeOpacity={0.7}
+                      onPress={() => setShowSupervisorModal(true)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                        <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
                       </View>
-                      <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={styles.rowLabel}>Supervisor Management</Text>
+                          <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  )}
 
                   {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
@@ -436,20 +445,22 @@ export default function MoreScreen() {
               </TouchableOpacity>
 
               {/* MCA Compliance Row */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => router.push('/compliance')}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f3e8ff' }]}>
-                  <Ionicons name="business-outline" size={18} color="#9333ea" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>MCA Statutory Compliance</Text>
-                  <Text style={styles.rowSubLabel}>CIN: U01100PB2026PTC063294 • Regd. Office</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
+              {!isOnlyCustomer && (
+                <TouchableOpacity
+                  style={styles.row}
+                  activeOpacity={0.7}
+                  onPress={() => router.push('/compliance')}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#f3e8ff' }]}>
+                    <Ionicons name="business-outline" size={18} color="#9333ea" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>MCA Statutory Compliance</Text>
+                    <Text style={styles.rowSubLabel}>CIN: U01100PB2026PTC063294 • Regd. Office</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              )}
 
 
 

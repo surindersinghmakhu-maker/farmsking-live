@@ -24,6 +24,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
 import { verifyAccountPassword } from '@/src/api/auth.api';
@@ -58,7 +59,12 @@ export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { user, updateUser, refreshUser, linkGoogle, unlinkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
+  const { role } = useRole();
   const updateAddress = useUpdateMyAddress();
+  const isCustomerRole =
+    role === 'CUSTOMER' ||
+    user?.role === 'CUSTOMER' ||
+    (!user?.roles || user.roles.length === 0 || user.roles.every((r: any) => r === 'CUSTOMER'));
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -964,34 +970,36 @@ export default function ProfileScreen() {
 
 
               {/* ── Section: Notifications & Security ── */}
-              <View style={[styles.card, { padding: 16, gap: 12 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="settings" size={14} color="#9333ea" />
+              {!isCustomerRole && (
+                <View style={[styles.card, { padding: 16, gap: 12 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
+                    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="settings" size={14} color="#9333ea" />
+                    </View>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Preferences & Security</Text>
                   </View>
-                  <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Preferences & Security</Text>
-                </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📱 WhatsApp Alerts</Text>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>Receive mandi rates, weather & farm alerts</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📱 WhatsApp Alerts</Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>Receive mandi rates, weather & farm alerts</Text>
+                    </View>
+                    <Switch
+                      value={whatsappGroupEnabled}
+                      onValueChange={(v) => { isUserInteractingRef.current = true; setWhatsappGroupEnabled(v); }}
+                      trackColor={{ false: '#e2e8f0', true: '#86efac' }}
+                      thumbColor={whatsappGroupEnabled ? '#16a34a' : '#94a3b8'}
+                    />
                   </View>
-                  <Switch
-                    value={whatsappGroupEnabled}
-                    onValueChange={(v) => { isUserInteractingRef.current = true; setWhatsappGroupEnabled(v); }}
-                    trackColor={{ false: '#e2e8f0', true: '#86efac' }}
-                    thumbColor={whatsappGroupEnabled ? '#16a34a' : '#94a3b8'}
-                  />
-                </View>
 
-                <View
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginTop: 4 }}
-                >
-                  <Ionicons name="shield-checkmark" size={16} color="#16a34a" />
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#166534' }}>Passwordless Mobile OTP Login Active</Text>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginTop: 4 }}
+                  >
+                    <Ionicons name="shield-checkmark" size={16} color="#16a34a" />
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#166534' }}>Passwordless Mobile OTP Login Active</Text>
+                  </View>
                 </View>
-              </View>
+              )}
 
               {isSaved && (
                 <View style={styles.savedNotice}>

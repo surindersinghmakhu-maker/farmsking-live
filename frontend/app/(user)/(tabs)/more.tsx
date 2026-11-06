@@ -249,7 +249,7 @@ export default function MoreScreen() {
                     const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
-                        style={styles.row}
+                        style={[styles.row, { borderBottomWidth: 0 }]}
                         activeOpacity={0.8}
                         onPress={() => router.push('/seller-dashboard')}
                       >
@@ -285,22 +285,6 @@ export default function MoreScreen() {
                       </TouchableOpacity>
                     );
                   })()}
-
-                  {/* 🗑️ Delete Account Row */}
-                  <TouchableOpacity
-                    style={[styles.row, { borderBottomWidth: 0 }]}
-                    activeOpacity={0.7}
-                    onPress={handleOpenDeleteModal}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                      <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
-                      <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -548,7 +532,7 @@ export default function MoreScreen() {
               <Text style={pModalStyles.pHead}>4. Account & Personal Data Deletion Rights</Text>
               <Text style={pModalStyles.pBody}>
                 In strict compliance with Google Play Developer Policy, you have full control over your personal data:{"\n"}
-                • In-App Instant Deletion: You can initiate complete account and personal data deletion directly in the app via "Account Settings & Profiles" ➔ "Delete Account".{"\n"}
+                • In-App Instant Deletion: You can initiate complete account and personal data deletion directly using the "Delete Account & Purge Data" button at the bottom of this Privacy Policy.{"\n"}
                 • 3-Step Verification: For security, deletion requires King ID, Postal PIN Code & Security Captcha verification.{"\n"}
                 • Data Removal: Upon confirmation, your active profile, wallet records, and farm data are soft-deleted immediately and permanently purged from server nodes. You can also request deletion by emailing support@farmsking.com.
               </Text>
@@ -557,6 +541,37 @@ export default function MoreScreen() {
               <Text style={pModalStyles.pBody}>
                 Data is shared strictly with authorized partners solely for service delivery: PhonePe Payment Gateway (for UPI transactions) and WhatsApp OTP SMS services for secure login verification.
               </Text>
+
+              {/* 🗑️ Permanent Delete Account Card at the very bottom of Privacy Policy */}
+              <View style={{ marginTop: 18, marginBottom: 10, padding: 14, backgroundColor: '#fef2f2', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fca5a5' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Ionicons name="trash-bin-outline" size={18} color="#dc2626" />
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#991b1b' }}>Permanent Account & Data Deletion</Text>
+                </View>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#7f1d1d', lineHeight: 16, marginBottom: 10 }}>
+                  In accordance with Google Play Developer Policy, you have the right to permanently purge your account, mobile identity, and all associated farm records at any time.
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#dc2626',
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderRadius: RADIUS.sm,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setShowPrivacyModal(false);
+                    handleOpenDeleteModal();
+                  }}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ffffff" />
+                  <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.bold }}>Delete Account & Purge Data</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
 
             <TouchableOpacity style={pModalStyles.closeBtn} onPress={() => setShowPrivacyModal(false)}>

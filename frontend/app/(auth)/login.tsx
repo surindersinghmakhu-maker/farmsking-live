@@ -19,7 +19,13 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import * as AuthSession from 'expo-auth-session';
 import * as Haptics from 'expo-haptics';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+} from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
@@ -33,7 +39,7 @@ if (Platform.OS !== 'web') {
 const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 
 export default function LoginScreen() {
-  const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration } = useAuth();
+  const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
@@ -85,6 +91,7 @@ export default function LoginScreen() {
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [otpSending, setOtpSending] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
 
   // New User Role Selection State
@@ -213,25 +220,75 @@ export default function LoginScreen() {
       return;
     }
     setOtpSending(true);
-    try {
-      const res = await sendLoginOtp(cleanNum);
-      setOtpSent(true);
-      setResendTimer(60);
-      const codeToUse = res?.devOtp || '123456';
-      setDevOtp(codeToUse);
-      // Auto-fill code into the 6 boxes immediately for 1-touch login
-      setOtpDigits(codeToUse.split(''));
-      setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-    } catch (err: any) {
-      console.warn('[sendLoginOtp fallback]:', err);
-      // Fallback: Activate test mode with universal OTP '123456'
-      setOtpSent(true);
-      setDevOtp('123456');
-      setOtpDigits(['1', '2', '3', '4', '5', '6']);
-      setResendTimer(60);
-      setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-    } finally {
-      setOtpSending(false);
+
+    if (isLocalhost) {
+      // 💻 LOCALHOST ONLY: Fast test mode / dev OTP
+      try {
+        const res = await sendLoginOtp(cleanNum);
+        setOtpSent(true);
+        setResendTimer(60);
+        const codeToUse = res?.devOtp || '123456';
+        setDevOtp(codeToUse);
+        setOtpDigits(codeToUse.split(''));
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
+      } catch (err: any) {
+        console.warn('[sendLoginOtp fallback]:', err);
+        setOtpSent(true);
+        setDevOtp('123456');
+        setOtpDigits(['1', '2', '3', '4', '5', '6']);
+        setResendTimer(60);
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
+      } finally {
+        setOtpSending(false);
+      }
+    } else {
+      // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS
+      try {
+        if (typeof window !== 'undefined') {
+          if (!(window as any).recaptchaVerifierLogin) {
+            (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
+              auth,
+              'recaptcha-container-login',
+              { size: 'invisible' }
+            );
+          }
+        }
+
+        const confirmation = await signInWithPhoneNumber(
+          auth,
+          `+91${cleanNum}`,
+          (window as any).recaptchaVerifierLogin
+        );
+
+        setConfirmationResult(confirmation);
+        setOtpSent(true);
+        setDevOtp(null);
+        setOtpDigits(['', '', '', '', '', '']); // Always empty on live for real SMS input
+        setResendTimer(60);
+        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+      } catch (err: any) {
+        console.warn('[Firebase Phone Auth error]:', err);
+        if (typeof window !== 'undefined' && (window as any).recaptchaVerifierLogin) {
+          try {
+            (window as any).recaptchaVerifierLogin.clear();
+          } catch {}
+          (window as any).recaptchaVerifierLogin = null;
+        }
+
+        let msg = 'Failed to send verification SMS. Please try again.';
+        if (err?.code === 'auth/invalid-phone-number') {
+          msg = 'Invalid mobile number format. Please check the 10-digit number.';
+        } else if (err?.code === 'auth/too-many-requests') {
+          msg = 'Too many requests. Please wait a few moments before retrying.';
+        } else if (err?.code === 'auth/quota-exceeded') {
+          msg = 'Daily SMS quota reached. Please use Google Sign-In or contact support.';
+        } else if (err?.message) {
+          msg = err.message;
+        }
+        setError(msg);
+      } finally {
+        setOtpSending(false);
+      }
     }
   };
 
@@ -276,20 +333,40 @@ export default function LoginScreen() {
     }
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
+
     try {
-      const res = await otpLogin({ mobile: cleanNum, otp: code });
-      if (res?.isNewUser) {
-        setIsNewUserModal(true);
+      if (!isLocalhost && confirmationResult) {
+        // 🚀 LIVE PRODUCTION: Verify SMS code via Firebase & backend session
+        const resConfirm = await confirmationResult.confirm(code);
+        const idToken = await resConfirm.user.getIdToken();
+        const res: any = await firebaseLogin(idToken);
+        if (res?.isNewUser) {
+          setIsNewUserModal(true);
+        } else {
+          handleSuccessNavigation(false, res);
+        }
       } else {
-        handleSuccessNavigation(false, res);
+        // 💻 LOCALHOST: Verify via backend OTP store
+        const res = await otpLogin({ mobile: cleanNum, otp: code });
+        if (res?.isNewUser) {
+          setIsNewUserModal(true);
+        } else {
+          handleSuccessNavigation(false, res);
+        }
       }
     } catch (err: any) {
-      const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(
-        isNet
-          ? 'Network error! Please check your internet connection.'
-          : err?.response?.data?.message ?? err?.message ?? 'Verification failed. Please check code.'
-      );
+      console.warn('[handleOtpLogin error]:', err);
+      let msg = 'Verification failed. Please check the 6-digit code.';
+      if (err?.code === 'auth/invalid-verification-code') {
+        msg = 'Incorrect SMS OTP code. Please enter the valid 6-digit code received on your phone.';
+      } else if (err?.code === 'auth/code-expired') {
+        msg = 'Verification code has expired. Please tap Resend to request a new code.';
+      } else if (err?.response?.data?.message) {
+        msg = err.response.data.message;
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -476,8 +553,11 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
-            {/* Localhost Testing Mode Banner */}
-            {(isLocalhost || devOtp) && (
+            {/* Invisible Firebase reCAPTCHA container for Web Phone Auth */}
+            <View id="recaptcha-container-login" style={{ display: 'none' }} />
+
+            {/* Localhost Testing Mode Banner: Strictly shown only on Localhost */}
+            {isLocalhost && (
               <View style={styles.devBanner}>
                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="construct" size={16} color="#10b981" />
@@ -508,6 +588,7 @@ export default function LoginScreen() {
                       setOtpSent(false);
                       setOtpDigits(['', '', '', '', '', '']);
                       setDevOtp(null);
+                      setConfirmationResult(null);
                     }}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                   >
@@ -534,6 +615,7 @@ export default function LoginScreen() {
                       setOtpSent(false);
                       setOtpDigits(['', '', '', '', '', '']);
                       setDevOtp(null);
+                      setConfirmationResult(null);
                     }
                   }}
                   onFocus={() => setFocusedField('mobile')}
@@ -578,33 +660,36 @@ export default function LoginScreen() {
                 <View style={styles.otpInfoBar}>
                   <Ionicons name="shield-checkmark" size={15} color="#34d399" />
                   <Text style={styles.otpInfoText}>
-                    Code sent to <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
+                    {isLocalhost ? 'Code sent to ' : 'SMS verification code sent to '}
+                    <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
                   </Text>
                 </View>
 
-                {/* 🌟 Direct In-Context Test OTP Helper Card 🌟 */}
-                <View style={styles.testOtpCard}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <Ionicons name="key" size={14} color="#f59e0b" />
-                      <Text style={styles.testOtpLabel}>Verification Code (Testing / SMS Gateway):</Text>
+                {/* 🌟 Direct In-Context Test OTP Helper Card (Localhost Only) 🌟 */}
+                {isLocalhost && (
+                  <View style={styles.testOtpCard}>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <Ionicons name="key" size={14} color="#f59e0b" />
+                        <Text style={styles.testOtpLabel}>Verification Code (Testing / SMS Gateway):</Text>
+                      </View>
+                      <Text style={styles.testOtpCode}>
+                        {devOtp || '123456'}
+                      </Text>
                     </View>
-                    <Text style={styles.testOtpCode}>
-                      {devOtp || '123456'}
-                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const code = (devOtp || '123456').slice(0, 6);
+                        setOtpDigits(code.split(''));
+                      }}
+                      style={styles.quickFillButton}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="flash" size={13} color="#10b981" />
+                      <Text style={styles.quickFillText}>Auto-Fill Code</Text>
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      const code = (devOtp || '123456').slice(0, 6);
-                      setOtpDigits(code.split(''));
-                    }}
-                    style={styles.quickFillButton}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="flash" size={13} color="#10b981" />
-                    <Text style={styles.quickFillText}>Auto-Fill Code</Text>
-                  </TouchableOpacity>
-                </View>
+                )}
 
                 <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
                 

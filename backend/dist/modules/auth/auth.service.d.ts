@@ -209,8 +209,8 @@ export declare class AuthService {
         isNewUser: boolean;
         waSent: boolean;
         message: string;
-        devOtp: string;
-        universalTestOtp: string;
+        devOtp: string | undefined;
+        universalTestOtp: string | undefined;
     }>;
     verifyLoginOtp(mobile: string, otp: string): Promise<{
         isNewUser: boolean;
@@ -255,6 +255,10 @@ export declare class AuthService {
         isNewUser: boolean;
     }>;
     firebaseLogin(idToken: string): Promise<{
+        isNewUser: boolean;
+        mobile: string;
+        message: string;
+    } | {
         accessToken: string;
         user: {
             id: string;
@@ -268,6 +272,9 @@ export declare class AuthService {
             warningMessage: string | undefined;
             evictedOldest: boolean;
         };
+        isNewUser: boolean;
+        mobile?: undefined;
+        message?: undefined;
     }>;
     private buildAuthResponse;
 }

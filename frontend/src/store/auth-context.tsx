@@ -16,7 +16,7 @@ interface AuthContextValue {
   sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>;
   otpLogin: (payload: { mobile: string; otp: string }) => Promise<any>;
   completeOtpRegistration: (payload: CompleteOtpRegistrationPayload) => Promise<User>;
-  firebaseLogin: (idToken: string) => Promise<User>;
+  firebaseLogin: (idToken: string) => Promise<any>;
   googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean; user?: User }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
   unlinkGoogle: () => Promise<{ success: boolean; message: string }>;
@@ -193,7 +193,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       firebaseLogin: async (idToken) => {
         const response = await firebaseLoginApi(idToken);
-        if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
+        if ((response as any).isNewUser) {
+          return response;
+        }
+        if (response.user?.role === 'ADMIN' || response.user?.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         await persistSession(response.accessToken, response.user);

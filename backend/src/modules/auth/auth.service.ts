@@ -1228,6 +1228,7 @@ export class AuthService {
       waSent = false;
     }
 
+    const isDev = process.env.NODE_ENV !== 'production';
     return {
       success: true,
       isNewUser: !user,
@@ -1235,8 +1236,8 @@ export class AuthService {
       message: waSent
         ? 'OTP sent via WhatsApp!'
         : 'Verification code generated. Please verify to continue.',
-      devOtp: otpCode,
-      universalTestOtp: '123456',
+      devOtp: isDev ? otpCode : undefined,
+      universalTestOtp: isDev ? '123456' : undefined,
     };
   }
 
@@ -1245,8 +1246,9 @@ export class AuthService {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
 
+    const isDev = process.env.NODE_ENV !== 'production';
     const stored = this.loginOtpStore.get(cleanMobile);
-    const isTestCode = otp.trim() === '123456';
+    const isTestCode = isDev && otp.trim() === '123456';
     const isStoredMatch = Boolean(stored && stored.otp === otp.trim());
     const isBypassMatch = isTestCode || isStoredMatch;
 
@@ -1391,8 +1393,23 @@ export class AuthService {
         where: { mobile: cleanMobile, deletedAt: null },
       });
       
+      // If user does not exist yet, allow seamless onboarding / role selection
       if (!user) {
-        throw new NotFoundException('Account not found. Please register first.');
+        return {
+          isNewUser: true,
+          mobile: cleanMobile,
+          message: 'Mobile number verified via Firebase. Please select your role to proceed.',
+        };
+      }
+
+      // Check account lockout / block
+      if (user.isPermanentlyBlocked) {
+        throw new UnauthorizedException('🔒 Your account has been permanently blocked. Please contact Admin.');
+      }
+      if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+        const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
+        const minutesLeft = Math.ceil(msLeft / (1000 * 60));
+        throw new UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
       }
 
       // Reset any failed login attempts on successful OTP login
@@ -1404,8 +1421,14 @@ export class AuthService {
       }
 
       const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
-      return this.buildAuthResponse(safeUser as any);
+      return {
+        isNewUser: false,
+        ...this.buildAuthResponse(safeUser as any),
+      };
     } catch (err: any) {
+      if (err instanceof UnauthorizedException || err instanceof BadRequestException) {
+        throw err;
+      }
       throw new UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
     }
   }

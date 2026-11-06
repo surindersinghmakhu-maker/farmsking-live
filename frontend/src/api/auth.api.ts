@@ -129,7 +129,9 @@ export async function completeOtpRegistrationApi(
   return data;
 }
 
-export async function firebaseLoginApi(idToken: string): Promise<AuthResponse> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/firebase-login', { idToken });
+export async function firebaseLoginApi(
+  idToken: string
+): Promise<AuthResponse & { isNewUser?: boolean; mobile?: string; message?: string }> {
+  const { data } = await apiClient.post<AuthResponse & { isNewUser?: boolean; mobile?: string; message?: string }>('/auth/firebase-login', { idToken });
   return data;
 }

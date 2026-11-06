@@ -22,8 +22,8 @@ export declare class AuthController {
         isNewUser: boolean;
         waSent: boolean;
         message: string;
-        devOtp: string;
-        universalTestOtp: string;
+        devOtp: string | undefined;
+        universalTestOtp: string | undefined;
     }>;
     verifyLoginOtp(body: VerifyLoginOtpDto): Promise<{
         isNewUser: boolean;
@@ -85,6 +85,10 @@ export declare class AuthController {
         };
     }>;
     firebaseLogin(body: FirebaseLoginDto): Promise<{
+        isNewUser: boolean;
+        mobile: string;
+        message: string;
+    } | {
         accessToken: string;
         user: {
             id: string;
@@ -98,6 +102,9 @@ export declare class AuthController {
             warningMessage: string | undefined;
             evictedOldest: boolean;
         };
+        isNewUser: boolean;
+        mobile?: undefined;
+        message?: undefined;
     }>;
     linkGoogleAccount(user: AuthUser, dto: LinkGoogleDto): Promise<{
         success: boolean;

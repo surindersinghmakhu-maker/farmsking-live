@@ -1027,6 +1027,7 @@ let AuthService = class AuthService {
         catch {
             waSent = false;
         }
+        const isDev = process.env.NODE_ENV !== 'production';
         return {
             success: true,
             isNewUser: !user,
@@ -1034,15 +1035,16 @@ let AuthService = class AuthService {
             message: waSent
                 ? 'OTP sent via WhatsApp!'
                 : 'Verification code generated. Please verify to continue.',
-            devOtp: otpCode,
-            universalTestOtp: '123456',
+            devOtp: isDev ? otpCode : undefined,
+            universalTestOtp: isDev ? '123456' : undefined,
         };
     }
     async verifyLoginOtp(mobile, otp) {
         const rawDigits = mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
+        const isDev = process.env.NODE_ENV !== 'production';
         const stored = this.loginOtpStore.get(cleanMobile);
-        const isTestCode = otp.trim() === '123456';
+        const isTestCode = isDev && otp.trim() === '123456';
         const isStoredMatch = Boolean(stored && stored.otp === otp.trim());
         const isBypassMatch = isTestCode || isStoredMatch;
         if (!stored && !isTestCode) {
@@ -1158,7 +1160,19 @@ let AuthService = class AuthService {
                 where: { mobile: cleanMobile, deletedAt: null },
             });
             if (!user) {
-                throw new common_1.NotFoundException('Account not found. Please register first.');
+                return {
+                    isNewUser: true,
+                    mobile: cleanMobile,
+                    message: 'Mobile number verified via Firebase. Please select your role to proceed.',
+                };
+            }
+            if (user.isPermanentlyBlocked) {
+                throw new common_1.UnauthorizedException('🔒 Your account has been permanently blocked. Please contact Admin.');
+            }
+            if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+                const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
+                const minutesLeft = Math.ceil(msLeft / (1000 * 60));
+                throw new common_1.UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
             }
             if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
                 user = await this.prisma.user.update({
@@ -1167,9 +1181,15 @@ let AuthService = class AuthService {
                 });
             }
             const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
-            return this.buildAuthResponse(safeUser);
+            return {
+                isNewUser: false,
+                ...this.buildAuthResponse(safeUser),
+            };
         }
         catch (err) {
+            if (err instanceof common_1.UnauthorizedException || err instanceof common_1.BadRequestException) {
+                throw err;
+            }
             throw new common_1.UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
         }
     }

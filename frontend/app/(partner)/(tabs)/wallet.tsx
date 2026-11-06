@@ -494,15 +494,6 @@ export default function WalletScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.claimBannerBtnJpg}
-                  onPress={handleDownloadJpgCoupon}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="image-outline" size={14} color="#b45309" />
-                  <Text style={styles.claimBannerBtnJpgText}>Invite Card</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
                   style={styles.claimBannerBtn}
                   onPress={() => {
                     tap();
@@ -753,18 +744,6 @@ function ReferralInviteCard({
             <Ionicons name={copiedLink ? 'checkmark-circle' : 'link-outline'} size={16} color="#0f172a" />
             <Text style={styles.refCopyLinkBtnTextStacked}>
               {copiedLink ? 'Link Copied!' : 'Copy Link'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* 3. Invite Card Button (JPG Coupon) */}
-          <TouchableOpacity
-            style={styles.refCouponBtnStacked}
-            onPress={handleDownloadJpgCoupon}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="image-outline" size={16} color="#b45309" />
-            <Text style={styles.refCouponBtnTextStacked}>
-              Invite Card (JPG)
             </Text>
           </TouchableOpacity>
         </View>

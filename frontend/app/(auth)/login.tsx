@@ -93,6 +93,7 @@ export default function LoginScreen() {
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
+  const autoSubmittedCodeRef = useRef<string | null>(null);
 
   // New User Role Selection State
   const [isNewUserModal, setIsNewUserModal] = useState(false);
@@ -292,7 +293,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Handle segmented digit input
+  // Handle segmented digit input with instant auto-submit on completion
   const handleDigitChange = (val: string, index: number) => {
     const clean = val.replace(/\D/g, '');
     if (clean.length > 1) {
@@ -305,6 +306,10 @@ export default function LoginScreen() {
       setOtpDigits(newDigits);
       const nextIndex = Math.min(pasted.length, 5);
       otpCellRefs[nextIndex]?.current?.focus();
+      const fullCode = newDigits.join('').trim();
+      if (fullCode.length === 6 && autoSubmittedCodeRef.current !== fullCode) {
+        handleOtpLogin(fullCode);
+      }
       return;
     }
 
@@ -315,22 +320,35 @@ export default function LoginScreen() {
     if (clean && index < 5) {
       otpCellRefs[index + 1]?.current?.focus();
     }
+
+    const fullCode = newDigits.join('').trim();
+    if (fullCode.length === 6 && autoSubmittedCodeRef.current !== fullCode) {
+      handleOtpLogin(fullCode);
+    }
   };
 
   const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === 'Backspace' && !otpDigits[index] && index > 0) {
       otpCellRefs[index - 1]?.current?.focus();
+    } else if (e.nativeEvent.key === 'Enter') {
+      const fullCode = otpDigits.join('').trim();
+      if (fullCode.length === 6) {
+        handleOtpLogin(fullCode);
+      }
     }
   };
 
-  // Step 2: Verify Mobile OTP
-  const handleOtpLogin = async () => {
+  // Step 2: Verify Mobile OTP (supports explicit code passed from auto-submit)
+  const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
-    const code = otpDigits.join('').trim();
+    const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
     if (!code || code.length < 6) {
       setError('Please enter the complete 6-digit verification code.');
       return;
     }
+    if (isSubmitting) return;
+
+    autoSubmittedCodeRef.current = code;
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
 
@@ -356,6 +374,7 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       console.warn('[handleOtpLogin error]:', err);
+      autoSubmittedCodeRef.current = null;
       let msg = 'Verification failed. Please check the 6-digit code.';
       if (err?.code === 'auth/invalid-verification-code') {
         msg = 'Incorrect SMS OTP code. Please enter the valid 6-digit code received on your phone.';
@@ -393,11 +412,12 @@ export default function LoginScreen() {
   };
 
   const autoFillDevOtp = () => {
-    const code = devOtp || '123456';
+    const code = (devOtp || '123456').slice(0, 6);
     setOtpDigits(code.split(''));
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    handleOtpLogin(code);
   };
 
   const currentOtpFilled = otpDigits.join('').length === 6;
@@ -589,6 +609,7 @@ export default function LoginScreen() {
                       setOtpDigits(['', '', '', '', '', '']);
                       setDevOtp(null);
                       setConfirmationResult(null);
+                      autoSubmittedCodeRef.current = null;
                     }}
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                   >
@@ -616,11 +637,22 @@ export default function LoginScreen() {
                       setOtpDigits(['', '', '', '', '', '']);
                       setDevOtp(null);
                       setConfirmationResult(null);
+                      autoSubmittedCodeRef.current = null;
                     }
                   }}
                   onFocus={() => setFocusedField('mobile')}
                   onBlur={() => setFocusedField(null)}
-                  returnKeyType="done"
+                  returnKeyType="send"
+                  onSubmitEditing={() => {
+                    if (mobile.trim().length >= 10 && !otpSending) {
+                      handleSendOtp();
+                    }
+                  }}
+                  onKeyPress={(e: any) => {
+                    if (e.nativeEvent.key === 'Enter' && mobile.trim().length >= 10 && !otpSending) {
+                      handleSendOtp();
+                    }
+                  }}
                   editable={!otpSent}
                   autoCapitalize="none"
                 />
@@ -681,6 +713,7 @@ export default function LoginScreen() {
                       onPress={() => {
                         const code = (devOtp || '123456').slice(0, 6);
                         setOtpDigits(code.split(''));
+                        handleOtpLogin(code);
                       }}
                       style={styles.quickFillButton}
                       activeOpacity={0.8}

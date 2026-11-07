@@ -1,5 +1,6 @@
 import { EmailService } from '../email/email.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
+import { SmsService } from '../sms/sms.service';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -13,6 +14,10 @@ import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DispatchOrderDto } from './dto/dispatch-order.dto';
 import { BillingService } from './billing.service';
+export declare function extractOrderRecipient(deliveryAddress?: string | null, customerUser?: any): {
+    recipientName: any;
+    recipientMobile: any;
+};
 export declare class OrdersService {
     private readonly prisma;
     private readonly notificationsService;
@@ -25,7 +30,8 @@ export declare class OrdersService {
     private readonly billingService;
     private readonly emailService;
     private readonly whatsappBotService;
-    constructor(prisma: PrismaService, notificationsService: NotificationsService, couponsService: CouponsService, walletService: WalletService, appSettingsService: AppSettingsService, phonePeService: PhonePeService, shiprocketService: ShiprocketService, cashfreeService: CashfreeService, billingService: BillingService, emailService: EmailService, whatsappBotService: WhatsappBotService);
+    private readonly smsService;
+    constructor(prisma: PrismaService, notificationsService: NotificationsService, couponsService: CouponsService, walletService: WalletService, appSettingsService: AppSettingsService, phonePeService: PhonePeService, shiprocketService: ShiprocketService, cashfreeService: CashfreeService, billingService: BillingService, emailService: EmailService, whatsappBotService: WhatsappBotService, smsService: SmsService);
     create(customer: AuthUser, dto: CreateOrderDto): Promise<{
         customer: {
             id: string;

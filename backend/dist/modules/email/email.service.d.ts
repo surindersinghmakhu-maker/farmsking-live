@@ -22,4 +22,24 @@ export declare class EmailService {
         trackingNumber?: string;
         courierName?: string;
     }): Promise<boolean>;
+    sendOrderPlacedConfirmationEmail(toEmail: string, recipientName: string, order: {
+        orderNumber: string;
+        totalAmount: number;
+        paymentMode?: string;
+        deliveryAddress?: string;
+        items: Array<{
+            productName: string;
+            quantity: number;
+            price: number;
+        }>;
+    }): Promise<boolean>;
+    sendAdminOrderAlertEmail(adminEmail: string, order: {
+        orderNumber: string;
+        totalAmount: number;
+        customerName: string;
+        customerMobile: string;
+        deliveryAddress?: string;
+        itemCount: number;
+        paymentMode?: string;
+    }): Promise<boolean>;
 }

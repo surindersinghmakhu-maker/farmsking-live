@@ -68,6 +68,7 @@ const seller_module_1 = require("./modules/seller/seller.module");
 const cashfree_module_1 = require("./modules/cashfree/cashfree.module");
 const shiprocket_module_1 = require("./modules/shiprocket/shiprocket.module");
 const email_module_1 = require("./modules/email/email.module");
+const sms_module_1 = require("./modules/sms/sms.module");
 const ai_chat_module_1 = require("./modules/ai-chat/ai-chat.module");
 const iso_controls_module_1 = require("./modules/iso-controls/iso-controls.module");
 const prisma_exception_filter_1 = require("./common/filters/prisma-exception.filter");
@@ -138,6 +139,7 @@ exports.AppModule = AppModule = __decorate([
             cashfree_module_1.CashfreeModule,
             shiprocket_module_1.ShiprocketModule,
             email_module_1.EmailModule,
+            sms_module_1.SmsModule,
             ai_chat_module_1.AiChatModule,
         ],
         controllers: [app_controller_1.AppController],

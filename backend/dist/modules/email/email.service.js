@@ -103,9 +103,14 @@ let EmailService = EmailService_1 = class EmailService {
                         pass: smtp.password,
                     },
                 });
+                const senderUser = smtp.fromEmail || smtp.username;
+                const senderName = smtp.fromName || 'FarmsKing Agritech';
+                return { transporter: this.transporter, senderUser, senderName };
             }
         }
-        catch { }
+        catch (err) {
+            this.logger.warn(`Could not load custom admin SMTP: ${err.message}`);
+        }
         if (!this.transporter) {
             this.initTransporter();
         }
@@ -113,9 +118,6 @@ let EmailService = EmailService_1 = class EmailService {
         let senderName = 'FarmsKing Official';
         try {
             const integrations = await this.appSettingsService.getIntegrations();
-            if (integrations?.projectMasterData?.smtp?.fromEmail) {
-                senderUser = integrations.projectMasterData.smtp.fromEmail;
-            }
             if (integrations?.projectMasterData?.smtp?.fromName) {
                 senderName = integrations.projectMasterData.smtp.fromName;
             }
@@ -471,6 +473,150 @@ let EmailService = EmailService_1 = class EmailService {
         }
         catch (err) {
             this.logger.error(`Error sending order update email to ${toEmail}:`, err.message);
+            return false;
+        }
+    }
+    async sendOrderPlacedConfirmationEmail(toEmail, recipientName, order) {
+        const { transporter, senderUser, senderName } = await this.getActiveTransporterAndSender();
+        if (!transporter)
+            return false;
+        const itemsHtml = order.items
+            .map((i) => `
+        <tr>
+          <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #ffffff; font-size: 13px;">${i.productName}</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #d1fae5; font-size: 13px; text-align: center;">${i.quantity}</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #d1fae5; font-size: 13px; text-align: right;">₹${i.price}</td>
+          <td style="padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #f59e0b; font-size: 13px; font-weight: 700; text-align: right;">₹${(i.price * i.quantity).toFixed(2)}</td>
+        </tr>`)
+            .join('');
+        const mailOptions = {
+            from: `"${senderName}" <${senderUser}>`,
+            to: toEmail.trim(),
+            subject: `🛒 Order Confirmed #${order.orderNumber} - FarmsKing AgriStore`,
+            text: `Dear ${recipientName}, Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been placed successfully. Payment Mode: ${order.paymentMode || 'COD'}. Delivery Address: ${order.deliveryAddress || 'Registered Address'}. Track online at https://farmsking.in/order-tracking. Thank you! - FarmsKing Technologies Private Limited`,
+            html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #064E3B; padding: 28px; border-radius: 14px; color: #ffffff; max-width: 560px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #065F46; padding-bottom: 14px; margin-bottom: 18px;">
+            <div>
+              <h2 style="color: #34D399; margin: 0; font-size: 22px; font-weight: 800;">🌱 FarmsKing AgriStore</h2>
+              <p style="margin: 2px 0 0; font-size: 11.5px; color: #a7f3d0;">Official Order Booking Confirmation</p>
+            </div>
+            <span style="background: #10B981; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; color: #ffffff;">CONFIRMED</span>
+          </div>
+
+          <p style="font-size: 15px; color: #E5E7EB; margin-top: 0;">Dear <b>${recipientName}</b>,</p>
+          <p style="font-size: 13.5px; color: #D1D5DB; line-height: 1.5;">
+            Thank you for shopping with FarmsKing! Your order has been placed successfully and is now being prepared by certified agricultural hubs.
+          </p>
+
+          <div style="background-color: #065F46; padding: 14px 18px; border-radius: 10px; margin: 16px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 12.5px; color: #a7f3d0;">Order Number:</span>
+              <span style="font-size: 13.5px; font-weight: 800; color: #ffffff;">#${order.orderNumber}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="font-size: 12.5px; color: #a7f3d0;">Payment Mode:</span>
+              <span style="font-size: 13px; font-weight: 700; color: #f59e0b;">${order.paymentMode || 'COD'}</span>
+            </div>
+            ${order.deliveryAddress ? `
+            <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+              <span style="font-size: 11.5px; color: #a7f3d0; display: block; margin-bottom: 2px;">📍 Delivery Destination:</span>
+              <span style="font-size: 12.5px; color: #ffffff;">${order.deliveryAddress}</span>
+            </div>` : ''}
+          </div>
+
+          <h3 style="font-size: 13.5px; color: #34D399; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Order Summary</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; background: rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden;">
+            <thead>
+              <tr style="background-color: #042f2e;">
+                <th style="padding: 8px 12px; color: #a7f3d0; font-size: 11.5px; text-align: left;">Item</th>
+                <th style="padding: 8px 12px; color: #a7f3d0; font-size: 11.5px; text-align: center;">Qty</th>
+                <th style="padding: 8px 12px; color: #a7f3d0; font-size: 11.5px; text-align: right;">Price</th>
+                <th style="padding: 8px 12px; color: #a7f3d0; font-size: 11.5px; text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" style="padding: 12px; font-size: 14px; font-weight: 800; color: #ffffff; text-align: right; border-top: 1px solid #10b981;">Grand Total:</td>
+                <td style="padding: 12px; font-size: 16px; font-weight: 800; color: #34d399; text-align: right; border-top: 1px solid #10b981;">₹${order.totalAmount}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div style="text-align: center; margin: 24px 0 16px;">
+            <a href="https://farmsking.in/order-tracking" style="background-color: #10B981; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 800; font-size: 13.5px; display: inline-block; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+              📍 Track Live Order & Courier Dispatch →
+            </a>
+          </div>
+
+          <p style="font-size: 12px; color: #9CA3AF; text-align: center; margin-top: 16px;">
+            An official GST Tax Invoice has been generated and can be downloaded anytime from your FarmsKing account.
+          </p>
+
+          <hr style="border-color: #065F46; margin: 20px 0 12px;" />
+          <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+          </p>
+          <p style="font-size: 10.5px; color: #6EE7B7; text-align: center; margin-top: 2px;">
+            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+          </p>
+        </div>
+      `,
+        };
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            this.logger.log(`Order confirmation email sent to ${toEmail} for #${order.orderNumber}. Message ID: ${info.messageId}`);
+            return true;
+        }
+        catch (err) {
+            this.logger.error(`Error sending order confirmation email to ${toEmail}:`, err.message);
+            return false;
+        }
+    }
+    async sendAdminOrderAlertEmail(adminEmail, order) {
+        const { transporter, senderUser, senderName } = await this.getActiveTransporterAndSender();
+        if (!transporter)
+            return false;
+        const mailOptions = {
+            from: `"${senderName}" <${senderUser}>`,
+            to: adminEmail.trim(),
+            subject: `⚡ [NEW ORDER] #${order.orderNumber} placed (₹${order.totalAmount}) - ${order.customerName}`,
+            text: `New order received! Order #${order.orderNumber} of ₹${order.totalAmount} placed by ${order.customerName} (${order.customerMobile}). Items: ${order.itemCount}. Payment: ${order.paymentMode || 'COD'}. Address: ${order.deliveryAddress || 'N/A'}. Check Admin Order Manager: https://farmsking.in/admin-orders`,
+            html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0f172a; padding: 24px; border-radius: 12px; color: #ffffff; max-width: 520px; margin: auto; border: 1px solid #334155;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 12px; margin-bottom: 14px;">
+            <h3 style="color: #38bdf8; margin: 0; font-size: 18px;">🛒 New Customer Order Booked</h3>
+            <span style="background: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #ffffff;">ADMIN ALERT</span>
+          </div>
+          <p style="font-size: 14px; color: #e2e8f0; margin-top: 0;">
+            A new order has just been placed on FarmsKing AgriStore:
+          </p>
+          <div style="background-color: #1e293b; padding: 14px 16px; border-radius: 8px; margin: 14px 0; border-left: 4px solid #38bdf8;">
+            <p style="margin: 4px 0; font-size: 13.5px; color: #ffffff;"><b>Order Number:</b> #${order.orderNumber}</p>
+            <p style="margin: 4px 0; font-size: 13.5px; color: #ffffff;"><b>Total Amount:</b> <span style="color: #34d399; font-weight: 800; font-size: 15px;">₹${order.totalAmount}</span></p>
+            <p style="margin: 4px 0; font-size: 13.5px; color: #ffffff;"><b>Payment Mode:</b> ${order.paymentMode || 'COD'}</p>
+            <p style="margin: 4px 0; font-size: 13.5px; color: #ffffff;"><b>Customer:</b> ${order.customerName} (📱 ${order.customerMobile})</p>
+            <p style="margin: 4px 0; font-size: 13px; color: #cbd5e1;"><b>Items Count:</b> ${order.itemCount} item(s)</p>
+            ${order.deliveryAddress ? `<p style="margin: 4px 0; font-size: 12.5px; color: #94a3b8;"><b>Delivery Address:</b> ${order.deliveryAddress}</p>` : ''}
+          </div>
+          <div style="text-align: center; margin: 20px 0 10px;">
+            <a href="https://farmsking.in/admin-orders" style="background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 10px 22px; border-radius: 6px; font-weight: 700; font-size: 13px; display: inline-block;">
+              Open Admin Order Hub →
+            </a>
+          </div>
+        </div>
+      `,
+        };
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            this.logger.log(`Admin order alert email sent to ${adminEmail} for #${order.orderNumber}. Message ID: ${info.messageId}`);
+            return true;
+        }
+        catch (err) {
+            this.logger.error(`Error sending admin order alert email to ${adminEmail}:`, err.message);
             return false;
         }
     }

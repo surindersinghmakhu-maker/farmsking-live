@@ -10,8 +10,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
+exports.extractOrderRecipient = extractOrderRecipient;
 const email_service_1 = require("../email/email.service");
 const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
+const sms_service_1 = require("../sms/sms.service");
 const crypto_1 = require("crypto");
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
@@ -32,11 +34,26 @@ const DETAIL_INCLUDE = {
     packedBy: { select: { id: true, name: true } },
     dispatchedBy: { select: { id: true, name: true } },
 };
+function extractOrderRecipient(deliveryAddress, customerUser) {
+    let recipientName = customerUser?.name || 'Valued Customer';
+    let recipientMobile = customerUser?.mobile || '';
+    if (deliveryAddress) {
+        const nameMatch = deliveryAddress.match(/Name:\s*([^,\n]+)/i);
+        if (nameMatch && nameMatch[1].trim()) {
+            recipientName = nameMatch[1].trim();
+        }
+        const mobileMatch = deliveryAddress.match(/Mobile:\s*([0-9]{10})/i);
+        if (mobileMatch && mobileMatch[1].trim()) {
+            recipientMobile = mobileMatch[1].trim();
+        }
+    }
+    return { recipientName, recipientMobile };
+}
 function generateOrderNumber() {
     return `ORD-${Date.now().toString(36).toUpperCase()}-${(0, crypto_1.randomBytes)(2).toString('hex').toUpperCase()}`;
 }
 let OrdersService = class OrdersService {
-    constructor(prisma, notificationsService, couponsService, walletService, appSettingsService, phonePeService, shiprocketService, cashfreeService, billingService, emailService, whatsappBotService) {
+    constructor(prisma, notificationsService, couponsService, walletService, appSettingsService, phonePeService, shiprocketService, cashfreeService, billingService, emailService, whatsappBotService, smsService) {
         this.prisma = prisma;
         this.notificationsService = notificationsService;
         this.couponsService = couponsService;
@@ -48,6 +65,7 @@ let OrdersService = class OrdersService {
         this.billingService = billingService;
         this.emailService = emailService;
         this.whatsappBotService = whatsappBotService;
+        this.smsService = smsService;
     }
     async create(customer, dto) {
         const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
@@ -380,32 +398,96 @@ let OrdersService = class OrdersService {
             const [customer, order] = await Promise.all([
                 this.prisma.user.findUnique({
                     where: { id: customerId },
-                    select: { name: true, mobile: true, email: true },
+                    select: { id: true, name: true, mobile: true, email: true },
                 }),
                 this.prisma.customerOrder.findUnique({
                     where: { id: orderId },
-                    select: { orderNumber: true, totalAmount: true },
+                    include: {
+                        items: true,
+                    },
                 }),
             ]);
             if (customer) {
                 const orderNum = order?.orderNumber || orderId.slice(-8).toUpperCase();
                 const orderTotal = Number(order?.totalAmount ?? 0);
-                if (customer.email && !customer.email.includes('placeholder')) {
-                    this.emailService
-                        .sendOrderLifecycleEmail(customer.email, customer.name || 'Valued Customer', {
-                        orderNumber: orderNum,
-                        statusTitle: title,
-                        statusDescription: body,
-                        totalAmount: orderTotal,
-                        courierName: meta?.courierName,
-                        trackingNumber: meta?.trackingNumber,
-                    })
-                        .catch((err) => console.warn('[OrdersService] Email notification error:', err?.message));
+                const { recipientName, recipientMobile } = extractOrderRecipient(order?.deliveryAddress, customer);
+                const targetEmail = customer.email && !customer.email.includes('placeholder') ? customer.email : null;
+                if (targetEmail) {
+                    if (eventType === 'ORDER_PLACED_SMS') {
+                        this.emailService
+                            .sendOrderPlacedConfirmationEmail(targetEmail, recipientName, {
+                            orderNumber: orderNum,
+                            totalAmount: orderTotal,
+                            paymentMode: order?.paymentMode,
+                            deliveryAddress: order?.deliveryAddress || undefined,
+                            items: (order?.items || []).map((i) => ({
+                                productName: i.productName,
+                                quantity: i.quantity,
+                                price: Number(i.price),
+                            })),
+                        })
+                            .catch((err) => console.warn('[OrdersService] Customer order confirmation email error:', err?.message));
+                    }
+                    else {
+                        this.emailService
+                            .sendOrderLifecycleEmail(targetEmail, recipientName, {
+                            orderNumber: orderNum,
+                            statusTitle: title,
+                            statusDescription: body,
+                            totalAmount: orderTotal,
+                            courierName: meta?.courierName,
+                            trackingNumber: meta?.trackingNumber,
+                        })
+                            .catch((err) => console.warn('[OrdersService] Customer order status email error:', err?.message));
+                    }
                 }
-                if (customer.mobile && !customer.mobile.startsWith('G_')) {
-                    const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total: ₹${orderTotal}\n` : ''}\nTrack your order anytime at https://farmsking.com/order-tracking\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`;
+                if (eventType === 'ORDER_PLACED_SMS') {
+                    try {
+                        const integrations = await this.appSettingsService.getIntegrations();
+                        const adminEmail = integrations?.projectMasterData?.smtp?.fromEmail ||
+                            integrations?.projectMasterData?.supportEmail ||
+                            integrations?.projectMasterData?.contactEmail ||
+                            process.env.ADMIN_EMAIL ||
+                            'farmskingapp@gmail.com';
+                        if (adminEmail && !adminEmail.includes('placeholder')) {
+                            this.emailService
+                                .sendAdminOrderAlertEmail(adminEmail, {
+                                orderNumber: orderNum,
+                                totalAmount: orderTotal,
+                                customerName: recipientName,
+                                customerMobile: recipientMobile || customer.mobile || 'N/A',
+                                deliveryAddress: order?.deliveryAddress || undefined,
+                                itemCount: order?.items?.length || 1,
+                                paymentMode: order?.paymentMode,
+                            })
+                                .catch((err) => console.warn('[OrdersService] Admin order alert email error:', err?.message));
+                        }
+                    }
+                    catch (adminMailErr) {
+                        console.warn('[OrdersService] Admin email lookup error:', adminMailErr?.message);
+                    }
+                }
+                const targetMobile = recipientMobile || customer.mobile;
+                if (targetMobile) {
+                    if (eventType === 'ORDER_PLACED_SMS') {
+                        this.smsService
+                            .sendOrderPlacedSms(targetMobile, recipientName, orderNum, orderTotal)
+                            .catch((err) => console.warn('[OrdersService] SMS notification error:', err?.message));
+                    }
+                    else {
+                        const smsBody = `FarmsKing Order #${orderNum}: ${title}. ${body}. Track: https://farmsking.in/order-tracking`;
+                        this.smsService
+                            .sendTextMessage(targetMobile, smsBody, eventType)
+                            .catch((err) => console.warn('[OrdersService] SMS status update error:', err?.message));
+                    }
+                }
+                if (targetMobile && !targetMobile.startsWith('G_')) {
+                    const itemsList = (order?.items || [])
+                        .map((i) => `• ${i.productName} (Qty: ${i.quantity}) - ₹${Number(i.price) * i.quantity}`)
+                        .join('\n');
+                    const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total Amount: *₹${orderTotal}*\n` : ''}${itemsList ? `\n*Items:*\n${itemsList}\n` : ''}${order?.deliveryAddress ? `\n📍 *Delivery Address:* ${order.deliveryAddress}\n` : ''}\nTrack your order anytime: https://farmsking.in/order-tracking\n- _FARMSKING TECHNOLOGIES PRIVATE LIMITED_`;
                     this.whatsappBotService
-                        .sendDirectTextMessage(customer.mobile, waText)
+                        .sendDirectTextMessage(targetMobile, waText)
                         .catch((err) => console.warn('[OrdersService] WhatsApp alert error:', err?.message));
                 }
             }
@@ -634,6 +716,7 @@ exports.OrdersService = OrdersService = __decorate([
         cashfree_service_1.CashfreeService,
         billing_service_1.BillingService,
         email_service_1.EmailService,
-        whatsapp_service_1.WhatsappBotService])
+        whatsapp_service_1.WhatsappBotService,
+        sms_service_1.SmsService])
 ], OrdersService);
 //# sourceMappingURL=orders.service.js.map

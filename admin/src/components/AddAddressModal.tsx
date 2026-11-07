@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
 import { useCreateAddress, useUpdateAddress } from '@/src/hooks/useAddresses';
-import { CustomerAddress } from '@/src/api/addresses.api';
+import { CustomerAddress, CreateAddressPayload } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { FONT, RADIUS } from '@/constants/theme';
 
@@ -51,7 +51,6 @@ export default function AddAddressModal({
   const [tag, setTag] = useState<'HOME' | 'FARM' | 'WORK'>('HOME');
   const [fullName, setFullName] = useState(user?.name ?? '');
   const [line, setLine] = useState('');
-  const [locality, setLocality] = useState('');
   const [mobile, setMobile] = useState(getCleanMobile(user?.mobile));
   const [pincode, setPincode] = useState('');
   const [postOffice, setPostOffice] = useState('');
@@ -65,13 +64,14 @@ export default function AddAddressModal({
   useEffect(() => {
     if (editingAddress) {
       setTag(editingAddress.tag);
-      setFullName(user?.name || '');
+      setFullName(editingAddress.name || user?.name || '');
       setLine(editingAddress.line);
       setMobile(editingAddress.mobile || getCleanMobile(user?.mobile));
       setPincode(editingAddress.pincode);
       setPostOffice(editingAddress.postOffice);
       setDistrict(editingAddress.district);
       setState(editingAddress.state);
+      setOfficeOptions([]);
     } else {
       reset();
     }
@@ -81,55 +81,82 @@ export default function AddAddressModal({
     setTag('HOME');
     setFullName(user?.name ?? '');
     setLine('');
-    setLocality('');
     setMobile(getCleanMobile(user?.mobile));
     setPincode('');
     setPostOffice('');
     setDistrict('');
     setState('');
     setOfficeOptions([]);
+    setIsPostOfficeExpanded(false);
     setStatus(null);
   };
 
-  const fetchAddress = async (code: string) => {
-    setIsLoading(true);
+  const handlePincodeChange = async (code: string) => {
+    setPincode(code);
     setStatus(null);
-    try {
-      const result = await lookupPincode(code);
-      setOfficeOptions(result.offices);
-      setPostOffice(result.postOffice);
-      setDistrict(result.district);
-      setState(result.state);
-      setIsPostOfficeExpanded(true);
-    } catch (err: any) {
-      setStatus(`❌ ${err?.message ?? 'Could not fetch PIN details'}`);
-    } finally {
-      setIsLoading(false);
+    if (code.length === 6 && /^\d{6}$/.test(code)) {
+      setIsLoading(true);
+      try {
+        const result = await lookupPincode(code);
+        setOfficeOptions(result.offices || []);
+        setPostOffice(result.postOffice);
+        setDistrict(result.district);
+        setState(result.state);
+        if (result.offices && result.offices.length > 1) {
+          setIsPostOfficeExpanded(true);
+        }
+      } catch (err: any) {
+        setOfficeOptions([]);
+        setPostOffice('');
+        setDistrict('');
+        setState('');
+        setStatus('Invalid PIN code — no matching post office branch found.');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setOfficeOptions([]);
     }
   };
 
   const handleSave = async () => {
+    if (!fullName.trim()) {
+      setStatus('Please enter recipient full name.');
+      return;
+    }
     if (!line.trim()) {
-      setStatus('❌ Enter the address line (house/street/farm plot).');
+      setStatus('Please enter House No. / Street / Village line.');
+      return;
+    }
+    if (!pincode.trim() || !/^\d{6}$/.test(pincode.trim())) {
+      setStatus('Please enter a valid 6-digit PIN code.');
       return;
     }
     if (!postOffice || !district || !state) {
-      setStatus('❌ Fetch the address from the PIN code first.');
+      setStatus('Please select your Post Office from the branches.');
       return;
     }
     tap();
     try {
-      const addressText = locality.trim() ? `${line.trim()}, ${locality.trim()}` : line.trim();
-      const fullAddressLine = fullName.trim() ? `${fullName.trim()} - ${addressText}` : addressText;
+      const payload: CreateAddressPayload = {
+        tag,
+        name: fullName.trim(),
+        line: line.trim(),
+        mobile: mobile.trim() || undefined,
+        postOffice: postOffice.trim(),
+        district: district.trim(),
+        state: state.trim(),
+        pincode: pincode.trim(),
+      };
 
       let saved: CustomerAddress;
       if (editingAddress) {
         saved = await updateAddress.mutateAsync({
           id: editingAddress.id,
-          payload: { tag, line: fullAddressLine, mobile: mobile.trim() || undefined, postOffice, district, state, pincode },
+          payload,
         });
       } else {
-        saved = await createAddress.mutateAsync({ tag, line: fullAddressLine, mobile: mobile.trim() || undefined, postOffice, district, state, pincode });
+        saved = await createAddress.mutateAsync(payload);
       }
       reset();
       onClose();
@@ -142,171 +169,228 @@ export default function AddAddressModal({
   const isPending = createAddress.isPending || updateAddress.isPending;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { reset(); onClose(); }}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => { reset(); onClose(); }}>
       <View style={modalStyles.modalOverlay}>
         <View style={modalStyles.modalContent}>
           <View style={modalStyles.modalHeader}>
-            <Text style={modalStyles.modalTitle}>{editingAddress ? 'Edit Registered Address' : 'Add Delivery Address'}</Text>
-            <TouchableOpacity onPress={() => { reset(); onClose(); }}>
-              <Ionicons name="close-circle" size={24} color="#64748b" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="location-sharp" size={18} color={primaryColor} />
+              <Text style={modalStyles.modalTitle}>
+                {editingAddress ? 'Edit Registered Address' : 'Add Registered Address'}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => { reset(); onClose(); }} style={{ padding: 2 }}>
+              <Ionicons name="close-circle" size={22} color="#64748b" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 520 }}>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 480 }} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+            {/* Address Tag Selector */}
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 2 }}>
               {(['HOME', 'FARM', 'WORK'] as const).map((t) => (
                 <TouchableOpacity
                   key={t}
-                  style={[modalStyles.tagChip, tag === t && { backgroundColor: primaryColor, borderColor: primaryColor }]}
-                  onPress={() => setTag(t)}
+                  style={[
+                    modalStyles.tagChip,
+                    tag === t && { backgroundColor: primaryColor, borderColor: primaryColor },
+                  ]}
+                  onPress={() => { tap(); setTag(t); }}
                 >
-                  <Text style={[modalStyles.tagChipText, tag === t && { color: '#ffffff' }]}>{t}</Text>
+                  <Text style={[modalStyles.tagChipText, tag === t && { color: '#ffffff' }]}>
+                    {t === 'HOME' ? '🏠 HOME' : t === 'FARM' ? '🌾 FARM' : '🏢 WORK'}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={modalStyles.inputLabel}>Full Name / Contact Person</Text>
-            <TextInput
-              style={modalStyles.modalInput}
-              placeholder="Recipient full name *"
-              placeholderTextColor="#94a3b8"
-              value={fullName}
-              onChangeText={setFullName}
-            />
+            {/* Field 1: Recipient Full Name */}
+            <View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={modalStyles.inputLabel}>Recipient Full Name *</Text>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>Default: your name (editable)</Text>
+              </View>
+              <TextInput
+                style={modalStyles.modalInput}
+                placeholder="Recipient full name *"
+                placeholderTextColor="#94a3b8"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            </View>
 
-            <Text style={[modalStyles.inputLabel, { marginTop: 10 }]}>Address Line *</Text>
-            <TextInput
-              style={modalStyles.modalInput}
-              placeholder="House no, street / farm plot"
-              placeholderTextColor="#94a3b8"
-              value={line}
-              onChangeText={setLine}
-            />
+            {/* Field 2: House No. / Street / Village Line */}
+            <View>
+              <Text style={modalStyles.inputLabel}>House No. / Street / Village Line *</Text>
+              <TextInput
+                style={modalStyles.modalInput}
+                placeholder="e.g. House #14, Main Street / Village"
+                placeholderTextColor="#94a3b8"
+                value={line}
+                onChangeText={setLine}
+              />
+            </View>
 
-            <Text style={[modalStyles.inputLabel, { marginTop: 10 }]}>Locality / Area / Landmark (Optional)</Text>
-            <TextInput
-              style={modalStyles.modalInput}
-              placeholder="e.g. Near Water Tank / Main Road"
-              placeholderTextColor="#94a3b8"
-              value={locality}
-              onChangeText={setLocality}
-            />
-
-            <Text style={[modalStyles.inputLabel, { marginTop: 10 }]}>Delivery Mobile Number</Text>
-            <TextInput
-              style={modalStyles.modalInput}
-              placeholder="10-digit mobile number for delivery *"
-              placeholderTextColor="#94a3b8"
-              keyboardType="phone-pad"
-              maxLength={10}
-              value={mobile}
-              onChangeText={setMobile}
-            />
-
-            <Text style={[modalStyles.inputLabel, { marginTop: 10 }]}>PIN Code</Text>
-            <View style={modalStyles.pincodeRow}>
-              <View style={[modalStyles.inputWrap, { flex: 1, backgroundColor: '#f8fafc' }]}>
+            {/* Field 3: 6-Digit PIN Code */}
+            <View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={modalStyles.inputLabel}>6-Digit PIN Code *</Text>
+                {isLoading ? (
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: primaryColor }}>Fetching branches...</Text>
+                ) : null}
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <TextInput
-                  style={modalStyles.input}
-                  placeholder="6-digit PIN"
+                  style={[modalStyles.modalInput, { flex: 1, fontFamily: FONT.bold, letterSpacing: 1 }]}
+                  placeholder="Enter 6-digit PIN code *"
                   placeholderTextColor="#94a3b8"
                   keyboardType="numeric"
                   maxLength={6}
                   value={pincode}
-                  onChangeText={(t) => { setPincode(t); if (t.length === 6) fetchAddress(t); }}
+                  onChangeText={handlePincodeChange}
                 />
+                {isLoading ? (
+                  <ActivityIndicator size="small" color={primaryColor} />
+                ) : pincode.length === 6 && district ? (
+                  <Ionicons name="checkmark-circle" size={20} color={primaryColor} />
+                ) : null}
               </View>
-              <TouchableOpacity
-                style={[modalStyles.fetchBtn, { backgroundColor: primaryColor }]}
-                activeOpacity={0.8}
-                disabled={isLoading || pincode.length !== 6}
-                onPress={() => fetchAddress(pincode)}
-              >
-                {isLoading ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={modalStyles.fetchBtnText}>Fetch</Text>}
-              </TouchableOpacity>
             </View>
 
-            <Text style={modalStyles.inputLabel}>Post Office / Locality</Text>
-            {officeOptions.length > 0 ? (
-              postOffice && !isPostOfficeExpanded ? (
-                <TouchableOpacity
-                  style={[modalStyles.selectedOfficeCard, { borderColor: primaryColor, backgroundColor: '#f0fdf4' }]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    tap();
-                    setIsPostOfficeExpanded(true);
-                  }}
-                >
-                  <Ionicons name="checkmark-circle" size={18} color={primaryColor} />
-                  <Text style={[modalStyles.selectedOfficeText, { color: primaryColor }]} numberOfLines={1}>
-                    {postOffice} ({district})
-                  </Text>
-                  <View style={[modalStyles.changePill, { borderColor: primaryColor }]}>
-                    <Text style={[modalStyles.changePillText, { color: primaryColor }]}>Change</Text>
-                    <Ionicons name="chevron-down" size={12} color={primaryColor} />
-                  </View>
-                </TouchableOpacity>
-              ) : (
-                <View style={modalStyles.expandedOfficeList}>
-                  {officeOptions.map((office) => {
-                    const isSelected = postOffice === office.name;
-                    return (
-                      <TouchableOpacity
-                        key={office.name}
-                        style={[
-                          modalStyles.expandedOfficeCard,
-                          isSelected && { backgroundColor: '#f0fdf4', borderColor: primaryColor },
-                        ]}
-                        onPress={() => {
-                          tap();
-                          setPostOffice(office.name);
-                          setDistrict(office.district);
-                          setState(office.state);
-                          setIsPostOfficeExpanded(false);
-                        }}
-                      >
-                        <Ionicons
-                          name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                          size={16}
-                          color={isSelected ? primaryColor : '#94a3b8'}
-                        />
-                        <Text style={[modalStyles.expandedOfficeText, isSelected && { color: primaryColor, fontFamily: FONT.bold }]}>
-                          {office.name} ({office.district})
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )
-            ) : (
-              <TextInput style={modalStyles.modalInput} value={postOffice} onChangeText={setPostOffice} placeholder="Auto-filled from PIN" placeholderTextColor="#94a3b8" />
-            )}
+            {/* Field 4: Post Office Branch (Select from branches) */}
+            <View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                <Text style={[modalStyles.inputLabel, { marginBottom: 0 }]}>Post Office Branch *</Text>
+                {officeOptions.length > 1 && (
+                  <TouchableOpacity onPress={() => setIsPostOfficeExpanded((prev) => !prev)}>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                      {isPostOfficeExpanded ? '▲ Hide Branches' : `▼ Change Branch (${officeOptions.length})`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={modalStyles.inputLabel}>District</Text>
-                <View style={modalStyles.readOnlySelector}>
-                  <Ionicons name="location-outline" size={16} color="#64748b" />
-                  <Text style={modalStyles.readOnlyText} numberOfLines={1}>{district || '—'}</Text>
-                  <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
+              {officeOptions.length > 0 ? (
+                postOffice && !isPostOfficeExpanded ? (
+                  <TouchableOpacity
+                    style={[modalStyles.selectedOfficeCard, { borderColor: '#86efac', backgroundColor: '#f0fdf4' }]}
+                    activeOpacity={0.85}
+                    onPress={() => setIsPostOfficeExpanded(true)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                      <Ionicons name="checkmark-circle" size={16} color={primaryColor} />
+                      <Text style={[modalStyles.selectedOfficeText, { color: primaryColor }]}>
+                        {postOffice}
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }}>
+                        ({district})
+                      </Text>
+                    </View>
+                    <View style={modalStyles.changePill}>
+                      <Text style={[modalStyles.changePillText, { color: primaryColor }]}>Select</Text>
+                      <Ionicons name="chevron-down" size={12} color={primaryColor} />
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={modalStyles.expandedOfficeList}>
+                    <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                      {officeOptions.map((office) => {
+                        const isSelected = postOffice === office.name;
+                        return (
+                          <TouchableOpacity
+                            key={office.name}
+                            style={[
+                              modalStyles.expandedOfficeCard,
+                              isSelected && { backgroundColor: '#f0fdf4' },
+                            ]}
+                            onPress={() => {
+                              tap();
+                              setPostOffice(office.name);
+                              setDistrict(office.district);
+                              setState(office.state);
+                              setIsPostOfficeExpanded(false);
+                            }}
+                          >
+                            <Ionicons
+                              name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                              size={14}
+                              color={isSelected ? primaryColor : '#94a3b8'}
+                            />
+                            <Text style={[modalStyles.expandedOfficeText, isSelected && { color: primaryColor, fontFamily: FONT.bold }]}>
+                              {office.name} ({office.district})
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                )
+              ) : (
+                <View style={{ paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#94a3b8' }}>
+                    Auto-fetched when you enter 6-digit PIN code
+                  </Text>
                 </View>
+              )}
+            </View>
+
+            {/* Field 5 & 6: District * & State * (Read Only from PIN) */}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                  <Text style={[modalStyles.inputLabel, { fontSize: 11, marginBottom: 0 }]}>District *</Text>
+                  <Ionicons name="lock-closed" size={10} color="#94a3b8" />
+                </View>
+                <TextInput
+                  style={[modalStyles.modalInput, { backgroundColor: '#f1f5f9', color: '#475569', fontSize: 12 }]}
+                  placeholder="District (from PIN)"
+                  placeholderTextColor="#94a3b8"
+                  value={district}
+                  editable={false}
+                />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={modalStyles.inputLabel}>State</Text>
-                <View style={modalStyles.readOnlySelector}>
-                  <Text style={modalStyles.readOnlyText} numberOfLines={1}>{state || '—'}</Text>
-                  <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                  <Text style={[modalStyles.inputLabel, { fontSize: 11, marginBottom: 0 }]}>State *</Text>
+                  <Ionicons name="lock-closed" size={10} color="#94a3b8" />
                 </View>
+                <TextInput
+                  style={[modalStyles.modalInput, { backgroundColor: '#f1f5f9', color: '#475569', fontSize: 12 }]}
+                  placeholder="State (from PIN)"
+                  placeholderTextColor="#94a3b8"
+                  value={state}
+                  editable={false}
+                />
               </View>
+            </View>
+
+            {/* Contact Mobile Number */}
+            <View>
+              <Text style={modalStyles.inputLabel}>Contact Mobile Number *</Text>
+              <TextInput
+                style={modalStyles.modalInput}
+                placeholder="10-digit delivery mobile *"
+                placeholderTextColor="#94a3b8"
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={mobile}
+                onChangeText={setMobile}
+              />
             </View>
 
             {status ? <Text style={modalStyles.errorText}>{status}</Text> : null}
 
-            <TouchableOpacity style={[modalStyles.modalSubmitBtn, { backgroundColor: primaryColor }]} onPress={handleSave} disabled={isPending}>
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[modalStyles.modalSubmitBtn, { backgroundColor: primaryColor }]}
+              onPress={handleSave}
+              disabled={isPending}
+            >
               {isPending ? (
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
-                <Text style={modalStyles.modalSubmitText}>{editingAddress ? 'Save Changes' : 'Save Delivery Address'}</Text>
+                <Text style={modalStyles.modalSubmitText}>
+                  💾 {editingAddress ? 'Update & Save Address' : 'Save Delivery Address'}
+                </Text>
               )}
             </TouchableOpacity>
           </ScrollView>
@@ -327,21 +411,21 @@ const modalStyles = StyleSheet.create({
   modalContent: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
-    padding: 20,
+    padding: 18,
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 460,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
   },
@@ -349,22 +433,22 @@ const modalStyles = StyleSheet.create({
     fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#334155',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   modalInput: {
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
     fontSize: 13,
     fontFamily: FONT.medium,
     color: '#0f172a',
   },
   tagChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: '#cbd5e1',
@@ -375,65 +459,36 @@ const modalStyles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#475569',
   },
-  pincodeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  inputWrap: {
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  input: {
-    fontSize: 13,
-    fontFamily: FONT.medium,
-    color: '#0f172a',
-  },
-  fetchBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fetchBtnText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontFamily: FONT.bold,
-  },
   selectedOfficeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderWidth: 1,
   },
   selectedOfficeText: {
-    flex: 1,
     fontSize: 12.5,
     fontFamily: FONT.bold,
   },
   changePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    borderWidth: 1,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 8,
+    gap: 2,
+    paddingHorizontal: 6,
     paddingVertical: 2,
+    backgroundColor: '#ffffff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#86efac',
   },
   changePillText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.bold,
   },
   expandedOfficeList: {
-    maxHeight: 140,
+    maxHeight: 130,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
@@ -444,8 +499,8 @@ const modalStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
@@ -453,33 +508,17 @@ const modalStyles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.medium,
     color: '#334155',
-  },
-  readOnlySelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-  },
-  readOnlyText: {
     flex: 1,
-    fontSize: 12,
-    fontFamily: FONT.medium,
-    color: '#475569',
   },
   errorText: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#dc2626',
-    marginTop: 8,
+    marginTop: 2,
   },
   modalSubmitBtn: {
-    marginTop: 14,
-    paddingVertical: 12,
+    marginTop: 6,
+    paddingVertical: 10,
     borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',

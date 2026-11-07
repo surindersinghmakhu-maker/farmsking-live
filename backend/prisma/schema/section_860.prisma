@@ -95,6 +95,7 @@ model CustomerAddress {
   ownerId    String
   owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   tag        String
+  name       String?
   line       String
   mobile     String?
   postOffice String

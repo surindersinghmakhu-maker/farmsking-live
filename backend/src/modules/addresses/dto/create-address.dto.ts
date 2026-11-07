@@ -4,6 +4,10 @@ export class CreateAddressDto {
   @IsIn(['HOME', 'FARM', 'WORK'])
   tag: 'HOME' | 'FARM' | 'WORK';
 
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @IsString()
   @MinLength(1)
   line: string;

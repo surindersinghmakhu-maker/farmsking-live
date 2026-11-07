@@ -46,7 +46,7 @@ import { useMyAddresses, useCreateAddress, useUpdateAddress, useSetDefaultAddres
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { CustomerAddress } from '@/src/api/addresses.api';
-import { lookupPincode } from '@/src/api/pincode.api';
+import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { useCart } from '@/src/store/cart-context';
 import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
@@ -511,29 +511,43 @@ export default function ShopScreen() {
   const [isEditAddressModalOpen, setIsEditAddressModalOpen] = useState(false);
   const [editingAddressItem, setEditingAddressItem] = useState<CustomerAddress | null>(null);
   const [addrTag, setAddrTag] = useState<'HOME' | 'FARM' | 'WORK'>('HOME');
+  const [addrName, setAddrName] = useState(user?.name || '');
   const [addrLine, setAddrLine] = useState('');
   const [addrPostOffice, setAddrPostOffice] = useState('');
   const [addrDistrict, setAddrDistrict] = useState('');
   const [addrState, setAddrState] = useState('');
   const [addrPincode, setAddrPincode] = useState('');
   const [addrMobile, setAddrMobile] = useState('');
+  const [addrOffices, setAddrOffices] = useState<PincodeOffice[]>([]);
+  const [isAddrOfficeExpanded, setIsAddrOfficeExpanded] = useState(false);
   const [addrError, setAddrError] = useState<string | null>(null);
   const [isLookingUpPincode, setIsLookingUpPincode] = useState(false);
 
   const handlePincodeChange = async (pin: string) => {
     setAddrPincode(pin);
+    setAddrError(null);
     if (pin.length === 6 && /^\d{6}$/.test(pin)) {
       try {
         setIsLookingUpPincode(true);
         const res = await lookupPincode(pin);
-        if (res.postOffice) setAddrPostOffice(res.postOffice);
-        if (res.district) setAddrDistrict(res.district);
-        if (res.state) setAddrState(res.state);
-      } catch (e) {
-        // ignore
+        setAddrOffices(res.offices || []);
+        setAddrPostOffice(res.postOffice);
+        setAddrDistrict(res.district);
+        setAddrState(res.state);
+        if (res.offices && res.offices.length > 1) {
+          setIsAddrOfficeExpanded(true);
+        }
+      } catch (e: any) {
+        setAddrOffices([]);
+        setAddrPostOffice('');
+        setAddrDistrict('');
+        setAddrState('');
+        setAddrError('Invalid PIN code — no branch post office found.');
       } finally {
         setIsLookingUpPincode(false);
       }
+    } else {
+      setAddrOffices([]);
     }
   };
 
@@ -541,38 +555,52 @@ export default function ShopScreen() {
     setEditingAddressItem(addr);
     if (addr) {
       setAddrTag(addr.tag || 'HOME');
+      setAddrName(addr.name || user?.name || '');
       setAddrLine(addr.line || '');
       setAddrPostOffice(addr.postOffice || '');
       setAddrDistrict(addr.district || '');
       setAddrState(addr.state || '');
       setAddrPincode(addr.pincode || '');
       setAddrMobile(addr.mobile || user?.mobile || (user as any)?.phone || '');
+      setAddrOffices([]);
     } else {
       setAddrTag('HOME');
+      setAddrName(user?.name || '');
       setAddrLine('');
       setAddrPostOffice('');
       setAddrDistrict('');
       setAddrState('');
       setAddrPincode('');
       setAddrMobile(user?.mobile || (user as any)?.phone || '');
+      setAddrOffices([]);
     }
     setAddrError(null);
+    setIsAddrOfficeExpanded(false);
     setIsEditAddressModalOpen(true);
   };
 
   const handleSaveAddress = async () => {
-    if (!addrLine.trim() || !addrPostOffice.trim() || !addrDistrict.trim() || !addrState.trim() || !addrPincode.trim()) {
-      setAddrError('Please fill all required address fields.');
+    if (!addrName.trim()) {
+      setAddrError('Please enter recipient full name.');
       return;
     }
-    if (!/^\d{6}$/.test(addrPincode.trim())) {
-      setAddrError('PIN code must be exactly 6 digits.');
+    if (!addrLine.trim()) {
+      setAddrError('Please enter House No. / Street / Village line.');
+      return;
+    }
+    if (!addrPincode.trim() || !/^\d{6}$/.test(addrPincode.trim())) {
+      setAddrError('Please enter a valid 6-digit PIN code.');
+      return;
+    }
+    if (!addrPostOffice.trim() || !addrDistrict.trim() || !addrState.trim()) {
+      setAddrError('Please select a valid Post Office from the branches.');
       return;
     }
     try {
       tap();
-      const payload = {
+      const payload: CreateAddressPayload = {
         tag: addrTag,
+        name: addrName.trim(),
         line: addrLine.trim(),
         postOffice: addrPostOffice.trim(),
         district: addrDistrict.trim(),
@@ -623,12 +651,13 @@ export default function ShopScreen() {
 
   const composeAddress = (addr: (typeof savedAddresses)[number]) => {
     const parts = [];
-    const mob = addr.mobile || user?.mobile || (user as any)?.phone;
+    if (addr.name) parts.push(`Name: ${addr.name}`);
     parts.push(`Address: ${addr.line}`);
-    if (addr.postOffice) parts.push(`Post Office: ${addr.postOffice}`);
+    if (addr.postOffice) parts.push(`PO: ${addr.postOffice}`);
     if (addr.district) parts.push(`District: ${addr.district}`);
     if (addr.state) parts.push(`State: ${addr.state}`);
     if (addr.pincode) parts.push(`PIN: ${addr.pincode}`);
+    const mob = addr.mobile || user?.mobile || (user as any)?.phone;
     if (mob) parts.push(`Mobile: ${mob}`);
     return parts.join(', ');
   };
@@ -4806,107 +4835,241 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       {/* 📍 Edit Registered Address Modal */}
       <Modal visible={isEditAddressModalOpen} animationType="fade" transparent onRequestClose={() => setIsEditAddressModalOpen(false)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { maxWidth: 460, padding: 16 }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {editingAddressItem ? '✏️ Edit Registered Address' : '📍 Add Registered Address'}
-              </Text>
-              <TouchableOpacity onPress={() => setIsEditAddressModalOpen(false)}>
-                <Ionicons name="close-circle" size={24} color="#64748b" />
+          <View style={[styles.modalContent, { maxWidth: 460, padding: 18, borderRadius: RADIUS.xl }]}>
+            <View style={[styles.modalHeader, { paddingBottom: 8, marginBottom: 8 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="location-sharp" size={18} color="#15803d" />
+                <Text style={[styles.modalTitle, { fontSize: 15 }]}>
+                  {editingAddressItem ? 'Edit Registered Address' : 'Add Registered Address'}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsEditAddressModalOpen(false)} style={{ padding: 2 }}>
+                <Ionicons name="close-circle" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={{ gap: 8, paddingBottom: 10 }} showsVerticalScrollIndicator={false} style={{ maxHeight: 440 }}>
-              <Text style={styles.inputLabel}>Address Tag *</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
+            <ScrollView contentContainerStyle={{ gap: 8, paddingBottom: 4 }} showsVerticalScrollIndicator={false} style={{ maxHeight: 480 }}>
+              {/* Address Tag Selector */}
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 2 }}>
                 {(['HOME', 'FARM', 'WORK'] as const).map((t) => (
                   <TouchableOpacity
                     key={t}
                     style={[
                       styles.filterChip,
+                      { paddingVertical: 5, paddingHorizontal: 12 },
                       addrTag === t && { backgroundColor: '#15803d', borderColor: '#166534' },
                     ]}
-                    onPress={() => setAddrTag(t)}
+                    onPress={() => { tap(); setAddrTag(t); }}
                   >
-                    <Text style={[styles.filterChipText, addrTag === t && { color: '#ffffff' }]}>
+                    <Text style={[styles.filterChipText, { fontSize: 11 }, addrTag === t && { color: '#ffffff' }]}>
                       {t === 'HOME' ? '🏠 HOME' : t === 'FARM' ? '🌾 FARM' : '🏢 WORK'}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.inputLabel}>6-Digit PIN Code *</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {/* Field 1: Recipient Full Name */}
+              <View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.inputLabel, { fontSize: 11.5, marginBottom: 3 }]}>Recipient Full Name *</Text>
+                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>Default: your name (editable)</Text>
+                </View>
                 <TextInput
-                  style={[styles.modalInput, { flex: 1 }]}
-                  placeholder="e.g. 142044"
-                  keyboardType="numeric"
-                  maxLength={6}
-                  value={addrPincode}
-                  onChangeText={handlePincodeChange}
+                  style={[styles.modalInput, { paddingVertical: 7, fontSize: 13 }]}
+                  placeholder="Recipient full name *"
+                  placeholderTextColor="#94a3b8"
+                  value={addrName}
+                  onChangeText={setAddrName}
                 />
-                {isLookingUpPincode ? <ActivityIndicator size="small" color="#15803d" /> : null}
               </View>
 
-              <Text style={styles.inputLabel}>House No. / Street / Village Line *</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. VPO Makhu, Near Gurudwara Sahib"
-                value={addrLine}
-                onChangeText={setAddrLine}
-              />
+              {/* Field 2: House No. / Street / Village Line */}
+              <View>
+                <Text style={[styles.inputLabel, { fontSize: 11.5, marginBottom: 3 }]}>House No. / Street / Village Line *</Text>
+                <TextInput
+                  style={[styles.modalInput, { paddingVertical: 7, fontSize: 13 }]}
+                  placeholder="e.g. House #14, Main Road, VPO Makhu"
+                  placeholderTextColor="#94a3b8"
+                  value={addrLine}
+                  onChangeText={setAddrLine}
+                />
+              </View>
 
-              <Text style={styles.inputLabel}>Post Office *</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. Makhu"
-                value={addrPostOffice}
-                onChangeText={setAddrPostOffice}
-              />
+              {/* Field 3: 6-Digit PIN Code */}
+              <View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={[styles.inputLabel, { fontSize: 11.5, marginBottom: 3 }]}>6-Digit PIN Code *</Text>
+                  {isLookingUpPincode ? (
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>Fetching branches...</Text>
+                  ) : null}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <TextInput
+                    style={[styles.modalInput, { flex: 1, paddingVertical: 7, fontSize: 14, fontFamily: FONT.bold, letterSpacing: 1 }]}
+                    placeholder="Enter 6-digit PIN code *"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    maxLength={6}
+                    value={addrPincode}
+                    onChangeText={handlePincodeChange}
+                  />
+                  {isLookingUpPincode ? (
+                    <ActivityIndicator size="small" color="#15803d" />
+                  ) : addrPincode.length === 6 && addrDistrict ? (
+                    <Ionicons name="checkmark-circle" size={20} color="#15803d" />
+                  ) : null}
+                </View>
+              </View>
 
+              {/* Field 4: Post Office Branch (Select from branches) */}
+              <View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                  <Text style={[styles.inputLabel, { fontSize: 11.5, marginBottom: 0 }]}>Post Office Branch *</Text>
+                  {addrOffices.length > 1 && (
+                    <TouchableOpacity onPress={() => setIsAddrOfficeExpanded((prev) => !prev)}>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                        {isAddrOfficeExpanded ? '▲ Hide Branches' : `▼ Change Branch (${addrOffices.length})`}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {addrOffices.length > 0 ? (
+                  addrPostOffice && !isAddrOfficeExpanded ? (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 10,
+                        paddingVertical: 8,
+                        borderRadius: RADIUS.md,
+                        backgroundColor: '#f0fdf4',
+                        borderWidth: 1,
+                        borderColor: '#86efac',
+                      }}
+                      onPress={() => setIsAddrOfficeExpanded(true)}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <Ionicons name="checkmark-circle" size={16} color="#15803d" />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          {addrPostOffice}
+                        </Text>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }}>
+                          ({addrDistrict})
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: '#ffffff', borderRadius: 4, borderWidth: 1, borderColor: '#86efac' }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>Select</Text>
+                        <Ionicons name="chevron-down" size={12} color="#15803d" />
+                      </View>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ maxHeight: 130, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                      <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+                        {addrOffices.map((office) => {
+                          const isSel = addrPostOffice === office.name;
+                          return (
+                            <TouchableOpacity
+                              key={office.name}
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 8,
+                                paddingHorizontal: 10,
+                                paddingVertical: 7,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#f1f5f9',
+                                backgroundColor: isSel ? '#f0fdf4' : '#ffffff',
+                              }}
+                              onPress={() => {
+                                tap();
+                                setAddrPostOffice(office.name);
+                                setAddrDistrict(office.district);
+                                setAddrState(office.state);
+                                setIsAddrOfficeExpanded(false);
+                              }}
+                            >
+                              <Ionicons
+                                name={isSel ? 'radio-button-on' : 'radio-button-off'}
+                                size={14}
+                                color={isSel ? '#15803d' : '#94a3b8'}
+                              />
+                              <Text style={{ fontSize: 12, fontFamily: isSel ? FONT.bold : FONT.medium, color: isSel ? '#15803d' : '#334155', flex: 1 }}>
+                                {office.name} ({office.district})
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  )
+                ) : (
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#94a3b8' }}>
+                      Auto-fetched when you enter 6-digit PIN code
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Field 5 & 6: District * & State * (Read Only from PIN) */}
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>District *</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                    <Text style={[styles.inputLabel, { fontSize: 11, marginBottom: 0 }]}>District *</Text>
+                    <Ionicons name="lock-closed" size={10} color="#94a3b8" />
+                  </View>
                   <TextInput
-                    style={styles.modalInput}
-                    placeholder="e.g. Ferozepur"
+                    style={[styles.modalInput, { paddingVertical: 7, fontSize: 12, backgroundColor: '#f1f5f9', color: '#475569' }]}
+                    placeholder="District (from PIN)"
+                    placeholderTextColor="#94a3b8"
                     value={addrDistrict}
-                    onChangeText={setAddrDistrict}
+                    editable={false}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>State *</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                    <Text style={[styles.inputLabel, { fontSize: 11, marginBottom: 0 }]}>State *</Text>
+                    <Ionicons name="lock-closed" size={10} color="#94a3b8" />
+                  </View>
                   <TextInput
-                    style={styles.modalInput}
-                    placeholder="e.g. Punjab"
+                    style={[styles.modalInput, { paddingVertical: 7, fontSize: 12, backgroundColor: '#f1f5f9', color: '#475569' }]}
+                    placeholder="State (from PIN)"
+                    placeholderTextColor="#94a3b8"
                     value={addrState}
-                    onChangeText={setAddrState}
+                    editable={false}
                   />
                 </View>
               </View>
 
-              <Text style={styles.inputLabel}>Contact Mobile Number *</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="e.g. 9577622000"
-                keyboardType="phone-pad"
-                maxLength={10}
-                value={addrMobile}
-                onChangeText={setAddrMobile}
-              />
+              {/* Contact Mobile Number */}
+              <View>
+                <Text style={[styles.inputLabel, { fontSize: 11.5, marginBottom: 3 }]}>Contact Mobile Number *</Text>
+                <TextInput
+                  style={[styles.modalInput, { paddingVertical: 7, fontSize: 13 }]}
+                  placeholder="10-digit delivery mobile"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  value={addrMobile}
+                  onChangeText={setAddrMobile}
+                />
+              </View>
 
-              {addrError ? <Text style={styles.errorText}>{addrError}</Text> : null}
+              {addrError ? <Text style={[styles.errorText, { fontSize: 11.5, marginTop: 2 }]}>{addrError}</Text> : null}
 
+              {/* Submit CTA */}
               <TouchableOpacity
-                style={[styles.modalSubmitBtn, { backgroundColor: '#15803d', marginTop: 10 }]}
+                style={[styles.modalSubmitBtn, { backgroundColor: '#15803d', marginTop: 6, paddingVertical: 10 }]}
                 disabled={createAddressMutation.isPending || updateAddressMutation.isPending}
                 onPress={handleSaveAddress}
               >
                 {createAddressMutation.isPending || updateAddressMutation.isPending ? (
                   <ActivityIndicator color="#ffffff" size="small" />
                 ) : (
-                  <Text style={styles.modalSubmitText}>
-                    💾 {editingAddressItem ? 'Update & Save Address' : 'Save New Address'}
+                  <Text style={[styles.modalSubmitText, { fontSize: 13.5 }]}>
+                    💾 {editingAddressItem ? 'Update & Save Address' : 'Save Delivery Address'}
                   </Text>
                 )}
               </TouchableOpacity>

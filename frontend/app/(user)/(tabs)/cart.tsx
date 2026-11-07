@@ -60,12 +60,13 @@ export default function CartScreen() {
 
   const composeAddress = (addr: CustomerAddress) => {
     const parts = [];
-    const mob = addr.mobile || user?.mobile || (user as any)?.phone;
+    if (addr.name) parts.push(`Name: ${addr.name}`);
     parts.push(addr.line);
     if (addr.postOffice) parts.push(`PO: ${addr.postOffice}`);
     if (addr.district) parts.push(addr.district);
     if (addr.state) parts.push(addr.state);
     if (addr.pincode) parts.push(`PIN: ${addr.pincode}`);
+    const mob = addr.mobile || user?.mobile || (user as any)?.phone;
     if (mob) parts.push(`📞 ${mob}`);
     return parts.join(', ');
   };

@@ -31,6 +31,7 @@ let AddressesService = class AddressesService {
             data: {
                 ownerId: user.id,
                 tag: dto.tag,
+                name: dto.name,
                 line: dto.line,
                 mobile: dto.mobile,
                 postOffice: dto.postOffice,

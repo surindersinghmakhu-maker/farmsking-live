@@ -1407,6 +1407,7 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
                   </TouchableOpacity>
                 </View>
               </View>
+              {addr.name ? <Text style={[styles.addressLine, { fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 2 }]}>👤 {addr.name}</Text> : null}
               <Text style={styles.addressLine}>{addr.line}</Text>
               <Text style={styles.addressMeta}>{addr.postOffice}, {addr.district}, {addr.state} - {addr.pincode}</Text>
               {addr.mobile ? <Text style={styles.addressMeta}>📞 {addr.mobile}</Text> : null}

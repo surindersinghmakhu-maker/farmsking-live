@@ -4,6 +4,7 @@ export interface CustomerAddress {
   id: string;
   ownerId: string;
   tag: 'HOME' | 'FARM' | 'WORK';
+  name?: string | null;
   line: string;
   mobile?: string | null;
   postOffice: string;
@@ -16,6 +17,7 @@ export interface CustomerAddress {
 
 export interface CreateAddressPayload {
   tag: 'HOME' | 'FARM' | 'WORK';
+  name?: string;
   line: string;
   mobile?: string;
   postOffice: string;

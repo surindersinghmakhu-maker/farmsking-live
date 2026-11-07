@@ -1,5 +1,6 @@
 import { EmailService } from '../email/email.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
+import { SmsService } from '../sms/sms.service';
 import { randomBytes } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationType, OrderStatus, OrderPaymentMode, OrderPaymentStatus, Role, SellerType, SubOrderStatus, RtoBearer } from '@prisma/client';
@@ -26,6 +27,24 @@ const DETAIL_INCLUDE = {
   dispatchedBy: { select: { id: true, name: true } },
 } as const;
 
+
+export function extractOrderRecipient(deliveryAddress?: string | null, customerUser?: any) {
+  let recipientName = customerUser?.name || 'Valued Customer';
+  let recipientMobile = customerUser?.mobile || '';
+
+  if (deliveryAddress) {
+    const nameMatch = deliveryAddress.match(/Name:\s*([^,\n]+)/i);
+    if (nameMatch && nameMatch[1].trim()) {
+      recipientName = nameMatch[1].trim();
+    }
+    const mobileMatch = deliveryAddress.match(/Mobile:\s*([0-9]{10})/i);
+    if (mobileMatch && mobileMatch[1].trim()) {
+      recipientMobile = mobileMatch[1].trim();
+    }
+  }
+
+  return { recipientName, recipientMobile };
+}
 function generateOrderNumber(): string {
   return `ORD-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString('hex').toUpperCase()}`;
 }
@@ -44,6 +63,7 @@ export class OrdersService {
     private readonly billingService: BillingService,
     private readonly emailService: EmailService,
     private readonly whatsappBotService: WhatsappBotService,
+    private readonly smsService: SmsService,
   ) {}
 
   async create(customer: AuthUser, dto: CreateOrderDto) {
@@ -462,45 +482,112 @@ export class OrdersService {
     eventType?: string,
     meta?: { courierName?: string; trackingNumber?: string },
   ) {
-    // 1. Create in-app notification record
+    // 1. In-app notification record
     await this.notificationsService.create(customerId, NotificationType.SYSTEM, title, body, { orderId, eventType });
 
-    // 2. Fetch Customer and Order details
+    // 2. Fetch full Customer and Order details
     try {
       const [customer, order] = await Promise.all([
         this.prisma.user.findUnique({
           where: { id: customerId },
-          select: { name: true, mobile: true, email: true },
+          select: { id: true, name: true, mobile: true, email: true },
         }),
         this.prisma.customerOrder.findUnique({
           where: { id: orderId },
-          select: { orderNumber: true, totalAmount: true },
+          include: {
+            items: true,
+          },
         }),
       ]);
 
       if (customer) {
         const orderNum = order?.orderNumber || orderId.slice(-8).toUpperCase();
         const orderTotal = Number(order?.totalAmount ?? 0);
+        const { recipientName, recipientMobile } = extractOrderRecipient(order?.deliveryAddress, customer);
 
-        // 3. Email Notification (if email is linked)
-        if (customer.email && !customer.email.includes('placeholder')) {
-          this.emailService
-            .sendOrderLifecycleEmail(customer.email, customer.name || 'Valued Customer', {
-              orderNumber: orderNum,
-              statusTitle: title,
-              statusDescription: body,
-              totalAmount: orderTotal,
-              courierName: meta?.courierName,
-              trackingNumber: meta?.trackingNumber,
-            })
-            .catch((err: any) => console.warn('[OrdersService] Email notification error:', err?.message));
+        // 3. Email Notification Flow
+        const targetEmail = customer.email && !customer.email.includes('placeholder') ? customer.email : null;
+        if (targetEmail) {
+          if (eventType === 'ORDER_PLACED_SMS') {
+            this.emailService
+              .sendOrderPlacedConfirmationEmail(targetEmail, recipientName, {
+                orderNumber: orderNum,
+                totalAmount: orderTotal,
+                paymentMode: order?.paymentMode,
+                deliveryAddress: order?.deliveryAddress || undefined,
+                items: (order?.items || []).map((i) => ({
+                  productName: i.productName,
+                  quantity: i.quantity,
+                  price: Number(i.price),
+                })),
+              })
+              .catch((err: any) => console.warn('[OrdersService] Customer order confirmation email error:', err?.message));
+          } else {
+            this.emailService
+              .sendOrderLifecycleEmail(targetEmail, recipientName, {
+                orderNumber: orderNum,
+                statusTitle: title,
+                statusDescription: body,
+                totalAmount: orderTotal,
+                courierName: meta?.courierName,
+                trackingNumber: meta?.trackingNumber,
+              })
+              .catch((err: any) => console.warn('[OrdersService] Customer order status email error:', err?.message));
+          }
         }
 
-        // 4. WhatsApp / Mobile Text Alert
-        if (customer.mobile && !customer.mobile.startsWith('G_')) {
-          const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total: ₹${orderTotal}\n` : ''}\nTrack your order anytime at https://farmsking.com/order-tracking\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`;
+        // 4. Admin Real-Time Email Alert on Order Placement
+        if (eventType === 'ORDER_PLACED_SMS') {
+          try {
+            const integrations = await this.appSettingsService.getIntegrations();
+            const adminEmail =
+              integrations?.projectMasterData?.smtp?.fromEmail ||
+              integrations?.projectMasterData?.supportEmail ||
+              integrations?.projectMasterData?.contactEmail ||
+              process.env.ADMIN_EMAIL ||
+              'farmskingapp@gmail.com';
+
+            if (adminEmail && !adminEmail.includes('placeholder')) {
+              this.emailService
+                .sendAdminOrderAlertEmail(adminEmail, {
+                  orderNumber: orderNum,
+                  totalAmount: orderTotal,
+                  customerName: recipientName,
+                  customerMobile: recipientMobile || customer.mobile || 'N/A',
+                  deliveryAddress: order?.deliveryAddress || undefined,
+                  itemCount: order?.items?.length || 1,
+                  paymentMode: order?.paymentMode,
+                })
+                .catch((err: any) => console.warn('[OrdersService] Admin order alert email error:', err?.message));
+            }
+          } catch (adminMailErr: any) {
+            console.warn('[OrdersService] Admin email lookup error:', adminMailErr?.message);
+          }
+        }
+
+        // 5. Text Message (SMS) Dispatch via Admin Configured SMS Provider
+        const targetMobile = recipientMobile || customer.mobile;
+        if (targetMobile) {
+          if (eventType === 'ORDER_PLACED_SMS') {
+            this.smsService
+              .sendOrderPlacedSms(targetMobile, recipientName, orderNum, orderTotal)
+              .catch((err: any) => console.warn('[OrdersService] SMS notification error:', err?.message));
+          } else {
+            const smsBody = `FarmsKing Order #${orderNum}: ${title}. ${body}. Track: https://farmsking.in/order-tracking`;
+            this.smsService
+              .sendTextMessage(targetMobile, smsBody, eventType)
+              .catch((err: any) => console.warn('[OrdersService] SMS status update error:', err?.message));
+          }
+        }
+
+        // 6. WhatsApp Business Text Message Dispatch
+        if (targetMobile && !targetMobile.startsWith('G_')) {
+          const itemsList = (order?.items || [])
+            .map((i) => `• ${i.productName} (Qty: ${i.quantity}) - ₹${Number(i.price) * i.quantity}`)
+            .join('\n');
+          const waText = `📦 *FarmsKing Order Update*\n*Order #${orderNum}*\n\n*${title}*\n${body}\n${orderTotal > 0 ? `Total Amount: *₹${orderTotal}*\n` : ''}${itemsList ? `\n*Items:*\n${itemsList}\n` : ''}${order?.deliveryAddress ? `\n📍 *Delivery Address:* ${order.deliveryAddress}\n` : ''}\nTrack your order anytime: https://farmsking.in/order-tracking\n- _FARMSKING TECHNOLOGIES PRIVATE LIMITED_`;
           this.whatsappBotService
-            .sendDirectTextMessage(customer.mobile, waText)
+            .sendDirectTextMessage(targetMobile, waText)
             .catch((err: any) => console.warn('[OrdersService] WhatsApp alert error:', err?.message));
         }
       }

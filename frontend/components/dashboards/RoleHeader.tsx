@@ -371,6 +371,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
   },
   avatarRing: {
     width: 62,
@@ -445,8 +446,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headerRightActions: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 8,
   },
   mobileThemeToggle: {

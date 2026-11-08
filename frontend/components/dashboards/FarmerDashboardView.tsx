@@ -472,7 +472,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         } as any) : {},
                       ]}
                     >
-                      <Ionicons name={tool.icon} size={16} color="#ffffff" />
+                      <Ionicons name={tool.icon} size={13} color="#ffffff" />
                     </LinearGradient>
 
                     {/* Title */}
@@ -498,7 +498,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         },
                       ]}
                     >
-                      <Ionicons name="chevron-forward" size={12} color={tool.accent} />
+                      <Ionicons name="chevron-forward" size={9} color={tool.accent} />
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -696,23 +696,23 @@ const styles = StyleSheet.create({
   },
   actionCard4DInner: {
     borderRadius: 14,
-    paddingHorizontal: 11,
-    paddingVertical: 10,
-    minHeight: 52,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    minHeight: 46,
     borderWidth: 1.2,
     borderTopWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
+    gap: 6,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 8,
     elevation: 3,
   },
   actionIcon4D: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
+    width: 24,
+    height: 24,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -720,17 +720,18 @@ const styles = StyleSheet.create({
   },
   actionCardBodyCompact: {
     flex: 1,
+    minWidth: 0,
     justifyContent: 'center',
   },
   actionCardTitle4D: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     letterSpacing: -0.2,
   },
   chevronPill4D: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 17,
+    height: 17,
+    borderRadius: 8.5,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

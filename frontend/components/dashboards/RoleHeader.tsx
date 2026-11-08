@@ -159,7 +159,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
-            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#475569' }]}>{greeting}</Text>
+            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#334155' }]}>{greeting}</Text>
             <Text style={[styles.nameText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
             
             {/* Role Tag Badge */}

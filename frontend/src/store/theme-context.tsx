@@ -39,9 +39,9 @@ export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
     icon: 'sunny',
     bg: '#f1f5f9',
     cardBg: '#ffffff',
-    cardBorder: 'rgba(203, 213, 225, 0.85)',
+    cardBorder: '#cbd5e1',
     text: '#0f172a',
-    textMuted: '#64748b',
+    textMuted: '#334155',
     primary: '#16a34a',
     primaryLight: '#f0fdf4',
     accent: '#d97706',
@@ -49,16 +49,16 @@ export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
     headerGradient: ['#ffffff', '#f8fafc', '#ecfdf5'],
     shadowColor: 'rgba(0, 0, 0, 0.08)',
     tabBarBg: '#ffffff',
-    tabBarBorder: '#e2e8f0',
+    tabBarBorder: '#cbd5e1',
     tabBarActive: '#16a34a',
-    tabBarInactive: '#64748b',
+    tabBarInactive: '#475569',
     btnBg: '#16a34a',
     btnText: '#ffffff',
     btnIconColor: '#ffffff',
     titleColor: '#0f172a',
-    subColor: '#334155',
+    subColor: '#1e293b',
     accentColor: '#16a34a',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     isDark: false,
     statusBarStyle: 'dark',
   },
@@ -301,8 +301,18 @@ export interface ExecutiveThemeContextValue {
 
 const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
 
+const getInitialTheme = (): ExecutiveTheme => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+      if (saved && saved in EXECUTIVE_THEME_CONFIG) return saved as ExecutiveTheme;
+    } catch {}
+  }
+  return 'EMERALD';
+};
+
 export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
-  const [executiveTheme, setExecutiveThemeState] = useState<ExecutiveTheme>('EMERALD');
+  const [executiveTheme, setExecutiveThemeState] = useState<ExecutiveTheme>(getInitialTheme);
 
   useEffect(() => {
     let isMounted = true;
@@ -320,9 +330,26 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
   const setExecutiveTheme = (next: ExecutiveTheme) => {
     setExecutiveThemeState(next);
     AppStorage.setItemAsync(THEME_STORAGE_KEY, next);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(THEME_STORAGE_KEY, next);
+        const cfg = EXECUTIVE_THEME_CONFIG[next];
+        if (cfg && document.body) {
+          document.documentElement.style.backgroundColor = cfg.bg;
+          document.body.style.backgroundColor = cfg.bg;
+        }
+      } catch {}
+    }
   };
 
   const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme], [executiveTheme]);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && document.body) {
+      document.documentElement.style.backgroundColor = colors.bg;
+      document.body.style.backgroundColor = colors.bg;
+    }
+  }, [colors.bg]);
 
   const toggleThemeMode = () => {
     const next: ExecutiveTheme = colors.isDark ? 'LIGHT' : 'EMERALD';

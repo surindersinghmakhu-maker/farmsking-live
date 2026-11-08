@@ -1201,9 +1201,9 @@ export default function PublicLandingPage() {
             transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease !important;
             backdrop-filter: blur(24px) !important;
             -webkit-backdrop-filter: blur(24px) !important;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%) !important;
-            box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.08), inset 0 1px 2px rgba(255, 255, 255, 1) !important;
-            border-color: rgba(226, 232, 240, 0.95) !important;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
+            box-shadow: 0 14px 34px -8px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(203, 213, 225, 0.9) !important;
+            border-color: #cbd5e1 !important;
           }
           .orig-glass-card-day:hover {
             transform: translateY(-8px) scale(1.015) !important;
@@ -5962,8 +5962,8 @@ const S = StyleSheet.create({
     ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)' } as any) : {}),
   },
   telemetryMetricCardDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderColor: 'rgba(226, 232, 240, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderColor: '#cbd5e1',
     shadowColor: 'rgba(15, 23, 42, 0.06)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
@@ -6034,7 +6034,7 @@ const S = StyleSheet.create({
     lineHeight: 17,
   },
   metricSubtitleDay: {
-    color: '#64748b',
+    color: '#334155',
   },
 
   // ══ Official Institutional & ISO Compliance Trust Ribbon ══
@@ -6107,7 +6107,7 @@ const S = StyleSheet.create({
     maxWidth: 720,
   },
   isoSubHeadingDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   isoGrid: {
     flexDirection: 'row',
@@ -6138,8 +6138,8 @@ const S = StyleSheet.create({
     elevation: 3,
   },
   isoCardDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderColor: 'rgba(226, 232, 240, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderColor: '#cbd5e1',
     shadowColor: 'rgba(15, 23, 42, 0.05)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
@@ -6195,7 +6195,7 @@ const S = StyleSheet.create({
     lineHeight: 18,
   },
   isoCardScopeDay: {
-    color: '#64748b',
+    color: '#334155',
   },
 
   pillarFeatureList: {
@@ -6216,7 +6216,8 @@ const S = StyleSheet.create({
     lineHeight: 14,
   },
   pillarFeatureTextDay: {
-    color: '#475569',
+    color: '#0f172a',
+    fontFamily: FONT.semiBold,
   },
   liveBadgeMiniLatency: {
     fontSize: 8.5,
@@ -6507,10 +6508,10 @@ const S = StyleSheet.create({
     color: '#0f172a',
   },
   mandiRateVarietyDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   mandiRateHubDay: {
-    color: '#475569',
+    color: '#1e293b',
   },
   mandiRatePriceDay: {
     color: '#059669',
@@ -6534,8 +6535,8 @@ const S = StyleSheet.create({
     color: '#059669',
   },
   tickerItemDay: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   tickerVerifiedBadgeDay: {
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
@@ -6547,16 +6548,16 @@ const S = StyleSheet.create({
     color: '#0f172a',
   },
   tickerVarietyDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   tickerHubDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   tickerPriceDay: {
     color: '#0f172a',
   },
   tickerTimeDay: {
-    color: '#94a3b8',
+    color: '#475569',
   },
   tickerLoginCtaChipDay: {
     backgroundColor: '#ecfdf5',
@@ -6719,7 +6720,7 @@ const S = StyleSheet.create({
     color: '#0f172a',
   },
   heroSubTitleDay: {
-    color: '#475569',
+    color: '#1e293b',
   },
 
   // Mandi Discovery Day
@@ -6951,11 +6952,11 @@ const S = StyleSheet.create({
     color: '#0f172a',
   },
   sectionSubheadDay: {
-    color: '#475569',
+    color: '#334155',
   },
   pillarCardOrigDay: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
     ...premiumShadow('#0f172a', 'md'),
   },
   origCardArrowBadgeDay: {
@@ -6966,7 +6967,7 @@ const S = StyleSheet.create({
     color: '#0f172a',
   },
   origCardSubtitleDay: {
-    color: '#475569',
+    color: '#334155',
   },
   origPillBtnFarmingDay: {
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
@@ -6999,13 +7000,13 @@ const S = StyleSheet.create({
 
   // Footer Day
   footerDay: {
-    borderTopColor: '#e2e8f0',
+    borderTopColor: '#cbd5e1',
   },
   footerBrandDay: {
     color: '#0f172a',
   },
   footerCopyDay: {
-    color: '#64748b',
+    color: '#334155',
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -8134,7 +8135,8 @@ const S = StyleSheet.create({
     marginBottom: 9,
   },
   footerLinkDay: {
-    color: '#64748b',
+    color: '#1e293b',
+    fontFamily: FONT.semiBold,
   },
   helplineNum: {
     fontSize: 18,
@@ -8152,7 +8154,7 @@ const S = StyleSheet.create({
     marginBottom: 10,
   },
   helplineSubDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   footerContactEmail: {
     fontSize: 12,
@@ -8169,7 +8171,7 @@ const S = StyleSheet.create({
     color: '#64748b',
   },
   footerContactAddrDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   footerQrContainer: {
     backgroundColor: '#ffffff',
@@ -8523,7 +8525,7 @@ const S = StyleSheet.create({
     fontSize: 10,
     fontFamily: FONT.medium,
   },
-  liveTickerLocationTextDay: { color: '#64748b' },
+  liveTickerLocationTextDay: { color: '#334155' },
   liveTickerLocationTextNight: { color: '#94a3b8' },
   liveTickerActionText: {
     fontSize: 10.5,
@@ -8639,7 +8641,7 @@ const S = StyleSheet.create({
     maxWidth: 620,
     lineHeight: 19,
   },
-  aiDoctorSubheadDay: { color: '#475569' },
+  aiDoctorSubheadDay: { color: '#334155' },
   aiDoctorSubheadNight: { color: '#94a3b8' },
 
   // Samples Grid
@@ -8658,8 +8660,8 @@ const S = StyleSheet.create({
     borderWidth: 1.5,
   },
   aiDoctorSampleTabDay: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   aiDoctorSampleTabNight: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
@@ -8822,7 +8824,7 @@ const S = StyleSheet.create({
     fontFamily: FONT.medium,
     marginTop: 2,
   },
-  aiDiseaseSublineDay: { color: '#475569' },
+  aiDiseaseSublineDay: { color: '#334155' },
   aiDiseaseSublineNight: { color: '#cbd5e1' },
   aiCropEmojiBadge: {
     width: 50,
@@ -8851,7 +8853,7 @@ const S = StyleSheet.create({
   },
   aiPrescriptionCardDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0, 0, 0, 0.03)', 'xs'),
   },
   aiPrescriptionCardNight: {
@@ -9077,7 +9079,7 @@ const S = StyleSheet.create({
     fontFamily: FONT.semiBold,
     marginLeft: 3,
   },
-  ratingReviewsCountDay: { color: '#64748b' },
+  ratingReviewsCountDay: { color: '#334155' },
   ratingReviewsCountNight: { color: '#94a3b8' },
   heroAudioReadoutBtn: {
     flexDirection: 'row',
@@ -9188,7 +9190,7 @@ const S = StyleSheet.create({
   },
   organicTrustItemDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0,0,0,0.04)', 'sm'),
   },
   organicTrustText: {
@@ -9197,7 +9199,7 @@ const S = StyleSheet.create({
     color: '#cbd5e1',
   },
   organicTrustTextDay: {
-    color: '#334155',
+    color: '#0f172a',
   },
   organicCard: {
     flex: 1,
@@ -9226,7 +9228,7 @@ const S = StyleSheet.create({
   },
   organicCardDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0,0,0,0.06)', 'lg'),
   },
   organicIconCircle: {
@@ -9270,7 +9272,7 @@ const S = StyleSheet.create({
     marginBottom: 14,
   },
   organicCardDescDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   organicFeatureList: {
     gap: 6,
@@ -9287,7 +9289,7 @@ const S = StyleSheet.create({
     color: '#cbd5e1',
   },
   organicFeatureTextDay: {
-    color: '#475569',
+    color: '#1e293b',
   },
   organicCardBtn: {
     paddingVertical: 8,
@@ -9328,7 +9330,7 @@ const S = StyleSheet.create({
   },
   organicFarmerBannerDay: {
     backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
+    borderColor: '#f59e0b',
     ...premiumShadow('rgba(245, 158, 11, 0.1)', 'md'),
   },
   organicFarmerBannerLeft: {
@@ -9461,7 +9463,7 @@ const S = StyleSheet.create({
   },
   allocCardDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0,0,0,0.06)', 'xl'),
   },
   allocCardMobile: {
@@ -9532,7 +9534,7 @@ const S = StyleSheet.create({
     marginBottom: 20,
   },
   allocCardDescDay: {
-    color: '#475569',
+    color: '#334155',
   },
   allocFeatureGrid: {
     flexDirection: 'row',
@@ -9562,8 +9564,8 @@ const S = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   allocFeatureBoxDay: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   allocFeatureIconRow: {
     flexDirection: 'row',
@@ -9586,7 +9588,7 @@ const S = StyleSheet.create({
     lineHeight: 15,
   },
   allocFeatureDescDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   allocSpecialistPill: {
     flexDirection: 'row',
@@ -9630,7 +9632,7 @@ const S = StyleSheet.create({
     color: '#94a3b8',
   },
   allocSpecialistRoleDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   allocVerifiedTag: {
     flexDirection: 'row',
@@ -9741,7 +9743,7 @@ const S = StyleSheet.create({
   },
   loginStepCardDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0,0,0,0.05)', 'lg'),
   },
   loginStepNumBadge: {
@@ -9783,7 +9785,7 @@ const S = StyleSheet.create({
     lineHeight: 18,
   },
   loginStepDescDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   loginRolesContainer: {
     borderRadius: 24,
@@ -9797,7 +9799,7 @@ const S = StyleSheet.create({
   },
   loginRolesContainerDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     ...premiumShadow('rgba(0,0,0,0.06)', 'xl'),
   },
   loginRolesContainerMobile: {
@@ -9847,8 +9849,8 @@ const S = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   loginRoleItemDay: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   loginRoleEmoji: {
     fontSize: 22,
@@ -9869,7 +9871,7 @@ const S = StyleSheet.create({
     lineHeight: 16,
   },
   loginRoleDescDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   loginActionBanner: {
     flexDirection: 'row',
@@ -9934,7 +9936,7 @@ const S = StyleSheet.create({
     color: '#94a3b8',
   },
   loginHelplineTextDay: {
-    color: '#64748b',
+    color: '#334155',
   },
 
   allocCardBtnText: {
@@ -10287,7 +10289,7 @@ const S = StyleSheet.create({
   },
   appShowcaseCardDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     shadowColor: 'rgba(0, 0, 0, 0.08)',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
@@ -10316,7 +10318,7 @@ const S = StyleSheet.create({
     marginBottom: 24,
   },
   appShowcaseSubtitleDay: {
-    color: '#64748b',
+    color: '#334155',
   },
   appPerksGrid: {
     flexDirection: 'row',
@@ -10348,7 +10350,7 @@ const S = StyleSheet.create({
   appPerkDesc: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#334155',
     lineHeight: 15,
   },
   appDownloadBtnRow: {
@@ -10397,8 +10399,8 @@ const S = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   appRatingPillDay: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
   appRatingText: {
     fontSize: 11.5,

@@ -25,6 +25,13 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const [otpSent, setOtpSent] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  const isLocalhost =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.includes('192.168.'));
+
   useEffect(() => {
     if (visible) {
       setMobileInput('');
@@ -51,10 +58,25 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       return;
     }
 
+    if (isLocalhost) {
+      setOtpSent(true);
+      setErrorMsg(null);
+      setIsSendingOtp(false);
+      return;
+    }
+
     setIsSendingOtp(true);
     setErrorMsg(null);
     try {
-      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifierDelete) {
+      if (typeof window !== 'undefined') {
+        const el = document.getElementById('recaptcha-container-delete');
+        if (el) el.innerHTML = '';
+        if ((window as any).recaptchaVerifierDelete) {
+          try {
+            (window as any).recaptchaVerifierDelete.clear();
+          } catch {}
+          (window as any).recaptchaVerifierDelete = null;
+        }
         (window as any).recaptchaVerifierDelete = new RecaptchaVerifier(
           auth,
           'recaptcha-container-delete',
@@ -72,7 +94,17 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setOtpSent(true);
     } catch (err: any) {
       console.warn('Firebase OTP Error:', err);
-      setErrorMsg(err?.message || 'Failed to send OTP. Please try again.');
+      let msg = 'Failed to send OTP. Please try again.';
+      if (err?.code === 'auth/invalid-phone-number') {
+        msg = 'Invalid mobile number format. Please check the 10-digit number.';
+      } else if (err?.code === 'auth/too-many-requests') {
+        msg = 'Too many requests. Please wait a few moments before retrying.';
+      } else if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
+        msg = 'Verification service was refreshed. Please tap Send OTP again.';
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      setErrorMsg(msg);
     } finally {
       setIsSendingOtp(false);
     }
@@ -86,6 +118,23 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
 
     if (deleteConfirmInput.trim().toLowerCase() !== 'delete') {
       setErrorMsg('Please type "delete" to confirm.');
+      return;
+    }
+
+    if (isLocalhost) {
+      setIsVerifying(true);
+      setErrorMsg(null);
+      try {
+        setIsDeletingAccount(true);
+        await deleteMyAccount();
+        await logout();
+      } catch (err: any) {
+        console.warn('Verification/Deletion Error:', err);
+        setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to delete account.');
+        setIsDeletingAccount(false);
+      } finally {
+        setIsVerifying(false);
+      }
       return;
     }
 
@@ -128,7 +177,18 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
           </View>
 
           {/* Invisible Recaptcha */}
-          <View id="recaptcha-container-delete" style={{ display: 'none' }} />
+          <View
+            nativeID="recaptcha-container-delete"
+            id="recaptcha-container-delete"
+            style={{
+              position: 'absolute',
+              width: 0,
+              height: 0,
+              opacity: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+            }}
+          />
 
           <View style={{ gap: 12, width: '100%' }}>
             {!otpSent ? (

@@ -124,6 +124,17 @@ function RootNavigation() {
     }
   }, [user, isLoading, segmentsPath]);
 
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // Seamless splash handoff: dismiss only when navigation tree is ready
+      requestAnimationFrame(() => {
+        if ((window as any).__dismissFarmsKingSplash) {
+          (window as any).__dismissFarmsKingSplash();
+        }
+      });
+    }
+  }, []);
+
   if (isLoading && Platform.OS !== 'web') {
     return <SplashView />;
   }
@@ -174,22 +185,15 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  // Graceful splash dismissal: displays for ~950ms so user notices branding, then smoothly fades out
+  // Smooth splash dismissal: fades out seamlessly as soon as React mounts and paints
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      const timer = setTimeout(() => {
-        const sp = document.getElementById('farmsking-web-splash');
-        if (sp) {
-          sp.style.transition = 'opacity 0.35s ease-out';
-          sp.style.opacity = '0';
-          sp.style.pointerEvents = 'none';
-          setTimeout(() => {
-            if (sp && sp.parentNode) sp.parentNode.removeChild(sp);
-          }, 350);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        if ((window as any).__dismissFarmsKingSplash) {
+          (window as any).__dismissFarmsKingSplash();
         }
-      }, 950);
-      return () => clearTimeout(timer);
+      });
     }
   }, []);
 

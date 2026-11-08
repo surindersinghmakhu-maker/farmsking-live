@@ -95,7 +95,7 @@ type TabName =
   | 'operator-orders' | 'trainer-dashboard';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
+  FARMER: { tabs: ['index', 'farm', 'records', 'shop', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
   CUSTOMER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
   ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
@@ -141,7 +141,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
 };
 
 const ALL_TABS: TabName[] = [
-  'index', 'shop', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records',
+  'index', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records',
   'categories', 'cart', 'orders',
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',
@@ -149,6 +149,7 @@ const ALL_TABS: TabName[] = [
   'super-users', 'super-coupons', 'super-accounts', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
   'operator-orders', 'trainer-dashboard',
+  'shop',
   'more', 'admin_more',
 ];
 
@@ -165,7 +166,7 @@ export default function TabLayout() {
   const unreadNotifCount = unreadNotifData?.count ?? 0;
   const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
-  const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
+  const visible = new Set(config ? config.tabs : ['index', 'farm', 'records', 'shop', 'more']);
 
   const isChatCapable = !!user && CHAT_CAPABLE_ROLES.has(user.role);
   useGlobalChatUnreadSync(isChatCapable);
@@ -182,6 +183,7 @@ export default function TabLayout() {
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
+    if (name === 'ai-doctor') return 'AI Doctor';
     const meta = (TAB_META as any)[name];
     return meta ? t(meta.key, meta.title) : name;
   };
@@ -373,8 +375,13 @@ export default function TabLayout() {
             headerShown: false,
             animation: 'fade',
           }}>
-          {ALL_TABS.map((name) => {
-            const isShown = visible.has(name);
+          {(() => {
+            const tabOrder = [
+              ...config.tabs,
+              ...ALL_TABS.filter((t) => !config.tabs.includes(t)),
+            ];
+            return tabOrder.map((name) => {
+              const isShown = visible.has(name);
             if (name === 'index') {
               return (
                 <Tabs.Screen
@@ -446,7 +453,7 @@ export default function TabLayout() {
                   key={name}
                   name={name}
                   options={{
-                    title: t(meta.key, meta.title),
+                    title: getTabTitle(name),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <TabIconWithCartCount count={cartItemCount}>
@@ -462,7 +469,7 @@ export default function TabLayout() {
                 key={name}
                 name={name}
                 options={{
-                  title: t(meta.key, meta.title),
+                  title: getTabTitle(name),
                   href: isShown ? undefined : null,
                   tabBarIcon: ({ color, focused }) => (
                     <TabIconWithUnreadDot showDot={showUnreadDot}>
@@ -472,7 +479,8 @@ export default function TabLayout() {
                 }}
               />
             );
-          })}
+          });
+        })()}
 
           {/* Hidden tool screens — accessed via More tab, navigation shortcuts, and direct links */}
           <Tabs.Screen

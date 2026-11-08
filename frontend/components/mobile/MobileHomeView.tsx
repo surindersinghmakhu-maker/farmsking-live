@@ -58,7 +58,7 @@ const QUICK_APP_ACTIONS = [
   },
   {
     id: 'farming',
-    title: 'Farmers',
+    title: 'Farming',
     badge: null,
     badgeColor: '',
     icon: 'leaf-outline',

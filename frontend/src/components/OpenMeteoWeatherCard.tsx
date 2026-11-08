@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     marginVertical: 3,
   },
   headerRow: {
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
   },
   compactBarLeft: {
     flexDirection: 'row',
@@ -554,8 +554,8 @@ const styles = StyleSheet.create({
   },
   compactMetricsText: {
     fontSize: 10,
-    fontFamily: FONT.medium,
-    color: '#64748b',
+    fontFamily: FONT.semiBold,
+    color: '#334155',
   },
   sprayPill: {
     flexDirection: 'row',
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   feelsLikeText: {
     fontSize: 9.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#334155',
   },
   detailSection: {
     alignItems: 'flex-end',
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
   forecastHeaderTitle: {
     fontSize: 10.5,
     fontFamily: FONT.extraBold,
-    color: '#475569',
+    color: '#1e293b',
     marginBottom: 4,
   },
   forecastGrid: {
@@ -665,12 +665,12 @@ const styles = StyleSheet.create({
   forecastItemCard: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffff',
     paddingVertical: 5,
     paddingHorizontal: 2,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
   },
   forecastDayText: {
     fontSize: 9,

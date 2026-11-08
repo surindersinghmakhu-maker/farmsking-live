@@ -71,7 +71,7 @@ export default function PublicBottomNav() {
         },
         {
           key: 'farming',
-          label: 'Farmers',
+          label: 'Farming',
           icon: 'leaf',
           iconOutline: 'leaf-outline',
           path: '/topic/Farming',
@@ -393,7 +393,7 @@ export default function PublicBottomNav() {
       },
       {
         key: 'crops',
-        label: 'Farmers',
+        label: 'Farming',
         icon: 'leaf',
         iconOutline: 'leaf-outline',
         path: '/topic/Farming',

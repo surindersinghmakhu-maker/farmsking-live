@@ -180,13 +180,17 @@ export default function MoreScreen() {
           colors={theme.gradient}
           style={styles.hero}
         >
-          <View style={styles.avatarCircle}>
+          <TouchableOpacity
+            style={styles.avatarCircle}
+            activeOpacity={0.85}
+            onPress={() => router.push('/profile?tab=PROFILE')}
+          >
             {user?.photoUrl ? (
               <Avatar uri={user.photoUrl} size={52} />
             ) : (
               <Ionicons name="person" size={24} color="#fff" />
             )}
-          </View>
+          </TouchableOpacity>
           <Text style={styles.name}>{user?.name ?? t('farmsKingUser')}</Text>
           <View style={styles.kingIdBadge}>
             <Ionicons name="key-outline" size={11} color="#ffffff" />
@@ -217,7 +221,7 @@ export default function MoreScreen() {
                         <Ionicons name={item.icon} size={18} color={theme.primary} />
                       </View>
                       <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
                   ))}
 
@@ -240,7 +244,7 @@ export default function MoreScreen() {
                         </View>
                         <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
                   )}
 
@@ -305,7 +309,7 @@ export default function MoreScreen() {
                         <Text style={styles.rowLabel}>👑 FarmsKing VIP Pass Scheme</Text>
                         <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -320,7 +324,7 @@ export default function MoreScreen() {
                         <Text style={styles.rowLabel}>🔬 AI Crop Doctor & Scanner</Text>
                         <Text style={styles.rowSubLabel}>Scan Leaf Photo for Instant Disease & Dosage</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -335,7 +339,7 @@ export default function MoreScreen() {
                         <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
                         <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -355,7 +359,7 @@ export default function MoreScreen() {
                         <Text style={styles.rowLabel}>🌿 Hire a Garden Expert</Text>
                         <Text style={styles.rowSubLabel}>Connect with certified garden advisors for plant care</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -375,7 +379,7 @@ export default function MoreScreen() {
                     <Ionicons name="hardware-chip-outline" size={18} color="#16a34a" />
                   </View>
                   <Text style={styles.rowLabel}>{t('serverIpConfig')}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  <Ionicons name="chevron-forward" size={18} color="#64748b" />
                 </TouchableOpacity>
               ) : null}
 
@@ -393,7 +397,7 @@ export default function MoreScreen() {
                   <Text style={styles.rowLabel}>Terms and Conditions</Text>
                   <Text style={styles.rowSubLabel}>Official Terms of Service & User Agreement</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* Privacy Policy Row */}
@@ -409,7 +413,7 @@ export default function MoreScreen() {
                   <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
                   <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* Refund Policy Row */}
@@ -425,7 +429,7 @@ export default function MoreScreen() {
                   <Text style={styles.rowLabel}>Refund & Return Policy</Text>
                   <Text style={styles.rowSubLabel}>100% Genuine, Zero Fake Products Guarantee</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* MCA Compliance Row */}
@@ -442,7 +446,7 @@ export default function MoreScreen() {
                     <Text style={styles.rowLabel}>MCA Statutory Compliance</Text>
                     <Text style={styles.rowSubLabel}>CIN: U01100PB2026PTC063294 • Regd. Office</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  <Ionicons name="chevron-forward" size={18} color="#64748b" />
                 </TouchableOpacity>
               )}
 
@@ -454,7 +458,7 @@ export default function MoreScreen() {
                   <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
                 </View>
                 <Text style={styles.rowLabel}>Support</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* Contact Us Row (At the very bottom) */}
@@ -463,7 +467,7 @@ export default function MoreScreen() {
                   <Ionicons name="call-outline" size={18} color={theme.primary} />
                 </View>
                 <Text style={styles.rowLabel}>Contact Us</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
             </View>
           </View>
@@ -688,20 +692,20 @@ const styles = StyleSheet.create({
   kingIdText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
   body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 32 },
   section: { marginBottom: 12 },
-  sectionTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 },
+  sectionTitle: { fontSize: 11, fontFamily: FONT.extraBold, color: '#1e293b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 },
   sectionCard: {
-    backgroundColor: '#ffffff', borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm'),
+    backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#cbd5e1', ...premiumShadow('#0f172a', 'sm'),
   },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12,
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1, borderBottomColor: '#e2e8f0',
   },
   rowIconBg: {
     width: 32, height: 32, borderRadius: 10, backgroundColor: theme.primaryLight,
     alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: 13.5, fontFamily: FONT.semiBold, color: '#0f172a' },
-  rowSubLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  rowLabel: { flex: 1, fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  rowSubLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#334155', marginTop: 1 },
   switchBadgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   langBadgeTextActive: { fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' },
   logoutButton: {

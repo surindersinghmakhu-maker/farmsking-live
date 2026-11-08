@@ -422,21 +422,66 @@ export default function ProfileScreen() {
   const pickPhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permission needed', 'Please allow photo access to choose a picture.');
+      if (Platform.OS === 'web') {
+        window.alert('Please allow photo access to choose a picture.');
+      } else {
+        Alert.alert('Permission needed', 'Please allow photo access to choose a picture.');
+      }
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
+      quality: 0.8,
       allowsEditing: true,
       aspect: [1, 1],
     });
     if (result.canceled || !result.assets[0]) return;
 
     const selectedUri = result.assets[0].uri;
+    // Show local preview immediately so UI feels instant
     isUserInteractingRef.current = true;
     setPhotoUrl(selectedUri);
-    setIsPhotoModalOpen(false);
+    setIsUploadingPhoto(true);
+
+    try {
+      // 1. Upload picture to server
+      const uploaded = await uploadPhoto(selectedUri);
+      const serverPhotoUrl = uploaded.fileUrl;
+      setPhotoUrl(serverPhotoUrl);
+
+      // 2. Immediately persist to database (save etc di lod na pave)
+      const updated = await updateAddress.mutateAsync({ photoUrl: serverPhotoUrl });
+
+      // 3. Update global user session state
+      await updateUser({
+        ...(user || {}),
+        ...(updated || {}),
+        photoUrl: serverPhotoUrl,
+      } as any);
+
+      await refreshUser();
+      isUserInteractingRef.current = false;
+      setIsPhotoModalOpen(false);
+
+      if (Platform.OS === 'web') {
+        window.alert('Profile photo updated successfully!');
+      } else {
+        Alert.alert('Success ✨', 'Profile photo updated successfully!');
+      }
+    } catch (err: any) {
+      console.error('[pickPhoto] Auto-upload error:', err);
+      const errMsg = err?.response?.data?.message ?? err?.message ?? 'Could not upload photo. Please try again.';
+      if (Platform.OS === 'web') {
+        window.alert(`Photo upload failed: ${errMsg}`);
+      } else {
+        Alert.alert('Upload Failed', errMsg);
+      }
+      // Revert to existing user photo if upload fails
+      setPhotoUrl(user?.photoUrl ?? null);
+      isUserInteractingRef.current = false;
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const fetchLocationFromPincode = async (codeToFetch?: string) => {
@@ -733,14 +778,34 @@ export default function ProfileScreen() {
             <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
               {/* Photo Avatar */}
               <View style={styles.avatarSection}>
-                <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
+                <TouchableOpacity
+                  style={styles.avatarWrap}
+                  activeOpacity={0.85}
+                  disabled={isUploadingPhoto}
+                  onPress={pickPhoto}
+                >
                   <Avatar uri={photoUrl ?? undefined} size={88} />
                   <View style={styles.photoEditBadge}>
-                    <Ionicons name="camera" size={13} color="#ffffff" />
+                    {isUploadingPhoto ? (
+                      <ActivityIndicator size={10} color="#ffffff" />
+                    ) : (
+                      <Ionicons name="camera" size={13} color="#ffffff" />
+                    )}
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setIsPhotoModalOpen(true)}>
-                  <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                <TouchableOpacity
+                  style={styles.changePhotoBtn}
+                  disabled={isUploadingPhoto}
+                  onPress={pickPhoto}
+                >
+                  {isUploadingPhoto ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <ActivityIndicator size="small" color="#059669" />
+                      <Text style={styles.changePhotoText}>Uploading Photo...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                  )}
                 </TouchableOpacity>
               </View>
 
@@ -821,14 +886,34 @@ export default function ProfileScreen() {
 
               {/* ── Section 1: Header / Avatar ── */}
               <View style={[styles.avatarSection, { marginBottom: 16, alignItems: 'center' }]}>
-                <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
+                <TouchableOpacity
+                  style={styles.avatarWrap}
+                  activeOpacity={0.85}
+                  disabled={isUploadingPhoto}
+                  onPress={pickPhoto}
+                >
                   <Avatar key={photoUrl ?? 'avatar'} uri={photoUrl ?? undefined} size={96} />
                   <View style={styles.photoEditBadge}>
-                    <Ionicons name="camera" size={14} color="#ffffff" />
+                    {isUploadingPhoto ? (
+                      <ActivityIndicator size={10} color="#ffffff" />
+                    ) : (
+                      <Ionicons name="camera" size={14} color="#ffffff" />
+                    )}
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setIsPhotoModalOpen(true)} style={{ marginTop: 8 }}>
-                  <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                <TouchableOpacity
+                  disabled={isUploadingPhoto}
+                  onPress={pickPhoto}
+                  style={{ marginTop: 8 }}
+                >
+                  {isUploadingPhoto ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <ActivityIndicator size="small" color="#059669" />
+                      <Text style={styles.changePhotoText}>Uploading Photo...</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                  )}
                 </TouchableOpacity>
                 
                 <Text style={{ fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 12 }}>

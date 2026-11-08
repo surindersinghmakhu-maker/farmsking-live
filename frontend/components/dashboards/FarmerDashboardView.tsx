@@ -21,7 +21,6 @@ import { useParties } from '@/src/hooks/useParties';
 import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenceCard';
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
-import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { FarmerPortalUpgradeSection, FarmerPortalUpgradeSectionRef } from '@/src/components/FarmerPortalUpgradeSection';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
@@ -125,6 +124,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const upgradeSectionRef = useRef<FarmerPortalUpgradeSectionRef>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionOffsets = useRef<{ [key: string]: number }>({ all: 0 });
+  const [activeMobileSection, setActiveMobileSection] = useState<string>('all');
   const router = useRouter();
   const { user } = useAuth();
   const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
@@ -167,7 +169,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   // Quick Payment Voucher Modal State
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
   const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
-  const [showAiChatModal, setShowAiChatModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
   const { data: labourWorkers = [] } = useLabourWorkers();
   const { data: parties = [] } = useParties();
@@ -194,6 +195,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       style={[styles.container, { backgroundColor: colors.bg }]}
       contentContainerStyle={[
         styles.scrollContent,
@@ -269,6 +271,72 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       />
 
       <View style={styles.content}>
+
+        {/* 📱 MOBILE SECTION QUICK-TABS (Visible on mobile screen for instant tool jump) */}
+        {!isDesktop && (
+          <View style={styles.mobileQuickTabsRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.mobileQuickTabsScroll}
+            >
+              {[
+                { id: 'all', label: 'All', icon: 'apps-outline' as const },
+                { id: 'tools', label: 'Agronomy Hub', icon: 'build-outline' as const },
+                { id: 'accounts', label: 'Accounts', icon: 'receipt-outline' as const },
+                { id: 'weather', label: 'Weather', icon: 'cloud-outline' as const },
+                { id: 'plans', label: 'VIP Pass', icon: 'ribbon-outline' as const },
+              ].map((tab) => {
+                const isActive = activeMobileSection === tab.id;
+                return (
+                  <TouchableOpacity
+                    key={tab.id}
+                    style={[
+                      styles.mobileQuickTabPill,
+                      isActive && styles.mobileQuickTabPillActive,
+                      {
+                        backgroundColor: isActive
+                          ? '#16a34a'
+                          : colors.isDark
+                          ? 'rgba(255, 255, 255, 0.08)'
+                          : '#ffffff',
+                        borderColor: isActive
+                          ? '#22c55e'
+                          : colors.isDark
+                          ? 'rgba(255, 255, 255, 0.14)'
+                          : '#cbd5e1',
+                      },
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setActiveMobileSection(tab.id);
+                      const targetY = sectionOffsets.current[tab.id] ?? 0;
+                      scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 8), animated: true });
+                    }}
+                  >
+                    <Ionicons
+                      name={tab.icon}
+                      size={12}
+                      color={isActive ? '#ffffff' : colors.isDark ? '#94a3b8' : '#334155'}
+                    />
+                    <Text
+                      style={[
+                        styles.mobileQuickTabText,
+                        {
+                          color: isActive ? '#ffffff' : colors.isDark ? '#f1f5f9' : '#0f172a',
+                          fontFamily: isActive ? FONT.bold : FONT.semiBold,
+                        },
+                      ]}
+                    >
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
         {/* Active Group Voice Call Alert Banner for Farmer */}
         {voiceCallHook.activeCall ? (
           <TouchableOpacity
@@ -302,46 +370,17 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
 
 
-        {/* AI Chat Popup Modal */}
-        <Modal
-          visible={showAiChatModal}
-          animationType="slide"
-          transparent={false}
-          onRequestClose={() => setShowAiChatModal(false)}
-        >
-          <SafeAreaView style={{ flex: 1, backgroundColor: '#020d06' }}>
-            <View style={styles.aiModalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={styles.compactAiAvatar}>
-                  <Ionicons name="sparkles" size={18} color="#ffffff" />
-                </View>
-                <View>
-                  <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                    ✨ Farmsking Kisan AI Doctor
-                  </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#00ff87' }}>
-                    Google Search Grounded · Agriculture & FarmsKing
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.aiModalCloseBtn}
-                onPress={() => setShowAiChatModal(false)}
-              >
-                <Ionicons name="close" size={22} color="#0f172a" />
-              </TouchableOpacity>
-            </View>
-            <AgriAiChatbot isModal={true} />
-          </SafeAreaView>
-        </Modal>
+        
 
 
 
         {/* Live Open-Meteo Weather Card */}
-        <OpenMeteoWeatherCard />
+        <View onLayout={(e) => { sectionOffsets.current['weather'] = e.nativeEvent.layout.y; }}>
+          <OpenMeteoWeatherCard />
+        </View>
 
         {/* Quick Accounts & Payments Action Grid */}
-        <View style={[styles.quickAccountsCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+        <View onLayout={(e) => { sectionOffsets.current['accounts'] = e.nativeEvent.layout.y; }} style={[styles.quickAccountsCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
           <Text style={[styles.quickAccountsTitle, { color: colors.text }]}>📊 Quick Accounts & Payments</Text>
           <View style={styles.quickAccountsGrid}>
             {/* Button 1: + Add Sale */}
@@ -407,7 +446,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         <MarketRatesCard />
 
         {/* 🚜 Essential Farm Tools & Agronomy Hub Section (Compact) */}
-        <View style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+        <View onLayout={(e) => { sectionOffsets.current['tools'] = e.nativeEvent.layout.y; }} style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
           {/* Compact Section Header */}
           <View style={styles.toolsSectionHeader}>
             <View style={styles.toolsSectionHeaderLeft}>
@@ -493,8 +532,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                       style={[
                         styles.chevronPill4D,
                         {
-                          backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                          borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                          backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.07)',
+                          borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.16)',
                         },
                       ]}
                     >
@@ -508,7 +547,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         </View>
 
         {/* 🌟 Executive Smart Farming Portal 7-Feature Upgrade Section */}
-        <FarmerPortalUpgradeSection ref={upgradeSectionRef} />
+        <View onLayout={(e) => { sectionOffsets.current['plans'] = e.nativeEvent.layout.y; }}>
+          <FarmerPortalUpgradeSection ref={upgradeSectionRef} />
+        </View>
 
 
       </View>
@@ -546,6 +587,36 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 };
 
 const styles = StyleSheet.create({
+  mobileQuickTabsRow: {
+    marginHorizontal: SPACING.md,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  mobileQuickTabsScroll: {
+    gap: 6,
+    paddingVertical: 2,
+    alignItems: 'center',
+  },
+  mobileQuickTabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  mobileQuickTabPillActive: {
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  mobileQuickTabText: {
+    fontSize: 11,
+    letterSpacing: -0.1,
+  },
   container: { flex: 1 },
   scrollContent: { flexGrow: 1 },
   content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 20 },

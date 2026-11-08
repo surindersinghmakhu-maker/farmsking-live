@@ -488,7 +488,17 @@ try {
     }
 
     const webSplashHtml = `
-    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #070c18; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; transition: opacity 0.35s ease-out;">
+    <style>
+      html, body, #root {
+        background-color: #070c18;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+      }
+    </style>
+    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #070c18; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; transition: opacity 0.2s ease-out;">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 76px; height: 76px; border-radius: 20px; filter: drop-shadow(0 4px 22px rgba(16, 185, 129, 0.5)); margin-bottom: 16px;" />
         <div style="color: #fef08a; font-size: 17px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing Smart Farming</div>
@@ -499,10 +509,8 @@ try {
     </div>
     <script>
       (function() {
-        var startTime = Date.now();
-        var MIN_DISPLAY_MS = 950;
         var dismissed = false;
-        function finishDismiss() {
+        window.__dismissFarmsKingSplash = function() {
           if (dismissed) return;
           dismissed = true;
           var el = document.getElementById('farmsking-web-splash');
@@ -510,25 +518,16 @@ try {
             el.style.opacity = '0';
             setTimeout(function() {
               if (el && el.parentNode) el.parentNode.removeChild(el);
-            }, 350);
+            }, 200);
           }
-        }
-        function scheduleDismiss() {
-          var elapsed = Date.now() - startTime;
-          var remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
-          setTimeout(finishDismiss, remaining);
-        }
-        var root = document.getElementById('root');
-        if (root && window.MutationObserver) {
-          var obs = new MutationObserver(function() {
-            if (root.children.length > 1 || (root.children.length === 1 && root.children[0].id !== 'farmsking-web-splash')) {
-              scheduleDismiss();
-              obs.disconnect();
-            }
-          });
-          obs.observe(root, { childList: true });
-        }
-        setTimeout(scheduleDismiss, 2000);
+        };
+
+        // Safety fallback: if app takes longer than 2.5s, dismiss automatically so user is never stuck
+        setTimeout(function() {
+          if (!dismissed && window.__dismissFarmsKingSplash) {
+            window.__dismissFarmsKingSplash();
+          }
+        }, 2500);
       })();
     </script>
     `;

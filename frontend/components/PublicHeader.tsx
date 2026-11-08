@@ -49,7 +49,7 @@ const MAIN_NAV_LINKS = [
   },
   {
     id: 'farming',
-    label: 'Farmers',
+    label: 'Farming',
     path: '/topic/Farming',
     icon: 'leaf-outline',
     activeIcon: 'leaf',
@@ -571,7 +571,7 @@ export default function PublicHeader({
                           <Ionicons
                             name={(active && link.activeIcon ? link.activeIcon : link.icon) as any}
                             size={15}
-                            color={active ? link.color : isDay ? '#475569' : '#94a3b8'}
+                            color={active ? link.color : isDay ? '#1e293b' : '#94a3b8'}
                           />
                         </View>
                       )}
@@ -685,7 +685,7 @@ export default function PublicHeader({
                   activeOpacity={0.85}
                 >
                   <Ionicons name="sunny" size={11} color={isDay ? '#b45309' : '#94a3b8'} />
-                  <Text style={[styles.themeSegmentText, isDay && styles.themeSegmentTextActiveDay]}>
+                  <Text style={[styles.themeSegmentText, isDay ? styles.themeSegmentTextActiveDay : styles.themeSegmentTextNight]}>
                     Day
                   </Text>
                 </TouchableOpacity>
@@ -694,8 +694,8 @@ export default function PublicHeader({
                   onPress={() => handleToggleTheme('night')}
                   activeOpacity={0.85}
                 >
-                  <Ionicons name="moon" size={10.5} color={!isDay ? '#38bdf8' : '#94a3b8'} />
-                  <Text style={[styles.themeSegmentText, !isDay && styles.themeSegmentTextActiveNight]}>
+                  <Ionicons name="moon" size={10.5} color={!isDay ? '#38bdf8' : (isDay ? '#475569' : '#94a3b8')} />
+                  <Text style={[styles.themeSegmentText, !isDay ? styles.themeSegmentTextActiveNight : styles.themeSegmentTextDay]}>
                     Night
                   </Text>
                 </TouchableOpacity>
@@ -1096,10 +1096,10 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   headerDay: {
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    backgroundColor: 'rgba(255,255,255,0.98)',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.06)',
-    ...premiumShadow('rgba(0,0,0,0.08)', 'lg'),
+    borderColor: 'rgba(0,0,0,0.12)',
+    ...premiumShadow('rgba(0,0,0,0.10)', 'lg'),
   },
   headerNight: {
     backgroundColor: 'rgba(15, 23, 42, 0.94)',
@@ -1317,7 +1317,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.semiBold,
   },
-  navLinkTextDay: { color: '#64748b' },
+  navLinkTextDay: { color: '#0f172a', fontFamily: FONT.bold },
   navLinkTextNight: { color: '#94a3b8' },
   navLinkDay: {},
   navLinkNight: {},
@@ -1583,6 +1583,12 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
+  themeSegmentTextDay: {
+    color: '#334155',
+  },
+  themeSegmentTextNight: {
+    color: '#94a3b8',
+  },
   themeSegmentTextActiveDay: {
     color: '#b45309',
   },
@@ -1604,8 +1610,8 @@ const styles = StyleSheet.create({
   },
   langPickerDay: {
     backgroundColor: '#ffffff',
-    borderColor: '#e2e8f0',
-    ...premiumShadow('rgba(0,0,0,0.04)', 'xs'),
+    borderColor: '#cbd5e1',
+    ...premiumShadow('rgba(0,0,0,0.06)', 'xs'),
   },
   langPickerNight: {
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
@@ -1648,7 +1654,8 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
   },
   langOptionDay: {
-    color: '#64748b',
+    color: '#0f172a',
+    fontFamily: FONT.bold,
   },
   langOptionNight: {
     color: '#94a3b8',
@@ -1711,7 +1718,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   loginBtnDay: {
-    borderColor: 'rgba(16,185,129,0.25)',
+    borderColor: 'rgba(5, 150, 105, 0.45)',
   },
   loginBtnNight: {
     borderColor: 'rgba(52,211,153,0.40)',
@@ -1725,10 +1732,10 @@ const styles = StyleSheet.create({
   },
   loginBtnTextBox: { flexDirection: 'column' },
   loginBtnText: { fontSize: 12, fontFamily: FONT.bold, lineHeight: 15 },
-  loginBtnTextDay: { color: '#059669' },
+  loginBtnTextDay: { color: '#047857' },
   loginBtnTextNight: { color: '#34d399' },
-  loginBtnSubText: { fontSize: 8.5, fontFamily: FONT.semiBold, letterSpacing: 0.3 },
-  loginBtnSubTextDay: { color: '#16a34a' },
+  loginBtnSubText: { fontSize: 8.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
+  loginBtnSubTextDay: { color: '#065f46' },
   loginBtnSubTextNight: { color: '#a7f3d0' },
 
   // User button (logged in)
@@ -1849,7 +1856,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     marginTop: 2,
   },
-  modalSubDay: { color: '#64748b' },
+  modalSubDay: { color: '#334155' },
   modalSubNight: { color: '#94a3b8' },
   modalCloseBtn: {
     width: 30,
@@ -1946,6 +1953,6 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     fontFamily: FONT.semiBold,
   },
-  modalInfoTextDay: { color: '#475569' },
+  modalInfoTextDay: { color: '#1e293b' },
   modalInfoTextNight: { color: '#cbd5e1' },
 });

@@ -241,13 +241,19 @@ export default function LoginScreen() {
       // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS
       try {
         if (typeof window !== 'undefined') {
-          if (!(window as any).recaptchaVerifierLogin) {
-            (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
-              auth,
-              'recaptcha-container-login',
-              { size: 'invisible' }
-            );
+          const el = document.getElementById('recaptcha-container-login');
+          if (el) el.innerHTML = '';
+          if ((window as any).recaptchaVerifierLogin) {
+            try {
+              (window as any).recaptchaVerifierLogin.clear();
+            } catch {}
+            (window as any).recaptchaVerifierLogin = null;
           }
+          (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
+            auth,
+            'recaptcha-container-login',
+            { size: 'invisible' }
+          );
         }
 
         const confirmation = await signInWithPhoneNumber(
@@ -264,11 +270,15 @@ export default function LoginScreen() {
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       } catch (err: any) {
         console.warn('[Firebase Phone Auth error]:', err);
-        if (typeof window !== 'undefined' && (window as any).recaptchaVerifierLogin) {
-          try {
-            (window as any).recaptchaVerifierLogin.clear();
-          } catch {}
-          (window as any).recaptchaVerifierLogin = null;
+        if (typeof window !== 'undefined') {
+          const el = document.getElementById('recaptcha-container-login');
+          if (el) el.innerHTML = '';
+          if ((window as any).recaptchaVerifierLogin) {
+            try {
+              (window as any).recaptchaVerifierLogin.clear();
+            } catch {}
+            (window as any).recaptchaVerifierLogin = null;
+          }
         }
 
         let msg = 'Failed to send verification SMS. Please try again.';
@@ -278,6 +288,8 @@ export default function LoginScreen() {
           msg = 'Too many requests. Please wait a few moments before retrying.';
         } else if (err?.code === 'auth/quota-exceeded') {
           msg = 'Daily SMS quota reached. Please use Google Sign-In or contact support.';
+        } else if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
+          msg = 'Verification service was refreshed. Please tap Continue again.';
         } else if (err?.message) {
           msg = err.message;
         }
@@ -574,7 +586,18 @@ export default function LoginScreen() {
             ) : null}
 
             {/* Invisible Firebase reCAPTCHA container for Web Phone Auth */}
-            <View id="recaptcha-container-login" style={{ display: 'none' }} />
+            <View
+              nativeID="recaptcha-container-login"
+              id="recaptcha-container-login"
+              style={{
+                position: 'absolute',
+                width: 0,
+                height: 0,
+                opacity: 0,
+                overflow: 'hidden',
+                pointerEvents: 'none',
+              }}
+            />
 
             {/* Localhost Testing Mode Banner: Strictly shown only on Localhost */}
             {isLocalhost && (

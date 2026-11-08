@@ -59,7 +59,15 @@ export function OtpVerificationModal({
     setIsSending(true);
     setErrorText(null);
     try {
-      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifier) {
+      if (typeof window !== 'undefined') {
+        const el = document.getElementById('recaptcha-container-otp');
+        if (el) el.innerHTML = '';
+        if ((window as any).recaptchaVerifier) {
+          try {
+            (window as any).recaptchaVerifier.clear();
+          } catch {}
+          (window as any).recaptchaVerifier = null;
+        }
         (window as any).recaptchaVerifier = new RecaptchaVerifier(
           auth,
           'recaptcha-container-otp',
@@ -74,7 +82,23 @@ export function OtpVerificationModal({
       setConfirmationResult(confirmation);
       setTimer(30);
     } catch (err: any) {
-      setErrorText(err.message || 'Failed to send OTP via Firebase.');
+      if (typeof window !== 'undefined') {
+        const el = document.getElementById('recaptcha-container-otp');
+        if (el) el.innerHTML = '';
+        if ((window as any).recaptchaVerifier) {
+          try {
+            (window as any).recaptchaVerifier.clear();
+          } catch {}
+          (window as any).recaptchaVerifier = null;
+        }
+      }
+      let msg = 'Failed to send OTP via SMS. Please retry.';
+      if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
+        msg = 'Verification service refreshed. Please tap Resend to try again.';
+      } else if (err?.message) {
+        msg = err.message;
+      }
+      setErrorText(msg);
     } finally {
       setIsSending(false);
     }
@@ -124,7 +148,18 @@ export function OtpVerificationModal({
             </TouchableOpacity>
           </View>
 
-          <View id="recaptcha-container-otp" style={{ display: 'none' }} />
+          <View
+            nativeID="recaptcha-container-otp"
+            id="recaptcha-container-otp"
+            style={{
+              position: 'absolute',
+              width: 0,
+              height: 0,
+              opacity: 0,
+              overflow: 'hidden',
+              pointerEvents: 'none',
+            }}
+          />
 
           {isSending ? (
             <View style={{ alignItems: 'center', marginVertical: 20 }}>

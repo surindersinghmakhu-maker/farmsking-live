@@ -92,6 +92,17 @@ export function useMarkOrderDelivered() {
   return useOrderMutation(api.markOrderDelivered, 'DELIVERED');
 }
 
+export function useSubmitOrderUtr() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, utr, note }: { id: string; utr: string; note?: string }) =>
+      api.submitOrderUtr(id, utr, note),
+    onSuccess: (data: any, vars: { id: string; utr: string; note?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
 export function useDispatchOrder() {
   const queryClient = useQueryClient();
   return useMutation({

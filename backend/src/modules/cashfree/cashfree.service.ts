@@ -205,6 +205,82 @@ export class CashfreeService {
   /**
    * Verify Payment Session Status from Cashfree
    */
+  /**
+   * Create Recurring Subscription (Google Pay / PhonePe UPI AutoPay) on Cashfree
+   */
+  async createSubscription(dto: {
+    subscriptionId: string;
+    planName: string;
+    amount: number;
+    intervalType?: 'MONTH' | 'YEAR';
+    customerId: string;
+    customerPhone: string;
+    customerEmail?: string;
+    customerName?: string;
+  }) {
+    const subBaseUrl = this.baseUrl.includes('sandbox')
+      ? 'https://sandbox.cashfree.com/sub'
+      : 'https://api.cashfree.com/sub';
+
+    const payload = {
+      subscriptionId: dto.subscriptionId,
+      planId: `PLAN_${(dto.planName || 'VIP').toUpperCase().replace(/\s+/g, '_')}`,
+      customerName: dto.customerName || 'FarmsKing Farmer',
+      customerPhone: dto.customerPhone || '9999999999',
+      customerEmail: dto.customerEmail || 'support@farmsking.in',
+      authModes: ['UPI', 'ENACH', 'CARD'],
+      amount: dto.amount,
+      returnUrl: `https://farmsking.in/payment-status?sub_id={sub_id}`,
+      notificationChannels: ['SMS', 'EMAIL'],
+    };
+
+    try {
+      this.logger.log(`Creating Cashfree Recurring Subscription: ${dto.subscriptionId}`);
+      const response = await fetch(`${subBaseUrl}/subscriptions`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      const resData = await response.json();
+      if (!response.ok) {
+        this.logger.warn(`Cashfree direct Subscriptions API status ${response.status}. Falling back to standard PG checkout.`);
+        const stdOrder = await this.createStandardOrder({
+          orderId: dto.subscriptionId,
+          amount: dto.amount,
+          customerId: dto.customerId,
+          customerPhone: dto.customerPhone,
+          customerName: dto.customerName,
+        });
+        return {
+          subscriptionId: dto.subscriptionId,
+          paymentSessionId: stdOrder.paymentSessionId,
+          subscriptionLink: `https://payments.cashfree.com/order/#${stdOrder.paymentSessionId}`,
+        };
+      }
+
+      return {
+        subscriptionId: resData.subscriptionId || dto.subscriptionId,
+        paymentSessionId: resData.paymentSessionId || null,
+        subscriptionLink: resData.authLink || resData.subscriptionLink || `https://payments.cashfree.com/subscriptions/${resData.subscriptionId || dto.subscriptionId}`,
+      };
+    } catch (error) {
+      this.logger.warn('Cashfree subscription creation fallback to standard order:', error?.message);
+      const stdOrder = await this.createStandardOrder({
+        orderId: dto.subscriptionId,
+        amount: dto.amount,
+        customerId: dto.customerId,
+        customerPhone: dto.customerPhone,
+        customerName: dto.customerName,
+      });
+      return {
+        subscriptionId: dto.subscriptionId,
+        paymentSessionId: stdOrder.paymentSessionId,
+        subscriptionLink: `https://payments.cashfree.com/order/#${stdOrder.paymentSessionId}`,
+      };
+    }
+  }
+
   async verifyPayment(orderId: string) {
     const endpoint = `${this.baseUrl}/orders/${orderId}`;
 

@@ -37,6 +37,18 @@ let CashfreeController = class CashfreeController {
             customerName: dto.customerName || user.name,
         });
     }
+    createSubscription(user, dto) {
+        return this.cashfreeService.createSubscription({
+            subscriptionId: dto.subscriptionId,
+            planName: dto.planName,
+            amount: dto.amount,
+            intervalType: dto.intervalType || 'MONTH',
+            customerId: user.id,
+            customerPhone: dto.customerPhone || user.mobile,
+            customerEmail: dto.customerEmail || user.email || undefined,
+            customerName: dto.customerName || user.name,
+        });
+    }
     verifyPayment(orderId) {
         return this.cashfreeService.verifyPayment(orderId);
     }
@@ -70,6 +82,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], CashfreeController.prototype, "createOrder", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('subscriptions/create'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], CashfreeController.prototype, "createSubscription", null);
 __decorate([
     (0, common_1.Get)('orders/:orderId/verify'),
     __param(0, (0, common_1.Param)('orderId')),

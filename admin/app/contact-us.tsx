@@ -16,7 +16,7 @@ export default function ContactUsPage() {
   const phone = support?.mobile || '+91-9876543210';
   const whatsapp = phone;
   const email = support?.email || 'support@farmsking.in';
-  const address = 'FarmsKing AgriTech Pvt Ltd\nMakhu, Punjab, India - 142044';
+  const address = 'FARMSKING TECHNOLOGIES PRIVATE LIMITED\nVPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422';
 
   return (
     <View style={styles.container}>

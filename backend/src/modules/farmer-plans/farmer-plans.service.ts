@@ -199,6 +199,101 @@ export class FarmerPlansService implements OnModuleInit {
   }
 
   /**
+   * Option 3: Calculate real-time upgrade quote with prorated unused credit adjustment.
+   * Strictly blocks downgrading from higher tier to lower tier while active.
+   */
+  async getUpgradeQuote(user: AuthUser, targetPlan: FarmerSubscriptionPlan, billingPeriodDays?: number) {
+    const farmerId = user.id;
+    const effective = await this.getEffectivePlan(farmerId);
+    const now = new Date();
+    const currentPlanType = effective.plan ?? FarmerSubscriptionPlan.FREE;
+    const currentRank = PLAN_RANK[currentPlanType] ?? 0;
+    const targetRank = PLAN_RANK[targetPlan] ?? 0;
+    const isCurrentActive = currentPlanType !== FarmerSubscriptionPlan.FREE && !!effective.endDate && effective.endDate > now;
+
+    // Strict Downgrade Guard (Rule: "vadde to shota plan nhi kita ja skda")
+    if (isCurrentActive && targetRank < currentRank) {
+      return {
+        isAllowed: false,
+        isDowngrade: true,
+        currentPlan: currentPlanType,
+        targetPlan,
+        reason: `Downgrades are not permitted. Your active ${currentPlanType} plan has higher privileges than ${targetPlan}.`,
+        targetPlanPrice: 0,
+        unusedCreditAmount: 0,
+        netPayableAmount: 0,
+        daysRemaining: Math.ceil((effective.endDate!.getTime() - now.getTime()) / DAY_MS),
+      };
+    }
+
+    // Target plan pricing
+    let pricing = billingPeriodDays
+      ? await this.prisma.farmerPlanPricing.findFirst({
+          where: { plan: targetPlan, billingPeriodDays: Number(billingPeriodDays) },
+        })
+      : null;
+
+    if (!pricing) {
+      pricing = await this.prisma.farmerPlanPricing.findFirst({
+        where: { plan: targetPlan },
+        orderBy: { billingPeriodDays: 'desc' },
+      });
+    }
+
+    const targetPlanPrice = pricing ? Number(pricing.price) : 0;
+    const daysGranted = pricing?.billingPeriodDays || 365;
+
+    // Same-tier Renewal (Queue / Date Extension)
+    if (isCurrentActive && targetRank === currentRank) {
+      const remaining = Math.ceil((effective.endDate!.getTime() - now.getTime()) / DAY_MS);
+      return {
+        isAllowed: true,
+        isDowngrade: false,
+        isSameTierRenewal: true,
+        currentPlan: currentPlanType,
+        targetPlan,
+        targetPlanPrice,
+        unusedCreditAmount: 0,
+        netPayableAmount: targetPlanPrice,
+        daysRemaining: remaining,
+        daysGranted,
+        extensionNotice: `Your plan will be extended by +${daysGranted} days on top of your current expiry date.`,
+      };
+    }
+
+    // Upgrade to Higher Tier Plan: Option 3 Prorated Adjustment
+    let unusedCreditAmount = 0;
+    let daysRemaining = 0;
+    if (isCurrentActive && targetRank > currentRank && effective.endDate) {
+      daysRemaining = Math.max(0, Math.ceil((effective.endDate.getTime() - now.getTime()) / DAY_MS));
+      const currentPricing = await this.prisma.farmerPlanPricing.findFirst({
+        where: { plan: currentPlanType },
+        orderBy: { billingPeriodDays: 'desc' },
+      });
+      const currentPrice = currentPricing ? Number(currentPricing.price) : 0;
+      const currentTotalDays = currentPricing?.billingPeriodDays || 365;
+      const rawCredit = (daysRemaining / currentTotalDays) * currentPrice;
+      unusedCreditAmount = Math.round(Math.min(rawCredit, targetPlanPrice) * 100) / 100;
+    }
+
+    const netPayableAmount = Math.max(0, Math.round((targetPlanPrice - unusedCreditAmount) * 100) / 100);
+
+    return {
+      isAllowed: true,
+      isDowngrade: false,
+      isUpgrade: isCurrentActive && targetRank > currentRank,
+      currentPlan: currentPlanType,
+      targetPlan,
+      targetPlanPrice,
+      unusedCreditAmount,
+      netPayableAmount,
+      daysRemaining,
+      daysGranted,
+      savingsText: unusedCreditAmount > 0 ? `₹${unusedCreditAmount.toFixed(2)} adjusted from your active ${currentPlanType} plan` : null,
+    };
+  }
+
+  /**
    * Whenever a farmer's effective advisor-crop cap shrinks (tier drop, including all the way to
    * no-advisor on FREE/BASIC), reverts the most-recently-submitted PENDING/ACCEPTED crops back to
    * NONE until the count is back within the new cap — the oldest-submitted crops are kept.
@@ -411,6 +506,13 @@ export class FarmerPlansService implements OnModuleInit {
     let updatedPlan: any;
     let extended = false;
     let sleptPlanCreated = false;
+
+    // Strict Downgrade Guard (Rule: "vadde to shota plan nhi kita ja skda")
+    if (isCurrentActive && targetRank < currentRank) {
+      throw new BadRequestException(
+        `Downgrade is strictly prohibited while an active higher-tier plan (${currentPlanType}) is running. You can only upgrade to a higher tier or renew your current plan.`,
+      );
+    }
 
     // 1. Same Tier Renewal / Extension
     if (isCurrentActive && targetRank === currentRank) {

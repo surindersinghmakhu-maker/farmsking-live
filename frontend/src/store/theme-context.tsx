@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, ReactNo
 import { Ionicons } from '@expo/vector-icons';
 import * as AppStorage from '@/src/lib/storage';
 
-export type ExecutiveTheme = 'EMERALD' | 'DARK' | 'GOLD' | 'SAPPHIRE' | 'AMETHYST' | 'RUBY' | 'OCEAN' | 'PLATINUM';
+export type ExecutiveTheme = 'LIGHT' | 'EMERALD' | 'DARK' | 'GOLD' | 'SAPPHIRE' | 'AMETHYST' | 'RUBY' | 'OCEAN' | 'PLATINUM';
 
 export interface ThemeConfig {
   name: string;
@@ -34,6 +34,35 @@ export interface ThemeConfig {
 }
 
 export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
+  LIGHT: {
+    name: 'Executive Daylight (Clean White)',
+    icon: 'sunny',
+    bg: '#f1f5f9',
+    cardBg: '#ffffff',
+    cardBorder: 'rgba(203, 213, 225, 0.85)',
+    text: '#0f172a',
+    textMuted: '#64748b',
+    primary: '#16a34a',
+    primaryLight: '#f0fdf4',
+    accent: '#d97706',
+    headerBg: '#ffffff',
+    headerGradient: ['#ffffff', '#f8fafc', '#ecfdf5'],
+    shadowColor: 'rgba(0, 0, 0, 0.08)',
+    tabBarBg: '#ffffff',
+    tabBarBorder: '#e2e8f0',
+    tabBarActive: '#16a34a',
+    tabBarInactive: '#64748b',
+    btnBg: '#16a34a',
+    btnText: '#ffffff',
+    btnIconColor: '#ffffff',
+    titleColor: '#0f172a',
+    subColor: '#334155',
+    accentColor: '#16a34a',
+    borderColor: '#e2e8f0',
+    isDark: false,
+    statusBarStyle: 'dark',
+  },
+
   EMERALD: {
     name: 'Cyber Emerald (4D)',
     icon: 'leaf',
@@ -262,10 +291,12 @@ export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
 
 const THEME_STORAGE_KEY = 'farmsking_executive_theme_setting';
 
-interface ExecutiveThemeContextValue {
+export interface ExecutiveThemeContextValue {
   executiveTheme: ExecutiveTheme;
   setExecutiveTheme: (theme: ExecutiveTheme) => void;
   colors: ThemeConfig;
+  toggleThemeMode: () => void;
+  isDark: boolean;
 }
 
 const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
@@ -293,13 +324,22 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
 
   const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme], [executiveTheme]);
 
+  const toggleThemeMode = () => {
+    const next: ExecutiveTheme = colors.isDark ? 'LIGHT' : 'EMERALD';
+    setExecutiveTheme(next);
+  };
+
+  const isDark = colors.isDark;
+
   const value = useMemo(
     () => ({
       executiveTheme,
       setExecutiveTheme,
       colors,
+      toggleThemeMode,
+      isDark,
     }),
-    [executiveTheme, colors]
+    [executiveTheme, colors, isDark]
   );
 
   return <ExecutiveThemeContext.Provider value={value}>{children}</ExecutiveThemeContext.Provider>;

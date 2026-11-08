@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useAllOrders, useCancelOrder, useConfirmOrder } from '@/src/hooks/useOrders';
+import { useAllOrders, useCancelOrder, useConfirmOrder, useMarkOrderPaid } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderPaymentMode, OrderPaymentStatus, OrderStatus } from '@/src/types/api';
 import { exportOrdersToExcel } from '@/src/utils/excelExport';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -150,6 +150,7 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
   const { isLight, isMedium, textColor, subTextColor, cardBg, cardBorder } = useExecutiveTheme();
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
+  const markPaid = useMarkOrderPaid();
   const meta = STATUS_META[order.status];
   const paymentMeta = PAYMENT_STATUS_META[order.paymentStatus];
   const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
@@ -244,6 +245,41 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
                 <Text style={styles.metaLabel}>Gateway State</Text>
                 <Text style={[styles.metaValue, { color: textColor }]}>{order.phonepePaymentState}</Text>
               </View>
+            ) : null}
+            {order.paymentStatus !== 'PAID' && order.status !== 'CANCELLED' ? (
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  backgroundColor: '#16a34a',
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: RADIUS.md,
+                  marginTop: 10,
+                }}
+                disabled={markPaid.isPending}
+                onPress={() => {
+                  tap();
+                  const utr = prompt('Enter Bank / UPI UTR Transaction ID (Optional):', order.phonepeMerchantOrderId || '');
+                  if (utr !== null) {
+                    markPaid.mutate(
+                      { id: order.id, transactionId: utr.trim(), notes: 'Verified by Admin' },
+                      {
+                        onSuccess: () => {
+                          showAdminToast('SUCCESS', 'Payment Verified', `Order ${order.orderNumber} marked as PAID.`);
+                        },
+                      }
+                    );
+                  }
+                }}
+              >
+                <Ionicons name="checkmark-circle-outline" size={16} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontSize: 12, fontFamily: FONT.bold }}>
+                  {markPaid.isPending ? 'Verifying...' : '✓ Verify & Mark as Paid (UPI/Bank)'}
+                </Text>
+              </TouchableOpacity>
             ) : null}
           </View>
 

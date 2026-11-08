@@ -1,0 +1,13 @@
+import { Role } from '@prisma/client';
+export interface AuthUser {
+    id: string;
+    mobile: string;
+    role: Role;
+    roles: Role[];
+    deactivatedRoles: Role[];
+    name: string;
+    kingId?: string | null;
+    isSeniorDoctor?: boolean;
+    employerFarmerId?: string | null;
+    supervisorFeaturesConfig?: any;
+}

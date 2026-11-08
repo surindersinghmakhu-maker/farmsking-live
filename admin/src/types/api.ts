@@ -304,6 +304,7 @@ export interface AdvisorAssignment {
   status: AdvisorAssignmentStatus;
   startDate: string;
   endDate?: string | null;
+  notes?: string | null;
   advisor?: FarmerBasic;
   farmer?: FarmerBasic;
   subscription?: AdvisorSubscription;

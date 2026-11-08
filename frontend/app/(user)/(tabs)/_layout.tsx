@@ -163,8 +163,7 @@ export default function TabLayout() {
   const { user, logout } = useAuth();
   const { data: unreadNotifData } = useUnreadNotificationCount();
   const unreadNotifCount = unreadNotifData?.count ?? 0;
-  const { colors } = useExecutiveTheme();
-  const isDark = colors?.isDark ?? true;
+  const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
 
@@ -317,6 +316,30 @@ export default function TabLayout() {
                 <Text style={[desktopStyles.langBtnText, language === 'en' && desktopStyles.langBtnTextActive]}>ENG</Text>
               </TouchableOpacity>
             </View>
+
+            {/* ☀️ / 🌙 Desktop Light / Dark Toggle */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.themeToggleBtn,
+                isDark ? desktopStyles.themeToggleBtnDark : desktopStyles.themeToggleBtnLight,
+              ]}
+              activeOpacity={0.8}
+              onPress={toggleThemeMode}
+            >
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={14}
+                color={isDark ? '#f59e0b' : '#0f172a'}
+              />
+              <Text
+                style={[
+                  desktopStyles.themeToggleBtnText,
+                  { color: isDark ? '#ffffff' : '#0f172a' },
+                ]}
+              >
+                {isDark ? 'Light' : 'Dark'}
+              </Text>
+            </TouchableOpacity>
 
             {/* Logout Button */}
             <TouchableOpacity
@@ -628,6 +651,28 @@ const desktopStyles = StyleSheet.create({
     fontSize: 9,
     fontFamily: FONT.bold,
     lineHeight: 11,
+  },
+  themeToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  themeToggleBtnDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  themeToggleBtnLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    ...premiumShadow('rgba(0, 0, 0, 0.06)', 'sm'),
+  },
+  themeToggleBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
   },
   logoutBtn: {
     flexDirection: 'row',

@@ -474,6 +474,49 @@ export class OrdersService {
     return { paymentStatus };
   }
 
+  async markPaymentPaid(operator: AuthUser, id: string, transactionId?: string, paymentNotes?: string) {
+    const order = await this.findOneOrThrow(operator, id);
+    if (order.paymentStatus === OrderPaymentStatus.PAID) {
+      return order;
+    }
+    const updated = await this.prisma.customerOrder.update({
+      where: { id },
+      data: {
+        paymentStatus: OrderPaymentStatus.PAID,
+        phonepeMerchantOrderId: transactionId?.trim() || order.phonepeMerchantOrderId || `MANUAL-${Date.now()}`,
+        phonepePaymentState: paymentNotes?.trim() || 'VERIFIED_BY_ADMIN',
+      },
+      include: DETAIL_INCLUDE,
+    });
+
+    await this.notifyCustomer(
+      order.customerId,
+      '💳 Payment Received',
+      `Payment of ₹${order.totalAmount} for FarmsKing Order #${order.orderNumber} has been verified and confirmed.`,
+      id,
+      'ORDER_CONFIRMED_SMS',
+    );
+
+    return updated;
+  }
+
+  async submitPaymentUtr(customer: AuthUser, id: string, utrNumber: string) {
+    const order = await this.findOneOrThrow(customer, id);
+    const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
+    if (order.customerId !== customer.id && !staffRoles.includes(customer.role)) {
+      throw new ForbiddenException('You cannot update payment reference for this order.');
+    }
+    return this.prisma.customerOrder.update({
+      where: { id },
+      data: {
+        phonepeMerchantOrderId: utrNumber.trim(),
+        phonepePaymentState: 'UTR_SUBMITTED_BY_CUSTOMER',
+        paymentStatus: OrderPaymentStatus.PENDING,
+      },
+      include: DETAIL_INCLUDE,
+    });
+  }
+
   private async notifyCustomer(
     customerId: string,
     title: string,

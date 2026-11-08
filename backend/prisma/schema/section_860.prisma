@@ -157,7 +157,8 @@ model AppSetting {
   walletUsagePlatformFeePercent Float   @default(2.0)
   walletUsageGstPercent         Float   @default(18.0)
   /// Whether to apply platform fee+GST on wallet actions (can be toggled by superadmin)
-  walletTaxEnabled              Boolean @default(true)
+  walletTaxEnabled              Boolean  @default(true)
+  createdAt                     DateTime @default(now())
 
   @@map("app_settings")
 }
@@ -188,6 +189,7 @@ model CouponSystemSetting {
   inviteCouponCommissionPercent     Decimal  @default(5) @db.Decimal(5, 2)
   inviteCouponValidityDays          Int      @default(3650)
   inviteCouponUsageLimit            Int      @default(100000)
+  createdAt                         DateTime @default(now())
   updatedAt                         DateTime @updatedAt
   updatedById                       String?
   updatedBy                         User?    @relation("CouponSystemSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)

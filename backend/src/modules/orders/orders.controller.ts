@@ -8,6 +8,7 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DispatchOrderDto } from './dto/dispatch-order.dto';
+import { MarkPaidDto, SubmitUtrDto } from './dto/mark-paid.dto';
 
 const STAFF_ROLES = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
 
@@ -116,5 +117,17 @@ export class OrdersController {
   @Post(':id/mark-delivered')
   markDelivered(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.ordersService.markDelivered(user, id);
+  }
+
+  @Roles(Role.OPERATOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/mark-paid')
+  markPaid(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: MarkPaidDto) {
+    return this.ordersService.markPaymentPaid(user, id, dto.transactionId, dto.notes);
+  }
+
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.OPERATOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/submit-utr')
+  submitUtr(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SubmitUtrDto) {
+    return this.ordersService.submitPaymentUtr(user, id, dto.utrNumber);
   }
 }

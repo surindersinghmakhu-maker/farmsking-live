@@ -210,8 +210,8 @@ export class AppSettingsService {
       doctorMaintenanceMode: flags.doctorMaintenanceMode ?? false,
       gardenAdvisorMaintenanceMode: flags.gardenAdvisorMaintenanceMode ?? false,
       accountsMaintenanceMode: flags.accountsMaintenanceMode ?? false,
-      walletWithdrawalEnabled: flags.walletWithdrawalEnabled ?? false,
-      allowedWithdrawalRoles: Array.isArray(flags.allowedWithdrawalRoles) ? flags.allowedWithdrawalRoles : [],
+      walletWithdrawalEnabled: false, // Permanently disabled by platform rule
+      allowedWithdrawalRoles: [], // Permanently disabled by platform rule
     };
 
     this.cache = { data: result, timestamp: now };
@@ -415,6 +415,9 @@ export class AppSettingsService {
     for (const [key, val] of Object.entries(dto)) {
       if (val !== undefined) fields[key] = val;
     }
+    // Strict Invariant: Wallet withdrawals are permanently closed across the platform
+    fields.walletWithdrawalEnabled = false;
+    fields.allowedWithdrawalRoles = [];
 
     if (dto.adminName !== undefined || dto.adminMobile !== undefined || dto.adminEmail !== undefined || dto.upiId !== undefined || dto.logoUrl !== undefined || dto.appName !== undefined || dto.tagline !== undefined) {
       try {

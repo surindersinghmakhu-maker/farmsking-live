@@ -27,6 +27,7 @@ import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
 import SettingPaymentShareSetup from '@/components/settings/SettingPaymentShareSetup';
 import SettingPlanOffersSetup from '@/components/settings/SettingPlanOffersSetup';
+import SettingAuditLogsView from '@/src/components/settings/SettingAuditLogsView';
 
 // Tab configuration array — allows adding new tabs cleanly whenever needed
 export interface SettingsTabItem {
@@ -42,6 +43,12 @@ export const SETTINGS_TABS: SettingsTabItem[] = [
     label: 'About',
     icon: 'information-circle-outline',
     description: 'Corporate profile, technology architecture, statutory details & legal compliance',
+  },
+  {
+    id: 'AUDIT_LOGS',
+    label: 'System Logs',
+    icon: 'shield-checkmark-outline',
+    description: 'Table-wise & transaction-wise audit history, timestamps, who changed what and when',
   },
   {
     id: 'ENTITY_SETUP',
@@ -90,6 +97,9 @@ export default function NewSettingsScreen() {
 
   const [activeTab, setActiveTab] = useState<string>(() => {
     const tabParam = params?.tab?.toUpperCase();
+    if (tabParam === 'AUDIT_LOGS' || tabParam === 'AUDIT' || tabParam === 'LOGS' || tabParam === 'LOG') {
+      return 'AUDIT_LOGS';
+    }
     if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
       return 'ENTITY_SETUP';
     }
@@ -114,7 +124,9 @@ export default function NewSettingsScreen() {
 
   React.useEffect(() => {
     const tabParam = params?.tab?.toUpperCase();
-    if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
+    if (tabParam === 'AUDIT_LOGS' || tabParam === 'AUDIT' || tabParam === 'LOGS' || tabParam === 'LOG') {
+      setActiveTab('AUDIT_LOGS');
+    } else if (tabParam === 'ENTITY_SETUP' || tabParam === 'ENTITY' || tabParam === 'MASTER_DATA' || tabParam === 'SETTING') {
       setActiveTab('ENTITY_SETUP');
     } else if (tabParam === 'FEATURES' || tabParam === 'FEATURE') {
       setActiveTab('FEATURES');
@@ -653,6 +665,12 @@ export default function NewSettingsScreen() {
                 </View>
               </View>
             </View>
+          </View>
+        )}
+
+        {activeTab === 'AUDIT_LOGS' && (
+          <View style={{ width: '100%' }}>
+            <SettingAuditLogsView />
           </View>
         )}
 

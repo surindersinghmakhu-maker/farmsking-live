@@ -21,11 +21,13 @@ const auth_user_util_1 = require("../../common/utils/auth-user.util");
 const upi_util_1 = require("../../common/utils/upi.util");
 const wallet_service_1 = require("../wallet/wallet.service");
 const cashfree_service_1 = require("../cashfree/cashfree.service");
+const razorpay_service_1 = require("../razorpay/razorpay.service");
+const DAY_MS = 24 * 60 * 60 * 1000;
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
 };
 let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
-    constructor(prisma, advisorAssignmentService, notificationsService, appSettingsService, farmerPlansService, walletService, cashfreeService) {
+    constructor(prisma, advisorAssignmentService, notificationsService, appSettingsService, farmerPlansService, walletService, cashfreeService, razorpayService) {
         this.prisma = prisma;
         this.advisorAssignmentService = advisorAssignmentService;
         this.notificationsService = notificationsService;
@@ -33,6 +35,7 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         this.farmerPlansService = farmerPlansService;
         this.walletService = walletService;
         this.cashfreeService = cashfreeService;
+        this.razorpayService = razorpayService;
     }
     async initiate(user, dto, farmerId) {
         const targetFarmerId = farmerId ?? user.id;
@@ -47,8 +50,13 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             throw new common_1.NotFoundException('Farmer account not found. Please log in again.');
         }
         const effective = await this.farmerPlansService.getEffectivePlan(targetFarmerId);
-        if (farmer_plans_service_1.PLAN_RANK[dto.targetPlan] < farmer_plans_service_1.PLAN_RANK[effective.plan]) {
-            throw new common_1.BadRequestException(`You already have the ${effective.plan} plan active — this would be a downgrade.`);
+        const now = new Date();
+        const currentPlanType = effective.plan ?? client_1.FarmerSubscriptionPlan.FREE;
+        const currentRank = farmer_plans_service_1.PLAN_RANK[currentPlanType] ?? 0;
+        const targetRank = farmer_plans_service_1.PLAN_RANK[dto.targetPlan] ?? 0;
+        const isCurrentActive = currentPlanType !== client_1.FarmerSubscriptionPlan.FREE && !!effective.endDate && effective.endDate > now;
+        if (isCurrentActive && targetRank < currentRank) {
+            throw new common_1.BadRequestException(`Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`);
         }
         let pricing = dto.billingPeriodDays
             ? await this.prisma.farmerPlanPricing.findFirst({
@@ -64,8 +72,21 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         if (!pricing) {
             throw new common_1.BadRequestException('Pricing for this plan is not configured yet. Please contact support.');
         }
-        const amount = Number(pricing.price);
+        const baseAmount = Number(pricing.price);
         const daysGranted = pricing.billingPeriodDays;
+        let proratedCredit = 0;
+        if (isCurrentActive && targetRank > currentRank && effective.endDate) {
+            const daysRemaining = Math.max(0, Math.ceil((effective.endDate.getTime() - now.getTime()) / DAY_MS));
+            const currentPricing = await this.prisma.farmerPlanPricing.findFirst({
+                where: { plan: currentPlanType },
+                orderBy: { billingPeriodDays: 'desc' },
+            });
+            const currentPrice = currentPricing ? Number(currentPricing.price) : 0;
+            const currentTotalDays = currentPricing?.billingPeriodDays || 365;
+            const rawCredit = (daysRemaining / currentTotalDays) * currentPrice;
+            proratedCredit = Math.round(Math.min(rawCredit, baseAmount) * 100) / 100;
+        }
+        const amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
         const request = await this.prisma.farmerPlanPaymentRequest.create({
             data: {
                 farmerId: targetFarmerId,
@@ -237,6 +258,7 @@ exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = __decorate([
         app_settings_service_1.AppSettingsService,
         farmer_plans_service_1.FarmerPlansService,
         wallet_service_1.WalletService,
-        cashfree_service_1.CashfreeService])
+        cashfree_service_1.CashfreeService,
+        razorpay_service_1.RazorpayService])
 ], FarmerPlanPaymentsService);
 //# sourceMappingURL=farmer-plan-payments.service.js.map

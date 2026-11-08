@@ -20,6 +20,8 @@ export function useInitiateFarmerPlanPayment() {
       selectedAdvisorId,
       doctorKingId,
       advisorKingId,
+      isAutoDebit,
+      preferredGateway,
     }: {
       targetPlan: FarmerPlanType;
       billingPeriodDays?: number;
@@ -28,8 +30,20 @@ export function useInitiateFarmerPlanPayment() {
       selectedAdvisorId?: string;
       doctorKingId?: string;
       advisorKingId?: string;
+      isAutoDebit?: boolean;
+      preferredGateway?: 'CASHFREE' | 'RAZORPAY' | 'PHONEPE' | 'UPI_DIRECT';
     }) =>
-      api.initiateFarmerPlanPayment(targetPlan, billingPeriodDays, farmerId, selectedDoctorId, selectedAdvisorId, doctorKingId, advisorKingId),
+      api.initiateFarmerPlanPayment(
+        targetPlan,
+        billingPeriodDays,
+        farmerId,
+        selectedDoctorId,
+        selectedAdvisorId,
+        doctorKingId,
+        advisorKingId,
+        isAutoDebit,
+        preferredGateway,
+      ),
   });
 }
 

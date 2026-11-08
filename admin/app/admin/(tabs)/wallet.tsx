@@ -333,17 +333,11 @@ export default function WalletScreen() {
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
   const isAdvisorOrPartner = isAdvisor || isPartner;
 
-  // Dynamic Role-Based Withdrawal Permissions from App Settings
-  const isWithdrawalGloballyEnabled = Boolean(appSettings?.walletWithdrawalEnabled) && !appSettings?.walletMaintenanceMode;
-  const configuredWithdrawalRoles = Array.isArray(appSettings?.allowedWithdrawalRoles)
-    ? appSettings.allowedWithdrawalRoles
-    : [];
-
-  const canWithdraw =
-    isWithdrawalGloballyEnabled &&
-    (configuredWithdrawalRoles.some((r) => userRoles.includes(r) || currentRole === r) ||
-      (configuredWithdrawalRoles.includes('ADVISOR') && (userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR')));
-  const isClient = !canWithdraw;
+// Platform Policy: Wallet withdrawals are permanently closed across all wallets and roles
+  const isWithdrawalGloballyEnabled = false;
+  const configuredWithdrawalRoles: string[] = [];
+  const canWithdraw = false;
+  const isClient = true;
 
   const isWelcomeClaimed = (wallet?.transactions ?? []).some(
     (t) => t.type === 'CREDIT' && t.reason?.toLowerCase().includes('welcome')
@@ -2105,21 +2099,20 @@ function WithdrawModal({ visible, balance, onClose }: { visible: boolean; balanc
               </TouchableOpacity>
             </View>
           ) : (
-            <>
-              <Text style={styles.label}>Available: ₹{balance.toLocaleString('en-IN')}</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Amount to withdraw"
-                placeholderTextColor="#94a3b8"
-                keyboardType="numeric"
-                value={amount}
-                onChangeText={setAmount}
-              />
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <TouchableOpacity style={styles.submitBtn} disabled={createWithdrawal.isPending} onPress={handleSubmit}>
-                {createWithdrawal.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Submit Request</Text>}
-              </TouchableOpacity>
-            </>
+            <View style={{ gap: 12 }}>
+                <View style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 8, padding: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Ionicons name="lock-closed" size={16} color="#dc2626" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b' }}>Withdrawals Disabled</Text>
+                  </View>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#7f1d1d', lineHeight: 16 }}>
+                    Wallet withdrawals are permanently closed across the platform. All wallet balance can be utilized directly as billing credits for agricultural inputs, crop care plans, and services.
+                  </Text>
+                </View>
+                <TouchableOpacity style={styles.submitBtn} onPress={() => { reset(); onClose(); }}>
+                  <Text style={styles.submitBtnText}>Understood</Text>
+                </TouchableOpacity>
+              </View>
           )}
         </View>
       </View>

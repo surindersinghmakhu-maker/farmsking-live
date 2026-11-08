@@ -59,7 +59,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   onSecondaryAvatarPress,
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
-  const { colors } = useExecutiveTheme();
+  const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
@@ -77,9 +77,9 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
     subtitle.trim().toLowerCase() === roleMeta.label.toLowerCase();
 
   return (
-    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop]}>
-      {/* Top Banner Row: ALWAYS visible on both Mobile and Desktop */}
-      {(
+    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop, { borderColor: colors.cardBorder, borderWidth: isDesktop ? 1 : 0 }]}>
+      {/* Top Banner Row: ONLY visible on Mobile screens (Hidden on PC/Desktop where top navbar exists) */}
+      {!isDesktop && (
         <View style={styles.topRow}>
           <TouchableOpacity
             style={styles.brandRow}
@@ -122,6 +122,22 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               <Text style={styles.logoutText}>Log Out</Text>
             </TouchableOpacity>
 
+            {/* Mobile Theme Toggle Button */}
+            <TouchableOpacity
+              style={[
+                styles.mobileThemeToggle,
+                colors.isDark ? styles.mobileThemeToggleDark : styles.mobileThemeToggleLight,
+              ]}
+              activeOpacity={0.75}
+              onPress={toggleThemeMode}
+            >
+              <Ionicons
+                name={colors.isDark ? 'sunny' : 'moon'}
+                size={16}
+                color={colors.isDark ? '#fbbf24' : '#0f172a'}
+              />
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.iconButton}
               activeOpacity={0.75}
@@ -143,35 +159,17 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
-            <Text style={styles.greetingText}>{greeting}</Text>
-            <Text style={styles.nameText} numberOfLines={1}>{profileName}</Text>
+            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#475569' }]}>{greeting}</Text>
+            <Text style={[styles.nameText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
             
-            {/* 🏷️ Role Tag Badge & Always-Visible Quick Logout Chip */}
+            {/* Role Tag Badge */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 3, flexWrap: 'wrap' }}>
-              <View style={styles.roleTagPill}>
-                <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
+              <View style={[styles.roleTagPill, { backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(22, 163, 74, 0.12)', borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(22, 163, 74, 0.3)' }]}>
+                <Text style={[styles.roleTagText, { color: colors.isDark ? '#ffffff' : '#15803d' }]}>{roleMeta.icon} {roleMeta.label}</Text>
               </View>
-
-              <TouchableOpacity
-                style={styles.userBlockLogoutChip}
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (Platform.OS === 'web') {
-                    if (window.confirm('Are you sure you want to log out from FarmsKing?')) logout();
-                  } else {
-                    Alert.alert('Log Out', 'Are you sure you want to log out from FarmsKing?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
-                    ]);
-                  }
-                }}
-              >
-                <Ionicons name="power" size={11} color="#fca5a5" />
-                <Text style={styles.userBlockLogoutText}>Log Out</Text>
-              </TouchableOpacity>
             </View>
 
-            {!isRedundantSubtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+            {!isRedundantSubtitle ? <Text style={[styles.subtitleText, { color: colors.isDark ? 'rgba(255,255,255,0.95)' : '#334155' }]}>{subtitle}</Text> : null}
           </View>
 
           {/* Center Block: Profile Photo Avatar */}
@@ -198,28 +196,30 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             ) : null}
           </View>
 
-          {/* Right Block: Secondary Avatar or Plan Badge */}
-          {secondaryAvatarUrl !== undefined || secondaryName ? (
-            <View style={styles.secondaryAvatarBlock}>
-              <TouchableOpacity
-                style={styles.secondaryAvatarRing}
-                activeOpacity={0.85}
-                onPress={onSecondaryAvatarPress}
-              >
-                <Avatar uri={secondaryAvatarUrl} size={46} />
-                <View style={styles.farmerCropBadge}>
-                  <Text style={{ fontSize: 8 }}>🌾</Text>
-                </View>
-              </TouchableOpacity>
-              <Text style={styles.secondaryAvatarName} numberOfLines={1}>
-                {secondaryName || 'Farmer'}
-              </Text>
-            </View>
-          ) : planBadge ? (
-            <View style={styles.planRightBlock}>
-              {planBadge}
-            </View>
-          ) : null}
+          {/* Right Block: Secondary Avatar or Plan Badge + Light/Dark Theme Switcher */}
+          <View style={styles.headerRightActions}>
+            {secondaryAvatarUrl !== undefined || secondaryName ? (
+              <View style={styles.secondaryAvatarBlock}>
+                <TouchableOpacity
+                  style={styles.secondaryAvatarRing}
+                  activeOpacity={0.85}
+                  onPress={onSecondaryAvatarPress}
+                >
+                  <Avatar uri={secondaryAvatarUrl} size={46} />
+                  <View style={styles.farmerCropBadge}>
+                    <Text style={{ fontSize: 8 }}>🌾</Text>
+                  </View>
+                </TouchableOpacity>
+                <Text style={[styles.secondaryAvatarName, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>
+                  {secondaryName || 'Farmer'}
+                </Text>
+              </View>
+            ) : planBadge ? (
+              <View style={styles.planRightBlock}>
+                {planBadge}
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
     </LinearGradient>
@@ -361,22 +361,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     letterSpacing: 0.2,
   },
-  userBlockLogoutChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(239, 68, 68, 0.22)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.45)',
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  userBlockLogoutText: {
-    color: '#fecaca',
-    fontSize: 10.5,
-    fontFamily: FONT.bold,
-  },
   subtitleText: {
     color: 'rgba(255,255,255,0.95)',
     fontSize: 11,
@@ -459,5 +443,26 @@ const styles = StyleSheet.create({
     marginTop: 2,
     maxWidth: 80,
     textAlign: 'center',
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mobileThemeToggle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  mobileThemeToggleDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  mobileThemeToggleLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
   },
 });

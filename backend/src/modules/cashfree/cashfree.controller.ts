@@ -39,6 +39,25 @@ export class CashfreeController {
     });
   }
 
+  /** Create a Cashfree Recurring Subscription (UPI AutoPay) */
+  @UseGuards(JwtAuthGuard)
+  @Post('subscriptions/create')
+  createSubscription(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { subscriptionId: string; planName: string; amount: number; intervalType?: 'MONTH' | 'YEAR'; customerName?: string; customerPhone?: string; customerEmail?: string },
+  ) {
+    return this.cashfreeService.createSubscription({
+      subscriptionId: dto.subscriptionId,
+      planName: dto.planName,
+      amount: dto.amount,
+      intervalType: dto.intervalType || 'MONTH',
+      customerId: user.id,
+      customerPhone: dto.customerPhone || user.mobile,
+      customerEmail: dto.customerEmail || (user as any).email || undefined,
+      customerName: dto.customerName || user.name,
+    });
+  }
+
   /** Verify Cashfree Payment Status */
   @Get('orders/:orderId/verify')
   verifyPayment(@Param('orderId') orderId: string) {

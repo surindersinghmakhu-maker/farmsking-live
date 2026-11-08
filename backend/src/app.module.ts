@@ -58,6 +58,7 @@ import { VoiceCallModule } from './modules/voice-call/voice-call.module';
 import { TrainersModule } from './modules/trainers/trainers.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { CashfreeModule } from './modules/cashfree/cashfree.module';
+import { RazorpayModule } from './modules/razorpay/razorpay.module';
 import { ShiprocketModule } from './modules/shiprocket/shiprocket.module';
 import { EmailModule } from './modules/email/email.module';
 import { SmsModule } from './modules/sms/sms.module';
@@ -128,6 +129,7 @@ import { RedisModule } from './modules/redis/redis.module';
     TrainersModule,
     SellerModule,
     CashfreeModule,
+    RazorpayModule,
     ShiprocketModule,
     EmailModule,
     SmsModule,

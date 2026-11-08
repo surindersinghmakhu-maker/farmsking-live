@@ -94,3 +94,13 @@ export async function markOrderDelivered(id: string): Promise<CustomerOrder> {
   const { data } = await apiClient.post<CustomerOrder>(`/orders/${id}/mark-delivered`);
   return data;
 }
+
+export async function markOrderPaid(id: string, transactionId?: string, notes?: string): Promise<CustomerOrder> {
+  const { data } = await apiClient.post<CustomerOrder>(`/orders/${id}/mark-paid`, { transactionId, notes });
+  return data;
+}
+
+export async function submitOrderUtr(id: string, utrNumber: string): Promise<CustomerOrder> {
+  const { data } = await apiClient.post<CustomerOrder>(`/orders/${id}/submit-utr`, { utrNumber });
+  return data;
+}

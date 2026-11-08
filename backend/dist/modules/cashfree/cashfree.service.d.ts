@@ -27,6 +27,20 @@ export declare class CashfreeService {
         paymentSessionId: any;
         orderStatus: any;
     }>;
+    createSubscription(dto: {
+        subscriptionId: string;
+        planName: string;
+        amount: number;
+        intervalType?: 'MONTH' | 'YEAR';
+        customerId: string;
+        customerPhone: string;
+        customerEmail?: string;
+        customerName?: string;
+    }): Promise<{
+        subscriptionId: any;
+        paymentSessionId: any;
+        subscriptionLink: any;
+    }>;
     verifyPayment(orderId: string): Promise<any>;
     handlePaymentSuccess(orderId: string, cashfreeData: any): Promise<void>;
     handleWebhook(body: any): Promise<{

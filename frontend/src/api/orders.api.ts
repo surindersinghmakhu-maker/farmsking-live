@@ -94,3 +94,8 @@ export async function markOrderDelivered(id: string): Promise<CustomerOrder> {
   const { data } = await apiClient.post<CustomerOrder>(`/orders/${id}/mark-delivered`);
   return data;
 }
+
+export async function submitOrderUtr(id: string, utr: string, note?: string): Promise<CustomerOrder> {
+  const { data } = await apiClient.post<CustomerOrder>(`/orders/${id}/submit-utr`, { utr, note });
+  return data;
+}

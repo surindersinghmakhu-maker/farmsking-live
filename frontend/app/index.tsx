@@ -325,8 +325,14 @@ function SpatialTiltCard({
 }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0, glareX: 50, glareY: 50, isHovered: false });
 
+  const isTouchDevice =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.innerWidth <= 768 || ('ontouchstart' in window && !window.matchMedia('(hover: hover)').matches));
+  const canInteract = isInteractive && !isTouchDevice;
+
   const handleMouseMove = (e: any) => {
-    if (Platform.OS !== 'web' || !isInteractive) return;
+    if (Platform.OS !== 'web' || !canInteract) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
@@ -342,11 +348,11 @@ function SpatialTiltCard({
   };
 
   const handleMouseLeave = () => {
-    if (Platform.OS !== 'web' || !isInteractive) return;
+    if (Platform.OS !== 'web' || !canInteract) return;
     setTilt({ x: 0, y: 0, glareX: 50, glareY: 50, isHovered: false });
   };
 
-  const dynamicWebStyle = Platform.OS === 'web' && isInteractive ? {
+  const dynamicWebStyle = Platform.OS === 'web' && canInteract ? {
     perspective: 1200,
     transformStyle: 'preserve-3d',
     transform: tilt.isHovered
@@ -1678,6 +1684,22 @@ export default function PublicLandingPage() {
             .mandi-single-card-window {
               height: 70px !important;
             }
+            .orig-glass-card:hover,
+            .orig-glass-card-day:hover,
+            .card-farming:hover,
+            .card-farming-day:hover,
+            .card-gardening:hover,
+            .card-gardening-day:hover,
+            .card-cropdoctors:hover,
+            .card-cropdoctors-day:hover,
+            .card-agristore:hover,
+            .card-agristore-day:hover,
+            .alloc-card-hover:hover,
+            .alloc-card-hover.card-agronomist:hover,
+            .alloc-card-hover.card-gardener:hover {
+              transform: none !important;
+              box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.45) !important;
+            }
           }
           .mandi-single-card-window:hover {
             transform: translateY(-1.5px) !important;
@@ -2867,7 +2889,7 @@ export default function PublicLandingPage() {
             </Text>
           </View>
 
-          <View style={S.fourCardsRow}>
+          <View style={[S.fourCardsRow, isMobile && S.fourCardsRowMobile]}>
             {/* ══ Card 1: Farming (Exact Original Picture Glass Style) ══ */}
             <SpatialTiltCard
               style={[
@@ -3274,7 +3296,7 @@ export default function PublicLandingPage() {
 
           {/* Direct Agri Store & Cultivator Listing Banner */}
           
-          <View style={[S.organicFarmerBanner, isDay ? S.organicFarmerBannerDay : S.organicFarmerBannerNight]}>
+          <View style={[S.organicFarmerBanner, isDay ? S.organicFarmerBannerDay : S.organicFarmerBannerNight, isMobile && S.organicFarmerBannerMobile]}>
             <View style={S.organicFarmerBannerLeft}>
               <View style={S.organicFarmerBannerIconBox}>
                 <Ionicons name="leaf" size={22} color="#f59e0b" />
@@ -3383,8 +3405,8 @@ export default function PublicLandingPage() {
               </Text>
 
               {/* 4 Feature Highlights */}
-              <View style={S.allocFeatureGrid}>
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+              <View style={[S.allocFeatureGrid, isMobile && S.allocFeatureGridMobile]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="planet" size={16} color="#06b6d4" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Satellite Telemetry</Text>
@@ -3394,7 +3416,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="flask" size={16} color="#10b981" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Custom Nutrition Plans</Text>
@@ -3404,7 +3426,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="call" size={16} color="#f59e0b" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Direct 1-on-1 Contact</Text>
@@ -3414,7 +3436,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="checkmark-done" size={16} color="#3b82f6" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Zero Overdose Guarantee</Text>
@@ -3491,8 +3513,8 @@ export default function PublicLandingPage() {
               </Text>
 
               {/* 4 Feature Highlights */}
-              <View style={S.allocFeatureGrid}>
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+              <View style={[S.allocFeatureGrid, isMobile && S.allocFeatureGridMobile]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="layers" size={16} color="#e11d48" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Potting Soil Recipes</Text>
@@ -3502,7 +3524,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="sunny" size={16} color="#f59e0b" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Sunlight Orientation</Text>
@@ -3512,7 +3534,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="heart-circle" size={16} color="#10b981" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Pet &amp; Child Safe Bio-Cures</Text>
@@ -3522,7 +3544,7 @@ export default function PublicLandingPage() {
                   </Text>
                 </View>
 
-                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight]}>
+                <View style={[S.allocFeatureBox, isDay ? S.allocFeatureBoxDay : S.allocFeatureBoxNight, isMobile && S.allocFeatureBoxMobile]}>
                   <View style={S.allocFeatureIconRow}>
                     <Ionicons name="camera" size={16} color="#8b5cf6" />
                     <Text style={[S.allocFeatureTitle, isDay && S.allocFeatureTitleDay]}>Instant Leaf Photo Reviews</Text>
@@ -3878,7 +3900,7 @@ export default function PublicLandingPage() {
 
             <View style={[S.loginRolesGrid, isMobile && S.loginRolesGridMobile]}>
               {/* Role 1: Farmers */}
-              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight, isMobile && S.loginRoleItemMobile]}>
                 <Text style={S.loginRoleEmoji}>👨‍🌾</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Farmers & Cultivators</Text>
@@ -3889,7 +3911,7 @@ export default function PublicLandingPage() {
               </View>
 
               {/* Role 2: Gardeners */}
-              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight, isMobile && S.loginRoleItemMobile]}>
                 <Text style={S.loginRoleEmoji}>🪴</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Home & Terrace Gardeners</Text>
@@ -3900,7 +3922,7 @@ export default function PublicLandingPage() {
               </View>
 
               {/* Role 3: Crop Doctors & Advisors */}
-              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight, isMobile && S.loginRoleItemMobile]}>
                 <Text style={S.loginRoleEmoji}>🩺</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Agronomists & Staff</Text>
@@ -3911,7 +3933,7 @@ export default function PublicLandingPage() {
               </View>
 
               {/* Role 4: Sellers */}
-              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight]}>
+              <View style={[S.loginRoleItem, isDay ? S.loginRoleItemDay : S.loginRoleItemNight, isMobile && S.loginRoleItemMobile]}>
                 <Text style={S.loginRoleEmoji}>🏪</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[S.loginRoleTitle, isDay && S.loginRoleTitleDay]}>Agri Sellers & Artisans</Text>
@@ -5926,8 +5948,8 @@ const S = StyleSheet.create({
     width: '100%',
   },
   telemetryStripGridMobile: {
-    flexWrap: 'wrap',
-    gap: 10,
+    flexDirection: 'column',
+    gap: 12,
   },
   telemetryMetricCard: {
     flex: 1,
@@ -5956,9 +5978,12 @@ const S = StyleSheet.create({
     elevation: 4,
   },
   telemetryMetricCardMobile: {
-    flex: undefined,
+    flex: 0,
+    flexGrow: 0,
+    flexShrink: 0,
     width: '100%',
     minWidth: '100%',
+    maxWidth: '100%',
     padding: 14,
     borderRadius: RADIUS.md,
   },
@@ -7434,10 +7459,20 @@ const S = StyleSheet.create({
     minWidth: '47%',
     maxWidth: '48%',
   },
+  fourCardsRowMobile: {
+    flexDirection: 'column',
+    gap: 16,
+    width: '100%',
+  },
   pillarCardOrigMobile: {
-    flexBasis: '100%',
+    flex: 0,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    width: '100%',
     minWidth: '100%',
     maxWidth: '100%',
+    marginBottom: 0,
   },
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -9280,6 +9315,12 @@ const S = StyleSheet.create({
     gap: 16,
     flexWrap: 'wrap',
   },
+  organicFarmerBannerMobile: {
+    padding: 16,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 14,
+  },
   organicFarmerBannerNight: {
     backgroundColor: 'rgba(15, 23, 42, 0.9)',
     borderColor: 'rgba(245, 158, 11, 0.35)',
@@ -9499,12 +9540,22 @@ const S = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
+  allocFeatureGridMobile: {
+    flexDirection: 'column',
+    gap: 10,
+    marginBottom: 16,
+  },
   allocFeatureBox: {
     flex: 1,
     minWidth: '47%',
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
+  },
+  allocFeatureBoxMobile: {
+    flex: 0,
+    width: '100%',
+    minWidth: '100%',
   },
   allocFeatureBoxNight: {
     backgroundColor: 'rgba(2, 6, 23, 0.4)',
@@ -9785,6 +9836,11 @@ const S = StyleSheet.create({
     padding: 14,
     borderRadius: 16,
     borderWidth: 1,
+  },
+  loginRoleItemMobile: {
+    flex: 0,
+    width: '100%',
+    minWidth: '100%',
   },
   loginRoleItemNight: {
     backgroundColor: 'rgba(2, 6, 23, 0.45)',

@@ -174,8 +174,10 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
             <meta charset="utf-8" />
             <title>${titleText}</title>
             <style>
-              body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f8fafc; color: #0f172a; }
-              .card { max-width: 500px; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+              @page { size: A4 portrait; margin: 12mm 15mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; margin: 0; padding: 20px; background: #ffffff; color: #0f172a; }
+              .card { max-width: 600px; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); page-break-inside: avoid; }
               .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid ${themeColor}; padding-bottom: 10px; margin-bottom: 12px; }
               .brand { font-size: 20px; font-weight: 800; color: #15803d; }
               .tagline { font-size: 10px; color: #64748b; }

@@ -37,6 +37,26 @@ export class FarmerPlansController {
     return this.farmerPlansService.getMyPlan(user);
   }
 
+  /** Calculate real-time upgrade quote with prorated unused credit adjustment (Option 3) */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Get('upgrade-quote')
+  getUpgradeQuote(
+    @CurrentUser() user: AuthUser,
+    @Query('targetPlan') targetPlan: FarmerSubscriptionPlan,
+    @Query('billingPeriodDays') billingPeriodDays?: number,
+  ) {
+    return this.farmerPlansService.getUpgradeQuote(user, targetPlan, billingPeriodDays ? Number(billingPeriodDays) : undefined);
+  }
+
   /** Farmer / Advisor / Admin: fetch membership and care plan history including active, sleep mode, and past plans */
   @Roles(
     Role.CUSTOMER,

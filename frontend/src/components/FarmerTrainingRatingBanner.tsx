@@ -3,8 +3,10 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { getFarmerPendingBanner, submitFarmerTrainingRating } from '@/src/api/trainers.api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export function FarmerTrainingRatingBanner() {
+  const { colors } = useExecutiveTheme();
   const [pendingInfo, setPendingInfo] = useState<{
     hasPending: boolean;
     training: { id: string; trainerName: string; trainerMobile: string; status: string } | null;
@@ -44,7 +46,7 @@ export function FarmerTrainingRatingBanner() {
   if (!pendingInfo?.hasPending || !pendingInfo.training) return null;
 
   return (
-    <View style={[styles.container, premiumShadow('#15803d', 'sm')]}>
+    <View style={[styles.container, { backgroundColor: colors.isDark ? '#041d0f' : '#f0fdf4', borderColor: colors.isDark ? 'rgba(0, 255, 135, 0.3)' : '#bbf7d0' }, premiumShadow(colors.shadowColor, 'sm')]}>
       <View style={styles.headerRow}>
         <View style={styles.iconBg}>
           <Ionicons name="school" size={20} color="#15803d" />

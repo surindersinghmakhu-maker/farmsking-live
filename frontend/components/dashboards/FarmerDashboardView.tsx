@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert, Modal, SafeAreaView } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert, Modal, SafeAreaView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -24,7 +24,6 @@ import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { FarmerPortalUpgradeSection, FarmerPortalUpgradeSectionRef } from '@/src/components/FarmerPortalUpgradeSection';
-import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { FarmerTrainingRatingBanner } from '@/src/components/FarmerTrainingRatingBanner';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -37,6 +36,81 @@ interface FarmerDashboardViewProps {
   onOpenAdminChat?: () => void;
 }
 
+const SMART_AGRONOMY_TOOLS = [
+  {
+    id: 'copilot',
+    title: 'AI Copilot',
+    icon: 'sparkles' as const,
+    accent: '#059669',
+    iconGradient: ['#10b981', '#047857'] as [string, string],
+    lightBg: ['#ffffff', '#ecfdf5'] as [string, string],
+    darkBg: ['rgba(6, 78, 59, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#a7f3d0',
+    borderDark: 'rgba(52, 211, 153, 0.5)',
+    shadow: '#10b981',
+  },
+  {
+    id: 'doctor',
+    title: 'Crop Doctor',
+    icon: 'scan' as const,
+    accent: '#0284c7',
+    iconGradient: ['#0ea5e9', '#0369a1'] as [string, string],
+    lightBg: ['#ffffff', '#f0f9ff'] as [string, string],
+    darkBg: ['rgba(7, 89, 133, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#bae6fd',
+    borderDark: 'rgba(56, 189, 248, 0.5)',
+    shadow: '#0284c7',
+  },
+  {
+    id: 'gps',
+    title: 'Farm GPS',
+    icon: 'location' as const,
+    accent: '#d97706',
+    iconGradient: ['#f59e0b', '#b45309'] as [string, string],
+    lightBg: ['#ffffff', '#fffbeb'] as [string, string],
+    darkBg: ['rgba(120, 53, 15, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#fde68a',
+    borderDark: 'rgba(251, 191, 36, 0.5)',
+    shadow: '#d97706',
+  },
+  {
+    id: 'crops',
+    title: 'My Crops',
+    icon: 'leaf' as const,
+    accent: '#15803d',
+    iconGradient: ['#22c55e', '#15803d'] as [string, string],
+    lightBg: ['#ffffff', '#f0fdf4'] as [string, string],
+    darkBg: ['rgba(20, 83, 45, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#bbf7d0',
+    borderDark: 'rgba(74, 222, 128, 0.5)',
+    shadow: '#15803d',
+  },
+  {
+    id: 'chat',
+    title: 'Support Chat',
+    icon: 'chatbubbles' as const,
+    accent: '#7c3aed',
+    iconGradient: ['#8b5cf6', '#6d28d9'] as [string, string],
+    lightBg: ['#ffffff', '#f5f3ff'] as [string, string],
+    darkBg: ['rgba(76, 29, 149, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#ddd6fe',
+    borderDark: 'rgba(168, 85, 247, 0.5)',
+    shadow: '#7c3aed',
+  },
+  {
+    id: 'verify',
+    title: 'Verify Product',
+    icon: 'shield-checkmark' as const,
+    accent: '#e11d48',
+    iconGradient: ['#f43f5e', '#be123c'] as [string, string],
+    lightBg: ['#ffffff', '#fff1f2'] as [string, string],
+    darkBg: ['rgba(136, 19, 55, 0.45)', 'rgba(15, 23, 42, 0.9)'] as [string, string],
+    borderLight: '#fecdd3',
+    borderDark: 'rgba(251, 113, 133, 0.5)',
+    shadow: '#e11d48',
+  },
+];
+
 const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
   FREE: { icon: 'leaf', color: '#15803d' },
   PRO: { icon: 'flash', color: '#0284c7' },
@@ -48,6 +122,8 @@ const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
 };
 
 export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const upgradeSectionRef = useRef<FarmerPortalUpgradeSectionRef>(null);
   const router = useRouter();
   const { user } = useAuth();
@@ -91,7 +167,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   // Quick Payment Voucher Modal State
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
   const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
-  const [showSupervisorModal, setShowSupervisorModal] = useState(false);
   const [showAiChatModal, setShowAiChatModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
   const { data: labourWorkers = [] } = useLabourWorkers();
@@ -118,7 +193,14 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={Platform.OS === 'web' ? true : false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bg }]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingBottom: isDesktop ? 32 : 115 },
+      ]}
+      showsVerticalScrollIndicator={Platform.OS === 'web' ? true : false}
+    >
       {/* Header */}
       <RoleHeader
         currentRole="FARMER"
@@ -264,7 +346,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           <View style={styles.quickAccountsGrid}>
             {/* Button 1: + Add Sale */}
             <TouchableOpacity
-              style={[styles.quickAccountsBtn, { backgroundColor: '#16a34a' }]}
+              style={[styles.quickAccountsBtn, { width: isDesktop ? '23.8%' : '48.5%', backgroundColor: '#16a34a' }]}
               activeOpacity={0.85}
               onPress={() => {
                 tap();
@@ -272,12 +354,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="add-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText}>+ Add Sale</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>+ Add Sale</Text>
             </TouchableOpacity>
 
             {/* Button 2: + Add Expense */}
             <TouchableOpacity
-              style={[styles.quickAccountsBtn, { backgroundColor: '#dc2626' }]}
+              style={[styles.quickAccountsBtn, { width: isDesktop ? '23.8%' : '48.5%', backgroundColor: '#dc2626' }]}
               activeOpacity={0.85}
               onPress={() => {
                 tap();
@@ -285,12 +367,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="remove-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText}>+ Add Expense</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>+ Add Expense</Text>
             </TouchableOpacity>
 
-            {/* Button 3: 💰 Payment In (Receipt) */}
+            {/* Button 3: Payment In */}
             <TouchableOpacity
-              style={[styles.quickAccountsBtn, { backgroundColor: '#0284c7' }]}
+              style={[styles.quickAccountsBtn, { width: isDesktop ? '23.8%' : '48.5%', backgroundColor: '#0284c7' }]}
               activeOpacity={0.85}
               onPress={() => {
                 tap();
@@ -299,12 +381,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="arrow-down-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText}>💰 Payment In</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>Payment In</Text>
             </TouchableOpacity>
 
-            {/* Button 4: 💸 Payment Out (Payment) */}
+            {/* Button 4: Payment Out */}
             <TouchableOpacity
-              style={[styles.quickAccountsBtn, { backgroundColor: '#ea580c' }]}
+              style={[styles.quickAccountsBtn, { width: isDesktop ? '23.8%' : '48.5%', backgroundColor: '#ea580c' }]}
               activeOpacity={0.85}
               onPress={() => {
                 tap();
@@ -313,9 +395,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="arrow-up-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText}>💸 Payment Out</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>Payment Out</Text>
             </TouchableOpacity>
-
           </View>
         </View>
 
@@ -325,142 +406,104 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />
 
-        {/* 🚜 Farm Supervisor Delegation Banner */}
-        <TouchableOpacity
-          style={[styles.supervisorBannerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-          activeOpacity={0.85}
-          onPress={() => {
-            tap();
-            setShowSupervisorModal(true);
-          }}
-        >
-          <View style={styles.supervisorBannerLeft}>
-            <View style={styles.supervisorBannerIconWrap}>
-              <Ionicons name="shield-checkmark" size={22} color="#15803d" />
+        {/* 🚜 Essential Farm Tools & Agronomy Hub Section (Compact) */}
+        <View style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+          {/* Compact Section Header */}
+          <View style={styles.toolsSectionHeader}>
+            <View style={styles.toolsSectionHeaderLeft}>
+              <Ionicons name="apps" size={15} color="#16a34a" />
+              <Text style={[styles.toolsSectionTitle, { color: colors.text }]}>Smart Agronomy Hub & Tools</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.supervisorBannerTitle, { color: colors.text }]}>Appoint Farm Supervisor</Text>
-                <View style={styles.zeroAdminPill}>
-                  <Text style={styles.zeroAdminPillText}>0% ADMIN DELAY</Text>
-                </View>
-              </View>
-              <Text style={[styles.supervisorBannerSub, { color: colors.textMuted }]}>
-                Delegate crop sales, labour, sprays & expenses by King ID. Checked features are active immediately.
-              </Text>
+            <View style={[styles.toolsSectionCountBadge, { backgroundColor: colors.isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7' }]}>
+              <Text style={styles.toolsSectionCountText}>6 Quick Tools</Text>
             </View>
           </View>
-          <View style={styles.supervisorBannerArrow}>
-            <Ionicons name="chevron-forward" size={18} color="#15803d" />
-          </View>
-        </TouchableOpacity>
 
-        {/* Farm Action Grid — All buttons in ONE unified card */}
-        <View style={[styles.toolsContainerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-        >
+          {/* Action Grid (4D Depth Cards with Natural Vibrant Colors) */}
           <View style={styles.actionGridInner}>
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                router.push('/crop-intelligence' as any as any);
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
-                <Ionicons name="sparkles" size={16} color="#15803d" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Kisan AI</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Ask Expert</Text>
-              </View>
-            </TouchableOpacity>
+            {SMART_AGRONOMY_TOOLS.map((tool) => {
+              const bgColors = colors.isDark ? tool.darkBg : tool.lightBg;
+              const borderColor = colors.isDark ? tool.borderDark : tool.borderLight;
+              return (
+                <TouchableOpacity
+                  key={tool.id}
+                  style={[
+                    styles.actionCard4DWrapper,
+                    { width: isDesktop ? '31.8%' : '48.4%' },
+                  ]}
+                  activeOpacity={0.84}
+                  onPress={() => {
+                    tap();
+                    if (tool.id === 'copilot') router.push('/crop-intelligence' as any);
+                    else if (tool.id === 'doctor') router.push('/crop-disease-scanner' as any);
+                    else if (tool.id === 'gps') setShowLocationProfileModal(true);
+                    else if (tool.id === 'crops') router.push('/(user)/(tabs)/farm' as any);
+                    else if (tool.id === 'chat') onOpenAdminChat?.();
+                    else if (tool.id === 'verify') upgradeSectionRef.current?.openScanner();
+                  }}
+                >
+                  <LinearGradient
+                    colors={bgColors}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[
+                      styles.actionCard4DInner,
+                      {
+                        borderColor,
+                        shadowColor: tool.shadow,
+                      },
+                      Platform.OS === 'web' ? ({
+                        boxShadow: colors.isDark
+                          ? `0 8px 20px -4px ${tool.shadow}45, inset 0 1px 1px rgba(255, 255, 255, 0.25)`
+                          : `0 4px 14px -2px ${tool.shadow}35, inset 0 1px 1px rgba(255, 255, 255, 0.9)`,
+                        transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                      } as any) : {},
+                    ]}
+                  >
+                    {/* 4D Embossed Natural Squircle Icon */}
+                    <LinearGradient
+                      colors={tool.iconGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={[
+                        styles.actionIcon4D,
+                        Platform.OS === 'web' ? ({
+                          boxShadow: `0 3px 10px -1px ${tool.shadow}80, inset 0 1px 1px rgba(255, 255, 255, 0.7)`,
+                        } as any) : {},
+                      ]}
+                    >
+                      <Ionicons name={tool.icon} size={16} color="#ffffff" />
+                    </LinearGradient>
 
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                router.push('/crop-disease-scanner' as any);
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#e0f2fe' }]}>
-                <Ionicons name="scan" size={16} color="#0284c7" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>AI Crop Doctor</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Scan Leaf Photo</Text>
-              </View>
-            </TouchableOpacity>
+                    {/* Title */}
+                    <View style={styles.actionCardBodyCompact}>
+                      <Text
+                        style={[
+                          styles.actionCardTitle4D,
+                          { color: colors.isDark ? '#ffffff' : '#0f172a' },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {tool.title}
+                      </Text>
+                    </View>
 
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                setShowLocationProfileModal(true);
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="location" size={16} color="#b45309" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Farm GPS</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>1-Tap Lock</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                setShowSupervisorModal(true);
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
-                <Ionicons name="shield-checkmark" size={16} color="#15803d" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Supervisor</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Appoint King ID</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                onOpenAdminChat?.();
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
-                <Ionicons name="chatbubbles" size={16} color="#15803d" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Admin Support</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Chat Live</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)', opacity: 0.7 }]}
-              activeOpacity={1}
-              disabled={true}
-              onPress={() => {
-                tap();
-                upgradeSectionRef.current?.openScanner();
-              }}
-            >
-              <View style={[styles.actionIconBgUnified, { backgroundColor: '#e0f2fe' }]}>
-                <Ionicons name="qr-code" size={16} color="#0284c7" />
-              </View>
-              <View style={styles.actionCardTextGroup}>
-                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Verify Product</Text>
-                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Scan Barcode</Text>
-              </View>
-            </TouchableOpacity>
+                    {/* Right Forward Chevron Pill */}
+                    <View
+                      style={[
+                        styles.chevronPill4D,
+                        {
+                          backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                          borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                        },
+                      ]}
+                    >
+                      <Ionicons name="chevron-forward" size={12} color={tool.accent} />
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -498,19 +541,14 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         visible={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
       />
-
-      {/* 🚜 Supervisor Management & King ID Appointment Modal */}
-      <SupervisorManagementModal
-        visible={showSupervisorModal}
-        onClose={() => setShowSupervisorModal(false)}
-      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 24 },
+  scrollContent: { flexGrow: 1 },
+  content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 20 },
   welcomeBannerCard: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
@@ -613,58 +651,89 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 255, 135, 0.18)',
     ...premiumShadow('#00ff87', 'sm'),
   },
-  toolsContainerCard: {
-    borderRadius: 24, // iOS Squircle style
+  toolsSectionWrapper: {
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.22)',
-    backgroundColor: '#04160c',
-    padding: 16,
-    gap: 12,
-    marginTop: 4,
+    padding: 10,
+    gap: 8,
+    marginVertical: 2,
+  },
+  toolsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+    paddingBottom: 2,
+  },
+  toolsSectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  toolsSectionTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.2,
+  },
+  toolsSectionCountBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  toolsSectionCountText: {
+    color: '#15803d',
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
   },
   actionGridInner: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
-  actionCardUnified: {
-    width: '48.5%',
-    borderRadius: 12,
-    paddingHorizontal: 8,
+  actionCard4DWrapper: {
+    borderRadius: 14,
+    marginVertical: 1,
+  },
+  actionCard4DInner: {
+    borderRadius: 14,
+    paddingHorizontal: 11,
     paddingVertical: 10,
+    minHeight: 52,
+    borderWidth: 1.2,
+    borderTopWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 9,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  actionIconBgUnified: {
+  actionIcon4D: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.45)',
   },
-  actionIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionCardTextGroup: {
+  actionCardBodyCompact: {
     flex: 1,
     justifyContent: 'center',
   },
-  actionCardTitle: {
-    fontSize: 14,
+  actionCardTitle4D: {
+    fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#ffffff',
     letterSpacing: -0.2,
   },
-  actionCardSub: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-    marginTop: 2,
+  chevronPill4D: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
   },
   // Plan badge styles — frosted-glass pills so they read cleanly against the gradient header, in any theme.
   planRow: {
@@ -1304,62 +1373,6 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 18,
-  },
-  supervisorBannerCard: {
-    backgroundColor: '#04160c',
-    borderRadius: RADIUS.lg,
-    padding: 12,
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 255, 135, 0.25)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    marginVertical: 2,
-    ...premiumShadow('#00ff87', 'sm'),
-  },
-  supervisorBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  supervisorBannerIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  supervisorBannerTitle: {
-    fontSize: 13,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  zeroAdminPill: {
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.30)',
-  },
-  zeroAdminPillText: {
-    color: '#15803d',
-    fontSize: 9,
-    fontFamily: FONT.extraBold,
-  },
-  supervisorBannerSub: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    lineHeight: 15,
-    marginTop: 1,
-  },
-  supervisorBannerArrow: {
-    padding: 4,
   },
 });
 

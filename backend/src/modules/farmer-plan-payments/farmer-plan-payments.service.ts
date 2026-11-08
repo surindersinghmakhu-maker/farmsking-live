@@ -14,6 +14,9 @@ import { RejectFarmerPlanPaymentDto } from './dto/reject-farmer-plan-payment.dto
 
 import { WalletService } from '../wallet/wallet.service';
 import { CashfreeService } from '../cashfree/cashfree.service';
+import { RazorpayService } from '../razorpay/razorpay.service';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const DETAIL_INCLUDE = {
   farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
@@ -29,6 +32,7 @@ export class FarmerPlanPaymentsService {
     private readonly farmerPlansService: FarmerPlansService,
     private readonly walletService: WalletService,
     private readonly cashfreeService: CashfreeService,
+    private readonly razorpayService: RazorpayService,
   ) {}
 
   /** Farmer (or their advisor) taps "Upgrade" and picks BASIC/STANDARD/PREMIUM — generates a fixed-amount UPI link and opens a pending payment claim. */
@@ -47,8 +51,17 @@ export class FarmerPlanPaymentsService {
     }
 
     const effective = await this.farmerPlansService.getEffectivePlan(targetFarmerId);
-    if (PLAN_RANK[dto.targetPlan] < PLAN_RANK[effective.plan]) {
-      throw new BadRequestException(`You already have the ${effective.plan} plan active — this would be a downgrade.`);
+    const now = new Date();
+    const currentPlanType = effective.plan ?? FarmerSubscriptionPlan.FREE;
+    const currentRank = PLAN_RANK[currentPlanType] ?? 0;
+    const targetRank = PLAN_RANK[dto.targetPlan] ?? 0;
+    const isCurrentActive = currentPlanType !== FarmerSubscriptionPlan.FREE && !!effective.endDate && effective.endDate > now;
+
+    // Strict Downgrade Guard (Rule: "vadde to shota plan nhi kita ja skda")
+    if (isCurrentActive && targetRank < currentRank) {
+      throw new BadRequestException(
+        `Downgrade is strictly prohibited. You already have the higher-tier ${currentPlanType} plan active — you cannot downgrade to ${dto.targetPlan}.`,
+      );
     }
 
     let pricing = dto.billingPeriodDays
@@ -68,8 +81,24 @@ export class FarmerPlanPaymentsService {
       throw new BadRequestException('Pricing for this plan is not configured yet. Please contact support.');
     }
 
-    const amount = Number(pricing.price);
+    const baseAmount = Number(pricing.price);
     const daysGranted = pricing.billingPeriodDays;
+
+    // Option 3: Prorated Adjustment when Upgrading to a Higher Tier
+    let proratedCredit = 0;
+    if (isCurrentActive && targetRank > currentRank && effective.endDate) {
+      const daysRemaining = Math.max(0, Math.ceil((effective.endDate.getTime() - now.getTime()) / DAY_MS));
+      const currentPricing = await this.prisma.farmerPlanPricing.findFirst({
+        where: { plan: currentPlanType },
+        orderBy: { billingPeriodDays: 'desc' },
+      });
+      const currentPrice = currentPricing ? Number(currentPricing.price) : 0;
+      const currentTotalDays = currentPricing?.billingPeriodDays || 365;
+      const rawCredit = (daysRemaining / currentTotalDays) * currentPrice;
+      proratedCredit = Math.round(Math.min(rawCredit, baseAmount) * 100) / 100;
+    }
+
+    const amount = Math.max(0, Math.round((baseAmount - proratedCredit) * 100) / 100);
 
     const request = await this.prisma.farmerPlanPaymentRequest.create({
       data: {

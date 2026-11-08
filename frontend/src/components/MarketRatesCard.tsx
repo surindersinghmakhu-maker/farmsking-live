@@ -1148,21 +1148,21 @@ export function MarketRatesCard() {
                           item.isBest && styles.mandiTableRowBest,
                         ]}
                       >
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ flex: 1, minWidth: 100 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <Text style={[styles.mandiNameText, item.isHome && { color: '#047857', fontFamily: FONT.extraBold }]}>
                               🏛️ {item.state}
                             </Text>
                             {item.isBest && (
                               <View style={styles.bestPriceBadge}>
                                 <Ionicons name="star" size={10} color="#ffffff" />
-                                <Text style={styles.bestPriceBadgeText}>HIGHEST PROFIT</Text>
+                                <Text style={styles.bestPriceBadgeText}>BEST PRICE</Text>
                               </View>
                             )}
                           </View>
                         </View>
 
-                        <View style={{ alignItems: 'flex-end' }}>
+                        <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                           {item.hasRateData && item.highPrice != null ? (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                               <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>

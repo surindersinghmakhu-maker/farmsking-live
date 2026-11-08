@@ -14,6 +14,7 @@ const app_settings_module_1 = require("../app-settings/app-settings.module");
 const farmer_plans_module_1 = require("../farmer-plans/farmer-plans.module");
 const wallet_module_1 = require("../wallet/wallet.module");
 const cashfree_module_1 = require("../cashfree/cashfree.module");
+const razorpay_module_1 = require("../razorpay/razorpay.module");
 const farmer_plan_payments_controller_1 = require("./farmer-plan-payments.controller");
 const farmer_plan_payments_service_1 = require("./farmer-plan-payments.service");
 let FarmerPlanPaymentsModule = class FarmerPlanPaymentsModule {
@@ -21,7 +22,7 @@ let FarmerPlanPaymentsModule = class FarmerPlanPaymentsModule {
 exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule;
 exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule, app_settings_module_1.AppSettingsModule, farmer_plans_module_1.FarmerPlansModule, wallet_module_1.WalletModule, cashfree_module_1.CashfreeModule],
+        imports: [advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule, app_settings_module_1.AppSettingsModule, farmer_plans_module_1.FarmerPlansModule, wallet_module_1.WalletModule, cashfree_module_1.CashfreeModule, razorpay_module_1.RazorpayModule],
         controllers: [farmer_plan_payments_controller_1.FarmerPlanPaymentsController],
         providers: [farmer_plan_payments_service_1.FarmerPlanPaymentsService],
     })

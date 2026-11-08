@@ -71,53 +71,12 @@ export class WithdrawalsService {
   }
 
   async create(user: AuthUser, dto: CreateWithdrawalDto) {
-    const s = await this.appSettingsService.get();
-
-    // 1. Check if wallet withdrawals are enabled globally
-    const withdrawalEnabled = (s as any).walletWithdrawalEnabled ?? false;
-    const maintenanceMode = (s as any).walletMaintenanceMode ?? false;
-    if (!withdrawalEnabled || maintenanceMode) {
-      throw new ForbiddenException(
-        'Wallet balance withdrawals are currently disabled by administration.',
-      );
-    }
-
-    // 2. Enforce Role-Based Withdrawal Permissions configured in Admin Settings
-    const allowedRoles: string[] = Array.isArray((s as any).allowedWithdrawalRoles)
-      ? (s as any).allowedWithdrawalRoles
-      : [];
-    if (!allowedRoles.includes(user.role)) {
-      throw new ForbiddenException(
-        `Wallet withdrawal is not permitted for your user role (${user.role}). Please contact support if you need assistance.`,
-      );
-    }
-
-    if (dto.requestedAmount < 50) {
-      throw new BadRequestException('Minimum withdrawal limit is ₹50.');
-    }
-
-    await this.assertPayoutProfileComplete(user);
-
-    const balance = await this.walletService.getBalance(user.id);
-    if (dto.requestedAmount > balance) {
-      throw new BadRequestException(`Requested amount exceeds your wallet balance of ₹${balance.toFixed(2)}.`);
-    }
-
-    const { platformFee, gstAmount, netPayable } = await this.calcWithdrawalCharges(dto.requestedAmount);
-
-    return this.prisma.withdrawalRequest.create({
-      data: {
-        businessPartnerId: user.id,
-        requestedAmount: dto.requestedAmount,
-        platformFeeAmount: platformFee,
-        gstAmount: gstAmount,
-        netPayableAmount: netPayable,
-        platformExpense: true,
-      },
-    });
+    throw new ForbiddenException(
+      'Wallet balance withdrawals are strictly disabled across the platform. Wallet balance can be utilized directly for platform services, crop care plans, and purchases.',
+    );
   }
 
-  listMine(user: AuthUser) {
+    listMine(user: AuthUser) {
     return this.prisma.withdrawalRequest.findMany({
       where: { businessPartnerId: user.id },
       orderBy: { requestedAt: 'desc' },

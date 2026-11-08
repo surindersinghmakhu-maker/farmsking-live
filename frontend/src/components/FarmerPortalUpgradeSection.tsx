@@ -60,9 +60,6 @@ export const FarmerPortalUpgradeSection = forwardRef<FarmerPortalUpgradeSectionR
   }>(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // Emergency Siren State
-  const [isSirenActive, setIsSirenActive] = useState(false);
-
   // Multi-Mandi Comparison Selected Crop
   const [selectedCrop, setSelectedCrop] = useState<'Wheat' | 'Paddy 1509' | 'Cotton'>('Wheat');
 
@@ -459,23 +456,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#7f1d1d',
     marginTop: 1,
-  },
-  sirenToggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#991b1b',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.pill,
-  },
-  sirenToggleActive: {
-    backgroundColor: '#dc2626',
-  },
-  sirenToggleText: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#ffffff',
   },
   emergencyAdviceBox: {
     flexDirection: 'row',

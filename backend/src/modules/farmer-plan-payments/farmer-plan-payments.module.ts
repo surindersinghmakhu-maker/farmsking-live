@@ -5,11 +5,12 @@ import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { FarmerPlansModule } from '../farmer-plans/farmer-plans.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { CashfreeModule } from '../cashfree/cashfree.module';
+import { RazorpayModule } from '../razorpay/razorpay.module';
 import { FarmerPlanPaymentsController } from './farmer-plan-payments.controller';
 import { FarmerPlanPaymentsService } from './farmer-plan-payments.service';
 
 @Module({
-  imports: [AdvisorAssignmentModule, NotificationsModule, AppSettingsModule, FarmerPlansModule, WalletModule, CashfreeModule],
+  imports: [AdvisorAssignmentModule, NotificationsModule, AppSettingsModule, FarmerPlansModule, WalletModule, CashfreeModule, RazorpayModule],
   controllers: [FarmerPlanPaymentsController],
   providers: [FarmerPlanPaymentsService],
 })

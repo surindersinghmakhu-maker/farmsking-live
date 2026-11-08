@@ -27,6 +27,16 @@ __decorate([
 ], InitiateFarmerPlanPaymentDto.prototype, "billingPeriodDays", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], InitiateFarmerPlanPaymentDto.prototype, "isAutoDebit", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], InitiateFarmerPlanPaymentDto.prototype, "preferredGateway", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], InitiateFarmerPlanPaymentDto.prototype, "selectedDoctorId", void 0);
 __decorate([

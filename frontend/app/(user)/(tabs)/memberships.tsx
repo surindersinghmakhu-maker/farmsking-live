@@ -31,6 +31,20 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARMER;
 
+const PLAN_TIER_RANK: Record<string, number> = {
+  FREE: 0,
+  BASIC: 0,
+  PRO: 1,
+  SILVER: 1,
+  SMART: 2,
+  GOLD: 2,
+  SUPER: 3,
+  PLATINUM: 3,
+  VIP: 3,
+  DIAMOND: 4,
+  ROYAL: 5,
+};
+
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
@@ -361,70 +375,115 @@ export default function MembershipsScreen() {
             </View>
 
             {/* Plan 2: Lite Plan */}
-            <View style={[styles.planCard, { borderColor: '#38bdf8', borderWidth: 1.5 }, premiumShadow('#0284c7', 'sm')]}>
-              <View style={styles.planHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.planTitle, { color: '#0284c7' }]}>⚡ Lite Plan (Recommended)</Text>
-                  <Text style={styles.planPrice}>₹299 <Text style={styles.planPeriod}>/ 180 Days (6 Months)</Text></Text>
+            {(() => {
+              const currentRank = PLAN_TIER_RANK[plan] ?? 0;
+              const isLiteDowngrade = !isExpired && currentRank > 1;
+              const isLiteCurrent = plan === 'PRO' && !isExpired;
+              const isLiteUpgrade = !isExpired && currentRank < 1 && plan !== 'FREE';
+
+              return (
+                <View style={[styles.planCard, { borderColor: '#38bdf8', borderWidth: 1.5 }, premiumShadow('#0284c7', 'sm')]}>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#0284c7' }]}>⚡ Lite Plan (Recommended)</Text>
+                      <Text style={styles.planPrice}>₹299 <Text style={styles.planPeriod}>/ 180 Days (6 Months)</Text></Text>
+                    </View>
+                    {isLiteCurrent && <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>}
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={styles.featureItem}>✅ Register up to 5 Active Crops Concurrent 🌾</Text>
+                    <Text style={styles.featureItem}>✅ Unlimited Sale Invoices & Bill Sharing 🧾</Text>
+                    <Text style={styles.featureItem}>✅ Full AI Crop Disease Scanner Access 🔬</Text>
+                    <Text style={styles.featureItem}>✅ ISRO Satellite Field Map & Soil Moisture 🛰️</Text>
+                    <Text style={styles.featureItem}>✅ Complete Financial Records & Ledger 💰</Text>
+                  </View>
+                  {isLiteDowngrade ? (
+                    <View style={{ backgroundColor: '#f1f5f9', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 6 }}>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#64748b', textAlign: 'center' }}>
+                        🔒 Higher VIP Tier Active · Downgrades are not permitted
+                      </Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.upgradeBtn, { backgroundColor: isLiteCurrent ? '#047857' : '#0284c7' }]}
+                      disabled={initiatePlanPayment.isPending}
+                      onPress={() => handlePurchasePlan('PRO', 180)}
+                    >
+                      <Text style={styles.upgradeBtnText}>
+                        {isLiteCurrent ? 'Renew Lite Plan (+180 Days) ⚡' : isLiteUpgrade ? 'Upgrade to Lite Plan ⚡' : 'Get Lite Plan ⚡'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {plan === 'PRO' && <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>}
-              </View>
-              <View style={styles.featureList}>
-                <Text style={styles.featureItem}>✅ Register up to 5 Active Crops Concurrent 🌾</Text>
-                <Text style={styles.featureItem}>✅ Unlimited Sale Invoices & Bill Sharing 🧾</Text>
-                <Text style={styles.featureItem}>✅ Full AI Crop Disease Scanner Access 🔬</Text>
-                <Text style={styles.featureItem}>✅ ISRO Satellite Field Map & Soil Moisture 🛰️</Text>
-                <Text style={styles.featureItem}>✅ Complete Financial Records & Ledger 💰</Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
-                disabled={initiatePlanPayment.isPending}
-                onPress={() => handlePurchasePlan('PRO', 180)}
-              >
-                <Text style={styles.upgradeBtnText}>Upgrade to Lite Plan ⚡</Text>
-              </TouchableOpacity>
-            </View>
+              );
+            })()}
 
             {/* Plan 3: Pro VIP Plan */}
-            <View style={[styles.planCard, { borderColor: '#10b981', borderWidth: 2 }, premiumShadow('#10b981', 'sm')]}>
-              <View style={styles.vipTag}>
-                <Text style={styles.vipTagText}>👑 MOST POPULAR VIP PLAN 🏆</Text>
-              </View>
-              <View style={styles.planHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.planTitle, { color: '#059669' }]}>👑 Pro VIP Plan 💎</Text>
-                  <Text style={styles.planPrice}>₹699 <Text style={styles.planPeriod}>/ 365 Days (1 Year)</Text></Text>
+            {(() => {
+              const currentRank = PLAN_TIER_RANK[plan] ?? 0;
+              const isVipDowngrade = !isExpired && currentRank > 2;
+              const isVipCurrent = (plan === 'SMART' || plan === 'SUPER') && !isExpired;
+              const isVipUpgrade = !isExpired && currentRank < 2 && plan !== 'FREE';
+
+              return (
+                <View style={[styles.planCard, { borderColor: '#10b981', borderWidth: 2 }, premiumShadow('#10b981', 'sm')]}>
+                  <View style={styles.vipTag}>
+                    <Text style={styles.vipTagText}>👑 MOST POPULAR VIP PLAN 🏆</Text>
+                  </View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#059669' }]}>👑 Pro VIP Plan 💎</Text>
+                      <Text style={styles.planPrice}>₹699 <Text style={styles.planPeriod}>/ 365 Days (1 Year)</Text></Text>
+                    </View>
+                    {isVipCurrent ? (
+                      <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>
+                    ) : null}
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={styles.featureItem}>✅ Unlimited Active Crops & Farm Plots 🌾</Text>
+                    <Text style={styles.featureItem}>✅ Priority AI Disease First-Aid Treatment 💊</Text>
+                    <Text style={styles.featureItem}>✅ Full ISRO Satellite Health Heatmap Sync 🛰️</Text>
+                    <Text style={styles.featureItem}>✅ Multi-Worker Labour & Expense Tracker 👥</Text>
+                    <Text style={styles.featureItem}>✅ Priority VIP Support & Free Cloud Backup 🛡️</Text>
+                  </View>
+                  {isVipUpgrade && (
+                    <View style={{ backgroundColor: '#ecfdf5', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#a7f3d0', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#047857', textAlign: 'center' }}>
+                        ⚡ Prorated Credit: Unused days from your active {plan} plan will be automatically deducted!
+                      </Text>
+                    </View>
+                  )}
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {freeTrialEnabled && !hasUsedTrial && plan === 'FREE' ? (
+                      <TouchableOpacity
+                        style={[styles.upgradeBtn, { backgroundColor: '#166534', flex: 1 }]}
+                        disabled={activateTrialMutation.isPending}
+                        onPress={handleActivateFreeTrial}
+                      >
+                        <Text style={styles.upgradeBtnText}>Get Free Demo 10 Days 🎁</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                    {isVipDowngrade ? (
+                      <View style={{ backgroundColor: '#f1f5f9', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flex: 1 }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#64748b', textAlign: 'center' }}>
+                          🔒 Higher Tier Active
+                        </Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.upgradeBtn, { backgroundColor: isVipCurrent ? '#047857' : '#10b981', flex: 1 }]}
+                        disabled={initiatePlanPayment.isPending}
+                        onPress={() => handlePurchasePlan('SMART', 365)}
+                      >
+                        <Text style={styles.upgradeBtnText}>
+                          {isVipCurrent ? 'Renew VIP Plan (+365 Days) 👑' : isVipUpgrade ? 'Upgrade VIP (Prorated) 👑' : 'Upgrade VIP 👑'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-                {plan === 'SMART' || plan === 'SUPER' ? (
-                  <View style={styles.currentBadge}><Text style={styles.currentBadgeText}>Current Plan</Text></View>
-                ) : null}
-              </View>
-              <View style={styles.featureList}>
-                <Text style={styles.featureItem}>✅ Unlimited Active Crops & Farm Plots 🌾</Text>
-                <Text style={styles.featureItem}>✅ Priority AI Disease First-Aid Treatment 💊</Text>
-                <Text style={styles.featureItem}>✅ Full ISRO Satellite Health Heatmap Sync 🛰️</Text>
-                <Text style={styles.featureItem}>✅ Multi-Worker Labour & Expense Tracker 👥</Text>
-                <Text style={styles.featureItem}>✅ Priority VIP Support & Free Cloud Backup 🛡️</Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                {freeTrialEnabled && !hasUsedTrial && plan === 'FREE' ? (
-                  <TouchableOpacity
-                    style={[styles.upgradeBtn, { backgroundColor: '#166534', flex: 1 }]}
-                    disabled={activateTrialMutation.isPending}
-                    onPress={handleActivateFreeTrial}
-                  >
-                    <Text style={styles.upgradeBtnText}>Get Free Demo 10 Days 🎁</Text>
-                  </TouchableOpacity>
-                ) : null}
-                <TouchableOpacity
-                  style={[styles.upgradeBtn, { backgroundColor: '#10b981', flex: 1 }]}
-                  disabled={initiatePlanPayment.isPending}
-                  onPress={() => handlePurchasePlan('SMART', 365)}
-                >
-                  <Text style={styles.upgradeBtnText}>Upgrade VIP 👑</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+              );
+            })()}
           </View>
         ) : (
           /* 2. DOCTOR CROP CARE MEMBERSHIPS PART */

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput, Modal, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput, Modal, Linking, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -103,6 +103,8 @@ const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_S
 const theme = RoleThemes.FARM_ADVISOR;
 
 export const AdvisorDashboardView: React.FC = () => {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
@@ -205,7 +207,7 @@ export const AdvisorDashboardView: React.FC = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} contentContainerStyle={{ flexGrow: 1, paddingBottom: isDesktop ? 32 : 115 }} showsVerticalScrollIndicator={false}>
         <RoleHeader
           currentRole="FARM_ADVISOR"
           profileName={user?.name || 'Advisor'}

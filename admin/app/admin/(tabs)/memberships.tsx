@@ -17,7 +17,15 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
-import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
+import {
+  useMyAdvisor,
+  useAvailableAdvisors,
+  useChooseAdvisor,
+  useMyPendingRequest,
+  usePendingDoctorChanges,
+  useAdminApproveDoctorChange,
+  useAdminRejectDoctorChange,
+} from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
 import { CopyButton } from '@/src/components/CopyButton';
@@ -65,6 +73,9 @@ export default function MembershipsScreen() {
   const { data: pendingRequest } = useMyPendingRequest();
   const chooseAdvisor = useChooseAdvisor();
   const redeemCouponMutation = useRedeemFarmerPlanCoupon();
+  const { data: pendingDoctorChanges = [], refetch: refetchPendingChanges } = usePendingDoctorChanges();
+  const approveChangeMutation = useAdminApproveDoctorChange();
+  const rejectChangeMutation = useAdminRejectDoctorChange();
   const { cropFields } = useCrops();
 
   const [activeTab, setActiveTab] = useState<'FARMER_SOFTWARE' | 'CROP_CARE'>('FARMER_SOFTWARE');
@@ -370,6 +381,82 @@ export default function MembershipsScreen() {
         ) : (
           /* 2. DOCTOR CROP CARE MEMBERSHIPS PART */
           <View style={{ gap: 14 }}>
+            {/* Admin Doctor Change Review Queue */}
+            {pendingDoctorChanges && pendingDoctorChanges.length > 0 ? (
+              <View style={[styles.statusCard, { backgroundColor: '#1e1b4b', borderColor: '#6366f1', borderWidth: 1.5, gap: 10 }, premiumShadow('#6366f1', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="swap-horizontal" size={20} color="#818cf8" />
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                      Pending Doctor Switch Requests ({pendingDoctorChanges.length})
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: '#4338ca', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#e0e7ff' }}>Admin Action Required</Text>
+                  </View>
+                </View>
+
+                {pendingDoctorChanges.map((change) => (
+                  <View key={change.id} style={{ backgroundColor: '#0f172a', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#312e81', gap: 8 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
+                          Farmer: {change.farmer?.name || 'Farmer'} {change.farmer?.kingId ? `(${change.farmer.kingId})` : ''}
+                        </Text>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                          Requested New Doctor: Dr. {change.advisor?.name || 'Doctor'}
+                        </Text>
+                        {change.notes && (
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#f59e0b', marginTop: 4 }}>
+                            Reason: "{change.notes}"
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: '#059669', paddingVertical: 8, borderRadius: RADIUS.sm, alignItems: 'center' }}
+                        disabled={approveChangeMutation.isPending}
+                        onPress={async () => {
+                          try {
+                            await approveChangeMutation.mutateAsync(change.id);
+                            refetchPendingChanges();
+                            if (Platform.OS === 'web') alert('Doctor switch approved successfully!');
+                            else Alert.alert('Success', 'Doctor switch approved successfully!');
+                          } catch (err) {
+                            const msg = err?.response?.data?.message || 'Could not approve change.';
+                            if (Platform.OS === 'web') alert(msg);
+                            else Alert.alert('Error', msg);
+                          }
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>✓ Approve Switch</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: '#dc2626', paddingVertical: 8, borderRadius: RADIUS.sm, alignItems: 'center' }}
+                        disabled={rejectChangeMutation.isPending}
+                        onPress={async () => {
+                          try {
+                            await rejectChangeMutation.mutateAsync({ id: change.id, reason: 'Declined by Administrator' });
+                            refetchPendingChanges();
+                            if (Platform.OS === 'web') alert('Doctor switch declined.');
+                            else Alert.alert('Declined', 'Doctor switch declined.');
+                          } catch (err) {
+                            const msg = err?.response?.data?.message || 'Could not decline change.';
+                            if (Platform.OS === 'web') alert(msg);
+                            else Alert.alert('Error', msg);
+                          }
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>✕ Decline</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
             {/* Pending Doctor Change Request Status Banner */}
             {pendingRequest ? (
               pendingRequest.status === 'PENDING' ? (

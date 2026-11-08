@@ -778,6 +778,7 @@ function UpiUpgradeFlow({
 }) {
   const initiate = useInitiateFarmerPlanPayment();
   const submit = useSubmitFarmerPlanPayment();
+  const [isAutoDebit, setIsAutoDebit] = useState(true);
   const [request, setRequest] = useState<InitiateFarmerPlanPaymentResponse | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -793,7 +794,7 @@ function UpiUpgradeFlow({
     (async () => {
       setError(null);
       try {
-        const res = await initiate.mutateAsync({ targetPlan: plan, billingPeriodDays });
+        const res = await initiate.mutateAsync({ targetPlan: plan, billingPeriodDays, isAutoDebit });
         if (isMounted) setRequest(res);
       } catch (err: any) {
         if (isMounted) setError(err?.response?.data?.message ?? 'Could not generate payment link. Try again.');
@@ -802,7 +803,7 @@ function UpiUpgradeFlow({
     return () => {
       isMounted = false;
     };
-  }, [plan, billingPeriodDays]);
+  }, [plan, billingPeriodDays, isAutoDebit]);
 
   const handleOpenUpiApp = async () => {
     if (!request || !request.upiLink) return;
@@ -911,14 +912,75 @@ function UpiUpgradeFlow({
     const planName = (PLAN_COLUMN_META[plan]?.label ?? plan).toUpperCase();
     const paymentRefCode = `FK-${kingId}-${planName}-${request.id.slice(0, 6).toUpperCase()}`;
 
-    const handlePayOnline = async () => {
+    const handlePayOnline = async (gatewayType?: 'RAZORPAY' | 'CASHFREE') => {
+      // 1. Razorpay Flow
+      if (gatewayType === 'RAZORPAY' || request.razorpayOrderId || request.razorpaySubscriptionId) {
+        if (request.razorpayShortUrl) {
+          try {
+            await Linking.openURL(request.razorpayShortUrl);
+            return;
+          } catch {}
+        }
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          const loadScript = () => {
+            return new Promise((resolve) => {
+              if ((window as any).Razorpay) return resolve(true);
+              const script = document.createElement('script');
+              script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+              script.onload = () => resolve(true);
+              script.onerror = () => resolve(false);
+              document.body.appendChild(script);
+            });
+          };
+
+          const loaded = await loadScript();
+          if (loaded && (window as any).Razorpay) {
+            const options: any = {
+              key: request.razorpayKeyId || 'rzp_test_placeholder',
+              amount: Math.round(Number(request.amount) * 100),
+              currency: 'INR',
+              name: 'FarmsKing Technologies',
+              description: `${planName} Plan ${request.isAutoDebit ? 'UPI AutoPay Subscription' : 'Membership'}`,
+              prefill: {
+                name: request.farmer?.name,
+                contact: request.farmer?.mobile,
+              },
+              theme: { color: '#16a34a' },
+              handler: function () {
+                window.location.reload();
+              },
+            };
+            if (request.razorpaySubscriptionId) {
+              options.subscription_id = request.razorpaySubscriptionId;
+            } else if (request.razorpayOrderId) {
+              options.order_id = request.razorpayOrderId;
+            }
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+            return;
+          }
+        }
+      }
+
+      // 2. Cashfree Flow
+      if (request.cashfreeSubscriptionLink) {
+        try {
+          await Linking.openURL(request.cashfreeSubscriptionLink);
+          return;
+        } catch {}
+      }
       if (request.cashfreeSessionId) {
         try {
           await Linking.openURL(`https://payments.cashfree.com/order/#${request.cashfreeSessionId}`);
+          return;
         } catch {
           setError('Could not open payment page.');
+          return;
         }
-      } else if (request.upiLink) {
+      }
+
+      // 3. Fallback direct UPI
+      if (request.upiLink) {
         handleOpenUpiApp();
       } else {
         setError('Payment session could not be initialized.');
@@ -931,18 +993,87 @@ function UpiUpgradeFlow({
           {planName} Plan Price: ₹{request.amount}
         </Text>
 
-        {request.cashfreeSessionId ? (
+        {/* Billing Mode Switcher: Auto-Debit vs One-Time */}
+        <View style={{ width: '100%', flexDirection: 'row', gap: 6, backgroundColor: '#f1f5f9', padding: 3, borderRadius: RADIUS.pill, marginVertical: 2 }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 7,
+              paddingHorizontal: 8,
+              borderRadius: RADIUS.pill,
+              backgroundColor: isAutoDebit ? '#16a34a' : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setIsAutoDebit(true)}
+          >
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isAutoDebit ? '#ffffff' : '#64748b' }}>
+              ⚡ GPay AutoPay (Auto-Debit)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 7,
+              paddingHorizontal: 8,
+              borderRadius: RADIUS.pill,
+              backgroundColor: !isAutoDebit ? '#16a34a' : 'transparent',
+              alignItems: 'center',
+            }}
+            onPress={() => setIsAutoDebit(false)}
+          >
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: !isAutoDebit ? '#ffffff' : '#64748b' }}>
+              💳 Pay Once (One-Time)
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {isAutoDebit ? (
+          <View style={{ width: '100%', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', padding: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="repeat" size={16} color="#059669" />
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#065f46', flex: 1 }}>
+              Auto-renews periodically via UPI AutoPay. Cancel or pause anytime in Google Pay settings.
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Razorpay Gateway Card */}
+        {request.razorpayOrderId || request.razorpaySubscriptionId || request.activeGateway === 'RAZORPAY' ? (
           <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-            <Ionicons name="card-outline" size={36} color="#475569" />
+            <Ionicons name="flash" size={32} color="#0284c7" />
             <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-              Complete your VIP Pass purchase securely via Online Gateway.
+              {isAutoDebit ? 'Set up UPI AutoPay via Razorpay' : 'Instant Checkout via Razorpay'}
+            </Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
+              Supports Google Pay, PhonePe, Paytm, Cards & Netbanking
+            </Text>
+            <TouchableOpacity 
+              style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+              onPress={() => handlePayOnline('RAZORPAY')}
+            >
+              <Ionicons name="flash-outline" size={16} color="#ffffff" />
+              <Text style={styles.submitBtnText}>
+                {isAutoDebit ? 'Authorize AutoPay on Google Pay (Razorpay)' : 'Pay Now via Razorpay'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Cashfree Gateway Card */}
+        {request.cashfreeSessionId || request.cashfreeSubscriptionLink || request.activeGateway === 'CASHFREE' ? (
+          <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
+            <Ionicons name="card-outline" size={32} color="#6d28d9" />
+            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
+              {isAutoDebit ? 'Set up UPI AutoPay via Cashfree' : 'Instant Checkout via Cashfree'}
             </Text>
             <TouchableOpacity 
               style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-              onPress={handlePayOnline}
+              onPress={() => handlePayOnline('CASHFREE')}
             >
               <Ionicons name="lock-closed" size={16} color="#ffffff" />
-              <Text style={styles.submitBtnText}>Pay Online Now (Cashfree)</Text>
+              <Text style={styles.submitBtnText}>
+                {isAutoDebit ? 'Authorize AutoPay on Google Pay (Cashfree)' : 'Pay Online Now (Cashfree)'}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : null}

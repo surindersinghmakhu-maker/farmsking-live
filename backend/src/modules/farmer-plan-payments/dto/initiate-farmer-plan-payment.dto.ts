@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { FarmerSubscriptionPlan } from '@prisma/client';
 
 export class InitiateFarmerPlanPaymentDto {
@@ -9,6 +9,14 @@ export class InitiateFarmerPlanPaymentDto {
   @IsInt()
   @Min(1)
   billingPeriodDays?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isAutoDebit?: boolean;
+
+  @IsOptional()
+  @IsString()
+  preferredGateway?: 'CASHFREE' | 'RAZORPAY' | 'PHONEPE' | 'UPI_DIRECT';
 
   @IsOptional()
   selectedDoctorId?: string;
@@ -22,4 +30,3 @@ export class InitiateFarmerPlanPaymentDto {
   @IsOptional()
   advisorKingId?: string;
 }
-

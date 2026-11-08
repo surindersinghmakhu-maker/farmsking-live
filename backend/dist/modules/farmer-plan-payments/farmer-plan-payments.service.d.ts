@@ -9,6 +9,7 @@ import { SubmitFarmerPlanPaymentDto } from './dto/submit-farmer-plan-payment.dto
 import { RejectFarmerPlanPaymentDto } from './dto/reject-farmer-plan-payment.dto';
 import { WalletService } from '../wallet/wallet.service';
 import { CashfreeService } from '../cashfree/cashfree.service';
+import { RazorpayService } from '../razorpay/razorpay.service';
 export declare class FarmerPlanPaymentsService {
     private readonly prisma;
     private readonly advisorAssignmentService;
@@ -17,7 +18,8 @@ export declare class FarmerPlanPaymentsService {
     private readonly farmerPlansService;
     private readonly walletService;
     private readonly cashfreeService;
-    constructor(prisma: PrismaService, advisorAssignmentService: AdvisorAssignmentService, notificationsService: NotificationsService, appSettingsService: AppSettingsService, farmerPlansService: FarmerPlansService, walletService: WalletService, cashfreeService: CashfreeService);
+    private readonly razorpayService;
+    constructor(prisma: PrismaService, advisorAssignmentService: AdvisorAssignmentService, notificationsService: NotificationsService, appSettingsService: AppSettingsService, farmerPlansService: FarmerPlansService, walletService: WalletService, cashfreeService: CashfreeService, razorpayService: RazorpayService);
     initiate(user: AuthUser, dto: InitiateFarmerPlanPaymentDto, farmerId?: string): Promise<{
         activeGateway: import("../app-settings/constants/system-integrations.constant").SupportedPaymentGateway;
         upiLink: string;

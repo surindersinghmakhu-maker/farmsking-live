@@ -66,6 +66,7 @@ const voice_call_module_1 = require("./modules/voice-call/voice-call.module");
 const trainers_module_1 = require("./modules/trainers/trainers.module");
 const seller_module_1 = require("./modules/seller/seller.module");
 const cashfree_module_1 = require("./modules/cashfree/cashfree.module");
+const razorpay_module_1 = require("./modules/razorpay/razorpay.module");
 const shiprocket_module_1 = require("./modules/shiprocket/shiprocket.module");
 const email_module_1 = require("./modules/email/email.module");
 const sms_module_1 = require("./modules/sms/sms.module");
@@ -137,6 +138,7 @@ exports.AppModule = AppModule = __decorate([
             trainers_module_1.TrainersModule,
             seller_module_1.SellerModule,
             cashfree_module_1.CashfreeModule,
+            razorpay_module_1.RazorpayModule,
             shiprocket_module_1.ShiprocketModule,
             email_module_1.EmailModule,
             sms_module_1.SmsModule,

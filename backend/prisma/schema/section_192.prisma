@@ -200,6 +200,7 @@ model InvoiceSequence {
   financialYear String // e.g. 2627
   type          String // CUSTOMER_INVOICE | COMMISSION_INVOICE | PAYOUT_STATEMENT | CREDIT_NOTE
   lastSequence  Int      @default(0)
+  createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@unique([financialYear, type])

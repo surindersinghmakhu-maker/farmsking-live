@@ -6,6 +6,7 @@ export declare class CouponSettingsService {
     constructor(prisma: PrismaService);
     get(): Promise<{
         id: string;
+        createdAt: Date;
         updatedAt: Date;
         partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
@@ -30,6 +31,7 @@ export declare class CouponSettingsService {
     }>;
     update(admin: AuthUser, dto: UpdateCouponSettingsDto): Promise<{
         id: string;
+        createdAt: Date;
         updatedAt: Date;
         partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;

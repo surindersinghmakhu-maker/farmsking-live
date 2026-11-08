@@ -92,6 +92,30 @@ export function useMarkOrderDelivered() {
   return useOrderMutation(api.markOrderDelivered, 'DELIVERED');
 }
 
+export function useMarkOrderPaid() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, transactionId, notes }: { id: string; transactionId?: string; notes?: string }) =>
+      api.markOrderPaid(id, transactionId, notes),
+    onSuccess: (data: any, vars: { id: string }) => {
+      queryClient.setQueriesData({ queryKey: ['orders'] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((order: any) => {
+            if (order.id === vars.id) {
+              return { ...order, paymentStatus: 'PAID' };
+            }
+            return order;
+          });
+        }
+        return oldData;
+      });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.refetchQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
 export function useDispatchOrder() {
   const queryClient = useQueryClient();
   return useMutation({

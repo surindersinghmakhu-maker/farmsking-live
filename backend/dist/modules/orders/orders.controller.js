@@ -22,6 +22,7 @@ const current_user_decorator_1 = require("../../common/decorators/current-user.d
 const orders_service_1 = require("./orders.service");
 const create_order_dto_1 = require("./dto/create-order.dto");
 const dispatch_order_dto_1 = require("./dto/dispatch-order.dto");
+const mark_paid_dto_1 = require("./dto/mark-paid.dto");
 const STAFF_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
 let OrdersController = class OrdersController {
     constructor(ordersService) {
@@ -77,6 +78,12 @@ let OrdersController = class OrdersController {
     }
     markDelivered(user, id) {
         return this.ordersService.markDelivered(user, id);
+    }
+    markPaid(user, id, dto) {
+        return this.ordersService.markPaymentPaid(user, id, dto.transactionId, dto.notes);
+    }
+    submitUtr(user, id, dto) {
+        return this.ordersService.submitPaymentUtr(user, id, dto.utrNumber);
     }
 };
 exports.OrdersController = OrdersController;
@@ -229,6 +236,26 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "markDelivered", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)(':id/mark-paid'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, mark_paid_dto_1.MarkPaidDto]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "markPaid", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)(':id/submit-utr'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, mark_paid_dto_1.SubmitUtrDto]),
+    __metadata("design:returntype", void 0)
+], OrdersController.prototype, "submitUtr", null);
 exports.OrdersController = OrdersController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('orders'),

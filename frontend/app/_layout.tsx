@@ -27,8 +27,12 @@ import PublicBottomNav from '@/components/PublicBottomNav';
 import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
 import { StaffSessionGuardian } from '@/src/components/StaffSessionGuardian';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// Prevent the splash screen from auto-hiding on native mobile until assets load; hide immediately on web.
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => {});
+} else {
+  SplashScreen.hideAsync().catch(() => {});
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -170,26 +174,26 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  const [minTimeElapsed, setMinTimeElapsed] = useState(Platform.OS === 'web');
-
+  // Graceful splash dismissal: displays for ~950ms so user notices branding, then smoothly fades out
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setMinTimeElapsed(true);
-      return;
+    SplashScreen.hideAsync().catch(() => {});
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const timer = setTimeout(() => {
+        const sp = document.getElementById('farmsking-web-splash');
+        if (sp) {
+          sp.style.transition = 'opacity 0.35s ease-out';
+          sp.style.opacity = '0';
+          sp.style.pointerEvents = 'none';
+          setTimeout(() => {
+            if (sp && sp.parentNode) sp.parentNode.removeChild(sp);
+          }, 350);
+        }
+      }, 950);
+      return () => clearTimeout(timer);
     }
-    const timer = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, 450);
-    return () => clearTimeout(timer);
   }, []);
 
-  const isReady = Platform.OS === 'web' || ((loaded || fontError) && minTimeElapsed);
-
-  useEffect(() => {
-    if (isReady) {
-      SplashScreen.hideAsync().catch(() => { });
-    }
-  }, [isReady]);
+  const isReady = Platform.OS === 'web' || Boolean(loaded || fontError);
 
   if (!isReady) {
     return (

@@ -20,7 +20,15 @@ export interface FarmerPlanPaymentRequest {
 }
 
 export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequest {
-  cashfreeSessionId: string;
+  cashfreeSessionId?: string | null;
+  cashfreeSubscriptionLink?: string | null;
+  cashfreeSubscriptionId?: string | null;
+  razorpayOrderId?: string | null;
+  razorpaySubscriptionId?: string | null;
+  razorpayShortUrl?: string | null;
+  razorpayKeyId?: string | null;
+  activeGateway?: string;
+  isAutoDebit?: boolean;
   upiLink?: string;
 }
 
@@ -32,10 +40,21 @@ export async function initiateFarmerPlanPayment(
   selectedAdvisorId?: string,
   doctorKingId?: string,
   advisorKingId?: string,
+  isAutoDebit?: boolean,
+  preferredGateway?: 'CASHFREE' | 'RAZORPAY' | 'PHONEPE' | 'UPI_DIRECT',
 ): Promise<InitiateFarmerPlanPaymentResponse> {
   const { data } = await apiClient.post<InitiateFarmerPlanPaymentResponse>(
     '/farmer-plan-payments',
-    { targetPlan, billingPeriodDays, selectedDoctorId, selectedAdvisorId, doctorKingId, advisorKingId },
+    {
+      targetPlan,
+      billingPeriodDays,
+      selectedDoctorId,
+      selectedAdvisorId,
+      doctorKingId,
+      advisorKingId,
+      isAutoDebit,
+      preferredGateway,
+    },
     { params: farmerId ? { farmerId } : {} },
   );
   return data;

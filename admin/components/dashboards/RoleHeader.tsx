@@ -246,7 +246,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               </Text>
             </View>
 
-            {subtitle ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
+            {subtitle && currentRole !== 'FARMER' ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
           </View>
 
           {/* Center Block: Profile Photo Avatar (Hidden for Admin / Super Admin) */}

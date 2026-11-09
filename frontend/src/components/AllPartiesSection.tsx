@@ -21,6 +21,8 @@ import { formatInr } from '@/src/utils/formatInr';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Avatar } from '@/src/components/Avatar';
 import { useAuth } from '@/src/store/auth-context';
+import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { buildPartyLedgerRows, GroupedLedgerRow, PopulatedLedgerEntry } from '@/src/utils/partyLedger';
 import { useFetchSaleBill } from '@/src/hooks/useSaleBills';
@@ -55,6 +57,9 @@ export interface UnifiedPartyItem {
 }
 
 export function AllPartiesSection() {
+  const { colors, isDark } = useExecutiveTheme();
+  const { t } = useLanguage();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
   const { data: rawParties = [], isLoading: isLoadingParties } = useParties();
   const { data: rawWorkers = [], isLoading: isLoadingWorkers } = useLabourWorkers();
 
@@ -288,7 +293,7 @@ export function AllPartiesSection() {
           }}
         >
           <Ionicons name="add" size={16} color="#ffffff" />
-          <Text style={styles.addBtnText}>+ New</Text>
+          <Text style={styles.addBtnText}>{t('addParty', '+ New')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -296,10 +301,10 @@ export function AllPartiesSection() {
       {/* 2. Compact Filter Chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
         {[
-          { key: 'ALL', label: `All (${unifiedParties.length})` },
-          { key: 'BUYERS', label: 'Buyers' },
-          { key: 'SUPPLIERS', label: 'Suppliers' },
-          { key: 'LABOUR', label: 'Labour' },
+          { key: 'ALL', label: `${t('tabAllParties', 'All')} (${unifiedParties.length})` },
+          { key: 'BUYERS', label: t('buyerCustomer', 'Buyers') },
+          { key: 'SUPPLIERS', label: t('dealerSupplier', 'Suppliers') },
+          { key: 'LABOUR', label: t('tabLabour', 'Labour') },
         ].map((f) => {
           const isActive = selectedFilter === f.key;
           return (
@@ -791,6 +796,8 @@ function StatementViewModal({ item, onClose }: { item: UnifiedPartyItem; onClose
 }
 
 function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; onClose: () => void }) {
+  const { colors, isDark } = useExecutiveTheme();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
   const { user } = useAuth();
   const { data: statement, isLoading } = useLabourWorkerStatement(workerId);
   const timeline = statement?.timeline || [];
@@ -892,6 +899,8 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
 }
 
 function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: string; partyName: string; onClose: () => void }) {
+  const { colors, isDark } = useExecutiveTheme();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
   const shotRef = React.useRef<any>(null);
   const [isSharing, setIsSharing] = useState(false);
   const { user } = useAuth();
@@ -1431,7 +1440,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: { flex: 1, gap: 6 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   searchBar: {
@@ -1439,9 +1448,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: RADIUS.md,
     paddingHorizontal: 8,
     height: 38,
@@ -1450,7 +1459,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     fontFamily: FONT.medium,
-    color: '#0f172a',
+    color: isDark ? colors.text : '#0f172a',
   },
   addBtn: {
     flexDirection: 'row',
@@ -1467,22 +1476,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
   },
   filterChipActive: {
     backgroundColor: '#16a34a',
     borderColor: '#16a34a',
   },
-  filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
+  filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569' },
   filterChipTextActive: { color: '#ffffff' },
 
   compactCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     paddingVertical: 8,
     paddingHorizontal: 10,
     gap: 6,
@@ -1498,21 +1507,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: isDark ? colors.cardBorder : '#f1f5f9',
   },
-  partyName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  partyName: { fontSize: 13, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
   typeBadge: {
     fontSize: 9,
     fontFamily: FONT.bold,
     color: '#15803d',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
   },
-  metaText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
+  metaText: { fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' },
 
   balanceBadge: {
     borderWidth: 1,
@@ -1526,23 +1535,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#e0f2fe',
+    backgroundColor: isDark ? 'rgba(2, 132, 199, 0.2)' : '#e0f2fe',
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? 'rgba(2, 132, 199, 0.4)' : 'transparent',
     paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 4,
   },
-  compactBtnText: { fontSize: 10.5, fontFamily: FONT.bold },
+  compactBtnText: { fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0284c7' },
 
   emptyCard: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 30,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
   },
-  emptyTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
+  emptyTitle: { fontSize: 13, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b' },
 
   modalOverlay: {
     flex: 1,
@@ -1554,9 +1565,11 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: 12,
     padding: 14,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? colors.cardBorder : 'transparent',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1565,20 +1578,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingBottom: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
   },
-  modalTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
-  label: { fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginTop: 6, marginBottom: 3 },
+  modalTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
+  label: { fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569', marginTop: 6, marginBottom: 3 },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 6,
     fontSize: 12,
     fontFamily: FONT.medium,
-    color: '#0f172a',
-    backgroundColor: '#f8fafc',
+    color: isDark ? colors.text : '#0f172a',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
   },
   errorText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#ef4444', marginTop: 6 },
   modalActionRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
@@ -1587,10 +1600,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     alignItems: 'center',
   },
-  cancelBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#475569' },
+  cancelBtnText: { fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569' },
   saveBtn: {
     flex: 1,
     paddingVertical: 8,
@@ -1602,14 +1615,14 @@ const styles = StyleSheet.create({
 
   pillInput: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: 16,
     paddingHorizontal: 14,
     height: 42,
     fontSize: 12.5,
     fontFamily: FONT.medium,
-    color: '#0f172a',
-    backgroundColor: '#ffffff',
+    color: isDark ? colors.text : '#0f172a',
+    backgroundColor: isDark ? '#0b1329' : '#ffffff',
   },
   partyTypeChip: {
     paddingHorizontal: 12,
@@ -1622,8 +1635,8 @@ const styles = StyleSheet.create({
     borderColor: '#0284c7',
   },
   partyTypeChipUnselected: {
-    backgroundColor: '#ffffff',
-    borderColor: '#cbd5e1',
+    backgroundColor: isDark ? '#0b1329' : '#ffffff',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
   },
   partyTypeChipText: {
     fontSize: 11.5,
@@ -1633,20 +1646,20 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   partyTypeChipTextUnselected: {
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
   },
   pillCancelBtn: {
     flex: 1,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillCancelBtnText: {
     fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#334155',
+    color: isDark ? colors.textMuted : '#334155',
   },
   pillSaveBtn: {
     flex: 1.2,

@@ -23,6 +23,7 @@ import {
 } from '@/src/api/appSettings.api';
 import SettingEntitySetup from '@/components/settings/SettingEntitySetup';
 import { ThirdPartyServicesSection } from '@/src/components/ThirdPartyServicesSection';
+import { useVisitorStats } from '@/src/hooks/useAppSettings';
 import SettingOtherSetup from '@/components/settings/SettingOtherSetup';
 import SettingFeaturesSetup from '@/components/settings/SettingFeaturesSetup';
 import SettingPaymentShareSetup from '@/components/settings/SettingPaymentShareSetup';
@@ -148,6 +149,7 @@ export default function NewSettingsScreen() {
 
   // System integrations query
   const { data: systemConfig, isLoading: isSysLoading, refetch: refetchSys } = useSystemIntegrations();
+  const { data: visitorStats, refetch: refetchVisitorStats, isFetching: isFetchingVisitorStats } = useVisitorStats();
   const config = useMemo(() => mergeSystemIntegrationsWithDefaults(systemConfig), [systemConfig]);
   const masterData = config.projectMasterData || DEFAULT_PROJECT_MASTER_DATA;
   const aboutData = config.about || DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.about;
@@ -159,7 +161,7 @@ export default function NewSettingsScreen() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refetchSys();
+    await Promise.all([refetchSys(), refetchVisitorStats()]);
     setRefreshing(false);
     showToast('⚡ System status and telemetry synchronized!');
   };
@@ -1334,5 +1336,160 @@ const styles = StyleSheet.create({
   statutoryLawText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  visitorSectionCard: {
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    padding: 18,
+    marginTop: 18,
+    gap: 16,
+  },
+  visitorCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  visitorGlobeIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+  },
+  visitorMainTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+  },
+  visitorLivePulsePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.35)',
+  },
+  visitorPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10b981',
+  },
+  visitorLiveText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#10b981',
+    letterSpacing: 0.5,
+  },
+  visitorSubTitle: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    marginTop: 2,
+  },
+  visitorRefreshBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+  },
+  visitorRefreshText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  visitorMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  visitorMetricBox: {
+    flex: 1,
+    minWidth: 160,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    padding: 14,
+    gap: 4,
+  },
+  visitorMetricTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  visitorMetricLabel: {
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  visitorIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  visitorMetricValue: {
+    fontSize: 22,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.5,
+    marginTop: 2,
+  },
+  visitorMetricSub: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+  },
+  deviceBreakdownContainer: {
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    padding: 12,
+    gap: 10,
+  },
+  deviceBreakdownHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  deviceBreakdownTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+  },
+  deviceProgressBarTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0284c7',
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  deviceProgressBarFillMobile: {
+    height: '100%',
+    backgroundColor: '#10b981',
+  },
+  deviceProgressBarFillDesktop: {
+    height: '100%',
+    backgroundColor: '#0284c7',
+  },
+  visitorFooterStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    flexWrap: 'wrap',
+  },
+  visitorFooterText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
   },
 });

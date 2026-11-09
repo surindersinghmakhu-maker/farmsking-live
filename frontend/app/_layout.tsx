@@ -111,6 +111,17 @@ function RootNavigation() {
         return;
       }
 
+      if (isAtRootOrIndex) {
+        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+          router.replace('/(partner)/(tabs)');
+        } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+          router.replace('/admin');
+        } else {
+          router.replace('/(user)/(tabs)');
+        }
+        return;
+      }
+
       if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
@@ -125,17 +136,29 @@ function RootNavigation() {
   }, [user, isLoading, segmentsPath]);
 
   useEffect(() => {
+    if (isLoading) return;
+
+    // If we are redirecting away from root/index to tabs or admin, wait until the destination is active
+    const currentGroup = segments[0] as string;
+    const isAtRootOrIndex = !currentGroup || currentGroup === '' || currentGroup === 'index';
+    if (user && isAtRootOrIndex) {
+      // In the middle of redirecting to dashboard; hold the splash overlay so no blank flash occurs
+      return;
+    }
+
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      // Seamless splash handoff: dismiss only when navigation tree is ready
+      // Double animation frame gives browser time to composite and paint the actual target screen
       requestAnimationFrame(() => {
-        if ((window as any).__dismissFarmsKingSplash) {
-          (window as any).__dismissFarmsKingSplash();
-        }
+        requestAnimationFrame(() => {
+          if ((window as any).__dismissFarmsKingSplash) {
+            (window as any).__dismissFarmsKingSplash();
+          }
+        });
       });
     }
-  }, []);
+  }, [user, isLoading, segmentsPath]);
 
-  if (isLoading && Platform.OS !== 'web') {
+  if (isLoading) {
     return <SplashView />;
   }
 
@@ -174,6 +197,26 @@ function RootNavigation() {
 import { MobileAppShell } from '@/components/MobileAppShell';
 import { LiveWebsiteWebView } from '@/components/LiveWebsiteWebView';
 
+function GlobalVisitorTelemetryRecorder() {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      if (sessionStorage.getItem('farmsking_session_visit_recorded')) return;
+      sessionStorage.setItem('farmsking_session_visit_recorded', '1');
+      const isMobile = window.innerWidth < 768;
+      fetch('/api/v1/app-settings/record-visit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device: isMobile ? 'mobile' : 'desktop',
+          path: window.location.pathname || '/',
+        }),
+      }).catch(() => {});
+    } catch {}
+  }, []);
+  return null;
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded, fontError] = useFonts({
@@ -185,15 +228,10 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  // Smooth splash dismissal: fades out seamlessly as soon as React mounts and paints
+  // Native mobile splash dismissal
   useEffect(() => {
-    SplashScreen.hideAsync().catch(() => {});
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      requestAnimationFrame(() => {
-        if ((window as any).__dismissFarmsKingSplash) {
-          (window as any).__dismissFarmsKingSplash();
-        }
-      });
+    if (Platform.OS !== 'web') {
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, []);
 
@@ -215,6 +253,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppFaviconGlobalizer />
+      <GlobalVisitorTelemetryRecorder />
       <LanguageProvider>
         <ExecutiveThemeProvider>
           <AuthProvider>

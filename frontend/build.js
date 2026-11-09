@@ -96,8 +96,12 @@ try {
   if (fs.existsSync(distIndexPath)) {
     let indexHtml = fs.readFileSync(distIndexPath, 'utf8');
 
+    // ⚡ Ultra-Fast Parallel Script & Font Preloads
+    const scriptMatch = indexHtml.match(/src="(\/_expo\/static\/js\/web\/entry-[a-z0-9]+\.js)"/);
+    const bundlePreload = scriptMatch ? `    <link rel="preload" href="${scriptMatch[1]}" as="script" />\n` : '';
+
     const vectorIconStyles = `
-    <!-- 100% Reliable Production Vector Icon Fonts -->
+${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     <link rel="preload" href="/fonts/Ionicons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/MaterialCommunityIcons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/MaterialIcons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
@@ -489,16 +493,36 @@ try {
 
     const webSplashHtml = `
     <style>
-      html, body, #root {
-        background-color: #070c18;
+      html, body {
+        background-color: #070c18 !important;
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
         min-height: 100%;
       }
+      #root {
+        background-color: #070c18;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      #farmsking-web-splash {
+        position: fixed;
+        inset: 0;
+        background: #070c18;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        pointer-events: none;
+        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform;
+      }
     </style>
-    <div id="farmsking-web-splash" style="position: fixed; inset: 0; background: #070c18; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; pointer-events: none; transition: opacity 0.2s ease-out;">
+    <div id="farmsking-web-splash">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 76px; height: 76px; border-radius: 20px; filter: drop-shadow(0 4px 22px rgba(16, 185, 129, 0.5)); margin-bottom: 16px;" />
         <div style="color: #fef08a; font-size: 17px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing Smart Farming</div>
@@ -516,23 +540,24 @@ try {
           var el = document.getElementById('farmsking-web-splash');
           if (el) {
             el.style.opacity = '0';
+            el.style.transform = 'scale(1.02)';
             setTimeout(function() {
               if (el && el.parentNode) el.parentNode.removeChild(el);
-            }, 200);
+            }, 350);
           }
         };
 
-        // Safety fallback: if app takes longer than 2.5s, dismiss automatically so user is never stuck
+        // Safety fallback: if app takes longer than 3000ms, dismiss automatically so user is never stuck
         setTimeout(function() {
           if (!dismissed && window.__dismissFarmsKingSplash) {
             window.__dismissFarmsKingSplash();
           }
-        }, 2500);
+        }, 3000);
       })();
     </script>
     `;
 
-    indexHtml = indexHtml.replace('<div id="root"></div>', `<div id="root">${webSplashHtml}</div>`);
+    indexHtml = indexHtml.replace('<div id="root"></div>', `<div id="root"></div>\n${webSplashHtml}`);
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 

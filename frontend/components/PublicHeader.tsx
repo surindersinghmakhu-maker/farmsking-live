@@ -28,8 +28,8 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
-// ── Streamlined Top Navigation: Core Links ──
-const MAIN_NAV_LINKS = [
+// ── Streamlined Top & Mobile Navigation: Single Source of Truth ──
+export const MAIN_NAV_LINKS = [
   {
     id: 'home',
     label: 'Home',
@@ -83,8 +83,8 @@ const MAIN_NAV_LINKS = [
     id: 'gardening',
     label: 'Gardening',
     path: '/topic/Gardening',
-    icon: 'leaf-outline',
-    activeIcon: 'leaf',
+    icon: 'flower-outline',
+    activeIcon: 'flower',
     image: require('@/assets/images/icon_gardening_3d_clean.png'),
     color: '#e11d48',
     bg: 'rgba(225,29,72,0.1)',
@@ -99,6 +99,7 @@ const MAIN_NAV_LINKS = [
     id: 'store',
     label: 'Agri Store',
     path: '/shop',
+    aliases: ['/agristore'],
     icon: 'storefront-outline',
     activeIcon: 'storefront',
     image: require('@/assets/images/icon_agristore_3d_clean.png'),
@@ -111,7 +112,7 @@ const MAIN_NAV_LINKS = [
     border: 'rgba(249, 115, 22, 0.5)',
     shadow: '#f97316',
   },
-  ];
+];
 
 
 
@@ -248,13 +249,17 @@ export default function PublicHeader({
     pathname === path || (path === '/' && (pathname === '/index' || pathname === ''));
 
   const getNavActiveIndex = () => {
-    if (helplineModalOpen) return 5;
-    if (pathname.startsWith('/shop') || pathname.startsWith('/agristore')) return 4;
-    if (pathname.startsWith('/topic/Gardening') || pathname.includes('Gardening')) return 3;
-    if (pathname.startsWith('/topic/Crop-Doctors') || pathname.includes('Crop-Doctors')) return 2;
-    if (pathname.startsWith('/topic/Farming') || pathname.includes('Farming')) return 1;
-    if (pathname === '/' || pathname === '/index' || pathname === '') return 0;
-    return 0;
+    if (helplineModalOpen) return -1;
+    const foundIdx = MAIN_NAV_LINKS.findIndex((link) => {
+      if (link.path === '/' || link.path === '') {
+        return pathname === '/' || pathname === '/index' || pathname === '';
+      }
+      if ((link as any).aliases && (link as any).aliases.some((a: string) => pathname.startsWith(a))) {
+        return true;
+      }
+      return pathname.startsWith(link.path);
+    });
+    return foundIdx !== -1 ? foundIdx : 0;
   };
 
   const navActiveIndex = getNavActiveIndex();
@@ -264,6 +269,7 @@ export default function PublicHeader({
   const navSlideAnim = useRef(new RNAnimated.Value(initialIndex)).current;
   const [navMeasurements, setNavMeasurements] = useState<{ x: number; width: number }[]>([]);
   const [mobileMeasurements, setMobileMeasurements] = useState<{ x: number; width: number }[]>([]);
+  const [mobileRibbonWidth, setMobileRibbonWidth] = useState(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1073,6 +1079,118 @@ export default function PublicHeader({
           </View>
         </View>
       </Modal>
+
+      {/* ── Fixed Mobile Bottom Ribbon (100% Auto-Synced with MAIN_NAV_LINKS) ── */}
+      {isMobile && (
+        <View
+          style={[
+            styles.mobileBottomRibbon,
+            isDay ? styles.mobileBottomRibbonDay : styles.mobileBottomRibbonNight,
+          ]}
+          onLayout={(e) => {
+            const w = e.nativeEvent.layout.width;
+            if (w > 0 && w !== mobileRibbonWidth) setMobileRibbonWidth(w);
+          }}
+        >
+          {/* Continuous Sliding Glowing Pill Indicator */}
+          {mobileRibbonWidth > 0 && navActiveIndex >= 0 && navActiveIndex < MAIN_NAV_LINKS.length && (
+            <RNAnimated.View
+              style={[
+                styles.mobileRibbonGliderPill,
+                {
+                  width: Math.max(0, mobileRibbonWidth / MAIN_NAV_LINKS.length - 8),
+                  transform: [
+                    {
+                      translateX: navSlideAnim.interpolate({
+                        inputRange: MAIN_NAV_LINKS.map((_, i) => i),
+                        outputRange: MAIN_NAV_LINKS.map(
+                          (i) => i * (mobileRibbonWidth / MAIN_NAV_LINKS.length) + 4
+                        ),
+                        extrapolate: 'clamp',
+                      }),
+                    },
+                  ],
+                  borderColor: MAIN_NAV_LINKS[navActiveIndex]?.border || 'rgba(16, 185, 129, 0.45)',
+                  shadowColor: MAIN_NAV_LINKS[navActiveIndex]?.shadow || '#10b981',
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <LinearGradient
+                colors={
+                  (isDay
+                    ? MAIN_NAV_LINKS[navActiveIndex]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']
+                    : MAIN_NAV_LINKS[navActiveIndex]?.glowNight || ['rgba(16,185,129,0.35)', 'rgba(5,150,105,0.12)']) as [string, string, ...string[]]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <LinearGradient
+                colors={(MAIN_NAV_LINKS[navActiveIndex]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.mobileRibbonGliderLaser}
+              />
+            </RNAnimated.View>
+          )}
+
+          {/* Dynamic Tabs derived directly from MAIN_NAV_LINKS */}
+          {MAIN_NAV_LINKS.map((link, idx) => {
+            const isTabActive = navActiveIndex === idx;
+            return (
+              <TouchableOpacity
+                key={link.id}
+                style={styles.mobileRibbonTabItem}
+                onPress={() => handleNavClick(link)}
+                activeOpacity={0.8}
+              >
+                <View
+                  style={[
+                    styles.mobileRibbonIconWrap,
+                    Platform.OS === 'web'
+                      ? ({
+                          transform: isTabActive ? 'scale(1.15)' : 'scale(1)',
+                          transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        } as any)
+                      : isTabActive
+                      ? { transform: [{ scale: 1.15 }] }
+                      : {},
+                  ]}
+                >
+                  {link.image ? (
+                    <Image
+                      source={link.image}
+                      style={[
+                        styles.mobileRibbonIconImg,
+                        { opacity: isTabActive ? 1 : isDay ? 0.85 : 0.75 },
+                      ]}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Ionicons
+                      name={(isTabActive && link.activeIcon ? link.activeIcon : link.icon) as any}
+                      size={20}
+                      color={isTabActive ? link.color : isDay ? '#64748b' : '#94a3b8'}
+                    />
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.mobileRibbonTabText,
+                    isDay ? styles.mobileRibbonTabTextDay : styles.mobileRibbonTabTextNight,
+                    isTabActive && { color: link.color, fontFamily: FONT.extraBold },
+                    Platform.OS === 'web' ? ({ transition: 'color 0.25s ease' } as any) : {},
+                  ]}
+                  numberOfLines={1}
+                >
+                  {link.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </>
   );
 }
@@ -1955,4 +2073,79 @@ const styles = StyleSheet.create({
   },
   modalInfoTextDay: { color: '#1e293b' },
   modalInfoTextNight: { color: '#cbd5e1' },
+
+  // Mobile Fixed Bottom Ribbon (Synchronized with MAIN_NAV_LINKS)
+  mobileBottomRibbon: {
+    position: 'fixed' as any,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: 'rgba(6, 14, 32, 0.95)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 6,
+    paddingBottom: Platform.OS === 'ios' ? 14 : 2,
+    zIndex: 9999,
+    ...premiumShadow('#000000', 'lg'),
+  },
+  mobileBottomRibbonDay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+    borderTopColor: '#e2e8f0',
+    ...premiumShadow('#0f172a', 'md'),
+  },
+  mobileRibbonGliderPill: {
+    position: 'absolute',
+    top: 5,
+    bottom: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+  },
+  mobileRibbonGliderLaser: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 2.5,
+    borderRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+  },
+  mobileRibbonTabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 5,
+    position: 'relative',
+    zIndex: 2,
+  },
+  mobileRibbonIconWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+  },
+  mobileRibbonIconImg: {
+    width: 21,
+    height: 21,
+  },
+  mobileRibbonTabText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  mobileRibbonTabTextDay: {
+    color: '#64748b',
+  },
 });

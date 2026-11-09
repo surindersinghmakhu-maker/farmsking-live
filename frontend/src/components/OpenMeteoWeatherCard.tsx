@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 
 interface WeatherData {
   temp: number;
@@ -173,10 +174,37 @@ async function getCoordsForPincode(
 export function OpenMeteoWeatherCard() {
   const { user } = useAuth();
   const { colors } = useExecutiveTheme();
+  const { t } = useLanguage();
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [expanded, setExpanded] = useState(false);
+
+  const getLocalizedCondition = (code: number, fallback: string) => {
+    switch (code) {
+      case 0: return t('sunnyClear', 'Sunny Clear Sky');
+      case 1:
+      case 2: return t('partlyCloudy', 'Partly Cloudy');
+      case 3: return t('overcast', 'Overcast Sky');
+      case 61:
+      case 63:
+      case 65:
+      case 80:
+      case 81:
+      case 82: return t('rainExpected', 'Rain Showers');
+      default: return fallback;
+    }
+  };
+
+  const getLocalizedAdvice = (code: number, fallback: string) => {
+    switch (code) {
+      case 0: return t('advisoryGreatDay', 'Great day for crop spraying & field irrigation.');
+      case 1:
+      case 2: return t('advisoryInspectCrop', 'Inspect crop conditions; weather is favorable for spraying.');
+      case 3: return t('advisoryAvoidWind', 'Overcast sky; avoid crop spraying during strong winds.');
+      default: return fallback;
+    }
+  };
 
   const fetchWeather = async () => {
     setLoading(true);
@@ -269,25 +297,28 @@ export function OpenMeteoWeatherCard() {
                 {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PIN WEATHER'}
               </Text>
             </View>
-            <Text style={[styles.locationText, { color: colors.primary }]} numberOfLines={1}>
+            <Text style={[styles.locationText, { color: colors.isDark ? colors.primary : '#0f172a', fontFamily: FONT.extraBold }]} numberOfLines={1}>
               📍 {data?.locationName || (user?.pincode ? `PIN ${user.pincode}` : `${user?.district || 'Punjab'}`)}
             </Text>
           </View>
 
           <View style={styles.headerRight}>
             <TouchableOpacity
-              style={[styles.refreshBtn, colors.isDark && { backgroundColor: '#1e293b' }]}
+              style={[
+                styles.refreshBtn,
+                colors.isDark ? { backgroundColor: '#1e293b' } : { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
+              ]}
               onPress={(e) => {
                 e.stopPropagation?.();
                 fetchWeather();
               }}
             >
-              <Ionicons name="refresh" size={13} color={colors.primary} />
+              <Ionicons name="refresh" size={13} color={colors.isDark ? colors.primary : '#0f172a'} />
             </TouchableOpacity>
             <Ionicons
               name={expanded ? 'chevron-up-circle-outline' : 'chevron-down-circle-outline'}
               size={18}
-              color={colors.primary}
+              color={colors.isDark ? colors.primary : '#0f172a'}
             />
           </View>
         </View>
@@ -295,11 +326,11 @@ export function OpenMeteoWeatherCard() {
         {loading ? (
           <View style={styles.centerBoxCompact}>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Fetching live weather...</Text>
+            <Text style={[styles.loadingText, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Fetching live weather...</Text>
           </View>
         ) : error || !data ? (
           <View style={styles.centerBoxCompact}>
-            <Text style={[styles.errorText, { color: colors.textMuted }]}>Weather service unavailable</Text>
+            <Text style={[styles.errorText, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Weather service unavailable</Text>
             <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={fetchWeather}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
@@ -309,13 +340,13 @@ export function OpenMeteoWeatherCard() {
             {/* Collapsed Compact Row */}
             {!expanded && (
               <>
-                <View style={[styles.compactBar, { backgroundColor: colors.isDark ? '#1e293b' : '#f8fafc', borderColor: colors.isDark ? '#334155' : '#f1f5f9' }]}>
+                <View style={[styles.compactBar, { backgroundColor: colors.isDark ? '#1e293b' : '#f8fafc', borderColor: colors.isDark ? '#334155' : '#cbd5e1' }]}>
                 <View style={styles.compactBarLeft}>
-                  <Ionicons name={data.conditionIcon} size={24} color={colors.primary} />
-                  <Text style={[styles.compactTempText, { color: colors.text }]}>{data.temp}°C</Text>
-                  <Text style={[styles.compactConditionText, { color: colors.primary }]} numberOfLines={1}>{data.conditionText}</Text>
+                  <Ionicons name={data.conditionIcon} size={24} color={colors.isDark ? colors.primary : '#0284c7'} />
+                  <Text style={[styles.compactTempText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]}>{data.temp}°C</Text>
+                  <Text style={[styles.compactConditionText, { color: colors.isDark ? colors.primary : '#0369a1' }]} numberOfLines={1}>{data.conditionText}</Text>
                   <View style={styles.metricDotDivider} />
-                  <Text style={[styles.compactMetricsText, { color: colors.textMuted }]} numberOfLines={1}>
+                  <Text style={[styles.compactMetricsText, { color: colors.isDark ? '#94a3b8' : '#1e293b' }]} numberOfLines={1}>
                     💧 {data.humidity}% · 💨 {data.windSpeed}km/h
                   </Text>
                 </View>
@@ -338,7 +369,7 @@ export function OpenMeteoWeatherCard() {
                     { color: data.isSpraySafe ? '#166534' : '#991b1b' },
                   ]}
                 >
-                  {data.isSpraySafe ? 'Spray Safe' : 'Avoid Spray'}
+                  {data.isSpraySafe ? t('spraySafe', 'Spray Safe') : t('sprayUnsafe', 'Avoid Spray')}
                 </Text>
               </View>
               </>
@@ -353,20 +384,20 @@ export function OpenMeteoWeatherCard() {
                   <Ionicons name={data.conditionIcon} size={36} color="#0284c7" />
                   <View>
                     <Text style={styles.mainTempText}>{data.temp}°C</Text>
-                    <Text style={styles.feelsLikeText}>Feels like {data.feelsLike}°C</Text>
+                    <Text style={styles.feelsLikeText}>{t('temperature', 'Feels like')} {data.feelsLike}°C</Text>
                   </View>
                 </View>
 
                 <View style={styles.detailSection}>
-                  <Text style={styles.expandedConditionText}>{data.conditionText}</Text>
+                  <Text style={styles.expandedConditionText}>{getLocalizedCondition(data.weatherCode, data.conditionText)}</Text>
                   <View style={styles.metricsPillsRow}>
                     <View style={styles.metricChip}>
                       <Ionicons name="water-outline" size={11} color="#0284c7" />
-                      <Text style={styles.metricChipText}>Humidity {data.humidity}%</Text>
+                      <Text style={styles.metricChipText}>{t('humidity', 'Humidity')} {data.humidity}%</Text>
                     </View>
                     <View style={styles.metricChip}>
                       <Ionicons name="navigate-outline" size={11} color="#0369a1" />
-                      <Text style={styles.metricChipText}>Wind {data.windSpeed}km/h</Text>
+                      <Text style={styles.metricChipText}>{t('windSpeed', 'Wind')} {data.windSpeed}km/h</Text>
                     </View>
                   </View>
                 </View>
@@ -393,7 +424,7 @@ export function OpenMeteoWeatherCard() {
                     { color: data.isSpraySafe ? '#15803d' : '#991b1b' },
                   ]}
                 >
-                  {data.advice}
+                  {getLocalizedAdvice(data.weatherCode, data.advice)}
                 </Text>
               </View>
 

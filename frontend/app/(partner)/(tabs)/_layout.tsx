@@ -1,11 +1,13 @@
 import { Tabs, useRouter, usePathname } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView, Animated, LayoutChangeEvent } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { AnimatedPurpleBottomBar } from '@/components/ui/AnimatedPurpleBottomBar';
 import { RoleThemes, UserRole } from '@/constants/Colors';
+import { ROLE_TABS, TabName, getTabsForRole, RoleTabItem } from '@/constants/RoleTabs';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useRole } from '@/src/store/role-context';
 import { useAuth } from '@/src/store/auth-context';
@@ -83,32 +85,6 @@ const badgeStyles = StyleSheet.create({
   },
 });
 
-type TabName =
-  | 'index' | 'shop' | 'ai-doctor' | 'admin_shop' | 'farm' | 'garden' | 'records' | 'market' | 'more' | 'admin_more'
-  | 'categories' | 'cart' | 'orders'
-  | 'farmers' | 'schedule' | 'chat'
-  | 'referrals' | 'wallet'
-  | 'admin-orders' | 'admin-products'
-  | 'super-users' | 'super-coupons' | 'super-accounts' | 'super-settings'
-  | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders' | 'trainer-dashboard';
-
-const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'farm', 'records', 'shop', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
-  CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
-  ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
-  OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
-  LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
-  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'shop', 'wallet', 'more'] },
-};
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
@@ -161,9 +137,135 @@ export default function TabLayout() {
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
-  const { colors } = useExecutiveTheme();
+  const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'farm', 'records', 'shop', 'more']);
+
+  const roleTabs = getTabsForRole(role);
+
+  // Robust tab identification by exact route matching
+  const getActiveTabKey = (): string => {
+    const isHome =
+      pathname === '/' ||
+      pathname === '/(partner)/(tabs)' ||
+      pathname === '/(partner)/(tabs)/index' ||
+      pathname === '/(tabs)' ||
+      pathname === '/(tabs)/index' ||
+      pathname === '';
+    if (isHome) {
+      const homeTab = roleTabs.find((t) => t.tabName === 'index');
+      return homeTab ? homeTab.tabName : roleTabs[0]?.tabName || 'index';
+    }
+    const segments = pathname.replace(/^\/+|\/+$/g, '').split('/');
+    const matched = roleTabs.find((t) => {
+      if (t.tabName === 'index') return false;
+      return (
+        segments.includes(t.tabName) ||
+        pathname === `/${t.tabName}` ||
+        pathname.startsWith(`/${t.tabName}/`) ||
+        pathname.includes(`/(tabs)/${t.tabName}`)
+      );
+    });
+    return matched ? matched.tabName : roleTabs[0]?.tabName || 'index';
+  };
+
+  const activeTabKey = getActiveTabKey();
+  const activeIndex = Math.max(0, roleTabs.findIndex((t) => t.tabName === activeTabKey));
+  const currentTab = roleTabs[activeIndex] || roleTabs[0];
+
+  // Robust direct-pixel tab gliding animation (ISO 4D executive standard, zero desync)
+  const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const widthAnim = useRef(new Animated.Value(0)).current;
+  const pillOpacity = useRef(new Animated.Value(0)).current;
+  const [layoutVersion, setLayoutVersion] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const triggerTabsAnimation = () => {
+    fadeAnim.setValue(0.35);
+    Animated.spring(fadeAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 70,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  };
+
+  const animatePillToKey = (key: string, immediate = false) => {
+    const layout = tabLayouts.current[key];
+    if (layout && layout.width > 0) {
+      if (immediate) {
+        slideAnim.setValue(layout.x);
+        widthAnim.setValue(layout.width);
+        pillOpacity.setValue(1);
+      } else {
+        Animated.parallel([
+          Animated.spring(slideAnim, {
+            toValue: layout.x,
+            tension: 80,
+            friction: 9,
+            useNativeDriver: false,
+          }),
+          Animated.spring(widthAnim, {
+            toValue: layout.width,
+            tension: 80,
+            friction: 9,
+            useNativeDriver: false,
+          }),
+          Animated.timing(pillOpacity, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    }
+  };
+
+  useEffect(() => {
+    animatePillToKey(activeTabKey);
+    triggerTabsAnimation();
+  }, [activeTabKey, pathname, layoutVersion, role]);
+
+  const handleTabPress = (tabItem: RoleTabItem) => {
+    animatePillToKey(tabItem.tabName);
+    triggerTabsAnimation();
+    router.push(tabItem.path as any);
+  };
+
+  const handleNavLayout = (key: string, e: LayoutChangeEvent) => {
+    const { x, width: w } = e.nativeEvent.layout;
+    if (w > 0) {
+      tabLayouts.current[key] = { x, width: w };
+      setLayoutVersion((v) => v + 1);
+      if (key === activeTabKey) {
+        slideAnim.setValue(x);
+        widthAnim.setValue(w);
+        pillOpacity.setValue(1);
+      }
+    }
+  };
+
+  const getTabColor = (tabItem: RoleTabItem, isActive: boolean) => {
+    if (isActive) {
+      if (isDark) return tabItem.color;
+      switch (tabItem.tabName) {
+        case 'index':
+        case 'farm':
+          return '#15803d';
+        case 'records':
+          return '#0284c7';
+        case 'shop':
+          return '#c2410c';
+        case 'more':
+        case 'admin_more':
+          return '#7e22ce';
+        default:
+          return '#15803d';
+      }
+    }
+    return isDark ? '#94a3b8' : '#0f172a';
+  };
 
   const isChatCapable = !!user && CHAT_CAPABLE_ROLES.has(user.role);
   useGlobalChatUnreadSync(isChatCapable);
@@ -192,47 +294,83 @@ export default function TabLayout() {
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
   };
 
-  const handleNavigate = (tabName: TabName) => {
-    if (tabName === 'index') {
-      router.push('/' as any);
-    } else {
-      router.push(`/${tabName}` as any);
-    }
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* 💻 DESKTOP TOP NAVIGATION HEADER MENU (Visible on screens >= 768px) */}
       {isDesktop && (
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)' as any)}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(partner)/(tabs)' as any)}>
               <BrandLogo height={34} width={116} useFastBundledOnly={true} dark={colors.isDark} resizeMode="contain" />
             </TouchableOpacity>
           </View>
 
-          {/* Desktop Links Menu */}
+          {/* Desktop Links Menu with 4D Continuous Gliding Spring Pill */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavRow}>
-            {config.tabs.map((tabName) => {
-              const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-              const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
-              const isActive = isIndexActive || isOtherActive;
-              const title = getTabTitle(tabName);
-              const iconName = getTabIcon(tabName, isActive);
-
-              return (
-                <TouchableOpacity
-                  key={tabName}
-                  style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
-                  onPress={() => handleNavigate(tabName)}
+            <View style={desktopStyles.menuNavWrapper}>
+              {Boolean(tabLayouts.current[currentTab?.tabName]) && (
+                <Animated.View
+                  style={[
+                    desktopStyles.desktopGlidingPill,
+                    {
+                      left: slideAnim,
+                      width: widthAnim,
+                      opacity: pillOpacity,
+                      borderColor: currentTab?.border || '#00ff87',
+                      shadowColor: currentTab?.shadow || '#00ff87',
+                    },
+                  ]}
+                  pointerEvents="none"
                 >
-                  <Ionicons name={iconName} size={17} color={isActive ? colors.primary : colors.tabBarInactive} />
-                  <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
-                    {title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  <LinearGradient
+                    colors={currentTab?.glow as [string, string, ...string[]]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <LinearGradient
+                    colors={currentTab?.laser as [string, string, ...string[]]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={desktopStyles.desktopLaserBar}
+                  />
+                </Animated.View>
+              )}
+
+              {roleTabs.map((tab, idx) => {
+                const isActive = tab.tabName === activeTabKey || idx === activeIndex;
+                const tabColor = getTabColor(tab, isActive);
+
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    onLayout={(e) => handleNavLayout(tab.tabName, e)}
+                    style={[
+                      desktopStyles.navMenuItem,
+                      isActive && desktopStyles.navMenuItemActiveZ,
+                    ]}
+                    onPress={() => handleTabPress(tab)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={isActive ? tab.icon : tab.iconOutline}
+                      size={17}
+                      color={tabColor}
+                    />
+                    <Text
+                      style={[
+                        desktopStyles.navMenuItemText,
+                        { color: tabColor },
+                        isActive && { color: tabColor, fontFamily: FONT.extraBold },
+                        !isDark && !isActive && { color: '#0f172a', fontWeight: '700' },
+                      ]}
+                    >
+                      {getTabTitle(tab.tabName)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
 
           {/* Right Header Actions */}
@@ -260,39 +398,88 @@ export default function TabLayout() {
               );
             })()}
 
-            <View style={desktopStyles.langSwitcherBox}>
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('pa')}
+            {/* ☀️ / 🌙 Desktop Light / Dark Toggle */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.themeToggleBtn,
+                isDark ? desktopStyles.themeToggleBtnDark : desktopStyles.themeToggleBtnLight,
+              ]}
+              activeOpacity={0.8}
+              onPress={toggleThemeMode}
+            >
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={14}
+                color={isDark ? '#f59e0b' : '#0f172a'}
+              />
+              <Text
+                style={[
+                  desktopStyles.themeToggleBtnText,
+                  { color: isDark ? '#ffffff' : '#0f172a' },
+                ]}
               >
-                <Text style={[desktopStyles.langBtnText, language === 'pa' && desktopStyles.langBtnTextActive]}>ਪੰਜਾਬੀ</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'hi' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('hi')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'hi' && desktopStyles.langBtnTextActive]}>हिंदी</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'en' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('en')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'en' && desktopStyles.langBtnTextActive]}>ENG</Text>
-              </TouchableOpacity>
-            </View>
+                {isDark ? 'Light' : 'Dark'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* 📱 TABS VIEW CONTAINER (Bottom tabs hide on Desktop, show on Mobile) */}
-      <View style={{ flex: 1 }}>
+      {/* 📱 MOBILE TOP HEADER BAR */}
+      {!isDesktop && (
+        <View style={[desktopStyles.headerBar, { height: 52, paddingHorizontal: 12, backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}>
+          <View style={desktopStyles.headerLeft}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(partner)/(tabs)' as any)}>
+              <BrandLogo height={28} width={96} useFastBundledOnly={true} dark={colors.isDark} resizeMode="contain" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {/* ☀️ / 🌙 PC-View Style Light / Dark Toggle */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.themeToggleBtn,
+                isDark ? desktopStyles.themeToggleBtnDark : desktopStyles.themeToggleBtnLight,
+                { paddingHorizontal: 9, paddingVertical: 5 },
+              ]}
+              activeOpacity={0.8}
+              onPress={toggleThemeMode}
+            >
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={14}
+                color={isDark ? '#f59e0b' : '#0f172a'}
+              />
+              <Text
+                style={[
+                  desktopStyles.themeToggleBtnText,
+                  { color: isDark ? '#ffffff' : '#0f172a' },
+                ]}
+              >
+                {isDark ? 'Light' : 'Dark'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 📱 TABS VIEW CONTAINER (Animated 4D Smooth Motion on tab switch) */}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <Tabs
-          tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
+          tabBar={(props: any) => (
+            <AnimatedPurpleBottomBar
+              {...props}
+              allowedTabs={config.tabs}
+              onTabPressTrigger={triggerTabsAnimation}
+            />
+          )}
           screenOptions={{
             headerShown: false,
             animation: 'fade',
+            sceneStyle: {
+              flex: 1,
+              paddingBottom: isDesktop ? 0 : (Platform.OS === 'ios' ? 70 : 60),
+            },
           }}>
           {(() => {
             const tabOrder = [
@@ -428,7 +615,7 @@ export default function TabLayout() {
           />
         </Tabs>
 
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -463,17 +650,52 @@ const desktopStyles = StyleSheet.create({
   menuNavRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+  },
+  menuNavWrapper: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    borderRadius: RADIUS.pill,
+  },
+  desktopGlidingPill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+  },
+  desktopLaserBar: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 2,
+    borderRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
   },
   navMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
     backgroundColor: 'transparent',
+    zIndex: 2,
+  },
+  navMenuItemActiveZ: {
+    zIndex: 3,
   },
   navMenuItemActive: {
     backgroundColor: 'rgba(56, 189, 248, 0.12)',
@@ -533,5 +755,27 @@ const desktopStyles = StyleSheet.create({
   },
   langBtnTextActive: {
     color: '#0f172a',
+  },
+  themeToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  themeToggleBtnDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  themeToggleBtnLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    ...premiumShadow('rgba(0, 0, 0, 0.06)', 'sm'),
+  },
+  themeToggleBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
   },
 });

@@ -101,6 +101,26 @@ export class AppSettingsController {
   getPublicMasterData() {
     return this.appSettingsService.getPublicMasterData();
   }
+
+  /** Get live website visitor telemetry */
+  @Get('visitor-stats')
+  getVisitorStats() {
+    return this.appSettingsService.getVisitorStats();
+  }
+
+  /** Public endpoint to record a page visit */
+  @Post('record-visit')
+  recordVisit(@Body() dto: { device?: string; path?: string }) {
+    return this.appSettingsService.recordVisit(dto);
+  }
+
+  /** Update visitor counter baseline (Super Admin only) */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Patch('visitor-stats')
+  updateVisitorStats(@CurrentUser() user: AuthUser, @Body() dto: any) {
+    return this.appSettingsService.updateVisitorStats(user, dto);
+  }
 }
 
 /** Public unauthenticated endpoint for website visitors & app public screens */

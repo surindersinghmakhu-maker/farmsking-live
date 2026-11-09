@@ -20,6 +20,12 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|otf|ttf|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
+    }
+
     location = /index.html {
         add_header Cache-Control "no-store, no-cache, must-revalidate";
     }
@@ -58,6 +64,12 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|otf|ttf|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        access_log off;
     }
 
     location = /index.html {

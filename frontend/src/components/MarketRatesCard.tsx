@@ -12,6 +12,7 @@ import { formatInr } from '../utils/formatInr';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 import { useExecutiveTheme } from '../store/theme-context';
+import { useLanguage } from '../store/language-context';
 
 const theme = RoleThemes.FARMER;
 
@@ -879,18 +880,19 @@ export function MarketRatesCard() {
   };
 
   const { colors } = useExecutiveTheme();
+  const { t } = useLanguage();
   const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
 
   return (
     <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm'), { position: 'relative', overflow: 'hidden' }]}>
       {/* Subtle Background Watermark Grid */}
-      <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
+      <View style={[styles.posterWatermarkGridContainer, { opacity: colors.isDark ? 0.08 : 0.03 }]} pointerEvents="none">
         {Array.from({ length: 6 }).map((_, rowIndex) => (
           <View key={rowIndex} style={styles.posterWatermarkRow}>
             {Array.from({ length: 3 }).map((_, colIndex) => (
               <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
                 <BrandLogo size={14} useGoldRing />
-                <Text style={[styles.posterWatermarkTileText, colors.isDark && { color: 'rgba(255, 255, 255, 0.06)' }]}>FarmsKing</Text>
+                <Text style={[styles.posterWatermarkTileText, { color: colors.isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.04)' }]}>FarmsKing</Text>
               </View>
             ))}
           </View>
@@ -900,36 +902,36 @@ export function MarketRatesCard() {
       {/* Compact Header with LIVE Indicator */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={[styles.title, { color: colors.text }]}>Your Crop Prices</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('cropPricesLive', 'Your Crop Prices')}</Text>
           <View style={styles.liveBadge}>
             <View style={styles.redDot} />
             <Text style={styles.liveText}>LIVE 24H</Text>
           </View>
         </View>
 
-        <View style={styles.pill}>
-          <Ionicons name="time-outline" size={10} color={theme.primary} />
-          <Text style={styles.pillText}>Previous 24 hrs</Text>
+        <View style={[styles.pill, !colors.isDark && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
+          <Ionicons name="time-outline" size={10} color={colors.isDark ? theme.primary : '#15803d'} />
+          <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>Previous 24 hrs</Text>
         </View>
       </View>
 
       {isLoading ? (
         <ActivityIndicator color={theme.primary} style={styles.spinner} />
       ) : isError ? (
-        <Text style={styles.emptyText}>Could not load crop prices right now.</Text>
+        <Text style={[styles.emptyText, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>{t('noMandiData', 'Could not load crop prices right now.')}</Text>
       ) : (
         <>
           {/* Table Header */}
-          <View style={styles.columnHeaderRow}>
-            <Text style={[styles.columnHeader, styles.cropColumn]}>YOUR CROP</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn]}>LOCAL ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn]}>ALL INDIA</Text>
-            <Text style={[styles.columnHeader, styles.shareColumn]}>SHARE</Text>
+          <View style={[styles.columnHeaderRow, { borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
+            <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'LOCAL')} ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('nationalMandi', 'ALL INDIA')}</Text>
+            <Text style={[styles.columnHeader, styles.shareColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('shareRates', 'SHARE')}</Text>
           </View>
 
           {/* Subcategory Rates List */}
           {subcategoryRates.length === 0 ? (
-            <Text style={[styles.emptyText, { textAlign: 'center', marginVertical: 8 }]}>
+            <Text style={[styles.emptyText, { textAlign: 'center', marginVertical: 8, color: colors.isDark ? '#94a3b8' : '#334155' }]}>
               No active crops to show live prices right now.
             </Text>
           ) : (
@@ -938,7 +940,7 @@ export function MarketRatesCard() {
               const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
 
               return (
-                <View key={rate.displayTitle} style={styles.row}>
+                <View key={rate.displayTitle} style={[styles.row, { borderTopColor: colors.isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }]}>
                   {/* 1. Crop Name (Clickable to open Multi-Mandi State-wise comparison) */}
                   <TouchableOpacity
                     style={styles.cropColumn}
@@ -949,12 +951,12 @@ export function MarketRatesCard() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                      <Text style={styles.cropNameClickable} numberOfLines={1}>
+                      <Text style={[styles.cropNameClickable, { color: colors.isDark ? '#38bdf8' : '#1d4ed8' }]} numberOfLines={1}>
                         {rate.displayTitle}
                       </Text>
-                      <Ionicons name="stats-chart" size={11} color="#2563eb" />
+                      <Ionicons name="stats-chart" size={11} color={colors.isDark ? '#38bdf8' : '#2563eb'} />
                     </View>
-                    <Text style={styles.cropUnitSub}>Per {rate.unit}</Text>
+                    <Text style={[styles.cropUnitSub, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Per {rate.unit}</Text>
                   </TouchableOpacity>
 
                   {/* 2. Local (State) Rate Box */}
@@ -962,8 +964,8 @@ export function MarketRatesCard() {
                     {hasLocal ? (
                       <View style={styles.rateDetailBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
-                          <Text style={styles.rateLabelPrefix}>Avg: </Text>
-                          <Text style={styles.rateValueAvg}>{formatInr(rate.localAvgRate!)}</Text>
+                          <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Avg: </Text>
+                          <Text style={[styles.rateValueAvg, { color: colors.isDark ? colors.primary : '#15803d' }]}>{formatInr(rate.localAvgRate!)}</Text>
                         </View>
                         <View style={styles.minMaxRow}>
                           <Text style={styles.minText}>
@@ -975,7 +977,7 @@ export function MarketRatesCard() {
                         </View>
                       </View>
                     ) : (
-                      <Text style={styles.dashText}>-</Text>
+                      <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#1e293b' }]}>-</Text>
                     )}
                   </View>
 
@@ -984,8 +986,8 @@ export function MarketRatesCard() {
                     {hasNational ? (
                       <View style={styles.rateDetailBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
-                          <Text style={styles.rateLabelPrefix}>Avg: </Text>
-                          <Text style={[styles.rateValueAvg, { color: '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
+                          <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Avg: </Text>
+                          <Text style={[styles.rateValueAvg, { color: colors.isDark ? '#ffffff' : '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
                         </View>
                         <View style={styles.minMaxRow}>
                           <Text style={styles.minText}>
@@ -997,7 +999,7 @@ export function MarketRatesCard() {
                         </View>
                       </View>
                     ) : (
-                      <Text style={styles.dashText}>-</Text>
+                      <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#1e293b' }]}>-</Text>
                     )}
                   </View>
 
@@ -1452,9 +1454,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f1f5f9',
   },
   columnHeader: {
-    fontSize: 9.5,
+    fontSize: 10.5,
     fontFamily: FONT.extraBold,
-    color: '#64748b',
+    color: '#0f172a',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -1479,18 +1481,18 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   cropUnitSub: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
-    color: '#64748b',
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#334155',
     marginTop: 1,
   },
   rateDetailBox: {
     gap: 2,
   },
   rateLabelPrefix: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#334155',
   },
   rateValueAvg: {
     fontSize: 13,
@@ -1513,9 +1515,9 @@ const styles = StyleSheet.create({
     color: '#dc2626',
   },
   dashText: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#94a3b8',
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#1e293b',
   },
   shareColumn: { width: 36, alignItems: 'center' },
   shareButton: {

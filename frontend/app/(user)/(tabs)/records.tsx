@@ -58,6 +58,7 @@ import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 
 const theme = RoleThemes.FARMER;
 
@@ -207,6 +208,8 @@ const LABOUR_WORK_TYPES = [
 ];
 
 export default function RecordsScreen() {
+  const { colors, isDark } = useExecutiveTheme();
+  const { t, language } = useLanguage();
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const { user } = useAuth();
@@ -468,49 +471,60 @@ export default function RecordsScreen() {
           alignItems: 'center',
           paddingHorizontal: 8,
           paddingVertical: 8,
-          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+          backgroundColor: isDark
+            ? (idx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)')
+            : (idx % 2 === 0 ? '#ffffff' : '#f8fafc'),
           borderBottomWidth: 1,
-          borderBottomColor: '#f1f5f9',
+          borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
           minWidth: 720,
         }}
       >
         {/* 1. Bill No */}
         <View style={{ width: 75 }}>
-          <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 72 }}>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>
+          <View style={{
+            backgroundColor: isDark ? 'rgba(56, 189, 248, 0.15)' : '#eff6ff',
+            borderWidth: 1,
+            borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#bfdbfe',
+            borderRadius: 4,
+            paddingHorizontal: 4,
+            paddingVertical: 1,
+            alignSelf: 'flex-start',
+            maxWidth: 72,
+          }}>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: isDark ? '#38bdf8' : '#1d4ed8' }} numberOfLines={1}>
               {formattedBillNo}
             </Text>
           </View>
         </View>
 
         {/* 2. Date */}
-        <Text style={{ width: 70, fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>
+        <Text style={{ width: 70, fontSize: 10, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569' }}>
           {displayDateStr}
         </Text>
 
         {/* 3. Party */}
         <View style={{ width: 105, paddingRight: 4 }}>
-          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
             🤝 {buyerDisplayName}
           </Text>
         </View>
 
         {/* 4. Bill Items */}
         <View style={{ flex: 1.5, minWidth: 140, paddingRight: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#16a34a' }} numberOfLines={2}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: isDark ? '#4ade80' : '#16a34a' }} numberOfLines={2}>
             🌾 {cropDetailText}
           </Text>
         </View>
 
         {/* 5. Net Sale Amount */}
-        <Text style={{ width: 100, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right', paddingRight: 6 }}>
+        <Text style={{ width: 100, fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', textAlign: 'right', paddingRight: 6 }}>
           ₹{billTotal.toLocaleString('en-IN')}
         </Text>
 
         {/* 6. Received Amount Column */}
         <View style={{ width: 110, alignItems: 'flex-end', paddingRight: 6 }}>
           {rcvdAmtVal > 0 ? (
-            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626' }}>
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#f87171' : '#dc2626' }}>
               {rcvdMode}: -₹{rcvdAmtVal.toLocaleString('en-IN')}
             </Text>
           ) : (
@@ -525,9 +539,9 @@ export default function RecordsScreen() {
               width: 26,
               height: 26,
               borderRadius: 13,
-              backgroundColor: '#f0fdf4',
+              backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
               borderWidth: 1,
-              borderColor: '#bbf7d0',
+              borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -543,9 +557,9 @@ export default function RecordsScreen() {
               width: 26,
               height: 26,
               borderRadius: 13,
-              backgroundColor: '#eff6ff',
+              backgroundColor: isDark ? 'rgba(2, 132, 199, 0.2)' : '#eff6ff',
               borderWidth: 1,
-              borderColor: '#bfdbfe',
+              borderColor: isDark ? 'rgba(2, 132, 199, 0.4)' : '#bfdbfe',
               alignItems: 'center',
               justifyContent: 'center',
             }}
@@ -553,7 +567,7 @@ export default function RecordsScreen() {
             onPress={() => openBillPreviewForSale(item)}
             hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
           >
-            <Ionicons name="download-outline" size={13} color="#2563eb" />
+            <Ionicons name="download-outline" size={13} color={isDark ? '#38bdf8' : '#2563eb'} />
           </TouchableOpacity>
         </View>
       </View>
@@ -719,7 +733,7 @@ export default function RecordsScreen() {
   const [wasEditingBill, setWasEditingBill] = useState(false);
 
   // Handle incoming route params (e.g. action: 'NEW_SALE' or action: 'NEW_EXPENSE' from Quick Accounts Card)
-  const { action, t } = useLocalSearchParams<{ action?: string; t?: string }>();
+  const { action, t: paramTimestamp } = useLocalSearchParams<{ action?: string; t?: string }>();
 
   useEffect(() => {
     if (action === 'NEW_SALE') {
@@ -743,7 +757,7 @@ export default function RecordsScreen() {
     } else if (action === 'PARTIES') {
       if (canViewParties) setRecordType('PARTIES');
     }
-  }, [action, t, canViewSales, canAddSales, canViewExpenses, canAddExpenses, canViewLabour, canViewParties]);
+  }, [action, paramTimestamp, canViewSales, canAddSales, canViewExpenses, canAddExpenses, canViewLabour, canViewParties]);
 
   const handleOpenEditSale = async (item: CropSaleRecord) => {
     tap();
@@ -2331,18 +2345,16 @@ export default function RecordsScreen() {
     setShowVoucherSlipModal(true);
   };
 
-  const { colors } = useExecutiveTheme();
-
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Header */}
       <LinearGradient colors={colors.headerGradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Accounts</Text>
-        <Text style={styles.heroSubtitle}>Track sales revenue & combined farm expenses</Text>
+        <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>Accounts</Text>
+        <Text style={[styles.heroSubtitle, { color: isDark ? 'rgba(255,255,255,0.85)' : '#334155' }]}>Track sales revenue & combined farm expenses</Text>
 
         {/* Tab Switcher */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ marginTop: 16 }}>
-          <View style={styles.subTabBar}>
+          <View style={[styles.subTabBar, { backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "#f1f5f9", borderColor: isDark ? colors.cardBorder : "#cbd5e1", borderWidth: 1 }]}>
             <Animated.View
               style={{
                 position: 'absolute',
@@ -2350,8 +2362,10 @@ export default function RecordsScreen() {
                 bottom: 4,
                 left: tabSlideAnim,
                 width: tabWidthAnim,
-                backgroundColor: '#ffffff',
+                backgroundColor: isDark ? '#04160c' : '#ffffff',
                 borderRadius: 6,
+                borderWidth: 1,
+                borderColor: isDark ? '#00ff87' : '#cbd5e1',
                 ...premiumShadow('rgba(0,0,0,0.18)', 'xs'),
               }}
             />
@@ -2362,8 +2376,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('OVERVIEW'); }}
               >
-                <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'OVERVIEW' && styles.subTabTextActive]}>Overview</Text>
+                <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'OVERVIEW' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('overview', 'Overview')}</Text>
               </TouchableOpacity>
             )}
 
@@ -2374,8 +2388,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('SALES'); }}
               >
-                <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'SALES' && styles.subTabTextActive]}>Sales</Text>
+                <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'SALES' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('sales', 'Sales')}</Text>
               </TouchableOpacity>
             )}
 
@@ -2386,8 +2400,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('EXPENSES'); }}
               >
-                <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'EXPENSES' && styles.subTabTextActive]}>Expenses</Text>
+                <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'EXPENSES' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('expenses', 'Expenses')}</Text>
               </TouchableOpacity>
             )}
 
@@ -2398,8 +2412,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('ANALYSIS'); }}
               >
-                <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'ANALYSIS' && styles.subTabTextActive]}>Payments</Text>
+                <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'ANALYSIS' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('payments', 'Payments')}</Text>
               </TouchableOpacity>
             )}
 
@@ -2410,8 +2424,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('LABOUR'); }}
               >
-                <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'LABOUR' && styles.subTabTextActive]}>Labour</Text>
+                <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'LABOUR' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('labour', 'Labour')}</Text>
               </TouchableOpacity>
             )}
 
@@ -2422,8 +2436,8 @@ export default function RecordsScreen() {
                 activeOpacity={0.8}
                 onPress={() => { tap(); setRecordType('PARTIES'); }}
               >
-                <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? theme.primary : '#ffffff'} />
-                <Text style={[styles.subTabText, recordType === 'PARTIES' && styles.subTabTextActive]}>Parties</Text>
+                <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? (isDark ? '#00ff87' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+                <Text style={[styles.subTabText, { color: isDark ? '#ffffff' : '#0f172a' }, recordType === 'PARTIES' && (isDark ? { color: '#00ff87', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })]}>{t('parties', 'Parties')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -2441,9 +2455,9 @@ export default function RecordsScreen() {
             /* CROP SALES TAB */
             <View style={{ flex: 1 }}>
               {/* Sales Summary Bar */}
-              <View style={styles.summaryBar}>
+              <View style={[styles.summaryBar, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderBottomColor: colors.cardBorder }]}>
                 <View>
-                  <Text style={styles.totalLabel}>Total Sales Revenue</Text>
+                  <Text style={[styles.totalLabel, isDark && { color: colors.textMuted }]}>Total Sales Revenue</Text>
                   <Text style={styles.salesValue}>{formatInr(totalSalesRevenue)}</Text>
                 </View>
                 {canAddSales && (
@@ -2475,7 +2489,7 @@ export default function RecordsScreen() {
                 ).map((mode) => (
                   <TouchableOpacity
                     key={mode.id}
-                    style={[styles.salesViewModeChip, salesViewMode === mode.id && styles.salesViewModeChipActive]}
+                    style={[styles.salesViewModeChip, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, salesViewMode === mode.id && styles.salesViewModeChipActive]}
                     activeOpacity={0.8}
                     onPress={() => {
                       tap();
@@ -2483,7 +2497,7 @@ export default function RecordsScreen() {
                       setExpandedSalesGroup(null);
                     }}
                   >
-                    <Text style={[styles.salesViewModeChipText, salesViewMode === mode.id && styles.salesViewModeChipTextActive]}>
+                    <Text style={[styles.salesViewModeChipText, isDark && { color: colors.text }, salesViewMode === mode.id && styles.salesViewModeChipTextActive]}>
                       {mode.label}
                     </Text>
                   </TouchableOpacity>
@@ -2496,9 +2510,9 @@ export default function RecordsScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  backgroundColor: '#f8fafc',
+                  backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                   borderWidth: 1,
-                  borderColor: '#cbd5e1',
+                  borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                   borderRadius: RADIUS.md,
                   paddingHorizontal: 10,
                   paddingVertical: 8,
@@ -2507,28 +2521,28 @@ export default function RecordsScreen() {
                 }}>
                   {/* From Date */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>FROM DATE</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b', marginBottom: 2 }}>FROM DATE</Text>
                     <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: isDark ? '#0b1329' : '#fff', borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
                       onPress={() => { tap(); setShowFromDatePicker(true); }}
                       activeOpacity={0.8}
                     >
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(salesFromDate)}</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{formatDateDDMMYYYY(salesFromDate)}</Text>
                       <Ionicons name="calendar" size={14} color="#16a34a" />
                     </TouchableOpacity>
                   </View>
 
-                  <Ionicons name="arrow-forward" size={14} color="#64748b" style={{ marginTop: 12 }} />
+                  <Ionicons name="arrow-forward" size={14} color={isDark ? colors.textMuted : '#64748b'} style={{ marginTop: 12 }} />
 
                   {/* To Date */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>TO DATE</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b', marginBottom: 2 }}>TO DATE</Text>
                     <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: isDark ? '#0b1329' : '#fff', borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
                       onPress={() => { tap(); setShowToDatePicker(true); }}
                       activeOpacity={0.8}
                     >
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(salesToDate)}</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{formatDateDDMMYYYY(salesToDate)}</Text>
                       <Ionicons name="calendar" size={14} color="#16a34a" />
                     </TouchableOpacity>
                   </View>
@@ -2553,16 +2567,16 @@ export default function RecordsScreen() {
 
               {activeSalesList.length === 0 ? (
                 <View style={styles.center}>
-                  <Ionicons name="cart-outline" size={36} color="#cbd5e1" />
-                  <Text style={styles.emptyText}>No sales recorded for this period.</Text>
-                  <Text style={styles.emptySub}>Tap "+ Sale" to log revenue from your harvested crops.</Text>
+                  <Ionicons name="cart-outline" size={36} color={isDark ? '#334155' : '#cbd5e1'} />
+                  <Text style={[styles.emptyText, isDark && { color: colors.text }]}>No sales recorded for this period.</Text>
+                  <Text style={[styles.emptySub, isDark && { color: colors.textMuted }]}>Tap "+ Sale" to log revenue from your harvested crops.</Text>
                 </View>
               ) : (salesViewMode !== 'BUYER') ? (
-                <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
+                <View style={{ borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: isDark ? colors.cardBg : '#ffffff', marginBottom: 16 }}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
                     <View style={{ flex: 1, minWidth: 720 }}>
                       {/* Table Header Row */}
-                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: isDark ? '#0f172a' : '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
                         <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                         <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                         <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
@@ -2586,24 +2600,24 @@ export default function RecordsScreen() {
                     return (
                       <View key={group.name} style={styles.salesGroupBlock}>
                         <TouchableOpacity
-                          style={styles.salesGroupHeader}
+                          style={[styles.salesGroupHeader, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }]}
                           activeOpacity={0.7}
                           onPress={() => {
                             tap();
                             setExpandedSalesGroup((cur) => (cur === group.name ? null : group.name));
                           }}
                         >
-                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color="#64748b" />
-                          <Text style={styles.salesGroupName} numberOfLines={1}>
+                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color={isDark ? colors.textMuted : '#64748b'} />
+                          <Text style={[styles.salesGroupName, isDark && { color: colors.text }]} numberOfLines={1}>
                             🤝 Buyer: {group.name} <Text style={styles.salesGroupCount}>({group.entries.length})</Text>
                           </Text>
                           <Text style={styles.salesGroupTotal}>{formatInr(group.total)}</Text>
                         </TouchableOpacity>
                         {isExpanded ? (
-                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
+                          <View style={{ borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: isDark ? colors.cardBg : '#ffffff', marginTop: 6 }}>
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
                               <View style={{ flex: 1, minWidth: 720 }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: isDark ? '#0f172a' : '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
                                   <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                                   <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                                   <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
@@ -2626,17 +2640,17 @@ export default function RecordsScreen() {
               {/* Sale Form Modal */}
               <Modal visible={showSaleForm} transparent animationType="slide" onRequestClose={() => setShowSaleForm(false)}>
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalCard, { width: '96%', maxWidth: 600, maxHeight: '94%', padding: isMobile ? 10 : 16, paddingBottom: 20 }]}>
+                  <View style={[styles.modalCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, { width: '96%', maxWidth: 600, maxHeight: '94%', padding: isMobile ? 10 : 16, paddingBottom: 20 }]}>
                     {saleStep === 'FORM' ? (
                       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                         {/* Header Bar with Date at Top */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9' }}>
                           <View>
-                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: theme.text }}>
+                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isDark ? colors.text : theme.text }}>
                               {editingBillId ? `✏️ Edit Sale / Bill #${editingBillNo}` : `New Sale / Bill #${nextSuggestedBillNo}`}
                             </Text>
                             {!editingBillId && (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>
                                 Vyapar Billing POS — Auto Bill #{nextSuggestedBillNo}
                               </Text>
                             )}
@@ -2645,16 +2659,16 @@ export default function RecordsScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             {/* Date Field at Top — Calendar Picker */}
                             <TouchableOpacity
-                              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6 }}
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6 }}
                               onPress={() => { tap(); setShowSaleDatePicker(true); }}
                               activeOpacity={0.8}
                             >
                               <Ionicons name="calendar-outline" size={14} color="#16a34a" />
-                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(saleDate)}</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{formatDateDDMMYYYY(saleDate)}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                               onPress={() => setShowSaleForm(false)}
-                              style={{ padding: 4, borderRadius: RADIUS.pill, backgroundColor: '#f1f5f9' }}
+                              style={{ padding: 4, borderRadius: RADIUS.pill, backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }}
                             >
                               <Ionicons name="close" size={18} color="#475569" />
                             </TouchableOpacity>
@@ -3470,20 +3484,20 @@ export default function RecordsScreen() {
             </View>
           ) : recordType === 'LABOUR' ? (
             /* LABOUR MANAGEMENT TAB */
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
               <LabourManagementSection />
             </ScrollView>
           ) : recordType === 'PARTIES' ? (
             /* ALL PEOPLE ACCOUNTS LIST TAB */
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 160 }} showsVerticalScrollIndicator={false}>
               <AllPartiesSection />
             </ScrollView>
           ) : recordType === 'EXPENSES' ? (
             /* FARM EXPENSES TAB */
             <>
-              <View style={styles.summaryBar}>
+              <View style={[styles.summaryBar, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderBottomColor: colors.cardBorder }]}>
                 <View>
-                  <Text style={styles.totalLabel}>Total Expenses</Text>
+                  <Text style={[styles.totalLabel, isDark && { color: colors.textMuted }]}>Total Expenses</Text>
                   <Text style={styles.totalValue}>{formatInr(totalSpent)}</Text>
                 </View>
                 {canAddExpenses && (
@@ -3506,7 +3520,7 @@ export default function RecordsScreen() {
                 {(['ALL', 'CROP', 'VENDOR'] as const).map((mode) => (
                   <TouchableOpacity
                     key={mode}
-                    style={[styles.salesViewModeChip, expenseViewMode === mode && { backgroundColor: '#dc2626', borderColor: '#dc2626' }]}
+                    style={[styles.salesViewModeChip, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, expenseViewMode === mode && { backgroundColor: '#dc2626', borderColor: '#dc2626' }]}
                     activeOpacity={0.8}
                     onPress={() => {
                       tap();
@@ -3514,7 +3528,7 @@ export default function RecordsScreen() {
                       setExpandedExpenseGroup(null);
                     }}
                   >
-                    <Text style={[styles.salesViewModeChipText, expenseViewMode === mode && styles.salesViewModeChipTextActive]}>
+                    <Text style={[styles.salesViewModeChipText, isDark && { color: colors.text }, expenseViewMode === mode && styles.salesViewModeChipTextActive]}>
                       {mode === 'ALL' ? 'All' : mode === 'CROP' ? 'Crop-wise' : 'Vendor-wise'}
                     </Text>
                   </TouchableOpacity>
@@ -3527,8 +3541,8 @@ export default function RecordsScreen() {
                 </View>
               ) : !expenses || expenses.length === 0 ? (
                 <View style={styles.center}>
-                  <Ionicons name="wallet-outline" size={36} color="#cbd5e1" />
-                  <Text style={styles.emptyText}>No expenses recorded yet.</Text>
+                  <Ionicons name="wallet-outline" size={36} color={isDark ? '#334155' : '#cbd5e1'} />
+                  <Text style={[styles.emptyText, isDark && { color: colors.text }]}>No expenses recorded yet.</Text>
                 </View>
               ) : expenseViewMode === 'ALL' ? (
                 <FlatList
@@ -3538,14 +3552,14 @@ export default function RecordsScreen() {
                   onRefresh={refetch}
                   contentContainerStyle={styles.list}
                   renderItem={({ item }) => (
-                    <View style={styles.compactSaleRow}>
+                    <View style={[styles.compactSaleRow, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }]}>
                       <Ionicons name={item.cropCycle ? 'leaf-outline' : getExpenseCategoryIcon(item.category.key)} size={14} color="#dc2626" />
                       <View style={styles.compactSaleBody}>
-                        <Text style={styles.compactSaleTitle} numberOfLines={1}>
+                        <Text style={[styles.compactSaleTitle, isDark && { color: colors.text }]} numberOfLines={1}>
                           {item.cropCycle ? item.cropCycle.cropName : item.category.labelEn}
                           {item.vendorName ? ` · ${item.vendorName}` : ''}
                         </Text>
-                        <Text style={styles.compactSaleMeta} numberOfLines={1}>
+                        <Text style={[styles.compactSaleMeta, isDark && { color: colors.textMuted }]} numberOfLines={1}>
                           {new Date(item.expenseDate).toLocaleDateString('en-IN')}
                           {item.notes ? ` · ${item.notes}` : ''}
                         </Text>
@@ -3557,9 +3571,9 @@ export default function RecordsScreen() {
                             width: 27,
                             height: 27,
                             borderRadius: 14,
-                            backgroundColor: '#f0fdf4',
+                            backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
                             borderWidth: 1,
-                            borderColor: '#bbf7d0',
+                            borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
@@ -3574,9 +3588,9 @@ export default function RecordsScreen() {
                             width: 27,
                             height: 27,
                             borderRadius: 14,
-                            backgroundColor: '#fff1f2',
+                            backgroundColor: isDark ? 'rgba(225, 29, 72, 0.2)' : '#fff1f2',
                             borderWidth: 1,
-                            borderColor: '#fecdd3',
+                            borderColor: isDark ? 'rgba(225, 29, 72, 0.4)' : '#fecdd3',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
@@ -3584,7 +3598,7 @@ export default function RecordsScreen() {
                           onPress={() => openExpenseSlipPreview(item)}
                           hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                         >
-                          <Ionicons name="download-outline" size={14} color="#e11d48" />
+                          <Ionicons name="download-outline" size={14} color={isDark ? '#fb7185' : '#e11d48'} />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -3597,32 +3611,32 @@ export default function RecordsScreen() {
                     return (
                       <View key={group.name} style={styles.salesGroupBlock}>
                         <TouchableOpacity
-                          style={styles.salesGroupHeader}
+                          style={[styles.salesGroupHeader, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }]}
                           activeOpacity={0.7}
                           onPress={() => {
                             tap();
                             setExpandedExpenseGroup((cur) => (cur === group.name ? null : group.name));
                           }}
                         >
-                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color="#64748b" />
-                          <Text style={styles.salesGroupName} numberOfLines={1}>
+                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color={isDark ? colors.textMuted : '#64748b'} />
+                          <Text style={[styles.salesGroupName, isDark && { color: colors.text }]} numberOfLines={1}>
                             {group.name} <Text style={styles.salesGroupCount}>({group.entries.length})</Text>
                           </Text>
                           <Text style={[styles.salesGroupTotal, { color: '#dc2626' }]}>{formatInr(group.total)}</Text>
                         </TouchableOpacity>
                         {isExpanded
                           ? group.entries.map((item) => (
-                            <View key={item.id} style={styles.compactSaleRow}>
+                            <View key={item.id} style={[styles.compactSaleRow, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }]}>
                               <Ionicons name={item.cropCycle ? 'leaf-outline' : getExpenseCategoryIcon(item.category.key)} size={14} color="#dc2626" />
                               <View style={styles.compactSaleBody}>
-                                <Text style={styles.compactSaleTitle} numberOfLines={1}>
+                                <Text style={[styles.compactSaleTitle, isDark && { color: colors.text }]} numberOfLines={1}>
                                   {expenseViewMode === 'CROP'
                                     ? item.vendorName || item.category.labelEn
                                     : item.cropCycle
                                       ? item.cropCycle.cropName
                                       : item.category.labelEn}
                                 </Text>
-                                <Text style={styles.compactSaleMeta} numberOfLines={1}>
+                                <Text style={[styles.compactSaleMeta, isDark && { color: colors.textMuted }]} numberOfLines={1}>
                                   {new Date(item.expenseDate).toLocaleDateString('en-IN')}
                                   {item.notes ? ` · ${item.notes}` : ''}
                                 </Text>
@@ -3634,9 +3648,9 @@ export default function RecordsScreen() {
                                     width: 27,
                                     height: 27,
                                     borderRadius: 14,
-                                    backgroundColor: '#f0fdf4',
+                                    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
                                     borderWidth: 1,
-                                    borderColor: '#bbf7d0',
+                                    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                   }}
@@ -3651,9 +3665,9 @@ export default function RecordsScreen() {
                                     width: 27,
                                     height: 27,
                                     borderRadius: 14,
-                                    backgroundColor: '#fff1f2',
+                                    backgroundColor: isDark ? 'rgba(225, 29, 72, 0.2)' : '#fff1f2',
                                     borderWidth: 1,
-                                    borderColor: '#fecdd3',
+                                    borderColor: isDark ? 'rgba(225, 29, 72, 0.4)' : '#fecdd3',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                   }}
@@ -3661,7 +3675,7 @@ export default function RecordsScreen() {
                                   onPress={() => openExpenseSlipPreview(item)}
                                   hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                                 >
-                                  <Ionicons name="download-outline" size={14} color="#e11d48" />
+                                  <Ionicons name="download-outline" size={14} color={isDark ? '#fb7185' : '#e11d48'} />
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -3684,12 +3698,12 @@ export default function RecordsScreen() {
                 }}
               >
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalCard, { maxHeight: '90%', width: '100%', maxWidth: 480, padding: 16 }]}>
+                  <View style={[styles.modalCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, { maxHeight: '90%', width: '100%', maxWidth: 480, padding: 16 }]}>
                     {/* Header */}
-                    <View style={[styles.modalHeaderRow, { borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 10, marginBottom: 12 }]}>
+                    <View style={[styles.modalHeaderRow, { borderBottomWidth: 1, borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9', paddingBottom: 10, marginBottom: 12 }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.formTitle, { fontSize: 16 }]}>🔴 Add Farm Expense</Text>
-                        <Text style={styles.formSubTitle}>Record crop-specific or general farm input expenses</Text>
+                        <Text style={[styles.formTitle, isDark && { color: colors.text }, { fontSize: 16 }]}>🔴 Add Farm Expense</Text>
+                        <Text style={[styles.formSubTitle, isDark && { color: colors.textMuted }]}>Record crop-specific or general farm input expenses</Text>
                       </View>
                       <TouchableOpacity
                         onPress={() => {
@@ -4117,18 +4131,18 @@ export default function RecordsScreen() {
 
               {/* Receivable/Payable/All subtabs */}
 
-              <View style={styles.analysisSubTabRow}>
+              <View style={[styles.analysisSubTabRow, isDark && { backgroundColor: colors.cardBg, borderBottomColor: colors.cardBorder }]}>
                 {(['RECEIVABLE', 'PAYABLE', 'ALL'] as const).map((tab) => (
                   <TouchableOpacity
                     key={tab}
-                    style={[styles.analysisSubTabBtn, analysisSubTab === tab && styles.analysisSubTabBtnActive]}
+                    style={[styles.analysisSubTabBtn, isDark && { backgroundColor: '#0b1329' }, analysisSubTab === tab && styles.analysisSubTabBtnActive]}
                     activeOpacity={0.8}
                     onPress={() => {
                       tap();
                       setAnalysisSubTab(tab);
                     }}
                   >
-                    <Text style={[styles.analysisSubTabText, analysisSubTab === tab && styles.analysisSubTabTextActive]}>
+                    <Text style={[styles.analysisSubTabText, isDark && { color: colors.textMuted }, analysisSubTab === tab && styles.analysisSubTabTextActive]}>
                       {tab === 'RECEIVABLE'
                         ? `Receivable ${formatInr(totalReceivable)}`
                         : tab === 'PAYABLE'
@@ -4140,30 +4154,30 @@ export default function RecordsScreen() {
               </View>
 
               {/* Search Bar for Accounts */}
-              <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4, backgroundColor: '#ffffff' }}>
+              <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4, backgroundColor: isDark ? colors.bg : '#ffffff' }}>
                 <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                     borderWidth: 1,
-                    borderColor: '#cbd5e1',
+                    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                     borderRadius: RADIUS.md,
                     paddingHorizontal: 10,
                     height: 38,
                   }}
                 >
-                  <Ionicons name="search" size={16} color="#64748b" style={{ marginRight: 6 }} />
+                  <Ionicons name="search" size={16} color={isDark ? colors.textMuted : '#64748b'} style={{ marginRight: 6 }} />
                   <TextInput
-                    style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#0f172a' }}
+                    style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: isDark ? colors.text : '#0f172a' }}
                     placeholder="Search worker, supplier, buyer or party..."
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     value={accountSearchQuery}
                     onChangeText={setAccountSearchQuery}
                   />
                   {accountSearchQuery.length > 0 && (
                     <TouchableOpacity onPress={() => setAccountSearchQuery('')}>
-                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                      <Ionicons name="close-circle" size={16} color={isDark ? colors.textMuted : '#94a3b8'} />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -4175,8 +4189,8 @@ export default function RecordsScreen() {
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                   <View style={styles.center}>
-                    <Ionicons name="people-outline" size={36} color="#cbd5e1" />
-                    <Text style={styles.emptyText}>
+                    <Ionicons name="people-outline" size={36} color={isDark ? '#334155' : '#cbd5e1'} />
+                    <Text style={[styles.emptyText, isDark && { color: colors.text }]}>
                       {accountSearchQuery
                         ? 'No matching party or worker found.'
                         : analysisSubTab === 'RECEIVABLE'
@@ -4191,13 +4205,15 @@ export default function RecordsScreen() {
                   // Determine per-party direction based on its own balance (works correctly for ALL tab too)
                   const isItemReceivable = item.balance > 0;
                   const itemColor = isItemReceivable ? '#16a34a' : '#dc2626';
-                  const itemBg = isItemReceivable ? '#dcfce7' : '#fee2e2';
+                  const itemBg = isDark
+                    ? (isItemReceivable ? 'rgba(22, 163, 74, 0.15)' : 'rgba(220, 38, 38, 0.15)')
+                    : (isItemReceivable ? '#dcfce7' : '#fee2e2');
                   const itemVoucherType = isItemReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT';
                   const itemBtnLabel = isItemReceivable ? 'Receive Amount' : 'Pay Amount';
 
                   return (
                   <TouchableOpacity
-                    style={[styles.card, premiumShadow('#000000', 'sm')]}
+                    style={[styles.card, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, premiumShadow('#000000', 'sm')]}
                     activeOpacity={0.85}
                     onPress={() => {
                       tap();
@@ -4219,7 +4235,7 @@ export default function RecordsScreen() {
                       <Ionicons name="person" size={18} color={itemColor} />
                     </View>
                     <View style={styles.cardBody}>
-                      <Text style={styles.cardTitle}>{item.name}</Text>
+                      <Text style={[styles.cardTitle, isDark && { color: colors.text }]}>{item.name}</Text>
                       <Text style={[styles.cardSubtitle, { color: itemColor, fontFamily: FONT.semiBold }]}>
                         {isItemReceivable ? '↑ Receivable (CR)' : '↓ Payable (DR)'}
                       </Text>
@@ -4252,7 +4268,7 @@ export default function RecordsScreen() {
               {/* Party Statement Modal */}
               <Modal visible={!!statementPartyId} transparent animationType="slide" onRequestClose={closeStatementModal}>
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+                  <View style={[styles.modalCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, { maxHeight: '85%' }]}>
                     {isLoadingStatement || !statement ? (
                       <View style={styles.center}>
                         <ActivityIndicator color={theme.primary} size="large" />
@@ -4261,7 +4277,7 @@ export default function RecordsScreen() {
                       <>
                         <View style={styles.modalHeaderRow}>
                           <View style={{ flex: 1 }}>
-                            <Text style={styles.formTitle}>{statement.party.name}</Text>
+                            <Text style={[styles.formTitle, isDark && { color: colors.text }]}>{statement.party.name}</Text>
                             <Text style={[styles.formSubTitle, { color: statement.balance >= 0 ? '#16a34a' : '#dc2626' }]}>
                               {statement.balance >= 0 ? 'Receivable' : 'Payable'}: {formatInr(Math.abs(statement.balance))}
                             </Text>

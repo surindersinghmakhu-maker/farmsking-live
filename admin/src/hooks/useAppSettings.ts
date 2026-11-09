@@ -95,6 +95,14 @@ export function useSupportContact() {
   return query;
 }
 
+export function useVisitorStats() {
+  return useQuery({
+    queryKey: ['app-settings', 'visitor-stats'],
+    queryFn: api.getVisitorStats,
+    refetchInterval: 15000,
+  });
+}
+
 export function useUpdateAppSettings() {
   const queryClient = useQueryClient();
   return useMutation({

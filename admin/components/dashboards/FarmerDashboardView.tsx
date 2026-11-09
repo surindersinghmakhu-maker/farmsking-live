@@ -123,7 +123,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       <RoleHeader
         currentRole="FARMER"
         profileName={user?.name || 'Farmer'}
-        subtitle={user?.village ? `🌾 ${user.village}` : 'Farmer Profile'}
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
           <View style={{ alignItems: 'flex-end', gap: 3 }}>

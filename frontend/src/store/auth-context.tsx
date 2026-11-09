@@ -47,7 +47,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const [user, setUser] = useState<User | null>(getInitialUser);
-  const [isLoading, setIsLoading] = useState<boolean>(Platform.OS !== 'web');
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const token = window.localStorage.getItem(TOKEN_KEY);
+        if (token) {
+          const stored = window.localStorage.getItem(USER_KEY);
+          return !stored;
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    }
+    return true;
+  });
   const userRef = useRef<User | null>(null);
   userRef.current = user;
   const queryClient = useQueryClient();

@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useRedeemFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors } from '@/src/hooks/useAdvisorAssignments';
@@ -36,6 +37,7 @@ interface CropCarePlanModalProps {
 }
 
 export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) {
+  const { colors, isDark } = useExecutiveTheme();
   const { user } = useAuth();
   const redeemCoupon = useRedeemFarmerPlanCoupon();
   const initiatePayment = useInitiateFarmerPlanPayment();
@@ -50,12 +52,22 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const [tabMode, setTabMode] = useState<'FEATURES' | 'BUY'>('FEATURES');
   const [selectedPlanKey, setSelectedPlanKey] = useState<'SILVER' | 'GOLD' | 'ROYAL'>('GOLD');
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
+  const [landTier, setLandTier] = useState<'SMALL' | 'LARGE'>('SMALL'); // < 5 Acres vs >= 5 Acres
+  const [isFreeTrialMode, setIsFreeTrialMode] = useState<boolean>(false);
+  const [isAutoDebit, setIsAutoDebit] = useState<boolean>(false); // Auto-Debit (UPI Mandate) vs Manual Recharge
   const [utrInput, setUtrInput] = useState('');
   const [showUpiPay, setShowUpiPay] = useState(false);
   const [paymentData, setPaymentData] = useState<any | null>(null);
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
+
+  const baseAdvisorFee = isFreeTrialMode ? 0 : (landTier === 'SMALL' ? 500 : 1000);
+  const platformFee = 99;
+  const gstAmount = 17.82; // 18% GST on ₹99
+  const totalPayable = isFreeTrialMode ? 116.82 : Math.round((baseAdvisorFee + platformFee + gstAmount) * 100) / 100;
+  const adminCommission = isFreeTrialMode ? 0 : Math.round(baseAdvisorFee * 0.10);
+  const doctorNetPayout = isFreeTrialMode ? 0 : (baseAdvisorFee - adminCommission);
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) {
@@ -167,7 +179,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={resetModal}>
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: isDark ? '#061a0e' : '#ffffff', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#cbd5e1', borderWidth: isDark ? 1 : 0 }]}>
           {/* Modal Header Banner */}
           <LinearGradient colors={['#0f172a', '#0284c7']} style={styles.header}>
             <View style={{ flex: 1 }}>
@@ -236,12 +248,12 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
             ) : (
               <>
                 {/* 1. APPLY CROP CARE COUPON SECTION */}
-                <View style={styles.couponSectionCard}>
-                  <Text style={styles.sectionTitle}>🎟️ Apply Crops Care Coupon</Text>
-                  <Text style={styles.sectionSub}>Enter your doctor or partner coupon code below:</Text>
+                <View style={[styles.couponSectionCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
+                  <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Apply Crops Care Coupon</Text>
+                  <Text style={[styles.sectionSub, { color: isDark ? colors.textMuted : '#334155' }]}>Enter your doctor or partner coupon code below:</Text>
                   <View style={styles.inputRow}>
                     <TextInput
-                      style={styles.couponInput}
+                      style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1', borderWidth: 1 }]}
                       placeholder="ENTER CROP CARE CODE (e.g. DOCTOR100)"
                       placeholderTextColor="#94a3b8"
                       value={couponInput}
@@ -266,10 +278,10 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
 
                 {/* COUPON CONFIRMATION PREVIEW CARD */}
                 {previewData ? (
-                  <View style={styles.confirmBox}>
+                  <View style={[styles.confirmBox, { backgroundColor: isDark ? '#04160c' : '#f0fdf4', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#86efac' }]}>
                     <View style={styles.confirmHeader}>
                       <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-                      <Text style={styles.confirmHeaderTitle}>Coupon Details Confirmation</Text>
+                      <Text style={[styles.confirmHeaderTitle, { color: isDark ? '#ffffff' : '#166534' }]}>Coupon Details Confirmation</Text>
                     </View>
 
                     <View style={styles.confirmRow}>
@@ -295,13 +307,13 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                     </View>
 
                     {/* Doctor Details (Name & Specialization ONLY) */}
-                    <View style={styles.doctorCard}>
+                    <View style={[styles.doctorCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
                       <View style={styles.doctorIconBg}>
                         <Text style={{ fontSize: 16 }}>🩺</Text>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.doctorRoleTag}>SENIOR CROP DOCTOR</Text>
-                        <Text style={styles.doctorNameText}>{previewData.doctor?.name || 'Dr. Specialist Doctor'}</Text>
+                        <Text style={[styles.doctorNameText, { color: isDark ? '#ffffff' : '#0f172a' }]}>{previewData.doctor?.name || 'Dr. Specialist Doctor'}</Text>
                         <Text style={styles.doctorSpecText}>{previewData.doctor?.specialization || 'Crop Protection & Advisory Specialist'}</Text>
                       </View>
                     </View>
@@ -322,7 +334,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
 
                     {/* Features List */}
                     <View style={{ marginTop: 10 }}>
-                      <Text style={styles.confirmSectionTitle}>🌟 Included Plan Features:</Text>
+                      <Text style={[styles.confirmSectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🌟 Included Plan Features:</Text>
                       {(previewData.features || [
                         '360° VIP Specialist Doctor Advisory',
                         'Direct Phone & Chat Advisory with Doctor',
@@ -331,7 +343,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                       ]).map((feat, idx) => (
                         <View key={idx} style={styles.featRow}>
                           <Ionicons name="checkmark-circle-outline" size={14} color="#16a34a" />
-                          <Text style={styles.featText}>{feat}</Text>
+                          <Text style={[styles.featText, { color: isDark ? '#cbd5e1' : '#334155' }]}>{feat}</Text>
                         </View>
                       ))}
                     </View>
@@ -359,23 +371,23 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                 ) : null}
 
                 {/* 2 TABS BELOW APPLY COUPON BUTTON */}
-                <View style={styles.tabNavRow}>
+                <View style={[styles.tabNavRow, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9' }]}>
                   <TouchableOpacity
-                    style={[styles.tabNavBtn, tabMode === 'FEATURES' && styles.tabNavBtnActive]}
+                    style={[styles.tabNavBtn, tabMode === 'FEATURES' && (isDark ? { backgroundColor: '#04160c', borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.3)' } : styles.tabNavBtnActive)]}
                     onPress={() => { tap(); setTabMode('FEATURES'); }}
                   >
-                    <Ionicons name="star" size={14} color={tabMode === 'FEATURES' ? '#0f172a' : '#64748b'} />
-                    <Text style={[styles.tabNavText, tabMode === 'FEATURES' && styles.tabNavTextActive]}>
+                    <Ionicons name="star" size={14} color={tabMode === 'FEATURES' ? (isDark ? '#00ff87' : '#0f172a') : (isDark ? '#94a3b8' : '#64748b')} />
+                    <Text style={[styles.tabNavText, tabMode === 'FEATURES' && (isDark ? { color: '#00ff87' } : styles.tabNavTextActive)]}>
                       🌟 Plan Features
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.tabNavBtn, tabMode === 'BUY' && styles.tabNavBtnActive]}
+                    style={[styles.tabNavBtn, tabMode === 'BUY' && (isDark ? { backgroundColor: '#04160c', borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.3)' } : styles.tabNavBtnActive)]}
                     onPress={() => { tap(); setTabMode('BUY'); }}
                   >
-                    <Ionicons name="cart" size={14} color={tabMode === 'BUY' ? '#0f172a' : '#64748b'} />
-                    <Text style={[styles.tabNavText, tabMode === 'BUY' && styles.tabNavTextActive]}>
+                    <Ionicons name="cart" size={14} color={tabMode === 'BUY' ? (isDark ? '#00ff87' : '#0f172a') : (isDark ? '#94a3b8' : '#64748b')} />
+                    <Text style={[styles.tabNavText, tabMode === 'BUY' && (isDark ? { color: '#00ff87' } : styles.tabNavTextActive)]}>
                       🛒 Buy Coupon
                     </Text>
                   </TouchableOpacity>
@@ -383,107 +395,144 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
 
                 {tabMode === 'FEATURES' ? (
                   /* TAB 1: PLAN FEATURES */
-                  <View style={styles.benefitsCard}>
-                    <Text style={styles.sectionTitle}>🌟 Crops Care Plan Features & Supervision</Text>
+                  <View style={[styles.benefitsCard, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#f0fdf4', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#bbf7d0' }]}>
+                    <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🌟 Crops Care Plan Features & Supervision</Text>
                     <View style={styles.benefitsList}>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>1-on-1 Assigned Specialist Senior Crop Doctor</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>1-on-1 Assigned Specialist Senior Crop Doctor</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>Junior Field Advisor Supervision under Senior Doctor</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>Junior Field Advisor Supervision under Senior Doctor</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>5 or 10 Crop Plots Monitored Daily</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>5 or 10 Crop Plots Monitored Daily</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>Stage-wise Chemical & Organic Spray Schedules</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>Stage-wise Chemical & Organic Spray Schedules</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>Direct Phone Calls & WhatsApp Chat Advisory</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>Direct Phone Calls & WhatsApp Chat Advisory</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>ISRO Satellite Field Health & Soil Moisture Sync</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>ISRO Satellite Field Health & Soil Moisture Sync</Text>
                       </View>
                       <View style={styles.benefitItem}>
                         <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                        <Text style={styles.benefitText}>Emergency Crop Disease Diagnostic Prescriptions</Text>
+                        <Text style={[styles.benefitText, { color: isDark ? '#e2e8f0' : '#166534' }]}>Emergency Crop Disease Diagnostic Prescriptions</Text>
                       </View>
                     </View>
                   </View>
                 ) : (
                   /* TAB 2: BUY COUPON (SELECT PLAN & DOCTOR/ADVISOR) */
                   <View style={{ gap: 12 }}>
-                    <Text style={styles.sectionTitle}>🩺 SELECT CROP CARE SCHEME</Text>
+                    <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🩺 CROP CARE & ADVISORY PLAN (TIER 3)</Text>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginTop: -4 }}>
+                      Continuous seed-to-harvest crop monitoring & personalized spray schedules
+                    </Text>
 
-                    {/* Plan A: Crop Advisor */}
-                    <TouchableOpacity
-                      style={[
-                        styles.planOptionCard,
-                        selectedPlanKey === 'SILVER' && { borderColor: '#16a34a', backgroundColor: '#f0fdf4' },
-                      ]}
-                      activeOpacity={0.88}
-                      onPress={() => setSelectedPlanKey('SILVER')}
-                    >
-                      <View style={styles.planHeaderRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.planTitleText, { color: '#16a34a' }]}>👨‍🌾 Crop Advisor Plan</Text>
-                          <Text style={styles.planPriceText}>₹299 <Text style={styles.planPeriodText}>/ Full Crop Season</Text></Text>
-                        </View>
-                        <Ionicons
-                          name={selectedPlanKey === 'SILVER' ? 'radio-button-on' : 'radio-button-off'}
-                          size={22}
-                          color={selectedPlanKey === 'SILVER' ? '#16a34a' : '#cbd5e1'}
-                        />
-                      </View>
-                      <Text style={[styles.planDescText, { color: '#15803d', fontWeight: 'bold' }]}>
-                        Expert in: Wheat, Paddy, Cotton, Mustard & Traditional Crops
+                    {/* Land-Based Pricing Tier Selector */}
+                    <View style={{ gap: 6, marginTop: 4 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                        1. Select Farm Land Size (Land-Based Pricing):
                       </Text>
-                      <Text style={styles.planDescText}>
-                        Covers up to 5 active crops with dedicated advisor supervision, soil health tracking, and spray guidance.
-                      </Text>
-                    </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          style={[
+                            styles.planOptionCard,
+                            {
+                              flex: 1,
+                              padding: 10,
+                              backgroundColor: isDark ? (landTier === 'SMALL' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (landTier === 'SMALL' ? '#f0fdf4' : '#ffffff'),
+                              borderColor: isDark ? (landTier === 'SMALL' ? '#00ff87' : 'rgba(255, 255, 255, 0.08)') : (landTier === 'SMALL' ? '#16a34a' : '#cbd5e1'),
+                            }
+                          ]}
+                          activeOpacity={0.88}
+                          onPress={() => { tap(); setLandTier('SMALL'); }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>Small Farmer</Text>
+                            <Ionicons name={landTier === 'SMALL' ? 'radio-button-on' : 'radio-button-off'} size={18} color={landTier === 'SMALL' ? '#16a34a' : '#94a3b8'} />
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
+                            &lt; 5 Acres Land
+                          </Text>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
+                            ₹500 <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/month Base</Text>
+                          </Text>
+                        </TouchableOpacity>
 
-                    {/* Plan B: Expert Doctor */}
+                        <TouchableOpacity
+                          style={[
+                            styles.planOptionCard,
+                            {
+                              flex: 1,
+                              padding: 10,
+                              backgroundColor: isDark ? (landTier === 'LARGE' ? 'rgba(217, 119, 6, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (landTier === 'LARGE' ? '#fffbeb' : '#ffffff'),
+                              borderColor: isDark ? (landTier === 'LARGE' ? '#fbbf24' : 'rgba(255, 255, 255, 0.08)') : (landTier === 'LARGE' ? '#d97706' : '#cbd5e1'),
+                            }
+                          ]}
+                          activeOpacity={0.88}
+                          onPress={() => { tap(); setLandTier('LARGE'); }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#d97706' }}>Large Farmer</Text>
+                            <Ionicons name={landTier === 'LARGE' ? 'radio-button-on' : 'radio-button-off'} size={18} color={landTier === 'LARGE' ? '#d97706' : '#94a3b8'} />
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
+                            ≥ 5 Acres Land
+                          </Text>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
+                            ₹1,000 <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/month Base</Text>
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Free Trial Architecture Toggle */}
                     <TouchableOpacity
-                      style={[
-                        styles.planOptionCard,
-                        selectedPlanKey === 'GOLD' && { borderColor: '#d97706', backgroundColor: '#fffbeb' },
-                      ]}
-                      activeOpacity={0.88}
-                      onPress={() => setSelectedPlanKey('GOLD')}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 10,
+                        borderRadius: RADIUS.md,
+                        backgroundColor: isDark ? (isFreeTrialMode ? 'rgba(0, 255, 135, 0.12)' : 'rgba(255, 255, 255, 0.03)') : (isFreeTrialMode ? '#ecfdf5' : '#f8fafc'),
+                        borderWidth: 1.5,
+                        borderColor: isDark ? (isFreeTrialMode ? '#00ff87' : 'rgba(255, 255, 255, 0.08)') : (isFreeTrialMode ? '#10b981' : '#e2e8f0'),
+                      }}
+                      activeOpacity={0.85}
+                      onPress={() => { tap(); setIsFreeTrialMode(!isFreeTrialMode); }}
                     >
-                      <View style={[styles.vipTagPill, { backgroundColor: '#d97706' }]}>
-                        <Text style={styles.vipTagText}>🌟 EXPERT SUPERVISION</Text>
-                      </View>
-                      <View style={styles.planHeaderRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.planTitleText, { color: '#d97706' }]}>🩺 Expert Doctor Plan</Text>
-                          <Text style={styles.planPriceText}>₹499 <Text style={styles.planPeriodText}>/ Full Crop Season</Text></Text>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                            🎁 1-Month Advisor Free Trial
+                          </Text>
+                          <View style={{ backgroundColor: '#16a34a', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 4 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#ffffff' }}>TRIAL OPTION</Text>
+                          </View>
                         </View>
-                        <Ionicons
-                          name={selectedPlanKey === 'GOLD' ? 'radio-button-on' : 'radio-button-off'}
-                          size={22}
-                          color={selectedPlanKey === 'GOLD' ? '#d97706' : '#cbd5e1'}
-                        />
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginTop: 2 }}>
+                          Advisor base fee is ₹0 during trial. Farmer pays only FarmsKing platform charge: ₹99/mo + 18% GST (₹116.82).
+                        </Text>
                       </View>
-                      <Text style={[styles.planDescText, { color: '#b45309', fontWeight: 'bold' }]}>
-                        Expert in: Vegetables, Fruits, Horticulture, Polyhouse & All Cash Crops
-                      </Text>
-                      <Text style={styles.planDescText}>
-                        Covers up to 10 crop plots with Senior Doctor priority care, direct audio/video call requests, and emergency disease visits.
-                      </Text>
+                      <Ionicons
+                        name={isFreeTrialMode ? 'checkbox' : 'square-outline'}
+                        size={20}
+                        color={isFreeTrialMode ? '#16a34a' : '#94a3b8'}
+                      />
                     </TouchableOpacity>
 
                     {/* SELECT DOCTOR OR ADVISOR */}
                     <View style={{ gap: 6 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-                        Select Crop Doctor / Advisor (Optional):
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                        2. Select Crop Doctor / Advisor:
                       </Text>
                       {availableAdvisors.length === 0 ? (
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
@@ -494,11 +543,12 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                           <TouchableOpacity
                             style={[
                               styles.advSelectPill,
-                              selectedAdvisorId === null && styles.advSelectPillActive,
+                              { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0' },
+                              selectedAdvisorId === null && (isDark ? { backgroundColor: 'rgba(0, 255, 135, 0.16)', borderColor: '#00ff87' } : styles.advSelectPillActive),
                             ]}
                             onPress={() => setSelectedAdvisorId(null)}
                           >
-                            <Text style={[styles.advSelectText, selectedAdvisorId === null && styles.advSelectTextActive]}>
+                            <Text style={[styles.advSelectText, { color: isDark ? colors.textMuted : '#334155' }, selectedAdvisorId === null && { color: isDark ? '#00ff87' : '#166534', fontFamily: FONT.extraBold }]}>
                               Auto-Assign Doctor
                             </Text>
                           </TouchableOpacity>
@@ -507,22 +557,101 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                               key={adv.id}
                               style={[
                                 styles.advSelectPill,
-                                selectedAdvisorId === adv.id && styles.advSelectPillActive,
+                                { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0' },
+                                selectedAdvisorId === adv.id && (isDark ? { backgroundColor: 'rgba(0, 255, 135, 0.16)', borderColor: '#00ff87' } : styles.advSelectPillActive),
                               ]}
                               onPress={() => setSelectedAdvisorId(adv.id)}
                             >
-                              <Text style={[styles.advSelectText, selectedAdvisorId === adv.id && styles.advSelectTextActive]}>
+                              <Text style={[styles.advSelectText, { color: isDark ? colors.textMuted : '#334155' }, selectedAdvisorId === adv.id && { color: isDark ? '#00ff87' : '#166534', fontFamily: FONT.extraBold }]}>
                                 {(adv.role as any) === 'DOCTOR' || (adv as any)?.isSeniorDoctor ? '🩺' : '👨‍⚕️'} {adv.name}
                               </Text>
-
                             </TouchableOpacity>
                           ))}
                         </ScrollView>
                       )}
                     </View>
 
+                    {/* Subscription Payment Logic (Rule 3): Manual Recharge vs Auto-Debit */}
+                    <View style={{ gap: 6 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                        3. Payment Method:
+                      </Text>
+                      <View style={{ width: '100%', flexDirection: 'row', gap: 6, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', padding: 3, borderRadius: RADIUS.pill }}>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            paddingVertical: 7,
+                            paddingHorizontal: 8,
+                            borderRadius: RADIUS.pill,
+                            backgroundColor: !isAutoDebit ? '#16a34a' : 'transparent',
+                            alignItems: 'center',
+                          }}
+                          onPress={() => setIsAutoDebit(false)}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: !isAutoDebit ? '#ffffff' : (isDark ? '#cbd5e1' : '#64748b') }}>
+                            💳 Manual Recharge (One-Time)
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            paddingVertical: 7,
+                            paddingHorizontal: 8,
+                            borderRadius: RADIUS.pill,
+                            backgroundColor: isAutoDebit ? '#16a34a' : 'transparent',
+                            alignItems: 'center',
+                          }}
+                          onPress={() => setIsAutoDebit(true)}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isAutoDebit ? '#ffffff' : (isDark ? '#cbd5e1' : '#64748b') }}>
+                            ⚡ Auto-Debit (UPI Mandate)
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* Post-Trial Monthly Breakdown & Revenue Share Card */}
+                    <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0', gap: 6 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                        📊 Monthly Financial Breakdown & Settlement:
+                      </Text>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>Advisor Base Fee:</Text>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
+                          {isFreeTrialMode ? '₹0 (Waived for Trial)' : `₹${baseAdvisorFee}`}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>FarmsKing Platform Fee:</Text>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>₹{platformFee}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>GST (18% on ₹99):</Text>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>₹{gstAmount}</Text>
+                      </View>
+                      <View style={{ height: 1, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0', marginVertical: 2 }} />
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a' }}>Total Monthly Charge:</Text>
+                        <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#16a34a' }}>₹{totalPayable}</Text>
+                      </View>
+
+                      {/* Revenue split transparency */}
+                      <View style={{ backgroundColor: isDark ? 'rgba(0, 255, 135, 0.08)' : '#ecfdf5', padding: 8, borderRadius: 6, marginTop: 4, gap: 2 }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#166534' }}>
+                          REVENUE SHARE ALLOCATION:
+                        </Text>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#14532d' }}>
+                          • FarmsKing Retains: ₹{platformFee} Platform Fee + 10% Commission ({isFreeTrialMode ? '₹0' : `₹${adminCommission}`})
+                        </Text>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#14532d' }}>
+                          • Doctor Net Payout: {isFreeTrialMode ? '₹0 during free trial' : `₹${doctorNetPayout} (90% of base fee credited to Doctor Wallet)`}
+                        </Text>
+                      </View>
+                    </View>
+
                     <TouchableOpacity
-                      style={[styles.buyBtn, { backgroundColor: selectedPlanKey === 'ROYAL' ? '#7c3aed' : '#0284c7' }]}
+                      style={[styles.buyBtn, { backgroundColor: '#16a34a' }]}
                       disabled={isGeneratingQr}
                       onPress={() => handleInitiatePayment(selectedPlanKey)}
                     >
@@ -530,9 +659,9 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                         <ActivityIndicator color="#ffffff" />
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="card-outline" size={18} color="#ffffff" />
+                          <Ionicons name={isAutoDebit ? 'repeat' : 'card-outline'} size={18} color="#ffffff" />
                           <Text style={styles.buyBtnText}>
-                            Pay securely via Cashfree ({selectedPlanKey === 'GOLD' ? '₹499' : '₹299'})
+                            {isAutoDebit ? `Setup UPI AutoPay (₹${totalPayable}/mo)` : `Pay ₹${totalPayable} via Cashfree`}
                           </Text>
                         </View>
                       )}

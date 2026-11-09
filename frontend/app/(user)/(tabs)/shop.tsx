@@ -23,6 +23,8 @@ import * as Clipboard from 'expo-clipboard';
 import QRCode from 'react-native-qrcode-svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
+import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
@@ -363,6 +365,8 @@ function renderDeliveryAddressCard(order: any) {
 }
 
 export default function ShopScreen() {
+  const { colors, isDark } = useExecutiveTheme();
+  const { t } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
   const { role } = useRole();
@@ -1528,7 +1532,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Top E-Commerce Mode Switcher for Admins */}
       {isAdminOrSuperAdmin && (
         <View style={styles.adminTopBar}>
@@ -2291,7 +2295,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
         <View style={{ flex: 1 }}>
           {/* Official FarmsKing Hero Header */}
-          <LinearGradient colors={['#0a2417', '#0f3923', '#15803d']} style={styles.hero}>
+          <LinearGradient colors={colors.headerGradient} style={styles.hero}>
             <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
               <View style={styles.headerTop}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -2299,30 +2303,33 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <Ionicons name="storefront" size={24} color="#4ade80" />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86efac', letterSpacing: 0.2, marginBottom: 2 }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d', letterSpacing: 0.2, marginBottom: 2 }}>
                       👋 Welcome, {user?.name || 'Farmer'}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.heroTitle}>Official Agri Store</Text>
+                      <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>Official Agri Store</Text>
                       <View style={styles.verifiedTag}>
                         <Ionicons name="checkmark-circle" size={12} color="#facc15" />
                         <Text style={styles.verifiedTagText}>Verified Official</Text>
                       </View>
                     </View>
-                    <Text style={styles.heroSubtitle}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
+                    <Text style={[styles.heroSubtitle, { color: isDark ? 'rgba(255,255,255,0.85)' : '#334155' }]}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
                   </View>
                 </View>
 
                 <View style={styles.headerActions}>
                   <TouchableOpacity
-                    style={styles.cartIconBtn}
+                    style={[
+                      styles.cartIconBtn,
+                      !isDark && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                    ]}
                     activeOpacity={0.85}
                     onPress={() => {
                       tap();
                       setActiveSubTab('CHECKOUT');
                     }}
                   >
-                    <Ionicons name="bag-handle" size={21} color="#ffffff" />
+                    <Ionicons name="bag-handle" size={21} color={isDark ? '#ffffff' : '#0f172a'} />
                     {itemCount > 0 && (
                       <View style={styles.cartBadge}>
                         <Text style={styles.cartBadgeText}>{itemCount}</Text>
@@ -2333,11 +2340,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               </View>
 
               {/* Quick Search Input Box */}
-              <View style={styles.searchBarBox}>
+              <View style={[styles.searchBarBox, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
                 <Ionicons name="search" size={18} color="#15803d" />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search: Seeds, Fertilizers, Insecticides, Spray Pumps..."
+                  placeholder={t('searchStorePlaceholder', 'Search: Seeds, Fertilizers, Insecticides, Spray Pumps...')}
                   placeholderTextColor="#94a3b8"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -2353,7 +2360,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           </LinearGradient>
 
           {/* Sub Nav Bar */}
-          <View style={styles.subTabBar}>
+          <View style={[styles.subTabBar, isDark && { backgroundColor: colors.cardBg, borderBottomColor: colors.cardBorder }]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', minWidth: '100%', maxWidth: 1200, alignSelf: 'center' }}>
               <TouchableOpacity
                 style={[styles.subTabItem, activeSubTab === 'CATALOG' && styles.subTabItemActive]}
@@ -2363,7 +2370,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 }}
               >
                 <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>Products</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>{t('tabProducts', 'Products')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2374,7 +2381,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 }}
               >
                 <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>Cart ({itemCount})</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>{t('tabCart', 'Cart')} ({itemCount})</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2385,7 +2392,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 }}
               >
                 <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>My Orders</Text>
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>{t('myOrders', 'My Orders')}</Text>
               </TouchableOpacity>
 
 
@@ -5785,6 +5792,8 @@ function FarmsKingProductDetailModal({
 }
 
 function ProductCard({
+  // Unified Executive Theme
+
   product,
   cartQty,
   onAdd,

@@ -1,11 +1,13 @@
 import { Tabs, useRouter, usePathname } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView, Animated, LayoutChangeEvent } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { AnimatedPurpleBottomBar } from '@/components/ui/AnimatedPurpleBottomBar';
 import { RoleThemes, UserRole } from '@/constants/Colors';
+import { ROLE_TABS, TabName, getTabsForRole, RoleTabItem } from '@/constants/RoleTabs';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useRole } from '@/src/store/role-context';
 import { useAuth } from '@/src/store/auth-context';
@@ -84,32 +86,6 @@ const badgeStyles = StyleSheet.create({
   },
 });
 
-type TabName =
-  | 'index' | 'shop' | 'ai-doctor' | 'admin_shop' | 'farm' | 'garden' | 'records' | 'market' | 'more' | 'admin_more'
-  | 'categories' | 'cart' | 'orders'
-  | 'farmers' | 'schedule' | 'chat'
-  | 'referrals' | 'wallet'
-  | 'admin-orders' | 'admin-products'
-  | 'super-users' | 'super-coupons' | 'super-accounts' | 'super-settings'
-  | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders' | 'trainer-dashboard';
-
-const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'farm', 'records', 'shop', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
-  CUSTOMER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
-  ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  SUPERVISOR: { tabs: ['index', 'farm', 'records', 'wallet', 'more'] },
-  OPERATOR: { tabs: ['index', 'operator-orders', 'wallet', 'more'] },
-  LABOUR: { tabs: ['index', 'wallet', 'more'] },
-  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'shop', 'wallet', 'more'] },
-};
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
@@ -165,8 +141,148 @@ export default function TabLayout() {
   const { data: unreadNotifData } = useUnreadNotificationCount();
   const unreadNotifCount = unreadNotifData?.count ?? 0;
   const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
+
+  // Instant smooth splash handoff: dismiss splash as soon as the dashboard has finished compositing & painting
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if ((window as any).__dismissFarmsKingSplash) {
+            (window as any).__dismissFarmsKingSplash();
+          }
+        });
+      });
+    }
+  }, []);
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'farm', 'records', 'shop', 'more']);
+
+  const roleTabs = getTabsForRole(role);
+
+  // Robust tab identification by exact route matching
+  const getActiveTabKey = (): string => {
+    const isHome =
+      pathname === '/' ||
+      pathname === '/(user)/(tabs)' ||
+      pathname === '/(user)/(tabs)/index' ||
+      pathname === '/(tabs)' ||
+      pathname === '/(tabs)/index' ||
+      pathname === '';
+    if (isHome) {
+      const homeTab = roleTabs.find((t) => t.tabName === 'index');
+      return homeTab ? homeTab.tabName : roleTabs[0]?.tabName || 'index';
+    }
+    const segments = pathname.replace(/^\/+|\/+$/g, '').split('/');
+    // Check specific matches first
+    const matched = roleTabs.find((t) => {
+      if (t.tabName === 'index') return false;
+      return (
+        segments.includes(t.tabName) ||
+        pathname === `/${t.tabName}` ||
+        pathname.startsWith(`/${t.tabName}/`) ||
+        pathname.includes(`/(tabs)/${t.tabName}`)
+      );
+    });
+    return matched ? matched.tabName : roleTabs[0]?.tabName || 'index';
+  };
+
+  const activeTabKey = getActiveTabKey();
+  const activeIndex = Math.max(0, roleTabs.findIndex((t) => t.tabName === activeTabKey));
+  const currentTab = roleTabs[activeIndex] || roleTabs[0];
+
+  // Robust direct-pixel tab gliding animation (ISO 4D executive standard, zero desync)
+  const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const widthAnim = useRef(new Animated.Value(0)).current;
+  const pillOpacity = useRef(new Animated.Value(0)).current;
+  const [layoutVersion, setLayoutVersion] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const triggerTabsAnimation = () => {
+    fadeAnim.setValue(0.35);
+    Animated.spring(fadeAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 70,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  };
+
+  const animatePillToKey = (key: string, immediate = false) => {
+    const layout = tabLayouts.current[key];
+    if (layout && layout.width > 0) {
+      if (immediate) {
+        slideAnim.setValue(layout.x);
+        widthAnim.setValue(layout.width);
+        pillOpacity.setValue(1);
+      } else {
+        Animated.parallel([
+          Animated.spring(slideAnim, {
+            toValue: layout.x,
+            tension: 80,
+            friction: 9,
+            useNativeDriver: false,
+          }),
+          Animated.spring(widthAnim, {
+            toValue: layout.width,
+            tension: 80,
+            friction: 9,
+            useNativeDriver: false,
+          }),
+          Animated.timing(pillOpacity, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    }
+  };
+
+  useEffect(() => {
+    animatePillToKey(activeTabKey);
+    triggerTabsAnimation();
+  }, [activeTabKey, pathname, layoutVersion, role]);
+
+  const handleTabPress = (tabItem: RoleTabItem) => {
+    animatePillToKey(tabItem.tabName);
+    triggerTabsAnimation();
+    router.push(tabItem.path as any);
+  };
+
+  const handleNavLayout = (key: string, e: LayoutChangeEvent) => {
+    const { x, width: w } = e.nativeEvent.layout;
+    if (w > 0) {
+      tabLayouts.current[key] = { x, width: w };
+      setLayoutVersion((v) => v + 1);
+      if (key === activeTabKey) {
+        slideAnim.setValue(x);
+        widthAnim.setValue(w);
+        pillOpacity.setValue(1);
+      }
+    }
+  };
+
+  const getTabColor = (tabItem: RoleTabItem, isActive: boolean) => {
+    if (isActive) {
+      if (isDark) return tabItem.color;
+      switch (tabItem.tabName) {
+        case 'index':
+        case 'farm':
+          return '#15803d';
+        case 'records':
+          return '#0284c7';
+        case 'shop':
+          return '#c2410c';
+        case 'more':
+        case 'admin_more':
+          return '#7e22ce';
+        default:
+          return '#15803d';
+      }
+    }
+    return isDark ? '#94a3b8' : '#0f172a';
+  };
 
   const isChatCapable = !!user && CHAT_CAPABLE_ROLES.has(user.role);
   useGlobalChatUnreadSync(isChatCapable);
@@ -182,8 +298,11 @@ export default function TabLayout() {
     if (name === 'index') return getHomeTitle(role);
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
-    if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
-    if (name === 'ai-doctor') return 'AI Doctor';
+    if (name === 'farm') return t('tabCrops', 'Crops');
+    if (name === 'records') return t('tabRecords', 'Accounts');
+    if (name === 'shop') return (role === 'ADMIN' || role === 'SUPER_ADMIN') ? t('agristoreHub', 'E-Commerce') : t('tabStore', 'Store');
+    if (name === 'admin_shop') return t('agristoreHub', 'E-Commerce');
+    if (name === 'ai-doctor') return t('cropDoctor', 'AI Doctor');
     const meta = (TAB_META as any)[name];
     return meta ? t(meta.key, meta.title) : name;
   };
@@ -194,14 +313,6 @@ export default function TabLayout() {
     if (name === 'farmers') return focused ? 'leaf' : 'leaf-outline';
     const meta = (TAB_META as any)[name];
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
-  };
-
-  const handleNavigate = (tabName: TabName) => {
-    if (tabName === 'index') {
-      router.push('/' as any);
-    } else {
-      router.push(`/${tabName}` as any);
-    }
   };
 
   return (
@@ -216,7 +327,7 @@ export default function TabLayout() {
                 isDark && desktopStyles.brandLogoNightPill,
               ]}
               activeOpacity={0.8}
-              onPress={() => router.push(userRole === 'CUSTOMER' ? ('/(user)/(tabs)/shop' as any) : ('/(tabs)' as any))}
+              onPress={() => router.push(role === 'CUSTOMER' ? ('/(user)/(tabs)/shop' as any) : ('/(user)/(tabs)' as any))}
             >
               <BrandLogo
                 height={36}
@@ -233,28 +344,72 @@ export default function TabLayout() {
             </TouchableOpacity>
           </View>
 
-          {/* Desktop Links Menu */}
+          {/* Desktop Links Menu with 4D Continuous Gliding Spring Pill */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavRow}>
-            {config.tabs.map((tabName) => {
-              const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-              const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
-              const isActive = isIndexActive || isOtherActive;
-              const title = getTabTitle(tabName);
-              const iconName = getTabIcon(tabName, isActive);
-
-              return (
-                <TouchableOpacity
-                  key={tabName}
-                  style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
-                  onPress={() => handleNavigate(tabName)}
+            <View style={desktopStyles.menuNavWrapper}>
+              {Boolean(tabLayouts.current[currentTab?.tabName]) && (
+                <Animated.View
+                  style={[
+                    desktopStyles.desktopGlidingPill,
+                    {
+                      left: slideAnim,
+                      width: widthAnim,
+                      opacity: pillOpacity,
+                      borderColor: currentTab?.border || '#00ff87',
+                      shadowColor: currentTab?.shadow || '#00ff87',
+                    },
+                  ]}
+                  pointerEvents="none"
                 >
-                  <Ionicons name={iconName} size={17} color={isActive ? colors.primary : colors.tabBarInactive} />
-                  <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
-                    {title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  <LinearGradient
+                    colors={currentTab?.glow as [string, string, ...string[]]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <LinearGradient
+                    colors={currentTab?.laser as [string, string, ...string[]]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={desktopStyles.desktopLaserBar}
+                  />
+                </Animated.View>
+              )}
+
+              {roleTabs.map((tab, idx) => {
+                const isActive = tab.tabName === activeTabKey || idx === activeIndex;
+                const tabColor = getTabColor(tab, isActive);
+
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    onLayout={(e) => handleNavLayout(tab.tabName, e)}
+                    style={[
+                      desktopStyles.navMenuItem,
+                      isActive && desktopStyles.navMenuItemActiveZ,
+                    ]}
+                    onPress={() => handleTabPress(tab)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={isActive ? tab.icon : tab.iconOutline}
+                      size={17}
+                      color={tabColor}
+                    />
+                    <Text
+                      style={[
+                        desktopStyles.navMenuItemText,
+                        { color: tabColor },
+                        isActive && { color: tabColor, fontFamily: FONT.extraBold },
+                        !isDark && !isActive && { color: '#0f172a', fontWeight: '700' },
+                      ]}
+                    >
+                      {getTabTitle(tab.tabName)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
 
           {/* Right Header Actions */}
@@ -284,40 +439,20 @@ export default function TabLayout() {
 
             {/* Notification Bell */}
             <TouchableOpacity
-              style={desktopStyles.headerIconBtn}
+              style={[
+                desktopStyles.headerIconBtn,
+                isDark ? desktopStyles.headerIconBtnDark : desktopStyles.headerIconBtnLight,
+              ]}
               activeOpacity={0.75}
               onPress={() => router.push('/notifications' as never)}
             >
-              <Ionicons name="notifications-outline" size={18} color="#ffffff" />
+              <Ionicons name="notifications-outline" size={18} color={isDark ? '#ffffff' : '#0f172a'} />
               {unreadNotifCount > 0 ? (
                 <View style={desktopStyles.notifDot}>
                   {unreadNotifCount <= 9 ? <Text style={desktopStyles.notifDotText}>{unreadNotifCount}</Text> : null}
                 </View>
               ) : null}
             </TouchableOpacity>
-
-            <View style={desktopStyles.langSwitcherBox}>
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('pa')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'pa' && desktopStyles.langBtnTextActive]}>ਪੰਜਾਬੀ</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'hi' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('hi')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'hi' && desktopStyles.langBtnTextActive]}>हिंदी</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'en' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('en')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'en' && desktopStyles.langBtnTextActive]}>ENG</Text>
-              </TouchableOpacity>
-            </View>
 
             {/* ☀️ / 🌙 Desktop Light / Dark Toggle */}
             <TouchableOpacity
@@ -342,38 +477,101 @@ export default function TabLayout() {
                 {isDark ? 'Light' : 'Dark'}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
-            {/* Logout Button */}
+      {/* 📱 MOBILE TOP HEADER BAR (Always visible at top of every tab on mobile with PC-view styled theme button) */}
+      {!isDesktop && (
+        <View style={[desktopStyles.headerBar, { height: 52, paddingHorizontal: 12, backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}>
+          <View style={desktopStyles.headerLeft}>
             <TouchableOpacity
-              style={desktopStyles.logoutBtn}
+              style={[
+                desktopStyles.brandLogoBox,
+                isDark && desktopStyles.brandLogoNightPill,
+              ]}
               activeOpacity={0.8}
-              onPress={() => {
-                if (Platform.OS === 'web') {
-                  if (window.confirm('Are you sure you want to log out?')) logout();
-                } else {
-                  import('react-native').then(({ Alert }) => {
-                    Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
-                    ]);
-                  });
-                }
-              }}
+              onPress={() => router.push(role === 'CUSTOMER' ? ('/(user)/(tabs)/shop' as any) : ('/(user)/(tabs)' as any))}
             >
-              <Ionicons name="power" size={13} color="#ef4444" />
-              <Text style={desktopStyles.logoutBtnText}>Log Out</Text>
+              <BrandLogo
+                height={28}
+                width={96}
+                useHdQuality={true}
+                dark={isDark}
+                resizeMode="contain"
+                style={[
+                  isDark && Platform.OS === 'web' ? ({
+                    filter: 'drop-shadow(0 0 10px rgba(34, 197, 94, 0.4)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5))',
+                  } as any) : {},
+                ]}
+              />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {/* Notification Bell */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.headerIconBtn,
+                isDark ? desktopStyles.headerIconBtnDark : desktopStyles.headerIconBtnLight,
+                { width: 32, height: 32 },
+              ]}
+              activeOpacity={0.75}
+              onPress={() => router.push('/notifications' as never)}
+            >
+              <Ionicons name="notifications-outline" size={17} color={isDark ? '#ffffff' : '#0f172a'} />
+              {unreadNotifCount > 0 ? (
+                <View style={desktopStyles.notifDot}>
+                  {unreadNotifCount <= 9 ? <Text style={desktopStyles.notifDotText}>{unreadNotifCount}</Text> : null}
+                </View>
+              ) : null}
+            </TouchableOpacity>
+
+            {/* ☀️ / 🌙 PC-View Style Light / Dark Toggle */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.themeToggleBtn,
+                isDark ? desktopStyles.themeToggleBtnDark : desktopStyles.themeToggleBtnLight,
+                { paddingHorizontal: 9, paddingVertical: 5 },
+              ]}
+              activeOpacity={0.8}
+              onPress={toggleThemeMode}
+            >
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={14}
+                color={isDark ? '#f59e0b' : '#0f172a'}
+              />
+              <Text
+                style={[
+                  desktopStyles.themeToggleBtnText,
+                  { color: isDark ? '#ffffff' : '#0f172a' },
+                ]}
+              >
+                {isDark ? 'Light' : 'Dark'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* 📱 TABS VIEW CONTAINER (Bottom tabs hide on Desktop, show on Mobile) */}
-      <View style={{ flex: 1 }}>
+      {/* 📱 TABS VIEW CONTAINER (Animated 4D Smooth Motion on tab switch) */}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <Tabs
-          tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
+          tabBar={(props: any) => (
+            <AnimatedPurpleBottomBar
+              {...props}
+              allowedTabs={config.tabs}
+              onTabPressTrigger={triggerTabsAnimation}
+            />
+          )}
           screenOptions={{
             headerShown: false,
             animation: 'fade',
+            sceneStyle: {
+              flex: 1,
+              paddingBottom: isDesktop ? 0 : (Platform.OS === 'ios' ? 70 : 60),
+            },
           }}>
           {(() => {
             const tabOrder = [
@@ -517,7 +715,7 @@ export default function TabLayout() {
           <Tabs.Screen name="garden/report-issue" options={{ href: null }} />
         </Tabs>
 
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -560,30 +758,57 @@ const desktopStyles = StyleSheet.create({
   menuNavRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+  },
+  menuNavWrapper: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 2,
+    borderRadius: RADIUS.pill,
+  },
+  desktopGlidingPill: {
+    position: 'absolute',
+    top: 2,
+    bottom: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    overflow: 'hidden',
+    zIndex: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.55,
+    shadowRadius: 10,
+  },
+  desktopLaserBar: {
+    position: 'absolute',
+    top: 0,
+    left: 8,
+    right: 8,
+    height: 2,
+    borderRadius: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
   },
   navMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
     backgroundColor: 'transparent',
+    zIndex: 2,
   },
-  navMenuItemActive: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+  navMenuItemActiveZ: {
+    zIndex: 3,
   },
   navMenuItemText: {
     fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#94a3b8',
-  },
-  navMenuItemTextActive: {
-    color: '#ffffff',
   },
   headerRight: {
     flexDirection: 'row',
@@ -609,9 +834,18 @@ const desktopStyles = StyleSheet.create({
   langSwitcherBox: {
     flexDirection: 'row',
     gap: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     padding: 2,
     borderRadius: RADIUS.pill,
+  },
+  langSwitcherBoxDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  langSwitcherBoxLight: {
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
   },
   langBtn: {
     paddingHorizontal: 6,
@@ -620,6 +854,12 @@ const desktopStyles = StyleSheet.create({
   },
   langBtnActive: {
     backgroundColor: '#ffffff',
+  },
+  langBtnActiveDark: {
+    backgroundColor: '#ffffff',
+  },
+  langBtnActiveLight: {
+    backgroundColor: '#0f172a',
   },
   langBtnText: {
     fontSize: 9.5,
@@ -633,12 +873,18 @@ const desktopStyles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  headerIconBtnDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+  },
+  headerIconBtnLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
   },
   notifDot: {
     minWidth: 15,

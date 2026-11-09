@@ -26,6 +26,7 @@ import { FarmerPortalUpgradeSection, FarmerPortalUpgradeSectionRef } from '@/src
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { FarmerTrainingRatingBanner } from '@/src/components/FarmerTrainingRatingBanner';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -38,6 +39,7 @@ interface FarmerDashboardViewProps {
 const SMART_AGRONOMY_TOOLS = [
   {
     id: 'copilot',
+    titleKey: 'aiCopilot',
     title: 'AI Copilot',
     icon: 'sparkles' as const,
     accent: '#059669',
@@ -50,6 +52,7 @@ const SMART_AGRONOMY_TOOLS = [
   },
   {
     id: 'doctor',
+    titleKey: 'cropDoctor',
     title: 'Crop Doctor',
     icon: 'scan' as const,
     accent: '#0284c7',
@@ -62,6 +65,7 @@ const SMART_AGRONOMY_TOOLS = [
   },
   {
     id: 'gps',
+    titleKey: 'farmGps',
     title: 'Farm GPS',
     icon: 'location' as const,
     accent: '#d97706',
@@ -74,6 +78,7 @@ const SMART_AGRONOMY_TOOLS = [
   },
   {
     id: 'crops',
+    titleKey: 'myCrops',
     title: 'My Crops',
     icon: 'leaf' as const,
     accent: '#15803d',
@@ -86,6 +91,7 @@ const SMART_AGRONOMY_TOOLS = [
   },
   {
     id: 'chat',
+    titleKey: 'supportChat',
     title: 'Support Chat',
     icon: 'chatbubbles' as const,
     accent: '#7c3aed',
@@ -98,7 +104,8 @@ const SMART_AGRONOMY_TOOLS = [
   },
   {
     id: 'verify',
-    title: 'Verify Product',
+    titleKey: 'govtAdvisory',
+    title: 'Govt Advisory',
     icon: 'shield-checkmark' as const,
     accent: '#e11d48',
     iconGradient: ['#f43f5e', '#be123c'] as [string, string],
@@ -125,10 +132,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const isDesktop = width >= 768;
   const upgradeSectionRef = useRef<FarmerPortalUpgradeSectionRef>(null);
   const scrollViewRef = useRef<ScrollView>(null);
-  const sectionOffsets = useRef<{ [key: string]: number }>({ all: 0 });
-  const [activeMobileSection, setActiveMobileSection] = useState<string>('all');
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
   const theme = {
     ...RoleThemes.FARMER,
@@ -207,17 +213,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       <RoleHeader
         currentRole="FARMER"
         profileName={user?.name || 'Farmer'}
-        subtitle={
-          user?.village
-            ? `📍 ${user.village}${user?.district ? `, ${user.district}` : ''}`
-            : user?.district
-            ? `📍 ${user.district}`
-            : (user as any)?.farmName
-            ? `🏡 ${(user as any).farmName}`
-            : user?.kingId
-            ? `👑 ID: ${user.kingId}`
-            : undefined
-        }
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
           <View style={{ alignItems: 'flex-end', gap: 3 }}>
@@ -229,7 +224,19 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             ) : null}
 
             <TouchableOpacity
-              style={styles.combinedMembershipCard}
+              style={[
+                styles.combinedMembershipCard,
+                !colors.isDark && {
+                  backgroundColor: '#ffffff',
+                  borderWidth: 1.5,
+                  borderColor: '#cbd5e1',
+                  shadowColor: 'rgba(0, 0, 0, 0.08)',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 1,
+                  shadowRadius: 4,
+                  elevation: 2,
+                },
+              ]}
               activeOpacity={0.88}
               onPress={() => {
                 tap();
@@ -238,23 +245,43 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <View style={styles.combinedCardTopRow}>
-                <Ionicons name={currentPlanMeta.icon} size={13} color="#f59e0b" />
-                <Text style={styles.combinedCardPlanText} numberOfLines={1}>
+                <Ionicons name={currentPlanMeta.icon} size={14} color="#d97706" />
+                <Text
+                  style={[
+                    styles.combinedCardPlanText,
+                    { color: colors.isDark ? '#ffffff' : '#0f172a' },
+                  ]}
+                  numberOfLines={1}
+                >
                   {meta.label}
                 </Text>
               </View>
 
               {plan !== 'FREE' && !isExpired && (daysUntilExpiry !== null || formattedExpiry) ? (
                 <View style={styles.combinedCardValidRow}>
-                  <Ionicons name="time-outline" size={10} color="#fef08a" />
-                  <Text style={styles.combinedCardValidText} numberOfLines={1} adjustsFontSizeToFit>
+                  <Ionicons name="time-outline" size={11} color={colors.isDark ? '#fef08a' : '#d97706'} />
+                  <Text
+                    style={[
+                      styles.combinedCardValidText,
+                      { color: colors.isDark ? '#fef08a' : '#b45309' },
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
                     {daysUntilExpiry !== null ? `${daysUntilExpiry}d left` : ''}
                     {formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
                   </Text>
                 </View>
               ) : (
                 <View style={styles.combinedCardValidRow}>
-                  <Text style={styles.combinedCardValidText}>Farmer Pass 🎟️</Text>
+                  <Text
+                    style={[
+                      styles.combinedCardValidText,
+                      { color: colors.isDark ? '#fef08a' : '#15803d', fontFamily: FONT.extraBold },
+                    ]}
+                  >
+                    Farmer Pass 🎟️
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -271,72 +298,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       />
 
       <View style={styles.content}>
-
-        {/* 📱 MOBILE SECTION QUICK-TABS (Visible on mobile screen for instant tool jump) */}
-        {!isDesktop && (
-          <View style={styles.mobileQuickTabsRow}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.mobileQuickTabsScroll}
-            >
-              {[
-                { id: 'all', label: 'All', icon: 'apps-outline' as const },
-                { id: 'tools', label: 'Agronomy Hub', icon: 'build-outline' as const },
-                { id: 'accounts', label: 'Accounts', icon: 'receipt-outline' as const },
-                { id: 'weather', label: 'Weather', icon: 'cloud-outline' as const },
-                { id: 'plans', label: 'VIP Pass', icon: 'ribbon-outline' as const },
-              ].map((tab) => {
-                const isActive = activeMobileSection === tab.id;
-                return (
-                  <TouchableOpacity
-                    key={tab.id}
-                    style={[
-                      styles.mobileQuickTabPill,
-                      isActive && styles.mobileQuickTabPillActive,
-                      {
-                        backgroundColor: isActive
-                          ? '#16a34a'
-                          : colors.isDark
-                          ? 'rgba(255, 255, 255, 0.08)'
-                          : '#ffffff',
-                        borderColor: isActive
-                          ? '#22c55e'
-                          : colors.isDark
-                          ? 'rgba(255, 255, 255, 0.14)'
-                          : '#cbd5e1',
-                      },
-                    ]}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      tap();
-                      setActiveMobileSection(tab.id);
-                      const targetY = sectionOffsets.current[tab.id] ?? 0;
-                      scrollViewRef.current?.scrollTo({ y: Math.max(0, targetY - 8), animated: true });
-                    }}
-                  >
-                    <Ionicons
-                      name={tab.icon}
-                      size={12}
-                      color={isActive ? '#ffffff' : colors.isDark ? '#94a3b8' : '#334155'}
-                    />
-                    <Text
-                      style={[
-                        styles.mobileQuickTabText,
-                        {
-                          color: isActive ? '#ffffff' : colors.isDark ? '#f1f5f9' : '#0f172a',
-                          fontFamily: isActive ? FONT.bold : FONT.semiBold,
-                        },
-                      ]}
-                    >
-                      {tab.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        )}
         {/* Active Group Voice Call Alert Banner for Farmer */}
         {voiceCallHook.activeCall ? (
           <TouchableOpacity
@@ -375,13 +336,11 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
 
         {/* Live Open-Meteo Weather Card */}
-        <View onLayout={(e) => { sectionOffsets.current['weather'] = e.nativeEvent.layout.y; }}>
-          <OpenMeteoWeatherCard />
-        </View>
+        <OpenMeteoWeatherCard />
 
         {/* Quick Accounts & Payments Action Grid */}
-        <View onLayout={(e) => { sectionOffsets.current['accounts'] = e.nativeEvent.layout.y; }} style={[styles.quickAccountsCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.quickAccountsTitle, { color: colors.text }]}>📊 Quick Accounts & Payments</Text>
+        <View style={[styles.quickAccountsCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.quickAccountsTitle, { color: colors.text }]}>📊 {t('quickActions', 'Quick Accounts & Payments')}</Text>
           <View style={styles.quickAccountsGrid}>
             {/* Button 1: + Add Sale */}
             <TouchableOpacity
@@ -393,7 +352,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="add-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>+ Add Sale</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>{t('addSaleBtn', '+ Add Sale')}</Text>
             </TouchableOpacity>
 
             {/* Button 2: + Add Expense */}
@@ -406,7 +365,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="remove-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>+ Add Expense</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>{t('addExpenseBtn', '+ Add Expense')}</Text>
             </TouchableOpacity>
 
             {/* Button 3: Payment In */}
@@ -420,7 +379,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="arrow-down-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>Payment In</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>{t('receivable', 'Payment In')}</Text>
             </TouchableOpacity>
 
             {/* Button 4: Payment Out */}
@@ -434,7 +393,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               }}
             >
               <Ionicons name="arrow-up-circle" size={15} color="#ffffff" />
-              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>Payment Out</Text>
+              <Text style={styles.quickAccountsBtnText} numberOfLines={1}>{t('payable', 'Payment Out')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -446,12 +405,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         <MarketRatesCard />
 
         {/* 🚜 Essential Farm Tools & Agronomy Hub Section (Compact) */}
-        <View onLayout={(e) => { sectionOffsets.current['tools'] = e.nativeEvent.layout.y; }} style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+        <View style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
           {/* Compact Section Header */}
           <View style={styles.toolsSectionHeader}>
             <View style={styles.toolsSectionHeaderLeft}>
               <Ionicons name="apps" size={15} color="#16a34a" />
-              <Text style={[styles.toolsSectionTitle, { color: colors.text }]}>Smart Agronomy Hub & Tools</Text>
+              <Text style={[styles.toolsSectionTitle, { color: colors.text }]}>{t('cropIntelligence', 'Smart Agronomy Hub & Tools')}</Text>
             </View>
             <View style={[styles.toolsSectionCountBadge, { backgroundColor: colors.isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7' }]}>
               <Text style={styles.toolsSectionCountText}>6 Quick Tools</Text>
@@ -523,7 +482,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                         ]}
                         numberOfLines={1}
                       >
-                        {tool.title}
+                        {t((tool as any).titleKey || tool.id, tool.title)}
                       </Text>
                     </View>
 
@@ -547,9 +506,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         </View>
 
         {/* 🌟 Executive Smart Farming Portal 7-Feature Upgrade Section */}
-        <View onLayout={(e) => { sectionOffsets.current['plans'] = e.nativeEvent.layout.y; }}>
-          <FarmerPortalUpgradeSection ref={upgradeSectionRef} />
-        </View>
+        <FarmerPortalUpgradeSection ref={upgradeSectionRef} />
 
 
       </View>
@@ -587,36 +544,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 };
 
 const styles = StyleSheet.create({
-  mobileQuickTabsRow: {
-    marginHorizontal: SPACING.md,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  mobileQuickTabsScroll: {
-    gap: 6,
-    paddingVertical: 2,
-    alignItems: 'center',
-  },
-  mobileQuickTabPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-  },
-  mobileQuickTabPillActive: {
-    shadowColor: '#16a34a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  mobileQuickTabText: {
-    fontSize: 11,
-    letterSpacing: -0.1,
-  },
   container: { flex: 1 },
   scrollContent: { flexGrow: 1 },
   content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 20 },
@@ -795,8 +722,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionCardTitle4D: {
-    fontSize: 11.5,
-    fontFamily: FONT.bold,
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
     letterSpacing: -0.2,
   },
   chevronPill4D: {

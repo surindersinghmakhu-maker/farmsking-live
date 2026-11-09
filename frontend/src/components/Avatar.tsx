@@ -25,8 +25,8 @@ export function Avatar({ uri, size = 52 }: AvatarProps) {
             resizeMode="cover"
           />
         ) : (
-          <View style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="person" size={Math.round(size * 0.52)} color="#94a3b8" />
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: size / 2 }}>
+            <Ionicons name="person" size={Math.round(size * 0.52)} color="#475569" />
           </View>
         )}
       </View>

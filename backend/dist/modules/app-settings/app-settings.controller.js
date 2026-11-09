@@ -64,6 +64,15 @@ let AppSettingsController = class AppSettingsController {
     getPublicMasterData() {
         return this.appSettingsService.getPublicMasterData();
     }
+    getVisitorStats() {
+        return this.appSettingsService.getVisitorStats();
+    }
+    recordVisit(dto) {
+        return this.appSettingsService.recordVisit(dto);
+    }
+    updateVisitorStats(user, dto) {
+        return this.appSettingsService.updateVisitorStats(user, dto);
+    }
 };
 exports.AppSettingsController = AppSettingsController;
 __decorate([
@@ -168,6 +177,29 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "getPublicMasterData", null);
+__decorate([
+    (0, common_1.Get)('visitor-stats'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "getVisitorStats", null);
+__decorate([
+    (0, common_1.Post)('record-visit'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "recordVisit", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
+    (0, common_1.Patch)('visitor-stats'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AppSettingsController.prototype, "updateVisitorStats", null);
 exports.AppSettingsController = AppSettingsController = __decorate([
     (0, common_1.Controller)('app-settings'),
     __metadata("design:paramtypes", [app_settings_service_1.AppSettingsService])

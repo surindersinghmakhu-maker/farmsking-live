@@ -38,6 +38,8 @@ import { useMyCrops } from '@/src/hooks/useCrops';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
 import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
+import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useLanguage } from '@/src/store/language-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -48,6 +50,9 @@ function todayIso() {
 }
 
 export function LabourManagementSection() {
+  const { colors, isDark } = useExecutiveTheme();
+  const { t } = useLanguage();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
   const [subTab, setSubTab] = useState<'WORKERS' | 'WORK_ENTRIES' | 'PAYMENTS'>('WORKERS');
   const { user } = useAuth();
   const isSupervisor = user?.role === 'SUPERVISOR' || (Array.isArray(user?.roles) && user.roles.includes('SUPERVISOR' as any));
@@ -325,15 +330,15 @@ export function LabourManagementSection() {
   return (
     <View style={styles.container}>
       {/* 1. Header Summary Banner */}
-      <View style={[styles.summaryCard, premiumShadow('#0f172a', 'sm')]}>
+      <View style={[styles.summaryCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow('#0f172a', 'sm')]}>
         <View style={styles.summaryTopRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <View style={styles.summaryIconBg}>
+            <View style={[styles.summaryIconBg, isDark && { backgroundColor: 'rgba(22, 163, 74, 0.2)' }]}>
               <Ionicons name="people" size={20} color="#16a34a" />
             </View>
             <View>
-              <Text style={styles.summaryTitle}>Labour Management</Text>
-              <Text style={styles.summarySubtitle}>
+              <Text style={[styles.summaryTitle, isDark && { color: colors.text }]}>Labour Management</Text>
+              <Text style={[styles.summarySubtitle, isDark && { color: colors.textMuted }]}>
                 {totalWorkersCount} Worker{totalWorkersCount === 1 ? '' : 's'} Registered
               </Text>
             </View>
@@ -345,7 +350,7 @@ export function LabourManagementSection() {
               onPress={handleOpenAddWorker}
             >
               <Ionicons name="person-add" size={14} color="#ffffff" />
-              <Text style={styles.addWorkerTopBtnText}>+ Add Worker</Text>
+              <Text style={styles.addWorkerTopBtnText}>{t('addWorker', '+ Add Worker')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -355,27 +360,27 @@ export function LabourManagementSection() {
       {canAddLabour && (
         <View style={styles.quickActionRow}>
           <TouchableOpacity
-            style={[styles.quickActionBtn, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}
+            style={[styles.quickActionBtn, isDark ? { backgroundColor: 'rgba(234, 88, 12, 0.15)', borderColor: 'rgba(234, 88, 12, 0.35)' } : { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}
             activeOpacity={0.8}
             onPress={() => handleOpenAddWork()}
           >
             <Ionicons name="hammer-outline" size={16} color="#ea580c" />
-            <Text style={[styles.quickActionBtnText, { color: '#c2410c' }]}>+ Log Work</Text>
+            <Text style={[styles.quickActionBtnText, { color: isDark ? '#fb923c' : '#c2410c' }]}>{t('markAttendance', '+ Log Work')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.quickActionBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+            style={[styles.quickActionBtn, isDark ? { backgroundColor: 'rgba(22, 163, 74, 0.15)', borderColor: 'rgba(22, 163, 74, 0.35)' } : { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
             activeOpacity={0.8}
             onPress={() => handleOpenAddPayment()}
           >
             <Ionicons name="cash-outline" size={16} color="#16a34a" />
-            <Text style={[styles.quickActionBtnText, { color: '#166534' }]}>+ Give Payment</Text>
+            <Text style={[styles.quickActionBtnText, { color: isDark ? '#4ade80' : '#166534' }]}>{t('recordPaymentBtn', '+ Give Payment')}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* 3. Sub Tabs Bar */}
-      <View style={styles.subTabRow}>
+      <View style={[styles.subTabRow, isDark && { backgroundColor: 'rgba(0, 0, 0, 0.45)', borderWidth: 1, borderColor: colors.cardBorder }]}>
         <TouchableOpacity
           style={[styles.subTabChip, subTab === 'WORKERS' && styles.subTabChipActive]}
           activeOpacity={0.8}
@@ -387,10 +392,10 @@ export function LabourManagementSection() {
           <Ionicons
             name="people-outline"
             size={14}
-            color={subTab === 'WORKERS' ? '#ffffff' : '#475569'}
+            color={subTab === 'WORKERS' ? '#ffffff' : (isDark ? colors.textMuted : '#475569')}
           />
-          <Text style={[styles.subTabText, subTab === 'WORKERS' && styles.subTabTextActive]}>
-            Workers List ({workers.length})
+          <Text style={[styles.subTabText, isDark && { color: colors.textMuted }, subTab === 'WORKERS' && styles.subTabTextActive]}>
+            {t('workersList', 'Workers List')} ({workers.length})
           </Text>
         </TouchableOpacity>
 
@@ -405,10 +410,10 @@ export function LabourManagementSection() {
           <Ionicons
             name="document-text-outline"
             size={14}
-            color={subTab === 'WORK_ENTRIES' ? '#ffffff' : '#475569'}
+            color={subTab === 'WORK_ENTRIES' ? '#ffffff' : (isDark ? colors.textMuted : '#475569')}
           />
-          <Text style={[styles.subTabText, subTab === 'WORK_ENTRIES' && styles.subTabTextActive]}>
-            Work Log ({workEntries.length})
+          <Text style={[styles.subTabText, isDark && { color: colors.textMuted }, subTab === 'WORK_ENTRIES' && styles.subTabTextActive]}>
+            {t('workEntries', 'Work Log')} ({workEntries.length})
           </Text>
         </TouchableOpacity>
 
@@ -423,10 +428,10 @@ export function LabourManagementSection() {
           <Ionicons
             name="wallet-outline"
             size={14}
-            color={subTab === 'PAYMENTS' ? '#ffffff' : '#475569'}
+            color={subTab === 'PAYMENTS' ? '#ffffff' : (isDark ? colors.textMuted : '#475569')}
           />
-          <Text style={[styles.subTabText, subTab === 'PAYMENTS' && styles.subTabTextActive]}>
-            Payments ({payments.length})
+          <Text style={[styles.subTabText, isDark && { color: colors.textMuted }, subTab === 'PAYMENTS' && styles.subTabTextActive]}>
+            {t('paymentsList', 'Payments')} ({payments.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -436,10 +441,10 @@ export function LabourManagementSection() {
         isLoadingWorkers ? (
           <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 30 }} />
         ) : workers.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Ionicons name="people-outline" size={42} color="#cbd5e1" />
-            <Text style={styles.emptyTitle}>No Workers Added Yet</Text>
-            <Text style={styles.emptySub}>
+          <View style={[styles.emptyCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+            <Ionicons name="people-outline" size={42} color={isDark ? '#334155' : '#cbd5e1'} />
+            <Text style={[styles.emptyTitle, isDark && { color: colors.text }]}>No Workers Added Yet</Text>
+            <Text style={[styles.emptySub, isDark && { color: colors.textMuted }]}>
               Add daily wage workers, tractor drivers, or harvest laborers to manage work and payments.
             </Text>
             <TouchableOpacity style={styles.emptyBtn} activeOpacity={0.8} onPress={handleOpenAddWorker}>
@@ -461,14 +466,14 @@ export function LabourManagementSection() {
               .map((w) => {
               const pending = w.pendingBalance ?? 0;
               return (
-                <View key={w.id} style={[styles.workerCard, premiumShadow('#0f172a', 'sm')]}>
+                <View key={w.id} style={[styles.workerCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                   {/* Top Row: Worker Avatar, Name & Inline Metrics (Earned, Paid, Balance) */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap' }}>
                       <Avatar size={36} />
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <Text style={styles.workerName}>{w.name}</Text>
+                          <Text style={[styles.workerName, isDark && { color: colors.text }]}>{w.name}</Text>
                           <TouchableOpacity
                             style={{ padding: 2 }}
                             activeOpacity={0.7}
@@ -479,25 +484,25 @@ export function LabourManagementSection() {
                           </TouchableOpacity>
 
                           {/* Inline Metrics Directly Next To Worker Name */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: isDark ? '#0b1329' : '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' }}>
                               Earned: <Text style={{ fontFamily: FONT.bold, color: '#c2410c' }}>{formatInr(w.totalEarned ?? 0)}</Text>
                             </Text>
-                            <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                            <Text style={{ fontSize: 10.5, color: isDark ? colors.cardBorder : '#cbd5e1' }}>·</Text>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' }}>
                               Paid: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{formatInr(w.totalPaid ?? 0)}</Text>
                             </Text>
-                            <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                            <Text style={{ fontSize: 10.5, color: isDark ? colors.cardBorder : '#cbd5e1' }}>·</Text>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' }}>
                               Bal: <Text style={{ fontFamily: FONT.extraBold, color: pending > 0 ? '#dc2626' : '#16a34a' }}>{formatInr(pending)}</Text>
                             </Text>
                           </View>
                         </View>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-                          {w.mobile ? <Text style={styles.workerMeta}>📱 {w.mobile}</Text> : null}
+                          {w.mobile ? <Text style={[styles.workerMeta, isDark && { color: colors.textMuted }]}>📱 {w.mobile}</Text> : null}
                           {w.defaultRate ? (
-                            <Text style={styles.workerMeta}>
+                            <Text style={[styles.workerMeta, isDark && { color: colors.textMuted }]}>
                               🏷️ ₹{w.defaultRate}/{w.defaultUnit || 'Day'}
                             </Text>
                           ) : null}
@@ -507,10 +512,10 @@ export function LabourManagementSection() {
                   </View>
 
                   {/* Card Actions: + Work | + Pay | Statement */}
-                  <View style={styles.workerActionRow}>
+                  <View style={[styles.workerActionRow, isDark && { borderTopColor: colors.cardBorder }]}>
                     {canAddLabour && (
                       <TouchableOpacity
-                        style={styles.workerActionBtn}
+                        style={[styles.workerActionBtn, isDark && { borderRightColor: colors.cardBorder }]}
                         activeOpacity={0.8}
                         onPress={() => handleOpenAddWork(w)}
                       >
@@ -521,7 +526,7 @@ export function LabourManagementSection() {
 
                     {canAddLabour && (
                       <TouchableOpacity
-                        style={styles.workerActionBtn}
+                        style={[styles.workerActionBtn, isDark && { borderRightColor: colors.cardBorder }]}
                         activeOpacity={0.8}
                         onPress={() => handleOpenAddPayment(w)}
                       >
@@ -548,10 +553,10 @@ export function LabourManagementSection() {
         isLoadingWork ? (
           <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 30 }} />
         ) : workEntries.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Ionicons name="document-text-outline" size={42} color="#cbd5e1" />
-            <Text style={styles.emptyTitle}>No Work Entries Logged</Text>
-            <Text style={styles.emptySub}>Log daily work for your labor workers here.</Text>
+          <View style={[styles.emptyCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+            <Ionicons name="document-text-outline" size={42} color={isDark ? '#334155' : '#cbd5e1'} />
+            <Text style={[styles.emptyTitle, isDark && { color: colors.text }]}>No Work Entries Logged</Text>
+            <Text style={[styles.emptySub, isDark && { color: colors.textMuted }]}>Log daily work for your labor workers here.</Text>
             <TouchableOpacity style={styles.emptyBtn} activeOpacity={0.8} onPress={() => handleOpenAddWork()}>
               <Ionicons name="add" size={16} color="#ffffff" />
               <Text style={styles.emptyBtnText}>Log Work Entry</Text>
@@ -560,13 +565,13 @@ export function LabourManagementSection() {
         ) : (
           <View style={{ gap: 10 }}>
             {workEntries.map((entry) => (
-              <View key={entry.id} style={[styles.itemCard, premiumShadow('#0f172a', 'sm')]}>
+              <View key={entry.id} style={[styles.itemCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                 <View style={styles.itemCardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="hammer-outline" size={15} color="#ea580c" />
-                    <Text style={styles.itemWorkerName}>{entry.worker?.name || 'Labour Worker'}</Text>
+                    <Text style={[styles.itemWorkerName, isDark && { color: colors.text }]}>{entry.worker?.name || 'Labour Worker'}</Text>
                   </View>
-                  <Text style={styles.itemDate}>
+                  <Text style={[styles.itemDate, isDark && { color: colors.textMuted }]}>
                     {new Date(entry.workDate).toLocaleDateString('en-IN', {
                       day: '2-digit',
                       month: 'short',
@@ -578,13 +583,13 @@ export function LabourManagementSection() {
                 <View style={styles.itemCardBody}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemType}>{entry.workType}</Text>
-                    <Text style={styles.itemQtyRate}>
+                    <Text style={[styles.itemQtyRate, isDark && { color: colors.textMuted }]}>
                       {entry.quantity} {entry.unit} @ ₹{entry.rate}/{entry.unit}
                     </Text>
                   </View>
                   <Text style={styles.itemAmount}>+{formatInr(Number(entry.totalAmount))}</Text>
                 </View>
-                {entry.notes ? <Text style={styles.itemNotes}>📝 {entry.notes}</Text> : null}
+                {entry.notes ? <Text style={[styles.itemNotes, isDark && { color: colors.textMuted }]}>📝 {entry.notes}</Text> : null}
               </View>
             ))}
           </View>
@@ -592,10 +597,10 @@ export function LabourManagementSection() {
       ) : isLoadingPayments ? (
         <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 30 }} />
       ) : payments.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Ionicons name="wallet-outline" size={42} color="#cbd5e1" />
-          <Text style={styles.emptyTitle}>No Labour Payments Recorded</Text>
-          <Text style={styles.emptySub}>Record payments given to workers here.</Text>
+        <View style={[styles.emptyCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+          <Ionicons name="wallet-outline" size={42} color={isDark ? '#334155' : '#cbd5e1'} />
+          <Text style={[styles.emptyTitle, isDark && { color: colors.text }]}>No Labour Payments Recorded</Text>
+          <Text style={[styles.emptySub, isDark && { color: colors.textMuted }]}>Record payments given to workers here.</Text>
           <TouchableOpacity style={styles.emptyBtn} activeOpacity={0.8} onPress={() => handleOpenAddPayment()}>
             <Ionicons name="add" size={16} color="#ffffff" />
             <Text style={styles.emptyBtnText}>Record Payment</Text>
@@ -604,13 +609,13 @@ export function LabourManagementSection() {
       ) : (
         <View style={{ gap: 10 }}>
           {payments.map((p) => (
-            <View key={p.id} style={[styles.itemCard, premiumShadow('#0f172a', 'sm')]}>
+            <View key={p.id} style={[styles.itemCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow('#0f172a', 'sm')]}>
               <View style={styles.itemCardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="checkmark-circle-outline" size={15} color="#16a34a" />
-                  <Text style={styles.itemWorkerName}>{p.worker?.name || 'Labour Worker'}</Text>
+                  <Text style={[styles.itemWorkerName, isDark && { color: colors.text }]}>{p.worker?.name || 'Labour Worker'}</Text>
                 </View>
-                <Text style={styles.itemDate}>
+                <Text style={[styles.itemDate, isDark && { color: colors.textMuted }]}>
                   {new Date(p.paymentDate).toLocaleDateString('en-IN', {
                     day: '2-digit',
                     month: 'short',
@@ -2240,14 +2245,14 @@ function generateWorkerStatementPdfHtml({
   `;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   container: { flex: 1, gap: 8 },
   summaryCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     gap: 8,
   },
   summaryTopRow: {
@@ -2259,12 +2264,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
-  summarySubtitle: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
+  summaryTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
+  summarySubtitle: { fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' },
   addWorkerTopBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2277,15 +2282,15 @@ const styles = StyleSheet.create({
   addWorkerTopBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
   metricsRow: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
     borderRadius: RADIUS.md,
     padding: 6,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: isDark ? colors.cardBorder : '#f1f5f9',
     gap: 6,
   },
   metricItem: { flex: 1, alignItems: 'center' },
-  metricLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' },
+  metricLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b' },
   metricValue: { fontSize: 12.5, fontFamily: FONT.extraBold, marginTop: 1 },
   quickActionRow: { flexDirection: 'row', gap: 6 },
   quickActionBtn: {
@@ -2301,9 +2306,11 @@ const styles = StyleSheet.create({
   quickActionBtnText: { fontSize: 11.5, fontFamily: FONT.bold },
   subTabRow: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : '#f1f5f9',
     borderRadius: RADIUS.pill,
     padding: 3,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? colors.cardBorder : 'transparent',
     gap: 4,
   },
   subTabChip: {
@@ -2316,20 +2323,20 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   subTabChipActive: { backgroundColor: '#16a34a' },
-  subTabText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
+  subTabText: { fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569' },
   subTabTextActive: { color: '#ffffff' },
   emptyCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
   },
-  emptyTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#334155' },
-  emptySub: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', maxWidth: 300 },
+  emptyTitle: { fontSize: 13, fontFamily: FONT.bold, color: isDark ? colors.text : '#334155' },
+  emptySub: { fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#94a3b8', textAlign: 'center', maxWidth: 300 },
   emptyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2342,33 +2349,33 @@ const styles = StyleSheet.create({
   },
   emptyBtnText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
   workerCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.md,
     padding: 9,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     gap: 6,
   },
   workerCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  workerName: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
-  workerMeta: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
+  workerName: { fontSize: 13.5, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
+  workerMeta: { fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' },
   balanceBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#fecdd3' },
   balanceBadgeText: { fontSize: 10.5, fontFamily: FONT.extraBold },
   workerMetricsBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: RADIUS.sm,
   },
-  workerMetricText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' },
+  workerMetricText: { fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' },
   workerActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: isDark ? colors.cardBorder : '#f1f5f9',
     paddingTop: 6,
   },
   workerActionBtn: {
@@ -2378,26 +2385,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
     borderRightWidth: 1,
-    borderRightColor: '#f1f5f9',
+    borderRightColor: isDark ? colors.cardBorder : '#f1f5f9',
     paddingVertical: 3,
   },
   workerActionText: { fontSize: 10.5, fontFamily: FONT.bold },
   itemCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     gap: 6,
   },
   itemCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  itemWorkerName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  itemDate: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' },
+  itemWorkerName: { fontSize: 13, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' },
+  itemDate: { fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#94a3b8' },
   itemCardBody: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   itemType: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ea580c' },
-  itemQtyRate: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  itemQtyRate: { fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginTop: 1 },
   itemAmount: { fontSize: 15, fontFamily: FONT.extraBold, color: '#c2410c' },
-  itemNotes: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 },
+  itemNotes: { fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginTop: 4 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
@@ -2408,53 +2415,55 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 460,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
     gap: 8,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? colors.cardBorder : 'transparent',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
     paddingBottom: 8,
   },
-  modalTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 8, marginBottom: 4 },
+  modalTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
+  label: { fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#334155', marginTop: 8, marginBottom: 4 },
   input: {
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 13,
     fontFamily: FONT.medium,
-    backgroundColor: '#f8fafc',
-    color: '#0f172a',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
+    color: isDark ? colors.text : '#0f172a',
   },
   pickerChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
   },
   pickerChipActive: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-  pickerChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' },
+  pickerChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#475569' },
   pickerChipTextActive: { color: '#ffffff' },
   calcBox: {
-    backgroundColor: '#fff7ed',
+    backgroundColor: isDark ? 'rgba(234, 88, 12, 0.12)' : '#fff7ed',
     borderRadius: RADIUS.md,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#ffedd5',
+    borderColor: isDark ? 'rgba(234, 88, 12, 0.3)' : '#ffedd5',
     marginTop: 8,
   },
-  calcTitle: { fontSize: 10.5, fontFamily: FONT.bold, color: '#9a3412' },
-  calcValue: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 },
+  calcTitle: { fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#fb923c' : '#9a3412' },
+  calcValue: { fontSize: 12.5, fontFamily: FONT.extraBold, color: isDark ? '#fdba74' : '#c2410c', marginTop: 1 },
   errorText: { color: '#dc2626', fontSize: 11.5, fontFamily: FONT.bold, marginTop: 4 },
   modalActionRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
   cancelBtn: {
@@ -2462,10 +2471,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: RADIUS.md,
   },
-  cancelBtnText: { color: '#475569', fontFamily: FONT.bold, fontSize: 13 },
+  cancelBtnText: { color: isDark ? colors.textMuted : '#475569', fontFamily: FONT.bold, fontSize: 13 },
   saveBtn: {
     flex: 1.5,
     alignItems: 'center',
@@ -2478,13 +2487,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
     padding: 10,
     borderRadius: RADIUS.md,
     marginBottom: 10,
   },
-  statementWorkerName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  statementWorkerMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  statementWorkerName: { fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a' },
+  statementWorkerMeta: { fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginTop: 2 },
   callSmallBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2497,19 +2506,19 @@ const styles = StyleSheet.create({
   callSmallBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
   statementMetricsBox: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? '#0b1329' : '#ffffff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     borderRadius: RADIUS.md,
     padding: 8,
     marginBottom: 12,
   },
   statementMetricItem: { flex: 1, alignItems: 'center' },
-  statementMetricLabel: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
+  statementMetricLabel: { fontSize: 9.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' },
   statementMetricVal: { fontSize: 12.5, fontFamily: FONT.extraBold, marginTop: 2 },
   ledgerHeaderRow: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
     padding: 6,
     borderRadius: RADIUS.xs,
     marginBottom: 4,
@@ -2519,13 +2528,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
   },
-  ledgerParticulars: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
-  ledgerNotes: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  ledgerParticulars: { fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' },
+  ledgerNotes: { fontSize: 10, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' },
   ledgerVal: { fontSize: 11, fontFamily: FONT.bold, textAlign: 'right' },
   emptyLedgerBox: { padding: 20, alignItems: 'center' },
-  emptyLedgerText: { fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium },
+  emptyLedgerText: { fontSize: 12, color: isDark ? colors.textMuted : '#94a3b8', fontFamily: FONT.medium },
   shareWaBtn: {
     flexDirection: 'row',
     alignItems: 'center',

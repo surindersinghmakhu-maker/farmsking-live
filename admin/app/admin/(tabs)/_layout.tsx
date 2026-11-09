@@ -544,21 +544,6 @@ export default function TabLayout() {
                 />
               </TouchableOpacity>
             </View>
-
-            {/* 🚪 Mobile Header Quick Logout Button */}
-            <TouchableOpacity
-              style={[
-                mobileStyles.actionBtn,
-                isLight && { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-                isDarkTheme && { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)' },
-              ]}
-              onPress={handleLogout}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              accessibilityLabel="Sign out of Admin session"
-            >
-              <Ionicons name="log-out-outline" size={15} color="#ef4444" />
-            </TouchableOpacity>
           </View>
         )}
 
@@ -719,25 +704,6 @@ export default function TabLayout() {
                     </Text>
                   </TouchableOpacity>
                 )}
-
-                {/* 🚪 Top Bar Logout Button (Desktop) */}
-                {isDesktop && (
-                  <TouchableOpacity
-                    style={[
-                      desktopStyles.topLogoutBtn,
-                      isLight && desktopStyles.topLogoutBtnLight,
-                      isDarkTheme && desktopStyles.topLogoutBtnDark,
-                    ]}
-                    onPress={handleLogout}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Log out of FarmsKing Admin"
-                  >
-                    <Ionicons name="log-out-outline" size={14} color="#ef4444" />
-                    <Text style={[desktopStyles.topLogoutBtnText, isLight && { color: '#dc2626' }]}>
-                      Logout
-                    </Text>
-                  </TouchableOpacity>
-                )}
               </View>
             </View>
           </View>
@@ -756,9 +722,16 @@ export default function TabLayout() {
                - flex:1 so it fills all available height
                - paddingBottom on mobile so content clears the 64px floating tab bar
              On desktop paddingBottom is 0 (sidebar navigation, no tab bar). */}
-        <Tabs
-          tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
-          screenOptions={{
+        {/* 📱 TABS VIEW CONTAINER (Animated 4D Smooth Motion on tab switch) */}
+        <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+          <Tabs
+            tabBar={(props: any) => (
+              <AnimatedPurpleBottomBar
+                {...props}
+                onTabPressTrigger={triggerTabsAnimation}
+              />
+            )}
+            screenOptions={{
             headerShown: false,
             animation: 'fade',
             sceneStyle: {
@@ -1007,6 +980,7 @@ export default function TabLayout() {
             }}
           />
         </Tabs>
+        </Animated.View>
 
         {/* 🌟 SUPER PREMIUM MODALS & TOAST NOTIFICATIONS */}
         <GlobalCommandSearchModal

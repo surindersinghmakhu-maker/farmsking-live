@@ -21,8 +21,10 @@ import { useCart } from '@/src/store/cart-context';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { useLanguage } from '@/src/store/language-context';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { getTabsForRole } from '@/constants/RoleTabs';
 
 interface NavTabItem {
   key: string;
@@ -47,7 +49,19 @@ export default function PublicBottomNav() {
   const { items } = useCart();
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
+
+  const getTabLabel = (tab: NavTabItem) => {
+    if (tab.key === 'home' || tab.tabName === 'index') return t('tabHome', tab.label);
+    if (tab.key === 'farm' || tab.tabName === 'farm') return t('tabCrops', tab.label);
+    if (tab.key === 'records' || tab.tabName === 'records') return t('tabRecords', tab.label);
+    if (tab.key === 'shop' || tab.key === 'store' || tab.tabName === 'shop') return t('tabCustomerHome', tab.label);
+    if (tab.key === 'more' || tab.tabName === 'more' || tab.isMore) return t('tabMore', tab.label);
+    if (tab.key === 'farming') return t('tabFarms', tab.label);
+    if (tab.key === 'gardening' || tab.tabName === 'garden') return t('tabGardens', tab.label);
+    if (tab.key === 'doctors' || tab.tabName === 'ai-doctor') return t('tabMyAdvisor', tab.label);
+    return tab.label;
+  };
 
   const [showMoreModal, setShowMoreModal] = useState(false);
   const totalCartCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -55,7 +69,7 @@ export default function PublicBottomNav() {
   // Compute active navigation tabs dynamically according to user's logged-in status & role
   const navTabs: NavTabItem[] = useMemo(() => {
     if (!user) {
-      // 🌐 GUEST / UNREGISTERED VISITOR
+      // 🌐 GUEST / UNREGISTERED VISITOR - 100% synchronized with PC View PublicHeader (MAIN_NAV_LINKS)
       return [
         {
           key: 'home',
@@ -82,130 +96,8 @@ export default function PublicBottomNav() {
           shadow: '#10b981',
         },
         {
-          key: 'doctors',
-          label: 'Crop Doctors',
-          icon: 'medkit',
-          iconOutline: 'medkit-outline',
-          path: '/ai-doctor',
-          color: '#06b6d4',
-          glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
-          laser: ['#38bdf8', '#06b6d4', '#0284c7'],
-          border: 'rgba(6, 182, 212, 0.60)',
-          shadow: '#06b6d4',
-          isSpecial: true,
-        },
-        {
-          key: 'store',
-          label: 'Agri Store',
-          icon: 'cart',
-          iconOutline: 'cart-outline',
-          path: '/shop',
-          color: '#f97316',
-          glow: ['rgba(249, 115, 22, 0.32)', 'rgba(234, 88, 12, 0.18)', 'rgba(249, 115, 22, 0.05)'],
-          laser: ['#fb923c', '#f97316', '#ea580c'],
-          border: 'rgba(249, 115, 22, 0.50)',
-          shadow: '#f97316',
-        },
-        {
-          key: 'more',
-          label: 'More',
-          icon: 'grid',
-          iconOutline: 'grid-outline',
-          isMore: true,
-          color: '#a855f7',
-          glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-          laser: ['#c084fc', '#a855f7', '#7e22ce'],
-          border: 'rgba(168, 85, 247, 0.50)',
-          shadow: '#a855f7',
-        },
-      ];
-    }
-
-    // 🌾 1. FARMER ROLE
-    if (role === 'FARMER' || (!role && user.role === 'FARMER')) {
-      return [
-        {
-          key: 'home',
-          label: 'Home',
-          icon: 'home',
-          iconOutline: 'home-outline',
-          path: '/',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
-          key: 'crops',
-          label: 'Crops',
-          icon: 'leaf',
-          iconOutline: 'leaf-outline',
-          path: '/topic/Farming',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
-          key: 'doctors',
-          label: 'Crop Doctors',
-          icon: 'medkit',
-          iconOutline: 'medkit-outline',
-          path: '/ai-doctor',
-          color: '#06b6d4',
-          glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
-          laser: ['#38bdf8', '#06b6d4', '#0284c7'],
-          border: 'rgba(6, 182, 212, 0.60)',
-          shadow: '#06b6d4',
-          isSpecial: true,
-        },
-        {
-          key: 'store',
-          label: 'Agri Store',
-          icon: 'cart',
-          iconOutline: 'cart-outline',
-          path: '/shop',
-          color: '#f97316',
-          glow: ['rgba(249, 115, 22, 0.32)', 'rgba(234, 88, 12, 0.18)', 'rgba(249, 115, 22, 0.05)'],
-          laser: ['#fb923c', '#f97316', '#ea580c'],
-          border: 'rgba(249, 115, 22, 0.50)',
-          shadow: '#f97316',
-        },
-        {
-          key: 'more',
-          label: 'More',
-          icon: 'grid',
-          iconOutline: 'grid-outline',
-          isMore: true,
-          color: '#a855f7',
-          glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-          laser: ['#c084fc', '#a855f7', '#7e22ce'],
-          border: 'rgba(168, 85, 247, 0.50)',
-          shadow: '#a855f7',
-        },
-      ];
-    }
-
-    // 🌿 2. GARDENER ROLE
-    if (role === 'GARDENER' || user.role === 'GARDENER') {
-      return [
-        {
-          key: 'home',
-          label: 'Home',
-          icon: 'home',
-          iconOutline: 'home-outline',
-          path: '/',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
-          key: 'gardens',
-          label: 'Gardens',
+          key: 'gardening',
+          label: 'Gardening',
           icon: 'flower',
           iconOutline: 'flower-outline',
           path: '/topic/Gardening',
@@ -220,17 +112,16 @@ export default function PublicBottomNav() {
           label: 'Crop Doctors',
           icon: 'medkit',
           iconOutline: 'medkit-outline',
-          path: '/ai-doctor',
+          path: '/topic/Crop-Doctors',
           color: '#06b6d4',
           glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
           laser: ['#38bdf8', '#06b6d4', '#0284c7'],
           border: 'rgba(6, 182, 212, 0.60)',
           shadow: '#06b6d4',
-          isSpecial: true,
         },
         {
           key: 'store',
-          label: 'Store',
+          label: 'Agri Store',
           icon: 'cart',
           iconOutline: 'cart-outline',
           path: '/shop',
@@ -240,223 +131,52 @@ export default function PublicBottomNav() {
           border: 'rgba(249, 115, 22, 0.50)',
           shadow: '#f97316',
         },
-        {
-          key: 'more',
-          label: 'More',
-          icon: 'grid',
-          iconOutline: 'grid-outline',
-          isMore: true,
-          color: '#a855f7',
-          glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-          laser: ['#c084fc', '#a855f7', '#7e22ce'],
-          border: 'rgba(168, 85, 247, 0.50)',
-          shadow: '#a855f7',
-        },
       ];
     }
 
-    // 🛒 3. CUSTOMER ROLE
-    if (role === 'CUSTOMER' || user.role === 'CUSTOMER') {
-      return [
-        {
-          key: 'store',
-          label: 'Store',
-          icon: 'cart',
-          iconOutline: 'cart-outline',
-          path: '/shop',
-          color: '#f97316',
-          glow: ['rgba(249, 115, 22, 0.32)', 'rgba(234, 88, 12, 0.18)', 'rgba(249, 115, 22, 0.05)'],
-          laser: ['#fb923c', '#f97316', '#ea580c'],
-          border: 'rgba(249, 115, 22, 0.50)',
-          shadow: '#f97316',
-        },
-        {
-          key: 'doctors',
-          label: 'Crop Doctors',
-          icon: 'medkit',
-          iconOutline: 'medkit-outline',
-          path: '/ai-doctor',
-          color: '#06b6d4',
-          glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
-          laser: ['#38bdf8', '#06b6d4', '#0284c7'],
-          border: 'rgba(6, 182, 212, 0.60)',
-          shadow: '#06b6d4',
-          isSpecial: true,
-        },
-        {
-          key: 'cart',
-          label: 'Cart',
-          icon: 'bag-check',
-          iconOutline: 'bag-check-outline',
-          path: '/(user)/(tabs)/cart',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
-          key: 'more',
-          label: 'More',
-          icon: 'grid',
-          iconOutline: 'grid-outline',
-          isMore: true,
-          color: '#a855f7',
-          glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-          laser: ['#c084fc', '#a855f7', '#7e22ce'],
-          border: 'rgba(168, 85, 247, 0.50)',
-          shadow: '#a855f7',
-        },
-      ];
-    }
-
-    // 💼 4. BUSINESS PARTNER ROLE
-    if (role === 'BUSINESS_PARTNER' || user.role === 'BUSINESS_PARTNER') {
-      return [
-        {
-          key: 'home',
-          label: 'Home',
-          icon: 'home',
-          iconOutline: 'home-outline',
-          path: '/',
-          color: '#10b981',
-          glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-          laser: ['#00ff87', '#10b981', '#059669'],
-          border: 'rgba(16, 185, 129, 0.50)',
-          shadow: '#10b981',
-        },
-        {
-          key: 'partner',
-          label: 'Partner Hub',
-          icon: 'briefcase',
-          iconOutline: 'briefcase-outline',
-          path: '/(partner)/(tabs)',
-          color: '#6366f1',
-          glow: ['rgba(99, 102, 241, 0.32)', 'rgba(79, 70, 229, 0.18)', 'rgba(99, 102, 241, 0.05)'],
-          laser: ['#818cf8', '#6366f1', '#4f46e5'],
-          border: 'rgba(99, 102, 241, 0.50)',
-          shadow: '#6366f1',
-        },
-        {
-          key: 'doctors',
-          label: 'Crop Doctors',
-          icon: 'medkit',
-          iconOutline: 'medkit-outline',
-          path: '/ai-doctor',
-          color: '#06b6d4',
-          glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
-          laser: ['#38bdf8', '#06b6d4', '#0284c7'],
-          border: 'rgba(6, 182, 212, 0.60)',
-          shadow: '#06b6d4',
-          isSpecial: true,
-        },
-        {
-          key: 'wallet',
-          label: 'Wallet',
-          icon: 'wallet',
-          iconOutline: 'wallet-outline',
-          path: '/(partner)/(tabs)/wallet',
-          color: '#f59e0b',
-          glow: ['rgba(245, 158, 11, 0.32)', 'rgba(217, 119, 6, 0.18)', 'rgba(245, 158, 11, 0.05)'],
-          laser: ['#fbbf24', '#f59e0b', '#d97706'],
-          border: 'rgba(245, 158, 11, 0.50)',
-          shadow: '#f59e0b',
-        },
-        {
-          key: 'more',
-          label: 'More',
-          icon: 'grid',
-          iconOutline: 'grid-outline',
-          isMore: true,
-          color: '#a855f7',
-          glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-          laser: ['#c084fc', '#a855f7', '#7e22ce'],
-          border: 'rgba(168, 85, 247, 0.50)',
-          shadow: '#a855f7',
-        },
-      ];
-    }
-
-    // 🛡️ 5. DEFAULT / ADMIN / STAFF ROLES
-    return [
-      {
-        key: 'home',
-        label: 'Home',
-        icon: 'home',
-        iconOutline: 'home-outline',
-        path: '/',
-        color: '#10b981',
-        glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-        laser: ['#00ff87', '#10b981', '#059669'],
-        border: 'rgba(16, 185, 129, 0.50)',
-        shadow: '#10b981',
-      },
-      {
-        key: 'crops',
-        label: 'Farming',
-        icon: 'leaf',
-        iconOutline: 'leaf-outline',
-        path: '/topic/Farming',
-        color: '#10b981',
-        glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
-        laser: ['#00ff87', '#10b981', '#059669'],
-        border: 'rgba(16, 185, 129, 0.50)',
-        shadow: '#10b981',
-      },
-      {
-        key: 'doctors',
-        label: 'Crop Doctors',
-        icon: 'medkit',
-        iconOutline: 'medkit-outline',
-        path: '/ai-doctor',
-        color: '#06b6d4',
-        glow: ['rgba(6, 182, 212, 0.40)', 'rgba(16, 185, 129, 0.22)', 'rgba(6, 182, 212, 0.08)'],
-        laser: ['#38bdf8', '#06b6d4', '#0284c7'],
-        border: 'rgba(6, 182, 212, 0.60)',
-        shadow: '#06b6d4',
-        isSpecial: true,
-      },
-      {
-        key: 'store',
-        label: 'Agri Store',
-        icon: 'cart',
-        iconOutline: 'cart-outline',
-        path: '/shop',
-        color: '#f97316',
-        glow: ['rgba(249, 115, 22, 0.32)', 'rgba(234, 88, 12, 0.18)', 'rgba(249, 115, 22, 0.05)'],
-        laser: ['#fb923c', '#f97316', '#ea580c'],
-        border: 'rgba(249, 115, 22, 0.50)',
-        shadow: '#f97316',
-      },
-      {
-        key: 'more',
-        label: 'More',
-        icon: 'grid',
-        iconOutline: 'grid-outline',
-        isMore: true,
-        color: '#a855f7',
-        glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
-        laser: ['#c084fc', '#a855f7', '#7e22ce'],
-        border: 'rgba(168, 85, 247, 0.50)',
-        shadow: '#a855f7',
-      },
-    ];
+    // 🌾 LOGGED IN USER - Dynamically generated from RoleTabs (100% synchronized with PC View Header Tabs)
+    return getTabsForRole(role || user.role);
   }, [user, role]);
 
   // Compute active tab index
   const getActiveIndex = () => {
-    if (showMoreModal) return 4;
+    if (showMoreModal) {
+      const idx = navTabs.findIndex((t) => t.isMore);
+      if (idx !== -1) return idx;
+    }
     for (let i = 0; i < navTabs.length; i++) {
       const tab = navTabs[i];
       if (tab.path && (pathname === tab.path || (tab.path !== '/' && pathname.startsWith(tab.path)))) {
         return i;
       }
     }
-    if (pathname.startsWith('/ai-doctor') || pathname.startsWith('/crop-intelligence') || pathname.startsWith('/crop-disease-scanner')) {
-      return 2;
+    if (pathname === '/' || pathname === '/(user)/(tabs)' || pathname === '/(user)/(tabs)/index' || pathname === '/(partner)/(tabs)' || pathname === '/(partner)/(tabs)/index') {
+      const homeIdx = navTabs.findIndex((t) => t.key === 'index' || t.key === 'home');
+      if (homeIdx !== -1) return homeIdx;
     }
-    if (pathname.startsWith('/shop') || pathname.startsWith('/store')) {
-      return navTabs.findIndex(t => t.key === 'store') !== -1 ? navTabs.findIndex(t => t.key === 'store') : 3;
+    if (pathname.includes('/farm') || pathname.includes('/topic/Farming')) {
+      const idx = navTabs.findIndex((t) => t.key === 'farm' || t.key === 'farming' || t.key === 'crops');
+      if (idx !== -1) return idx;
+    }
+    if (pathname.includes('/garden') || pathname.includes('/topic/Gardening')) {
+      const idx = navTabs.findIndex((t) => t.key === 'garden' || t.key === 'gardening' || t.key === 'gardens');
+      if (idx !== -1) return idx;
+    }
+    if (pathname.includes('/records')) {
+      const idx = navTabs.findIndex((t) => t.key === 'records');
+      if (idx !== -1) return idx;
+    }
+    if (pathname.includes('/shop') || pathname.includes('/store')) {
+      const idx = navTabs.findIndex((t) => t.key === 'shop' || t.key === 'store' || t.key === 'admin_shop');
+      if (idx !== -1) return idx;
+    }
+    if (pathname.includes('/more') || pathname.includes('/admin_more')) {
+      const idx = navTabs.findIndex((t) => t.key === 'more' || t.key === 'admin_more');
+      if (idx !== -1) return idx;
+    }
+    if (pathname.startsWith('/ai-doctor') || pathname.startsWith('/crop-intelligence') || pathname.startsWith('/crop-disease-scanner') || pathname.startsWith('/topic/Crop-Doctors')) {
+      const idx = navTabs.findIndex((t) => t.key === 'doctors' || t.key === 'ai-doctor');
+      if (idx !== -1) return idx;
     }
     return 0; // Default Home
   };
@@ -468,14 +188,19 @@ export default function PublicBottomNav() {
   useEffect(() => {
     RNAnimated.spring(slideAnim, {
       toValue: activeIndex,
-      tension: 68,
-      friction: 10,
+      tension: 75,
+      friction: 9,
       useNativeDriver: false,
     }).start();
   }, [activeIndex]);
 
   // STRICT RULE: Only render on Mobile View (Width <= 768px). PC / Desktop uses top header menu exclusively.
   if (!isMobile) {
+    return null;
+  }
+
+  // Do not render for logged in users — tabs layouts use native 4D AnimatedPurpleBottomBar directly
+  if (user) {
     return null;
   }
 
@@ -489,8 +214,20 @@ export default function PublicBottomNav() {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    // Instant 4D spring response on press
+    RNAnimated.spring(slideAnim, {
+      toValue: tabIndex,
+      tension: 75,
+      friction: 9,
+      useNativeDriver: false,
+    }).start();
+
     if (tabItem.isMore) {
-      setShowMoreModal(true);
+      if (user) {
+        router.push(tabItem.path as any);
+      } else {
+        setShowMoreModal(true);
+      }
       return;
     }
     if (tabItem.path) {
@@ -517,18 +254,48 @@ export default function PublicBottomNav() {
     }
   };
 
+  const { isDark, colors } = useExecutiveTheme();
   const currentTab = navTabs[activeIndex] || navTabs[0];
+
+  const getTabColor = (tabItem: NavTabItem, isTabActive: boolean) => {
+    if (isTabActive) {
+      if (isDark) return tabItem.color;
+      switch (tabItem.key) {
+        case 'home':
+        case 'crops':
+        case 'farm':
+          return '#15803d';
+        case 'records':
+        case 'accounts':
+          return '#0284c7';
+        case 'store':
+        case 'shop':
+          return '#c2410c';
+        case 'more':
+          return '#7e22ce';
+        default:
+          return tabItem.color || '#15803d';
+      }
+    }
+    return isDark ? '#94a3b8' : '#0f172a';
+  };
 
   return (
     <>
       {/* ── Fixed Bottom Tab Bar ── */}
       <View style={styles.fixedWrapper} pointerEvents="box-none">
         <View
-          style={styles.barContainer}
+          style={[
+            styles.barContainer,
+            !isDark && {
+              backgroundColor: 'rgba(255, 255, 255, 0.98)',
+              borderColor: '#cbd5e1',
+            }
+          ]}
           onLayout={(e: LayoutChangeEvent) => setBarWidth(e.nativeEvent.layout.width)}
         >
           {Platform.OS === 'web' && (
-            <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+            <BlurView intensity={35} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
           )}
 
           {/* Dynamic Gliding Active Pill */}
@@ -541,8 +308,8 @@ export default function PublicBottomNav() {
                   transform: [
                     {
                       translateX: slideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3, 4],
-                        outputRange: [0, 1, 2, 3, 4].map(
+                        inputRange: navTabs.map((_, i) => i),
+                        outputRange: navTabs.map(
                           (i) => i * (barWidth / navTabs.length) + 4
                         ),
                         extrapolate: 'clamp',
@@ -604,7 +371,7 @@ export default function PublicBottomNav() {
                       isTabActive && { color: '#06b6d4', fontWeight: '800' },
                     ]}
                   >
-                    {tab.label}
+                    {getTabLabel(tab)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -621,9 +388,9 @@ export default function PublicBottomNav() {
                   <Ionicons
                     name={isTabActive ? tab.icon : tab.iconOutline}
                     size={21}
-                    color={isTabActive ? tab.color : '#94a3b8'}
+                    color={getTabColor(tab, isTabActive)}
                   />
-                  {tab.key === 'store' && totalCartCount > 0 && (
+                  {(tab.key === 'store' || tab.key === 'shop' || tab.key === 'cart') && totalCartCount > 0 && (
                     <View style={styles.cartBadge}>
                       <Text style={styles.cartBadgeText}>
                         {totalCartCount > 99 ? '99+' : totalCartCount}
@@ -631,8 +398,8 @@ export default function PublicBottomNav() {
                     </View>
                   )}
                 </View>
-                <Text style={[styles.tabLabel, isTabActive && { color: tab.color, fontWeight: '800' }]}>
-                  {tab.label}
+                <Text style={[styles.tabLabel, { color: getTabColor(tab, isTabActive) }, isTabActive && { fontWeight: '800' }]}>
+                  {getTabLabel(tab)}
                 </Text>
               </TouchableOpacity>
             );

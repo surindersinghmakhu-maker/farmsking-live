@@ -82,7 +82,7 @@ export default function MoreScreen() {
     user?.role === 'GARDENER' ||
     (Array.isArray(user?.roles) && user.roles.includes('GARDENER'));
   const brandLogoUri = appSettings?.logoUrl ?? null;
-  const { language, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const [showServerModal, setShowServerModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -170,31 +170,43 @@ export default function MoreScreen() {
     NOTIFICATIONS_ITEM,
     ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' ? [ADVISOR_PROFILE_ITEM] : []),
     FARMER_WALLET_ITEM,
-    ...(!isOnlyCustomer ? [LABOUR_ITEM] : []),
   ];
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={theme.gradient}
+          colors={colors.headerGradient}
           style={styles.hero}
         >
           <TouchableOpacity
-            style={styles.avatarCircle}
+            style={[
+              styles.avatarCircle,
+              {
+                borderColor: colors.isDark ? 'rgba(255,255,255,0.4)' : '#cbd5e1',
+                backgroundColor: colors.isDark ? 'rgba(255,255,255,0.18)' : '#f1f5f9',
+              }
+            ]}
             activeOpacity={0.85}
             onPress={() => router.push('/profile?tab=PROFILE')}
           >
             {user?.photoUrl ? (
               <Avatar uri={user.photoUrl} size={52} />
             ) : (
-              <Ionicons name="person" size={24} color="#fff" />
+              <Ionicons name="person" size={24} color={colors.isDark ? '#ffffff' : '#0f172a'} />
             )}
           </TouchableOpacity>
-          <Text style={styles.name}>{user?.name ?? t('farmsKingUser')}</Text>
-          <View style={styles.kingIdBadge}>
-            <Ionicons name="key-outline" size={11} color="#ffffff" />
-            <Text style={styles.kingIdText}>
+          <Text style={[styles.name, { color: colors.isDark ? '#ffffff' : '#0f172a' }]}>{user?.name ?? t('farmsKingUser')}</Text>
+          <View style={[
+            styles.kingIdBadge,
+            {
+              backgroundColor: colors.isDark ? 'rgba(255,255,255,0.18)' : '#f1f5f9',
+              borderWidth: colors.isDark ? 0 : 1,
+              borderColor: '#cbd5e1',
+            }
+          ]}>
+            <Ionicons name="key-outline" size={11} color={colors.isDark ? '#ffffff' : '#0f172a'} />
+            <Text style={[styles.kingIdText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]}>
               KING ID: {user?.kingId ?? 'N/A'}{getCleanMobile(user?.mobile) ? ` · 📞 ${getCleanMobile(user?.mobile)}` : ''}
             </Text>
           </View>
@@ -207,28 +219,95 @@ export default function MoreScreen() {
 
               {/* Account Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
-                <View style={styles.sectionCard}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('accountSection')}</Text>
+                <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
                   {/* Account Sub-Items listed directly */}
                   {accountItems.map((item) => (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={styles.row}
+                    <TouchableOpacity key={item.key} style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                       onPress={() => item.href && router.push(item.href as any)}
                     >
-                      <View style={styles.rowIconBg}>
-                        <Ionicons name={item.icon} size={18} color={theme.primary} />
+                      <View style={[styles.rowIconBg, !colors.isDark && { backgroundColor: '#f0fdf4' }]}>
+                        <Ionicons name={item.icon} size={18} color={colors.isDark ? colors.primary : '#15803d'} />
                       </View>
-                      <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
+                      <Text style={[styles.rowLabel, { color: colors.text }]}>{t(item.key, item.label)}</Text>
+                      <Ionicons name="chevron-forward" size={18} color={colors.isDark ? '#64748b' : '#0f172a'} />
                     </TouchableOpacity>
                   ))}
 
+                  {/* 🌐 Dedicated Language Selection Box inside Account Section */}
+                  <View style={[styles.row, { borderBottomColor: colors.cardBorder, flexDirection: 'column', alignItems: 'stretch', gap: 10, paddingVertical: 12 }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View style={[styles.rowIconBg, !colors.isDark && { backgroundColor: '#f0fdf4' }]}>
+                          <Ionicons name="globe-outline" size={18} color={colors.isDark ? colors.primary : '#15803d'} />
+                        </View>
+                        <View>
+                          <Text style={[styles.rowLabel, { color: colors.text }]}>{t('languageSwitchLabel', 'Language')}</Text>
+                          <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>{t('languageSwitchSub', 'Select application language')}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, backgroundColor: colors.isDark ? 'rgba(255,255,255,0.08)' : '#f1f5f9', borderWidth: 1, borderColor: colors.cardBorder }}
+                        onPress={() => setShowLanguageModal(true)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: colors.primary }}>More ›</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Quick Switch Language Pills: Punjabi | Hindi | English */}
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity
+                        style={[
+                          styles.langOptionPill,
+                          language === 'pa'
+                            ? (colors.isDark ? styles.langOptionPillActiveDark : styles.langOptionPillActiveLight)
+                            : (colors.isDark ? styles.langOptionPillInactiveDark : styles.langOptionPillInactiveLight),
+                        ]}
+                        activeOpacity={0.8}
+                        onPress={() => setLanguage('pa')}
+                      >
+                        <Text style={[styles.langOptionPillText, language === 'pa' ? styles.langOptionPillTextActive : { color: colors.text }]}>
+                          ਪੰਜਾਬੀ
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.langOptionPill,
+                          language === 'hi'
+                            ? (colors.isDark ? styles.langOptionPillActiveDark : styles.langOptionPillActiveLight)
+                            : (colors.isDark ? styles.langOptionPillInactiveDark : styles.langOptionPillInactiveLight),
+                        ]}
+                        activeOpacity={0.8}
+                        onPress={() => setLanguage('hi')}
+                      >
+                        <Text style={[styles.langOptionPillText, language === 'hi' ? styles.langOptionPillTextActive : { color: colors.text }]}>
+                          हिंदी
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.langOptionPill,
+                          language === 'en'
+                            ? (colors.isDark ? styles.langOptionPillActiveDark : styles.langOptionPillActiveLight)
+                            : (colors.isDark ? styles.langOptionPillInactiveDark : styles.langOptionPillInactiveLight),
+                        ]}
+                        activeOpacity={0.8}
+                        onPress={() => setLanguage('en')}
+                      >
+                        <Text style={[styles.langOptionPillText, language === 'en' ? styles.langOptionPillTextActive : { color: colors.text }]}>
+                          English
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
                   {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
                   {!isOnlyCustomer && (
-                    <TouchableOpacity
-                      style={styles.row}
+                    <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                       onPress={() => setShowSupervisorModal(true)}
                     >
@@ -237,12 +316,12 @@ export default function MoreScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={styles.rowLabel}>Supervisor Management</Text>
+                          <Text style={[styles.rowLabel, { color: colors.text }]}>Supervisor Management</Text>
                           <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
                             <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
                           </View>
                         </View>
-                        <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Add & Manage Supervisor Sub-Accounts</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
@@ -265,10 +344,10 @@ export default function MoreScreen() {
                           />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.rowLabel}>
+                          <Text style={[styles.rowLabel, { color: colors.text }]}>
                             {isSellerRole ? '🏪 Seller Portal' : '🌾 Register as Seller'}
                           </Text>
-                          <Text style={styles.rowSubLabel}>
+                          <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>
                             {isSellerRole
                               ? 'Add Products, Manage Orders & Cashfree Payouts'
                               : 'Start Selling Farm Produce, Seeds & Organics Pan-India'}
@@ -295,10 +374,9 @@ export default function MoreScreen() {
               {/* Dedicated App Parts: VIP Pass Scheme for Farmers, Garden Advisor for Gardeners */}
               {hasFarmerRole ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>👑 VIP PASS SCHEME & CROPS CARE</Text>
-                  <View style={styles.sectionCard}>
-                    <TouchableOpacity
-                      style={styles.row}
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>👑 VIP PASS SCHEME & CROPS CARE</Text>
+                  <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+                    <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}
                     >
@@ -306,14 +384,13 @@ export default function MoreScreen() {
                         <Ionicons name="ribbon-outline" size={18} color="#d97706" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>👑 FarmsKing VIP Pass Scheme</Text>
-                        <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>👑 FarmsKing VIP Pass Scheme</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Farmer App Plans & Specialist Doctor Advisory</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.row}
+                    <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/crop-disease-scanner' as any)}
                     >
@@ -321,8 +398,8 @@ export default function MoreScreen() {
                         <Ionicons name="scan-outline" size={18} color="#0284c7" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>🔬 AI Crop Doctor & Scanner</Text>
-                        <Text style={styles.rowSubLabel}>Scan Leaf Photo for Instant Disease & Dosage</Text>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>🔬 AI Crop Doctor & Scanner</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Scan Leaf Photo for Instant Disease & Dosage</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
@@ -336,8 +413,8 @@ export default function MoreScreen() {
                         <Ionicons name="medical-outline" size={18} color="#16a34a" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
-                        <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>🩺 Crops Care Plan</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Specialist Doctor Advisory & Coupon Offers</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
@@ -345,8 +422,8 @@ export default function MoreScreen() {
                 </View>
               ) : isGardener ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>🌿 GARDEN EXPERT & ADVISORY</Text>
-                  <View style={styles.sectionCard}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>🌿 GARDEN EXPERT & ADVISORY</Text>
+                  <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
                     <TouchableOpacity
                       style={[styles.row, { borderBottomWidth: 0 }]}
                       activeOpacity={0.7}
@@ -356,8 +433,8 @@ export default function MoreScreen() {
                         <Ionicons name="school-outline" size={18} color="#16a34a" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>🌿 Hire a Garden Expert</Text>
-                        <Text style={styles.rowSubLabel}>Connect with certified garden advisors for plant care</Text>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>🌿 Hire a Garden Expert</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Connect with certified garden advisors for plant care</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#64748b" />
                     </TouchableOpacity>
@@ -367,26 +444,24 @@ export default function MoreScreen() {
 
           {/* Developer & Support Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('devSupportSection')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('devSupportSection')}</Text>
+            <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
               {__DEV__ ? (
-                <TouchableOpacity
-                  style={styles.row}
+                <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                   activeOpacity={0.7}
                   onPress={() => setShowServerModal(true)}
                 >
                   <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
                     <Ionicons name="hardware-chip-outline" size={18} color="#16a34a" />
                   </View>
-                  <Text style={styles.rowLabel}>{t('serverIpConfig')}</Text>
+                  <Text style={[styles.rowLabel, { color: colors.text }]}>{t('serverIpConfig')}</Text>
                   <Ionicons name="chevron-forward" size={18} color="#64748b" />
                 </TouchableOpacity>
               ) : null}
 
 
               {/* Terms and Conditions Row */}
-              <TouchableOpacity
-                style={styles.row}
+              <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/terms')}
               >
@@ -394,15 +469,14 @@ export default function MoreScreen() {
                   <Ionicons name="document-text-outline" size={18} color="#2563eb" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Terms and Conditions</Text>
-                  <Text style={styles.rowSubLabel}>Official Terms of Service & User Agreement</Text>
+                  <Text style={[styles.rowLabel, { color: colors.text }]}>Terms and Conditions</Text>
+                  <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Official Terms of Service & User Agreement</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* Privacy Policy Row */}
-              <TouchableOpacity
-                style={styles.row}
+              <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 onPress={() => setShowPrivacyModal(true)}
               >
@@ -410,15 +484,14 @@ export default function MoreScreen() {
                   <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
-                  <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
+                  <Text style={[styles.rowLabel, { color: colors.text }]}>🛡️ Privacy Policy</Text>
+                  <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Data Protection & Google Play Policy</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
               {/* Refund Policy Row */}
-              <TouchableOpacity
-                style={styles.row}
+              <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/refund-policy')}
               >
@@ -426,38 +499,18 @@ export default function MoreScreen() {
                   <Ionicons name="refresh-circle-outline" size={18} color="#d97706" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Refund & Return Policy</Text>
-                  <Text style={styles.rowSubLabel}>100% Genuine, Zero Fake Products Guarantee</Text>
+                  <Text style={[styles.rowLabel, { color: colors.text }]}>Refund & Return Policy</Text>
+                  <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>100% Genuine, Zero Fake Products Guarantee</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
-              {/* MCA Compliance Row */}
-              {!isOnlyCustomer && (
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/compliance')}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f3e8ff' }]}>
-                    <Ionicons name="business-outline" size={18} color="#9333ea" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>MCA Statutory Compliance</Text>
-                    <Text style={styles.rowSubLabel}>CIN: U01100PB2026PTC063294 • Regd. Office</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#64748b" />
-                </TouchableOpacity>
-              )}
-
-
-
               {/* Support Row */}
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
+              <TouchableOpacity style={[styles.row, { borderBottomColor: colors.cardBorder }]} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
                 <View style={styles.rowIconBg}>
                   <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Support</Text>
+                <Text style={[styles.rowLabel, { color: colors.text }]}>Support</Text>
                 <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
 
@@ -466,7 +519,7 @@ export default function MoreScreen() {
                 <View style={styles.rowIconBg}>
                   <Ionicons name="call-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Contact Us</Text>
+                <Text style={[styles.rowLabel, { color: colors.text }]}>Contact Us</Text>
                 <Ionicons name="chevron-forward" size={18} color="#64748b" />
               </TouchableOpacity>
             </View>
@@ -714,6 +767,38 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#fecaca', marginTop: 4,
   },
   logoutText: { color: '#dc2626', fontFamily: FONT.bold, fontSize: 13.5 },
+  langOptionPill: {
+    flex: 1,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  langOptionPillActiveDark: {
+    backgroundColor: '#10b981',
+    borderColor: '#34d399',
+  },
+  langOptionPillActiveLight: {
+    backgroundColor: '#15803d',
+    borderColor: '#166534',
+  },
+  langOptionPillInactiveDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  langOptionPillInactiveLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+  },
+  langOptionPillText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  langOptionPillTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.extraBold,
+  },
 });
 
 /** Multi-Language User Guides & PDF Download Modal for More Tab */

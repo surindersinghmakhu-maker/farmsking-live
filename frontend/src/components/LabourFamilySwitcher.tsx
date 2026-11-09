@@ -21,6 +21,7 @@ import { uploadPhoto } from '@/src/api/uploads.api';
 import { useAuth } from '@/src/store/auth-context';
 import { useCreateLabourWorker, useUpdateLabourWorker, useSearchWorkersByMobile } from '@/src/hooks/useLabour';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -70,6 +71,8 @@ export function LabourFamilySwitcher({
   showAddButton = true,
   openEditSignal,
 }: LabourFamilySwitcherProps) {
+  const { colors, isDark } = useExecutiveTheme();
+  const styles = useMemo(() => getStyles(colors, isDark), [colors, isDark]);
   const { user } = useAuth();
   const createWorker = useCreateLabourWorker();
   const updateWorker = useUpdateLabourWorker();
@@ -919,15 +922,15 @@ export function LabourFamilySwitcher({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any, isDark: boolean) => StyleSheet.create({
   addFamilyMemberBarBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.35)' : '#bbf7d0',
     borderRadius: RADIUS.md,
     paddingVertical: 9,
     paddingHorizontal: 12,
@@ -937,24 +940,24 @@ const styles = StyleSheet.create({
   addFamilyMemberBarBtnText: {
     fontSize: 12.5,
     fontFamily: FONT.bold,
-    color: '#15803d',
+    color: isDark ? '#4ade80' : '#15803d',
   },
   container: {
     marginVertical: SPACING.sm,
   },
   farmerSwitcherBox: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.1)' : '#f0fdf4',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.3)' : '#bbf7d0',
     padding: SPACING.sm,
     marginBottom: SPACING.sm,
   },
   farmerCardContainer: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.1)' : '#f0fdf4',
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.3)' : '#bbf7d0',
     padding: SPACING.sm,
     marginBottom: 10,
     elevation: 2,
@@ -964,10 +967,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   workerCardContainer: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? colors.cardBg : '#f8fafc',
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     padding: SPACING.sm,
     marginBottom: SPACING.sm,
     elevation: 2,
@@ -977,17 +980,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   farmerSectionWrapper: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.1)' : '#f0fdf4',
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.3)' : '#bbf7d0',
     borderRadius: RADIUS.md,
     padding: 6,
     paddingHorizontal: 8,
   },
   workerSectionWrapper: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
     borderWidth: 1.5,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: RADIUS.md,
     padding: 6,
     paddingHorizontal: 8,
@@ -1005,41 +1008,41 @@ const styles = StyleSheet.create({
   workerSectionLabelText: {
     fontSize: 9.5,
     fontFamily: FONT.extraBold,
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
     textTransform: 'uppercase',
   },
   farmerChipCard: {
     alignItems: 'center',
     width: 68,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.md,
     paddingVertical: 5,
     paddingHorizontal: 3,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? colors.cardBorder : '#bbf7d0',
   },
   farmerChipCardActive: {
     borderColor: '#16a34a',
-    backgroundColor: '#dcfce7',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7',
   },
   workerChipCard: {
     alignItems: 'center',
     width: 68,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.md,
     paddingVertical: 5,
     paddingHorizontal: 3,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
   },
   workerChipCardActive: {
     borderColor: '#16a34a',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
   },
   avatarRowDivider: {
     width: 1.5,
     height: 48,
-    backgroundColor: '#cbd5e1',
+    backgroundColor: isDark ? colors.cardBorder : '#cbd5e1',
     alignSelf: 'center',
     marginHorizontal: 4,
   },
@@ -1056,9 +1059,9 @@ const styles = StyleSheet.create({
     color: '#166534',
   },
   farmerRoleBadge: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7',
     borderWidth: 1,
-    borderColor: '#86efac',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#86efac',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
@@ -1071,10 +1074,10 @@ const styles = StyleSheet.create({
   workerCardTitle: {
     fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: isDark ? colors.text : '#0f172a',
   },
   countBadge: {
-    backgroundColor: '#e2e8f0',
+    backgroundColor: isDark ? '#1e293b' : '#e2e8f0',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: RADIUS.xs,
@@ -1082,22 +1085,22 @@ const styles = StyleSheet.create({
   countBadgeText: {
     fontSize: 10.5,
     fontFamily: FONT.bold,
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
   },
   workerRoleTag: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#64748b',
-    backgroundColor: '#ffffff',
+    color: isDark ? colors.textMuted : '#64748b',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
   },
   farmerRingActive: {
     borderColor: '#16a34a',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
   },
   farmerActiveBadge: {
     position: 'absolute',
@@ -1119,7 +1122,7 @@ const styles = StyleSheet.create({
   farmerSubText: {
     fontSize: 9.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: isDark ? colors.textMuted : '#64748b',
     textAlign: 'center',
   },
   addMemberBtn: {
@@ -1129,14 +1132,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
   },
   addMemberBtnText: {
     fontSize: 11.5,
     fontFamily: FONT.bold,
-    color: '#15803d',
+    color: isDark ? '#4ade80' : '#15803d',
   },
   avatarScrollContainer: {
     gap: 12,
@@ -1159,7 +1162,7 @@ const styles = StyleSheet.create({
   },
   avatarRingActive: {
     borderColor: '#16a34a',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
   },
   activeBadge: {
     position: 'absolute',
@@ -1190,7 +1193,7 @@ const styles = StyleSheet.create({
   avatarName: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
     marginTop: 4,
     textAlign: 'center',
   },
@@ -1201,7 +1204,7 @@ const styles = StyleSheet.create({
   avatarRelation: {
     fontSize: 9.5,
     fontFamily: FONT.regular,
-    color: '#94a3b8',
+    color: isDark ? colors.textMuted : '#94a3b8',
     textAlign: 'center',
   },
   quickAddCard: {
@@ -1218,7 +1221,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
   },
   quickAddText: {
     fontSize: 10.5,
@@ -1227,10 +1230,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   activeProfileCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: isDark ? colors.cardBorder : '#e2e8f0',
     padding: SPACING.md,
     marginTop: SPACING.sm,
   },
@@ -1262,7 +1265,7 @@ const styles = StyleSheet.create({
     borderColor: '#bbf7d0',
     borderRadius: 20,
     padding: 1,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
   },
   farmerBadgeIcon: {
     position: 'absolute',
@@ -1288,15 +1291,15 @@ const styles = StyleSheet.create({
   activeName: {
     fontSize: 15,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: isDark ? colors.text : '#0f172a',
   },
   relationBadge: {
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: RADIUS.xs,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
   },
   relationBadgeText: {
     fontSize: 10,
@@ -1306,7 +1309,7 @@ const styles = StyleSheet.create({
   activeSubtitle: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: isDark ? colors.textMuted : '#64748b',
     marginTop: 2,
   },
   updatePhotoCta: {
@@ -1316,9 +1319,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: RADIUS.sm,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4',
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0',
   },
   updatePhotoCtaText: {
     fontSize: 11,
@@ -1328,12 +1331,12 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
     borderRadius: RADIUS.sm,
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: isDark ? colors.cardBorder : '#f1f5f9',
   },
   statBox: {
     flex: 1,
@@ -1342,7 +1345,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 10,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: isDark ? colors.textMuted : '#64748b',
     textTransform: 'uppercase',
   },
   statVal: {
@@ -1353,7 +1356,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 20,
-    backgroundColor: '#cbd5e1',
+    backgroundColor: isDark ? colors.cardBorder : '#cbd5e1',
   },
   modalOverlay: {
     flex: 1,
@@ -1365,9 +1368,11 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#ffffff',
+    backgroundColor: isDark ? colors.cardBg : '#ffffff',
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
+    borderWidth: isDark ? 1 : 0,
+    borderColor: isDark ? colors.cardBorder : 'transparent',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1378,7 +1383,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: isDark ? colors.text : '#0f172a',
   },
   formAvatarWrap: {
     position: 'relative',
@@ -1422,27 +1427,28 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontFamily: FONT.medium,
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
     height: 40,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     fontSize: 13,
     fontFamily: FONT.regular,
-    backgroundColor: '#f8fafc',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
+    color: isDark ? colors.text : '#0f172a',
   },
   relationChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
+    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
   },
   relationChipActive: {
     backgroundColor: '#16a34a',
@@ -1451,7 +1457,7 @@ const styles = StyleSheet.create({
   relationChipText: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#475569',
+    color: isDark ? colors.textMuted : '#475569',
   },
   relationChipTextActive: {
     color: '#ffffff',
@@ -1472,14 +1478,14 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: isDark ? colors.textMuted : '#64748b',
   },
   saveBtn: {
     flex: 1.5,

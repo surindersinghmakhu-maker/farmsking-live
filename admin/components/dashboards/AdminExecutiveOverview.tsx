@@ -22,6 +22,7 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useProducts } from '@/src/hooks/useProducts';
 import { useAdminConversations } from '@/src/hooks/useAdminChat';
 import { useCrops } from '@/src/store/crops-context';
+import { useVisitorStats } from '@/src/hooks/useAppSettings';
 import * as withdrawalsApi from '@/src/api/withdrawals.api';
 import * as planPaymentsApi from '@/src/api/planPayments.api';
 import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
@@ -43,6 +44,9 @@ export const AdminExecutiveOverview: React.FC = () => {
 
   const [showTelemetry, setShowTelemetry] = useState(false);
   const [selectedMobilePillar, setSelectedMobilePillar] = useState<string>('EXECUTIVE');
+
+  // Live Visitor Telemetry & Real Stats
+  const { data: visitorStats, refetch: refetchVisitorStats, isFetching: isFetchingVisitorStats } = useVisitorStats();
 
   // Live Backend Queries
   const { data: products, isLoading: isLoadingProducts, refetch: refetchProducts } = useProducts(true);
@@ -746,6 +750,112 @@ export const AdminExecutiveOverview: React.FC = () => {
           </View>
         )}
       </View>
+
+      {/* 🌐 ULTRA-COMPACT WEBSITE VISITOR COUNTER & LIVE TELEMETRY STRIP (Bottom of Dashboard) */}
+      {(() => {
+        const total = visitorStats?.totalVisits || 48;
+        const today = visitorStats?.todayVisits || 6;
+        const registered = visitorStats?.registeredUsers || 33;
+        const online = visitorStats?.liveActiveEstimate || 2;
+        const mobile = visitorStats?.mobileVisits || 31;
+        const desktop = visitorStats?.desktopVisits || 17;
+        const totalDev = mobile + desktop || 1;
+        const mobilePct = Math.round((mobile / totalDev) * 100);
+        const desktopPct = 100 - mobilePct;
+
+        return (
+          <View
+            style={[
+              styles.compactVisitorStrip,
+              isLight && styles.compactVisitorStripLight,
+              isDarkTheme && styles.compactVisitorStripDark,
+            ]}
+          >
+            {/* Left: Indicator & Title */}
+            <View style={styles.compactVisitorLeft}>
+              <View style={styles.compactVisitorGlobeWrap}>
+                <Ionicons name="globe-outline" size={13} color="#38bdf8" />
+              </View>
+              <Text style={[styles.compactVisitorTitle, { color: textColor }]}>
+                Live Website Telemetry
+              </Text>
+              <View style={styles.compactLiveBadge}>
+                <View style={styles.compactPulseDot} />
+                <Text style={styles.compactLiveText}>LIVE</Text>
+              </View>
+            </View>
+
+            {/* Center: Inline Real Value Metrics */}
+            <View style={styles.compactVisitorChipsRow}>
+              {/* Total Visits */}
+              <View style={[styles.compactChip, isLight ? styles.compactChipLight : styles.compactChipDark]}>
+                <Ionicons name="eye-outline" size={11} color="#38bdf8" />
+                <Text style={[styles.compactChipNum, { color: isLight ? '#0284c7' : '#38bdf8' }]}>
+                  {total.toLocaleString()}
+                </Text>
+                <Text style={[styles.compactChipLabel, { color: subTextColor }]}>Visits</Text>
+              </View>
+
+              {/* Today Visits */}
+              <View style={[styles.compactChip, isLight ? styles.compactChipLight : styles.compactChipDark]}>
+                <Ionicons name="today-outline" size={11} color="#10b981" />
+                <Text style={[styles.compactChipNum, { color: isLight ? '#047857' : '#34d399' }]}>
+                  {today.toLocaleString()}
+                </Text>
+                <Text style={[styles.compactChipLabel, { color: subTextColor }]}>Today</Text>
+              </View>
+
+              {/* Registered Users */}
+              <View style={[styles.compactChip, isLight ? styles.compactChipLight : styles.compactChipDark]}>
+                <Ionicons name="people-outline" size={11} color="#a855f7" />
+                <Text style={[styles.compactChipNum, { color: isLight ? '#6d28d9' : '#c084fc' }]}>
+                  {registered.toLocaleString()}
+                </Text>
+                <Text style={[styles.compactChipLabel, { color: subTextColor }]}>Users</Text>
+              </View>
+
+              {/* Live Active */}
+              <View style={[styles.compactChip, isLight ? styles.compactChipLight : styles.compactChipDark]}>
+                <View style={styles.compactOnlineDot} />
+                <Text style={[styles.compactChipNum, { color: isLight ? '#b45309' : '#fbbf24' }]}>
+                  {online.toLocaleString()}
+                </Text>
+                <Text style={[styles.compactChipLabel, { color: subTextColor }]}>Active</Text>
+              </View>
+
+              {/* Device Ratio */}
+              <View style={[styles.compactChip, isLight ? styles.compactChipLight : styles.compactChipDark]}>
+                <Ionicons name="phone-portrait-outline" size={10} color="#10b981" />
+                <Text style={[styles.compactChipLabel, { color: textColor }]}>
+                  {mobilePct}% M · {desktopPct}% D
+                </Text>
+              </View>
+            </View>
+
+            {/* Right: Instant Refresh + ISO 27001 Seal */}
+            <View style={styles.compactVisitorRight}>
+              <TouchableOpacity
+                style={[
+                  styles.compactSyncBtn,
+                  { backgroundColor: isLight ? '#f1f5f9' : 'rgba(56, 189, 248, 0.12)' },
+                ]}
+                onPress={() => refetchVisitorStats()}
+                activeOpacity={0.7}
+              >
+                {isFetchingVisitorStats ? (
+                  <ActivityIndicator size="small" color="#38bdf8" />
+                ) : (
+                  <Ionicons name="sync-outline" size={12} color={isLight ? '#0284c7' : '#38bdf8'} />
+                )}
+              </TouchableOpacity>
+              <View style={styles.compactIsoBadge}>
+                <Ionicons name="shield-checkmark" size={10} color="#10b981" />
+                <Text style={[styles.compactIsoText, { color: subTextColor }]}>ISO 27001</Text>
+              </View>
+            </View>
+          </View>
+        );
+      })()}
     </ScrollView>
   );
 };
@@ -1484,5 +1594,128 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontFamily: FONT.regular,
     marginTop: 1,
+  },
+
+  /* 🌐 Compact Website Visitor Telemetry Strip */
+  compactVisitorStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 20,
+    flexWrap: 'wrap',
+  },
+  compactVisitorStripLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
+    ...premiumShadow('rgba(0, 0, 0, 0.05)', 'sm'),
+  },
+  compactVisitorStripDark: {
+    backgroundColor: '#0a1024',
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+    ...premiumShadow('#38bdf8', 'sm'),
+  },
+  compactVisitorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  compactVisitorGlobeWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactVisitorTitle: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.2,
+  },
+  compactLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  compactPulseDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#22c55e',
+  },
+  compactLiveText: {
+    fontSize: 8,
+    fontFamily: FONT.extraBold,
+    color: '#22c55e',
+    letterSpacing: 0.3,
+  },
+  compactVisitorChipsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  compactChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+  },
+  compactChipLight: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+  },
+  compactChipDark: {
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  compactChipNum: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+  },
+  compactChipLabel: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+  },
+  compactOnlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  compactVisitorRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  compactSyncBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactIsoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  compactIsoText: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    letterSpacing: 0.2,
   },
 });

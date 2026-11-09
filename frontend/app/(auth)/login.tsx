@@ -29,6 +29,7 @@ import {
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
@@ -41,6 +42,7 @@ const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.goo
 export default function LoginScreen() {
   const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
+  const { t } = useLanguage();
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const { width } = useWindowDimensions();
@@ -115,6 +117,56 @@ export default function LoginScreen() {
       };
     }
   }, []);
+
+  // Mouse movement tracking for 4D laser illumination & spotlight effects
+  const mouseTargetRef = useRef({ x: 0, y: 0, normX: 0, normY: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0, normX: 0, normY: 0 });
+  const [isMouseActive, setIsMouseActive] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || !isDesktop) return;
+
+    let animId: number;
+    let currX = window.innerWidth / 2;
+    let currY = window.innerHeight / 2;
+
+    const onMove = (e: MouseEvent) => {
+      if (!isMouseActive) setIsMouseActive(true);
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = (e.clientY / window.innerHeight) * 2 - 1;
+      mouseTargetRef.current = { x: e.clientX, y: e.clientY, normX: nx, normY: ny };
+    };
+
+    const onLeave = () => {
+      setIsMouseActive(false);
+      mouseTargetRef.current = { x: window.innerWidth / 2, y: window.innerHeight / 2, normX: 0, normY: 0 };
+    };
+
+    const loop = () => {
+      const tgt = mouseTargetRef.current;
+      currX += (tgt.x - currX) * 0.08;
+      currY += (tgt.y - currY) * 0.08;
+      const nx = (currX / window.innerWidth) * 2 - 1;
+      const ny = (currY / window.innerHeight) * 2 - 1;
+      setMousePos({
+        x: Math.round(currX),
+        y: Math.round(currY),
+        normX: Math.round(nx * 1000) / 1000,
+        normY: Math.round(ny * 1000) / 1000,
+      });
+      animId = requestAnimationFrame(loop);
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('mouseleave', onLeave);
+    animId = requestAnimationFrame(loop);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseleave', onLeave);
+      cancelAnimationFrame(animId);
+    };
+  }, [isDesktop]);
 
   // Timer countdown for OTP resend
   useEffect(() => {
@@ -238,11 +290,19 @@ export default function LoginScreen() {
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       }
     } else {
-      // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS
+      // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS with Backend Fallback
       try {
         if (typeof window !== 'undefined') {
-          const el = document.getElementById('recaptcha-container-login');
-          if (el) el.innerHTML = '';
+          let el = document.getElementById('recaptcha-container-login');
+          if (!el) {
+            el = document.createElement('div');
+            el.id = 'recaptcha-container-login';
+            el.style.position = 'fixed';
+            el.style.bottom = '0';
+            el.style.right = '0';
+            el.style.zIndex = '9999';
+            document.body.appendChild(el);
+          }
           if ((window as any).recaptchaVerifierLogin) {
             try {
               (window as any).recaptchaVerifierLogin.clear();
@@ -251,7 +311,7 @@ export default function LoginScreen() {
           }
           (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
             auth,
-            'recaptcha-container-login',
+            el,
             { size: 'invisible' }
           );
         }
@@ -269,7 +329,24 @@ export default function LoginScreen() {
         setResendTimer(60);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       } catch (err: any) {
-        console.warn('[Firebase Phone Auth error]:', err);
+        console.warn('[Firebase Phone Auth error, initiating fallback]:', err);
+
+        // 🛡️ ULTRA-ROBUST LIVE FALLBACK:
+        // If Firebase throws auth/internal-error, quota limits, or reCAPTCHA errors,
+        // instantly dispatch verification OTP via backend so the user is NEVER blocked!
+        try {
+          const fallbackRes = await sendLoginOtp(cleanNum);
+          setConfirmationResult(null); // Indicates backend OTP verification
+          setOtpSent(true);
+          setDevOtp(fallbackRes?.devOtp || null);
+          setOtpDigits(['', '', '', '', '', '']);
+          setResendTimer(60);
+          setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+          return;
+        } catch (backendErr: any) {
+          console.warn('[Backend OTP fallback error]:', backendErr);
+        }
+
         if (typeof window !== 'undefined') {
           const el = document.getElementById('recaptcha-container-login');
           if (el) el.innerHTML = '';
@@ -281,7 +358,7 @@ export default function LoginScreen() {
           }
         }
 
-        let msg = 'Failed to send verification SMS. Please try again.';
+        let msg = 'Failed to send verification code. Please try again.';
         if (err?.code === 'auth/invalid-phone-number') {
           msg = 'Invalid mobile number format. Please check the 10-digit number.';
         } else if (err?.code === 'auth/too-many-requests') {
@@ -439,9 +516,55 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Ambient Breathing Laser Glow Orbs */}
-      <View style={styles.glowOrbTopLeft} pointerEvents="none" />
-      <View style={styles.glowOrbBottomRight} pointerEvents="none" />
+      {/* Ambient Breathing Laser Glow Orbs (Dynamic Cursor Parallax Tracking) */}
+      <View
+        style={[
+          styles.glowOrbTopLeft,
+          Platform.OS === 'web' && isDesktop
+            ? ({
+                transform: [
+                  { translateX: mousePos.normX * 55 },
+                  { translateY: mousePos.normY * 45 },
+                ],
+                filter: 'blur(75px)',
+                opacity: isMouseActive ? 0.95 : 0.7,
+                transition: 'opacity 0.4s ease',
+              } as any)
+            : undefined,
+        ]}
+        pointerEvents="none"
+      />
+      <View
+        style={[
+          styles.glowOrbBottomRight,
+          Platform.OS === 'web' && isDesktop
+            ? ({
+                transform: [
+                  { translateX: -mousePos.normX * 50 },
+                  { translateY: -mousePos.normY * 40 },
+                ],
+                filter: 'blur(85px)',
+                opacity: isMouseActive ? 0.9 : 0.65,
+                transition: 'opacity 0.4s ease',
+              } as any)
+            : undefined,
+        ]}
+        pointerEvents="none"
+      />
+
+      {/* Global Interactive Dynamic Spotlight (Desktop Pointer Following) */}
+      {Platform.OS === 'web' && isDesktop && isMouseActive ? (
+        <View
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              pointerEvents: 'none',
+              zIndex: 1,
+              background: `radial-gradient(750px circle at ${mousePos.x}px ${mousePos.y}px, rgba(16, 185, 129, 0.08), transparent 75%)`,
+            } as any,
+          ]}
+        />
+      ) : null}
 
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -461,6 +584,19 @@ export default function LoginScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.leftShowcaseGradient}
               >
+                {/* 4D Interactive Dynamic Sheen Overlay */}
+                {Platform.OS === 'web' && isDesktop && isMouseActive && (
+                  <View
+                    style={[
+                      StyleSheet.absoluteFillObject,
+                      {
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                        background: `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(52, 211, 153, 0.12), transparent 70%)`,
+                      } as any,
+                    ]}
+                  />
+                )}
                 {/* Brand Emblem & Header */}
                 <View style={styles.showcaseHeader}>
                   <BrandLogo size={52} round useGoldRing useHdQuality />
@@ -548,6 +684,20 @@ export default function LoginScreen() {
               RIGHT PANEL: Ultra-Frictionless Auth Console
              ══════════════════════════════════════════════════════ */}
           <View style={[styles.rightAuthPanel, isDesktop && styles.rightAuthPanelDesktop]}>
+            {/* 4D Subtle Spotlight Sheen on Login Card */}
+            {Platform.OS === 'web' && isDesktop && isMouseActive && (
+              <View
+                style={[
+                  StyleSheet.absoluteFillObject,
+                  {
+                    pointerEvents: 'none',
+                    zIndex: 0,
+                    borderRadius: 24,
+                    background: `radial-gradient(500px circle at ${Math.max(0, mousePos.x - width * 0.45)}px ${mousePos.y}px, rgba(16, 185, 129, 0.07), transparent 70%)`,
+                  } as any,
+                ]}
+              />
+            )}
             
             {/* Top Navigation Strip */}
             <View style={styles.topNavRow}>
@@ -571,9 +721,9 @@ export default function LoginScreen() {
 
             {/* Console Header */}
             <View style={styles.authHeadingBox}>
-              <Text style={styles.authTitle}>Instant Sign In</Text>
+              <Text style={styles.authTitle}>{t('loginTitle', 'Instant Sign In')}</Text>
               <Text style={styles.authSubtitle}>
-                100% passwordless verified access. Enter your 10-digit mobile number to proceed.
+                {t('welcomeToFarmsKing', '100% passwordless verified access. Enter your 10-digit mobile number to proceed.')}
               </Text>
             </View>
 
@@ -704,7 +854,7 @@ export default function LoginScreen() {
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="paper-plane" size={16} color="#fff" />
-                      <Text style={styles.buttonText}>Get Verification Code</Text>
+                      <Text style={styles.buttonText}>{t('sendOtp', 'Get Verification Code')}</Text>
                     </View>
                   )}
                 </LinearGradient>
@@ -741,7 +891,7 @@ export default function LoginScreen() {
                   </View>
                 )}
 
-                <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
+                <Text style={styles.fieldLabel}>{t('enterOtp', 'Enter 6-Digit Code')}</Text>
                 
                 {/* 6 Individual Segmented Boxes */}
                 <View style={styles.segmentedRow}>
@@ -785,7 +935,7 @@ export default function LoginScreen() {
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="log-in" size={17} color="#fff" />
-                        <Text style={styles.buttonText}>Verify & Enter</Text>
+                        <Text style={styles.buttonText}>{t('verifyOtp', 'Verify & Enter')}</Text>
                       </View>
                     )}
                   </LinearGradient>
@@ -795,11 +945,11 @@ export default function LoginScreen() {
                 <View style={styles.resendRow}>
                   {resendTimer > 0 ? (
                     <Text style={styles.resendTimerText}>
-                      Resend code in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
+                      {t('resendOtp', 'Resend code in')} <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
                     </Text>
                   ) : (
                     <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                      <Text style={styles.resendActiveText}>Resend Verification Code</Text>
+                      <Text style={styles.resendActiveText}>{t('resendOtp', 'Resend Verification Code')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1118,7 +1268,12 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    ...(Platform.OS === 'web'
+      ? ({
+          transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, background-color 0.22s ease',
+        } as any)
+      : {}),
   },
   pillarIconWrap: {
     width: 38,

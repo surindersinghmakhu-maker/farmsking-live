@@ -220,6 +220,15 @@ export declare class AppSettingsController {
             lastBackupTimestamp: string | undefined;
         };
     }>;
+    getVisitorStats(): Promise<any>;
+    recordVisit(dto: {
+        device?: string;
+        path?: string;
+    }): Promise<any>;
+    updateVisitorStats(user: AuthUser, dto: any): Promise<{
+        success: boolean;
+        stats: any;
+    }>;
 }
 export declare class PublicContactController {
     private readonly appSettingsService;

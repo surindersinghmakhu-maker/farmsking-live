@@ -240,4 +240,13 @@ export declare class AppSettingsService {
         fieldValues: any;
         success: boolean;
     }>;
+    getVisitorStats(): Promise<any>;
+    recordVisit(dto: {
+        device?: string;
+        path?: string;
+    }): Promise<any>;
+    updateVisitorStats(admin: AuthUser, dto: any): Promise<{
+        success: boolean;
+        stats: any;
+    }>;
 }

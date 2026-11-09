@@ -11,6 +11,7 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useAuth } from '@/src/store/auth-context';
+import { useLanguage } from '@/src/store/language-context';
 
 interface RoleHeaderProps {
   currentRole: UserRole;
@@ -60,16 +61,38 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { colors, toggleThemeMode, isDark } = useExecutiveTheme();
+  const { t } = useLanguage();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
-  const greeting = getTimeBasedGreeting();
+  
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t('goodMorning', 'Good Morning');
+    if (hour < 17) return t('goodAfternoon', 'Good Afternoon');
+    if (hour < 21) return t('goodEvening', 'Good Evening');
+    return t('goodNight', 'Good Night');
+  };
+  const greeting = getGreeting();
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
   const { data: settings } = useAppSettings();
   const { logout } = useAuth();
 
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
+
+  const getRoleLabel = (r: string): string => {
+    switch (r) {
+      case 'FARMER': return t('tabFarmers', 'Farmer');
+      case 'GARDENER': return t('tabGardens', 'Gardener');
+      case 'FARM_ADVISOR': return t('cropDoctor', 'Crop Doctor');
+      case 'ADMIN': return t('tabAdminHome', 'Admin');
+      case 'SUPER_ADMIN': return t('tabSuperAdminHome', 'Super Admin');
+      case 'LABOUR': return t('tabLabour', 'Labour');
+      case 'CUSTOMER': return t('tabCustomerHome', 'Customer');
+      default: return roleMeta.label || r;
+    }
+  };
 
   const isRedundantSubtitle =
     !subtitle ||
@@ -78,104 +101,42 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 
   return (
     <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop, { borderColor: colors.cardBorder, borderWidth: isDesktop ? 1 : 0 }]}>
-      {/* Top Banner Row: ONLY visible on Mobile screens (Hidden on PC/Desktop where top navbar exists) */}
-      {!isDesktop && (
-        <View style={styles.topRow}>
-          <TouchableOpacity
-            style={styles.brandRow}
-            activeOpacity={0.8}
-            onPress={() => router.push('/')}
-          >
-            <Image
-              source={require('@/assets/images/favicon.png')}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 9,
-                ...(Platform.OS === 'web' ? ({
-                  filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.45))',
-                } as any) : {}),
-              }}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-
-          <View style={styles.actionsRight}>
-            <TouchableOpacity
-              style={styles.logoutButton}
-              activeOpacity={0.8}
-              onPress={() => {
-                // @ts-ignore
-                if (Platform.OS === 'web') {
-                  if (window.confirm('Are you sure you want to log out?')) logout();
-                } else {
-                  import('react-native').then(({ Alert }) => {
-                    Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
-                    ]);
-                  });
-                }
-              }}
-            >
-              <Ionicons name="power" size={14} color="#ef4444" />
-              <Text style={styles.logoutText}>Log Out</Text>
-            </TouchableOpacity>
-
-            {/* Mobile Theme Toggle Button */}
-            <TouchableOpacity
-              style={[
-                styles.mobileThemeToggle,
-                colors.isDark ? styles.mobileThemeToggleDark : styles.mobileThemeToggleLight,
-              ]}
-              activeOpacity={0.75}
-              onPress={toggleThemeMode}
-            >
-              <Ionicons
-                name={colors.isDark ? 'sunny' : 'moon'}
-                size={16}
-                color={colors.isDark ? '#fbbf24' : '#0f172a'}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.iconButton}
-              activeOpacity={0.75}
-              onPress={() => router.push('/notifications' as never)}
-            >
-              <Ionicons name="notifications-outline" size={19} color="#fff" />
-              {unreadCount > 0 ? (
-                <View style={styles.notifDot}>
-                  {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
-                </View>
-              ) : null}
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
       {/* User Header Block */}
       <View style={[styles.userHeaderBlock, isDesktop && styles.userHeaderBlockDesktop]}>
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
-            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#334155' }]}>{greeting}</Text>
+            <Text style={[styles.greetingText, { color: colors.isDark ? 'rgba(255,255,255,0.85)' : '#0f172a' }]}>{greeting}</Text>
             <Text style={[styles.nameText, { color: colors.isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
             
             {/* Role Tag Badge */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 3, flexWrap: 'wrap' }}>
-              <View style={[styles.roleTagPill, { backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.22)' : 'rgba(22, 163, 74, 0.12)', borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(22, 163, 74, 0.3)' }]}>
-                <Text style={[styles.roleTagText, { color: colors.isDark ? '#ffffff' : '#15803d' }]}>{roleMeta.icon} {roleMeta.label}</Text>
+              <View style={[
+                styles.roleTagPill,
+                {
+                  backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.22)' : '#dcfce7',
+                  borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.35)' : '#86efac',
+                }
+              ]}>
+                <Text style={[styles.roleTagText, { color: colors.isDark ? '#ffffff' : '#14532d' }]}>{roleMeta.icon} {getRoleLabel(currentRole)}</Text>
               </View>
             </View>
 
-            {!isRedundantSubtitle ? <Text style={[styles.subtitleText, { color: colors.isDark ? 'rgba(255,255,255,0.95)' : '#334155' }]}>{subtitle}</Text> : null}
+            {!isRedundantSubtitle && currentRole !== 'FARMER' ? (
+              <Text style={[styles.subtitleText, { color: colors.isDark ? 'rgba(255,255,255,0.95)' : '#0f172a' }]}>{subtitle}</Text>
+            ) : null}
           </View>
 
           {/* Center Block: Profile Photo Avatar */}
           <View style={styles.avatarContainer}>
             <TouchableOpacity
-              style={styles.avatarRing}
+              style={[
+                styles.avatarRing,
+                {
+                  borderColor: colors.isDark ? 'rgba(255,255,255,0.2)' : '#cbd5e1',
+                  borderWidth: 1.5,
+                }
+              ]}
               activeOpacity={currentRole === 'ADMIN' ? 1 : 0.8}
               disabled={currentRole === 'ADMIN'}
               onPress={onAvatarPress || (() => router.push('/profile'))}
@@ -334,16 +295,16 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 11,
-    fontFamily: FONT.medium,
+    fontSize: 12,
+    fontFamily: FONT.bold,
   },
   nameText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.3,
-    lineHeight: 21,
-    marginVertical: 0.5,
+    lineHeight: 22,
+    marginVertical: 1,
   },
   roleTagPill: {
     alignSelf: 'flex-start',
@@ -351,21 +312,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.35)',
     borderRadius: RADIUS.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
     marginVertical: 2,
   },
   roleTagText: {
     color: '#ffffff',
-    fontSize: 10.5,
+    fontSize: 11,
     fontFamily: FONT.extraBold,
     letterSpacing: 0.2,
   },
   subtitleText: {
     color: 'rgba(255,255,255,0.95)',
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    marginTop: 1,
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    marginTop: 2,
   },
   avatarContainer: {
     position: 'relative',

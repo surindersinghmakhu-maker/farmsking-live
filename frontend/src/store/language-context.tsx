@@ -9,7 +9,7 @@ const VALID_LANGUAGES = new Set<string>(LANGUAGE_OPTIONS.map((opt) => opt.code))
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => Promise<void>;
-  t: (key: TranslationKey, fallback?: string) => string;
+  t: (key: TranslationKey | string, fallback?: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

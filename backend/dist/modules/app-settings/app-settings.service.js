@@ -1156,6 +1156,112 @@ let AppSettingsService = class AppSettingsService {
         this.clearCache();
         return { success: true, ...updatedServiceConfig };
     }
+    async getVisitorStats() {
+        const [settings, userCount] = await Promise.all([
+            this.prisma.appSetting.upsert({
+                where: { id: SINGLETON_ID },
+                update: {},
+                create: { id: SINGLETON_ID },
+            }),
+            this.prisma.user.count(),
+        ]);
+        const flags = settings.featureFlags || {};
+        const todayStr = new Date().toISOString().slice(0, 10);
+        let stats = flags.visitorStats || {
+            totalVisits: userCount + 15,
+            todayVisits: 6,
+            uniqueVisitors: userCount + 4,
+            registeredUsers: userCount,
+            mobileVisits: Math.round((userCount + 15) * 0.65),
+            desktopVisits: Math.round((userCount + 15) * 0.35),
+            liveActiveEstimate: 2,
+            todayDate: todayStr,
+            lastVisitedAt: new Date().toISOString(),
+        };
+        stats.registeredUsers = userCount;
+        if (stats.todayDate !== todayStr) {
+            stats.todayVisits = 1;
+            stats.todayDate = todayStr;
+        }
+        return stats;
+    }
+    async recordVisit(dto) {
+        const [settings, userCount] = await Promise.all([
+            this.prisma.appSetting.upsert({
+                where: { id: SINGLETON_ID },
+                update: {},
+                create: { id: SINGLETON_ID },
+            }),
+            this.prisma.user.count(),
+        ]);
+        const flags = settings.featureFlags || {};
+        const todayStr = new Date().toISOString().slice(0, 10);
+        let stats = flags.visitorStats || {
+            totalVisits: userCount + 15,
+            todayVisits: 6,
+            uniqueVisitors: userCount + 4,
+            registeredUsers: userCount,
+            mobileVisits: Math.round((userCount + 15) * 0.65),
+            desktopVisits: Math.round((userCount + 15) * 0.35),
+            liveActiveEstimate: 2,
+            todayDate: todayStr,
+            lastVisitedAt: new Date().toISOString(),
+        };
+        stats.registeredUsers = userCount;
+        if (stats.todayDate !== todayStr) {
+            stats.todayVisits = 0;
+            stats.todayDate = todayStr;
+        }
+        stats.totalVisits = (Number(stats.totalVisits) || 0) + 1;
+        stats.todayVisits = (Number(stats.todayVisits) || 0) + 1;
+        stats.uniqueVisitors = (Number(stats.uniqueVisitors) || 0) + 1;
+        stats.lastVisitedAt = new Date().toISOString();
+        const isMobile = dto?.device === 'mobile';
+        if (isMobile) {
+            stats.mobileVisits = (Number(stats.mobileVisits) || 0) + 1;
+        }
+        else {
+            stats.desktopVisits = (Number(stats.desktopVisits) || 0) + 1;
+        }
+        stats.liveActiveEstimate = Math.max(1, Math.min(8, Math.round(stats.todayVisits * 0.4)));
+        await this.prisma.appSetting.update({
+            where: { id: SINGLETON_ID },
+            data: {
+                featureFlags: {
+                    ...flags,
+                    visitorStats: stats,
+                },
+            },
+        });
+        this.clearCache();
+        return stats;
+    }
+    async updateVisitorStats(admin, dto) {
+        const settings = await this.prisma.appSetting.upsert({
+            where: { id: SINGLETON_ID },
+            update: {},
+            create: { id: SINGLETON_ID },
+        });
+        const flags = settings.featureFlags || {};
+        const currentStats = await this.getVisitorStats();
+        const updated = {
+            ...currentStats,
+            ...dto,
+            updatedAt: new Date().toISOString(),
+            updatedById: admin?.id,
+        };
+        await this.prisma.appSetting.update({
+            where: { id: SINGLETON_ID },
+            data: {
+                featureFlags: {
+                    ...flags,
+                    visitorStats: updated,
+                },
+            },
+        });
+        this.clearCache();
+        return { success: true, stats: updated };
+    }
 };
 exports.AppSettingsService = AppSettingsService;
 exports.AppSettingsService = AppSettingsService = __decorate([

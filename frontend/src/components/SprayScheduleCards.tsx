@@ -2,12 +2,23 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useSprayScheduleForCrop, useUpdateSprayScheduleItem } from '@/src/hooks/useSpraySchedules';
 import { SprayScheduleItem } from '@/src/types/api';
 
 /** Which of the 3 outcome colors a completed/skipped spray item earns, based on how close its last
  * update landed to the originally scheduled date (>3 days late = delayed blue, SKIPPED = red, <=3 days = green). */
-export function pastSprayOutcome(item: SprayScheduleItem): { color: string; bg: string; border: string; label: string } {
+export function pastSprayOutcome(item: SprayScheduleItem, isDark = false): { color: string; bg: string; border: string; label: string } {
+  if (isDark) {
+    if (item.status === 'SKIPPED') return { color: '#f87171', bg: 'rgba(220, 38, 38, 0.15)', border: 'rgba(220, 38, 38, 0.35)', label: 'Skipped' };
+    const scheduled = new Date(item.scheduledDate);
+    scheduled.setHours(0, 0, 0, 0);
+    const updated = new Date(item.updatedAt);
+    updated.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((updated.getTime() - scheduled.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays > 3) return { color: '#60a5fa', bg: 'rgba(37, 99, 235, 0.15)', border: 'rgba(37, 99, 235, 0.35)', label: 'Delayed' };
+    return { color: '#4ade80', bg: 'rgba(22, 163, 74, 0.15)', border: 'rgba(22, 163, 74, 0.35)', label: 'Completed' };
+  }
   if (item.status === 'SKIPPED') {
     return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca', label: 'Skipped' };
   }
@@ -28,6 +39,7 @@ export function pastSprayOutcome(item: SprayScheduleItem): { color: string; bg: 
  * Automatically marks items as SKIPPED on the 6th day (after 5 days late).
  * Shared between the farmer's "My Advisor" view and the advisor's "Farmers" roster. */
 export function SprayScheduleCards({
+
   cropCycleId,
   accentColor,
   onViewDetail,
@@ -36,6 +48,7 @@ export function SprayScheduleCards({
   accentColor: string;
   onViewDetail: (item: SprayScheduleItem) => void;
 }) {
+  const { colors, isDark } = useExecutiveTheme();
   const { data: itemsRaw } = useSprayScheduleForCrop(cropCycleId);
   const updateItemMutation = useUpdateSprayScheduleItem();
 
@@ -158,7 +171,7 @@ export function SprayScheduleCards({
     <View style={styles.dualCardRow}>
       {upcoming ? (
         <View
-          style={[styles.sprayCard, styles.sprayCardHighlighted, { backgroundColor: accentColor, borderColor: accentColor, ...premiumShadow(accentColor, 'sm') }]}
+          style={[styles.sprayCard, styles.sprayCardHighlighted, { backgroundColor: isDark ? '#062615' : accentColor, borderColor: isDark ? '#00ff87' : accentColor, ...premiumShadow(isDark ? 'transparent' : accentColor, 'sm') }]}
         >
           <View style={styles.sprayCardHeaderRow}>
             <TouchableOpacity
@@ -264,7 +277,7 @@ export function SprayScheduleCards({
           ) : null}
         </View>
       ) : (
-        <View style={[styles.sprayCard, { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+        <View style={[styles.sprayCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }]}>
           <Text style={[styles.sprayCardEyebrow, { color: '#94a3b8' }]}>Upcoming Schedule</Text>
           <Text style={[styles.sprayCardMeta, { color: '#94a3b8', marginTop: 6 }]}>Nothing scheduled</Text>
         </View>
@@ -284,8 +297,8 @@ export function SprayScheduleCards({
           </Text>
         </View>
       ) : (
-        <View style={styles.sprayCardCollapsed}>
-          <Text style={styles.sprayCardCollapsedText}>Previous Schedule · No history yet</Text>
+        <View style={[styles.sprayCardCollapsed, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }]}>
+          <Text style={[styles.sprayCardCollapsedText, { color: isDark ? colors.textMuted : '#334155' }]}>Previous Schedule · No history yet</Text>
         </View>
       )}
     </View>

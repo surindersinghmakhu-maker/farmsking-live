@@ -43,59 +43,6 @@ const PUBLIC_NAV_LINKS = [
   { label: 'Crop Doctors', path: '/topic/Crop-Doctors', color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
 ];
 
-// ─── Mobile Bottom Nav Tabs (Admin-Style Colorful Dynamic Indicator) ──────────
-const BOTTOM_NAV_TABS = [
-  {
-    id: 'home',
-    label: 'Home',
-    icon: 'home',
-    color: '#10b981',
-    glow: ['rgba(16, 185, 129, 0.28)', 'rgba(5, 150, 105, 0.16)', 'rgba(16, 185, 129, 0.05)'],
-    laser: ['#00ff87', '#10b981', '#059669'],
-    border: 'rgba(16, 185, 129, 0.45)',
-    shadow: '#10b981',
-  },
-  {
-    id: 'mandi',
-    label: 'Mandi',
-    icon: 'trending-up',
-    color: '#eab308',
-    glow: ['rgba(234, 179, 8, 0.28)', 'rgba(202, 138, 4, 0.16)', 'rgba(234, 179, 8, 0.05)'],
-    laser: ['#fde047', '#eab308', '#ca8a04'],
-    border: 'rgba(234, 179, 8, 0.45)',
-    shadow: '#eab308',
-  },
-  {
-    id: 'doctor',
-    label: 'AI Doctor',
-    icon: 'sparkles',
-    color: '#06b6d4',
-    glow: ['rgba(6, 182, 212, 0.28)', 'rgba(16, 185, 129, 0.16)', 'rgba(6, 182, 212, 0.05)'],
-    laser: ['#38bdf8', '#00ff87', '#10b981'],
-    border: 'rgba(6, 182, 212, 0.45)',
-    shadow: '#06b6d4',
-  },
-  {
-    id: 'store',
-    label: 'Store',
-    icon: 'bag-handle',
-    color: '#0ea5e9',
-    glow: ['rgba(14, 165, 233, 0.28)', 'rgba(2, 132, 199, 0.16)', 'rgba(14, 165, 233, 0.05)'],
-    laser: ['#38bdf8', '#0ea5e9', '#0284c7'],
-    border: 'rgba(14, 165, 233, 0.45)',
-    shadow: '#0ea5e9',
-  },
-  {
-    id: 'menu',
-    label: 'Menu',
-    icon: 'grid',
-    color: '#8b5cf6',
-    glow: ['rgba(139, 92, 246, 0.28)', 'rgba(124, 58, 237, 0.16)', 'rgba(139, 92, 246, 0.05)'],
-    laser: ['#c084fc', '#8b5cf6', '#7c3aed'],
-    border: 'rgba(139, 92, 246, 0.45)',
-    shadow: '#8b5cf6',
-  },
-];
 
 // ─── FarmsKing Platform Verified Latest Entries Ticker Data ───────────────────
 const FARMSKING_LATEST_ENTRIES = [
@@ -634,6 +581,20 @@ const AI_DEMO_DATA = {
 export default function PublicLandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+
+  // Guard: If authenticated, immediately preserve session & redirect to appropriate dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        router.replace('/(partner)/(tabs)');
+      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        router.replace('/admin');
+      } else {
+        router.replace('/(user)/(tabs)');
+      }
+    }
+  }, [user, isLoading]);
+
   const { items: cartItems } = useCart();
   const totalCartCount = useMemo(() => (cartItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0), [cartItems]);
   const { width } = useWindowDimensions();
@@ -654,19 +615,7 @@ export default function PublicLandingPage() {
     }, 3800);
     return () => clearInterval(interval);
   }, []);
-  const [activeBottomTab, setActiveBottomTab] = useState(0);
-  const bottomSlideAnim = useRef(new RNAnimated.Value(0)).current;
-  const [bottomBarWidth, setBottomBarWidth] = useState(0);
 
-  const switchBottomTab = (index: number) => {
-    setActiveBottomTab(index);
-    RNAnimated.spring(bottomSlideAnim, {
-      toValue: index,
-      tension: 68,
-      friction: 10,
-      useNativeDriver: false,
-    }).start();
-  };
 
   // ── Farmers Audio Advisory Voice Assistant State ──
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
@@ -1776,6 +1725,9 @@ export default function PublicLandingPage() {
   }
 
   // Mobile and Desktop now both render the full web platform with responsive app adaptations
+  if (!isLoading && user) {
+    return <View style={{ flex: 1, backgroundColor: '#020d06' }} />;
+  }
 
   return (
     <View style={[S.root, isDay && S.rootDay]}>
@@ -4154,128 +4106,6 @@ export default function PublicLandingPage() {
           </View>
         </View>
       </ScrollView>
-
-      {/* ══ MOBILE DOCKED BOTTOM APP BAR WITH ADMIN-STYLE SPRING GLIDER ══ */}
-      {isMobile && (
-        <View
-          // @ts-ignore
-          className="mobile-docked-bottom-bar"
-          style={[S.mobileBottomBar, isDay && S.mobileBottomBarDay]}
-          onLayout={(e) => {
-            const w = e.nativeEvent.layout.width;
-            if (w > 0 && w !== bottomBarWidth) setBottomBarWidth(w);
-          }}
-        >
-          {/* Continuous Sliding Glowing Pill Indicator */}
-          {bottomBarWidth > 0 && (
-            <RNAnimated.View
-              style={[
-                S.bottomGliderPill,
-                {
-                  width: Math.max(0, (bottomBarWidth / BOTTOM_NAV_TABS.length) - 8),
-                  transform: [
-                    {
-                      translateX: bottomSlideAnim.interpolate({
-                        inputRange: [0, 1, 2, 3, 4],
-                        outputRange: [0, 1, 2, 3, 4].map(
-                          (i) => i * (bottomBarWidth / BOTTOM_NAV_TABS.length) + 4
-                        ),
-                        extrapolate: 'clamp',
-                      }),
-                    },
-                  ],
-                  borderColor: BOTTOM_NAV_TABS[activeBottomTab]?.border || 'rgba(16,185,129,0.45)',
-                  shadowColor: BOTTOM_NAV_TABS[activeBottomTab]?.shadow || '#10b981',
-                },
-              ]}
-              pointerEvents="none"
-            >
-              <LinearGradient
-                colors={(BOTTOM_NAV_TABS[activeBottomTab]?.glow || ['rgba(16,185,129,0.22)', 'rgba(5,150,105,0.06)']) as [string, string, ...string[]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <LinearGradient
-                colors={(BOTTOM_NAV_TABS[activeBottomTab]?.laser || ['#00ff87', '#10b981']) as [string, string, ...string[]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={S.bottomGliderLaser}
-              />
-            </RNAnimated.View>
-          )}
-
-          {/* 5 Tabs with Scale & Smooth Transitions */}
-          {BOTTOM_NAV_TABS.map((tab, idx) => {
-            const isTabActive = activeBottomTab === idx;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                style={S.bottomTabItem}
-                onPress={() => {
-                  switchBottomTab(idx);
-                  if (idx === 0) {
-                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                  } else if (idx === 1) {
-                    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                      const el = document.getElementById('mandi-rates');
-                      if (el) {
-                        el.scrollIntoView({ behavior: 'smooth' });
-                        return;
-                      }
-                      router.push('/#mandi-rates' as any);
-                    }
-                  } else if (idx === 2) {
-                    setTimeout(() => {
-                      router.push('/topic/Crop-Doctors');
-                    }, 160);
-                  } else if (idx === 3) {
-                    setTimeout(() => {
-                      router.push('/shop');
-                    }, 160);
-                  } else if (idx === 4) {
-                    setMobileMenuOpen(true);
-                  }
-                }}
-                activeOpacity={0.8}
-              >
-                <View
-                  style={[
-                    S.tabIconWrapper,
-                    Platform.OS === 'web'
-                      ? ({
-                          transform: isTabActive ? 'scale(1.18)' : 'scale(1)',
-                          transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                        } as any)
-                      : isTabActive
-                      ? { transform: [{ scale: 1.15 }] }
-                      : {},
-                  ]}
-                >
-                  <Ionicons
-                    name={isTabActive ? (tab.icon as any) : (`${tab.icon}-outline` as any)}
-                    size={20}
-                    color={isTabActive ? tab.color : isDay ? '#64748b' : '#94a3b8'}
-                  />
-                  {idx === 1 && <View style={S.mandiLiveBeaconDot} />}
-                </View>
-                <Text
-                  style={[
-                    S.bottomTabText,
-                    isDay && S.bottomTabTextDay,
-                    isTabActive && { color: tab.color, fontFamily: FONT.extraBold },
-                    Platform.OS === 'web' ? ({ transition: 'color 0.3s ease' } as any) : {},
-                  ]}
-                >
-                  {tab.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
 
       {/* ══ APP-STYLE MOBILE NAVIGATION SHEET / DRAWER ══ */}
       <Modal

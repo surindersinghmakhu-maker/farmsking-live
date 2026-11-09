@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { SprayScheduleItem } from '@/src/types/api';
 import { useSprayItemTemplatesForMyAdvisor } from '@/src/hooks/useSprayItemTemplates';
 
@@ -17,7 +18,14 @@ const STATUS_META: Record<SprayScheduleItem['status'], { label: string; color: s
  * missing, the alternative(s) are promoted into the primary recommendation slot instead of being
  * shown as a disconnected footnote. */
 export function SprayDetailCard({ item }: { item: SprayScheduleItem }) {
-  const statusMeta = STATUS_META[item.status] ?? STATUS_META.PENDING;
+  const { colors, isDark } = useExecutiveTheme();
+  const darkStatusMeta: Record<SprayScheduleItem['status'], { label: string; color: string; bg: string }> = {
+    PENDING: { label: 'Pending', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)' },
+    OVERDUE: { label: 'Overdue', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.15)' },
+    COMPLETED: { label: 'Completed', color: '#4ade80', bg: 'rgba(74, 222, 128, 0.15)' },
+    SKIPPED: { label: 'Skipped', color: '#f87171', bg: 'rgba(248, 113, 113, 0.15)' },
+  };
+  const statusMeta = isDark ? (darkStatusMeta[item.status] ?? darkStatusMeta.PENDING) : (STATUS_META[item.status] ?? STATUS_META.PENDING);
   const hasPrimary = !!item.recommendedProduct;
   const alternatives = [item.alternativeOption, item.alternativeOption2].filter(Boolean) as string[];
   const scheduledLabel = new Date(item.scheduledDate).toLocaleDateString('en-IN', {
@@ -57,13 +65,13 @@ export function SprayDetailCard({ item }: { item: SprayScheduleItem }) {
       </View>
 
       {hasPrimary ? (
-        <View style={styles.primaryCard}>
+        <View style={[styles.primaryCard, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.12)' : '#f0fdf4', borderColor: isDark ? 'rgba(0, 255, 135, 0.3)' : '#bbf7d0' }]}>
           <Text style={styles.primaryEyebrow}>Recommended Spray</Text>
-          <Text style={styles.primaryProduct}>{item.recommendedProduct}</Text>
+          <Text style={[styles.primaryProduct, { color: isDark ? '#ffffff' : '#0f172a' }]}>{item.recommendedProduct}</Text>
           {item.dosageInstructions ? (
             <View style={styles.dosageRow}>
               <Ionicons name="beaker-outline" size={13} color="#15803d" />
-              <Text style={styles.dosageText}>{item.dosageInstructions}</Text>
+              <Text style={[styles.dosageText, { color: isDark ? '#a7f3d0' : '#166534' }]}>{item.dosageInstructions}</Text>
             </View>
           ) : null}
         </View>
@@ -75,15 +83,15 @@ export function SprayDetailCard({ item }: { item: SprayScheduleItem }) {
       )}
 
       {matchedItemAlts.length > 0 ? (
-        <View style={styles.itemAltCard}>
+        <View style={[styles.itemAltCard, { backgroundColor: isDark ? 'rgba(168, 85, 247, 0.12)' : '#faf5ff', borderColor: isDark ? 'rgba(168, 85, 247, 0.25)' : '#e9d5ff' }]}>
           <View style={styles.altHeaderRow}>
             <Ionicons name="swap-horizontal-outline" size={14} color="#7c3aed" />
             <Text style={[styles.altEyebrow, { color: '#7c3aed' }]}>Item Alternatives</Text>
           </View>
           {matchedItemAlts.map((row, idx) => (
             <View key={idx} style={styles.itemAltRow}>
-              <Text style={styles.itemAltName}>{row.item}</Text>
-              <Text style={styles.itemAltValue}>{row.alts}</Text>
+              <Text style={[styles.itemAltName, { color: isDark ? '#ffffff' : '#0f172a' }]}>{row.item}</Text>
+              <Text style={[styles.itemAltValue, { color: isDark ? '#c084fc' : '#6b21a8' }]}>{row.alts}</Text>
             </View>
           ))}
         </View>
@@ -112,9 +120,9 @@ export function SprayDetailCard({ item }: { item: SprayScheduleItem }) {
       ) : null}
 
       {item.notes ? (
-        <View style={styles.notesCard}>
+        <View style={[styles.notesCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
           <Text style={styles.notesEyebrow}>Advisor Notes</Text>
-          <Text style={styles.notesText}>{item.notes}</Text>
+          <Text style={[styles.notesText, { color: isDark ? '#cbd5e1' : '#334155' }]}>{item.notes}</Text>
         </View>
       ) : null}
     </View>

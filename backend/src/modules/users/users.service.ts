@@ -1315,6 +1315,16 @@ export class UsersService implements OnModuleInit {
     if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
       throw new ConflictException("An admin's roles cannot be changed here.");
     }
+    const isStaff = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR, Role.TECHNICAL_TRAINER, Role.MANAGER].some(
+      (r) => user.role === r || (user.roles ?? []).includes(r)
+    );
+    if (isStaff) {
+      const clientRoles: Role[] = [Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.LABOUR];
+      const hasClientRole = activeRoles.some((r) => clientRoles.includes(r));
+      if (hasClientRole) {
+        throw new ConflictException('Admin staff members cannot hold Client group roles (Farmer, Gardener, Supervisor, Labour).');
+      }
+    }
     if (!activeRoles.includes(Role.CUSTOMER)) {
       activeRoles = [...activeRoles, Role.CUSTOMER];
     }

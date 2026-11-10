@@ -65,8 +65,8 @@ export const PartnerDashboardView: React.FC = () => {
       {/* Header */}
       <RoleHeader
         currentRole="BUSINESS_PARTNER"
-        profileName={user?.name || 'Business Partner'}
-        subtitle="Business Partner"
+        profileName={user?.name || 'Agent'}
+        subtitle="Business Agent"
         avatarUrl={user?.photoUrl || undefined}
       />
 

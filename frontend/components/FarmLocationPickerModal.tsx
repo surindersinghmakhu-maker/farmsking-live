@@ -97,6 +97,8 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
   const [calculatedAcres, setCalculatedAcres] = useState<number>(existingGpsData?.areaAcres || 0);
   const [isLocked, setIsLocked] = useState<boolean>(initialIsLocked);
   const [isUnlockRequested, setIsUnlockRequested] = useState<boolean>(false);
+  const [showReasonBox, setShowReasonBox] = useState<boolean>(false);
+  const [unlockReasonInput, setUnlockReasonInput] = useState<string>('');
   const [showLivePhotoModal, setShowLivePhotoModal] = useState<boolean>(false);
   const [showFullMapModal, setShowFullMapModal] = useState<boolean>(false);
   const [captureMode, setCaptureMode] = useState<'WALK' | 'REMOTE'>('WALK');
@@ -283,19 +285,25 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
   };
 
   const handleDirectUnlockRequest = () => {
+    if (!unlockReasonInput.trim() || unlockReasonInput.trim().length < 5) {
+      Alert.alert('Reason Required', 'Please provide a clear reason (minimum 5 characters) for unlocking this field so the Operator can review.');
+      return;
+    }
     setIsUnlockRequested(true);
     requestCropGpsUnlock(
       cropId || 'c1',
-      'Location reset request',
+      unlockReasonInput.trim(),
       farmerName,
       farmerPhone,
       cropName,
       plotName,
       location
     );
+    setShowReasonBox(false);
+    setUnlockReasonInput('');
     Alert.alert(
       'Unlock Request Sent 🔓',
-      `Request sent to Super Admin to reset location for ${cropName || 'this crop'}.`
+      `Request sent to Operator to unlock field coordinates for ${cropName || 'this crop'}.\nReason: "${unlockReasonInput.trim()}"`
     );
   };
 
@@ -322,12 +330,41 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               {/* LOCK / UNLOCK STATUS BANNERS */}
               {isLocked ? (
-                <View style={styles.lockedBanner}>
-                  <Ionicons name="lock-closed" size={16} color="#b45309" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.lockedTitle}>🔒 Location Saved & Locked (View Only)</Text>
-                    <Text style={styles.lockedSub}>Boundaries locked for satellite accuracy. Request admin unlock to edit.</Text>
+                <View style={[styles.lockedBanner, { flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="lock-closed" size={18} color="#b45309" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.lockedTitle}>🔒 Location Saved & Locked (View Only)</Text>
+                      <Text style={styles.lockedSub}>Boundaries are locked for satellite precision. Send request to Operator with reason to unlock.</Text>
+                    </View>
                   </View>
+                  {isUnlockRequested ? (
+                    <View style={{ backgroundColor: '#fffbeb', padding: 6, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
+                      <Text style={{ fontSize: 10.5, fontWeight: '700', color: '#b45309' }}>⏳ Unlock request submitted and pending Operator approval.</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#ffffff',
+                        borderWidth: 1.5,
+                        borderColor: '#f59e0b',
+                        paddingVertical: 7,
+                        paddingHorizontal: 10,
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                      }}
+                      activeOpacity={0.85}
+                      onPress={() => setShowReasonBox(true)}
+                    >
+                      <Ionicons name="lock-open-outline" size={14} color="#b45309" />
+                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#b45309' }}>
+                        🔓 Request Unlock from Operator (Provide Reason)
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ) : (
                 <View style={styles.unlockedBanner}>
@@ -796,6 +833,74 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   </Text>
                 </TouchableOpacity>
               ) : null}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* REASON BOX MODAL FOR UNLOCK REQUEST */}
+      <Modal visible={showReasonBox} transparent animationType="fade" onRequestClose={() => setShowReasonBox(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="lock-open" size={18} color="#b45309" />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>Request Field Unlock</Text>
+                  <Text style={{ fontSize: 11, color: '#64748b' }}>Operator approval required to edit coordinates</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowReasonBox(false)}>
+                <Ionicons name="close-circle" size={22} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 14 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#334155' }}>🌾 Crop: {cropName || 'Field Plot'}</Text>
+              <Text style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>📍 Plot: {plotName || 'Primary Plot'}</Text>
+            </View>
+
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#0f172a', marginBottom: 6 }}>
+              Reason for Unlocking <Text style={{ color: '#dc2626' }}>*</Text>
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: '#ffffff',
+                borderWidth: 1.5,
+                borderColor: '#cbd5e1',
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 12.5,
+                color: '#0f172a',
+                height: 90,
+                textAlignVertical: 'top',
+                marginBottom: 16,
+              }}
+              placeholder="Explain why you need to unlock (e.g. boundary shifted, marked wrong corner, land leveled)..."
+              placeholderTextColor="#94a3b8"
+              multiline
+              value={unlockReasonInput}
+              onChangeText={setUnlockReasonInput}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                style={{ flex: 1, paddingVertical: 11, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                onPress={() => setShowReasonBox(false)}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ flex: 1.6, paddingVertical: 11, borderRadius: 8, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+                activeOpacity={0.85}
+                onPress={handleDirectUnlockRequest}
+              >
+                <Ionicons name="send" size={14} color="#ffffff" />
+                <Text style={{ fontSize: 13, fontWeight: '800', color: '#ffffff' }}>Submit to Operator</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

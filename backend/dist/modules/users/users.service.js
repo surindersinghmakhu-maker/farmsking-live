@@ -1093,6 +1093,14 @@ let UsersService = class UsersService {
         if (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN) {
             throw new common_1.ConflictException("An admin's roles cannot be changed here.");
         }
+        const isStaff = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.MANAGER].some((r) => user.role === r || (user.roles ?? []).includes(r));
+        if (isStaff) {
+            const clientRoles = [client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
+            const hasClientRole = activeRoles.some((r) => clientRoles.includes(r));
+            if (hasClientRole) {
+                throw new common_1.ConflictException('Admin staff members cannot hold Client group roles (Farmer, Gardener, Supervisor, Labour).');
+            }
+        }
         if (!activeRoles.includes(client_1.Role.CUSTOMER)) {
             activeRoles = [...activeRoles, client_1.Role.CUSTOMER];
         }

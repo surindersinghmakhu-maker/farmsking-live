@@ -48,15 +48,18 @@ const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.gly
 type UserFilter =
   | 'ALL'
   | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR' | 'TECHNICAL_TRAINER'
-  | 'BUSINESS_PARTNER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
-  | 'CUSTOMER' | 'FARMER' | 'GARDENER';
+  | 'BUSINESS_PARTNER' | 'SELLER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
+  | 'CUSTOMER' | 'FARMER' | 'GARDENER' | 'SUPERVISOR' | 'LABOUR';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
   ALL: [
     { value: 'ALL', label: 'All Users', icon: 'people-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
-    { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
+    { value: 'BUSINESS_PARTNER', label: 'Agents', icon: 'briefcase-outline' },
+    { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
+    { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
+    { value: 'LABOUR', label: 'Labour Workers', icon: 'body-outline' },
     { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
     { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
@@ -68,13 +71,15 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
   CLIENTS: [
     { value: 'ALL', label: 'All Clients', icon: 'people-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
-    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
-    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
+    { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
+    { value: 'LABOUR', label: 'Labour Workers', icon: 'body-outline' },
+    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
   ],
   PARTNERS: [
     { value: 'ALL', label: 'All Partners', icon: 'briefcase-outline' },
-    { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
+    { value: 'BUSINESS_PARTNER', label: 'Agents', icon: 'briefcase-outline' },
+    { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
   ],
@@ -91,6 +96,9 @@ function filterToBackendRole(filter: UserFilter): Role | undefined {
   if (filter === 'ALL') return undefined;
   if (filter === 'TECHNICAL_TRAINER') return 'TECHNICAL_TRAINER' as Role;
   if (filter === 'TRADER') return 'TRADER' as Role;
+  if (filter === 'SELLER') return 'SELLER' as Role;
+  if (filter === 'SUPERVISOR') return 'SUPERVISOR' as Role;
+  if (filter === 'LABOUR') return 'LABOUR' as Role;
   return filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR' ? 'ADVISOR' : (filter as Role);
 }
 
@@ -159,8 +167,8 @@ export default function SuperUsersScreen() {
       const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
       if (subFilter === 'ALL') {
         if (group === 'ALL') return true;
-        if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'TRADER', 'GARDENER'].includes(r));
-        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR'].includes(r));
+        if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
+        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER'].includes(r));
         if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
         return true;
       }
@@ -169,12 +177,15 @@ export default function SuperUsersScreen() {
       if (subFilter === 'OPERATOR') return activeRoles.includes('OPERATOR') || u.role === 'OPERATOR';
       if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
       if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
+      if (subFilter === 'SELLER') return activeRoles.includes('SELLER') || u.role === 'SELLER';
       if (subFilter === 'TRADER') return activeRoles.includes('TRADER') || u.role === 'TRADER';
       if (subFilter === 'FARM_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN';
       if (subFilter === 'GARDEN_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN';
       if (subFilter === 'CUSTOMER') return activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER';
       if (subFilter === 'FARMER') return activeRoles.includes('FARMER') || u.role === 'FARMER';
       if (subFilter === 'GARDENER') return activeRoles.includes('GARDENER') || u.role === 'GARDENER';
+      if (subFilter === 'SUPERVISOR') return activeRoles.includes('SUPERVISOR') || u.role === 'SUPERVISOR';
+      if (subFilter === 'LABOUR') return activeRoles.includes('LABOUR') || u.role === 'LABOUR';
       return false;
     }).length;
   };
@@ -197,12 +208,15 @@ export default function SuperUsersScreen() {
         if (f.value === 'OPERATOR' && (activeRoles.includes('OPERATOR') || u.role === 'OPERATOR')) matches = true;
         if (f.value === 'TECHNICAL_TRAINER' && (activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER')) matches = true;
         if (f.value === 'BUSINESS_PARTNER' && (activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER')) matches = true;
+        if (f.value === 'SELLER' && (activeRoles.includes('SELLER') || u.role === 'SELLER')) matches = true;
         if (f.value === 'TRADER' && (activeRoles.includes('TRADER') || u.role === 'TRADER')) matches = true;
         if (f.value === 'FARM_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN') matches = true;
         if (f.value === 'GARDEN_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN') matches = true;
         if (f.value === 'CUSTOMER' && (activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER')) matches = true;
         if (f.value === 'FARMER' && (activeRoles.includes('FARMER') || u.role === 'FARMER')) matches = true;
         if (f.value === 'GARDENER' && (activeRoles.includes('GARDENER') || u.role === 'GARDENER')) matches = true;
+        if (f.value === 'SUPERVISOR' && (activeRoles.includes('SUPERVISOR') || u.role === 'SUPERVISOR')) matches = true;
+        if (f.value === 'LABOUR' && (activeRoles.includes('LABOUR') || u.role === 'LABOUR')) matches = true;
         if (matches) uniqueUserIds.add(u.id);
       });
     });
@@ -232,8 +246,8 @@ export default function SuperUsersScreen() {
       if (group === 'ALL') return true;
       const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
       const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
-      if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'TRADER', 'GARDENER'].includes(r));
-      if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR'].includes(r));
+      if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
+      if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER'].includes(r));
       if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
       return true;
     }
@@ -1525,7 +1539,7 @@ const ROLE_LABELS: Record<Role, string> = {
   FARMER: 'Farmer',
   GARDENER: 'Gardener',
   ADVISOR: 'Advisor',
-  BUSINESS_PARTNER: 'Business Partner',
+  BUSINESS_PARTNER: 'Agent',
   ADMIN: 'Admin',
   SUPER_ADMIN: 'Super Admin',
   OPERATOR: 'Operator',
@@ -1544,20 +1558,47 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
   const [advisorType, setAdvisorType] = useState<AdvisorType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isTargetStaff = Boolean(
+    target &&
+      ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MANAGER'].some(
+        (r) => target.role === r || (target.roles ?? []).includes(r as Role)
+      )
+  );
+
   useEffect(() => {
     if (!target) return;
     setError(null);
-    const active = (target.roles ?? [target.role]).filter((r: any) => !(target.deactivatedRoles ?? []).includes(r));
+    let active = (target.roles ?? [target.role]).filter((r: any) => !(target.deactivatedRoles ?? []).includes(r));
+    // Admin staff cannot hold Client group roles (Farmer, Gardener, Supervisor, Labour)
+    if (isTargetStaff) {
+      active = active.filter((r) => !['FARMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
+    }
     setSelected(active.includes('CUSTOMER') ? active : [...active, 'CUSTOMER']);
     setAdvisorType(target.advisorType ?? null);
-  }, [target]);
+  }, [target, isTargetStaff]);
 
   if (!target) return null;
 
   const toggle = (role: Role) => {
-    if (role === 'CUSTOMER') return;
+    if (isTargetStaff && ['FARMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(role)) {
+      setError('Admin staff accounts cannot hold Client group roles (Farmer, Gardener, Supervisor, Labour).');
+      return;
+    }
     tap();
-    setSelected((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]));
+    setSelected((prev) => {
+      const exists = prev.includes(role);
+      if (exists) {
+        return prev.filter((r) => r !== role);
+      }
+      // Mutually exclusive: User can only have either Farmer OR Gardener
+      if (role === 'FARMER') {
+        return [...prev.filter((r) => r !== 'GARDENER'), 'FARMER'];
+      }
+      if (role === 'GARDENER') {
+        return [...prev.filter((r) => r !== 'FARMER'), 'GARDENER'];
+      }
+      return [...prev, role];
+    });
   };
 
   const toggleAdvisorType = (type: AdvisorType) => {
@@ -1575,11 +1616,22 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
 
   const handleSave = () => {
     setError(null);
-    const message = `${target.name} ke roles update ho jayenge:\n${roleLabels.join(', ') || 'None'}\n\nConfirm karein?`;
+    const message = `Confirm role updates for ${target.name}:\n\n${roleLabels.join(', ') || 'None'}\n\nDo you want to save these changes?`;
     const doSave = async () => {
       try {
-        // Filter to only roles the backend allows via checkbox assignment
-        const assignableSelected = selected.filter((r) => ASSIGNABLE_CHECKBOX_ROLES.includes(r));
+        // Filter to only roles the backend allows via checkbox assignment, always preserving CUSTOMER
+        let assignableSelected = Array.from(
+          new Set([
+            ...selected.filter((r) => ASSIGNABLE_CHECKBOX_ROLES.includes(r)),
+            'CUSTOMER' as Role,
+          ])
+        );
+        // Security rule: Admin staff cannot hold Client group roles
+        if (isTargetStaff) {
+          assignableSelected = assignableSelected.filter(
+            (r) => !['FARMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r)
+          );
+        }
         await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: assignableSelected });
         if (selected.includes('ADVISOR') && advisorType) {
           await updateUser.mutateAsync({ id: target.id, payload: { advisorType } });
@@ -1599,57 +1651,233 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     }
   };
 
+  const allRoleGroups: {
+    title: string;
+    subtitle?: string;
+    items: {
+      key: string;
+      label: string;
+      isChecked: boolean;
+      isLocked: boolean;
+      wasEverGranted: boolean;
+      onPress: () => void;
+    }[];
+  }[] = [
+    {
+      title: 'Clients',
+      subtitle: 'Farmer/Gardener, Supervisor & Labour (Customer active by default)',
+      items: [
+        {
+          key: 'FARMER',
+          label: 'Farmer',
+          isChecked: selected.includes('FARMER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('FARMER'),
+          onPress: () => toggle('FARMER'),
+        },
+        {
+          key: 'GARDENER',
+          label: 'Gardener',
+          isChecked: selected.includes('GARDENER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('GARDENER'),
+          onPress: () => toggle('GARDENER'),
+        },
+        {
+          key: 'SUPERVISOR',
+          label: 'Supervisor',
+          isChecked: selected.includes('SUPERVISOR'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('SUPERVISOR'),
+          onPress: () => toggle('SUPERVISOR'),
+        },
+        {
+          key: 'LABOUR',
+          label: 'Labour Worker',
+          isChecked: selected.includes('LABOUR'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('LABOUR'),
+          onPress: () => toggle('LABOUR'),
+        },
+      ],
+    },
+    {
+      title: 'Business Partners',
+      items: [
+        {
+          key: 'BUSINESS_PARTNER',
+          label: 'Agent',
+          isChecked: selected.includes('BUSINESS_PARTNER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('BUSINESS_PARTNER'),
+          onPress: () => toggle('BUSINESS_PARTNER'),
+        },
+        {
+          key: 'SELLER',
+          label: 'Seller',
+          isChecked: selected.includes('SELLER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('SELLER'),
+          onPress: () => toggle('SELLER'),
+        },
+        {
+          key: 'FARM_ADVISOR',
+          label: 'Farm Advisor',
+          isChecked: advisorType === 'FARM',
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('ADVISOR') && target.advisorType === 'FARM',
+          onPress: () => toggleAdvisorType('FARM'),
+        },
+        {
+          key: 'GARDEN_ADVISOR',
+          label: 'Garden Advisor',
+          isChecked: advisorType === 'GARDEN',
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('ADVISOR') && target.advisorType === 'GARDEN',
+          onPress: () => toggleAdvisorType('GARDEN'),
+        },
+      ],
+    },
+    {
+      title: 'Staff & Market',
+      items: [
+        {
+          key: 'TECHNICAL_TRAINER',
+          label: 'Technical Trainer',
+          isChecked: selected.includes('TECHNICAL_TRAINER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('TECHNICAL_TRAINER'),
+          onPress: () => toggle('TECHNICAL_TRAINER'),
+        },
+        {
+          key: 'TRADER',
+          label: 'Trader & Buyer',
+          isChecked: selected.includes('TRADER'),
+          isLocked: false,
+          wasEverGranted: (target.roles ?? []).includes('TRADER'),
+          onPress: () => toggle('TRADER'),
+        },
+      ],
+    },
+  ];
+
+  // If target is Admin Staff, omit the Clients group completely to enforce strict boundary
+  const ROLE_GROUPS = isTargetStaff
+    ? allRoleGroups.filter((g) => g.title !== 'Clients')
+    : allRoleGroups;
+
   return (
-    <Modal visible={!!target} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={!!target} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-          <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>{target.name}'s Roles</Text>
-            <TouchableOpacity onPress={onClose}>
+        <View style={[styles.modalCard, { maxWidth: 540, maxHeight: '90%', padding: 16 }]}>
+          {/* Modal Header */}
+          <View style={[styles.modalHeaderRow, { marginBottom: 8, paddingBottom: 8 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.modalTitle}>{target.name}'s Roles</Text>
+              <View style={{ backgroundColor: 'rgba(0, 255, 135, 0.12)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 }}>
+                <Text style={{ color: '#00ff87', fontSize: 11, fontFamily: FONT.bold }}>{selected.length} Active</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.helperText}>
-            Unchecking a role deactivates it (it can be reactivated later) — roles are never deleted from history.
+
+          <Text style={[styles.helperText, { marginBottom: 10, fontSize: 11 }]}>
+            Unchecking a role deactivates it (can be reactivated later) — history is preserved.
           </Text>
 
-          <View style={{ gap: 8, marginTop: 8 }}>
-            {ASSIGNABLE_CHECKBOX_ROLES.filter((role) => role !== 'ADVISOR').map((role) => {
-              const isChecked = selected.includes(role);
-              const wasEverGranted = (target.roles ?? []).includes(role);
-              const isLocked = role === 'CUSTOMER';
-              return (
-                <TouchableOpacity
-                  key={role}
-                  style={[styles.permissionRow, isLocked && { opacity: 0.6 }]}
-                  activeOpacity={isLocked ? 1 : 0.8}
-                  disabled={isLocked}
-                  onPress={() => toggle(role)}
-                >
-                  <Ionicons name={isChecked ? 'checkbox' : 'square-outline'} size={20} color={isChecked ? theme.primary : '#94a3b8'} />
-                  <Text style={styles.permissionRowText}>{ROLE_LABELS[role]}</Text>
-                  {isLocked ? <Text style={styles.lockedHint}>Always active</Text> : wasEverGranted && !isChecked ? <Text style={styles.deactivatedHint}>Deactivated</Text> : null}
-                </TouchableOpacity>
-              );
-            })}
-            {(['FARM', 'GARDEN'] as AdvisorType[]).map((type) => {
-              const isChecked = advisorType === type;
-              const wasEverGranted = (target.roles ?? []).includes('ADVISOR') && target.advisorType === type;
-              return (
-                <TouchableOpacity key={type} style={styles.permissionRow} activeOpacity={0.8} onPress={() => toggleAdvisorType(type)}>
-                  <Ionicons name={isChecked ? 'checkbox' : 'square-outline'} size={20} color={isChecked ? theme.primary : '#94a3b8'} />
-                  <Text style={styles.permissionRowText}>{type === 'FARM' ? 'Farm Advisor' : 'Garden Advisor'}</Text>
-                  {wasEverGranted && !isChecked ? <Text style={styles.deactivatedHint}>Deactivated</Text> : null}
-                </TouchableOpacity>
-              );
-            })}
+          {isTargetStaff ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.25)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md, marginBottom: 10 }}>
+              <Ionicons name="shield-checkmark" size={14} color="#38bdf8" />
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#38bdf8', flex: 1 }}>
+                Admin Staff Account: Client group roles (Farmer, Gardener, Supervisor, Labour) are restricted.
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Compact Scrollable Roles Grid */}
+          <ScrollView
+            style={{ maxHeight: 360, flexGrow: 0 }}
+            contentContainerStyle={{ gap: 10, paddingBottom: 4 }}
+            showsVerticalScrollIndicator={true}
+          >
+            {ROLE_GROUPS.map((grp) => (
+              <View key={grp.title} style={{ gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#64748b', letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                    {grp.title}
+                  </Text>
+                  {grp.subtitle ? (
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                      {grp.subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {grp.items.map((item) => (
+                    <TouchableOpacity
+                      key={item.key}
+                      style={[
+                        styles.roleGridItem,
+                        item.isChecked && styles.roleGridItemChecked,
+                        item.isLocked && { opacity: 0.75 },
+                      ]}
+                      activeOpacity={item.isLocked ? 1 : 0.75}
+                      disabled={item.isLocked}
+                      onPress={item.onPress}
+                    >
+                      <Ionicons
+                        name={item.isChecked ? 'checkbox' : 'square-outline'}
+                        size={16}
+                        color={item.isChecked ? '#00ff87' : '#64748b'}
+                      />
+                      <Text
+                        style={[
+                          styles.roleGridItemText,
+                          item.isChecked && { color: '#ffffff', fontFamily: FONT.bold },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {item.label}
+                      </Text>
+                      {item.isLocked ? (
+                        <Text style={styles.lockedHint}>Always</Text>
+                      ) : item.wasEverGranted && !item.isChecked ? (
+                        <Text style={styles.deactivatedHint}>Off</Text>
+                      ) : null}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          {error ? <Text style={[styles.errorText, { marginTop: 6 }]}>{error}</Text> : null}
+
+          {/* Pinned Action Buttons */}
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <TouchableOpacity
+              style={[styles.cancelBtn, { flex: 1 }]}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.submitBtn, { flex: 2, marginTop: 0 }]}
+              disabled={updateActiveRoles.isPending}
+              onPress={handleSave}
+              activeOpacity={0.85}
+            >
+              {updateActiveRoles.isPending ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.submitBtnText}>Save Roles</Text>
+              )}
+            </TouchableOpacity>
           </View>
-
-          {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-          <TouchableOpacity style={styles.submitBtn} disabled={updateActiveRoles.isPending} onPress={handleSave}>
-            {updateActiveRoles.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save Roles</Text>}
-          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -3296,6 +3524,42 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  roleGridItem: {
+    width: '49%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.07)',
+  },
+  roleGridItemChecked: {
+    backgroundColor: 'rgba(0, 255, 135, 0.09)',
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+  },
+  roleGridItemText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+    flex: 1,
+  },
+  cancelBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: RADIUS.md,
+    paddingVertical: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cancelBtnText: {
+    color: '#cbd5e1',
+    fontFamily: FONT.semiBold,
+    fontSize: 13,
   },
   sectionTitle: {
     fontSize: 14,

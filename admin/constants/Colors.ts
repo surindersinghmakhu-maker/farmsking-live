@@ -12,7 +12,8 @@ export type UserRole =
   | 'LABOUR'
   | 'MANAGER'
   | 'SUPERVISOR'
-  | 'TECHNICAL_TRAINER';
+  | 'TECHNICAL_TRAINER'
+  | 'SELLER';
 
 /**
  * Shared, role-agnostic surface tokens — every role's theme spreads this
@@ -196,6 +197,17 @@ export const RoleThemes: Record<UserRole, {
     heroGradient: ['#ffffff', '#f0f9ff'],
     primary: '#0284c7',
     primaryLight: '#e0f2fe',
+    accent: '#38bdf8',
+  },
+  SELLER: {
+    ...SURFACE,
+    name: 'Seller Dashboard',
+    badge: 'Store Products & Vendor Orders',
+    headerBg: '#090e17',
+    gradient: ['#090e17', '#0f172a'],
+    heroGradient: ['#0f172a', '#090e17'],
+    primary: '#10b981',
+    primaryLight: 'rgba(16, 185, 129, 0.15)',
     accent: '#38bdf8',
   },
 };

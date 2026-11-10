@@ -33,7 +33,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
 
-    const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'SUPERVISOR', 'ADVISOR'];
+    const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER'];
     const isStaffUser = staffRoles.some(r => user.role === r || (user.roles && user.roles.includes(r as Role)));
 
     const granted = user.roles && user.roles.length > 0 ? user.roles : [user.role];
@@ -50,24 +50,9 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       finalRoles = ['CUSTOMER'];
     }
 
-    const isSuperOrAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
-
-    if (isSuperOrAdmin) {
-      return [
-        user.role as UserRole,
-        'FARMER',
-        'FARM_ADVISOR',
-        'GARDENER',
-        'GARDEN_ADVISOR',
-        'BUSINESS_PARTNER',
-        'OPERATOR',
-        'LABOUR',
-        'CUSTOMER',
-      ];
-    }
-
+    // Admin staff cannot hold Client group roles (FARMER, GARDENER, SUPERVISOR, LABOUR)
     if (isStaffUser) {
-      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'GARDENER');
+      finalRoles = finalRoles.filter((r) => !['FARMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
       if (!finalRoles.includes('CUSTOMER')) {
         finalRoles.push('CUSTOMER');
       }
@@ -75,7 +60,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     return finalRoles;
   }, [user]);
 
-  const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].some(
+  const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER'].some(
     r => user?.role === r || (user?.roles && user.roles.includes(r as Role))
   );
 

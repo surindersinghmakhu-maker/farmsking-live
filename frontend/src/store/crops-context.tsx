@@ -172,8 +172,37 @@ export interface GpsUnlockRequest {
   location: string;
   comment: string;
   status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  operatorRemark?: string;
   requestedAt: string;
+  reviewedAt?: string;
 }
+
+export const INITIAL_GPS_UNLOCK_REQUESTS: GpsUnlockRequest[] = [
+  {
+    id: 'req-gps-101',
+    cropId: 'c1',
+    farmerName: 'Harpreet Singh',
+    farmerPhone: '+91 98140 12345',
+    cropName: 'Wheat (HD-3086)',
+    plotName: 'East Canal Plot #4',
+    location: '30.9085° N, 75.8610° E (4.0 Acres)',
+    comment: 'Need to correct boundary corner C3 after recent land leveling and irrigation canal work.',
+    status: 'PENDING',
+    requestedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id: 'req-gps-102',
+    cropId: 'c2',
+    farmerName: 'Gurjit Kaur',
+    farmerPhone: '+91 98765 43210',
+    cropName: 'Paddy / Basmati (PB-1121)',
+    plotName: 'North Tubewell Acre',
+    location: '30.9120° N, 75.8540° E (2.5 Acres)',
+    comment: 'Accidentally marked neighbour farm corner; need to re-walk boundary.',
+    status: 'PENDING',
+    requestedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
+  },
+];
 
 interface CropsContextValue {
   cropFields: RegisteredCropField[];
@@ -198,8 +227,8 @@ interface CropsContextValue {
   addSpecialTreatment: (treatment: SpecialTreatmentTemplate) => void;
   applySpecialTreatmentToCrop: (cropId: string, treatmentId: string) => Promise<void>;
   requestCropGpsUnlock: (cropId: string, comment: string, farmerName?: string, farmerPhone?: string, cropName?: string, plotName?: string, location?: string) => void;
-  acceptGpsUnlockRequest: (requestId: string) => void;
-  declineGpsUnlockRequest: (requestId: string) => void;
+  acceptGpsUnlockRequest: (requestId: string, remark?: string) => void;
+  declineGpsUnlockRequest: (requestId: string, remark?: string) => void;
   unlockCropDirectly: (cropId: string) => void;
   lockCropGps: (cropId: string) => void;
   updateCropLocation: (cropId: string, newLocationText: string) => void;
@@ -333,6 +362,7 @@ interface PersistedLocalState {
   cropGpsDataMap?: Record<string, CropGpsData>;
   unlockedCropIds?: Record<string, boolean>;
   completionReviews?: Record<string, CropCompletionReview>;
+  gpsUnlockRequests?: GpsUnlockRequest[];
 }
 
 const STORAGE_KEY = 'farmsking_crops_local_state_v1';
@@ -401,7 +431,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const [customCropLocations, setCustomCropLocations] = useState<Record<string, string>>({});
   const [cropGpsDataMap, setCropGpsDataMap] = useState<Record<string, CropGpsData>>({});
   const [completionReviews, setCompletionReviews] = useState<Record<string, CropCompletionReview>>({});
-  const [gpsUnlockRequests, setGpsUnlockRequests] = useState<GpsUnlockRequest[]>([]);
+  const [gpsUnlockRequests, setGpsUnlockRequests] = useState<GpsUnlockRequest[]>(INITIAL_GPS_UNLOCK_REQUESTS);
   const [isPersistLoaded, setIsPersistLoaded] = useState(false);
 
   useEffect(() => {
@@ -416,6 +446,9 @@ export function CropsProvider({ children }: { children: ReactNode }) {
           setCropGpsDataMap(parsed.cropGpsDataMap ?? {});
           setUnlockedCropIds(parsed.unlockedCropIds ?? {});
           setCompletionReviews(parsed.completionReviews ?? {});
+          if (parsed.gpsUnlockRequests && parsed.gpsUnlockRequests.length > 0) {
+            setGpsUnlockRequests(parsed.gpsUnlockRequests);
+          }
         }
       } catch {
         // ignore, fallback to defaults
@@ -436,9 +469,10 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         cropGpsDataMap,
         unlockedCropIds,
         completionReviews,
+        gpsUnlockRequests,
       })
     );
-  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, completionReviews, isPersistLoaded]);
+  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, completionReviews, gpsUnlockRequests, isPersistLoaded]);
 
   const value = useMemo(
     () => ({
@@ -806,16 +840,20 @@ export function useCrops(): CropsContextValue {
     setGpsUnlockRequests((prev) => [newReq, ...prev]);
   };
 
-  const acceptGpsUnlockRequest = (requestId: string) => {
+  const acceptGpsUnlockRequest = (requestId: string, remark?: string) => {
     const targetReq = gpsUnlockRequests.find((r) => r.id === requestId);
     setGpsUnlockRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: 'APPROVED' } : r))
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, status: 'APPROVED', operatorRemark: remark || 'Approved by Operator', reviewedAt: new Date().toISOString() }
+          : r
+      )
     );
     if (targetReq?.cropId) {
       setUnlockedCropIds((prev) => ({ ...prev, [targetReq.cropId]: true }));
       setCustomCropLocations((prev) => ({
         ...prev,
-        [targetReq.cropId]: '📍 Location Reset by Admin (Set New GPS)',
+        [targetReq.cropId]: '📍 Location Reset by Operator (Set New GPS)',
       }));
     } else {
       setUnlockedCropIds((prev) => {
@@ -828,9 +866,13 @@ export function useCrops(): CropsContextValue {
     }
   };
 
-  const declineGpsUnlockRequest = (requestId: string) => {
+  const declineGpsUnlockRequest = (requestId: string, remark?: string) => {
     setGpsUnlockRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: 'DECLINED' } : r))
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, status: 'DECLINED', operatorRemark: remark || 'Declined by Operator', reviewedAt: new Date().toISOString() }
+          : r
+      )
     );
   };
 

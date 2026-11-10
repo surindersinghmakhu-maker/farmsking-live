@@ -120,6 +120,18 @@ const isRealImageString = (s?: string | null): boolean => {
   return true;
 };
 
+const getCategoryIcon = (cat: string): { name: string; iconColor?: string } => {
+  if (cat === 'All') return { name: 'apps', iconColor: '#15803d' };
+  if (cat.includes('Deals') || cat.includes('Coupon')) return { name: 'flame', iconColor: '#d97706' };
+  if (cat.includes('Seed')) return { name: 'leaf', iconColor: '#16a34a' };
+  if (cat.includes('Fertiliz')) return { name: 'flask', iconColor: '#0284c7' };
+  if (cat.includes('Crop Prot')) return { name: 'shield-checkmark', iconColor: '#7c3aed' };
+  if (cat.includes('Plant') || cat.includes('Nursery')) return { name: 'flower', iconColor: '#ea580c' };
+  if (cat.includes('Bio') || cat.includes('Organic')) return { name: 'water', iconColor: '#059669' };
+  if (cat.includes('Food') || cat.includes('Farmer Made')) return { name: 'nutrition', iconColor: '#d97706' };
+  if (cat.includes('Hidden')) return { name: 'eye-off', iconColor: '#dc2626' };
+  return { name: 'pricetag', iconColor: '#64748b' };
+};
 
 const cleanProductDisplayDescription = (desc?: string | null): string => {
   if (!desc || typeof desc !== 'string') return '';
@@ -2304,237 +2316,575 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             contentContainerStyle={{ flexGrow: 1, paddingBottom: itemCount > 0 && activeSubTab !== 'CHECKOUT' ? 84 : 24 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Official FarmsKing Hero Header */}
-            <LinearGradient colors={colors.headerGradient} style={styles.hero}>
-            <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
-              <View style={styles.headerTop}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={styles.storeBadgeWrap}>
-                    <Ionicons name="storefront" size={24} color="#4ade80" />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d', letterSpacing: 0.2, marginBottom: 2 }}>
-                      👋 Welcome, {user?.name || 'Farmer'}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>Official Agri Store</Text>
-                      <View style={styles.verifiedTag}>
-                        <Ionicons name="checkmark-circle" size={12} color="#facc15" />
-                        <Text style={styles.verifiedTagText}>Verified Official</Text>
-                      </View>
+            {/* Official FarmsKing Ultra-Premium Hero Header */}
+            <LinearGradient
+              colors={
+                isDark
+                  ? ['#021208', '#052b14', '#083d1c']
+                  : ['#ffffff', '#f0fdf4', '#dcfce7']
+              }
+              style={[
+                styles.hero,
+                {
+                  borderBottomWidth: 1,
+                  borderBottomColor: isDark ? 'rgba(34, 197, 94, 0.25)' : '#bbf7d0',
+                },
+              ]}
+            >
+              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
+                <View style={styles.headerTop}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                    <View style={[styles.storeBadgeWrap, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e' }]}>
+                      <Ionicons name="storefront" size={26} color={isDark ? '#4ade80' : '#15803d'} />
                     </View>
-                    <Text style={[styles.heroSubtitle, { color: isDark ? 'rgba(255,255,255,0.85)' : '#334155' }]}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
-                  </View>
-                </View>
-
-                <View style={styles.headerActions}>
-                  <TouchableOpacity
-                    style={[
-                      styles.cartIconBtn,
-                      !isDark && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
-                    ]}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      setActiveSubTab('CHECKOUT');
-                    }}
-                  >
-                    <Ionicons name="bag-handle" size={21} color={isDark ? '#ffffff' : '#0f172a'} />
-                    {itemCount > 0 && (
-                      <View style={styles.cartBadge}>
-                        <Text style={styles.cartBadgeText}>{itemCount}</Text>
+                    <View style={{ gap: 2 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d', letterSpacing: 0.3 }}>
+                          👋 Welcome back, {user?.name || 'Valued Farmer'}
+                        </Text>
+                        <View style={styles.liveSyncBadge}>
+                          <View style={styles.livePulseDot} />
+                          <Text style={styles.liveSyncText}>Live Mandi Sync</Text>
+                        </View>
                       </View>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                          Official Agri Store
+                        </Text>
+                        <View style={styles.verifiedTag}>
+                          <Ionicons name="shield-checkmark" size={12} color="#facc15" />
+                          <Text style={styles.verifiedTagText}>ICAR-Aligned 100% Certified</Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.heroSubtitle, { color: isDark ? 'rgba(255,255,255,0.75)' : '#475569' }]}>
+                        Direct Factory Inputs • High Germination Seeds • Certified Bio-Fertilizers & Plants
+                      </Text>
+                    </View>
+                  </View>
 
-              {/* Quick Search Input Box */}
-              <View style={[styles.searchBarBox, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
-                <Ionicons name="search" size={18} color="#15803d" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder={t('searchStorePlaceholder', 'Search: Seeds, Fertilizers, Insecticides, Spray Pumps...')}
-                  placeholderTextColor="#94a3b8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {searchQuery ? (
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <Ionicons name="close-circle" size={16} color="#64748b" />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            </View>
-
-          </LinearGradient>
-
-          {/* Sub Nav Bar */}
-          <View style={[styles.subTabBar, isDark && { backgroundColor: colors.cardBg, borderBottomColor: colors.cardBorder }]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', minWidth: '100%', maxWidth: 1200, alignSelf: 'center' }}>
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'CATALOG' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('CATALOG');
-                }}
-              >
-                <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>{t('tabProducts', 'Products')}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'CHECKOUT' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('CHECKOUT');
-                }}
-              >
-                <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>{t('tabCart', 'Cart')} ({itemCount})</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'ORDERS' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('ORDERS');
-                }}
-              >
-                <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>{t('myOrders', 'My Orders')}</Text>
-              </TouchableOpacity>
-
-
-            </ScrollView>
-          </View>
-
-          {activeSubTab === 'CATALOG' ? (
-            <View style={{ flex: 1 }}>
-              {/* Category Filter Chips Bar */}
-              <View style={{ backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.categoryFilterRow}
-                  contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', maxWidth: 1200, alignSelf: 'center' }}
-                >
-                {categoriesList.map((cat) => {
-                  const isHiddenCat = cat === '🔴 Hidden / Off Products';
-                  const isActive = activeCategory === cat;
-                  return (
+                  <View style={styles.headerActions}>
                     <TouchableOpacity
-                      key={cat}
                       style={[
-                        styles.filterChip,
-                        isHiddenCat && { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
-                        isActive && {
-                          backgroundColor: isHiddenCat ? '#dc2626' : '#15803d',
-                          borderColor: isHiddenCat ? '#b91c1c' : '#166534',
-                        },
+                        styles.cartIconBtn,
+                        itemCount > 0 && styles.cartIconBtnFilled,
+                        !isDark && { backgroundColor: '#ffffff', borderColor: '#cbd5e1' },
                       ]}
+                      activeOpacity={0.85}
                       onPress={() => {
                         tap();
-                        setActiveCategory(cat);
+                        setActiveSubTab('CHECKOUT');
                       }}
                     >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          isHiddenCat && { color: '#991b1b', fontFamily: FONT.extraBold },
-                          isActive && { color: '#ffffff' },
-                        ]}
-                      >
-                        {cat}
-                      </Text>
+                      <Ionicons
+                        name="bag-handle"
+                        size={20}
+                        color={itemCount > 0 ? '#ffffff' : isDark ? '#ffffff' : '#0f172a'}
+                      />
+                      {itemCount > 0 ? (
+                        <View style={styles.cartBadge}>
+                          <Text style={styles.cartBadgeText}>{itemCount}</Text>
+                        </View>
+                      ) : null}
                     </TouchableOpacity>
-                  );
-                })}
-                </ScrollView>
-              </View>
+                  </View>
+                </View>
 
-              {/* Admin Quick Alert Banner for Hidden / Turned Off Products */}
-              {isAdminOrSuperAdmin && inactiveProductCount > 0 && (
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#fef2f2',
-                    borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : '#fca5a5',
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    marginHorizontal: 12,
-                    marginTop: 8,
-                  }}
-                  onPress={() => {
-                    tap();
-                    setActiveCategory(activeCategory === '🔴 Hidden / Off Products' ? 'All' : '🔴 Hidden / Off Products');
-                  }}
+                {/* Trust Highlights Strip */}
+                <View
+                  style={[
+                    styles.trustHighlightsStrip,
+                    {
+                      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(240, 253, 244, 0.85)',
+                      borderColor: isDark ? 'rgba(74, 222, 128, 0.2)' : '#bbf7d0',
+                    },
+                  ]}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="eye-off" size={16} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626'} />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#991b1b' }}>
-                      {inactiveProductCount} Product(s) Hidden / Turned OFF
+                  <View style={styles.trustItem}>
+                    <Ionicons name="flash" size={13} color="#facc15" />
+                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
+                      Fast Mandi Dispatch
                     </Text>
                   </View>
-                  <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
-                      {activeCategory === '🔴 Hidden / Off Products' ? 'Showing Hidden (Click for All)' : '🔴 Show Hidden Products'}
+                  <View style={styles.trustDivider} />
+                  <View style={styles.trustItem}>
+                    <Ionicons name="checkmark-done-circle" size={13} color="#4ade80" />
+                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
+                      100% Genuine Guaranteed
                     </Text>
                   </View>
-                </TouchableOpacity>
-              )}
-
-              {/* Layout View Mode Bar (Grid vs List Toggle) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 6, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>
-                  {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden / Off Products' : '📦 Available Products'} ({filteredProducts.length})
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'GRID' ? '#15803d' : '#f1f5f9',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'GRID' ? '#166534' : '#cbd5e1',
-                    }}
-                    onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
-                  >
-                    <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b' }}>
-                      2-Col Grid
+                  <View style={styles.trustDivider} />
+                  <View style={styles.trustItem}>
+                    <Ionicons name="pricetags" size={13} color="#38bdf8" />
+                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
+                      Direct Manufacturer Rates
                     </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'COMPACT_LIST' ? '#15803d' : '#f1f5f9',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'COMPACT_LIST' ? '#166534' : '#cbd5e1',
-                    }}
-                    onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
-                  >
-                    <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b' }}>
-                      Compact List
+                  </View>
+                  <View style={styles.trustDivider} />
+                  <View style={styles.trustItem}>
+                    <Ionicons name="shield" size={13} color="#a855f7" />
+                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
+                      Doorstep Field Delivery
                     </Text>
-                  </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Quick Search Input Box */}
+                <View
+                  style={[
+                    styles.searchBarBox,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
+                      borderColor: isDark ? 'rgba(74, 222, 128, 0.35)' : '#cbd5e1',
+                    },
+                  ]}
+                >
+                  <Ionicons name="search" size={19} color="#16a34a" />
+                  <TextInput
+                    style={[styles.searchInput, { color: isDark ? '#ffffff' : '#0f172a' }]}
+                    placeholder={t('searchStorePlaceholder', 'Search 100% verified seeds, fertilizers, insecticides, spray pumps...')}
+                    placeholderTextColor={isDark ? '#94a3b8' : '#94a3b8'}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                  {searchQuery ? (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
+                      <Ionicons name="close-circle" size={18} color={isDark ? '#cbd5e1' : '#64748b'} />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.searchShortcutBadge}>
+                      <Text style={styles.searchShortcutText}>Search Catalog</Text>
+                    </View>
+                  )}
                 </View>
               </View>
+            </LinearGradient>
+
+            {/* Sub Nav Bar */}
+            <View
+              style={[
+                styles.subTabBar,
+                {
+                  backgroundColor: isDark ? colors.cardBg : '#ffffff',
+                  borderBottomColor: isDark ? colors.cardBorder : '#e2e8f0',
+                },
+              ]}
+            >
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexDirection: 'row',
+                  minWidth: '100%',
+                  maxWidth: 1200,
+                  alignSelf: 'center',
+                }}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.subTabItem,
+                    activeSubTab === 'CATALOG' && (isDark ? styles.subTabItemActiveDark : styles.subTabItemActive),
+                  ]}
+                  onPress={() => {
+                    tap();
+                    setActiveSubTab('CATALOG');
+                  }}
+                >
+                  <Ionicons
+                    name="grid-outline"
+                    size={15}
+                    color={activeSubTab === 'CATALOG' ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#94a3b8' : '#64748b')}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.subTabText,
+                      { color: isDark ? '#94a3b8' : '#64748b' },
+                      activeSubTab === 'CATALOG' && (isDark ? styles.subTabTextActiveDark : styles.subTabTextActive),
+                    ]}
+                  >
+                    {t('tabProducts', 'Products')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.subTabItem,
+                    activeSubTab === 'CHECKOUT' && (isDark ? styles.subTabItemActiveDark : styles.subTabItemActive),
+                  ]}
+                  onPress={() => {
+                    tap();
+                    setActiveSubTab('CHECKOUT');
+                  }}
+                >
+                  <Ionicons
+                    name="bag-check-outline"
+                    size={15}
+                    color={activeSubTab === 'CHECKOUT' ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#94a3b8' : '#64748b')}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.subTabText,
+                      { color: isDark ? '#94a3b8' : '#64748b' },
+                      activeSubTab === 'CHECKOUT' && (isDark ? styles.subTabTextActiveDark : styles.subTabTextActive),
+                    ]}
+                  >
+                    {t('tabCart', 'Cart')} ({itemCount})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.subTabItem,
+                    activeSubTab === 'ORDERS' && (isDark ? styles.subTabItemActiveDark : styles.subTabItemActive),
+                  ]}
+                  onPress={() => {
+                    tap();
+                    setActiveSubTab('ORDERS');
+                  }}
+                >
+                  <Ionicons
+                    name="receipt-outline"
+                    size={15}
+                    color={activeSubTab === 'ORDERS' ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#94a3b8' : '#64748b')}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.subTabText,
+                      { color: isDark ? '#94a3b8' : '#64748b' },
+                      activeSubTab === 'ORDERS' && (isDark ? styles.subTabTextActiveDark : styles.subTabTextActive),
+                    ]}
+                  >
+                    {t('myOrders', 'My Orders')}
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
+            {activeSubTab === 'CATALOG' ? (
+              <View style={{ flex: 1, backgroundColor: isDark ? '#090e17' : '#f8fafc' }}>
+                {/* Executive Category Filter Chips Bar */}
+                <View
+                  style={{
+                    width: '100%',
+                    backgroundColor: isDark ? colors.cardBg : '#ffffff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
+                  }}
+                >
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoryFilterRow}
+                    contentContainerStyle={{
+                      gap: 8,
+                      paddingHorizontal: 16,
+                      paddingVertical: 9,
+                      alignItems: 'center',
+                      maxWidth: 1200,
+                      width: '100%',
+                      alignSelf: 'center',
+                    }}
+                  >
+                    {categoriesList.map((cat) => {
+                      const isHiddenCat = cat === '🔴 Hidden / Off Products';
+                      const isDeals = cat.includes('Deals') || cat.includes('Coupon');
+                      const isActive = activeCategory === cat;
+                      const catIcon = getCategoryIcon(cat);
+                      const cleanLabel = cat.replace(/^[🔥🔴]\s*/, '');
+
+                      return (
+                        <TouchableOpacity
+                          key={cat}
+                          style={[
+                            styles.premiumCategoryChip,
+                            isActive
+                              ? isHiddenCat
+                                ? styles.premiumCategoryChipActiveDanger
+                                : isDeals
+                                ? styles.premiumCategoryChipActiveDeals
+                                : isDark
+                                ? styles.premiumCategoryChipActiveDark
+                                : styles.premiumCategoryChipActive
+                              : isHiddenCat
+                              ? styles.premiumCategoryChipInactiveDanger
+                              : isDeals
+                              ? isDark
+                                ? styles.premiumCategoryChipInactiveDealsDark
+                                : styles.premiumCategoryChipInactiveDeals
+                              : isDark
+                              ? styles.premiumCategoryChipInactiveDark
+                              : styles.premiumCategoryChipInactive,
+                          ]}
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            tap();
+                            setActiveCategory(cat);
+                          }}
+                        >
+                          <Ionicons
+                            name={catIcon.name as any}
+                            size={14}
+                            color={
+                              isActive
+                                ? '#ffffff'
+                                : isHiddenCat
+                                ? '#dc2626'
+                                : isDeals
+                                ? '#f59e0b'
+                                : isDark
+                                ? '#4ade80'
+                                : catIcon.iconColor || '#15803d'
+                            }
+                          />
+                          <Text
+                            style={[
+                              styles.premiumCategoryChipText,
+                              isActive
+                                ? styles.premiumCategoryChipTextActive
+                                : isDark
+                                ? styles.premiumCategoryChipTextInactiveDark
+                                : styles.premiumCategoryChipTextInactive,
+                              !isActive && isDeals && { color: isDark ? '#fbbf24' : '#b45309' },
+                              !isActive && isHiddenCat && { color: '#dc2626' },
+                            ]}
+                          >
+                            {cleanLabel}
+                          </Text>
+                          {isDeals && !isActive && (
+                            <View style={styles.hotPill}>
+                              <Text style={styles.hotPillText}>HOT</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
+                {/* Admin Quick Alert Banner for Hidden / Turned Off Products */}
+                {isAdminOrSuperAdmin && inactiveProductCount > 0 && (
+                  <View style={{ width: '100%', backgroundColor: isDark ? colors.cardBg : '#ffffff', borderBottomWidth: 1, borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9' }}>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : isDark ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2',
+                        borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : '#fca5a5',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        marginHorizontal: 16,
+                        marginVertical: 8,
+                        maxWidth: 1200,
+                        alignSelf: 'center',
+                        width: 'calc(100% - 32px)' as any,
+                      }}
+                      onPress={() => {
+                        tap();
+                        setActiveCategory(activeCategory === '🔴 Hidden / Off Products' ? 'All' : '🔴 Hidden / Off Products');
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="eye-off" size={16} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626'} />
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : isDark ? '#fca5a5' : '#991b1b' }}>
+                          {inactiveProductCount} Product(s) Hidden / Turned OFF
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
+                          {activeCategory === '🔴 Hidden / Off Products' ? 'Showing Hidden (Click for All)' : '🔴 Show Hidden Products'}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Executive Layout Toolbar (Available Products & View Mode Switcher) */}
+                <View
+                  style={{
+                    width: '100%',
+                    backgroundColor: isDark ? colors.bg : '#ffffff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: isDark ? colors.cardBorder : '#e2e8f0',
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingHorizontal: 16,
+                      paddingVertical: 11,
+                      maxWidth: 1200,
+                      width: '100%',
+                      alignSelf: 'center',
+                    }}
+                  >
+                    {/* Left: Premium KPI Badge & Available Products */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View
+                        style={[
+                          styles.toolbarIconBadge,
+                          isDark && {
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            borderColor: 'rgba(74, 222, 128, 0.35)',
+                          },
+                        ]}
+                      >
+                        <Ionicons
+                          name={activeCategory === '🔴 Hidden / Off Products' ? 'eye-off' : 'cube'}
+                          size={17}
+                          color={
+                            activeCategory === '🔴 Hidden / Off Products'
+                              ? '#dc2626'
+                              : isDark
+                              ? '#4ade80'
+                              : '#15803d'
+                          }
+                        />
+                      </View>
+                      <View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text
+                            style={[
+                              styles.toolbarTitle,
+                              { color: isDark ? '#ffffff' : '#0f172a' },
+                            ]}
+                          >
+                            {activeCategory === '🔴 Hidden / Off Products' ? 'Hidden Products' : 'Available Products'}
+                          </Text>
+                          <View
+                            style={[
+                              styles.toolbarCountPill,
+                              isDark && {
+                                backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                                borderColor: 'rgba(74, 222, 128, 0.35)',
+                              },
+                              activeCategory === '🔴 Hidden / Off Products' && {
+                                backgroundColor: '#fee2e2',
+                                borderColor: '#fca5a5',
+                              },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.statusPulseDot,
+                                isDark && { backgroundColor: '#4ade80' },
+                                activeCategory === '🔴 Hidden / Off Products' && { backgroundColor: '#dc2626' },
+                              ]}
+                            />
+                            <Text
+                              style={[
+                                styles.toolbarCountText,
+                                isDark && { color: '#4ade80' },
+                                activeCategory === '🔴 Hidden / Off Products' && { color: '#b91c1c' },
+                              ]}
+                            >
+                              {filteredProducts.length} Verified {filteredProducts.length === 1 ? 'Item' : 'Items'}
+                            </Text>
+                          </View>
+                        </View>
+                        <Text
+                          style={[
+                            styles.toolbarSubText,
+                            { color: isDark ? '#94a3b8' : '#64748b' },
+                          ]}
+                        >
+                          Showing {activeCategory === 'All' ? 'all catalog departments' : activeCategory}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Right: Sleek Segmented Switcher (2-Col Grid vs Compact List) */}
+                    <View
+                      style={[
+                        styles.segmentedControlWrap,
+                        isDark && {
+                          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                          borderColor: 'rgba(255, 255, 255, 0.12)',
+                        },
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.segmentBtn,
+                          storeLayoutMode === 'GRID' &&
+                            (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActive),
+                        ]}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          tap();
+                          setStoreLayoutMode('GRID');
+                        }}
+                      >
+                        <Ionicons
+                          name="grid"
+                          size={14}
+                          color={
+                            storeLayoutMode === 'GRID'
+                              ? isDark
+                                ? '#4ade80'
+                                : '#15803d'
+                              : isDark
+                              ? '#94a3b8'
+                              : '#64748b'
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.segmentBtnText,
+                            { color: isDark ? '#94a3b8' : '#64748b' },
+                            storeLayoutMode === 'GRID' &&
+                              (isDark ? styles.segmentBtnTextActiveDark : styles.segmentBtnTextActive),
+                          ]}
+                        >
+                          2-Col Grid
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.segmentBtn,
+                          storeLayoutMode === 'COMPACT_LIST' &&
+                            (isDark ? styles.segmentBtnActiveDark : styles.segmentBtnActive),
+                        ]}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          tap();
+                          setStoreLayoutMode('COMPACT_LIST');
+                        }}
+                      >
+                        <Ionicons
+                          name="list"
+                          size={15}
+                          color={
+                            storeLayoutMode === 'COMPACT_LIST'
+                              ? isDark
+                                ? '#4ade80'
+                                : '#15803d'
+                              : isDark
+                              ? '#94a3b8'
+                              : '#64748b'
+                          }
+                        />
+                        <Text
+                          style={[
+                            styles.segmentBtnText,
+                            { color: isDark ? '#94a3b8' : '#64748b' },
+                            storeLayoutMode === 'COMPACT_LIST' &&
+                              (isDark ? styles.segmentBtnTextActiveDark : styles.segmentBtnTextActive),
+                          ]}
+                        >
+                          Compact List
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
 
               <View
                 style={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
@@ -6102,31 +6452,217 @@ const styles = StyleSheet.create({
 
   hero: { paddingTop: 14, paddingBottom: 10, paddingHorizontal: SPACING.md, gap: 10 },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  storeBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
+  storeBadgeWrap: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
   logoBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
-  heroTitle: { color: '#ffffff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  verifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(250, 204, 21, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(250, 204, 21, 0.4)' },
+  heroTitle: { color: '#ffffff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  verifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(250, 204, 21, 0.18)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(250, 204, 21, 0.45)' },
   verifiedTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#facc15' },
   heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11, fontFamily: FONT.medium, marginTop: 2 },
+  liveSyncBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34, 197, 94, 0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.3)' },
+  livePulseDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
+  liveSyncText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#4ade80' },
+  trustHighlightsStrip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, paddingHorizontal: 12, borderRadius: RADIUS.pill, borderWidth: 1, flexWrap: 'wrap', gap: 6 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cartIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cartIconBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  cartIconBtnFilled: { backgroundColor: '#16a34a', borderColor: '#22c55e' },
   cartBadge: { position: 'absolute', top: -3, right: -3, backgroundColor: '#ef4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: '#ffffff' },
   cartBadgeText: { color: '#ffffff', fontSize: 9.5, fontFamily: FONT.extraBold },
-  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 44, gap: 8, },
+  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 46, gap: 8 },
   searchInput: { flex: 1, fontFamily: FONT.regular, fontSize: 13, color: '#0f172a' },
+  searchShortcutBadge: { backgroundColor: 'rgba(34, 197, 94, 0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.25)' },
+  searchShortcutText: { fontSize: 10, fontFamily: FONT.bold, color: '#16a34a' },
   trustRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', backgroundColor: 'rgba(0,0,0,0.25)', paddingVertical: 6, paddingHorizontal: 10, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  trustItemText: { fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' },
-  trustDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
+  trustItemText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' },
+  trustDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.25)' },
 
   subTabBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  subTabItem: { flexGrow: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  subTabItem: { flexGrow: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 12, borderBottomWidth: 2.5, borderBottomColor: 'transparent' },
   subTabItemActive: { borderBottomColor: '#15803d' },
-  subTabText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  subTabItemActiveDark: { borderBottomColor: '#22c55e' },
+  subTabText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b' },
   subTabTextActive: { color: '#15803d', fontFamily: FONT.bold },
-  categoryFilterRow: { backgroundColor: '#ffffff', flexGrow: 0, height: 50, minHeight: 50 },
+  subTabTextActiveDark: { color: '#4ade80', fontFamily: FONT.bold },
+  categoryFilterRow: { backgroundColor: 'transparent', flexGrow: 0, height: 52, minHeight: 52 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
   filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
+
+  premiumCategoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    minHeight: 36,
+  },
+  premiumCategoryChipActive: {
+    backgroundColor: '#15803d',
+    borderWidth: 1.5,
+    borderColor: '#166534',
+    ...premiumShadow('#15803d', 'sm'),
+  },
+  premiumCategoryChipActiveDark: {
+    backgroundColor: '#15803d',
+    borderWidth: 1.5,
+    borderColor: '#22c55e',
+    ...premiumShadow('#15803d', 'sm'),
+  },
+  premiumCategoryChipInactive: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+  },
+  premiumCategoryChipInactiveDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  premiumCategoryChipActiveDeals: {
+    backgroundColor: '#d97706',
+    borderWidth: 1.5,
+    borderColor: '#b45309',
+    ...premiumShadow('#d97706', 'sm'),
+  },
+  premiumCategoryChipInactiveDeals: {
+    backgroundColor: '#fffbeb',
+    borderWidth: 1.5,
+    borderColor: '#fde68a',
+  },
+  premiumCategoryChipInactiveDealsDark: {
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  premiumCategoryChipActiveDanger: {
+    backgroundColor: '#dc2626',
+    borderWidth: 1.5,
+    borderColor: '#b91c1c',
+    ...premiumShadow('#dc2626', 'sm'),
+  },
+  premiumCategoryChipInactiveDanger: {
+    backgroundColor: '#fee2e2',
+    borderWidth: 1.5,
+    borderColor: '#fca5a5',
+  },
+  premiumCategoryChipText: {
+    fontSize: 12,
+    lineHeight: 16,
+    includeFontPadding: false,
+  },
+  premiumCategoryChipTextActive: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+  },
+  premiumCategoryChipTextInactive: {
+    color: '#334155',
+    fontFamily: FONT.semiBold,
+  },
+  premiumCategoryChipTextInactiveDark: {
+    color: '#e2e8f0',
+    fontFamily: FONT.semiBold,
+  },
+  hotPill: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: RADIUS.xs,
+    marginLeft: 2,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  hotPillText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#b45309',
+  },
+  toolbarIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toolbarTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    letterSpacing: 0.2,
+  },
+  toolbarCountPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  statusPulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16a34a',
+  },
+  toolbarCountText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  toolbarSubText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  segmentedControlWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.pill,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 2,
+  },
+  segmentBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'transparent',
+  },
+  segmentBtnActive: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  segmentBtnActiveDark: {
+    backgroundColor: 'rgba(34, 197, 94, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
+  },
+  segmentBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  segmentBtnTextActive: {
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  segmentBtnTextActiveDark: {
+    fontFamily: FONT.bold,
+    color: '#4ade80',
+  },
   grid: { padding: SPACING.md, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, columnGap: 10, paddingBottom: 170, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   emptyCenter: { width: '100%', alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },

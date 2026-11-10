@@ -662,6 +662,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
 
   // Single Unified Form Modal
   const [selectedCrop, setSelectedCrop] = useState<CropItem | null>(null);
+  const [isCropDropdownOpen, setIsCropDropdownOpen] = useState<boolean>(false);
+  const [cropSearchQuery, setCropSearchQuery] = useState<string>('');
   const [isCropPickerOpen, setIsCropPickerOpen] = useState<boolean>(false);
   const [isAreaUnitPickerOpen, setIsAreaUnitPickerOpen] = useState<boolean>(false);
   const [isIrrigationPickerOpen, setIsIrrigationPickerOpen] = useState<boolean>(false);
@@ -738,6 +740,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       setCustomHarvestType('CONTINUOUS');
       setSowingDate(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
       setSelectedCrop(null);
+      setIsCropDropdownOpen(false);
+      setCropSearchQuery('');
     }
   }, [visible, editingCrop]);
 
@@ -750,7 +754,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     );
   }, [selectedCatId]);
 
-  // Filter crops belonging to selected category
+  // Filter crops belonging to selected category for modal
   const filteredCrops = useMemo(() => {
     const list = allCrops.filter((crop) => crop.categoryId === selectedCatId);
     if (!searchQuery.trim()) return list;
@@ -761,10 +765,29 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     );
   }, [allCrops, selectedCatId, searchQuery]);
 
+  // Filter crops for inline dropdown list with intelligent search
+  const displayedCrops = useMemo(() => {
+    const q = cropSearchQuery.trim().toLowerCase();
+    if (!q) {
+      return allCrops.filter((crop) => crop.categoryId === selectedCatId);
+    }
+    const withinCategory = allCrops.filter(
+      (crop) =>
+        crop.categoryId === selectedCatId &&
+        (crop.name.toLowerCase().includes(q) || (crop.variety && crop.variety.toLowerCase().includes(q)))
+    );
+    if (withinCategory.length > 0) return withinCategory;
+    return allCrops.filter(
+      (crop) =>
+        crop.name.toLowerCase().includes(q) || (crop.variety && crop.variety.toLowerCase().includes(q))
+    );
+  }, [allCrops, selectedCatId, cropSearchQuery]);
+
   const handleSelectCategory = (catId: string) => {
     tap();
     setSelectedCatId(catId);
     setSearchQuery('');
+    setCropSearchQuery('');
     setCustomCropName('');
     setCustomHarvestType('CONTINUOUS');
     setIsCategoryPickerOpen(false);
@@ -790,6 +813,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     }
     setSelectedUnit(crop.defaultUnit || 'KG');
     setVarietyName(crop.variety || '');
+    setIsCropDropdownOpen(false);
+    setCropSearchQuery('');
   };
 
   const handleFormSubmit = () => {
@@ -908,19 +933,23 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     <TouchableOpacity
                       style={[
                         styles.cropSelectBtnLarge,
-                        { borderColor: currentCategory.color, backgroundColor: currentCategory.bg, height: 38 },
+                        {
+                          borderColor: isCropDropdownOpen ? '#16a34a' : currentCategory.color,
+                          backgroundColor: currentCategory.bg,
+                          height: 38,
+                        },
                       ]}
                       activeOpacity={0.8}
                       onPress={() => {
                         tap();
-                        setIsCropPickerOpen(true);
+                        setIsCropDropdownOpen(!isCropDropdownOpen);
                       }}
                     >
                       <Ionicons name="leaf" size={14} color={currentCategory.color} />
                       <Text style={[styles.cropSelectTextLarge, { color: currentCategory.color }]} numberOfLines={1}>
                         {selectedCrop ? selectedCrop.name : `${dict.selectCropCount} (${filteredCrops.length})`}
                       </Text>
-                      <Ionicons name="chevron-down" size={13} color={currentCategory.color} />
+                      <Ionicons name={isCropDropdownOpen ? "chevron-up" : "chevron-down"} size={13} color={currentCategory.color} />
                     </TouchableOpacity>
                   ) : (
                     <TextInput
@@ -947,6 +976,104 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   />
                 </View>
               </View>
+
+              {/* INLINE DROPDOWN LIST FOR CROP ITEMS */}
+              {isCropDropdownOpen && selectedCatId !== 'other' && (
+                <View style={styles.inlineDropdownCard}>
+                  {/* Search Bar */}
+                  <View style={styles.dropdownSearchRow}>
+                    <Ionicons name="search-outline" size={14} color="#64748b" />
+                    <TextInput
+                      style={styles.dropdownSearchInput}
+                      placeholder="Search crop or variety..."
+                      placeholderTextColor="#94a3b8"
+                      value={cropSearchQuery}
+                      onChangeText={setCropSearchQuery}
+                      autoFocus={Platform.OS === 'web'}
+                    />
+                    {cropSearchQuery.length > 0 && (
+                      <TouchableOpacity onPress={() => setCropSearchQuery('')}>
+                        <Ionicons name="close-circle" size={15} color="#94a3b8" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {/* Header Title with count & Modal option */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, paddingHorizontal: 2 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b' }}>
+                      CROP ITEMS ({displayedCrops.length})
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsCropDropdownOpen(false);
+                        setIsCropPickerOpen(true);
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>
+                        View Full List ↗
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Scrollable Dropdown List */}
+                  <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled showsVerticalScrollIndicator={true}>
+                    {displayedCrops.length > 0 ? (
+                      displayedCrops.map((crop) => {
+                        const isSelected = selectedCrop?.id === crop.id || selectedCrop?.name.toLowerCase() === crop.name.toLowerCase();
+                        const isCont = (crop.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
+                        return (
+                          <TouchableOpacity
+                            key={crop.id}
+                            style={[
+                              styles.cropDropdownListItem,
+                              isSelected && { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
+                            ]}
+                            activeOpacity={0.7}
+                            onPress={() => handleSelectCropItem(crop)}
+                          >
+                            <View style={[styles.cropListIconBadge, { backgroundColor: currentCategory.bg }]}>
+                              <Ionicons name="leaf" size={13} color={currentCategory.color} />
+                            </View>
+
+                            <View style={{ flex: 1 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={[styles.cropListItemTitle, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                                  {crop.name}
+                                </Text>
+                                {crop.variety ? (
+                                  <Text style={styles.cropListItemVariety}>({crop.variety})</Text>
+                                ) : null}
+                              </View>
+                              {crop.season || crop.duration ? (
+                                <Text style={styles.cropListItemMeta}>
+                                  {[crop.season, crop.duration].filter(Boolean).join(' • ')}
+                                </Text>
+                              ) : null}
+                            </View>
+
+                            <View style={[styles.miniHarvestBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
+                              <Text style={[styles.miniHarvestBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
+                                {isCont ? 'Daily Harvest' : '1-Time Harvest'}
+                              </Text>
+                            </View>
+
+                            {isSelected && (
+                              <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })
+                    ) : (
+                      <View style={styles.dropdownEmptyRow}>
+                        <Ionicons name="leaf-outline" size={24} color="#cbd5e1" />
+                        <Text style={styles.dropdownEmptyText}>
+                          No crops found matching "{cropSearchQuery}"
+                        </Text>
+                      </View>
+                    )}
+                  </ScrollView>
+                </View>
+              )}
             </View>
 
             {/* SECTION 2: PLOT & FIELD DIMENSIONS */}
@@ -1268,17 +1395,35 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-                <View style={styles.categoryGridContainer}>
+              {/* Search bar inside modal */}
+              <View style={[styles.dropdownSearchRow, { marginVertical: 8 }]}>
+                <Ionicons name="search-outline" size={14} color="#64748b" />
+                <TextInput
+                  style={styles.dropdownSearchInput}
+                  placeholder="Search crop or variety..."
+                  placeholderTextColor="#94a3b8"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={15} color="#94a3b8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={true}>
+                <View style={{ gap: 6, paddingVertical: 4 }}>
                   {filteredCrops.length > 0 ? (
                     filteredCrops.map((crop) => {
+                      const isSelected = selectedCrop?.id === crop.id || selectedCrop?.name.toLowerCase() === crop.name.toLowerCase();
                       const isCont = (crop.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
                       return (
                         <TouchableOpacity
                           key={crop.id}
                           style={[
-                            styles.compactGridTile,
-                            { backgroundColor: currentCategory.bg, borderColor: currentCategory.color + '60' },
+                            styles.cropDropdownListItem,
+                            isSelected && { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
                           ]}
                           activeOpacity={0.8}
                           onPress={() => {
@@ -1287,15 +1432,35 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                             handleSelectCropItem(crop);
                           }}
                         >
-                          <Ionicons name="leaf" size={14} color={currentCategory.color} />
-                          <Text style={[styles.compactTileTitle, { color: currentCategory.color }]} numberOfLines={1}>
-                            {crop.name}{crop.variety ? ` · ${crop.variety}` : ''}
-                          </Text>
-                          <View style={[styles.compactTileBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
-                            <Text style={[styles.compactTileBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
-                              {isCont ? (dict.dailyHarvestContinuous?.split(' ')[0] || 'Daily') : (dict.oneTimeHarvest?.split(' ')[1] || '1-Time')}
+                          <View style={[styles.cropListIconBadge, { backgroundColor: currentCategory.bg }]}>
+                            <Ionicons name="leaf" size={14} color={currentCategory.color} />
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={[styles.cropListItemTitle, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                                {crop.name}
+                              </Text>
+                              {crop.variety ? (
+                                <Text style={styles.cropListItemVariety}>({crop.variety})</Text>
+                              ) : null}
+                            </View>
+                            {crop.season || crop.duration ? (
+                              <Text style={styles.cropListItemMeta}>
+                                {[crop.season, crop.duration].filter(Boolean).join(' • ')}
+                              </Text>
+                            ) : null}
+                          </View>
+
+                          <View style={[styles.miniHarvestBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
+                            <Text style={[styles.miniHarvestBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
+                              {isCont ? 'Daily Harvest' : '1-Time Harvest'}
                             </Text>
                           </View>
+
+                          {isSelected && (
+                            <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} />
+                          )}
                         </TouchableOpacity>
                       );
                     })
@@ -1704,6 +1869,80 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#64748b',
     marginTop: 1,
+  },
+  inlineDropdownCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    marginTop: 8,
+    padding: 8,
+    ...premiumShadow('#000000', 'sm'),
+  },
+  dropdownSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 10,
+    height: 36,
+  },
+  dropdownSearchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+    paddingVertical: 0,
+  },
+  cropDropdownListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    marginBottom: 5,
+  },
+  cropListIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cropListItemTitle: {
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+    color: '#0f172a',
+  },
+  cropListItemVariety: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  cropListItemMeta: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  dropdownEmptyRow: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  dropdownEmptyText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    textAlign: 'center',
   },
   categoryGridContainer: {
     flexDirection: 'row',

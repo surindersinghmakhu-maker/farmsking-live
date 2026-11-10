@@ -158,10 +158,10 @@ export function ThirdPartyServicesSection() {
   const handleSave = async () => {
     if (!localConfig) return;
     try {
-      await Promise.all([
-        updateMutation.mutateAsync(localConfig),
-        updateAppSettingsMutation.mutateAsync(appSettingsForm),
-      ]);
+      await updateMutation.mutateAsync(localConfig);
+      if (appSettingsForm && Object.keys(appSettingsForm).length > 0) {
+        await updateAppSettingsMutation.mutateAsync(appSettingsForm);
+      }
       showToast('✅ All API & third-party settings saved successfully!');
     } catch (err: any) {
       Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to save integrations');

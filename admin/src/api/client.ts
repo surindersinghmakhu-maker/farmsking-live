@@ -122,8 +122,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const msg = error.response?.data?.message || '';
-      onUnauthorized?.(msg);
+      const url = error.config?.url || '';
+      // Guard against accidental logout when modifying administrative settings
+      if (!url.includes('/app-settings')) {
+        const msg = error.response?.data?.message || '';
+        onUnauthorized?.(msg);
+      }
     }
     return Promise.reject(error);
   },

@@ -51,8 +51,8 @@ export async function listAvailableAdvisors(): Promise<AvailableAdvisor[]> {
   return data;
 }
 
-export async function chooseAdvisor(advisorId: string): Promise<AdvisorAssignment> {
-  const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/choose-advisor/${advisorId}`);
+export async function chooseAdvisor(advisorId: string, cropId?: string): Promise<AdvisorAssignment> {
+  const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/choose-advisor/${advisorId}`, { cropId });
   return data;
 }
 

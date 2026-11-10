@@ -28,25 +28,59 @@ let CallRequestsService = class CallRequestsService {
         this.notificationsService = notificationsService;
         this.chatGateway = chatGateway;
     }
-    async create(farmer) {
-        const assignment = await this.prisma.advisorAssignment.findFirst({
-            where: { farmerId: farmer.id, status: client_1.AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+    async create(farmer, dto) {
+        let advisorId = dto?.advisorId?.trim();
+        let cropId = dto?.cropId?.trim();
+        let cropName = null;
+        let cropVariety = null;
+        if (cropId) {
+            const crop = await this.prisma.cropCycle.findFirst({
+                where: { id: cropId, deletedAt: null, plot: { farm: { ownerId: farmer.id, deletedAt: null } } },
+            });
+            if (crop) {
+                cropName = crop.cropName;
+                cropVariety = crop.variety || null;
+            }
+        }
+        if (!advisorId) {
+            const assignment = await this.prisma.advisorAssignment.findFirst({
+                where: { farmerId: farmer.id, status: client_1.AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+            });
+            if (!assignment) {
+                throw new common_1.BadRequestException('Please select an advisor to request a consultation.');
+            }
+            advisorId = assignment.advisorId;
+        }
+        const advisor = await this.prisma.user.findFirst({
+            where: {
+                id: advisorId,
+                deletedAt: null,
+                OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }],
+            },
         });
-        if (!assignment) {
-            throw new common_1.BadRequestException('You have no active advisor to call.');
+        if (!advisor) {
+            throw new common_1.NotFoundException('Selected advisor not found or not active.');
         }
         const openRequest = await this.prisma.callRequest.findFirst({
-            where: { farmerId: farmer.id, advisorId: assignment.advisorId, status: client_1.CallRequestStatus.PENDING },
+            where: { farmerId: farmer.id, advisorId, status: client_1.CallRequestStatus.PENDING },
         });
         if (openRequest) {
-            throw new common_1.ConflictException('You already have a pending call request with your advisor.');
+            throw new common_1.ConflictException(`You already have a pending call request with Dr. ${advisor.name}.`);
         }
         const request = await this.prisma.callRequest.create({
-            data: { farmerId: farmer.id, advisorId: assignment.advisorId },
+            data: {
+                farmerId: farmer.id,
+                advisorId,
+            },
             include: SELECT,
         });
-        await this.notificationsService.create(assignment.advisorId, client_1.NotificationType.SYSTEM, 'Call requested', `${farmer.name} has requested a call with you.`);
-        return request;
+        const cropText = cropName ? ` for crop: ${cropName}${cropVariety ? ` (${cropVariety})` : ''}` : '';
+        await this.notificationsService.create(advisorId, client_1.NotificationType.SYSTEM, cropName ? `Call Requested: ${cropName}` : 'Advisory Call Requested', `${farmer.name} has requested an advisory consultation${cropText}.`, { callRequestId: request.id, cropId: cropId || undefined });
+        return {
+            ...request,
+            selectedCrop: cropName ? { id: cropId, name: cropName, variety: cropVariety } : null,
+            notes: dto?.notes || null,
+        };
     }
     getMyPending(farmer) {
         return this.prisma.callRequest.findFirst({

@@ -45,8 +45,8 @@ let AdvisorAssignmentController = class AdvisorAssignmentController {
     listAvailableAdvisors(user) {
         return this.advisorAssignmentService.listAvailableAdvisors(user);
     }
-    requestSpecificAdvisor(user, advisorId) {
-        return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId);
+    requestSpecificAdvisor(user, advisorId, body) {
+        return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId, body?.cropId);
     }
     cancelMyPendingRequest(user) {
         return this.advisorAssignmentService.cancelMyPendingRequest(user);
@@ -132,8 +132,9 @@ __decorate([
     (0, common_1.Post)('choose-advisor/:advisorId'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('advisorId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "requestSpecificAdvisor", null);
 __decorate([

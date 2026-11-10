@@ -2,13 +2,20 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { ResolveCallRequestDto } from './dto/resolve-call-request.dto';
+import { CreateCallRequestDto } from './dto/create-call-request.dto';
 import { ChatGateway } from '../chat/chat.gateway';
 export declare class CallRequestsService {
     private readonly prisma;
     private readonly notificationsService;
     private readonly chatGateway;
     constructor(prisma: PrismaService, notificationsService: NotificationsService, chatGateway: ChatGateway);
-    create(farmer: AuthUser): Promise<{
+    create(farmer: AuthUser, dto?: CreateCallRequestDto): Promise<{
+        selectedCrop: {
+            id: string | undefined;
+            name: string;
+            variety: string | null;
+        } | null;
+        notes: string | null;
         farmer: {
             id: string;
             kingId: string | null;
@@ -21,7 +28,6 @@ export declare class CallRequestsService {
             mobile: string;
             name: string;
         };
-    } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;

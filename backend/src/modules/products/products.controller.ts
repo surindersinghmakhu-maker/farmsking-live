@@ -56,6 +56,11 @@ export class ProductsController {
     return this.productsService.rejectProductByAdmin(id, reason);
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOne(id);
+  }
+
   /** Submit a Product Review */
   @UseGuards(JwtAuthGuard)
   @Post(':id/reviews')

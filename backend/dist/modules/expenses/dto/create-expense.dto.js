@@ -35,7 +35,7 @@ __decorate([
 ], CreateExpenseDto.prototype, "categoryId", void 0);
 __decorate([
     (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateExpenseDto.prototype, "amount", void 0);
 __decorate([
@@ -65,7 +65,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateExpenseDto.prototype, "quantity", void 0);
 __decorate([

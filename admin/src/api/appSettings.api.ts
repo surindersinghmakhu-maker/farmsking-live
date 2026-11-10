@@ -956,12 +956,20 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     },
   },
   satellite: {
-    activeProvider: 'AGROMONITORING',
+    activeProvider: 'COPERNICUS',
     isEnabled: true,
     providers: {
       agromonitoring: { apiKey: '', autoSyncPolygons: true },
-      sentinelHub: { clientId: '', clientSecret: '', instanceId: '' },
-      copernicus: { username: '', password: '', clientId: '' },
+      sentinelHub: {
+        clientId: 'sh-aa71ff27-94d4-4abc-8c7a-f5fe0f90a7f3',
+        clientSecret: 'zObH5KBf7ARK7TGjjymmPikaMqcBN6bw4EInpkzfNvCqAnuQb3hAe7uWDBOntoTbzhmh9clDKxMuI8LwaokDPd',
+        instanceId: '9fd51b5a-3635-4675-a814-c5d5aa35b9c2',
+      },
+      copernicus: {
+        username: 'farmskingindia@gmail.com',
+        password: '',
+        clientId: 'sh-aa71ff27-94d4-4abc-8c7a-f5fe0f90a7f3',
+      },
       googleEarthEngine: { serviceAccountEmail: '', privateKey: '', projectId: 'farmsking-geospatial' },
       isroBhuvan: { token: '', endpointUrl: 'https://bhuvan-app1.nrsc.gov.in/agri' },
       planetLabs: { apiKey: '' },

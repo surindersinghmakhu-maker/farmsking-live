@@ -68,9 +68,14 @@ export function useAcceptAssignment() {
 export function useChooseAdvisor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (advisorId: string) => advisorAssignmentsApi.chooseAdvisor(advisorId),
+    mutationFn: (param: string | { advisorId: string; cropId?: string }) => {
+      const advId = typeof param === 'string' ? param : param.advisorId;
+      const cId = typeof param === 'string' ? undefined : param.cropId;
+      return advisorAssignmentsApi.chooseAdvisor(advId, cId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['crops'] });
     },
   });
 }

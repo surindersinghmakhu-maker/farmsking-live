@@ -55,8 +55,12 @@ export class AdvisorAssignmentController {
 
   @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('choose-advisor/:advisorId')
-  requestSpecificAdvisor(@CurrentUser() user: AuthUser, @Param('advisorId') advisorId: string) {
-    return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId);
+  requestSpecificAdvisor(
+    @CurrentUser() user: AuthUser,
+    @Param('advisorId') advisorId: string,
+    @Body() body?: { cropId?: string },
+  ) {
+    return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId, body?.cropId);
   }
 
   @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)

@@ -57,7 +57,8 @@ export declare class ProductsController {
         bulkDiscountMinQty: number | null;
         bulkDiscountPercentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
-    listAll(user?: AuthUser, includeInactive?: string, sellerStoreId?: string, slug?: string, categorySlug?: string): import(".prisma/client").Prisma.PrismaPromise<({
+    listAll(user?: AuthUser, includeInactive?: string, sellerStoreId?: string, slug?: string, categorySlug?: string): Promise<{
+        description: string;
         sellerStore: {
             id: string;
             storeName: string;
@@ -67,14 +68,12 @@ export declare class ProductsController {
             pickupState: string | null;
             rating: number;
         } | null;
-    } & {
         id: string;
         name: string;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
         createdById: string;
-        description: string | null;
         title: string | null;
         unit: string;
         rejectionReason: string | null;
@@ -118,7 +117,7 @@ export declare class ProductsController {
         moderationStatus: import(".prisma/client").$Enums.ProductModerationStatus;
         bulkDiscountMinQty: number | null;
         bulkDiscountPercentage: import("@prisma/client/runtime/library").Decimal | null;
-    })[]>;
+    }[]>;
     listPendingForAdmin(): Promise<({
         sellerStore: {
             id: string;
@@ -242,6 +241,110 @@ export declare class ProductsController {
         bulkDiscountPercentage: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     rejectProductByAdmin(id: string, reason: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
+        createdById: string;
+        description: string | null;
+        title: string | null;
+        unit: string;
+        rejectionReason: string | null;
+        rating: number;
+        category: string | null;
+        mrp: import("@prisma/client/runtime/library").Decimal | null;
+        price: import("@prisma/client/runtime/library").Decimal;
+        dosageInstructions: string | null;
+        imageUrl: string | null;
+        brand: string | null;
+        categorySlug: string | null;
+        sellingPrice: import("@prisma/client/runtime/library").Decimal | null;
+        isTopSeller: boolean;
+        stockQty: number;
+        sellerStoreId: string | null;
+        sku: string | null;
+        hsnCode: string | null;
+        gstPercentage: import("@prisma/client/runtime/library").Decimal;
+        weightKg: number;
+        deadWeightKg: number | null;
+        lengthCm: number;
+        widthCm: number;
+        heightCm: number;
+        technicalName: string | null;
+        suitableCrops: string | null;
+        targetPests: string | null;
+        expiryDate: Date | null;
+        batchNumber: string | null;
+        isCodAllowed: boolean;
+        isReturnable: boolean;
+        returnWindowDays: number;
+        isReplaceable: boolean;
+        replacementWindowDays: number;
+        returnPolicyNotes: string | null;
+        commissionOverridePercentage: import("@prisma/client/runtime/library").Decimal | null;
+        imageFrontUrl: string | null;
+        imageBackLabelUrl: string | null;
+        imageDosageUrl: string | null;
+        imageProductUrl: string | null;
+        galleryImages: string[];
+        moderationStatus: import(".prisma/client").$Enums.ProductModerationStatus;
+        bulkDiscountMinQty: number | null;
+        bulkDiscountPercentage: import("@prisma/client/runtime/library").Decimal | null;
+    }>;
+    findOne(id: string): Promise<{
+        sellerStore: {
+            id: string;
+            panNumber: string | null;
+            bankIfsc: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            isActive: boolean;
+            sellerId: string;
+            storeName: string;
+            slug: string;
+            sellerType: import(".prisma/client").$Enums.SellerType;
+            legalName: string | null;
+            gstin: string | null;
+            kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            rejectionReason: string | null;
+            bankAccountNo: string | null;
+            bankBeneficiaryName: string | null;
+            cashfreeVendorId: string | null;
+            shiprocketPickupLocationId: string | null;
+            shiprocketPickupNickname: string | null;
+            pickupAddress: string | null;
+            pickupCity: string | null;
+            pickupState: string | null;
+            pickupPincode: string | null;
+            wantsToSellFood: boolean;
+            fssaiNo: string | null;
+            fssaiCertificateUrl: string | null;
+            fssaiExpiryDate: Date | null;
+            isFssaiApproved: boolean;
+            agriLicenseNo: string | null;
+            agriLicenseExpiryDate: Date | null;
+            additionalDoc1Title: string | null;
+            additionalDoc1Url: string | null;
+            additionalDoc2Title: string | null;
+            additionalDoc2Url: string | null;
+            gstDocUrl: string | null;
+            panDocUrl: string | null;
+            chequeDocUrl: string | null;
+            aadhaarFrontUrl: string | null;
+            aadhaarBackUrl: string | null;
+            tradeLicenseUrl: string | null;
+            commissionRate: import("@prisma/client/runtime/library").Decimal;
+            rtoBearer: import(".prisma/client").$Enums.RtoBearer;
+            rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
+            catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+            rating: number;
+            isOfficialStore: boolean;
+            officialBadgeText: string | null;
+            invoicePrefix: string | null;
+            invoiceLastSequence: number;
+        } | null;
+    } & {
         id: string;
         name: string;
         createdAt: Date;

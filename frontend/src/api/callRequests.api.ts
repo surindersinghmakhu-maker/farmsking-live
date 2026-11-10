@@ -14,8 +14,14 @@ export interface CallRequest {
   advisor?: { id: string; name: string; mobile: string };
 }
 
-export async function createCallRequest(): Promise<CallRequest> {
-  const { data } = await apiClient.post<CallRequest>('/call-requests');
+export interface CreateCallRequestPayload {
+  advisorId?: string;
+  cropId?: string;
+  notes?: string;
+}
+
+export async function createCallRequest(payload?: CreateCallRequestPayload): Promise<CallRequest> {
+  const { data } = await apiClient.post<CallRequest>('/call-requests', payload || {});
   return data;
 }
 

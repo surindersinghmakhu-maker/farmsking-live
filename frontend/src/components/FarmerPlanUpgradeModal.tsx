@@ -16,12 +16,16 @@ import type { InitiateFarmerPlanPaymentResponse } from '../api/farmerPlanPayment
 
 const theme = RoleThemes.FARMER;
 
-const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3, SILVER: 1, GOLD: 2, ROYAL: 3 };
+const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3, VIP: 3, BASIC: 0, PLATINUM: 3, DIAMOND: 4, SILVER: 1, GOLD: 2, ROYAL: 3 };
 const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; price: string }> = {
   FREE: { label: 'Free Pass', emoji: '🌱', color: '#166534', price: '₹0' },
   PRO: { label: 'Kisan Card', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Boss Card', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
   SUPER: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/30d' },
+  VIP: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/yr' },
+  BASIC: { label: 'Free Pass', emoji: '🌱', color: '#166534', price: '₹0' },
+  PLATINUM: { label: 'Platinum Card', emoji: '💎', color: '#0284c7', price: '₹1499/yr' },
+  DIAMOND: { label: 'Diamond VIP Card', emoji: '👑', color: '#7c3aed', price: '₹4999/yr' },
   SILVER: { label: 'Crop Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
   GOLD: { label: 'Crop Doctor', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
   ROYAL: { label: 'Crop Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
@@ -29,20 +33,20 @@ const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; c
 
 interface PlanRow {
   label: string;
-  values: Record<FarmerPlanType, string>;
+  values: Partial<Record<FarmerPlanType, string>>;
 }
 
 const PLAN_ROWS: PlanRow[] = [
-  { label: 'Bookkeeping Logs', values: { FREE: 'Basic', PRO: '✓ All', SMART: '✓ All', SUPER: '✓ All', SILVER: '✓ All', GOLD: '✓ All', ROYAL: '✓ All' } },
-  { label: 'Total Crop Cycles', values: { FREE: 'Max 3', PRO: 'Unlimited', SMART: 'Unlimited', SUPER: 'Unlimited', SILVER: 'Unlimited', GOLD: 'Unlimited', ROYAL: 'Unlimited' } },
-  { label: 'Crop History', values: { FREE: 'Summary', PRO: 'Full', SMART: 'Full', SUPER: 'Full', SILVER: 'Full', GOLD: 'Full', ROYAL: 'Full' } },
-  { label: 'Weather Report', values: { FREE: '✓', PRO: '✓', SMART: '✓', SUPER: '✓', SILVER: '✓', GOLD: '✓', ROYAL: '✓' } },
-  { label: 'Labour Record', values: { FREE: '—', PRO: '—', SMART: '✓ Included', SUPER: '✓ Included', SILVER: '—', GOLD: '✓ Included', ROYAL: '✓ Included' } },
-  { label: 'Worker Login', values: { FREE: '—', PRO: '—', SMART: '✓ Enabled', SUPER: '✓ Enabled', SILVER: '—', GOLD: '✓ Enabled', ROYAL: '✓ Enabled' } },
-  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
-  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
-  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
-  { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
+  { label: 'Bookkeeping Logs', values: { FREE: 'Basic', PRO: '✓ All', SMART: '✓ All', SUPER: '✓ All', VIP: '✓ All', SILVER: '✓ All', GOLD: '✓ All', ROYAL: '✓ All' } },
+  { label: 'Total Crop Cycles', values: { FREE: 'Max 3', PRO: 'Unlimited', SMART: 'Unlimited', SUPER: 'Unlimited', VIP: 'Unlimited', SILVER: 'Unlimited', GOLD: 'Unlimited', ROYAL: 'Unlimited' } },
+  { label: 'Crop History', values: { FREE: 'Summary', PRO: 'Full', SMART: 'Full', SUPER: 'Full', VIP: 'Full', SILVER: 'Full', GOLD: 'Full', ROYAL: 'Full' } },
+  { label: 'Weather Report', values: { FREE: '✓', PRO: '✓', SMART: '✓', SUPER: '✓', VIP: '✓', SILVER: '✓', GOLD: '✓', ROYAL: '✓' } },
+  { label: 'Labour Record', values: { FREE: '—', PRO: '—', SMART: '✓ Included', SUPER: '✓ Included', VIP: '✓ Included', SILVER: '—', GOLD: '✓ Included', ROYAL: '✓ Included' } },
+  { label: 'Worker Login', values: { FREE: '—', PRO: '—', SMART: '✓ Enabled', SUPER: '✓ Enabled', VIP: '✓ Enabled', SILVER: '—', GOLD: '✓ Enabled', ROYAL: '✓ Enabled' } },
+  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', VIP: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
+  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', VIP: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', VIP: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', VIP: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
 ];
 
 
@@ -70,16 +74,17 @@ function PlanComparisonChart({
           <Text style={chartStyles.headerTitle}>Features</Text>
         </View>
         {plans.map((p) => {
+          const colMeta = PLAN_COLUMN_META[p] ?? { label: `${p} Card`, emoji: '👑', color: '#b45309', price: '₹0' };
           const activeVariants = (pricingList ?? []).filter((it) => it.plan === p && it.isActive !== false);
           const displayPrice = p === 'FREE' ? '₹0' : activeVariants[0]
             ? `₹${activeVariants[0].price}/${Number(activeVariants[0].billingPeriodDays) === 365 ? 'yr' : `${activeVariants[0].billingPeriodDays}d`}`
-            : PLAN_COLUMN_META[p].price;
+            : colMeta.price;
 
           return (
             <View key={p} style={[chartStyles.cell, chartStyles.headerPlanCell]}>
-              <Text style={[chartStyles.headEmojiText]}>{PLAN_COLUMN_META[p].emoji}</Text>
-              <Text style={[chartStyles.headText, { color: PLAN_COLUMN_META[p].color }]}>
-                {PLAN_COLUMN_META[p].label}
+              <Text style={[chartStyles.headEmojiText]}>{colMeta.emoji}</Text>
+              <Text style={[chartStyles.headText, { color: colMeta.color }]}>
+                {colMeta.label}
               </Text>
               <Text style={chartStyles.headPriceText}>{displayPrice}</Text>
             </View>
@@ -93,7 +98,7 @@ function PlanComparisonChart({
             <Text style={chartStyles.labelText} numberOfLines={2}>{row.label}</Text>
           </View>
           {plans.map((p) => {
-            const val = row.values[p];
+            const val = row.values[p] ?? '—';
             const isCheck = val.includes('✓');
             const isDash = val === '—';
             return (

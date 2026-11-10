@@ -789,7 +789,7 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     },
   },
   satellite: {
-    activeProvider: 'AGROMONITORING',
+    activeProvider: 'COPERNICUS',
     isEnabled: true,
     providers: {
       agromonitoring: {

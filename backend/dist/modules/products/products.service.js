@@ -106,7 +106,7 @@ let ProductsService = class ProductsService {
             },
         });
     }
-    listAll(includeInactive, sellerStoreId, slug, categorySlug) {
+    async listAll(includeInactive, sellerStoreId, slug, categorySlug) {
         const where = includeInactive
             ? {}
             : { isActive: true, moderationStatus: client_1.ProductModerationStatus.ACTIVE };
@@ -116,7 +116,7 @@ let ProductsService = class ProductsService {
             where.sellerStore = { slug };
         if (categorySlug)
             where.categorySlug = categorySlug;
-        return this.prisma.product.findMany({
+        const list = await this.prisma.product.findMany({
             where,
             take: 150,
             include: {
@@ -134,6 +134,22 @@ let ProductsService = class ProductsService {
             },
             orderBy: { createdAt: 'desc' },
         });
+        return list.map((p) => {
+            let desc = p.description || '';
+            if (desc.includes('data:image')) {
+                const idx = desc.search(/\n\nGallery:\n|\nGallery:\n|Gallery:\s*data:/i);
+                if (idx > -1) {
+                    desc = desc.substring(0, idx).trim();
+                }
+            }
+            return {
+                ...p,
+                description: desc,
+            };
+        });
+    }
+    async findOne(id) {
+        return this.findOneOrThrow(id);
     }
     async findOneOrThrow(id) {
         const product = await this.prisma.product.findUnique({

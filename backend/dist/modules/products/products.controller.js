@@ -42,6 +42,9 @@ let ProductsController = class ProductsController {
     rejectProductByAdmin(id, reason) {
         return this.productsService.rejectProductByAdmin(id, reason);
     }
+    findOne(id) {
+        return this.productsService.findOne(id);
+    }
     addReview(user, id, rating, title, comment, photoUrls) {
         return this.productsService.addReview(user, id, rating, title, comment, photoUrls);
     }
@@ -104,6 +107,13 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "rejectProductByAdmin", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ProductsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(':id/reviews'),

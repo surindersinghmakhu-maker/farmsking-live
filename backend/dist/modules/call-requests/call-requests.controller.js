@@ -21,12 +21,13 @@ const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const call_requests_service_1 = require("./call-requests.service");
 const resolve_call_request_dto_1 = require("./dto/resolve-call-request.dto");
+const create_call_request_dto_1 = require("./dto/create-call-request.dto");
 let CallRequestsController = class CallRequestsController {
     constructor(callRequestsService) {
         this.callRequestsService = callRequestsService;
     }
-    create(user) {
-        return this.callRequestsService.create(user);
+    create(user, dto) {
+        return this.callRequestsService.create(user, dto);
     }
     getMyPending(user) {
         return this.callRequestsService.getMyPending(user);
@@ -40,11 +41,12 @@ let CallRequestsController = class CallRequestsController {
 };
 exports.CallRequestsController = CallRequestsController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER),
     (0, common_1.Post)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, create_call_request_dto_1.CreateCallRequestDto]),
     __metadata("design:returntype", void 0)
 ], CallRequestsController.prototype, "create", null);
 __decorate([

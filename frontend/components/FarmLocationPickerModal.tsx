@@ -143,12 +143,20 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
       setManualLatText(String(existingGpsData.centerLat));
       setManualLngText(String(existingGpsData.centerLng));
     } else {
-      setSelectedCoords(null);
-      setCorners([]);
-      setCornersMarked(0);
-      setCalculatedAcres(0);
-      setManualLatText('30.9085');
-      setManualLngText('75.8610');
+      const defLat = 30.9010;
+      const defLng = 75.8573;
+      const defCorners: CornerCoord[] = [
+        { label: 'C1 (NW)', lat: +(defLat + 0.0012).toFixed(4), lng: +(defLng - 0.0015).toFixed(4) },
+        { label: 'C2 (NE)', lat: +(defLat + 0.0014).toFixed(4), lng: +(defLng + 0.0016).toFixed(4) },
+        { label: 'C3 (SE)', lat: +(defLat - 0.0011).toFixed(4), lng: +(defLng + 0.0013).toFixed(4) },
+        { label: 'C4 (SW)', lat: +(defLat - 0.0013).toFixed(4), lng: +(defLng - 0.0014).toFixed(4) },
+      ];
+      setSelectedCoords({ lat: defLat, lng: defLng });
+      setCorners(defCorners);
+      setCornersMarked(4);
+      setCalculatedAcres(1.0);
+      setManualLatText(String(defLat));
+      setManualLngText(String(defLng));
     }
   }, [visible, initialIsLocked, existingGpsData]);
 
@@ -654,8 +662,8 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                 </View>
               </View>
 
-              {/* SATELLITE ADVISOR COMPREHENSIVE FIELD DETAILS & STEP-BY-STEP ADVICE — HIDES BEFORE LOCATION MARK/LOCK */}
-              {cornersMarked === 4 || isLocked ? (
+              {/* SATELLITE ADVISOR COMPREHENSIVE FIELD DETAILS & STEP-BY-STEP ADVICE — FULLY UNLOCKED */}
+              {selectedCoords !== null || cornersMarked > 0 || isLocked ? (
                 <View style={styles.farmerSelfAdviceCard}>
                   <View style={styles.selfAdviceHeader}>
                     <Ionicons name="sparkles" size={16} color="#16a34a" />

@@ -115,7 +115,7 @@ export class ProductsService {
   }
 
   /** Customers browsing only ever see active products */
-  listAll(includeInactive: boolean, sellerStoreId?: string, slug?: string, categorySlug?: string) {
+  async listAll(includeInactive: boolean, sellerStoreId?: string, slug?: string, categorySlug?: string) {
     const where: any = includeInactive
       ? {}
       : { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE };
@@ -124,7 +124,7 @@ export class ProductsService {
     if (slug) where.sellerStore = { slug };
     if (categorySlug) where.categorySlug = categorySlug;
 
-    return this.prisma.product.findMany({
+    const list = await this.prisma.product.findMany({
       where,
       take: 150, // Defensive bound to prevent massive catalog crash
       include: {
@@ -142,6 +142,25 @@ export class ProductsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Strip out heavy base64 strings from descriptions in catalog listing to ensure lightning-fast response (<150ms)
+    return list.map((p) => {
+      let desc = p.description || '';
+      if (desc.includes('data:image')) {
+        const idx = desc.search(/\n\nGallery:\n|\nGallery:\n|Gallery:\s*data:/i);
+        if (idx > -1) {
+          desc = desc.substring(0, idx).trim();
+        }
+      }
+      return {
+        ...p,
+        description: desc,
+      };
+    });
+  }
+
+  async findOne(id: string) {
+    return this.findOneOrThrow(id);
   }
 
   private async findOneOrThrow(id: string) {

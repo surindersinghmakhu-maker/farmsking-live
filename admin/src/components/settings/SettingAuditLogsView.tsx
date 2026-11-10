@@ -552,7 +552,7 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 11,
-    fontFamily: FONT.mono,
+    fontFamily: Platform.OS === 'web' ? 'monospace' : 'Courier',
   },
   jsonBox: {
     borderWidth: 1,

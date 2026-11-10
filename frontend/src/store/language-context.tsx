@@ -51,13 +51,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const t = (key: TranslationKey, fallback?: string): string => {
+  const t = (key: TranslationKey | string, fallback?: string): string => {
     const langDict = (translations as Record<string, Record<string, string>>)[language] || translations.en;
     if (key in langDict) {
       return langDict[key];
     }
     if (key in translations.en) {
-      return translations.en[key];
+      return (translations.en as Record<string, string>)[key];
     }
     return fallback || String(key);
   };

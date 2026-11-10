@@ -390,7 +390,7 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
         },
     },
     satellite: {
-        activeProvider: 'AGROMONITORING',
+        activeProvider: 'COPERNICUS',
         isEnabled: true,
         providers: {
             agromonitoring: {

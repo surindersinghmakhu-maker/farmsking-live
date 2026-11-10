@@ -97,7 +97,7 @@ export function useMarkOrderPaid() {
   return useMutation({
     mutationFn: ({ id, transactionId, notes }: { id: string; transactionId?: string; notes?: string }) =>
       api.markOrderPaid(id, transactionId, notes),
-    onSuccess: (data: any, vars: { id: string }) => {
+    onSuccess: (data: any, vars: { id: string; transactionId?: string; notes?: string }) => {
       queryClient.setQueriesData({ queryKey: ['orders'] }, (oldData: any) => {
         if (!oldData) return oldData;
         if (Array.isArray(oldData)) {

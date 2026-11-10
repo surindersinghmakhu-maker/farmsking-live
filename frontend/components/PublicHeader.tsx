@@ -1104,7 +1104,7 @@ export default function PublicHeader({
                       translateX: navSlideAnim.interpolate({
                         inputRange: MAIN_NAV_LINKS.map((_, i) => i),
                         outputRange: MAIN_NAV_LINKS.map(
-                          (i) => i * (mobileRibbonWidth / MAIN_NAV_LINKS.length) + 4
+                          (_, i) => i * (mobileRibbonWidth / MAIN_NAV_LINKS.length) + 4
                         ),
                         extrapolate: 'clamp',
                       }),
@@ -2097,6 +2097,10 @@ const styles = StyleSheet.create({
     borderTopColor: '#e2e8f0',
     ...premiumShadow('#0f172a', 'md'),
   },
+  mobileBottomRibbonNight: {
+    backgroundColor: 'rgba(10, 15, 28, 0.94)',
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+  },
   mobileRibbonGliderPill: {
     position: 'absolute',
     top: 5,
@@ -2147,5 +2151,8 @@ const styles = StyleSheet.create({
   },
   mobileRibbonTabTextDay: {
     color: '#64748b',
+  },
+  mobileRibbonTabTextNight: {
+    color: '#94a3b8',
   },
 });

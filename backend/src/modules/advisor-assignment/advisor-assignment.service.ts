@@ -19,49 +19,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
 
   async onApplicationBootstrap() {
-    setTimeout(() => {
-      this.reassignAllToSudhir().catch(err => console.error('Boot seed failed', err));
-    }, 5000);
-  }
-
-  /** Reassigns all existing assignments, crop problem reports, and call requests to Sudhir Kumar if available in DB. */
-  async reassignAllToSudhir() {
-    const sudhirAdvisor = await this.prisma.user.findFirst({
-      where: {
-        name: { contains: 'Sudhir', mode: 'insensitive' },
-        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
-        deletedAt: null,
-      },
-    });
-
-    if (!sudhirAdvisor) return;
-
-    await this.prisma.advisorAssignment.updateMany({
-      where: {
-        advisorId: { not: sudhirAdvisor.id },
-      },
-      data: {
-        advisorId: sudhirAdvisor.id,
-      },
-    });
-
-    await this.prisma.cropProblem.updateMany({
-      where: {
-        assignedAdvisorId: { not: sudhirAdvisor.id },
-      },
-      data: {
-        assignedAdvisorId: sudhirAdvisor.id,
-      },
-    });
-
-    await this.prisma.callRequest.updateMany({
-      where: {
-        advisorId: { not: sudhirAdvisor.id },
-      },
-      data: {
-        advisorId: sudhirAdvisor.id,
-      },
-    });
+    // Multi-advisor architecture active
   }
 
   /** Only paid plan farmers (PRO/SMART/SUPER) ever come with an advisor included — every roster query and stat is scoped to those tiers. */
@@ -441,7 +399,20 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
    * so Super Admin can notify current doctor.
    * If farmer has NO active advisor, creates a direct PENDING request for the new doctor.
    */
-  async requestSpecificAdvisor(farmerId: string, advisorId: string) {
+  async requestSpecificAdvisor(farmerId: string, advisorId: string, cropId?: string) {
+    let cropName = '';
+    let cropVariety = '';
+    let selectedCrop: any = null;
+    if (cropId) {
+      selectedCrop = await this.prisma.cropCycle.findFirst({
+        where: { id: cropId, deletedAt: null, plot: { farm: { ownerId: farmerId, deletedAt: null } } },
+      });
+      if (selectedCrop) {
+        cropName = selectedCrop.cropName;
+        cropVariety = selectedCrop.variety || '';
+      }
+    }
+
     const existingSame = await this.prisma.advisorAssignment.findFirst({
       where: {
         farmerId,
@@ -451,6 +422,12 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       },
     });
     if (existingSame) {
+      if (cropId && selectedCrop) {
+        await this.prisma.cropCycle.update({
+          where: { id: cropId },
+          data: { advisorReviewStatus: 'PENDING' as any, submittedToAdvisorAt: new Date() },
+        });
+      }
       return existingSame;
     }
 
@@ -465,16 +442,14 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       include: { advisor: { select: { id: true, name: true, mobile: true } } },
     });
 
-    // Automatically revoke any previous PENDING request for a different doctor
-    await this.prisma.advisorAssignment.updateMany({
-      where: { farmerId, status: AdvisorAssignmentStatus.PENDING, deletedAt: null },
-      data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Replaced by new doctor hire request' },
-    });
-
-    const isDoctorChange = !!currentActive && currentActive.advisorId !== advisorId;
+    const isDoctorChange = !!currentActive && currentActive.advisorId !== advisorId && !cropId;
     const initialStatus = isDoctorChange
       ? AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING
       : AdvisorAssignmentStatus.PENDING;
+
+    const assignmentNotes = cropName
+      ? `Crop: ${cropName}${cropVariety ? ` (${cropVariety})` : ''} [Crop ID: ${selectedCrop?.cropId || cropId}]`
+      : (isDoctorChange ? `Doctor Change Request from Dr. ${currentActive?.advisor?.name}` : undefined);
 
     const assignment = await this.prisma.advisorAssignment.create({
       data: {
@@ -483,15 +458,21 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         status: initialStatus,
         assignedById: farmerId,
         startDate: new Date(),
-        notes: isDoctorChange ? `Doctor Change Request from Dr. ${currentActive.advisor.name}` : undefined,
+        notes: assignmentNotes,
       },
       include: {
         advisor: { select: { id: true, name: true, mobile: true, photoUrl: true, specialization: true, bio: true, yearsExperience: true } },
       },
     });
 
+    if (cropId && selectedCrop) {
+      await this.prisma.cropCycle.update({
+        where: { id: cropId },
+        data: { advisorReviewStatus: 'PENDING' as any, submittedToAdvisorAt: new Date() },
+      });
+    }
+
     if (isDoctorChange) {
-      // Notify Admins to review doctor change request before contacting doctor
       const admins = await this.prisma.user.findMany({
         where: { roles: { hasSome: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null },
         select: { id: true },
@@ -501,7 +482,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
           admin.id,
           NotificationType.SYSTEM,
           'Doctor Change Request Pending Review',
-          `Farmer ${farmer.name} requested to switch doctor from Dr. ${currentActive.advisor.name} to Dr. ${assignment.advisor.name}. Admin review required.`,
+          `Farmer ${farmer.name} requested to switch doctor from Dr. ${currentActive?.advisor?.name} to Dr. ${assignment.advisor.name}. Admin review required.`,
         );
       }
       await this.notificationsService.create(
@@ -511,12 +492,12 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         'Your request to change crop doctor has been submitted to Admin for approval. Admin will notify your current doctor.',
       );
     } else {
-      // Direct request to new doctor
       await this.notificationsService.create(
         advisorId,
         NotificationType.SYSTEM,
-        'New farmer hire request',
-        `${farmer.name} wants to hire you as their advisor. Review their profile and accept or reject.`,
+        cropName ? `New Crop Care Request: ${cropName}` : 'New farmer hire request',
+        `${farmer.name} wants to hire you as crop advisor${cropName ? ` for "${cropName}"` : ''}. Review details and accept or decline.`,
+        { cropCycleId: cropId || undefined, farmerId },
       );
     }
 

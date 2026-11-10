@@ -12,7 +12,6 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     private readonly whatsAppGroupSyncService;
     constructor(prisma: PrismaService, notificationsService: NotificationsService, walletService: WalletService, whatsAppGroupSyncService: WhatsAppGroupSyncService);
     onApplicationBootstrap(): Promise<void>;
-    reassignAllToSudhir(): Promise<void>;
     private readonly STANDARD_OR_PREMIUM_FARMER_CLAUSE;
     getFarmerStats(user: AuthUser): Promise<{
         total: number;
@@ -271,7 +270,7 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         subscriptionId: string | null;
         assignedById: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    requestSpecificAdvisor(farmerId: string, advisorId: string): Promise<{
+    requestSpecificAdvisor(farmerId: string, advisorId: string, cropId?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -754,57 +754,58 @@ export default function FarmListScreen() {
     [activeCropFields]
   );
 
+  const renderHeroHeader = () => (
+    <LinearGradient colors={colors.headerGradient} style={styles.hero}>
+      <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
+      <View style={styles.heroTopRow}>
+        <Text style={[styles.heroGreeting, { color: isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>🌾 {t('myCropsAndDoctor', 'My Crops & Doctor Advisory')}</Text>
+      </View>
+
+      {/* Sub-Tab Switcher: Active Crops vs Crop Doctor Care */}
+      <View style={[styles.subTabBar, { backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "#f1f5f9", borderColor: isDark ? colors.cardBorder : "#cbd5e1", borderWidth: 1 }]}>
+        <TouchableOpacity
+          style={[
+            styles.subTabItem,
+            activeSubTab === 'CROPS' && (isDark
+              ? { backgroundColor: '#10b981', ...premiumShadow('#10b981', 'sm') }
+              : { backgroundColor: '#ffffff', borderColor: '#86efac', borderWidth: 1, ...premiumShadow('rgba(0,0,0,0.1)', 'xs') })
+          ]}
+          onPress={() => { tap(); setActiveSubTab('CROPS'); }}
+        >
+          <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? (isDark ? '#04160c' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+          <Text style={[
+            styles.subTabText,
+            { color: isDark ? '#ffffff' : '#0f172a' },
+            activeSubTab === 'CROPS' && (isDark ? { color: '#04160c', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })
+          ]}>
+            🌾 {t('activeCrops', 'Active Crops')} ({activeCropFields.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.subTabItem,
+            activeSubTab === 'CROP_CARE' && (isDark
+              ? { backgroundColor: '#10b981', ...premiumShadow('#10b981', 'sm') }
+              : { backgroundColor: '#ffffff', borderColor: '#86efac', borderWidth: 1, ...premiumShadow('rgba(0,0,0,0.1)', 'xs') })
+          ]}
+          onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
+        >
+          <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? (isDark ? '#04160c' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
+          <Text style={[
+            styles.subTabText,
+            { color: isDark ? '#ffffff' : '#0f172a' },
+            activeSubTab === 'CROP_CARE' && (isDark ? { color: '#04160c', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })
+          ]}>
+            🩺 {t('cropsCare', 'Crops Care')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Header */}
-      <LinearGradient colors={colors.headerGradient} style={styles.hero}>
-        <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
-        <View style={styles.heroTopRow}>
-          <Text style={[styles.heroGreeting, { color: isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>🌾 {t('myCropsAndDoctor', 'My Crops & Doctor Advisory')}</Text>
-        </View>
-
-        {/* Sub-Tab Switcher: Active Crops vs Crop Doctor Care */}
-        <View style={[styles.subTabBar, { backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "#f1f5f9", borderColor: isDark ? colors.cardBorder : "#cbd5e1", borderWidth: 1 }]}>
-          <TouchableOpacity
-            style={[
-              styles.subTabItem,
-              activeSubTab === 'CROPS' && (isDark
-                ? { backgroundColor: '#10b981', ...premiumShadow('#10b981', 'sm') }
-                : { backgroundColor: '#ffffff', borderColor: '#86efac', borderWidth: 1, ...premiumShadow('rgba(0,0,0,0.1)', 'xs') })
-            ]}
-            onPress={() => { tap(); setActiveSubTab('CROPS'); }}
-          >
-            <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? (isDark ? '#04160c' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
-            <Text style={[
-              styles.subTabText,
-              { color: isDark ? '#ffffff' : '#0f172a' },
-              activeSubTab === 'CROPS' && (isDark ? { color: '#04160c', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })
-            ]}>
-              🌾 {t('activeCrops', 'Active Crops')} ({activeCropFields.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.subTabItem,
-              activeSubTab === 'CROP_CARE' && (isDark
-                ? { backgroundColor: '#10b981', ...premiumShadow('#10b981', 'sm') }
-                : { backgroundColor: '#ffffff', borderColor: '#86efac', borderWidth: 1, ...premiumShadow('rgba(0,0,0,0.1)', 'xs') })
-            ]}
-            onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
-          >
-            <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? (isDark ? '#04160c' : '#15803d') : (isDark ? '#ffffff' : '#0f172a')} />
-            <Text style={[
-              styles.subTabText,
-              { color: isDark ? '#ffffff' : '#0f172a' },
-              activeSubTab === 'CROP_CARE' && (isDark ? { color: '#04160c', fontFamily: FONT.extraBold } : { color: '#15803d', fontFamily: FONT.extraBold })
-            ]}>
-              🩺 {t('cropsCare', 'Crops Care')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
       {activeSubTab === 'CROPS' ? (
         /* Main Active Crops & Completed History List */
         <FlatList
@@ -812,16 +813,19 @@ export default function FarmListScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('activeCrops', 'Active Crops')} ({activeCropFields.length})</Text>
-              <TouchableOpacity
-                style={[styles.topAddCropBtn, { backgroundColor: '#15803d' }]}
-                activeOpacity={0.85}
-                onPress={handleOpenAddCropModal}
-              >
-                <Ionicons name="add-circle" size={16} color="#ffffff" />
-                <Text style={[styles.topAddCropBtnText, { color: '#ffffff' }]}>{t('addNewCrop', '+ Add Crop')}</Text>
-              </TouchableOpacity>
+            <View>
+              {renderHeroHeader()}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 14, paddingHorizontal: SPACING.lg }}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('activeCrops', 'Active Crops')} ({activeCropFields.length})</Text>
+                <TouchableOpacity
+                  style={[styles.topAddCropBtn, { backgroundColor: '#15803d' }]}
+                  activeOpacity={0.85}
+                  onPress={handleOpenAddCropModal}
+                >
+                  <Ionicons name="add-circle" size={16} color="#ffffff" />
+                  <Text style={[styles.topAddCropBtnText, { color: '#ffffff' }]}>{t('addNewCrop', '+ Add Crop')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           }
           ListEmptyComponent={
@@ -984,136 +988,76 @@ export default function FarmListScreen() {
                 <View style={{ marginTop: 6 }}>
                   {(() => {
                     const cropGps = cropGpsDataMap[item.id] || item.gpsData;
-                    const isGpsLocked = cropGps?.isLocked || false;
+                    const latVal = cropGps?.centerLat || user?.gpsLat || 30.9010;
+                    const lngVal = cropGps?.centerLng || user?.gpsLng || 75.8573;
+                    const locVal = cropGps?.locationText || item.location || `📍 ${Number(latVal).toFixed(4)}° N, ${Number(lngVal).toFixed(4)}° E`;
 
-                    if (!isGpsLocked) {
-                      return (
-                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
-                          {/* Button 1: Set GPS Location */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 4,
-                              backgroundColor: '#16a34a',
-                              paddingVertical: 7,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setShowLocationProfileModal(true);
-                            }}
-                          >
-                            <Ionicons name="location" size={13} color="#ffffff" />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
-                              📍 Set GPS Location
-                            </Text>
-                          </TouchableOpacity>
+                    return (
+                      <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1.8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 5,
+                            backgroundColor: '#2563eb',
+                            paddingVertical: 7,
+                            paddingHorizontal: 8,
+                            borderRadius: 8,
+                          }}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            tap();
+                            router.push({
+                              pathname: '/satellite-map' as any,
+                              params: {
+                                cropId: item.id,
+                                cropName: item.cropName,
+                                farmerName: item.farmerName || user?.name,
+                                plotName: item.fieldName,
+                                area: item.area,
+                                location: locVal,
+                                lat: String(latVal),
+                                lng: String(lngVal),
+                              },
+                            });
+                          }}
+                        >
+                          <Ionicons name="planet" size={14} color="#ffffff" />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
+                            🛰️ Satellite Map
+                          </Text>
+                        </TouchableOpacity>
 
-                          {/* Button 2: Satellite Advisor */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 4,
-                              backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#fff7ed',
-                              borderWidth: 1,
-                              borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#ffedd5',
-                              paddingVertical: 7,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              Alert.alert(
-                                'Location Not Locked 🔒',
-                                'Please tap "📍 Set GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
-                              );
-                            }}
-                          >
-                            <Ionicons name="lock-closed" size={12} color={isDark ? '#fbbf24' : '#d97706'} />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#fef3c7' : '#b45309' }} numberOfLines={1}>
-                              🔒 Satellite Advisor
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    } else {
-                      // GPS Locked: Show active Satellite Map action button + Edit GPS in 1 row
-                      return (
-                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
-                          <TouchableOpacity
-                            style={{
-                              flex: 1.8,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 5,
-                              backgroundColor: '#2563eb',
-                              paddingVertical: 7,
-                              paddingHorizontal: 8,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              router.push({
-                                pathname: '/satellite-map' as any,
-                                params: {
-                                  cropId: item.id,
-                                  cropName: item.cropName,
-                                  farmerName: item.farmerName || user?.name,
-                                  plotName: item.fieldName,
-                                  area: item.area,
-                                  location: cropGps?.locationText || item.location,
-                                  lat: String(cropGps?.centerLat || ''),
-                                  lng: String(cropGps?.centerLng || ''),
-                                },
-                              });
-                            }}
-                          >
-                            <Ionicons name="planet" size={14} color="#ffffff" />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
-                              🛰️ Satellite Map
-                            </Text>
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 4,
-                              backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
-                              borderWidth: 1,
-                              borderColor: isDark ? 'rgba(74, 222, 128, 0.35)' : '#bbf7d0',
-                              paddingVertical: 7,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setSelectedCropForGps(item);
-                              setShowLocationModal(true);
-                            }}
-                          >
-                            <Ionicons name="location-outline" size={13} color={isDark ? '#4ade80' : '#166534'} />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#166534' }} numberOfLines={1}>
-                              📍 Edit GPS
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    }
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 4,
+                            backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
+                            borderWidth: 1,
+                            borderColor: isDark ? 'rgba(34, 197, 94, 0.35)' : '#bbf7d0',
+                            paddingVertical: 7,
+                            paddingHorizontal: 6,
+                            borderRadius: 8,
+                          }}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            tap();
+                            setSelectedCropForGps(item);
+                            setShowLocationModal(true);
+                          }}
+                        >
+                          <Ionicons name="location" size={12} color={isDark ? '#4ade80' : '#16a34a'} />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }} numberOfLines={1}>
+                            📍 GPS Field
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
                   })()}
                 </View>
               </View>
@@ -1122,7 +1066,7 @@ export default function FarmListScreen() {
 
           /* COMPLETED CROPS HISTORY SECTION AT THE BOTTOM */
           ListFooterComponent={
-            <View style={styles.historySectionContainer}>
+            <View style={[styles.historySectionContainer, { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0' }]}>
               <TouchableOpacity
                 style={styles.historySectionHeader}
                 activeOpacity={0.75}
@@ -1131,11 +1075,11 @@ export default function FarmListScreen() {
                   setIsHistoryExpanded((v) => !v);
                 }}
               >
-                <Ionicons name="time" size={18} color="#475569" />
-                <Text style={[styles.historySectionTitle, { flex: 1 }]}>
+                <Ionicons name="time" size={18} color={isDark ? '#38bdf8' : '#15803d'} />
+                <Text style={[styles.historySectionTitle, { color: colors.text, flex: 1 }]}>
                   Completed Crops History ({cropHistory.length})
                 </Text>
-                <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />
+                <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
               </TouchableOpacity>
 
               {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
@@ -1149,15 +1093,15 @@ export default function FarmListScreen() {
                       style={[
                         styles.historyCard,
                         {
-                          backgroundColor: '#ffffff',
+                          backgroundColor: colors.cardBg,
                           borderRadius: 14,
                           padding: 10,
                           marginBottom: 8,
                           borderWidth: 1,
-                          borderColor: '#cbd5e1',
+                          borderColor: colors.cardBorder,
                           overflow: 'hidden',
                         },
-                        premiumShadow('#000000', 'sm'),
+                        premiumShadow(colors.shadowColor, 'sm'),
                       ]}
                       activeOpacity={0.8}
                       onPress={() => openHistoryDetail(hItem)}
@@ -1165,11 +1109,11 @@ export default function FarmListScreen() {
                       {/* Top Bar: Plot Name + Crop ID + Advisor Status (All in 1 Row) */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, overflow: 'hidden' }}>
-                          <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: colors.text }} numberOfLines={1}>
                             📍 {hItem.fieldName}
                           </Text>
-                          <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1, borderColor: '#bae6fd' }}>
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                          <View style={{ backgroundColor: isDark ? 'rgba(2, 132, 199, 0.2)' : '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(56, 189, 248, 0.35)' : '#bae6fd' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
                               ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 5).toUpperCase()}`)}
                             </Text>
                           </View>
@@ -1178,21 +1122,21 @@ export default function FarmListScreen() {
                         {/* Advisor Status Badge in Top Right */}
                         {summary.isAdvisorHired ? (
                           <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.25)' : '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.35)' : '#a7f3d0' }}
                             activeOpacity={0.8}
                             onPress={(e) => {
                               e.stopPropagation();
                               handleOpenDoctorDialog(hItem, summary.advisorName);
                             }}
                           >
-                            <Ionicons name="medical" size={9.5} color="#15803d" />
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                            <Ionicons name="medical" size={9.5} color={isDark ? '#4ade80' : '#15803d'} />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }} numberOfLines={1}>
                               🩺 Doctor Hired
                             </Text>
                           </TouchableOpacity>
                         ) : (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0' }}>
+                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.textMuted }} numberOfLines={1}>
                               🩺 Self-Managed
                             </Text>
                           </View>
@@ -1201,21 +1145,21 @@ export default function FarmListScreen() {
 
                       {/* Row 2: Crop Period Timeline Strip (Under Farm/Plot Name) */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }}>
                           {/* Sown Date Badge */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#ffedd5' }}>
-                            <Ionicons name="leaf" size={10} color="#d97706" />
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#ffedd5' }}>
+                            <Ionicons name="leaf" size={10} color={isDark ? '#fbbf24' : '#d97706'} />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#fef3c7' : '#b45309' }}>
                               Sown: {hItem.sowingDate ? hItem.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'}
                             </Text>
                           </View>
 
-                          <Ionicons name="arrow-forward-sharp" size={10} color="#94a3b8" />
+                          <Ionicons name="arrow-forward-sharp" size={10} color={isDark ? '#64748b' : '#94a3b8'} />
 
                           {/* Completion Date Badge */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#a7f3d0' }}>
-                            <Ionicons name="flag" size={9.5} color="#15803d" />
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.2)' : '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.35)' : '#a7f3d0' }}>
+                            <Ionicons name="flag" size={9.5} color={isDark ? '#4ade80' : '#15803d'} />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d' }}>
                               Completed: {summary.completionDateStr}
                             </Text>
                           </View>
@@ -1225,16 +1169,16 @@ export default function FarmListScreen() {
                       {/* Row 3: Crop Name, Variety, Area & Plant Count */}
                       <View style={{ gap: 2, marginTop: 4 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }}>
                             🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
                           </Text>
                           {hItem.area ? (
-                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#334155' }}>
                               · 📐 {hItem.area}
                             </Text>
                           ) : null}
                           {hItem.plantCount ? (
-                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#334155' }}>
                               · 🪴 {hItem.plantCount} Plants
                             </Text>
                           ) : null}
@@ -1250,10 +1194,10 @@ export default function FarmListScreen() {
                             }}
                             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}
                           >
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
-                              🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                              🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: isDark ? '#7dd3fc' : '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
                             </Text>
-                            <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
+                            <Ionicons name="information-circle-outline" size={13} color={isDark ? '#38bdf8' : '#0284c7'} />
                           </TouchableOpacity>
                         ) : null}
                       </View>
@@ -1261,31 +1205,31 @@ export default function FarmListScreen() {
                       {/* Compact Financial Summary Breakdown Grid (4 Badges) */}
                       <View style={{ flexDirection: 'row', gap: 4, marginTop: 7 }}>
                         {/* Sales */}
-                        <View style={{ flex: 1, backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+                        <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.15)' : '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#166534' }} numberOfLines={1}>
                             💰 Sales ({summary.totalWeight})
                           </Text>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 1 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', marginTop: 1 }}>
                             ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
 
                         {/* Expenses */}
-                        <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                        <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(194, 65, 12, 0.15)' : '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : '#ffedd5' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#fdba74' : '#9a3412' }} numberOfLines={1}>
                             💸 Inputs
                           </Text>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fb923c' : '#c2410c', marginTop: 1 }}>
                             ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
 
                         {/* Labour */}
-                        <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                        <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(194, 65, 12, 0.15)' : '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : '#ffedd5' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#fdba74' : '#9a3412' }} numberOfLines={1}>
                             👷 Labour
                           </Text>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fb923c' : '#c2410c', marginTop: 1 }}>
                             ₹{summary.totalLabourNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
@@ -1294,41 +1238,41 @@ export default function FarmListScreen() {
                         <View
                           style={{
                             flex: 1.1,
-                            backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                            backgroundColor: isProfit ? (isDark ? 'rgba(5, 150, 105, 0.2)' : '#ecfdf5') : (isDark ? 'rgba(220, 38, 38, 0.2)' : '#fef2f2'),
                             paddingHorizontal: 6,
                             paddingVertical: 5,
                             borderRadius: 8,
                             borderWidth: 1,
-                            borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                            borderColor: isProfit ? (isDark ? 'rgba(16, 185, 129, 0.4)' : '#a7f3d0') : (isDark ? 'rgba(239, 68, 68, 0.4)' : '#fecaca'),
                           }}
                         >
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#065f46' : '#991b1b' }} numberOfLines={1}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? (isDark ? '#6ee7b7' : '#065f46') : (isDark ? '#fca5a5' : '#991b1b') }} numberOfLines={1}>
                             {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
                           </Text>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? '#047857' : '#dc2626', marginTop: 1 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? (isDark ? '#34d399' : '#047857') : (isDark ? '#f87171' : '#dc2626'), marginTop: 1 }}>
                             {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
                           </Text>
                         </View>
                       </View>
 
                       {/* Footer Action Bar */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 5, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 5, borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                          <Ionicons name="sparkles" size={12} color="#16a34a" />
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                          <Ionicons name="sparkles" size={12} color={isDark ? '#4ade80' : '#16a34a'} />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#16a34a' }}>
                             Tap for full audit statement & receipts
                           </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={14} color="#16a34a" />
+                        <Ionicons name="chevron-forward" size={14} color={isDark ? '#4ade80' : '#16a34a'} />
                       </View>
                     </TouchableOpacity>
                   );
                 })
               ) : (
-                <View style={styles.historyEmptyBox}>
-                  <Ionicons name="checkmark-done-circle-outline" size={32} color="#cbd5e1" />
-                  <Text style={styles.historyEmptyText}>No completed crops yet.</Text>
-                  <Text style={styles.historyEmptySub}>
+                <View style={[styles.historyEmptyBox, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }]}>
+                  <Ionicons name="checkmark-done-circle-outline" size={32} color={isDark ? '#475569' : '#cbd5e1'} />
+                  <Text style={[styles.historyEmptyText, { color: colors.textMuted }]}>No completed crops yet.</Text>
+                  <Text style={[styles.historyEmptySub, { color: isDark ? '#64748b' : '#94a3b8' }]}>
                     Completed crops will appear here with total sale weight and revenue summary.
                   </Text>
                 </View>
@@ -1338,7 +1282,7 @@ export default function FarmListScreen() {
         />
       ) : (
         /* CROP DOCTOR / CROP CARE ADVISORY SECTION */
-        <CropDoctorCareView />
+        <CropDoctorCareView headerComponent={renderHeroHeader()} />
       )}
 
       {/* STAGE CHANGE WARNING CONFIRMATION MODAL */}
@@ -1545,13 +1489,13 @@ export default function FarmListScreen() {
       {/* Completed Crop Full Details Modal */}
       <Modal visible={detailModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.saleModalCard}>
+          <View style={[styles.saleModalCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>
+              <Text style={[styles.modalHeaderTitle, { color: colors.text }]}>
                 {selectedHistoryCrop ? `${selectedHistoryCrop.cropName} · Full Details` : 'Crop Details'}
               </Text>
               <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
-                <Ionicons name="close" size={20} color="#475569" />
+                <Ionicons name="close" size={20} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -1567,25 +1511,25 @@ export default function FarmListScreen() {
                         style={[
                           styles.historyCard,
                           {
-                            backgroundColor: '#ffffff',
+                            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
                             borderRadius: 14,
                             padding: 10,
                             marginBottom: 10,
                             borderWidth: 1,
-                            borderColor: '#cbd5e1',
+                            borderColor: colors.cardBorder,
                             overflow: 'hidden',
                           },
-                          premiumShadow('#000000', 'sm'),
+                          premiumShadow(colors.shadowColor, 'sm'),
                         ]}
                       >
                         {/* Top Bar: Plot Name + Crop ID + Doctor Hired Badge */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, overflow: 'hidden' }}>
-                            <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: colors.text }} numberOfLines={1}>
                               📍 {selectedHistoryCrop.fieldName}
                             </Text>
-                            <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1, borderColor: '#bae6fd' }}>
-                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                            <View style={{ backgroundColor: isDark ? 'rgba(2, 132, 199, 0.2)' : '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(56, 189, 248, 0.35)' : '#bae6fd' }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
                                 ID: {selectedHistoryCrop.cropId || (selectedHistoryCrop.id?.startsWith('C-') ? selectedHistoryCrop.id : `C-${selectedHistoryCrop.id?.slice(0, 5).toUpperCase()}`)}
                               </Text>
                             </View>
@@ -1593,18 +1537,18 @@ export default function FarmListScreen() {
 
                           {summary.isAdvisorHired ? (
                             <TouchableOpacity
-                              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.25)' : '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.35)' : '#a7f3d0' }}
                               activeOpacity={0.8}
                               onPress={() => handleOpenDoctorDialog(selectedHistoryCrop, summary.advisorName)}
                             >
-                              <Ionicons name="medical" size={9.5} color="#15803d" />
-                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                              <Ionicons name="medical" size={9.5} color={isDark ? '#4ade80' : '#15803d'} />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }} numberOfLines={1}>
                                 🩺 Doctor Hired
                               </Text>
                             </TouchableOpacity>
                           ) : (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                              <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0' }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: colors.textMuted }} numberOfLines={1}>
                                 🩺 Self-Managed
                               </Text>
                             </View>
@@ -1613,19 +1557,19 @@ export default function FarmListScreen() {
 
                         {/* Row 2: Crop Period Timeline Strip */}
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#ffedd5' }}>
-                              <Ionicons name="leaf" size={10} color="#d97706" />
-                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#ffedd5' }}>
+                              <Ionicons name="leaf" size={10} color={isDark ? '#fbbf24' : '#d97706'} />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#fef3c7' : '#b45309' }}>
                                 Sown: {selectedHistoryCrop.sowingDate ? selectedHistoryCrop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'}
                               </Text>
                             </View>
 
-                            <Ionicons name="arrow-forward-sharp" size={10} color="#94a3b8" />
+                            <Ionicons name="arrow-forward-sharp" size={10} color={isDark ? '#64748b' : '#94a3b8'} />
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#a7f3d0' }}>
-                              <Ionicons name="flag" size={9.5} color="#15803d" />
-                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.2)' : '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.35)' : '#a7f3d0' }}>
+                              <Ionicons name="flag" size={9.5} color={isDark ? '#4ade80' : '#15803d'} />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d' }}>
                                 Completed: {summary.completionDateStr}
                               </Text>
                             </View>
@@ -1635,16 +1579,16 @@ export default function FarmListScreen() {
                         {/* Row 3: Crop Details + Doctor Name under Plant Count */}
                         <View style={{ gap: 2, marginTop: 4 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }}>
                               🌾 {selectedHistoryCrop.cropName} {selectedHistoryCrop.variety ? `· ${selectedHistoryCrop.variety}` : ''}
                             </Text>
                             {selectedHistoryCrop.area ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#334155' }}>
                                 · 📐 {selectedHistoryCrop.area}
                               </Text>
                             ) : null}
                             {selectedHistoryCrop.plantCount ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#334155' }}>
                                 · 🪴 {selectedHistoryCrop.plantCount} Plants
                               </Text>
                             ) : null}
@@ -1656,39 +1600,39 @@ export default function FarmListScreen() {
                               onPress={() => handleOpenDoctorDialog(selectedHistoryCrop, summary.advisorName)}
                               style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}
                             >
-                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
-                                🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                                🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: isDark ? '#7dd3fc' : '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
                               </Text>
-                              <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
+                              <Ionicons name="information-circle-outline" size={13} color={isDark ? '#38bdf8' : '#0284c7'} />
                             </TouchableOpacity>
                           ) : null}
                         </View>
 
                         {/* Row 4: 4 Financial Breakdown Boxes */}
                         <View style={{ flexDirection: 'row', gap: 4, marginTop: 7 }}>
-                          <View style={{ flex: 1, backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+                          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.15)' : '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#166534' }} numberOfLines={1}>
                               💰 Sales ({summary.totalWeight})
                             </Text>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 1 }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', marginTop: 1 }}>
                               ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
                             </Text>
                           </View>
 
-                          <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(194, 65, 12, 0.15)' : '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : '#ffedd5' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#fdba74' : '#9a3412' }} numberOfLines={1}>
                               💸 Inputs
                             </Text>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fb923c' : '#c2410c', marginTop: 1 }}>
                               ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
                             </Text>
                           </View>
 
-                          <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(194, 65, 12, 0.15)' : '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(249, 115, 22, 0.3)' : '#ffedd5' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#fdba74' : '#9a3412' }} numberOfLines={1}>
                               👷 Labour
                             </Text>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fb923c' : '#c2410c', marginTop: 1 }}>
                               ₹{summary.totalLabourNum.toLocaleString('en-IN')}
                             </Text>
                           </View>
@@ -1696,18 +1640,18 @@ export default function FarmListScreen() {
                           <View
                             style={{
                               flex: 1.1,
-                              backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                              backgroundColor: isProfit ? (isDark ? 'rgba(5, 150, 105, 0.2)' : '#ecfdf5') : (isDark ? 'rgba(220, 38, 38, 0.2)' : '#fef2f2'),
                               paddingHorizontal: 6,
                               paddingVertical: 5,
                               borderRadius: 8,
                               borderWidth: 1,
-                              borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                              borderColor: isProfit ? (isDark ? 'rgba(16, 185, 129, 0.4)' : '#a7f3d0') : (isDark ? 'rgba(239, 68, 68, 0.4)' : '#fecaca'),
                             }}
                           >
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#065f46' : '#991b1b' }} numberOfLines={1}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? (isDark ? '#6ee7b7' : '#065f46') : (isDark ? '#fca5a5' : '#991b1b') }} numberOfLines={1}>
                               {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
                             </Text>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? '#047857' : '#dc2626', marginTop: 1 }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? (isDark ? '#34d399' : '#047857') : (isDark ? '#f87171' : '#dc2626'), marginTop: 1 }}>
                               {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
                             </Text>
                           </View>
@@ -1797,34 +1741,34 @@ export default function FarmListScreen() {
 
                         {/* Completion Audit & Rating */}
                         {selectedHistoryCrop.completionReview ? (
-                          <View style={{ marginTop: 12, backgroundColor: '#f0fdf4', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                          <View style={{ marginTop: 12, backgroundColor: isDark ? 'rgba(21, 128, 61, 0.15)' : '#f0fdf4', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                              <Ionicons name="ribbon" size={16} color="#16a34a" />
-                              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                              <Ionicons name="ribbon" size={16} color={isDark ? '#4ade80' : '#16a34a'} />
+                              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#16a34a' }}>
                                 Farmer Completion Audit & Rating
                               </Text>
                             </View>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: colors.text }}>
                               App Benefit Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.farmskingRating || 5)} ({selectedHistoryCrop.completionReview.farmskingRating || 5}/5 Stars)
                             </Text>
                             {selectedHistoryCrop.completionReview.farmskingBenefitAmount ? (
-                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
-                                Estimated Extra Profit / Benefit: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{selectedHistoryCrop.completionReview.farmskingBenefitAmount}</Text>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? '#86efac' : '#15803d', marginTop: 2 }}>
+                                Estimated Extra Profit / Benefit: <Text style={{ fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#16a34a' }}>{selectedHistoryCrop.completionReview.farmskingBenefitAmount}</Text>
                               </Text>
                             ) : null}
                             {selectedHistoryCrop.completionReview.farmskingFeedback ? (
-                              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', marginTop: 4 }}>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 4 }}>
                                 💬 "{selectedHistoryCrop.completionReview.farmskingFeedback}"
                               </Text>
                             ) : null}
 
                             {selectedHistoryCrop.completionReview.doctorRating ? (
-                              <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
-                                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
+                              <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#dcfce7' }}>
+                                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
                                   🩺 Doctor Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.doctorRating)} (Grade: {selectedHistoryCrop.completionReview.doctorGrade || 'EXCELLENT'})
                                 </Text>
                                 {selectedHistoryCrop.completionReview.doctorFeedback ? (
-                                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155', marginTop: 2 }}>
+                                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 2 }}>
                                     Doctor Review: "{selectedHistoryCrop.completionReview.doctorFeedback}"
                                   </Text>
                                 ) : null}
@@ -1834,40 +1778,40 @@ export default function FarmListScreen() {
                         ) : null}
 
                         {/* TOTAL PAID FINANCIAL STATEMENT TABLE WITH DESCRIPTION & COMMENTS */}
-                        <View style={styles.statementSectionWrap}>
+                        <View style={[styles.statementSectionWrap, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: colors.cardBorder }]}>
                           <View style={styles.statementHeaderRow}>
-                            <Ionicons name="document-text" size={16} color="#15803d" />
-                            <Text style={styles.statementTitle}>🧾 Total Paid Financial Statement</Text>
-                            <View style={styles.paidBadge}>
-                              <Ionicons name="star" size={10} color="#b45309" />
-                              <Text style={styles.paidBadgeText}>PAID ONLY</Text>
+                            <Ionicons name="document-text" size={16} color={isDark ? '#4ade80' : '#15803d'} />
+                            <Text style={[styles.statementTitle, { color: colors.text }]}>🧾 Total Paid Financial Statement</Text>
+                            <View style={[styles.paidBadge, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#fef3c7', borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : '#fde68a' }]}>
+                              <Ionicons name="star" size={10} color={isDark ? '#fbbf24' : '#b45309'} />
+                              <Text style={[styles.paidBadgeText, { color: isDark ? '#fef3c7' : '#92400e' }]}>PAID ONLY</Text>
                             </View>
                           </View>
 
                           {statement.length > 0 ? (
                             statement.map((item, idx) => (
-                              <View key={item.id || idx} style={styles.statementRowCard}>
+                              <View key={item.id || idx} style={[styles.statementRowCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }]}>
                                 <View style={styles.statementRowTop}>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                                    <Text style={styles.statementDate}>📅 {item.date}</Text>
-                                    <View style={[styles.statementCatBadge, { backgroundColor: item.type === 'INCOME' ? '#dcfce7' : '#f1f5f9' }]}>
-                                      <Text style={[styles.statementCatText, { color: item.type === 'INCOME' ? '#15803d' : '#475569' }]}>
+                                    <Text style={[styles.statementDate, { color: colors.textMuted }]}>📅 {item.date}</Text>
+                                    <View style={[styles.statementCatBadge, { backgroundColor: item.type === 'INCOME' ? (isDark ? 'rgba(21, 128, 61, 0.25)' : '#dcfce7') : (isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9') }]}>
+                                      <Text style={[styles.statementCatText, { color: item.type === 'INCOME' ? (isDark ? '#4ade80' : '#15803d') : colors.textMuted }]}>
                                         {item.category}
                                       </Text>
                                     </View>
                                   </View>
-                                  <Text style={[styles.statementAmount, { color: item.type === 'INCOME' ? '#16a34a' : '#dc2626' }]}>
+                                  <Text style={[styles.statementAmount, { color: item.type === 'INCOME' ? (isDark ? '#4ade80' : '#16a34a') : (isDark ? '#f87171' : '#dc2626') }]}>
                                     {item.type === 'INCOME' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
                                   </Text>
                                 </View>
 
-                                <Text style={styles.statementDesc}>📝 Description: {item.description}</Text>
+                                <Text style={[styles.statementDesc, { color: colors.text }]}>📝 Description: {item.description}</Text>
 
                                 {item.comments ? (
-                                  <View style={styles.statementCommentBox}>
-                                    <Ionicons name="chatbubble-ellipses-outline" size={12} color="#475569" />
-                                    <Text style={styles.statementCommentText}>
-                                      💬 Comments & Notes: <Text style={{ fontFamily: FONT.medium, color: '#334155' }}>{item.comments}</Text>
+                                  <View style={[styles.statementCommentBox, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }]}>
+                                    <Ionicons name="chatbubble-ellipses-outline" size={12} color={colors.textMuted} />
+                                    <Text style={[styles.statementCommentText, { color: colors.textMuted }]}>
+                                      💬 Comments & Notes: <Text style={{ fontFamily: FONT.medium, color: colors.text }}>{item.comments}</Text>
                                     </Text>
                                   </View>
                                 ) : null}
@@ -1885,9 +1829,9 @@ export default function FarmListScreen() {
                               </View>
                             ))
                           ) : (
-                            <View style={{ padding: 14, backgroundColor: '#f8fafc', borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
-                              <Ionicons name="receipt-outline" size={26} color="#94a3b8" />
-                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>
+                            <View style={{ padding: 14, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+                              <Ionicons name="receipt-outline" size={26} color={isDark ? '#475569' : '#94a3b8'} />
+                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 4 }}>
                                 No paid financial transactions recorded for this crop cycle.
                               </Text>
                             </View>
@@ -2289,10 +2233,10 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
-  list: { padding: SPACING.lg, paddingBottom: 80, flexGrow: 1 },
+  list: { paddingBottom: 80, flexGrow: 1 },
   marketCardWrap: { marginBottom: SPACING.xs },
   sectionTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#334155', marginBottom: 6 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30, gap: 6 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30, gap: 6, marginHorizontal: SPACING.lg },
   emptyText: { color: theme.text, fontSize: 15, fontFamily: FONT.bold, textAlign: 'center' },
   emptySub: { color: theme.textMuted, fontSize: 12.5, fontFamily: FONT.medium, textAlign: 'center' },
   card: {
@@ -2302,6 +2246,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    marginHorizontal: SPACING.lg,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   cardTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
@@ -2413,6 +2358,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 1.5,
     borderTopColor: '#e2e8f0',
+    marginHorizontal: SPACING.lg,
   },
   historySectionHeader: {
     flexDirection: 'row',

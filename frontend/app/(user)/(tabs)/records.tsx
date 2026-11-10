@@ -1565,7 +1565,37 @@ export default function RecordsScreen() {
   // - Discounts added to Expense based on item sale value ratio.
   // - Expenses (tagged + general farm expenses) allocated per crop field.
   const cropAnalysis = useMemo(() => {
-    const totalFields = farmerCrops.length;
+    // Collect all registered active and historical/completed crops so post-harvest reports persist
+    const existingCropIds = new Set<string>();
+    const allCropsList: Array<{ id: string; cropId?: string; cropName: string; fieldName?: string; status?: string }> = [];
+
+    (farmerCrops || []).forEach((c) => {
+      existingCropIds.add(c.id);
+      if (c.cropId) existingCropIds.add(c.cropId);
+      allCropsList.push({
+        id: c.id,
+        cropId: c.cropId || c.id,
+        cropName: c.cropName,
+        fieldName: c.fieldName || 'Field 1',
+        status: (c as any).stage || 'ACTIVE',
+      });
+    });
+
+    (myRealCrops || []).forEach((rc) => {
+      if (!existingCropIds.has(rc.id)) {
+        existingCropIds.add(rc.id);
+        const statusLabel = rc.status === 'COMPLETED' ? 'Completed' : rc.status === 'HARVESTING' ? 'Harvesting' : rc.status;
+        allCropsList.push({
+          id: rc.id,
+          cropId: rc.id,
+          cropName: rc.cropName,
+          fieldName: rc.plot?.name ? `${rc.plot.name} (${statusLabel})` : `Plot (${statusLabel})`,
+          status: rc.status,
+        });
+      }
+    });
+
+    const totalFields = allCropsList.length;
 
     const getCleanName = (name: string): string => {
       if (!name) return '';
@@ -1580,7 +1610,7 @@ export default function RecordsScreen() {
     const fieldIncomes: Record<string, number> = {};
     const fieldExpenses: Record<string, number> = {};
 
-    farmerCrops.forEach((c) => {
+    allCropsList.forEach((c) => {
       fieldIncomes[c.id] = 0;
       fieldExpenses[c.id] = 0;
     });
@@ -1656,7 +1686,7 @@ export default function RecordsScreen() {
       const sKey = getCleanName(sItem.cropName);
 
       // Direct crop ID matches
-      const directMatches = farmerCrops.filter(
+      const directMatches = allCropsList.filter(
         (c) => sItem.cropId && (sItem.cropId === c.id || (c.cropId && sItem.cropId === c.cropId))
       );
 
@@ -1671,7 +1701,7 @@ export default function RecordsScreen() {
       }
 
       // Name matches
-      const nameMatches = farmerCrops.filter((c) => {
+      const nameMatches = allCropsList.filter((c) => {
         const cKey = getCleanName(c.cropName);
         if (!sKey || !cKey) return false;
         return sKey.includes(cKey) || cKey.includes(sKey);
@@ -1687,11 +1717,11 @@ export default function RecordsScreen() {
         return;
       }
 
-      // Fallback: distribute evenly across active fields
+      // Fallback: distribute evenly across fields
       if (totalFields > 0) {
         const incShare = sItem.incomeAmount / totalFields;
         const discShare = sItem.discountAmount / totalFields;
-        farmerCrops.forEach((c) => {
+        allCropsList.forEach((c) => {
           fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
           fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
         });
@@ -1708,7 +1738,7 @@ export default function RecordsScreen() {
       const eKey = getCleanName(expCropName);
 
       // Explicitly tagged crop ID match
-      const directMatches = farmerCrops.filter(
+      const directMatches = allCropsList.filter(
         (c) => expCropId && (expCropId === c.id || (c.cropId && expCropId === c.cropId))
       );
 
@@ -1721,7 +1751,7 @@ export default function RecordsScreen() {
       }
 
       // Explicitly tagged crop name match
-      const nameMatches = farmerCrops.filter((c) => {
+      const nameMatches = allCropsList.filter((c) => {
         const cKey = getCleanName(c.cropName);
         if (!eKey || !cKey) return false;
         return eKey.includes(cKey) || cKey.includes(eKey);
@@ -1735,16 +1765,16 @@ export default function RecordsScreen() {
         return;
       }
 
-      // General / untagged farm expenses: distribute across active crop fields
+      // General / untagged farm expenses: distribute across crop fields
       if (totalFields > 0) {
         const share = expAmt / totalFields;
-        farmerCrops.forEach((c) => {
+        allCropsList.forEach((c) => {
           fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
         });
       }
     });
 
-    return farmerCrops.map((crop) => {
+    return allCropsList.map((crop) => {
       const cropIdStr = crop.id;
       const cropName = crop.cropName || 'Crop';
       const fieldName = crop.fieldName || 'Field 1';
@@ -1761,7 +1791,7 @@ export default function RecordsScreen() {
         net,
       };
     });
-  }, [farmerCrops, rawSaleBillsList, allSalesRecords, expenses]);
+  }, [farmerCrops, myRealCrops, rawSaleBillsList, allSalesRecords, expenses]);
 
   const maxCropValue = Math.max(1, ...cropAnalysis.map((c) => Math.max(c.income, c.expense)));
   const overallNet = totalSalesRevenue - totalSpent;
@@ -2220,11 +2250,11 @@ export default function RecordsScreen() {
     }
     const activeCatId = categoryId || displayCategories[0]?.id;
 
-    if (!amountNum || amountNum <= 0) {
-      setExpenseError('⚠️ Enter a valid expense amount.');
+    if (isNaN(amountNum) || amountNum < 0 || (amount.trim() === '' && amountNum !== 0)) {
+      setExpenseError('⚠️ Enter a valid amount (enter 0 for free farm activity).');
       return;
     }
-    if ((expensePaymentMode === 'CREDIT' || expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') && !expenseParty) {
+    if (amountNum > 0 && (expensePaymentMode === 'CREDIT' || expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') && !expenseParty) {
       if (expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') {
         setExpenseError('⚠️ Please select a party or worker.');
         return;
@@ -2269,9 +2299,9 @@ export default function RecordsScreen() {
             amount: amountNum,
             expenseDate: expenseDate || todayIso(),
             plotId: targetPlotId,
-            paymentMode: expensePaymentMode,
-            partyId: expenseRecipientType !== 'CASH' ? expenseParty?.id : undefined,
-            vendorName: expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name,
+            paymentMode: amountNum === 0 ? 'CASH' : expensePaymentMode,
+            partyId: (amountNum > 0 && expenseRecipientType !== 'CASH') ? expenseParty?.id : undefined,
+            vendorName: (amountNum === 0) ? (vendorName.trim() || 'Self / Own Activity') : (expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name),
             quantity: quantity ? Number(quantity) : undefined,
             unit: unit.trim() || undefined,
             notes: combinedNotes,
@@ -2285,9 +2315,9 @@ export default function RecordsScreen() {
           amount: amountNum,
           expenseDate: expenseDate || todayIso(),
           plotId: targetPlotId,
-          paymentMode: expensePaymentMode,
-          partyId: expenseRecipientType !== 'CASH' ? expenseParty?.id : undefined,
-          vendorName: expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name,
+          paymentMode: amountNum === 0 ? 'CASH' : expensePaymentMode,
+          partyId: (amountNum > 0 && expenseRecipientType !== 'CASH') ? expenseParty?.id : undefined,
+          vendorName: (amountNum === 0) ? (vendorName.trim() || 'Self / Own Activity') : (expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name),
           quantity: quantity ? Number(quantity) : undefined,
           unit: unit.trim() || undefined,
           notes: combinedNotes,
@@ -2296,17 +2326,17 @@ export default function RecordsScreen() {
 
       const createdVoucherData: UniversalVoucherData = {
         voucherType: 'EXPENSE',
-        title: editingExpenseId ? '🔴 UPDATED FARM EXPENSE SLIP' : '🔴 FARM EXPENSE STATEMENT SLIP',
+        title: amountNum === 0 ? '🌿 FARM ACTIVITY STATEMENT SLIP' : (editingExpenseId ? '🔴 UPDATED FARM EXPENSE SLIP' : '🔴 FARM EXPENSE STATEMENT SLIP'),
         voucherNo: editingExpenseId ? `${editingExpenseId.replace(/^EXP-?/i, '').slice(0, 6).toUpperCase()}` : `${Date.now().toString().slice(-6)}`,
         date: expenseDate || todayIso(),
         farmerName: user?.name || 'Farmer',
         farmerPhone: user?.mobile || '',
         farmerVillage: user?.village || '',
-        partyName: expenseParty?.name || vendorName.trim() || (expenseRecipientType === 'LABOUR' ? 'Labour Worker' : 'Direct / Cash Vendor'),
+        partyName: amountNum === 0 ? (vendorName.trim() || 'Self / Free Activity') : (expenseParty?.name || vendorName.trim() || (expenseRecipientType === 'LABOUR' ? 'Labour Worker' : 'Direct / Cash Vendor')),
         partyPhone: expenseParty?.mobile || undefined,
-        partyRole: expenseRecipientType === 'LABOUR' ? 'Labour Worker' : expenseRecipientType === 'SUPPLIER' ? 'Supplier / Trader' : 'Cash Vendor',
+        partyRole: amountNum === 0 ? 'Farm Owner / Self' : (expenseRecipientType === 'LABOUR' ? 'Labour Worker' : expenseRecipientType === 'SUPPLIER' ? 'Supplier / Trader' : 'Cash Vendor'),
         amount: amountNum,
-        paymentMode: expensePaymentMode === 'CREDIT' ? 'CREDIT / Khata' : 'CASH / Direct',
+        paymentMode: amountNum === 0 ? 'FREE / 0 Expense' : (expensePaymentMode === 'CREDIT' ? 'CREDIT / Khata' : 'CASH / Direct'),
         categoryOrWorkType: displayCategories.find((c) => c.id === activeCatId)?.labelEn || (expenseRecipientType === 'LABOUR' ? labourWorkType : 'Farm Expense'),
         description: combinedNotes,
       };
@@ -3565,7 +3595,15 @@ export default function RecordsScreen() {
                         </Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                        {Number(item.amount) === 0 ? (
+                          <View style={{ backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#86efac' }}>
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }}>
+                              ₹0 Free
+                            </Text>
+                          </View>
+                        ) : (
+                          <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                        )}
                         <TouchableOpacity
                           style={{
                             width: 27,
@@ -3642,7 +3680,15 @@ export default function RecordsScreen() {
                                 </Text>
                               </View>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                                {Number(item.amount) === 0 ? (
+                                  <View style={{ backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#86efac' }}>
+                                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }}>
+                                      ₹0 Free
+                                    </Text>
+                                  </View>
+                                ) : (
+                                  <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                                )}
                                 <TouchableOpacity
                                   style={{
                                     width: 27,
@@ -3822,28 +3868,56 @@ export default function RecordsScreen() {
                         </View>
                       </View>
 
-                      {/* ROW 2: EXPENSE DETAILS */}
+                      {/* ROW 2: ACTIVITY DETAILS & SPRAY REMARKS */}
                       <View>
-                        <Text style={styles.label}>Expense Details</Text>
+                        <Text style={styles.label}>Activity Details / Spray Remarks *</Text>
                         <TextInput
                           style={[styles.input, { height: 38 }]}
-                          placeholder="e.g. 2 bags DAP fertilizer / diesel payment..."
+                          placeholder="e.g. Spray Name (Coragen 60ml/acre), Canal water 3 hrs, Family labour..."
                           placeholderTextColor="#94a3b8"
                           value={notes}
                           onChangeText={setNotes}
                         />
                       </View>
 
-                      {/* ROW 3: EXPENSE AMOUNT WITH INLINE CASH / UPI RADIOS ON THE RIGHT SIDE OF TEXTBOX */}
+                      {/* ROW 3: EXPENSE AMOUNT WITH QUICK ₹0 FREE ACTIVITY PILL & CASH / UPI RADIOS */}
                       <View>
-                        <Text style={styles.label}>Expense Amount (₹) *</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <Text style={[styles.label, { marginBottom: 0 }]}>Expense Amount (₹) *</Text>
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 4,
+                              backgroundColor: amount === '0' ? '#16a34a' : '#f0fdf4',
+                              paddingVertical: 3,
+                              paddingHorizontal: 8,
+                              borderRadius: RADIUS.pill,
+                              borderWidth: 1,
+                              borderColor: amount === '0' ? '#15803d' : '#86efac',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                              tap();
+                              setAmount('0');
+                              setExpensePaymentMode('CASH');
+                              setExpenseRecipientType('CASH');
+                              setExpenseParty(null);
+                            }}
+                          >
+                            <Ionicons name="sparkles" size={11} color={amount === '0' ? '#ffffff' : '#16a34a'} />
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: amount === '0' ? '#ffffff' : '#15803d' }}>
+                              ₹0 Free Activity
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           {/* Amount Input Box */}
-                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#cbd5e1', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10, height: 42 }}>
-                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#dc2626', marginRight: 6 }}>₹</Text>
+                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: amount === '0' ? '#16a34a' : '#cbd5e1', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10, height: 42 }}>
+                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: amount === '0' ? '#16a34a' : '#dc2626', marginRight: 6 }}>₹</Text>
                             <TextInput
                               style={{ flex: 1, fontSize: 15, fontFamily: FONT.bold, color: '#0f172a', padding: 0 }}
-                              placeholder="e.g. 2500"
+                              placeholder="e.g. 0 for free spray / 2500"
                               placeholderTextColor="#94a3b8"
                               keyboardType="numeric"
                               value={amount}
@@ -3894,6 +3968,16 @@ export default function RecordsScreen() {
                             </TouchableOpacity>
                           </View>
                         </View>
+
+                        {/* 0 Expense Notice */}
+                        {amount === '0' && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                            <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#15803d' }}>
+                              0 Expense activity saved to Crop Lifecycle History & Statement Report.
+                            </Text>
+                          </View>
+                        )}
                       </View>
 
                       {/* ROW 3: RECIPIENT / PAID TO */}

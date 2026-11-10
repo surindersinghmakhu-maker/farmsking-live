@@ -28,6 +28,7 @@ import { getTabsForRole } from '@/constants/RoleTabs';
 
 interface NavTabItem {
   key: string;
+  tabName?: string;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconOutline: keyof typeof Ionicons.glyphMap;
@@ -310,7 +311,7 @@ export default function PublicBottomNav() {
                       translateX: slideAnim.interpolate({
                         inputRange: navTabs.map((_, i) => i),
                         outputRange: navTabs.map(
-                          (i) => i * (barWidth / navTabs.length) + 4
+                          (_, i) => i * (barWidth / navTabs.length) + 4
                         ),
                         extrapolate: 'clamp',
                       }),
@@ -448,66 +449,72 @@ export default function PublicBottomNav() {
               showsVerticalScrollIndicator={false}
             >
               {/* User Profile Card */}
-              {user ? (
-                <View style={sheetStyles.userProfileBox}>
-                  <View style={sheetStyles.avatarWrap}>
-                    <Text style={sheetStyles.avatarText}>
-                      {(user.name || user.mobile || 'U').slice(0, 1).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={sheetStyles.userName} numberOfLines={1}>
-                      {user.name || 'FarmsKing Member'}
-                    </Text>
-                    <Text style={sheetStyles.userMobile}>
-                      +91 {user.mobile ? user.mobile.replace(/\D/g, '').slice(-10) : 'Registered User'}
-                    </Text>
-                    <View style={sheetStyles.badgeRow}>
-                      <View style={sheetStyles.roleBadge}>
-                        <Text style={sheetStyles.roleBadgeText}>
-                          {role === 'FARMER' ? '🌾 Verified Farmer' :
-                           role === 'GARDENER' ? '🌿 Home Gardener' :
-                           role === 'BUSINESS_PARTNER' ? '💼 Business Partner' :
-                           role === 'CUSTOMER' ? '🛒 Customer' :
-                           user.role || 'Member'}
+              {(() => {
+                const activeUser = user as any;
+                if (!activeUser) {
+                  return (
+                    <View style={sheetStyles.guestProfileBox}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={sheetStyles.guestTitle}>Welcome to FarmsKing</Text>
+                        <Text style={sheetStyles.guestSubtitle}>
+                          Sign in to access your farm pathology records, live mandi feed, and orders.
                         </Text>
                       </View>
-                      {user.kingId && (
-                        <View style={sheetStyles.kingIdBadge}>
-                          <Text style={sheetStyles.kingIdText}>ID: {user.kingId}</Text>
-                        </View>
-                      )}
+                      <TouchableOpacity
+                        style={sheetStyles.guestLoginBtn}
+                        onPress={() => {
+                          setShowMoreModal(false);
+                          router.push('/(auth)/login');
+                        }}
+                      >
+                        <Text style={sheetStyles.guestLoginText}>Log In</Text>
+                      </TouchableOpacity>
                     </View>
+                  );
+                }
+                return (
+                  <View style={sheetStyles.userProfileBox}>
+                    <View style={sheetStyles.avatarWrap}>
+                      <Text style={sheetStyles.avatarText}>
+                        {(activeUser.name || activeUser.mobile || 'U').slice(0, 1).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={sheetStyles.userName} numberOfLines={1}>
+                        {activeUser.name || 'FarmsKing Member'}
+                      </Text>
+                      <Text style={sheetStyles.userMobile}>
+                        +91 {activeUser.mobile ? activeUser.mobile.replace(/\D/g, '').slice(-10) : 'Registered User'}
+                      </Text>
+                      <View style={sheetStyles.badgeRow}>
+                        <View style={sheetStyles.roleBadge}>
+                          <Text style={sheetStyles.roleBadgeText}>
+                            {role === 'FARMER' ? '🌾 Verified Farmer' :
+                             role === 'GARDENER' ? '🌿 Home Gardener' :
+                             role === 'BUSINESS_PARTNER' ? '💼 Business Partner' :
+                             role === 'CUSTOMER' ? '🛒 Customer' :
+                             activeUser.role || 'Member'}
+                          </Text>
+                        </View>
+                        {activeUser.kingId && (
+                          <View style={sheetStyles.kingIdBadge}>
+                            <Text style={sheetStyles.kingIdText}>ID: {activeUser.kingId}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowMoreModal(false);
+                        router.push('/profile');
+                      }}
+                      style={sheetStyles.editProfileBtn}
+                    >
+                      <Ionicons name="chevron-forward" size={16} color="#10b981" />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowMoreModal(false);
-                      router.push('/profile');
-                    }}
-                    style={sheetStyles.editProfileBtn}
-                  >
-                    <Ionicons name="chevron-forward" size={16} color="#10b981" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={sheetStyles.guestProfileBox}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={sheetStyles.guestTitle}>Welcome to FarmsKing</Text>
-                    <Text style={sheetStyles.guestSubtitle}>
-                      Sign in to access your farm pathology records, live mandi feed, and orders.
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={sheetStyles.guestLoginBtn}
-                    onPress={() => {
-                      setShowMoreModal(false);
-                      router.push('/(auth)/login');
-                    }}
-                  >
-                    <Text style={sheetStyles.guestLoginText}>Log In</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                );
+              })()}
 
               {/* Quick Navigation Features */}
               <Text style={sheetStyles.sectionTitle}>Farm & Dashboard Shortcuts</Text>
@@ -546,7 +553,7 @@ export default function PublicBottomNav() {
                   <Ionicons name="chevron-forward" size={16} color="#64748b" />
                 </TouchableOpacity>
 
-                {user && (role === 'FARMER' || role === 'GARDENER' || user.role === 'FARMER') && (
+                {Boolean((user as any)?.role === 'FARMER' || (user as any)?.role === 'GARDENER' || role === 'FARMER' || role === 'GARDENER') && (
                   <TouchableOpacity
                     style={sheetStyles.menuRow}
                     onPress={() => {
@@ -698,7 +705,7 @@ export default function PublicBottomNav() {
               </View>
 
               {/* Log Out Button */}
-              {user && (
+              {Boolean(user) && (
                 <TouchableOpacity
                   style={sheetStyles.logoutBtn}
                   activeOpacity={0.85}

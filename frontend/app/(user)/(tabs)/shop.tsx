@@ -47,7 +47,7 @@ import { useCouponPreview } from '@/src/hooks/useCoupons';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useSetDefaultAddress } from '@/src/hooks/useAddresses';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
-import { CustomerAddress } from '@/src/api/addresses.api';
+import { CustomerAddress, CreateAddressPayload } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { useCart } from '@/src/store/cart-context';
 import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
@@ -398,12 +398,24 @@ export default function ShopScreen() {
   const removeProduct = useRemoveProduct();
   const createOrder = useCreateOrder();
 
-  // Orders Data
+  // Cart & Route Navigation Params
+  const params = useLocalSearchParams<{ tab?: string; subTab?: string }>();
+  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>(() => {
+    const target = (params?.subTab || params?.tab || '').toLowerCase();
+    if (target === 'checkout' || target === 'cart') return 'CHECKOUT';
+    if (target === 'orders') return 'ORDERS';
+    return 'CATALOG';
+  });
+
+  // Orders Data (Smart conditional fetching)
   const [orderFilter, setOrderFilter] = useState<OrderStatus | 'ALL'>('ALL');
+  const shouldFetchAllOrders = Boolean(isAdminOrSuperAdmin && viewMode === 'MANAGEMENT');
   const { data: allOrders, isLoading: isLoadingOrders } = useAllOrders(
-    orderFilter === 'ALL' ? undefined : orderFilter
+    orderFilter === 'ALL' ? undefined : orderFilter,
+    shouldFetchAllOrders
   );
-  const { data: myOrders, isLoading: isLoadingMyOrders } = useMyOrders();
+  const shouldFetchMyOrders = Boolean(activeSubTab === 'ORDERS' || activeSubTab === 'CHECKOUT');
+  const { data: myOrders, isLoading: isLoadingMyOrders } = useMyOrders(shouldFetchMyOrders);
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
   const startPackingOrder = useStartPackingOrder();
@@ -423,13 +435,6 @@ export default function ShopScreen() {
   const { addItem, items, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const params = useLocalSearchParams<{ tab?: string; subTab?: string }>();
-  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>(() => {
-    const target = (params?.subTab || params?.tab || '').toLowerCase();
-    if (target === 'checkout' || target === 'cart') return 'CHECKOUT';
-    if (target === 'orders') return 'ORDERS';
-    return 'CATALOG';
-  });
 
   useEffect(() => {
     const target = (params?.subTab || params?.tab || '').toLowerCase();
@@ -2530,7 +2535,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 contentContainerStyle={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
                 showsVerticalScrollIndicator={false}
               >
-                {filteredProducts.length === 0 ? (
+                {isLoadingProducts && (!products || (products as Product[]).length === 0) ? (
+                  <View style={{ width: '100%', paddingVertical: 40, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                    <ActivityIndicator size="large" color="#16a34a" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' }}>Loading agri products...</Text>
+                  </View>
+                ) : filteredProducts.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="storefront-outline" size={44} color="#cbd5e1" />
                     <Text style={styles.emptyText}>

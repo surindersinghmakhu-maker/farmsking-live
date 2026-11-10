@@ -209,7 +209,9 @@ export declare class AdvisorAssignmentController {
         seniorDoctorId: string | null;
         doctorConsultationFee: import("@prisma/client/runtime/library").Decimal | null;
     }[]>;
-    requestSpecificAdvisor(user: AuthUser, advisorId: string): Promise<{
+    requestSpecificAdvisor(user: AuthUser, advisorId: string, body?: {
+        cropId?: string;
+    }): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

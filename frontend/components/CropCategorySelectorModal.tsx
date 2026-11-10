@@ -27,6 +27,8 @@ import {
 } from '@/constants/cropCategoriesData';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CalendarDatePickerModal } from './CalendarDatePickerModal';
+import { RegisteredCropField } from '@/src/store/crops-context';
+import { useLanguage } from '@/src/store/language-context';
 
 export interface CropFormValues {
   crop: CropItem;
@@ -45,8 +47,6 @@ export interface CropFormValues {
   plantCount?: string;
 }
 
-import { RegisteredCropField } from '@/src/store/crops-context';
-
 interface CropCategorySelectorModalProps {
   visible: boolean;
   onClose: () => void;
@@ -60,6 +60,590 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
+// Multi-language dictionary for Crop Category Selector Modal
+const MODAL_I18N: Record<string, Record<string, string>> = {
+  en: {
+    editTitle: 'Edit Crop Details',
+    registerTitle: 'Register Crop',
+    editSubtitle: 'Update specifications & field telemetry below',
+    registerSubtitle: 'Enter plot dimensions & cultivation parameters',
+    activeRecord: 'Active Record',
+    cropId: 'Crop ID',
+    cropSelection: '1. CROP SELECTION',
+    plotDimensions: '2. PLOT & FIELD DIMENSIONS',
+    cultivationHarvesting: '3. CULTIVATION & HARVESTING',
+    cropName: 'Crop Name',
+    selectCropCount: 'Select Crop',
+    varietyOptional: 'Variety (Optional)',
+    varietyPlaceholder: 'e.g. Desi / Hybrid',
+    customCropPlaceholder: 'e.g. Custom Crop Name',
+    fieldNameLabel: 'Plot / Field Name',
+    fieldNamePlaceholder: 'e.g. Field Plot 1',
+    sowingDateLabel: 'Sowing Date',
+    areaSizeLabel: 'Area Size',
+    areaUnitLabel: 'Area Unit',
+    plantsOptional: 'Plants (Opt.)',
+    plantsPlaceholder: 'e.g. 500',
+    growthStageLabel: 'Growth Stage',
+    stagePlantation: '🌱 Plantation',
+    stageVegetative: '🌿 Vegetative',
+    stageFlowering: '🌸 Flowering',
+    stageHarvesting: '🌾 Harvesting',
+    irrigationSystemLabel: 'Irrigation System',
+    measurementUnitLabel: 'Measurement Unit',
+    harvestPatternLabel: 'Harvest Pattern',
+    dailyHarvestContinuous: 'Daily Harvest (Continuous)',
+    oneTimeHarvest: '🌾 1-Time Harvest (Single)',
+    updateCropBtn: '✏️ Update Crop Details',
+    saveCropBtn: 'Save Crop & Field Details',
+    selectCategoryTitle: 'Select Crop Category',
+    selectCategorySub: 'Tap any category to filter crop list',
+    availableCropsTitle: 'Available Crops',
+    categoryPrefix: 'Category',
+    noCropsFound: 'No crops found in this category.',
+    selectLandAreaTitle: 'Select Land Area Unit',
+    selectLandAreaSub: 'Tap your preferred unit of land measurement',
+    selectIrrigationTitle: 'Select Irrigation System',
+    selectIrrigationSub: 'Choose how this field plot is irrigated',
+    selectMeasurementTitle: 'Select Measurement Unit',
+    selectMeasurementSub: 'Select harvest & trading unit for this crop',
+    plotDefaultSuffix: 'Plot 1',
+    upgradePlan: 'Upgrade Plan Now 👑',
+    irrigationBorewell: 'Tube Well / Borewell',
+    irrigationCanal: 'Canal Water',
+    irrigationDrip: 'Drip Irrigation',
+    irrigationSprinkler: 'Sprinkler System',
+    irrigationRainfed: 'Rainfed (Barani)',
+    unitKg: 'KG (Kilogram)',
+    unitQuintal: 'Quintal (100 KG)',
+    unitPieces: 'Pieces (Pcs)',
+    unitBunch: 'Bunch',
+    unitDozen: 'Dozen',
+    unitBox: 'Box / Crate',
+    unitSet: 'Set',
+    areaKilla: 'Killa (Acre)',
+    areaBigha: 'Bigha',
+    areaMarla: 'Marla',
+    areaKanal: 'Kanal',
+    areaBiswa: 'Biswa',
+    areaGuntha: 'Guntha',
+    areaSquareMeter: 'Square Meter (sq m)',
+    catFlowers: 'Flowers & Floriculture',
+    catVegetables: 'Vegetables',
+    catFruits: 'Fruits & Orchards',
+    catGrains: 'Grains & Cereals',
+    catPulses: 'Pulses & Legumes',
+    catOilseeds: 'Oilseeds',
+    catFodder: 'Fodder Crops',
+    catHerbs: 'Herbs & Medicinal',
+    catOther: 'Other / Custom Crop',
+  },
+  pa: {
+    editTitle: 'ਫ਼ਸਲ ਵੇਰਵੇ ਸੋਧੋ',
+    registerTitle: 'ਨਵੀਂ ਫ਼ਸਲ ਦਰਜ ਕਰੋ',
+    editSubtitle: 'ਹੇਠਾਂ ਦਿੱਤੇ ਫ਼ਸਲ ਵੇਰਵੇ ਅਤੇ ਜਾਣਕਾਰੀ ਅੱਪਡੇਟ ਕਰੋ',
+    registerSubtitle: 'ਪਲਾਟ ਦਾ ਆਕਾਰ ਅਤੇ ਖੇਤੀ ਸੰਬੰਧੀ ਵੇਰਵੇ ਭਰੋ',
+    activeRecord: 'ਸਰਗਰਮ ਰਿਕਾਰਡ',
+    cropId: 'ਫ਼ਸਲ ID',
+    cropSelection: '1. ਫ਼ਸਲ ਦੀ ਚੋਣ',
+    plotDimensions: '2. ਪਲਾਟ ਅਤੇ ਖੇਤ ਦਾ ਆਕਾਰ',
+    cultivationHarvesting: '3. ਕਾਸ਼ਤ ਅਤੇ ਵਾਢੀ ਵੇਰਵੇ',
+    cropName: 'ਫ਼ਸਲ ਦਾ ਨਾਮ',
+    selectCropCount: 'ਫ਼ਸਲ ਚੁਣੋ',
+    varietyOptional: 'ਕਿਸਮ / ਵਰਾਇਟੀ (ਵਿਕਲਪਿਕ)',
+    varietyPlaceholder: 'ਜਿਵੇਂ ਦੇਸੀ / ਹਾਈਬ੍ਰਿਡ',
+    customCropPlaceholder: 'ਜਿਵੇਂ ਹੋਰ ਫ਼ਸਲ ਦਾ ਨਾਮ',
+    fieldNameLabel: 'ਪਲਾਟ / ਖੇਤ ਦਾ ਨਾਮ',
+    fieldNamePlaceholder: 'ਜਿਵੇਂ ਖੇਤ ਪਲਾਟ 1',
+    sowingDateLabel: 'ਬਿਜਾਈ ਦੀ ਮਿਤੀ',
+    areaSizeLabel: 'ਰਕਬਾ / ਆਕਾਰ',
+    areaUnitLabel: 'ਰਕਬਾ ਇਕਾਈ',
+    plantsOptional: 'ਬੂਟਿਆਂ ਦੀ ਗਿਣਤੀ',
+    plantsPlaceholder: 'ਜਿਵੇਂ 500',
+    growthStageLabel: 'ਫ਼ਸਲ ਦਾ ਪੜਾਅ',
+    stagePlantation: '🌱 ਬਿਜਾਈ / ਰੋਪਣ',
+    stageVegetative: '🌿 ਵਾਧਾ ਤੇ ਫੁਟਾਰਾ',
+    stageFlowering: '🌸 ਫੁੱਲ ਪੈਣ ਦਾ ਸਮਾਂ',
+    stageHarvesting: '🌾 ਵਾਢੀ / ਤੁੜਾਈ',
+    irrigationSystemLabel: 'ਸਿੰਚਾਈ ਪ੍ਰਣਾਲੀ',
+    measurementUnitLabel: 'ਮਾਪ ਇਕਾਈ',
+    harvestPatternLabel: 'ਵਾਢੀ ਦਾ ਤਰੀਕਾ',
+    dailyHarvestContinuous: 'ਰੋਜ਼ਾਨਾ ਤੁੜਾਈ (ਲਗਾਤਾਰ)',
+    oneTimeHarvest: '🌾 ਇੱਕ ਵਾਰ ਵਾਢੀ (ਇਕੱਠੀ)',
+    updateCropBtn: '✏️ ਫ਼ਸਲ ਵੇਰਵੇ ਅੱਪਡੇਟ ਕਰੋ',
+    saveCropBtn: 'ਫ਼ਸਲ ਅਤੇ ਖੇਤ ਵੇਰਵੇ ਸੁਰੱਖਿਅਤ ਕਰੋ',
+    selectCategoryTitle: 'ਫ਼ਸਲ ਦੀ ਸ਼੍ਰੇਣੀ ਚੁਣੋ',
+    selectCategorySub: 'ਫ਼ਸਲਾਂ ਦੀ ਸੂਚੀ ਦੇਖਣ ਲਈ ਸ਼੍ਰੇਣੀ ਚੁਣੋ',
+    availableCropsTitle: 'ਉਪਲਬਧ ਫ਼ਸਲਾਂ',
+    categoryPrefix: 'ਸ਼੍ਰੇਣੀ',
+    noCropsFound: 'ਇਸ ਸ਼੍ਰੇਣੀ ਵਿੱਚ ਕੋਈ ਫ਼ਸਲ ਨਹੀਂ ਮਿਲੀ।',
+    selectLandAreaTitle: 'ਰਕਬਾ ਮਾਪ ਇਕਾਈ ਚੁਣੋ',
+    selectLandAreaSub: 'ਆਪਣੀ ਜ਼ਮੀਨ ਦੀ ਮਾਪ ਇਕਾਈ ਚੁਣੋ',
+    selectIrrigationTitle: 'ਸਿੰਚਾਈ ਪ੍ਰਣਾਲੀ ਚੁਣੋ',
+    selectIrrigationSub: 'ਇਸ ਖੇਤ ਵਿੱਚ ਪਾਣੀ ਦੇਣ ਦਾ ਸਾਧਨ ਚੁਣੋ',
+    selectMeasurementTitle: 'ਮਾਪ ਇਕਾਈ ਚੁਣੋ',
+    selectMeasurementSub: 'ਫ਼ਸਲ ਦੀ ਉਪਜ ਅਤੇ ਵਿਕਰੀ ਇਕਾਈ ਚੁਣੋ',
+    plotDefaultSuffix: 'ਪਲਾਟ 1',
+    upgradePlan: 'ਪਲਾਨ ਅੱਪਗ੍ਰੇਡ ਕਰੋ 👑',
+    irrigationBorewell: 'ਟਿਊਬਵੈੱਲ / ਬੋਰਵੈੱਲ',
+    irrigationCanal: 'ਨਹਿਰੀ ਪਾਣੀ',
+    irrigationDrip: 'ਡ੍ਰਿੱਪ (ਤੁਪਕਾ) ਸਿੰਚਾਈ',
+    irrigationSprinkler: 'ਫੁਹਾਰਾ ਪ੍ਰਣਾਲੀ',
+    irrigationRainfed: 'ਬਰਾਨੀ (ਮੀਂਹ ਅਧਾਰਿਤ)',
+    unitKg: 'ਕਿਲੋਗ੍ਰਾਮ (KG)',
+    unitQuintal: 'ਕੁਇੰਟਲ (100 KG)',
+    unitPieces: 'ਨਗ / ਪੀਸ',
+    unitBunch: 'ਗੁੱਛਾ / ਬੰਚ',
+    unitDozen: 'ਦਰਜਨ',
+    unitBox: 'ਪੇਟੀ / ਕਰੇਟ',
+    unitSet: 'ਸੈੱਟ',
+    areaKilla: 'ਕਿੱਲਾ (ਏਕੜ)',
+    areaBigha: 'ਬੀਘਾ',
+    areaMarla: 'ਮਰਲਾ',
+    areaKanal: 'ਕਨਾਲ',
+    areaBiswa: 'ਬਿਸਵਾ',
+    areaGuntha: 'ਗੁੰਠਾ',
+    areaSquareMeter: 'ਵਰਗ ਮੀਟਰ',
+    catFlowers: 'ਫੁੱਲ ਤੇ ਫਲੋਰੀਕਲਚਰ',
+    catVegetables: 'ਸਬਜ਼ੀਆਂ',
+    catFruits: 'ਫਲ ਤੇ ਬਾਗਬਾਨੀ',
+    catGrains: 'ਅਨਾਜ ਤੇ ਅੰਨ',
+    catPulses: 'ਦਾਲਾਂ',
+    catOilseeds: 'ਤੇਲ ਬੀਜ',
+    catFodder: 'ਚਾਰੇ ਦੀਆਂ ਫ਼ਸਲਾਂ',
+    catHerbs: 'ਜੜੀ-ਬੂਟੀਆਂ ਤੇ ਔਸ਼ਧੀ',
+    catOther: 'ਹੋਰ / ਆਪਣੀ ਫ਼ਸਲ',
+  },
+  hi: {
+    editTitle: 'फसल विवरण संपादित करें',
+    registerTitle: 'नई फसल पंजीकृत करें',
+    editSubtitle: 'नीचे दिए गए फसल विनिर्देश और विवरण अपडेट करें',
+    registerSubtitle: 'खेत का आकार और खेती के पैरामीटर दर्ज करें',
+    activeRecord: 'सक्रिय रिकॉर्ड',
+    cropId: 'फसल ID',
+    cropSelection: '1. फसल का चयन',
+    plotDimensions: '2. खेत और भूखंड का आकार',
+    cultivationHarvesting: '3. बुआई और कटाई विवरण',
+    cropName: 'फसल का नाम',
+    selectCropCount: 'फसल चुनें',
+    varietyOptional: 'किस्म / वैरायटी (वैकल्पिक)',
+    varietyPlaceholder: 'उदा. देसी / हाइब्रिड',
+    customCropPlaceholder: 'उदा. अन्य फसल का नाम',
+    fieldNameLabel: 'खेत / प्लॉट का नाम',
+    fieldNamePlaceholder: 'उदा. खेत प्लॉट 1',
+    sowingDateLabel: 'बुआई की तिथि',
+    areaSizeLabel: 'क्षेत्रफल / आकार',
+    areaUnitLabel: 'क्षेत्रफल इकाई',
+    plantsOptional: 'पौधों की संख्या',
+    plantsPlaceholder: 'उदा. 500',
+    growthStageLabel: 'फसल की अवस्था',
+    stagePlantation: '🌱 रोपण / बुआई',
+    stageVegetative: '🌿 वानस्पतिक विकास',
+    stageFlowering: '🌸 फूल आने की अवस्था',
+    stageHarvesting: '🌾 कटाई / तुड़ाई',
+    irrigationSystemLabel: 'सिंचाई प्रणाली',
+    measurementUnitLabel: 'माप इकाई',
+    harvestPatternLabel: 'कटाई का प्रकार',
+    dailyHarvestContinuous: 'दैनिक तुड़ाई (निरंतर)',
+    oneTimeHarvest: '🌾 एकमुश्त कटाई (एकल)',
+    updateCropBtn: '✏️ फसल विवरण अपडेट करें',
+    saveCropBtn: 'फसल और खेत विवरण सहेजें',
+    selectCategoryTitle: 'फसल की श्रेणी चुनें',
+    selectCategorySub: 'फसलों की सूची देखने के लिए श्रेणी चुनें',
+    availableCropsTitle: 'उपलब्ध फसलें',
+    categoryPrefix: 'श्रेणी',
+    noCropsFound: 'इस श्रेणी में कोई फसल नहीं मिली।',
+    selectLandAreaTitle: 'भूमि क्षेत्रफल इकाई चुनें',
+    selectLandAreaSub: 'अपनी पसंदीदा भूमि माप इकाई चुनें',
+    selectIrrigationTitle: 'सिंचाई प्रणाली चुनें',
+    selectIrrigationSub: 'इस खेत में सिंचाई की विधि चुनें',
+    selectMeasurementTitle: 'माप इकाई चुनें',
+    selectMeasurementSub: 'फसल की उपज और व्यापार इकाई चुनें',
+    plotDefaultSuffix: 'प्लॉट 1',
+    upgradePlan: 'प्लान अपग्रेड करें 👑',
+    irrigationBorewell: 'ट्यूबवेल / बोरवेल',
+    irrigationCanal: 'नहरी पानी',
+    irrigationDrip: 'ड्रिप (टपक) सिंचाई',
+    irrigationSprinkler: 'फव्वारा प्रणाली',
+    irrigationRainfed: 'बारानी (वर्षा आधारित)',
+    unitKg: 'किलोग्राम (KG)',
+    unitQuintal: 'क्विंटल (100 KG)',
+    unitPieces: 'नग / पीस',
+    unitBunch: 'गुच्छा / बंच',
+    unitDozen: 'दर्जन',
+    unitBox: 'पेटी / क्रेट',
+    unitSet: 'सेट',
+    areaKilla: 'किल्ला (एकड़)',
+    areaBigha: 'बीघा',
+    areaMarla: 'मरला',
+    areaKanal: 'कनाल',
+    areaBiswa: 'बिस्वा',
+    areaGuntha: 'गुंठा',
+    areaSquareMeter: 'वर्ग मीटर',
+    catFlowers: 'फूल और फ्लोरीकल्चर',
+    catVegetables: 'सब्जियां',
+    catFruits: 'फल और बागवानी',
+    catGrains: 'अनाज और खाद्यान्न',
+    catPulses: 'दालें',
+    catOilseeds: 'तिलहन',
+    catFodder: 'चारा फसलें',
+    catHerbs: 'जड़ी-बूटी और औषधीय',
+    catOther: 'अन्य / कस्टम फसल',
+  },
+  mr: {
+    editTitle: 'पीक तपशील संपादित करा',
+    registerTitle: 'नवीन पीक नोंदणी करा',
+    editSubtitle: 'खाली दिलेले तपशील अपडेट करा',
+    registerSubtitle: 'प्लॉटचा आकार आणि लागवड माहिती प्रविष्ट करा',
+    activeRecord: 'सक्रिय नोंद',
+    cropId: 'पीक ID',
+    cropSelection: '1. पीक निवड',
+    plotDimensions: '2. शेत आणि प्लॉट आकार',
+    cultivationHarvesting: '3. लागवड व कापणी माहिती',
+    cropName: 'पिकाचे नाव',
+    selectCropCount: 'पीक निवडा',
+    varietyOptional: 'वाण / व्हरायटी (पर्यायी)',
+    varietyPlaceholder: 'उदा. देशी / संकरित',
+    customCropPlaceholder: 'उदा. इतर पिकाचे नाव',
+    fieldNameLabel: 'शेत / प्लॉटचे नाव',
+    fieldNamePlaceholder: 'उदा. शेत प्लॉट 1',
+    sowingDateLabel: 'पेरणीची तारीख',
+    areaSizeLabel: 'क्षेत्रफळ / आकार',
+    areaUnitLabel: 'क्षेत्रफळ एकक',
+    plantsOptional: 'झाडांची संख्या',
+    plantsPlaceholder: 'उदा. 500',
+    growthStageLabel: 'वाढीचा टप्पा',
+    stagePlantation: '🌱 लागवड / पेरणी',
+    stageVegetative: '🌿 शाकीय वाढ',
+    stageFlowering: '🌸 फुलोरा टप्पा',
+    stageHarvesting: '🌾 काढणी / तोडणी',
+    irrigationSystemLabel: 'सिंचन पद्धत',
+    measurementUnitLabel: 'मोजमाप एकक',
+    harvestPatternLabel: 'काढणी प्रकार',
+    dailyHarvestContinuous: 'दैनिक तोडणी (सतत)',
+    oneTimeHarvest: '🌾 एकरकमी काढणी (एकल)',
+    updateCropBtn: '✏️ पीक तपशील अपडेट करा',
+    saveCropBtn: 'पीक माहिती जतन करा',
+    selectCategoryTitle: 'पिकाचा वर्ग निवडा',
+    selectCategorySub: 'पिकांची यादी पाहण्यासाठी वर्ग निवडा',
+    availableCropsTitle: 'उपलब्ध पिके',
+    categoryPrefix: 'वर्ग',
+    noCropsFound: 'या वर्गात कोणतीही पिके आढळली नाहीत.',
+    selectLandAreaTitle: 'जमीन क्षेत्रफळ एकक निवडा',
+    selectLandAreaSub: 'तुमचे पसंतीचे जमीन एकक निवडा',
+    selectIrrigationTitle: 'सिंचन पद्धत निवडा',
+    selectIrrigationSub: 'या शेतासाठी पाण्याची पद्धत निवडा',
+    selectMeasurementTitle: 'मोजमाप एकक निवडा',
+    selectMeasurementSub: 'पिकाच्या उत्पादनाचे एकक निवडा',
+    plotDefaultSuffix: 'प्लॉट 1',
+    upgradePlan: 'प्लॅन अपग्रेड करा 👑',
+    irrigationBorewell: 'ट्यूबवेल / विहीर / बोरवेल',
+    irrigationCanal: 'कॅनॉल पाणी',
+    irrigationDrip: 'ठिबक सिंचन',
+    irrigationSprinkler: 'तुषार सिंचन',
+    irrigationRainfed: 'जिरायती (पावसावर आधारित)',
+    unitKg: 'किलोग्रॅम (KG)',
+    unitQuintal: 'क्विंटल (100 KG)',
+    unitPieces: 'नग / पीस',
+    unitBunch: 'जुडी / गुच्छ',
+    unitDozen: 'डझन',
+    unitBox: 'बॉक्स / क्रेट',
+    unitSet: 'सेट',
+    areaKilla: 'एकर (किल्ला)',
+    areaBigha: 'बिघा',
+    areaMarla: 'मरला',
+    areaKanal: 'कनाल',
+    areaBiswa: 'बिस्वा',
+    areaGuntha: 'गुंठा',
+    areaSquareMeter: 'चौरस मीटर',
+    catFlowers: 'फुले व पुष्पशेती',
+    catVegetables: 'भाजीपाला',
+    catFruits: 'फळे व फळबाग',
+    catGrains: 'धान्य व तृणधान्ये',
+    catPulses: 'कडधान्ये',
+    catOilseeds: 'गळीत धान्ये',
+    catFodder: 'चारा पिके',
+    catHerbs: 'औषधी वनस्पती',
+    catOther: 'इतर / स्वतःचे पीक',
+  },
+  te: {
+    editTitle: 'పంట వివరాలను సవరించండి',
+    registerTitle: 'కొత్త పంటను నమోదు చేయండి',
+    editSubtitle: 'క్రింద వివరాలను నవీకరించండి',
+    registerSubtitle: 'పొలం కొలతలు మరియు సాగు వివరాలను నమోదు చేయండి',
+    activeRecord: 'క్రియాశీల రికార్డు',
+    cropId: 'పంట ID',
+    cropSelection: '1. పంట ఎంపిక',
+    plotDimensions: '2. పొలం కొలతలు',
+    cultivationHarvesting: '3. సాగు మరియు కోత వివరాలు',
+    cropName: 'పంట పేరు',
+    selectCropCount: 'పంటను ఎంచుకోండి',
+    varietyOptional: 'రకం / వెరైటీ (ఐచ్ఛికం)',
+    varietyPlaceholder: 'ఉదా. దేశీ / హైబ్రిడ్',
+    customCropPlaceholder: 'ఉదా. ఇతర పంట పేరు',
+    fieldNameLabel: 'పొలం / ప్లాట్ పేరు',
+    fieldNamePlaceholder: 'ఉదా. పొలం ప్లాట్ 1',
+    sowingDateLabel: 'విత్తిన తేదీ',
+    areaSizeLabel: 'విస్తీర్ణం',
+    areaUnitLabel: 'విస్తీర్ణ యూనిట్',
+    plantsOptional: 'మొక్కల సంఖ్య',
+    plantsPlaceholder: 'ఉదా. 500',
+    growthStageLabel: 'పంట దశ',
+    stagePlantation: '🌱 నాటడం / విత్తడం',
+    stageVegetative: '🌿 ఏపుగా పెరిగే దశ',
+    stageFlowering: '🌸 పూత దశ',
+    stageHarvesting: '🌾 కోత దశ',
+    irrigationSystemLabel: 'నీటి పారుదల వ్యవస్థ',
+    measurementUnitLabel: 'కొలత యూనిట్',
+    harvestPatternLabel: 'కోత విధానం',
+    dailyHarvestContinuous: 'రోజువారీ కోత (నిరంతరాయం)',
+    oneTimeHarvest: '🌾 ఒకేసారి కోత (సింగిల్)',
+    updateCropBtn: '✏️ పంట వివరాలు నవీకరించండి',
+    saveCropBtn: 'పంట వివరాలు భద్రపరచండి',
+    selectCategoryTitle: 'పంట వర్గాన్ని ఎంచుకోండి',
+    selectCategorySub: 'జాబితాను చూడటానికి వర్గాన్ని ఎంచుకోండి',
+    availableCropsTitle: 'అందుబాటులో ఉన్న పంటలు',
+    categoryPrefix: 'వర్గం',
+    noCropsFound: 'ఈ వర్గంలో పంటలు లేవు.',
+    selectLandAreaTitle: 'భూమి కొలత యూనిట్ ఎంచుకోండి',
+    selectLandAreaSub: 'మీకు నచ్చిన యూనిట్‌ను ఎంచుకోండి',
+    selectIrrigationTitle: 'నీటి పారుదల ఎంచుకోండి',
+    selectIrrigationSub: 'పొలానికి నీరు పెట్టే విధానాన్ని ఎంచుకోండి',
+    selectMeasurementTitle: 'కొలత యూనిట్ ఎంచుకోండి',
+    selectMeasurementSub: 'పంట దిగుబడి యూనిట్‌ను ఎంచుకోండి',
+    plotDefaultSuffix: 'ప్లాట్ 1',
+    upgradePlan: 'ప్లాన్ అప్‌గ్రేడ్ చేయండి 👑',
+    irrigationBorewell: 'బోరుబావి / ట్యూబ్‌వెల్',
+    irrigationCanal: 'కాలువ నీరు',
+    irrigationDrip: 'బిందు సేద్యం (డ్రిప్)',
+    irrigationSprinkler: 'తుంపర సేద్యం (స్ప్రింక్లర్)',
+    irrigationRainfed: 'వర్షాధార పంట',
+    unitKg: 'కిలోగ్రామ్ (KG)',
+    unitQuintal: 'క్వింటాల్ (100 KG)',
+    unitPieces: 'ముక్కలు (Pcs)',
+    unitBunch: 'కట్ట / బంచ్',
+    unitDozen: 'డజన్',
+    unitBox: 'బాక్స్ / క్రేట్',
+    unitSet: 'సెట్',
+    areaKilla: 'ఎకరం (కిల్లా)',
+    areaBigha: 'బీఘా',
+    areaMarla: 'మర్లా',
+    areaKanal: 'కెనాల్',
+    areaBiswa: 'బిస్వా',
+    areaGuntha: 'గుంట',
+    areaSquareMeter: 'చదరపు మీటర్లు',
+    catFlowers: 'పూలు మరియు పూలసాగు',
+    catVegetables: 'కూరగాయలు',
+    catFruits: 'పండ్లు మరియు తోటలు',
+    catGrains: 'ధాన్యాలు',
+    catPulses: 'పప్పుధాన్యాలు',
+    catOilseeds: 'నూనె గింజలు',
+    catFodder: 'మేత పంటలు',
+    catHerbs: 'ఔషధ మొక్కలు',
+    catOther: 'ఇతర / అనుకూల పంట',
+  },
+  ta: {
+    editTitle: 'பயிர் விவரங்களைத் திருத்துக',
+    registerTitle: 'புதிய பயிரைப் பதிவுசெய்க',
+    editSubtitle: 'கீழே உள்ள விவரங்களைப் புதுப்பிக்கவும்',
+    registerSubtitle: 'நிலத்தின் அளவு மற்றும் சாகுபடி விவரங்களை உள்ளிடவும்',
+    activeRecord: 'செயலில் உள்ள பதிவு',
+    cropId: 'பயிர் ID',
+    cropSelection: '1. பயிர் தேர்வு',
+    plotDimensions: '2. நிலம் மற்றும் பரப்பளவு',
+    cultivationHarvesting: '3. சாகுபடி மற்றும் அறுவடை விவரங்கள்',
+    cropName: 'பயிரின் பெயர்',
+    selectCropCount: 'பயிரைத் தேர்ந்தெடுக்கவும்',
+    varietyOptional: 'வகை / ரகம் (விருப்பத்தேர்வு)',
+    varietyPlaceholder: 'எ.கா. நாட்டு ரகம் / கலப்பினம்',
+    customCropPlaceholder: 'எ.கா. பிற பயிரின் பெயர்',
+    fieldNameLabel: 'நிலம் / ப்ளாட் பெயர்',
+    fieldNamePlaceholder: 'எ.கா. வயல் ப்ளாட் 1',
+    sowingDateLabel: 'விதைத்த தேதி',
+    areaSizeLabel: 'பரப்பளவு',
+    areaUnitLabel: 'பரப்பளவு அலகு',
+    plantsOptional: 'செடிகளின் எண்ணிக்கை',
+    plantsPlaceholder: 'எ.கா. 500',
+    growthStageLabel: 'வளர்ச்சி நிலை',
+    stagePlantation: '🌱 நடுதல் / விதைத்தல்',
+    stageVegetative: '🌿 தழைப்பருவம்',
+    stageFlowering: '🌸 பூக்கும் பருவம்',
+    stageHarvesting: '🌾 அறுவடைப் பருவம்',
+    irrigationSystemLabel: 'நீர்ப்பாசன முறை',
+    measurementUnitLabel: 'அளவீட்டு அலகு',
+    harvestPatternLabel: 'அறுவடை முறை',
+    dailyHarvestContinuous: 'தினசரி அறுவடை (தொடர்ச்சியானது)',
+    oneTimeHarvest: '🌾 ஒரே முறை அறுவடை (ஒற்றை)',
+    updateCropBtn: '✏️ பயிர் விவரங்களைப் புதுப்பிக்கவும்',
+    saveCropBtn: 'பயிர் விவரங்களைச் சேமிக்கவும்',
+    selectCategoryTitle: 'பயிர் வகையைத் தேர்ந்தெடுக்கவும்',
+    selectCategorySub: 'பட்டியலைக் காண வகையைத் தொடவும்',
+    availableCropsTitle: 'கிடைக்கும் பயிர்கள்',
+    categoryPrefix: 'வகை',
+    noCropsFound: 'இவ்வகையில் பயிர்கள் இல்லை.',
+    selectLandAreaTitle: 'நில பரப்பளவு அலகைத் தேர்ந்தெடுக்கவும்',
+    selectLandAreaSub: 'உங்கள் நில அளவீட்டு அலகைத் தேர்ந்தெடுக்கவும்',
+    selectIrrigationTitle: 'நீர்ப்பாசன முறையைத் தேர்ந்தெடுக்கவும்',
+    selectIrrigationSub: 'பாசன முறையைத் தேர்ந்தெடுக்கவும்',
+    selectMeasurementTitle: 'அளவீட்டு அலகைத் தேர்ந்தெடுக்கவும்',
+    selectMeasurementSub: 'விளைச்சல் அலகைத் தேர்ந்தெடுக்கவும்',
+    plotDefaultSuffix: 'ப்ளாட் 1',
+    upgradePlan: 'திட்டத்தை மேம்படுத்தவும் 👑',
+    irrigationBorewell: 'ஆழ்துளை கிணறு / போர்வெல்',
+    irrigationCanal: 'கால்வாய் நீர்',
+    irrigationDrip: 'சொட்டு நீர் பாசனம்',
+    irrigationSprinkler: 'தெளிப்பு நீர் பாசனம்',
+    irrigationRainfed: 'மானாவாரி (மழை சார்ந்த)',
+    unitKg: 'கிலோகிராம் (KG)',
+    unitQuintal: 'குவிண்டால் (100 KG)',
+    unitPieces: 'எண்ணிக்கை (Pcs)',
+    unitBunch: 'கொத்து / கட்டு',
+    unitDozen: 'டஜன்',
+    unitBox: 'பெட்டி / கூடை',
+    unitSet: 'செட்',
+    areaKilla: 'ஏக்கர் (கில்லா)',
+    areaBigha: 'பிகா',
+    areaMarla: 'மர்லா',
+    areaKanal: 'கனால்',
+    areaBiswa: 'பிஸ்வா',
+    areaGuntha: 'குந்தா',
+    areaSquareMeter: 'சதுர மீட்டர்',
+    catFlowers: 'மலர்கள் மற்றும் பூந்தோட்டம்',
+    catVegetables: 'காய்கறிகள்',
+    catFruits: 'பழங்கள் மற்றும் பழத்தோட்டம்',
+    catGrains: 'தானியங்கள்',
+    catPulses: 'பருப்பு வகைகள்',
+    catOilseeds: 'எண்ணெய் வித்துக்கள்',
+    catFodder: 'தீவனப் பயிர்கள்',
+    catHerbs: 'மூலிகைகள்',
+    catOther: 'பிற பயிர்கள்',
+  },
+  ur: {
+    editTitle: 'فصل کی تفصیلات تبدیل کریں',
+    registerTitle: 'نئی فصل درج کریں',
+    editSubtitle: 'درج ذیل تفصیلات کو اپ ڈیٹ کریں',
+    registerSubtitle: 'زمین اور کاشت کے پیرامیٹرز درج کریں',
+    activeRecord: 'فعال ریکارڈ',
+    cropId: 'فصل ID',
+    cropSelection: '1. فصل کا انتخاب',
+    plotDimensions: '2. رقبہ اور زمین کی پیمائش',
+    cultivationHarvesting: '3. کاشت اور کٹائی کی تفصیلات',
+    cropName: 'فصل کا نام',
+    selectCropCount: 'فصل منتخب کریں',
+    varietyOptional: 'قسم / ورائٹی (اختیاری)',
+    varietyPlaceholder: 'مثلاً دیسی / ہائبرڈ',
+    customCropPlaceholder: 'مثلاً دیگر فصل کا نام',
+    fieldNameLabel: 'پلاٹ / کھیت کا نام',
+    fieldNamePlaceholder: 'مثلاً کھیت پلاٹ 1',
+    sowingDateLabel: 'بجائی کی تاریخ',
+    areaSizeLabel: 'رقبہ / سائز',
+    areaUnitLabel: 'رقبے کی اکائی',
+    plantsOptional: 'پودوں کی تعداد',
+    plantsPlaceholder: 'مثلاً 500',
+    growthStageLabel: 'فصل کا مرحلہ',
+    stagePlantation: '🌱 بجائی / پودے لگانا',
+    stageVegetative: '🌿 نشوونما کا مرحلہ',
+    stageFlowering: '🌸 پھول آنے کا وقت',
+    stageHarvesting: '🌾 کٹائی کا وقت',
+    irrigationSystemLabel: 'نظام آبپاشی',
+    measurementUnitLabel: 'پیمائش کی اکائی',
+    harvestPatternLabel: 'کٹائی کا طریقہ',
+    dailyHarvestContinuous: 'روزانہ چنائی (مسلسل)',
+    oneTimeHarvest: '🌾 ایک بار کٹائی (اکٹھی)',
+    updateCropBtn: '✏️ فصل کی تفصیلات اپ ڈیٹ کریں',
+    saveCropBtn: 'فصل اور کھیت کی تفصیلات محفوظ کریں',
+    selectCategoryTitle: 'فصل کا زمرہ منتخب کریں',
+    selectCategorySub: 'فہرست دیکھنے کے لیے زمرہ منتخب کریں',
+    availableCropsTitle: 'دستیاب فصلیں',
+    categoryPrefix: 'زمرہ',
+    noCropsFound: 'اس زمرے میں کوئی فصل نہیں ملی۔',
+    selectLandAreaTitle: 'زمین کی اکائی منتخب کریں',
+    selectLandAreaSub: 'زمین کی پیمائش کی اکائی منتخب کریں',
+    selectIrrigationTitle: 'نظام آبپاشی منتخب کریں',
+    selectIrrigationSub: 'پانی دینے کا طریقہ منتخب کریں',
+    selectMeasurementTitle: 'پیمائش کی اکائی منتخب کریں',
+    selectMeasurementSub: 'پیداوار کی اکائی منتخب کریں',
+    plotDefaultSuffix: 'پلاٹ 1',
+    upgradePlan: 'پلان اپ گریڈ کریں 👑',
+    irrigationBorewell: 'ٹیوب ویل / بور ویل',
+    irrigationCanal: 'نہری پانی',
+    irrigationDrip: 'ڈرپ (قطرہ قطرہ) آبپاشی',
+    irrigationSprinkler: 'فوارہ سسٹم',
+    irrigationRainfed: 'بارانی (بارش پر مبنی)',
+    unitKg: 'کلوگرام (KG)',
+    unitQuintal: 'کوئنٹل (100 KG)',
+    unitPieces: 'نگ / پیس',
+    unitBunch: 'گچھا / بنچ',
+    unitDozen: 'درجن',
+    unitBox: 'پیٹی / کریٹ',
+    unitSet: 'سیٹ',
+    areaKilla: 'قلعہ (ایکڑ)',
+    areaBigha: 'بیگھہ',
+    areaMarla: 'مرلہ',
+    areaKanal: 'کنال',
+    areaBiswa: 'بسوہ',
+    areaGuntha: 'گنتھا',
+    areaSquareMeter: 'مربع میٹر',
+    catFlowers: 'پھول اور فلوریکلچر',
+    catVegetables: 'سبزیاں',
+    catFruits: 'پھل اور باغات',
+    catGrains: 'اناج',
+    catPulses: 'دالیں',
+    catOilseeds: 'تیل کے بیج',
+    catFodder: 'چارے کی فصلیں',
+    catHerbs: 'جڑی بوٹیاں',
+    catOther: 'دیگر / کسٹم فصل',
+  },
+};
+
+const getCategoryLabel = (id: string, name: string, dict: Record<string, string>) => {
+  switch (id) {
+    case 'flowers': return dict.catFlowers || name;
+    case 'vegetables': return dict.catVegetables || name;
+    case 'fruits': return dict.catFruits || name;
+    case 'grains': return dict.catGrains || name;
+    case 'pulses': return dict.catPulses || name;
+    case 'oilseeds': return dict.catOilseeds || name;
+    case 'fodder': return dict.catFodder || name;
+    case 'herbs': return dict.catHerbs || name;
+    case 'other': return dict.catOther || name;
+    default: return name;
+  }
+};
+
+const getIrrigationLabel = (type: string, fallback: string, dict: Record<string, string>) => {
+  if (type.includes('Tube Well') || type.includes('Borewell')) return dict.irrigationBorewell || fallback;
+  if (type.includes('Canal')) return dict.irrigationCanal || fallback;
+  if (type.includes('Drip')) return dict.irrigationDrip || fallback;
+  if (type.includes('Sprinkler')) return dict.irrigationSprinkler || fallback;
+  if (type.includes('Rainfed')) return dict.irrigationRainfed || fallback;
+  return fallback;
+};
+
+const getUnitLabel = (unit: string, fallback: string, dict: Record<string, string>) => {
+  switch (unit) {
+    case 'KG': return dict.unitKg || fallback;
+    case 'Quintal': return dict.unitQuintal || fallback;
+    case 'Pieces': return dict.unitPieces || fallback;
+    case 'Bunch': return dict.unitBunch || fallback;
+    case 'Dozen': return dict.unitDozen || fallback;
+    case 'Box / Crate': return dict.unitBox || fallback;
+    case 'Set': return dict.unitSet || fallback;
+    default: return fallback;
+  }
+};
+
+const getAreaUnitLabel = (unit: string, fallback: string, dict: Record<string, string>) => {
+  if (unit.includes('Killa') || unit.includes('Acre')) return dict.areaKilla || fallback;
+  if (unit.includes('Bigha')) return dict.areaBigha || fallback;
+  if (unit.includes('Marla')) return dict.areaMarla || fallback;
+  if (unit.includes('Kanal')) return dict.areaKanal || fallback;
+  if (unit.includes('Biswa')) return dict.areaBiswa || fallback;
+  if (unit.includes('Guntha')) return dict.areaGuntha || fallback;
+  if (unit.includes('Square Meter')) return dict.areaSquareMeter || fallback;
+  return fallback;
+};
+
 export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps> = ({
   visible,
   onClose,
@@ -69,6 +653,9 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   onOpenUpgradeModal,
 }) => {
   const router = useRouter();
+  const { language } = useLanguage();
+  const dict = useMemo(() => MODAL_I18N[language] || MODAL_I18N.en, [language]);
+
   const [selectedCatId, setSelectedCatId] = useState<string>('flowers');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState<boolean>(false);
@@ -77,6 +664,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   const [selectedCrop, setSelectedCrop] = useState<CropItem | null>(null);
   const [isCropPickerOpen, setIsCropPickerOpen] = useState<boolean>(false);
   const [isAreaUnitPickerOpen, setIsAreaUnitPickerOpen] = useState<boolean>(false);
+  const [isIrrigationPickerOpen, setIsIrrigationPickerOpen] = useState<boolean>(false);
+  const [isCropUnitPickerOpen, setIsCropUnitPickerOpen] = useState<boolean>(false);
 
   // Form Fields
   const [fieldName, setFieldName] = useState('');
@@ -197,7 +786,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     tap();
     setSelectedCrop(crop);
     if (!fieldName.trim()) {
-      setFieldName(`${crop.name} Plot 1`);
+      setFieldName(`${crop.name} ${dict.plotDefaultSuffix || 'Plot 1'}`);
     }
     setSelectedUnit(crop.defaultUnit || 'KG');
     setVarietyName(crop.variety || '');
@@ -216,7 +805,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       ...baseCrop,
       variety: varietyName.trim() || undefined,
     };
-    const finalFieldName = fieldName.trim() ? fieldName.trim() : `${cropToSave.name || 'Crop'} Plot 1`;
+    const finalFieldName = fieldName.trim() ? fieldName.trim() : `${cropToSave.name || 'Crop'} ${dict.plotDefaultSuffix || 'Plot 1'}`;
 
     onSaveCropForm({
       crop: cropToSave,
@@ -243,264 +832,309 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     onClose();
   };
 
-  const isContinuousHarvest = (selectedCrop?.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
-
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.headerRow}>
+            <View style={styles.headerBadge}>
+              <Ionicons name="leaf" size={18} color="#16a34a" />
+            </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.modalTitle}>{editingCrop ? "✏️ Edit Crop Details" : "Add Crop Form"}</Text>
-              <Text style={styles.modalSub}>{editingCrop ? "Update crop specifications & field details below" : "Fill crop details & field specifications below"}</Text>
+              <Text style={styles.modalTitle}>{editingCrop ? dict.editTitle : dict.registerTitle}</Text>
+              <Text style={styles.modalSub}>{editingCrop ? dict.editSubtitle : dict.registerSubtitle}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={onClose}>
-              <Ionicons name="close" size={20} color="#475569" />
+              <Ionicons name="close" size={18} color="#64748b" />
             </TouchableOpacity>
           </View>
 
           {editingCrop ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e0f2fe', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#bae6fd', marginBottom: 10 }}>
+            <View style={styles.cropIdRibbon}>
               <Ionicons name="finger-print-outline" size={15} color="#0284c7" />
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
-                🆔 Crop ID: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{editingCrop.cropId || (editingCrop.id?.startsWith('C-') ? editingCrop.id : `C-${editingCrop.id?.slice(0, 6).toUpperCase()}`)}</Text>
+              <Text style={styles.cropIdText}>
+                {dict.cropId}: <Text style={{ fontFamily: FONT.extraBold, color: '#0369a1' }}>{editingCrop.cropId || (editingCrop.id?.startsWith('C-') ? editingCrop.id : `C-${editingCrop.id?.slice(0, 6).toUpperCase()}`)}</Text>
               </Text>
+              <View style={styles.cropIdVerifiedPill}>
+                <Text style={styles.cropIdVerifiedText}>{dict.activeRecord}</Text>
+              </View>
             </View>
           ) : null}
 
-          <ScrollView style={{ maxHeight: 520 }} showsVerticalScrollIndicator={false}>
-            {/* 1. Category Horizontal Pill Bar */}
-            <Text style={styles.inputLabelCompact}>Select Crop Category *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
-              {INITIAL_CROP_CATEGORIES.map((cat) => {
-                const isSelected = cat.id === selectedCatId;
-                return (
-                  <TouchableOpacity
-                    key={cat.id}
-                    style={[
-                      styles.compactCategoryChip,
-                      isSelected
-                        ? { backgroundColor: cat.color, borderColor: cat.color }
-                        : { backgroundColor: cat.bg, borderColor: '#cbd5e1' },
-                    ]}
-                    onPress={() => handleSelectCategory(cat.id)}
-                  >
-                    <Ionicons name={cat.icon as any} size={13} color={isSelected ? '#ffffff' : cat.color} />
-                    <Text
-                      style={[
-                        styles.compactCategoryText,
-                        isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: cat.color },
-                      ]}
-                    >
-                      {cat.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
-            {/* 2. Select Crop & Variety Name Side-by-Side Row */}
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 4 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabelCompact} numberOfLines={1}>Select Crop *</Text>
-                {selectedCatId !== 'other' ? (
-                  <TouchableOpacity
-                    style={[
-                      styles.cropSelectBtnLarge,
-                      { borderColor: currentCategory.color, backgroundColor: currentCategory.bg, height: 40, marginBottom: 0 },
-                    ]}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      tap();
-                      setIsCropPickerOpen(true);
-                    }}
-                  >
-                    <Ionicons name="leaf" size={15} color={currentCategory.color} />
-                    <Text style={[styles.cropSelectTextLarge, { color: currentCategory.color }]} numberOfLines={1}>
-                      {selectedCrop ? selectedCrop.name : `Choose Crop (${filteredCrops.length})`}
-                    </Text>
-                    <Ionicons name="chevron-down" size={13} color={currentCategory.color} />
-                  </TouchableOpacity>
-                ) : (
-                  <TextInput
-                    style={styles.compactFormInput}
-                    placeholder="Custom Crop Name"
-                    placeholderTextColor="#94a3b8"
-                    value={customCropName}
-                    onChangeText={(text) => {
-                      setCustomCropName(text);
-                      setFieldName(text.trim() ? `${text.trim()} Plot 1` : '');
-                    }}
-                  />
-                )}
+          <ScrollView style={{ maxHeight: 540 }} showsVerticalScrollIndicator={false}>
+            {/* SECTION 1: CROP IDENTITY */}
+            <View style={styles.formSectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons name="grid-outline" size={13} color="#16a34a" />
+                <Text style={styles.sectionHeaderTitle}>{dict.cropSelection}</Text>
               </View>
 
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabelCompact} numberOfLines={1}>Variety (Optional)</Text>
-                <TextInput
-                  style={styles.compactFormInput}
-                  placeholder="e.g. Desi / Pusa Ruby"
-                  placeholderTextColor="#94a3b8"
-                  value={varietyName}
-                  onChangeText={setVarietyName}
-                />
-              </View>
-            </View>
-
-            {/* 3. Side-by-Side Row: Field Name (Left) + Sowing Date (Right) */}
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 4 }}>
-              <View style={{ flex: 1.2 }}>
-                <Text style={styles.inputLabelCompact}>Farm / Field Name *</Text>
-                <TextInput
-                  style={styles.compactFormInput}
-                  placeholder="e.g. Plot 1 / Field"
-                  placeholderTextColor="#94a3b8"
-                  value={fieldName}
-                  onChangeText={setFieldName}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabelCompact}>Sowing Date *</Text>
-                <TouchableOpacity
-                  style={styles.calendarSelector}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setIsCalendarOpen(true);
-                  }}
-                >
-                  <Ionicons name="calendar" size={15} color="#16a34a" />
-                  <Text style={styles.calendarSelectorDate} numberOfLines={1}>
-                    {sowingDate}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* 4. Current Crop Stage */}
-            <Text style={styles.inputLabelCompact}>Current Crop Stage *</Text>
-            <View style={styles.compactStageGrid}>
-              {[
-                { key: 'PLANTATION', label: '🌱 Plantation', color: '#d97706', bg: '#fef3c7' },
-                { key: 'VEGETATIVE', label: '🌿 Vegetative', color: '#0284c7', bg: '#e0f2fe' },
-                { key: 'FLOWERING', label: '🌸 Flowering', color: '#e11d48', bg: '#ffe4e6' },
-                { key: 'HARVESTING', label: '🌾 Harvesting', color: '#16a34a', bg: '#dcfce7' },
-              ].map((st) => {
-                const isSelected = st.key === cropStage;
-                return (
-                  <TouchableOpacity
-                    key={st.key}
-                    style={[
-                      styles.compactStageChip,
-                      isSelected
-                        ? { backgroundColor: st.color, borderColor: st.color }
-                        : { backgroundColor: st.bg, borderColor: 'transparent' },
-                    ]}
-                    onPress={() => {
-                      tap();
-                      setCropStage(st.key as any);
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.compactStageText,
-                        isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: st.color },
-                      ]}
-                    >
-                      {st.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* 5. 3-Column Row: Total Area Size + Land Area Unit + No. of Plants (Optional) */}
-            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginTop: 4 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.inputLabelCompact} numberOfLines={1}>Area Size *</Text>
-                <TextInput
-                  style={styles.compactFormInput}
-                  placeholder="e.g. 1"
-                  placeholderTextColor="#94a3b8"
-                  keyboardType="numeric"
-                  value={area}
-                  onChangeText={setArea}
-                />
-              </View>
-              <View style={{ flex: 1.1 }}>
-                <Text style={styles.inputLabelCompact} numberOfLines={1}>Land Unit *</Text>
-                <TouchableOpacity
-                  style={styles.dropdownUnitSelectorBtn}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setIsAreaUnitPickerOpen(true);
-                  }}
-                >
-                  <Ionicons name="map-outline" size={14} color="#16a34a" />
-                  <Text style={styles.dropdownUnitSelectorText} numberOfLines={1}>
-                    {selectedAreaUnit}
-                  </Text>
-                  <Ionicons name="chevron-down" size={12} color="#64748b" />
-                </TouchableOpacity>
-              </View>
-              <View style={{ flex: 1.1 }}>
-                <Text style={styles.inputLabelCompact} numberOfLines={1}>No. of Plants (Opt.)</Text>
-                <TextInput
-                  style={styles.compactFormInput}
-                  placeholder="e.g. 500"
-                  placeholderTextColor="#94a3b8"
-                  keyboardType="numeric"
-                  value={plantCount}
-                  onChangeText={setPlantCount}
-                />
-              </View>
-            </View>
-
-            {/* 6. Irrigation Type & Harvest Pattern Row */}
-            <View style={{ marginTop: 6, gap: 6 }}>
-              <Text style={styles.inputLabelCompact}>Irrigation System *</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 5 }}>
-                {IRRIGATION_TYPES.map((irr) => {
-                  const isSelected = irr.type === selectedIrrigation;
+              {/* Category Horizontal Pill Bar */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+                {INITIAL_CROP_CATEGORIES.map((cat) => {
+                  const isSelected = cat.id === selectedCatId;
+                  const catLabel = getCategoryLabel(cat.id, cat.name, dict);
                   return (
                     <TouchableOpacity
-                      key={irr.type}
+                      key={cat.id}
                       style={[
-                        styles.compactMiniChip,
+                        styles.compactCategoryChip,
                         isSelected
-                          ? { backgroundColor: '#0284c7', borderColor: '#0284c7' }
-                          : { backgroundColor: '#e0f2fe', borderColor: '#cbd5e1' },
+                          ? { backgroundColor: cat.color, borderColor: cat.color }
+                          : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
                       ]}
-                      onPress={() => {
-                        tap();
-                        setSelectedIrrigation(irr.type);
-                      }}
+                      onPress={() => handleSelectCategory(cat.id)}
                     >
-                      <Ionicons name={irr.icon as any} size={12} color={isSelected ? '#ffffff' : '#0284c7'} />
+                      <Ionicons name={cat.icon as any} size={12} color={isSelected ? '#ffffff' : cat.color} />
                       <Text
                         style={[
-                          styles.compactMiniText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#0369a1' },
+                          styles.compactCategoryText,
+                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#334155' },
                         ]}
                       >
-                        {irr.label}
+                        {catLabel}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
 
-              <Text style={[styles.inputLabelCompact, { marginTop: 4 }]}>Harvest Pattern *</Text>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
+              {/* Crop Name & Variety in 2-Column Row */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                <View style={{ flex: 1.2 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.cropName} *</Text>
+                  {selectedCatId !== 'other' ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.cropSelectBtnLarge,
+                        { borderColor: currentCategory.color, backgroundColor: currentCategory.bg, height: 38 },
+                      ]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        tap();
+                        setIsCropPickerOpen(true);
+                      }}
+                    >
+                      <Ionicons name="leaf" size={14} color={currentCategory.color} />
+                      <Text style={[styles.cropSelectTextLarge, { color: currentCategory.color }]} numberOfLines={1}>
+                        {selectedCrop ? selectedCrop.name : `${dict.selectCropCount} (${filteredCrops.length})`}
+                      </Text>
+                      <Ionicons name="chevron-down" size={13} color={currentCategory.color} />
+                    </TouchableOpacity>
+                  ) : (
+                    <TextInput
+                      style={styles.compactFormInput}
+                      placeholder={dict.customCropPlaceholder}
+                      placeholderTextColor="#94a3b8"
+                      value={customCropName}
+                      onChangeText={(text) => {
+                        setCustomCropName(text);
+                        setFieldName(text.trim() ? `${text.trim()} ${dict.plotDefaultSuffix || 'Plot 1'}` : '');
+                      }}
+                    />
+                  )}
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.varietyOptional}</Text>
+                  <TextInput
+                    style={styles.compactFormInput}
+                    placeholder={dict.varietyPlaceholder}
+                    placeholderTextColor="#94a3b8"
+                    value={varietyName}
+                    onChangeText={setVarietyName}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* SECTION 2: PLOT & FIELD DIMENSIONS */}
+            <View style={styles.formSectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons name="location-outline" size={13} color="#0284c7" />
+                <Text style={[styles.sectionHeaderTitle, { color: '#0284c7' }]}>{dict.plotDimensions}</Text>
+              </View>
+
+              {/* Row: Field Name + Sowing Date */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1.2 }}>
+                  <Text style={styles.inputLabelCompact}>{dict.fieldNameLabel} *</Text>
+                  <TextInput
+                    style={styles.compactFormInput}
+                    placeholder={dict.fieldNamePlaceholder}
+                    placeholderTextColor="#94a3b8"
+                    value={fieldName}
+                    onChangeText={setFieldName}
+                  />
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact}>{dict.sowingDateLabel} *</Text>
+                  <TouchableOpacity
+                    style={styles.calendarSelector}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsCalendarOpen(true);
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={14} color="#16a34a" />
+                    <Text style={styles.calendarSelectorDate} numberOfLines={1}>
+                      {sowingDate}
+                    </Text>
+                    <Ionicons name="chevron-down" size={11} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* 3-Column: Area Size + Land Unit + Plants Count */}
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.areaSizeLabel} *</Text>
+                  <TextInput
+                    style={styles.compactFormInput}
+                    placeholder="e.g. 1"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={area}
+                    onChangeText={setArea}
+                  />
+                </View>
+
+                <View style={{ flex: 1.2 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.areaUnitLabel} *</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownUnitSelectorBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsAreaUnitPickerOpen(true);
+                    }}
+                  >
+                    <Ionicons name="map-outline" size={13} color="#16a34a" />
+                    <Text style={styles.dropdownUnitSelectorText} numberOfLines={1}>
+                      {getAreaUnitLabel(selectedAreaUnit, selectedAreaUnit, dict)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={11} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.plantsOptional}</Text>
+                  <TextInput
+                    style={styles.compactFormInput}
+                    placeholder={dict.plantsPlaceholder}
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={plantCount}
+                    onChangeText={setPlantCount}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* SECTION 3: CULTIVATION & HARVESTING */}
+            <View style={styles.formSectionCard}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons name="construct-outline" size={13} color="#d97706" />
+                <Text style={[styles.sectionHeaderTitle, { color: '#d97706' }]}>{dict.cultivationHarvesting}</Text>
+              </View>
+
+              {/* Growth Stage */}
+              <Text style={styles.inputLabelCompact}>{dict.growthStageLabel} *</Text>
+              <View style={styles.compactStageGrid}>
+                {[
+                  { key: 'PLANTATION', label: dict.stagePlantation, color: '#d97706', bg: '#fef3c7' },
+                  { key: 'VEGETATIVE', label: dict.stageVegetative, color: '#0284c7', bg: '#e0f2fe' },
+                  { key: 'FLOWERING', label: dict.stageFlowering, color: '#e11d48', bg: '#ffe4e6' },
+                  { key: 'HARVESTING', label: dict.stageHarvesting, color: '#16a34a', bg: '#dcfce7' },
+                ].map((st) => {
+                  const isSelected = st.key === cropStage;
+                  return (
+                    <TouchableOpacity
+                      key={st.key}
+                      style={[
+                        styles.compactStageChip,
+                        isSelected
+                          ? { backgroundColor: st.color, borderColor: st.color }
+                          : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setCropStage(st.key as any);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.compactStageText,
+                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#475569' },
+                        ]}
+                      >
+                        {st.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* 2-Column: Irrigation System + Crop Measurement Unit */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.irrigationSystemLabel} *</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownUnitSelectorBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsIrrigationPickerOpen(true);
+                    }}
+                  >
+                    <Ionicons
+                      name={(IRRIGATION_TYPES.find((irr) => irr.type === selectedIrrigation)?.icon as any) || 'water-outline'}
+                      size={14}
+                      color="#0284c7"
+                    />
+                    <Text style={styles.dropdownUnitSelectorText} numberOfLines={1}>
+                      {getIrrigationLabel(selectedIrrigation, selectedIrrigation, dict)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={11} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.measurementUnitLabel} *</Text>
+                  <TouchableOpacity
+                    style={styles.dropdownUnitSelectorBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsCropUnitPickerOpen(true);
+                    }}
+                  >
+                    <Ionicons
+                      name={(CROP_UNITS.find((u) => u.unit === selectedUnit)?.icon as any) || 'scale-outline'}
+                      size={14}
+                      color="#16a34a"
+                    />
+                    <Text style={styles.dropdownUnitSelectorText} numberOfLines={1}>
+                      {getUnitLabel(selectedUnit, selectedUnit, dict)}
+                    </Text>
+                    <Ionicons name="chevron-down" size={11} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Harvest Pattern */}
+              <Text style={[styles.inputLabelCompact, { marginTop: 8 }]}>{dict.harvestPatternLabel} *</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
                 <TouchableOpacity
                   style={[
                     styles.compactMiniChip,
-                    { flex: 1, justifyContent: 'center', height: 34 },
+                    { flex: 1, justifyContent: 'center', height: 36, borderRadius: RADIUS.md },
                     customHarvestType === 'CONTINUOUS'
                       ? { backgroundColor: '#16a34a', borderColor: '#16a34a' }
-                      : { backgroundColor: '#f0fdf4', borderColor: '#cbd5e1' },
+                      : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
                   ]}
                   onPress={() => {
                     tap();
@@ -508,16 +1142,16 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   }}
                 >
                   <Text style={[styles.compactMiniText, customHarvestType === 'CONTINUOUS' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#16a34a' }]}>
-                    Daily Harvest (Morning/Evening)
+                    {dict.dailyHarvestContinuous}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.compactMiniChip,
-                    { flex: 1, justifyContent: 'center', height: 34 },
+                    { flex: 1, justifyContent: 'center', height: 36, borderRadius: RADIUS.md },
                     customHarvestType === 'ONE_TIME'
                       ? { backgroundColor: '#d97706', borderColor: '#d97706' }
-                      : { backgroundColor: '#fef3c7', borderColor: '#cbd5e1' },
+                      : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
                   ]}
                   onPress={() => {
                     tap();
@@ -525,49 +1159,9 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   }}
                 >
                   <Text style={[styles.compactMiniText, customHarvestType === 'ONE_TIME' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#d97706' }]}>
-                    🌾 1-Time Harvest (Single)
+                    {dict.oneTimeHarvest}
                   </Text>
                 </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* 7. Dedicated Crop Measurement Unit Card */}
-            <View style={styles.saleInfoCard}>
-              <View style={styles.saleCardHeader}>
-                <Ionicons name="scale" size={14} color="#16a34a" />
-                <Text style={styles.saleCardTitle}>Crop Measurement Unit</Text>
-              </View>
-
-              {/* Crop Measurement Unit Selector */}
-              <Text style={styles.inputLabelCompact}>Crop Measurement Unit *</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {CROP_UNITS.map((u) => {
-                  const isSelected = u.unit === selectedUnit;
-                  return (
-                    <TouchableOpacity
-                      key={u.unit}
-                      style={[
-                        styles.compactMiniChip,
-                        isSelected
-                          ? { backgroundColor: '#16a34a', borderColor: '#16a34a' }
-                          : { backgroundColor: '#f0fdf4', borderColor: '#cbd5e1' },
-                      ]}
-                      onPress={() => {
-                        tap();
-                        setSelectedUnit(u.unit);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.compactMiniText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#15803d' },
-                        ]}
-                      >
-                        {u.unit}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
               </View>
             </View>
 
@@ -595,19 +1189,19 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     }}
                   >
                     <Ionicons name="sparkles" size={15} color="#ffffff" />
-                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Upgrade Plan Now 👑</Text>
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>{dict.upgradePlan}</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
             ) : null}
 
             <TouchableOpacity
-              style={[styles.submitFormBtn, { backgroundColor: currentCategory.color, marginTop: 12 }]}
+              style={[styles.submitFormBtn, { backgroundColor: '#16a34a', marginTop: 8 }]}
               activeOpacity={0.85}
               onPress={handleFormSubmit}
             >
               <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-              <Text style={styles.submitFormText}>{editingCrop ? "✏️ Update Crop Details" : "Save Crop & Field Details"}</Text>
+              <Text style={styles.submitFormText}>{editingCrop ? dict.updateCropBtn : dict.saveCropBtn}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -618,8 +1212,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
             <View style={styles.pickerModalCard}>
               <View style={styles.headerRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>Select Crop Category</Text>
-                  <Text style={styles.modalSub}>Tap any category to filter crop list</Text>
+                  <Text style={styles.modalTitle}>{dict.selectCategoryTitle}</Text>
+                  <Text style={styles.modalSub}>{dict.selectCategorySub}</Text>
                 </View>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => setIsCategoryPickerOpen(false)}>
                   <Ionicons name="close" size={20} color="#475569" />
@@ -630,6 +1224,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                 {INITIAL_CROP_CATEGORIES.map((cat) => {
                   const isSelected = cat.id === selectedCatId;
                   const count = allCrops.filter((c) => c.categoryId === cat.id).length;
+                  const catLabel = getCategoryLabel(cat.id, cat.name, dict);
                   return (
                     <TouchableOpacity
                       key={cat.id}
@@ -644,7 +1239,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     >
                       <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#ffffff' : cat.color} />
                       <Text style={[styles.compactTileTitle, { color: isSelected ? '#ffffff' : cat.color }]} numberOfLines={1}>
-                        {cat.name}
+                        {catLabel}
                       </Text>
                       <View style={[styles.compactTileBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)' }]}>
                         <Text style={[styles.compactTileBadgeText, { color: isSelected ? '#ffffff' : cat.color }]}>
@@ -665,8 +1260,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
             <View style={styles.pickerModalCard}>
               <View style={styles.headerRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>Available Crops ({filteredCrops.length})</Text>
-                  <Text style={styles.modalSub}>Category: {currentCategory.name}</Text>
+                  <Text style={styles.modalTitle}>{dict.availableCropsTitle} ({filteredCrops.length})</Text>
+                  <Text style={styles.modalSub}>{dict.categoryPrefix}: {getCategoryLabel(currentCategory.id, currentCategory.name, dict)}</Text>
                 </View>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => setIsCropPickerOpen(false)}>
                   <Ionicons name="close" size={20} color="#475569" />
@@ -698,7 +1293,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                           </Text>
                           <View style={[styles.compactTileBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
                             <Text style={[styles.compactTileBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
-                              {isCont ? 'Daily' : '1-Time'}
+                              {isCont ? (dict.dailyHarvestContinuous?.split(' ')[0] || 'Daily') : (dict.oneTimeHarvest?.split(' ')[1] || '1-Time')}
                             </Text>
                           </View>
                         </TouchableOpacity>
@@ -707,7 +1302,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   ) : (
                     <View style={styles.emptyWrap}>
                       <Ionicons name="leaf-outline" size={28} color="#cbd5e1" />
-                      <Text style={styles.emptyText}>No crops found in this category.</Text>
+                      <Text style={styles.emptyText}>{dict.noCropsFound}</Text>
                     </View>
                   )}
                 </View>
@@ -726,14 +1321,15 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
           }}
           initialDate={sowingDate}
         />
+
         {/* COMPACT LAND AREA UNIT PICKER MODAL */}
         <Modal visible={isAreaUnitPickerOpen} transparent animationType="slide">
           <View style={styles.overlay}>
             <View style={styles.pickerModalCard}>
               <View style={styles.headerRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>Select Land Area Unit</Text>
-                  <Text style={styles.modalSub}>Tap your preferred unit of land measurement</Text>
+                  <Text style={styles.modalTitle}>{dict.selectLandAreaTitle}</Text>
+                  <Text style={styles.modalSub}>{dict.selectLandAreaSub}</Text>
                 </View>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => setIsAreaUnitPickerOpen(false)}>
                   <Ionicons name="close" size={20} color="#475569" />
@@ -743,6 +1339,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               <View style={{ gap: 8, paddingVertical: 8 }}>
                 {LAND_AREA_UNITS.map((u) => {
                   const isSelected = u.unit === selectedAreaUnit;
+                  const unitLabel = getAreaUnitLabel(u.unit, u.label, dict);
                   return (
                     <TouchableOpacity
                       key={u.unit}
@@ -758,7 +1355,95 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     >
                       <Ionicons name="map-outline" size={16} color={isSelected ? '#16a34a' : '#64748b'} />
                       <Text style={[styles.unitOptionText, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
-                        {u.label}
+                        {unitLabel}
+                      </Text>
+                      {isSelected ? <Ionicons name="checkmark-circle" size={18} color="#16a34a" /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* COMPACT IRRIGATION SYSTEM PICKER MODAL */}
+        <Modal visible={isIrrigationPickerOpen} transparent animationType="slide">
+          <View style={styles.overlay}>
+            <View style={styles.pickerModalCard}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>{dict.selectIrrigationTitle}</Text>
+                  <Text style={styles.modalSub}>{dict.selectIrrigationSub}</Text>
+                </View>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setIsIrrigationPickerOpen(false)}>
+                  <Ionicons name="close" size={20} color="#475569" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ gap: 8, paddingVertical: 8 }}>
+                {IRRIGATION_TYPES.map((irr) => {
+                  const isSelected = irr.type === selectedIrrigation;
+                  const irrLabel = getIrrigationLabel(irr.type, irr.label, dict);
+                  return (
+                    <TouchableOpacity
+                      key={irr.type}
+                      style={[
+                        styles.unitOptionRow,
+                        isSelected && { backgroundColor: '#f0f9ff', borderColor: '#0284c7' },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setSelectedIrrigation(irr.type);
+                        setIsIrrigationPickerOpen(false);
+                      }}
+                    >
+                      <Ionicons name={irr.icon as any} size={18} color={isSelected ? '#0284c7' : '#64748b'} />
+                      <Text style={[styles.unitOptionText, isSelected && { color: '#0284c7', fontFamily: FONT.bold }]}>
+                        {irrLabel}
+                      </Text>
+                      {isSelected ? <Ionicons name="checkmark-circle" size={18} color="#0284c7" /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* COMPACT CROP MEASUREMENT UNIT PICKER MODAL */}
+        <Modal visible={isCropUnitPickerOpen} transparent animationType="slide">
+          <View style={styles.overlay}>
+            <View style={styles.pickerModalCard}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>{dict.selectMeasurementTitle}</Text>
+                  <Text style={styles.modalSub}>{dict.selectMeasurementSub}</Text>
+                </View>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setIsCropUnitPickerOpen(false)}>
+                  <Ionicons name="close" size={20} color="#475569" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ gap: 8, paddingVertical: 8 }}>
+                {CROP_UNITS.map((u) => {
+                  const isSelected = u.unit === selectedUnit;
+                  const unitLabel = getUnitLabel(u.unit, u.label, dict);
+                  return (
+                    <TouchableOpacity
+                      key={u.unit}
+                      style={[
+                        styles.unitOptionRow,
+                        isSelected && { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setSelectedUnit(u.unit);
+                        setIsCropUnitPickerOpen(false);
+                      }}
+                    >
+                      <Ionicons name={(u.icon as any) || 'scale-outline'} size={18} color={isSelected ? '#16a34a' : '#64748b'} />
+                      <Text style={[styles.unitOptionText, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                        {unitLabel}
                       </Text>
                       {isSelected ? <Ionicons name="checkmark-circle" size={18} color="#16a34a" /> : null}
                     </TouchableOpacity>
@@ -773,34 +1458,101 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   );
 };
 
+
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: Platform.OS === 'web' ? 'center' : 'flex-end',
     alignItems: 'center',
+    padding: Platform.OS === 'web' ? 16 : 0,
   },
   modalCard: {
     width: '100%',
-    maxWidth: 480,
-    maxHeight: '90%',
+    maxWidth: 620,
+    maxHeight: '92%',
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    paddingBottom: 32,
+    borderRadius: Platform.OS === 'web' ? 20 : 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 18,
+    paddingBottom: Platform.OS === 'web' ? 20 : 28,
+    borderWidth: Platform.OS === 'web' ? 1.5 : 0,
+    borderColor: '#e2e8f0',
     ...premiumShadow('#000000', 'lg'),
   },
   pickerModalCard: {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 520,
     maxHeight: '85%',
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: RADIUS.xl,
-    borderTopRightRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    paddingBottom: 32,
+    borderRadius: Platform.OS === 'web' ? 20 : 0,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 18,
+    paddingBottom: 28,
+    borderWidth: Platform.OS === 'web' ? 1.5 : 0,
+    borderColor: '#e2e8f0',
     ...premiumShadow('#000000', 'lg'),
+  },
+  headerBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cropIdRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0f9ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    marginBottom: 10,
+  },
+  cropIdText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0369a1',
+  },
+  cropIdVerifiedPill: {
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  cropIdVerifiedText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  formSectionCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 10,
+    marginBottom: 8,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 6,
+  },
+  sectionHeaderTitle: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    letterSpacing: 0.5,
   },
   headerRow: {
     flexDirection: 'row',

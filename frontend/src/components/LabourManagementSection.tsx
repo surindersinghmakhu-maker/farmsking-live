@@ -1573,6 +1573,8 @@ function WorkerStatementModal({
   workerId: string | null;
   onClose: () => void;
 }) {
+  const { colors, isDark } = useExecutiveTheme();
+  const styles = getStyles(colors, isDark);
   const { user } = useAuth();
   const { data: statement, isLoading } = useLabourWorkerStatement(workerId || undefined);
   const statementShotRef = useRef<any>(null);

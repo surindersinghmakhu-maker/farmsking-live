@@ -2728,67 +2728,175 @@ export function ThirdPartyServicesSection() {
               <View style={styles.sectionSubCardHeader}>
                 <Ionicons name="planet" size={17} color="#16a34a" />
                 <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
-                  {localConfig.satellite?.activeProvider || 'AGROMONITORING'} Sentinel-2 Parameters
+                  {localConfig.satellite?.activeProvider || 'COPERNICUS'} Sentinel-2 Parameters
                 </Text>
               </View>
 
-              <View style={styles.formGrid}>
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Satellite API Key</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="Enter Agromonitoring Key"
-                      secureTextEntry={!showSecrets['sat_key']}
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.satellite.providers.agromonitoring.apiKey}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          satellite: {
-                            ...localConfig.satellite,
-                            providers: {
-                              ...localConfig.satellite.providers,
-                              agromonitoring: { ...localConfig.satellite.providers.agromonitoring, apiKey: val },
+              {localConfig.satellite?.activeProvider === 'COPERNICUS' || localConfig.satellite?.activeProvider === 'SENTINEL_HUB' ? (
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>OAuth Client ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="sh-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.satellite.providers?.sentinelHub?.clientId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                sentinelHub: { ...(localConfig.satellite.providers?.sentinelHub || {}), clientId: val } as any,
+                              },
                             },
-                          },
-                        })
-                      }
-                    />
-                    <TouchableOpacity onPress={() => toggleSecret('sat_key')}>
-                      <Ionicons
-                        name={showSecrets['sat_key'] ? 'eye-off' : 'eye'}
-                        size={16}
-                        color={subTextColor}
+                          })
+                        }
                       />
-                    </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Auto-Sync Farm Polygons</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, justifyContent: 'space-between' }]}>
-                    <Text style={{ fontSize: 12, color: subTextColor }}>Synchronize GPS field coordinates with satellite</Text>
-                    <Switch
-                      value={localConfig.satellite.providers.agromonitoring.autoSyncPolygons}
-                      onValueChange={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          satellite: {
-                            ...localConfig.satellite,
-                            providers: {
-                              ...localConfig.satellite.providers,
-                              agromonitoring: { ...localConfig.satellite.providers.agromonitoring, autoSyncPolygons: val },
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>OAuth Client Secret</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Enter Client Secret"
+                        secureTextEntry={!showSecrets['sat_secret']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.satellite.providers?.sentinelHub?.clientSecret || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                sentinelHub: { ...(localConfig.satellite.providers?.sentinelHub || {}), clientSecret: val } as any,
+                              },
                             },
-                          },
-                        })
-                      }
-                      trackColor={{ false: '#334155', true: isLight ? '#16a34a' : '#00ff87' }}
-                      thumbColor="#ffffff"
-                    />
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('sat_secret')}>
+                        <Ionicons
+                          name={showSecrets['sat_secret'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Configuration / Instance ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="9fd51b5a-3635-4675-a814-c5d5aa35b9c2"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.satellite.providers?.sentinelHub?.instanceId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                sentinelHub: { ...(localConfig.satellite.providers?.sentinelHub || {}), instanceId: val } as any,
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Auto-Sync Farm Polygons</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, justifyContent: 'space-between' }]}>
+                      <Text style={{ fontSize: 12, color: subTextColor }}>Synchronize GPS field coordinates with satellite</Text>
+                      <Switch
+                        value={localConfig.satellite.providers?.agromonitoring?.autoSyncPolygons ?? true}
+                        onValueChange={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                agromonitoring: { ...(localConfig.satellite.providers?.agromonitoring || {}), autoSyncPolygons: val } as any,
+                              },
+                            },
+                          })
+                        }
+                        trackColor={{ false: '#334155', true: isLight ? '#16a34a' : '#00ff87' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
                   </View>
                 </View>
-              </View>
+              ) : (
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Satellite API Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Enter Agromonitoring Key"
+                        secureTextEntry={!showSecrets['sat_key']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.satellite.providers?.agromonitoring?.apiKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                agromonitoring: { ...(localConfig.satellite.providers?.agromonitoring || {}), apiKey: val } as any,
+                              },
+                            },
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('sat_key')}>
+                        <Ionicons
+                          name={showSecrets['sat_key'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Auto-Sync Farm Polygons</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder, justifyContent: 'space-between' }]}>
+                      <Text style={{ fontSize: 12, color: subTextColor }}>Synchronize GPS field coordinates with satellite</Text>
+                      <Switch
+                        value={localConfig.satellite.providers?.agromonitoring?.autoSyncPolygons ?? true}
+                        onValueChange={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            satellite: {
+                              ...localConfig.satellite,
+                              providers: {
+                                ...localConfig.satellite.providers,
+                                agromonitoring: { ...(localConfig.satellite.providers?.agromonitoring || {}), autoSyncPolygons: val } as any,
+                              },
+                            },
+                          })
+                        }
+                        trackColor={{ false: '#334155', true: isLight ? '#16a34a' : '#00ff87' }}
+                        thumbColor="#ffffff"
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
           </View>
         )}

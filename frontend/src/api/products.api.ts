@@ -18,17 +18,22 @@ export async function listProducts(includeInactive = false): Promise<Product[]> 
   return data;
 }
 
+export async function getProduct(id: string): Promise<Product> {
+  const { data } = await apiClient.get<Product>('/products/' + id);
+  return data;
+}
+
 export async function createProduct(payload: CreateProductPayload): Promise<Product> {
   const { data } = await apiClient.post<Product>('/products', payload);
   return data;
 }
 
 export async function updateProduct(id: string, payload: UpdateProductPayload): Promise<Product> {
-  const { data } = await apiClient.patch<Product>(`/products/${id}`, payload);
+  const { data } = await apiClient.patch<Product>('/products/' + id, payload);
   return data;
 }
 
 export async function removeProduct(id: string): Promise<Product> {
-  const { data } = await apiClient.delete<Product>(`/products/${id}`);
+  const { data } = await apiClient.delete<Product>('/products/' + id);
   return data;
 }

@@ -108,7 +108,7 @@ export default function CartScreen() {
       tap();
       const res = await couponPreview.mutateAsync({
         code: couponCode.trim().toUpperCase(),
-        orderTotal: subtotal,
+        amount: subtotal,
       });
       const discount = Number((res as any)?.discount || (res as any)?.discountAmount || 0);
       if (discount > 0) {

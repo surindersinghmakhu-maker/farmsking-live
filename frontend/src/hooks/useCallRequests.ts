@@ -4,7 +4,8 @@ import * as api from '../api/callRequests.api';
 export function useCreateCallRequest() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.createCallRequest,
+    mutationFn: (payload: api.CreateCallRequestPayload | void = undefined) =>
+      api.createCallRequest(payload || undefined),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['call-requests'] }),
   });
 }

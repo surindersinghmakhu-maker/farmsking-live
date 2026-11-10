@@ -424,7 +424,7 @@ export default function MembershipsScreen() {
                             refetchPendingChanges();
                             if (Platform.OS === 'web') alert('Doctor switch approved successfully!');
                             else Alert.alert('Success', 'Doctor switch approved successfully!');
-                          } catch (err) {
+                          } catch (err: any) {
                             const msg = err?.response?.data?.message || 'Could not approve change.';
                             if (Platform.OS === 'web') alert(msg);
                             else Alert.alert('Error', msg);
@@ -443,7 +443,7 @@ export default function MembershipsScreen() {
                             refetchPendingChanges();
                             if (Platform.OS === 'web') alert('Doctor switch declined.');
                             else Alert.alert('Declined', 'Doctor switch declined.');
-                          } catch (err) {
+                          } catch (err: any) {
                             const msg = err?.response?.data?.message || 'Could not decline change.';
                             if (Platform.OS === 'web') alert(msg);
                             else Alert.alert('Error', msg);

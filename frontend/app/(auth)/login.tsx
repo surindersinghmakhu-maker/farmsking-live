@@ -556,7 +556,7 @@ export default function LoginScreen() {
       {Platform.OS === 'web' && isDesktop && isMouseActive ? (
         <View
           style={[
-            StyleSheet.absoluteFillObject,
+            StyleSheet.absoluteFill,
             {
               pointerEvents: 'none',
               zIndex: 1,
@@ -588,7 +588,7 @@ export default function LoginScreen() {
                 {Platform.OS === 'web' && isDesktop && isMouseActive && (
                   <View
                     style={[
-                      StyleSheet.absoluteFillObject,
+                      StyleSheet.absoluteFill,
                       {
                         pointerEvents: 'none',
                         zIndex: 2,
@@ -688,7 +688,7 @@ export default function LoginScreen() {
             {Platform.OS === 'web' && isDesktop && isMouseActive && (
               <View
                 style={[
-                  StyleSheet.absoluteFillObject,
+                  StyleSheet.absoluteFill,
                   {
                     pointerEvents: 'none',
                     zIndex: 0,
@@ -919,7 +919,7 @@ export default function LoginScreen() {
 
                 {/* Verify & Enter Button */}
                 <TouchableOpacity
-                  onPress={handleOtpLogin}
+                  onPress={() => handleOtpLogin()}
                   disabled={isSubmitting || !currentOtpFilled}
                   activeOpacity={0.88}
                   style={[styles.primaryActionBtn, (!currentOtpFilled || isSubmitting) && { opacity: 0.6 }]}

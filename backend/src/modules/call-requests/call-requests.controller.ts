@@ -7,16 +7,17 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { CallRequestsService } from './call-requests.service';
 import { ResolveCallRequestDto } from './dto/resolve-call-request.dto';
+import { CreateCallRequestDto } from './dto/create-call-request.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('call-requests')
 export class CallRequestsController {
   constructor(private readonly callRequestsService: CallRequestsService) {}
 
-  @Roles(Role.FARMER, Role.GARDENER)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER)
   @Post()
-  create(@CurrentUser() user: AuthUser) {
-    return this.callRequestsService.create(user);
+  create(@CurrentUser() user: AuthUser, @Body() dto?: CreateCallRequestDto) {
+    return this.callRequestsService.create(user, dto);
   }
 
   @Roles(Role.FARMER, Role.GARDENER)

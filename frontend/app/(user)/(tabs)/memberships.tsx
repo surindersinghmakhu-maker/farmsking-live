@@ -27,6 +27,9 @@ import { useRole } from '@/src/store/role-context';
 import { CopyButton } from '@/src/components/CopyButton';
 import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
+import { CropSelectionModal } from '@/src/components/CropSelectionModal';
+import { useMyCrops } from '@/src/hooks/useCrops';
+import { useCreateCallRequest } from '@/src/hooks/useCallRequests';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARMER;
@@ -86,6 +89,10 @@ export default function MembershipsScreen() {
   const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
   const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
   const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
+  const { data: myRealCrops = [] } = useMyCrops();
+  const createCallRequest = useCreateCallRequest();
+  const [cropModalVisible, setCropModalVisible] = useState(false);
+  const [isInstantCallMode, setIsInstantCallMode] = useState(false);
 
   const activeAdvisor = myAdvisorData?.advisor;
   const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
@@ -129,10 +136,43 @@ export default function MembershipsScreen() {
   const handleInitiateAdvisorRequest = (adv: { id: string; name: string }) => {
     tap();
     setTargetAdvisorToRequest(adv);
-    if (activeAdvisor) {
-      setDisclaimerModalVisible(true);
-    } else {
-      executeAdvisorRequest(adv.id);
+    setIsChoosingAdvisor(false);
+    setIsInstantCallMode(false);
+    setCropModalVisible(true);
+  };
+
+  const handleInitiateInstantCall = (adv?: { id: string; name: string }) => {
+    tap();
+    const target = adv || activeAdvisor || (availableAdvisors[0] ? { id: availableAdvisors[0].id, name: availableAdvisors[0].name } : null);
+    if (!target) {
+      setIsChoosingAdvisor(true);
+      return;
+    }
+    setTargetAdvisorToRequest(target);
+    setIsInstantCallMode(true);
+    setCropModalVisible(true);
+  };
+
+  const handleConfirmCropPermission = async (cropId: string, cropName: string, notes?: string) => {
+    if (!targetAdvisorToRequest) return;
+    try {
+      if (isInstantCallMode) {
+        await createCallRequest.mutateAsync({
+          advisorId: targetAdvisorToRequest.id,
+          cropId: cropId !== 'GENERAL' ? cropId : undefined,
+          notes,
+        });
+        setCropModalVisible(false);
+        const msg = `✅ Instant consultation requested with Dr. ${targetAdvisorToRequest.name}! Crop details for "${cropName}" have been shared.`;
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Call Requested ⚡', msg);
+      } else {
+        await executeAdvisorRequest(targetAdvisorToRequest.id, cropId !== 'GENERAL' ? cropId : undefined, cropName);
+      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not process consultation request.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
     }
   };
 
@@ -163,14 +203,18 @@ export default function MembershipsScreen() {
     }
   };
 
-  const executeAdvisorRequest = async (advisorId: string) => {
+  const executeAdvisorRequest = async (advisorId: string, cropId?: string, cropName?: string) => {
     try {
-      await chooseAdvisor.mutateAsync(advisorId);
+      await chooseAdvisor.mutateAsync({ advisorId, cropId });
       setIsChoosingAdvisor(false);
       setDisclaimerModalVisible(false);
+      setCropModalVisible(false);
       setTargetAdvisorToRequest(null);
-      if (Platform.OS === 'web') alert('✅ Request submitted! Super Admin will review doctor change request and notify your doctor.');
-      else Alert.alert('Success', 'Request submitted! Super Admin will review doctor change request and notify your doctor.');
+      const msg = cropName && cropName !== 'General Farm Advisory'
+        ? `✅ Permission granted for "${cropName}"! Dr. ${targetAdvisorToRequest?.name || 'Advisor'} will review your crop and prepare your custom care plan.`
+        : '✅ Request submitted! Your advisor has been notified.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Success', msg);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Could not request doctor.';
       if (Platform.OS === 'web') alert(msg);
@@ -528,6 +572,36 @@ export default function MembershipsScreen() {
               )
             ) : null}
 
+            {/* ⚡ Instant 1-on-1 Doctor Consultation (Pay-Per-Consultation / Single Appointment) */}
+            <View style={[styles.planCard, { borderColor: '#f59e0b', borderWidth: 1.5, backgroundColor: isDark ? 'rgba(245, 158, 11, 0.05)' : '#fffbeb' }, premiumShadow('#f59e0b', 'sm')]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>⚡ PARALLEL SERVICE · ANYTIME ACCESS</Text>
+                </View>
+                <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#b45309' }}>₹100 - ₹200 <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#92400e' }}>/ Call</Text></Text>
+              </View>
+
+              <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 6 }}>
+                ⚡ Instant 1-on-1 Doctor Consultation
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 17, marginTop: 2 }}>
+                Need emergency crop diagnosis or a second opinion? Connect directly with any Agri-Doctor anytime — runs in parallel whether you already have a regular advisor or not.
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ 100% In-App Private VOIP Call</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Crop-Specific Permission</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#059669' }}>✓ Multiple Specialists</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#f59e0b', marginTop: 8 }]}
+                onPress={() => handleInitiateInstantCall()}
+              >
+                <Text style={styles.upgradeBtnText}>Book Instant Consultation ⚡</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Active Doctor Status Card */}
             <View style={[styles.doctorCard, { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -705,6 +779,25 @@ export default function MembershipsScreen() {
       <CropCarePlanModal
         visible={isCropCareModalOpen}
         onClose={() => setIsCropCareModalOpen(false)}
+      />
+
+      {/* Crop Selection & Farmer Permission Modal */}
+      <CropSelectionModal
+        visible={cropModalVisible}
+        onClose={() => setCropModalVisible(false)}
+        onConfirm={handleConfirmCropPermission}
+        doctorName={targetAdvisorToRequest?.name}
+        crops={myRealCrops.map((c) => ({
+          id: c.id,
+          cropName: c.cropName,
+          variety: c.variety,
+          cropId: c.cropId,
+          plot: c.plot,
+          area: c.area,
+          stage: c.stage,
+        }))}
+        isInstantCall={isInstantCallMode}
+        isLoading={chooseAdvisor.isPending || createCallRequest.isPending}
       />
     </View>
   );

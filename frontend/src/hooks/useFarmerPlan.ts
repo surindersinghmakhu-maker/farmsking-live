@@ -59,6 +59,34 @@ export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; c
     bg: '#fef3c7',
     borderColor: '#fde68a',
   },
+  VIP: {
+    label: 'Farmer VIP Card',
+    emoji: '👑',
+    color: '#b45309',
+    bg: '#fef3c7',
+    borderColor: '#fde68a',
+  },
+  BASIC: {
+    label: 'Free Pass',
+    emoji: '🌱',
+    color: '#166534',
+    bg: '#ffffff',
+    borderColor: '#86efac',
+  },
+  PLATINUM: {
+    label: 'Platinum Card',
+    emoji: '💎',
+    color: '#0284c7',
+    bg: '#f0f9ff',
+    borderColor: '#bae6fd',
+  },
+  DIAMOND: {
+    label: 'Diamond VIP Card',
+    emoji: '👑',
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+    borderColor: '#ddd6fe',
+  },
   SILVER: {
     label: 'Boss Card + Advisor',
     emoji: '🩺',
@@ -91,7 +119,13 @@ export function useFarmerPlan() {
   });
 
   const plan = query.data?.plan ?? 'FREE';
-  const meta = PLAN_META[plan];
+  const meta = PLAN_META[plan] ?? PLAN_META.FREE ?? {
+    label: plan ? `${plan} Pass` : 'Free Pass',
+    emoji: '🌱',
+    color: '#166534',
+    bg: '#ffffff',
+    borderColor: '#86efac',
+  };
 
   const hasActiveSoftwarePlan = plan !== 'FREE' && !(query.data?.isExpired ?? false);
   const canHireAdvisor = hasActiveSoftwarePlan;

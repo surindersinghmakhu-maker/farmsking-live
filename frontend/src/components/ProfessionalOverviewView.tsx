@@ -629,7 +629,7 @@ function CropStatementModal({
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #475569;">${new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${row.category}${row.comments ? `<br/><span style="font-size: 9px; color: #64748b;">${row.comments}</span>` : ''}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${row.type === 'INCOME' ? `+₹${row.incomeAmt.toLocaleString('en-IN')}` : '—'}</td>
-          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${row.type === 'EXPENSE' ? `-₹${row.expenseAmt.toLocaleString('en-IN')}` : '—'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${row.type === 'EXPENSE' ? (row.expenseAmt === 0 ? '<span style="color:#16a34a; font-weight: 700; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">₹0 (Free / Activity)</span>' : `-₹${row.expenseAmt.toLocaleString('en-IN')}`) : '—'}</td>
         </tr>`
         )
         .join('');
@@ -847,9 +847,25 @@ function CropStatementModal({
                     <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }}>
                       {row.type === 'INCOME' ? `+₹${row.incomeAmt.toLocaleString('en-IN')}` : '—'}
                     </Text>
-                    <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626', textAlign: 'right' }}>
-                      {row.type === 'EXPENSE' ? `-₹${row.expenseAmt.toLocaleString('en-IN')}` : '—'}
-                    </Text>
+                    {row.type === 'EXPENSE' ? (
+                      row.expenseAmt === 0 ? (
+                        <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
+                          <View style={{ backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, borderWidth: 1, borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#86efac' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#15803d' }}>
+                              ₹0 Free
+                            </Text>
+                          </View>
+                        </View>
+                      ) : (
+                        <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626', textAlign: 'right' }}>
+                          -₹{row.expenseAmt.toLocaleString('en-IN')}
+                        </Text>
+                      )
+                    ) : (
+                      <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#94a3b8', textAlign: 'right' }}>
+                        —
+                      </Text>
+                    )}
                   </View>
                 ))}
               </View>

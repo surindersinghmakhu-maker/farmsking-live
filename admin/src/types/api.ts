@@ -48,6 +48,8 @@ export interface User {
   deactivatedRoles?: Role[];
   name: string;
   email?: string | null;
+  isEmailVerified?: boolean | null;
+  pendingEmail?: string | null;
   googleId?: string | null;
   village?: string | null;
   district?: string | null;
@@ -119,6 +121,8 @@ export interface AdminUser {
   deactivatedRoles?: Role[];
   name: string;
   email?: string | null;
+  isEmailVerified?: boolean | null;
+  pendingEmail?: string | null;
   village?: string | null;
   district?: string | null;
   state?: string | null;

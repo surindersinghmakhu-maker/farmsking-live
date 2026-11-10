@@ -23,7 +23,7 @@ export class SatelliteService {
     // Check system integrations settings for satellite provider
     const integrations = await this.appSettingsService.getIntegrations();
     const satelliteConfig = integrations?.satellite || {
-      activeProvider: 'AGROMONITORING',
+      activeProvider: 'COPERNICUS',
       isEnabled: true,
       providers: {},
     };
@@ -35,7 +35,7 @@ export class SatelliteService {
 
     if (latestScan) return latestScan;
 
-    const activeProvider = satelliteConfig.activeProvider || 'AGROMONITORING';
+    const activeProvider = satelliteConfig.activeProvider || 'COPERNICUS';
     let tileLayerUrl = `https://api.agromonitoring.com/tile/1.0/ndvi/plot-${plotId}.png`;
     let meanNdvi = 0.76;
     let alerts: Array<{ lat: number; lng: number; message: string }> = [
@@ -53,10 +53,11 @@ export class SatelliteService {
         break;
       }
       case 'COPERNICUS': {
-        tileLayerUrl = `https://browser.dataspace.copernicus.eu/tiles/sentinel-2/ndvi/plot-${plotId}.png`;
-        meanNdvi = 0.75;
+        const instanceId = satelliteConfig.providers?.sentinelHub?.instanceId || process.env.COPERNICUS_INSTANCE_ID || '9fd51b5a-3635-4675-a814-c5d5aa35b9c2';
+        tileLayerUrl = `https://sh.dataspace.copernicus.eu/ogc/wms/${instanceId}?REQUEST=GetMap&LAYERS=NDVI&plot=${plotId}`;
+        meanNdvi = 0.79;
         alerts = [
-          { lat: 30.7046, lng: 76.7179, message: 'Sentinel-1 SAR Radar: Optimal soil moisture detected under cloud cover' },
+          { lat: 30.7046, lng: 76.7179, message: 'Copernicus Sentinel-2: Active vegetative biomass & balanced soil nitrogen' },
         ];
         break;
       }

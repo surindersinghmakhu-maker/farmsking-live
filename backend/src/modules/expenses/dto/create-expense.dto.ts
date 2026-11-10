@@ -1,5 +1,5 @@
 import { PaymentMode } from '@prisma/client';
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateExpenseDto {
   @IsUUID()
@@ -17,7 +17,7 @@ export class CreateExpenseDto {
   categoryId: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
-  @IsPositive()
+  @Min(0)
   amount: number;
 
   @IsDateString()
@@ -41,7 +41,7 @@ export class CreateExpenseDto {
 
   @IsOptional()
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   quantity?: number;
 
   @IsOptional()

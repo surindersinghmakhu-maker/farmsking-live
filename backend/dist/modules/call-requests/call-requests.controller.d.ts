@@ -1,10 +1,17 @@
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { CallRequestsService } from './call-requests.service';
 import { ResolveCallRequestDto } from './dto/resolve-call-request.dto';
+import { CreateCallRequestDto } from './dto/create-call-request.dto';
 export declare class CallRequestsController {
     private readonly callRequestsService;
     constructor(callRequestsService: CallRequestsService);
-    create(user: AuthUser): Promise<{
+    create(user: AuthUser, dto?: CreateCallRequestDto): Promise<{
+        selectedCrop: {
+            id: string | undefined;
+            name: string;
+            variety: string | null;
+        } | null;
+        notes: string | null;
         farmer: {
             id: string;
             kingId: string | null;
@@ -17,7 +24,6 @@ export declare class CallRequestsController {
             mobile: string;
             name: string;
         };
-    } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;

@@ -122,6 +122,10 @@ const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
   PRO: { icon: 'flash', color: '#0284c7' },
   SMART: { icon: 'star', color: '#1d4ed8' },
   SUPER: { icon: 'star', color: '#d97706' },
+  VIP: { icon: 'crown', color: '#d97706' },
+  BASIC: { icon: 'leaf', color: '#15803d' },
+  PLATINUM: { icon: 'diamond', color: '#0284c7' },
+  DIAMOND: { icon: 'crown', color: '#7c3aed' },
   SILVER: { icon: 'medical', color: '#475569' },
   GOLD: { icon: 'ribbon', color: '#d97706' },
   ROYAL: { icon: 'sparkles', color: '#7c3aed' },
@@ -253,7 +257,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                   ]}
                   numberOfLines={1}
                 >
-                  {meta.label}
+                  {meta?.label ?? 'VIP Pass'}
                 </Text>
               </View>
 

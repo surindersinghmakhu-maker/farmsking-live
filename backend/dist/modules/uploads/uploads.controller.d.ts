@@ -3,7 +3,8 @@ import { UploadsService } from './uploads.service';
 export declare class UploadsController {
     private readonly uploadsService;
     constructor(uploadsService: UploadsService);
-    upload(user: AuthUser, file: any): import(".prisma/client").Prisma.Prisma__UploadClient<{
+    upload(user: AuthUser, file: any): Promise<{
+        provider: string;
         id: string;
         createdAt: Date;
         uploadedById: string;
@@ -11,5 +12,19 @@ export declare class UploadsController {
         mimeType: string;
         originalName: string;
         sizeBytes: number;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
+    uploadBase64(user: AuthUser, body: {
+        dataUri: string;
+        filename?: string;
+        folder?: string;
+    }): Promise<{
+        provider: string;
+        id: string;
+        createdAt: Date;
+        uploadedById: string;
+        fileUrl: string;
+        mimeType: string;
+        originalName: string;
+        sizeBytes: number;
+    }>;
 }

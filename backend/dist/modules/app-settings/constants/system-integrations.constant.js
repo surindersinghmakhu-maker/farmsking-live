@@ -483,6 +483,7 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
     },
     storage: {
         activeProvider: 'CLOUDFLARE_R2',
+        isEnabled: true,
         providers: {
             cloudflareR2: {
                 accountId: process.env.R2_ACCOUNT_ID || '',
@@ -490,6 +491,22 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
                 secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
                 bucketName: process.env.R2_BUCKET_NAME || 'farmsking-media',
                 publicUrl: 'https://media.farmsking.in',
+            },
+            firebase: {
+                projectId: 'farmsking-510606',
+                storageBucket: 'farmsking-510606.firebasestorage.app',
+                apiKey: 'AIzaSyC4ZPSAJcbb7xHzPdWlmqNo0yX2rnLeIgo',
+                serviceAccountJson: '',
+            },
+            cloudinary: {
+                cloudName: 'farmsking',
+                apiKey: '',
+                apiSecret: '',
+                uploadPreset: 'crop_media',
+            },
+            local: {
+                uploadPath: './uploads',
+                publicBaseUrl: 'http://localhost:3000',
             },
             supabase: {
                 projectUrl: '',

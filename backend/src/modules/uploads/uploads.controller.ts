@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import {
   BadRequestException,
+  Body,
   Controller,
   Post,
   UploadedFile,
@@ -26,10 +27,14 @@ const ALLOWED_MIME_TYPES = [
   'image/vnd.microsoft.icon',
   'image/svg+xml',
   'image/x-png',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
+  'video/x-matroska',
   'application/octet-stream',
 ];
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg'];
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB for 1-minute field videos
+const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg', '.mp4', '.webm', '.mov'];
 
 @UseGuards(JwtAuthGuard)
 @Controller('uploads')
@@ -47,9 +52,9 @@ export class UploadsController {
           if (!ext) {
             if (file.mimetype === 'image/png') ext = '.png';
             else if (file.mimetype === 'image/webp') ext = '.webp';
-            else if (file.mimetype === 'image/heic') ext = '.heic';
-            else if (file.mimetype === 'image/x-icon' || file.mimetype === 'image/vnd.microsoft.icon') ext = '.ico';
-            else if (file.mimetype === 'image/svg+xml') ext = '.svg';
+            else if (file.mimetype === 'video/mp4') ext = '.mp4';
+            else if (file.mimetype === 'video/webm') ext = '.webm';
+            else if (file.mimetype === 'video/quicktime') ext = '.mov';
             else ext = '.jpg';
           }
           callback(null, `${randomUUID()}${ext}`);
@@ -57,8 +62,12 @@ export class UploadsController {
       }),
       limits: { fileSize: MAX_FILE_SIZE_BYTES },
       fileFilter: (_req, file, callback) => {
-        if (!ALLOWED_MIME_TYPES.includes(file.mimetype) && !file.mimetype?.startsWith('image/')) {
-          callback(new BadRequestException('Only image files (JPEG, PNG, WEBP, ICO, SVG, HEIC) are allowed.'), false);
+        if (
+          !ALLOWED_MIME_TYPES.includes(file.mimetype) &&
+          !file.mimetype?.startsWith('image/') &&
+          !file.mimetype?.startsWith('video/')
+        ) {
+          callback(new BadRequestException('Only image and video files are allowed.'), false);
           return;
         }
         callback(null, true);
@@ -71,5 +80,15 @@ export class UploadsController {
     }
     return this.uploadsService.create(user, file);
   }
-}
 
+  @Post('base64')
+  uploadBase64(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { dataUri: string; filename?: string; folder?: string },
+  ) {
+    if (!body?.dataUri) {
+      throw new BadRequestException('No base64 data provided.');
+    }
+    return this.uploadsService.createFromBase64(user, body.dataUri, body.filename, body.folder);
+  }
+}

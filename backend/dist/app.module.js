@@ -22,6 +22,7 @@ const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const market_rates_module_1 = require("./modules/market-rates/market-rates.module");
 const expenses_module_1 = require("./modules/expenses/expenses.module");
 const uploads_module_1 = require("./modules/uploads/uploads.module");
+const media_store_module_1 = require("./modules/media-store/media-store.module");
 const advisor_assignment_module_1 = require("./modules/advisor-assignment/advisor-assignment.module");
 const subscriptions_module_1 = require("./modules/subscriptions/subscriptions.module");
 const crop_activity_schedules_module_1 = require("./modules/crop-activity-schedules/crop-activity-schedules.module");
@@ -105,6 +106,7 @@ exports.AppModule = AppModule = __decorate([
             admin_chat_module_1.AdminChatModule,
             whatsapp_module_1.WhatsappBotModule,
             uploads_module_1.UploadsModule,
+            media_store_module_1.MediaStoreModule,
             advisor_assignment_module_1.AdvisorAssignmentModule,
             subscriptions_module_1.SubscriptionsModule,
             crop_activity_schedules_module_1.CropActivitySchedulesModule,

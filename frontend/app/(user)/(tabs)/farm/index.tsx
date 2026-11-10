@@ -34,6 +34,7 @@ import { CropCategorySelectorModal, CropFormValues } from '@/components/CropCate
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropMediaModal } from '@/components/CropMediaModal';
+import { CropActivitiesModal } from '@/components/CropActivitiesModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
@@ -218,6 +219,8 @@ export default function FarmListScreen() {
   const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
   const [selectedCropForMedia, setSelectedCropForMedia] = useState<RegisteredCropField | null>(null);
   const [showCropMediaModal, setShowCropMediaModal] = useState(false);
+  const [selectedCropForActivities, setSelectedCropForActivities] = useState<RegisteredCropField | null>(null);
+  const [showActivitiesModal, setShowActivitiesModal] = useState(false);
   const [completionReviewModalVisible, setCompletionReviewModalVisible] = useState(false);
   const [cropToComplete, setCropToComplete] = useState<RegisteredCropField | null>(null);
 
@@ -1005,15 +1008,44 @@ export default function FarmListScreen() {
                     )}
                   </View>
 
-                  {/* Previous Activity Row (Last Mark as Done Schedule Task) */}
-                  <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0', marginTop: 2 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Ionicons name="checkmark-done-circle" size={14} color="#16a34a" />
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#e2e8f0' : '#334155' }}>
-                        Previous Activity: <Text style={{ fontFamily: FONT.semiBold, color: isDark ? '#86efac' : '#166534' }}>{getLastDoneTask(item)}</Text>
+                  {/* Crop Activities Button (Interactive: Shows Expenses, Watering, Sprays, Fertilizers & Photos) */}
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: isDark ? 'rgba(2, 132, 199, 0.12)' : '#f0f9ff',
+                      paddingHorizontal: 9,
+                      paddingVertical: 6,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: isDark ? 'rgba(2, 132, 199, 0.35)' : '#bae6fd',
+                      marginTop: 3,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    activeOpacity={0.82}
+                    onPress={() => {
+                      tap();
+                      setSelectedCropForActivities(item);
+                      setShowActivitiesModal(true);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
+                      <Ionicons name="calendar" size={13} color="#0284c7" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                        Crop Activities:
+                      </Text>
+                      <Text
+                        style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#e0f2fe' : '#334155', flex: 1 }}
+                        numberOfLines={1}
+                      >
+                        {getLastDoneTask(item)}
                       </Text>
                     </View>
-                  </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(2, 132, 199, 0.25)' : '#e0f2fe', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0284c7' }}>View All</Text>
+                      <Ionicons name="chevron-forward" size={10} color="#0284c7" />
+                    </View>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Crop Satellite Field Link & Lock/Unlock Single Button */}
@@ -1026,7 +1058,7 @@ export default function FarmListScreen() {
                       (cropGps && cropGps.corners && cropGps.corners.length > 0) ||
                       (item.location && item.location.includes('°'))
                     );
-                    const isUnlocked = Boolean(unlockedCropIds[item.id]);
+                    const isUnlocked = unlockedCropIds[item.id] !== false;
                     const isLocked = isLinked && !isUnlocked;
                     const pendingRequest = (gpsUnlockRequests || []).find(
                       (r) => (r.cropId === item.id || r.cropId === item.cropId) && r.status === 'PENDING'
@@ -1036,66 +1068,9 @@ export default function FarmListScreen() {
                     const lngVal = cropGps?.centerLng || user?.gpsLng || 75.8573;
                     const locVal = cropGps?.locationText || item.location || `📍 ${Number(latVal).toFixed(4)}° N, ${Number(lngVal).toFixed(4)}° E`;
 
-                    // State 1: Not linked yet -> 2 Compact Buttons (Link Satellite + Crop Photos & Video)
-                    if (!isLinked) {
-                      return (
-                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
-                          {/* Button 1 (Blue): Link Satellite */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 5,
-                              backgroundColor: '#2563eb',
-                              paddingVertical: 8,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setSelectedCropForGps(item);
-                              setShowLocationModal(true);
-                            }}
-                          >
-                            <Ionicons name="planet" size={13} color="#ffffff" />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
-                              Link Satellite Field
-                            </Text>
-                          </TouchableOpacity>
-
-                          {/* Button 2 (Green): Crop Photos & Video */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 5,
-                              backgroundColor: isDark ? '#166534' : '#15803d',
-                              paddingVertical: 8,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setSelectedCropForMedia(item);
-                              setShowCropMediaModal(true);
-                            }}
-                          >
-                            <Ionicons name="camera" size={13} color="#ffffff" />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
-                              Crop Photos & Video
-                            </Text>
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    }
-
-                    // Linked State: Render 2 Compact Buttons directly on card (Satellite Map & Health + Crop Photos & Video)
+                    // Both Unlinked & Linked States: Render 2 Compact Buttons matching Image 4
+                    // Left (Green): Field Telemetry & Media
+                    // Right (Blue): Satellite Map & Weather
                     return (
                       <View style={{ gap: 5, width: '100%' }}>
                         {pendingRequest ? (
@@ -1119,47 +1094,18 @@ export default function FarmListScreen() {
                           </View>
                         ) : null}
 
-                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
-                          {/* Button 1 (Blue): ONE Single Satellite Button (Map, Health, GPS Telemetry & Operator Unlock Inside) */}
+                        <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
+                          {/* Button 1 (Green - Left): Field Telemetry & Media */}
                           <TouchableOpacity
                             style={{
                               flex: 1,
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: 5,
-                              backgroundColor: isDark ? '#1d4ed8' : '#2563eb',
-                              paddingVertical: 8,
-                              paddingHorizontal: 6,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setSelectedCropForGps(item);
-                              setShowLocationModal(true);
-                            }}
-                          >
-                            <Ionicons name={isLocked ? "lock-closed" : "planet"} size={13} color="#ffffff" />
-                            <Text
-                              style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }}
-                              numberOfLines={1}
-                            >
-                              {isLocked ? 'Satellite Map (Locked)' : 'Satellite Map & Health'}
-                            </Text>
-                          </TouchableOpacity>
-
-                          {/* Button 2 (Green): ONLY Ground Crop Photos & 1-Minute Live Video */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 5,
+                              gap: 6,
                               backgroundColor: isDark ? '#166534' : '#15803d',
-                              paddingVertical: 8,
-                              paddingHorizontal: 6,
+                              paddingVertical: 9,
+                              paddingHorizontal: 8,
                               borderRadius: 8,
                             }}
                             activeOpacity={0.85}
@@ -1169,12 +1115,41 @@ export default function FarmListScreen() {
                               setShowCropMediaModal(true);
                             }}
                           >
-                            <Ionicons name="camera" size={13} color="#ffffff" />
+                            <Ionicons name="shield-checkmark" size={14} color="#ffffff" />
                             <Text
-                              style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }}
+                              style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}
                               numberOfLines={1}
                             >
-                              Crop Photos & Video
+                              Field Telemetry & Media
+                            </Text>
+                          </TouchableOpacity>
+
+                          {/* Button 2 (Blue - Right): Satellite Map & Weather */}
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 6,
+                              backgroundColor: isDark ? '#1d4ed8' : '#2563eb',
+                              paddingVertical: 9,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                            }}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              setSelectedCropForGps(item);
+                              setShowLocationModal(true);
+                            }}
+                          >
+                            <Ionicons name="planet" size={14} color="#ffffff" />
+                            <Text
+                              style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}
+                              numberOfLines={1}
+                            >
+                              Satellite Map & Weather
                             </Text>
                           </TouchableOpacity>
                         </View>
@@ -2038,7 +2013,7 @@ export default function FarmListScreen() {
       {/* Farm GPS Location Picker Modal */}
       <FarmLocationPickerModal
         visible={showLocationModal}
-        initialIsLocked={selectedCropForGps ? !unlockedCropIds[selectedCropForGps.id] : true}
+        initialIsLocked={selectedCropForGps ? (unlockedCropIds[selectedCropForGps.id] === false) : false}
         cropId={selectedCropForGps?.id}
         cropName={selectedCropForGps?.cropName}
         farmerName={user?.name || selectedCropForGps?.farmerName}
@@ -2063,6 +2038,19 @@ export default function FarmListScreen() {
         fieldName={selectedCropForMedia?.fieldName}
         existingGpsData={selectedCropForMedia ? cropGpsDataMap[selectedCropForMedia.id] || selectedCropForMedia?.gpsData : undefined}
         onClose={() => setShowCropMediaModal(false)}
+      />
+
+      {/* Dedicated Crop Activities Modal (Expenses, Watering, Sprays, Fertilizers & Photos) */}
+      <CropActivitiesModal
+        visible={showActivitiesModal}
+        crop={selectedCropForActivities}
+        onClose={() => setShowActivitiesModal(false)}
+        onOpenMediaModal={() => {
+          if (selectedCropForActivities) {
+            setSelectedCropForMedia(selectedCropForActivities);
+            setShowCropMediaModal(true);
+          }
+        }}
       />
 
       {/* 1. Locked Crop Action Modal (View Map vs Request Unlock) */}

@@ -117,6 +117,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
 
   // Lock & Unlock State
   const [isLocked, setIsLocked] = useState<boolean>(initialIsLocked);
+  const [unlockedSubTab, setUnlockedSubTab] = useState<'SETUP' | 'HEALTH'>('SETUP');
   const [showReasonBox, setShowReasonBox] = useState<boolean>(false);
   const [unlockReasonInput, setUnlockReasonInput] = useState<string>('');
   const [isUnlockRequested, setIsUnlockRequested] = useState<boolean>(false);
@@ -162,10 +163,10 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
     }, 600);
   };
 
-  // Add Photo via Camera
+  // Add Photo via Camera (Up to 6)
   const handleTakePhotoLive = async () => {
-    if (photos.length >= 5) {
-      Alert.alert('Maximum Reached', 'You can upload a maximum of 5 field photos.');
+    if (photos.length >= 6) {
+      Alert.alert('Maximum Reached', 'You can upload a maximum of 6 field photos.');
       return;
     }
     try {
@@ -189,21 +190,21 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
     }
   };
 
-  // Add Photo via Library
+  // Add Photo via Library (Up to 6)
   const handlePickPhotoLibrary = async () => {
-    if (photos.length >= 5) {
-      Alert.alert('Maximum Reached', 'You can upload a maximum of 5 field photos.');
+    if (photos.length >= 6) {
+      Alert.alert('Maximum Reached', 'You can upload a maximum of 6 field photos.');
       return;
     }
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
-        selectionLimit: 5 - photos.length,
+        selectionLimit: 6 - photos.length,
         quality: 0.8,
       });
       if (!result.canceled && result.assets) {
-        const newUris = result.assets.map((a) => a.uri).slice(0, 5 - photos.length);
+        const newUris = result.assets.map((a) => a.uri).slice(0, 6 - photos.length);
         setPhotos((prev) => [...prev, ...newUris]);
       }
     } catch {
@@ -258,11 +259,20 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
     }
   };
 
-  // Final Submit & Lock Field
+  // Final Submit & Lock Field (Requires minimum 3 photos; video is optional)
   const handleFinalSubmitAndLock = () => {
     if (cornersMarked < 4) {
       Alert.alert('Set Location First 📍', 'Please mark all 4 boundary corners of the field.');
       setSetupStep(1);
+      return;
+    }
+
+    if (photos.length < 3) {
+      Alert.alert(
+        'Minimum 3 Photos Required',
+        `Please capture or upload at least 3 photos of your crop field before submitting (currently ${photos.length}/3 uploaded). Video is optional.`
+      );
+      setSetupStep(2);
       return;
     }
 
@@ -350,9 +360,44 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
               </View>
             </View>
 
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#64748b" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              {/* SUB-TAB TOGGLE FOR UNLOCKED STATE */}
+              {!isLocked && (
+                <View style={{ flexDirection: 'row', gap: 3, backgroundColor: '#f1f5f9', padding: 3, borderRadius: 8 }}>
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 6,
+                      backgroundColor: unlockedSubTab === 'SETUP' ? '#ffffff' : 'transparent',
+                    }}
+                    onPress={() => setUnlockedSubTab('SETUP')}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: unlockedSubTab === 'SETUP' ? '#2563eb' : '#64748b' }}>
+                      GPS Boundary
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      borderRadius: 6,
+                      backgroundColor: unlockedSubTab === 'HEALTH' ? '#ffffff' : 'transparent',
+                    }}
+                    onPress={() => setUnlockedSubTab('HEALTH')}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: unlockedSubTab === 'HEALTH' ? '#15803d' : '#64748b' }}>
+                      Live Health (NDVI)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* MAIN CONTENT AREA */}
@@ -360,7 +405,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
             {/* ========================================================= */}
             {/* CASE 1: UNLOCKED -> 3-STEP SETUP WIZARD (NO CLUTTER)      */}
             {/* ========================================================= */}
-            {!isLocked ? (
+            {!isLocked && unlockedSubTab === 'SETUP' ? (
               <View style={{ gap: 14 }}>
                 {/* 3-STEP PROGRESS NAVIGATION */}
                 <View style={styles.stepNavRow}>
@@ -380,7 +425,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   >
                     <Ionicons name="camera" size={14} color={setupStep === 2 ? '#2563eb' : '#64748b'} />
                     <Text style={[styles.stepNavText, setupStep === 2 && styles.stepNavTextActive]}>
-                      2. Photos ({photos.length}/5)
+                      2. Photos ({photos.length}/6)
                     </Text>
                   </TouchableOpacity>
 
@@ -390,7 +435,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   >
                     <Ionicons name="videocam" size={14} color={setupStep === 3 ? '#2563eb' : '#64748b'} />
                     <Text style={[styles.stepNavText, setupStep === 3 && styles.stepNavTextActive]}>
-                      3. Video {videoUri ? '✓' : ''}
+                      3. Video (Optional)
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -494,20 +539,22 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   <View style={styles.stepContainer}>
                     <View style={styles.stepHeaderRow}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Text style={styles.stepHeading}>Step 2: Upload Crop Photos (Up to 5)</Text>
-                        <Text style={styles.photoCountBadge}>{photos.length} / 5 Added</Text>
+                        <Text style={styles.stepHeading}>Step 2: Upload Crop Photos (Up to 6 · Min 3 Required)</Text>
+                        <Text style={[styles.photoCountBadge, photos.length < 3 && { backgroundColor: '#fef3c7', color: '#b45309' }]}>
+                          {photos.length} / 6 {photos.length >= 3 ? '✓' : '(Min 3)'}
+                        </Text>
                       </View>
                       <Text style={styles.stepSub}>
-                        Capture or upload live photos. Tap any thumbnail to preview and check before final submit.
+                        Capture or upload live photos (minimum 3 required to submit). Tap any thumbnail to preview and check before final submit.
                       </Text>
                     </View>
 
                     {/* CAPTURE BUTTONS */}
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       <TouchableOpacity
-                        style={[styles.mediaActionBtn, photos.length >= 5 && { opacity: 0.6 }]}
+                        style={[styles.mediaActionBtn, photos.length >= 6 && { opacity: 0.6 }]}
                         activeOpacity={0.85}
-                        disabled={photos.length >= 5}
+                        disabled={photos.length >= 6}
                         onPress={handleTakePhotoLive}
                       >
                         <Ionicons name="camera" size={18} color="#ffffff" />
@@ -515,9 +562,9 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={[styles.mediaActionBtnOutline, photos.length >= 5 && { opacity: 0.6 }]}
+                        style={[styles.mediaActionBtnOutline, photos.length >= 6 && { opacity: 0.6 }]}
                         activeOpacity={0.85}
-                        disabled={photos.length >= 5}
+                        disabled={photos.length >= 6}
                         onPress={handlePickPhotoLibrary}
                       >
                         <Ionicons name="images" size={18} color="#2563eb" />
@@ -525,9 +572,9 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                       </TouchableOpacity>
                     </View>
 
-                    {/* 5-PHOTO GRID */}
+                    {/* 6-PHOTO GRID */}
                     <View style={styles.photoGrid}>
-                      {[0, 1, 2, 3, 4].map((slotIdx) => {
+                      {[0, 1, 2, 3, 4, 5].map((slotIdx) => {
                         const photoUri = photos[slotIdx];
                         if (photoUri) {
                           return (
@@ -670,28 +717,32 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                           </Text>
                         </View>
                         <View style={styles.summaryItem}>
-                          <Ionicons name={photos.length > 0 ? 'checkmark-circle' : 'alert-circle'} size={16} color={photos.length > 0 ? '#15803d' : '#d97706'} />
+                          <Ionicons name={photos.length >= 3 ? 'checkmark-circle' : 'alert-circle'} size={16} color={photos.length >= 3 ? '#15803d' : '#d97706'} />
                           <Text style={styles.summaryItemText}>
-                            Crop Photos: {photos.length} of 5 Photos Captured
+                            Crop Photos: {photos.length} of 6 Photos ({photos.length >= 3 ? 'Min 3 Requirement Met ✓' : `Needs ${3 - photos.length} More`})
                           </Text>
                         </View>
                         <View style={styles.summaryItem}>
-                          <Ionicons name={videoUri ? 'checkmark-circle' : 'alert-circle'} size={16} color={videoUri ? '#15803d' : '#d97706'} />
+                          <Ionicons name={videoUri ? 'checkmark-circle' : 'checkmark-circle-outline'} size={16} color={videoUri ? '#15803d' : '#64748b'} />
                           <Text style={styles.summaryItemText}>
-                            Field Video: {videoUri ? '1-Min Video Attached' : 'Optional (Can add later)'}
+                            Field Video: {videoUri ? '1-Min Video Attached ✓' : 'Optional (Skipped)'}
                           </Text>
                         </View>
                       </View>
 
                       {/* BIG LOCK & SUBMIT BUTTON */}
                       <TouchableOpacity
-                        style={styles.bigSubmitLockBtn}
-                        activeOpacity={0.85}
+                        style={[
+                          styles.bigSubmitLockBtn,
+                          photos.length < 3 && { backgroundColor: '#94a3b8', opacity: 0.7 },
+                        ]}
+                        activeOpacity={photos.length >= 3 ? 0.85 : 1}
+                        disabled={photos.length < 3}
                         onPress={handleFinalSubmitAndLock}
                       >
-                        <Ionicons name="lock-closed" size={18} color="#ffffff" />
+                        <Ionicons name={photos.length >= 3 ? "lock-closed" : "alert-circle"} size={18} color="#ffffff" />
                         <Text style={styles.bigSubmitLockBtnText}>
-                          Submit & Lock Satellite Field
+                          {photos.length >= 3 ? 'Submit & Lock Satellite Field' : `Submit (Upload ${3 - photos.length} More Photos)`}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -712,14 +763,18 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
               /* CASE 2: LOCKED -> CLEAN SATELLITE MONITORING (NIGRANI)    */
               /* ========================================================= */
               <View style={{ gap: 14 }}>
-                {/* LOCKED BANNER */}
-                <View style={styles.lockedMonitoringBanner}>
+                {/* STATUS BANNER */}
+                <View style={[styles.lockedMonitoringBanner, { backgroundColor: isLocked ? '#f0fdf4' : '#eff6ff', borderColor: isLocked ? '#bbf7d0' : '#bfdbfe' }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Ionicons name="shield-checkmark" size={24} color="#15803d" />
+                    <Ionicons name={isLocked ? "shield-checkmark" : "lock-open"} size={24} color={isLocked ? "#15803d" : "#2563eb"} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.lockedMonitoringTitle}>Satellite Telemetry Active (Locked)</Text>
+                      <Text style={[styles.lockedMonitoringTitle, { color: isLocked ? '#15803d' : '#1d4ed8' }]}>
+                        {isLocked ? 'Satellite Telemetry Active (Locked)' : 'Satellite Field GPS Unlocked · Fully Editable'}
+                      </Text>
                       <Text style={styles.lockedMonitoringSub}>
-                        Field coordinates and ground-truth media are locked for orbital satellite calibration.
+                        {isLocked
+                          ? 'Field coordinates and ground-truth media are locked for orbital satellite calibration.'
+                          : 'Coordinates and boundary are unlocked. You can freely edit GPS corners or view live NDVI.'}
                       </Text>
                     </View>
                   </View>
@@ -865,23 +920,59 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                             onPress={() => setPreviewingPhotoIndex(pIdx)}
                           >
                             <Image source={{ uri: pUri }} style={styles.photoThumbImg} />
-                            <View style={styles.photoInspectBadge}>
-                              <Ionicons name="eye" size={14} color="#ffffff" />
+
+                            {/* TOP LIVE & BRAND WATERMARK */}
+                            <View style={{ position: 'absolute', top: 3, left: 3, right: 3, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#dc2626', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3 }}>
+                                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#ffffff' }} />
+                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#ffffff' }}>LIVE</Text>
+                              </View>
+                              <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 3, paddingVertical: 1, borderRadius: 3 }}>
+                                <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 42, height: 11 }} resizeMode="contain" />
+                              </View>
                             </View>
-                            <Text style={styles.photoSlotLabel}>Photo #{pIdx + 1}</Text>
+
+                            {/* BOTTOM DATE TIME WATERMARK */}
+                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.88)', paddingHorizontal: 4, paddingVertical: 2 }}>
+                              <Text style={{ fontSize: 7, color: '#fde047', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }} numberOfLines={1}>
+                                ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              </Text>
+                              <Text style={{ fontSize: 7, fontWeight: '800', color: '#4ade80' }}>FARMSKING™ · #{pIdx + 1}</Text>
+                            </View>
+
+                            <View style={styles.photoInspectBadge}>
+                              <Ionicons name="eye" size={13} color="#ffffff" />
+                            </View>
                           </TouchableOpacity>
                         ))}
                       </View>
                     ) : null}
 
                     {videoUri ? (
-                      <View style={styles.videoCard}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={[styles.videoCard, { padding: 0, overflow: 'hidden' }]}>
+                        {/* TOP WATERMARK */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dc2626', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                            <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#ffffff' }} />
+                            <Text style={{ fontSize: 8, fontWeight: '900', color: '#ffffff' }}>● LIVE VIDEO</Text>
+                          </View>
+                          <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 75, height: 18 }} resizeMode="contain" />
+                        </View>
+                        
+                        <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                           <Ionicons name="videocam" size={24} color="#15803d" />
                           <View>
                             <Text style={styles.videoTitle}>1-Minute Field Video Attached</Text>
                             <Text style={styles.videoSub}>Ground verification recording verified with GPS</Text>
                           </View>
+                        </View>
+
+                        {/* BOTTOM WATERMARK */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 4, backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
+                          <Text style={{ fontSize: 8.5, color: '#4ade80', fontWeight: '700' }}>🛡️ FarmsKing Video Telemetry Verified</Text>
+                          <Text style={{ fontSize: 8.5, color: '#fde047', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+                            ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} · LIVE
+                          </Text>
                         </View>
                       </View>
                     ) : null}
@@ -941,11 +1032,42 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   <Ionicons name="close-circle" size={24} color="#ffffff" />
                 </TouchableOpacity>
               </View>
-              <Image
-                source={{ uri: photos[previewingPhotoIndex] }}
-                style={styles.inspectImage}
-                resizeMode="contain"
-              />
+
+              <View style={{ position: 'relative', width: '100%', height: 360, backgroundColor: '#020617', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
+                <Image
+                  source={{ uri: photos[previewingPhotoIndex] }}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="contain"
+                />
+
+                {/* TOP WATERMARK: LIVE BADGE & BRAND LOGO */}
+                <View style={{ position: 'absolute', top: 10, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#dc2626', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5 }}>
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#ffffff' }} />
+                    <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>● LIVE CAPTURE</Text>
+                  </View>
+                  <Image
+                    source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
+                    style={{ width: 95, height: 22 }}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                {/* BOTTOM WATERMARK: CROP NAME, TELEMETRY & LIVE DATE TIME */}
+                <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(15, 23, 42, 0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                  <View>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>🌾 {cropName || 'Field Crop'} · {plotName || 'Plot #1'}</Text>
+                    <Text style={{ fontSize: 9, fontWeight: '700', color: '#4ade80' }}>🛡️ Official FarmsKing Ground Telemetry Verified</Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#fde047', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
+                      ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </Text>
+                    <Text style={{ fontSize: 8, fontWeight: '900', color: '#ef4444', letterSpacing: 0.5 }}>GEO-STAMPED · LIVE</Text>
+                  </View>
+                </View>
+              </View>
+
               <TouchableOpacity
                 style={styles.inspectDoneBtn}
                 onPress={() => setPreviewingPhotoIndex(null)}

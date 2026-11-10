@@ -371,11 +371,15 @@ export interface SystemIntegrationsConfig {
     };
   };
   storage: {
-    activeProvider: 'CLOUDFLARE_R2' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+    activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+    isEnabled?: boolean;
     providers: {
       cloudflareR2: { accountId: string; accessKeyId: string; secretAccessKey: string; bucketName: string; publicUrl: string };
-      supabase: { projectUrl: string; anonKey: string; bucketName: string };
-      awsS3: { region: string; accessKeyId: string; secretAccessKey: string; bucketName: string };
+      firebase: { projectId: string; storageBucket: string; apiKey: string; serviceAccountJson: string };
+      cloudinary: { cloudName: string; apiKey: string; apiSecret: string; uploadPreset: string };
+      local: { uploadPath: string; publicBaseUrl: string };
+      supabase?: { projectUrl: string; anonKey: string; bucketName: string };
+      awsS3?: { region: string; accessKeyId: string; secretAccessKey: string; bucketName: string };
       googleGcs?: { bucketName: string; clientEmail: string; privateKey: string };
       neonS3?: { endpoint: string; accessKey: string; secretKey: string; bucketName: string };
       minio?: { endpoint: string; accessKey: string; secretKey: string; bucketName: string };
@@ -1000,8 +1004,12 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
   },
   storage: {
     activeProvider: 'CLOUDFLARE_R2',
+    isEnabled: true,
     providers: {
       cloudflareR2: { accountId: '', accessKeyId: '', secretAccessKey: '', bucketName: 'farmsking-media', publicUrl: 'https://media.farmsking.in' },
+      firebase: { projectId: 'farmsking-510606', storageBucket: 'farmsking-510606.firebasestorage.app', apiKey: 'AIzaSyC4ZPSAJcbb7xHzPdWlmqNo0yX2rnLeIgo', serviceAccountJson: '' },
+      cloudinary: { cloudName: 'farmsking', apiKey: '', apiSecret: '', uploadPreset: 'crop_media' },
+      local: { uploadPath: './uploads', publicBaseUrl: 'http://localhost:3000' },
       supabase: { projectUrl: '', anonKey: '', bucketName: 'farmsking-vault' },
       awsS3: { region: 'ap-south-1', accessKeyId: '', secretAccessKey: '', bucketName: '' },
       googleGcs: { bucketName: '', clientEmail: '', privateKey: '' },
@@ -1208,6 +1216,7 @@ export function mergeSystemIntegrationsWithDefaults(
     storage: {
       ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.storage,
       ...(remote.storage || {}),
+      isEnabled: remote.storage?.isEnabled ?? DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.storage.isEnabled,
       providers: {
         ...DEFAULT_SYSTEM_INTEGRATIONS_CONFIG.storage.providers,
         ...(remote.storage?.providers || {}),

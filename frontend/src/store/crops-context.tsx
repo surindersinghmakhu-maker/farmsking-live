@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CropUnit, HarvestType, IrrigationType, LandAreaUnit } from '@/constants/cropCategoriesData';
 import { CropFormValues } from '@/components/CropCategorySelectorModal';
@@ -23,6 +23,20 @@ export const STAGE_ORDER: Record<CropStage, number> = {
   HARVESTING: 4,
   COMPLETED: 5,
 };
+
+export type CropActivityType = 'EXPENSE' | 'IRRIGATION' | 'SPRAY' | 'FERTILIZER' | 'HARVEST' | 'NOTE';
+
+export interface CropActivityItem {
+  id: string;
+  cropId: string;
+  type: CropActivityType;
+  title: string;
+  date: string;
+  cost?: number;
+  quantity?: string;
+  notes?: string;
+  createdAt: string;
+}
 
 export interface CornerCoord {
   label: string; // 'C1', 'C2', 'C3', 'C4'
@@ -213,6 +227,8 @@ interface CropsContextValue {
   specialTreatments: SpecialTreatmentTemplate[];
   unlockedCropIds: Record<string, boolean>;
   cropGpsDataMap: Record<string, CropGpsData>;
+  cropActivitiesMap: Record<string, CropActivityItem[]>;
+  addCropActivity: (cropId: string, activity: Omit<CropActivityItem, 'id' | 'createdAt'>) => Promise<void>;
   gpsUnlockRequests: GpsUnlockRequest[];
   completionReviews: Record<string, CropCompletionReview>;
   recordCompletionReview: (cropId: string, review: CropCompletionReview) => Promise<void>;
@@ -248,6 +264,8 @@ interface LocalCropsContextValue {
   setCustomCropLocations: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   cropGpsDataMap: Record<string, CropGpsData>;
   setCropGpsDataMap: React.Dispatch<React.SetStateAction<Record<string, CropGpsData>>>;
+  cropActivitiesMap: Record<string, CropActivityItem[]>;
+  setCropActivitiesMap: React.Dispatch<React.SetStateAction<Record<string, CropActivityItem[]>>>;
   completionReviews: Record<string, CropCompletionReview>;
   setCompletionReviews: React.Dispatch<React.SetStateAction<Record<string, CropCompletionReview>>>;
   gpsUnlockRequests: GpsUnlockRequest[];
@@ -362,6 +380,7 @@ interface PersistedLocalState {
   specialTreatments?: SpecialTreatmentTemplate[];
   customCropLocations?: Record<string, string>;
   cropGpsDataMap?: Record<string, CropGpsData>;
+  cropActivitiesMap?: Record<string, CropActivityItem[]>;
   unlockedCropIds?: Record<string, boolean>;
   completionReviews?: Record<string, CropCompletionReview>;
   gpsUnlockRequests?: GpsUnlockRequest[];
@@ -432,6 +451,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const [unlockedCropIds, setUnlockedCropIds] = useState<Record<string, boolean>>({});
   const [customCropLocations, setCustomCropLocations] = useState<Record<string, string>>({});
   const [cropGpsDataMap, setCropGpsDataMap] = useState<Record<string, CropGpsData>>({});
+  const [cropActivitiesMap, setCropActivitiesMap] = useState<Record<string, CropActivityItem[]>>({});
   const [completionReviews, setCompletionReviews] = useState<Record<string, CropCompletionReview>>({});
   const [gpsUnlockRequests, setGpsUnlockRequests] = useState<GpsUnlockRequest[]>(INITIAL_GPS_UNLOCK_REQUESTS);
   const [isPersistLoaded, setIsPersistLoaded] = useState(false);
@@ -446,6 +466,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
           setSpecialTreatments(parsed.specialTreatments ?? INITIAL_SPECIAL_TREATMENTS);
           setCustomCropLocations(parsed.customCropLocations ?? {});
           setCropGpsDataMap(parsed.cropGpsDataMap ?? {});
+          setCropActivitiesMap(parsed.cropActivitiesMap ?? {});
           setUnlockedCropIds(parsed.unlockedCropIds ?? {});
           setCompletionReviews(parsed.completionReviews ?? {});
           if (parsed.gpsUnlockRequests && parsed.gpsUnlockRequests.length > 0) {
@@ -469,12 +490,13 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         specialTreatments,
         customCropLocations,
         cropGpsDataMap,
+        cropActivitiesMap,
         unlockedCropIds,
         completionReviews,
         gpsUnlockRequests,
       })
     );
-  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, completionReviews, gpsUnlockRequests, isPersistLoaded]);
+  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, cropActivitiesMap, unlockedCropIds, completionReviews, gpsUnlockRequests, isPersistLoaded]);
 
   const value = useMemo(
     () => ({
@@ -483,10 +505,11 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       unlockedCropIds, setUnlockedCropIds,
       customCropLocations, setCustomCropLocations,
       cropGpsDataMap, setCropGpsDataMap,
+      cropActivitiesMap, setCropActivitiesMap,
       completionReviews, setCompletionReviews,
       gpsUnlockRequests, setGpsUnlockRequests,
     }),
-    [salesRecords, specialTreatments, unlockedCropIds, customCropLocations, cropGpsDataMap, completionReviews, gpsUnlockRequests]
+    [salesRecords, specialTreatments, unlockedCropIds, customCropLocations, cropGpsDataMap, cropActivitiesMap, completionReviews, gpsUnlockRequests]
   );
 
   return <LocalCropsContext.Provider value={value}>{children}</LocalCropsContext.Provider>;
@@ -504,6 +527,7 @@ export function useCrops(): CropsContextValue {
     unlockedCropIds, setUnlockedCropIds,
     customCropLocations, setCustomCropLocations,
     cropGpsDataMap, setCropGpsDataMap,
+    cropActivitiesMap, setCropActivitiesMap,
     completionReviews, setCompletionReviews,
     gpsUnlockRequests, setGpsUnlockRequests,
   } = context;
@@ -570,7 +594,7 @@ export function useCrops(): CropsContextValue {
             ],
             areaAcres: typeof c.plot?.area === 'number' ? c.plot.area : 1.0,
             locationText: `📍 ${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E (Copernicus Radar Ready)`,
-            isLocked: true,
+            isLocked: false,
             updatedAt: new Date().toISOString(),
           };
         }
@@ -908,6 +932,18 @@ export function useCrops(): CropsContextValue {
     }));
   };
 
+  const addCropActivity = useCallback(async (cropId: string, activity: Omit<CropActivityItem, 'id' | 'createdAt'>) => {
+    const newAct: CropActivityItem = {
+      ...activity,
+      id: `act_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setCropActivitiesMap((prev) => ({
+      ...prev,
+      [cropId]: [newAct, ...(prev[cropId] || [])],
+    }));
+  }, [setCropActivitiesMap]);
+
   return {
     cropFields,
     cropHistory,
@@ -915,6 +951,8 @@ export function useCrops(): CropsContextValue {
     specialTreatments,
     unlockedCropIds,
     cropGpsDataMap,
+    cropActivitiesMap,
+    addCropActivity,
     gpsUnlockRequests,
     isLoading,
     addCrop,

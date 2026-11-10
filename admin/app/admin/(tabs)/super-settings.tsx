@@ -36,7 +36,8 @@ type ToolCategory =
   | 'SATELLITE'
   | 'WEATHER'
   | 'LOGISTICS'
-  | 'PUSH';
+  | 'PUSH'
+  | 'STORAGE';
 
 type MasterDataSubTab =
   | 'basic-details'
@@ -68,6 +69,7 @@ interface CategoryFilter {
 type SectionTab = 'MASTER_DATA' | 'TOOLS';
 
 const TOOL_SERVICES_FILTERS: CategoryFilter[] = [
+  { key: 'STORAGE', label: 'Media Store (Cloud & Video)', icon: 'cloud-upload-outline' },
   { key: 'AI', label: 'AI Intelligence & Crop Doctor', icon: 'sparkles-outline' },
   { key: 'PAYMENTS', label: 'Payment Gateway & Checkout', icon: 'card-outline' },
   { key: 'SMS', label: 'SMS & OTP Service', icon: 'chatbox-ellipses-outline' },
@@ -1412,6 +1414,333 @@ export default function SuperSettingsScreen() {
                     />
                   </TouchableOpacity>
                 </View>
+              </View>
+            </View>
+          )}
+
+          {/* 9. Cloud & External Media Storage (Cloudflare R2, Firebase, Cloudinary, Local) */}
+          {activeFilter === 'STORAGE' && (
+            <View style={[styles.toolCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              {/* Header */}
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <View style={[styles.iconBox, { backgroundColor: 'rgba(2, 132, 199, 0.12)' }]}>
+                    <Ionicons name="cloud-upload" size={22} color="#0284c7" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.titleRow}>
+                      <Text style={[styles.toolTitle, { color: textColor }]}>Media Store (Cloud & Video Storage)</Text>
+                      <View style={[styles.statusBadge, { backgroundColor: (localConfig.storage?.isEnabled ?? true) ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.15)' }]}>
+                        <Text style={[styles.statusText, { color: (localConfig.storage?.isEnabled ?? true) ? '#10b981' : subTextColor }]}>
+                          {(localConfig.storage?.isEnabled ?? true) ? 'ACTIVE' : 'INACTIVE'}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.toolDesc, { color: subTextColor }]}>
+                      External storage for field photos & 1-minute videos with zero egress fees, fast global CDN, and permanent URL preservation.
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={localConfig.storage?.isEnabled ?? true}
+                  onValueChange={() => handleToggleTool('storage', 'Cloud Storage')}
+                  trackColor={{ false: '#475569', true: '#10b981' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Permanent URL Architecture Guarantee Banner */}
+              <View
+                style={{
+                  backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.1)',
+                  borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.3)',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginHorizontal: 16,
+                  marginTop: 12,
+                  flexDirection: 'row',
+                  gap: 10,
+                  alignItems: 'center',
+                }}
+              >
+                <Ionicons name="shield-checkmark" size={22} color="#16a34a" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isLight ? '#15803d' : '#86efac' }}>
+                    Permanent Absolute URL Guarantee
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isLight ? '#166534' : '#bbf7d0', marginTop: 2 }}>
+                    Every uploaded photo and video saves its permanent CDN URL directly to the database. You can change your active storage provider at any time—all existing photos and videos will always remain 100% accessible.
+                  </Text>
+                </View>
+              </View>
+
+              {/* Provider Selection */}
+              <View style={styles.providerSelectContainer}>
+                <Text style={[styles.sectionHeading, { color: textColor }]}>Select Active Storage Provider</Text>
+                <View style={styles.providerOptionsRow}>
+                  {[
+                    { key: 'CLOUDFLARE_R2', label: 'Cloudflare R2 ($0 Egress)', icon: 'cloud-outline' },
+                    { key: 'FIREBASE', label: 'Firebase Cloud Storage', icon: 'logo-google' },
+                    { key: 'CLOUDINARY', label: 'Cloudinary CDN', icon: 'images-outline' },
+                    { key: 'LOCAL', label: 'Local Hostinger Storage', icon: 'server-outline' },
+                  ].map((p) => {
+                    const isSelected = (localConfig.storage?.activeProvider || 'CLOUDFLARE_R2') === p.key;
+                    return (
+                      <TouchableOpacity
+                        key={p.key}
+                        style={[
+                          styles.providerOptionPill,
+                          {
+                            borderColor: isSelected ? '#0284c7' : cardBorder,
+                            backgroundColor: isSelected ? 'rgba(2, 132, 199, 0.12)' : innerBg,
+                          },
+                        ]}
+                        onPress={() => handleSetProvider('storage', p.key)}
+                      >
+                        <Text style={[styles.optionPillText, { color: isSelected ? '#0284c7' : textColor }]}>
+                          {p.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Provider Fields */}
+              <View style={styles.fieldsContainer}>
+                {/* 1. Cloudflare R2 */}
+                {(localConfig.storage?.activeProvider || 'CLOUDFLARE_R2') === 'CLOUDFLARE_R2' && (
+                  <>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Cloudflare Account ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. 9577622000abcdef1234567890abcdef"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accountId || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudflareR2', 'accountId', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>R2 Bucket Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. farmsking-media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.bucketName || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudflareR2', 'bucketName', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>R2 Access Key ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="R2 S3-Compatible Access Key ID..."
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accessKeyId || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudflareR2', 'accessKeyId', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>R2 Secret Access Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="R2 S3-Compatible Secret Access Key..."
+                        placeholderTextColor={subTextColor}
+                        secureTextEntry={!showSecrets['r2_sec']}
+                        value={localConfig.storage?.providers?.cloudflareR2?.secretAccessKey || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudflareR2', 'secretAccessKey', val)}
+                      />
+                      <TouchableOpacity onPress={() => toggleShowSecret('r2_sec')}>
+                        <Ionicons
+                          name={showSecrets['r2_sec'] ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Public CDN Domain / Custom URL</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. https://media.farmsking.in or https://pub-xxx.r2.dev"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.publicUrl || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudflareR2', 'publicUrl', val)}
+                      />
+                    </View>
+                  </>
+                )}
+
+                {/* 2. Firebase Cloud Storage */}
+                {localConfig.storage?.activeProvider === 'FIREBASE' && (
+                  <>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Firebase Storage Bucket</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. farmsking-510606.firebasestorage.app"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.firebase?.storageBucket || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'firebase', 'storageBucket', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Firebase Project ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. farmsking-510606"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.firebase?.projectId || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'firebase', 'projectId', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Firebase Web API Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="AIzaSy..."
+                        placeholderTextColor={subTextColor}
+                        secureTextEntry={!showSecrets['fb_key']}
+                        value={localConfig.storage?.providers?.firebase?.apiKey || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'firebase', 'apiKey', val)}
+                      />
+                      <TouchableOpacity onPress={() => toggleShowSecret('fb_key')}>
+                        <Ionicons
+                          name={showSecrets['fb_key'] ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Service Account JSON (Optional)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder, height: 75 }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor, textAlignVertical: 'top' }]}
+                        placeholder="Paste service account credentials JSON here (if using Firebase Admin SDK)..."
+                        placeholderTextColor={subTextColor}
+                        multiline
+                        numberOfLines={3}
+                        value={localConfig.storage?.providers?.firebase?.serviceAccountJson || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'firebase', 'serviceAccountJson', val)}
+                      />
+                    </View>
+                  </>
+                )}
+
+                {/* 3. Cloudinary */}
+                {localConfig.storage?.activeProvider === 'CLOUDINARY' && (
+                  <>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Cloudinary Cloud Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. farmsking"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.cloudName || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudinary', 'cloudName', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Cloudinary API Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. 123456789012345"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.apiKey || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudinary', 'apiKey', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Cloudinary API Secret</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="Cloudinary API Secret..."
+                        placeholderTextColor={subTextColor}
+                        secureTextEntry={!showSecrets['cl_sec']}
+                        value={localConfig.storage?.providers?.cloudinary?.apiSecret || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudinary', 'apiSecret', val)}
+                      />
+                      <TouchableOpacity onPress={() => toggleShowSecret('cl_sec')}>
+                        <Ionicons
+                          name={showSecrets['cl_sec'] ? 'eye-off-outline' : 'eye-outline'}
+                          size={18}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Upload Preset (Optional)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. crop_media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.uploadPreset || ''}
+                        onChangeText={(val) => handleUpdateField('storage', 'cloudinary', 'uploadPreset', val)}
+                      />
+                    </View>
+                  </>
+                )}
+
+                {/* 4. Local Hostinger Disk */}
+                {localConfig.storage?.activeProvider === 'LOCAL' && (
+                  <>
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Local Upload Folder</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="./uploads"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.local?.uploadPath || './uploads'}
+                        onChangeText={(val) => handleUpdateField('storage', 'local', 'uploadPath', val)}
+                      />
+                    </View>
+
+                    <Text style={[styles.inputLabel, { color: subTextColor }]}>Public Server Base URL</Text>
+                    <View style={[styles.inputBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.input, { color: textColor }]}
+                        placeholder="e.g. http://localhost:3000 or https://farmsking.com"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.local?.publicBaseUrl || 'http://localhost:3000'}
+                        onChangeText={(val) => handleUpdateField('storage', 'local', 'publicBaseUrl', val)}
+                      />
+                    </View>
+                  </>
+                )}
+
+                {/* Save Button for Storage */}
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#0284c7',
+                    paddingVertical: 12,
+                    paddingHorizontal: 20,
+                    borderRadius: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    marginTop: 16,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => handleSaveTool('storage', 'Cloud Storage')}
+                >
+                  <Ionicons name="save-outline" size={18} color="#ffffff" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
+                    Save Storage Configuration
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           )}

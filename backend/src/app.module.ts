@@ -13,6 +13,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MarketRatesModule } from './modules/market-rates/market-rates.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
+import { MediaStoreModule } from './modules/media-store/media-store.module';
 import { AdvisorAssignmentModule } from './modules/advisor-assignment/advisor-assignment.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { CropActivitySchedulesModule } from './modules/crop-activity-schedules/crop-activity-schedules.module';
@@ -96,6 +97,7 @@ import { RedisModule } from './modules/redis/redis.module';
     AdminChatModule,
     WhatsappBotModule,
     UploadsModule,
+    MediaStoreModule,
     AdvisorAssignmentModule,
     SubscriptionsModule,
     CropActivitySchedulesModule,

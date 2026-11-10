@@ -368,7 +368,8 @@ export interface SystemIntegrationsConfig {
         };
     };
     storage: {
-        activeProvider: 'CLOUDFLARE_R2' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+        activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+        isEnabled?: boolean;
         providers: {
             cloudflareR2: {
                 accountId: string;
@@ -376,6 +377,22 @@ export interface SystemIntegrationsConfig {
                 secretAccessKey: string;
                 bucketName: string;
                 publicUrl: string;
+            };
+            firebase: {
+                projectId: string;
+                storageBucket: string;
+                apiKey: string;
+                serviceAccountJson: string;
+            };
+            cloudinary: {
+                cloudName: string;
+                apiKey: string;
+                apiSecret: string;
+                uploadPreset: string;
+            };
+            local: {
+                uploadPath: string;
+                publicBaseUrl: string;
             };
             supabase: {
                 projectUrl: string;

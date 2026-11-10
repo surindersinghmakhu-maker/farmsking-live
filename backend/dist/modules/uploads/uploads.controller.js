@@ -32,10 +32,14 @@ const ALLOWED_MIME_TYPES = [
     'image/vnd.microsoft.icon',
     'image/svg+xml',
     'image/x-png',
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    'video/x-matroska',
     'application/octet-stream',
 ];
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg'];
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg', '.mp4', '.webm', '.mov'];
 let UploadsController = class UploadsController {
     constructor(uploadsService) {
         this.uploadsService = uploadsService;
@@ -45,6 +49,12 @@ let UploadsController = class UploadsController {
             throw new common_1.BadRequestException('No file uploaded.');
         }
         return this.uploadsService.create(user, file);
+    }
+    uploadBase64(user, body) {
+        if (!body?.dataUri) {
+            throw new common_1.BadRequestException('No base64 data provided.');
+        }
+        return this.uploadsService.createFromBase64(user, body.dataUri, body.filename, body.folder);
     }
 };
 exports.UploadsController = UploadsController;
@@ -61,12 +71,12 @@ __decorate([
                         ext = '.png';
                     else if (file.mimetype === 'image/webp')
                         ext = '.webp';
-                    else if (file.mimetype === 'image/heic')
-                        ext = '.heic';
-                    else if (file.mimetype === 'image/x-icon' || file.mimetype === 'image/vnd.microsoft.icon')
-                        ext = '.ico';
-                    else if (file.mimetype === 'image/svg+xml')
-                        ext = '.svg';
+                    else if (file.mimetype === 'video/mp4')
+                        ext = '.mp4';
+                    else if (file.mimetype === 'video/webm')
+                        ext = '.webm';
+                    else if (file.mimetype === 'video/quicktime')
+                        ext = '.mov';
                     else
                         ext = '.jpg';
                 }
@@ -75,8 +85,10 @@ __decorate([
         }),
         limits: { fileSize: MAX_FILE_SIZE_BYTES },
         fileFilter: (_req, file, callback) => {
-            if (!ALLOWED_MIME_TYPES.includes(file.mimetype) && !file.mimetype?.startsWith('image/')) {
-                callback(new common_1.BadRequestException('Only image files (JPEG, PNG, WEBP, ICO, SVG, HEIC) are allowed.'), false);
+            if (!ALLOWED_MIME_TYPES.includes(file.mimetype) &&
+                !file.mimetype?.startsWith('image/') &&
+                !file.mimetype?.startsWith('video/')) {
+                callback(new common_1.BadRequestException('Only image and video files are allowed.'), false);
                 return;
             }
             callback(null, true);
@@ -88,6 +100,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], UploadsController.prototype, "upload", null);
+__decorate([
+    (0, common_1.Post)('base64'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UploadsController.prototype, "uploadBase64", null);
 exports.UploadsController = UploadsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('uploads'),

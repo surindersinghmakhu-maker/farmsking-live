@@ -2427,145 +2427,734 @@ export function ThirdPartyServicesSection() {
               </View>
             </View>
 
-            {/* Cloudflare R2 Credentials */}
-            <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-              <View style={styles.sectionSubCardHeader}>
-                <Ionicons name="cloud-upload" size={17} color="#f97316" />
-                <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
-                  Cloudflare R2 Object Storage (Zero Egress Bandwidth Cost)
-                </Text>
-              </View>
-
-              <View style={styles.formGrid}>
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Account ID</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="Cloudflare Account ID"
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.storage.providers.cloudflareR2.accountId}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          storage: {
-                            ...localConfig.storage,
-                            providers: {
-                              ...localConfig.storage.providers,
-                              cloudflareR2: { ...localConfig.storage.providers.cloudflareR2, accountId: val },
-                            },
-                          },
-                        })
-                      }
-                    />
-                  </View>
+            {/* Storage Provider Specific Credentials Card */}
+            {/* 1. Cloudinary Media CDN (No Card Required) */}
+            {(localConfig.storage?.activeProvider === 'CLOUDINARY') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="images" size={17} color="#3b82f6" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    Cloudinary Media CDN (25 GB Free • No Credit Card Required)
+                  </Text>
                 </View>
 
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Access Key ID</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="Access Key ID"
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.storage.providers.cloudflareR2.accessKeyId}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          storage: {
-                            ...localConfig.storage,
-                            providers: {
-                              ...localConfig.storage.providers,
-                              cloudflareR2: { ...localConfig.storage.providers.cloudflareR2, accessKeyId: val },
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Cloud Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="e.g. farmsking-app"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.cloudName || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudinary: { ...(localConfig.storage.providers.cloudinary || { apiKey: '', apiSecret: '', uploadPreset: 'crop_media' }), cloudName: val },
+                              },
                             },
-                          },
-                        })
-                      }
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Secret Access Key</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="Secret Key"
-                      secureTextEntry={!showSecrets['r2_secret']}
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.storage.providers.cloudflareR2.secretAccessKey}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          storage: {
-                            ...localConfig.storage,
-                            providers: {
-                              ...localConfig.storage.providers,
-                              cloudflareR2: { ...localConfig.storage.providers.cloudflareR2, secretAccessKey: val },
-                            },
-                          },
-                        })
-                      }
-                    />
-                    <TouchableOpacity onPress={() => toggleSecret('r2_secret')}>
-                      <Ionicons
-                        name={showSecrets['r2_secret'] ? 'eye-off' : 'eye'}
-                        size={16}
-                        color={subTextColor}
+                          })
+                        }
                       />
-                    </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Bucket Name</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="farmsking-assets"
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.storage.providers.cloudflareR2.bucketName}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          storage: {
-                            ...localConfig.storage,
-                            providers: {
-                              ...localConfig.storage.providers,
-                              cloudflareR2: { ...localConfig.storage.providers.cloudflareR2, bucketName: val },
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>API Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="e.g. 123456789012345"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.apiKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudinary: { ...(localConfig.storage.providers.cloudinary || { cloudName: '', apiSecret: '', uploadPreset: 'crop_media' }), apiKey: val },
+                              },
                             },
-                          },
-                        })
-                      }
-                    />
+                          })
+                        }
+                      />
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.fieldCol}>
-                  <Text style={[styles.fieldLabel, { color: textColor }]}>Public CDN Domain URL</Text>
-                  <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-                    <TextInput
-                      style={[styles.textInput, { color: textColor }]}
-                      placeholder="https://cdn.farmsking.in"
-                      placeholderTextColor={subTextColor}
-                      value={localConfig.storage.providers.cloudflareR2.publicUrl}
-                      onChangeText={(val) =>
-                        setLocalConfig({
-                          ...localConfig,
-                          storage: {
-                            ...localConfig.storage,
-                            providers: {
-                              ...localConfig.storage.providers,
-                              cloudflareR2: { ...localConfig.storage.providers.cloudflareR2, publicUrl: val },
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>API Secret</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Cloudinary API Secret"
+                        secureTextEntry={!showSecrets['cloudinary_sec']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.apiSecret || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudinary: { ...(localConfig.storage.providers.cloudinary || { cloudName: '', apiKey: '', uploadPreset: 'crop_media' }), apiSecret: val },
+                              },
                             },
-                          },
-                        })
-                      }
-                    />
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('cloudinary_sec')}>
+                        <Ionicons
+                          name={showSecrets['cloudinary_sec'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Upload Preset (Folder)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="crop_media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudinary?.uploadPreset || 'crop_media'}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudinary: { ...(localConfig.storage.providers.cloudinary || { cloudName: '', apiKey: '', apiSecret: '' }), uploadPreset: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
                   </View>
                 </View>
               </View>
-            </View>
+            )}
+
+            {/* 2. Local Hostinger Server Storage */}
+            {(localConfig.storage?.activeProvider === 'LOCAL') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="server" size={17} color="#10b981" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    Local Hostinger Storage (Instant • Zero Configuration)
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Local Upload Directory</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="./uploads/crops"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.local?.uploadPath || './uploads'}
+                        editable={false}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Public Base URL</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="https://api.farmsking.in"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.local?.publicBaseUrl || 'http://localhost:3000'}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                local: { uploadPath: './uploads', publicBaseUrl: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* 3. Cloudflare R2 Credentials */}
+            {(localConfig.storage?.activeProvider === 'CLOUDFLARE_R2') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="cloud-upload" size={17} color="#f97316" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    Cloudflare R2 Object Storage (Zero Egress Bandwidth Cost)
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Account ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Cloudflare Account ID"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accountId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || {}), accountId: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Access Key ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Access Key ID"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accessKeyId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || {}), accessKeyId: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Secret Access Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Secret Key"
+                        secureTextEntry={!showSecrets['r2_secret']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.secretAccessKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || {}), secretAccessKey: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('r2_secret')}>
+                        <Ionicons
+                          name={showSecrets['r2_secret'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Bucket Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="farmsking-media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.bucketName || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || {}), bucketName: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Public CDN Domain URL</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="https://media.farmsking.in"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.publicUrl || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || {}), publicUrl: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* AWS S3 Storage */}
+            {(localConfig.storage?.activeProvider === 'AWS_S3') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="logo-amazon" size={17} color="#eab308" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    Amazon Web Services S3 Object Storage
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>AWS Region</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="ap-south-1"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.awsS3?.region || 'ap-south-1'}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                awsS3: { ...(localConfig.storage.providers.awsS3 || { accessKeyId: '', secretAccessKey: '', bucketName: '' }), region: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Access Key ID</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="AKIA..."
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.awsS3?.accessKeyId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                awsS3: { ...(localConfig.storage.providers.awsS3 || { region: 'ap-south-1', secretAccessKey: '', bucketName: '' }), accessKeyId: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Secret Access Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="AWS Secret Key"
+                        secureTextEntry={!showSecrets['aws_secret']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.awsS3?.secretAccessKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                awsS3: { ...(localConfig.storage.providers.awsS3 || { region: 'ap-south-1', accessKeyId: '', bucketName: '' }), secretAccessKey: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('aws_secret')}>
+                        <Ionicons
+                          name={showSecrets['aws_secret'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>S3 Bucket Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="farmsking-media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.awsS3?.bucketName || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                awsS3: { ...(localConfig.storage.providers.awsS3 || { region: 'ap-south-1', accessKeyId: '', secretAccessKey: '' }), bucketName: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* MinIO Self-Hosted NVMe S3 */}
+            {(localConfig.storage?.activeProvider === 'MINIO') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="hardware-chip" size={17} color="#e11d48" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    MinIO Self-Hosted NVMe S3 Storage
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>MinIO S3 API Endpoint</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="http://127.0.0.1:9000 or https://minio.farmsking.in"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.minio?.endpoint || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                minio: { ...(localConfig.storage.providers.minio || { accessKey: '', secretKey: '', bucketName: '' }), endpoint: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Root / Access Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="minioadmin"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.minio?.accessKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                minio: { ...(localConfig.storage.providers.minio || { endpoint: '', secretKey: '', bucketName: '' }), accessKey: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Secret Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="MinIO Secret Key"
+                        secureTextEntry={!showSecrets['minio_secret']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.minio?.secretKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                minio: { ...(localConfig.storage.providers.minio || { endpoint: '', accessKey: '', bucketName: '' }), secretKey: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('minio_secret')}>
+                        <Ionicons
+                          name={showSecrets['minio_secret'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Bucket Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="farmsking-media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.minio?.bucketName || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                minio: { ...(localConfig.storage.providers.minio || { endpoint: '', accessKey: '', secretKey: '' }), bucketName: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Google Cloud Storage (GCS) */}
+            {(localConfig.storage?.activeProvider === 'GCP_STORAGE') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="logo-google" size={17} color="#2563eb" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    Google Cloud Storage (GCS)
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>GCS Bucket Name</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="farmsking-510606.appspot.com"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.googleGcs?.bucketName || localConfig.storage?.providers?.firebase?.storageBucket || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                googleGcs: { ...(localConfig.storage.providers.googleGcs || { clientEmail: '', privateKey: '' }), bucketName: val },
+                                firebase: { ...(localConfig.storage.providers.firebase || { projectId: '', apiKey: '', serviceAccountJson: '' }), storageBucket: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Client Email / Service Account</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="service-account@farmsking.iam.gserviceaccount.com"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.googleGcs?.clientEmail || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                googleGcs: { ...(localConfig.storage.providers.googleGcs || { bucketName: '', privateKey: '' }), clientEmail: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* DigitalOcean Spaces & CDN */}
+            {(localConfig.storage?.activeProvider === 'DIGITALOCEAN') && (
+              <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={styles.sectionSubCardHeader}>
+                  <Ionicons name="server" size={17} color="#0284c7" />
+                  <Text style={[styles.sectionSubCardTitle, { color: textColor }]}>
+                    DigitalOcean Spaces & Global CDN
+                  </Text>
+                </View>
+
+                <View style={styles.formGrid}>
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Spaces Endpoint</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="https://blr1.digitaloceanspaces.com"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accountId || 'https://blr1.digitaloceanspaces.com'}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || { accessKeyId: '', secretAccessKey: '', bucketName: '', publicUrl: '' }), accountId: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Spaces Access Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Spaces Key"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.accessKeyId || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || { accountId: '', secretAccessKey: '', bucketName: '', publicUrl: '' }), accessKeyId: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Spaces Secret Key</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="Spaces Secret Key"
+                        secureTextEntry={!showSecrets['do_secret']}
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.secretAccessKey || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || { accountId: '', accessKeyId: '', bucketName: '', publicUrl: '' }), secretAccessKey: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                      <TouchableOpacity onPress={() => toggleSecret('do_secret')}>
+                        <Ionicons
+                          name={showSecrets['do_secret'] ? 'eye-off' : 'eye'}
+                          size={16}
+                          color={subTextColor}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.fieldCol}>
+                    <Text style={[styles.fieldLabel, { color: textColor }]}>Space Name (Bucket)</Text>
+                    <View style={[styles.inputBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+                      <TextInput
+                        style={[styles.textInput, { color: textColor }]}
+                        placeholder="farmsking-media"
+                        placeholderTextColor={subTextColor}
+                        value={localConfig.storage?.providers?.cloudflareR2?.bucketName || ''}
+                        onChangeText={(val) =>
+                          setLocalConfig({
+                            ...localConfig,
+                            storage: {
+                              ...localConfig.storage,
+                              providers: {
+                                ...localConfig.storage.providers,
+                                cloudflareR2: { ...(localConfig.storage.providers.cloudflareR2 || { accountId: '', accessKeyId: '', secretAccessKey: '', publicUrl: '' }), bucketName: val },
+                              },
+                            },
+                          })
+                        }
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
 
             {/* Firebase Cloud Messaging (FCM) Push */}
             <View style={[styles.sectionSubCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>

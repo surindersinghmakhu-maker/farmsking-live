@@ -35,6 +35,32 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_supervisorId_idx" ON "supervisor_requests"("supervisorId");`);
           await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_status_idx" ON "supervisor_requests"("status");`);
 
+          // Auto-migration: Media Store table for external cloud/local photos and videos
+          await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "media_store" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "uploadedById" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
+              "cropId" TEXT,
+              "fileUrl" TEXT NOT NULL,
+              "thumbnailUrl" TEXT,
+              "mediaType" TEXT NOT NULL DEFAULT 'IMAGE',
+              "mimeType" TEXT NOT NULL,
+              "originalName" TEXT NOT NULL,
+              "sizeBytes" INTEGER NOT NULL DEFAULT 0,
+              "provider" TEXT NOT NULL DEFAULT 'CLOUDFLARE_R2',
+              "bucketName" TEXT,
+              "storagePath" TEXT,
+              "isArchived" BOOLEAN NOT NULL DEFAULT false,
+              "archivedAt" TIMESTAMP WITH TIME ZONE,
+              "expiresAt" TIMESTAMP WITH TIME ZONE,
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_uploadedById_idx" ON "media_store"("uploadedById");`);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_cropId_idx" ON "media_store"("cropId");`);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_provider_idx" ON "media_store"("provider");`);
+
           // Auto-migration: Ensure all non-admin users who possess a King ID have the 'CUSTOMER' role in their roles array
           await this.$executeRawUnsafe(`
             UPDATE "users"

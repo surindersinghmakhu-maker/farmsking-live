@@ -67,7 +67,7 @@ export default function SatelliteMapScreen() {
         cropName: params.cropName || 'Registered Crop',
         areaAcres: parseFloat(params.area || '2.8') || 2.8,
         coordsText: params.location || (params.lat && params.lng ? `${params.lat}° N, ${params.lng}° E` : '30.9085° N, 75.8610° E (DB Saved)'),
-        isLocked: true,
+        isLocked: false,
         status: 'HEALTHY',
       });
     }
@@ -82,7 +82,7 @@ export default function SatelliteMapScreen() {
             cropName: crop.cropName,
             areaAcres: parseFloat(crop.area) || 2.5,
             coordsText: crop.location || '30.9012° N, 75.8575° E (DB Saved)',
-            isLocked: true,
+            isLocked: false,
             status: crop.stage === 'HARVESTING' ? 'NEEDS_ATTENTION' : 'HEALTHY',
           });
         }
@@ -110,7 +110,7 @@ export default function SatelliteMapScreen() {
     selectedPlot ? `${selectedPlot.coordsText} (${selectedPlot.areaAcres} Acres)` : null
   );
   const [isUnlockRequested, setIsUnlockRequested] = useState<boolean>(false);
-  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(false);
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(true);
   const [mapViewMode, setMapViewMode] = useState<'PHOTO' | 'NDVI' | 'MOISTURE'>('PHOTO');
 
   const mockZones: SatelliteZone[] = [

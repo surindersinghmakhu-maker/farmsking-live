@@ -18,6 +18,8 @@ import { SprayDetailCard } from '@/src/components/SprayDetailCard';
 import { FarmerProfileModal } from '@/src/components/FarmerProfileModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
 import { WeatherForecastModal } from '@/src/components/WeatherForecastModal';
+import { CropActivitiesModal } from '@/components/CropActivitiesModal';
+import { RegisteredCropField } from '@/src/store/crops-context';
 import { useUserWeather } from '@/src/hooks/useWeather';
 import { useChatUnreadCount, useConversations, useConversationsPresenceSync } from '@/src/hooks/useChat';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
@@ -234,6 +236,7 @@ function CropCardItem({
   openSprayDetail,
   router,
   showFarmerInfo = true,
+  onOpenActivities,
 }: {
   row: PlotRow;
   expandedCropCycleId: string | null;
@@ -241,6 +244,7 @@ function CropCardItem({
   openSprayDetail: (item: SprayScheduleItem, title: string) => void;
   router: any;
   showFarmerInfo?: boolean;
+  onOpenActivities?: (row: PlotRow) => void;
 }) {
   const isExpanded = expandedCropCycleId === row.cropCycleId;
   const stageRaw = (row.stage || '').toUpperCase();
@@ -275,38 +279,63 @@ function CropCardItem({
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 5,
-            backgroundColor: '#eff6ff',
-            borderWidth: 1.5,
-            borderColor: '#bfdbfe',
-            paddingHorizontal: 9,
-            paddingVertical: 6,
-            borderRadius: RADIUS.pill,
-            marginLeft: 6,
-          }}
-          activeOpacity={0.85}
-          onPress={() => {
-            tap();
-            router.push({
-              pathname: '/(tabs)/satellite-map',
-              params: {
-                cropId: row.cropCycleId,
-                cropName: row.cropName,
-                farmerName: row.farmerName,
-                plotName: row.plotName,
-                area: row.area,
-                sowingDate: row.sowingDate,
-              },
-            } as any);
-          }}
-        >
-          <Ionicons name="planet" size={13} color="#2563eb" />
-          <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>🛰️ Satellite View</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              backgroundColor: '#f0fdf4',
+              borderWidth: 1.5,
+              borderColor: '#86efac',
+              paddingHorizontal: 9,
+              paddingVertical: 6,
+              borderRadius: RADIUS.pill,
+            }}
+            activeOpacity={0.85}
+            onPress={() => {
+              tap();
+              if (onOpenActivities) {
+                onOpenActivities(row);
+              }
+            }}
+          >
+            <Ionicons name="leaf" size={13} color="#16a34a" />
+            <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#15803d' }}>🌱 Crop Activities</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+              backgroundColor: '#eff6ff',
+              borderWidth: 1.5,
+              borderColor: '#bfdbfe',
+              paddingHorizontal: 9,
+              paddingVertical: 6,
+              borderRadius: RADIUS.pill,
+            }}
+            activeOpacity={0.85}
+            onPress={() => {
+              tap();
+              router.push({
+                pathname: '/(tabs)/satellite-map',
+                params: {
+                  cropId: row.cropCycleId,
+                  cropName: row.cropName,
+                  farmerName: row.farmerName,
+                  plotName: row.plotName,
+                  area: row.area,
+                  sowingDate: row.sowingDate,
+                },
+              } as any);
+            }}
+          >
+            <Ionicons name="planet" size={13} color="#2563eb" />
+            <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>🛰️ Satellite View</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <SprayScheduleCards
@@ -398,6 +427,28 @@ export default function AdvisorFarmsScreen() {
   const { defaultTab } = useLocalSearchParams<{ defaultTab?: string }>();
   const [mainTab, setMainTab] = useState<'FARMS' | 'SCHEDULE'>(defaultTab === 'SCHEDULE' ? 'SCHEDULE' : 'FARMS');
   const [groupByMode, setGroupByMode] = useState<GroupByMode>('FARMER_WISE');
+
+  // Crop Activities Modal for Advisor View
+  const [selectedCropForActivities, setSelectedCropForActivities] = useState<RegisteredCropField | null>(null);
+  const [showActivitiesModal, setShowActivitiesModal] = useState(false);
+
+  const handleOpenActivities = (row: PlotRow) => {
+    setSelectedCropForActivities({
+      id: row.cropCycleId,
+      cropName: row.cropName,
+      fieldName: row.plotName,
+      variety: row.variety,
+      sowingDate: row.sowingDate ? new Date(row.sowingDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+      acreage: Number(row.area) || 1,
+      areaUnit: 'ACRE',
+      stage: 'GROWTH',
+      status: 'ACTIVE',
+      advisorShareStatus: 'ACCEPTED',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    setShowActivitiesModal(true);
+  };
 
   useEffect(() => {
     if (defaultTab === 'SCHEDULE') {
@@ -796,6 +847,7 @@ export default function AdvisorFarmsScreen() {
                                 openSprayDetail={openSprayDetail}
                                 router={router}
                                 showFarmerInfo={false}
+                                onOpenActivities={handleOpenActivities}
                               />
                             ))
                           )}
@@ -835,6 +887,7 @@ export default function AdvisorFarmsScreen() {
                               openSprayDetail={openSprayDetail}
                               router={router}
                               showFarmerInfo={true}
+                              onOpenActivities={handleOpenActivities}
                             />
                           ))}
                         </View>
@@ -873,6 +926,7 @@ export default function AdvisorFarmsScreen() {
                               openSprayDetail={openSprayDetail}
                               router={router}
                               showFarmerInfo={true}
+                              onOpenActivities={handleOpenActivities}
                             />
                           ))}
                         </View>
@@ -911,6 +965,7 @@ export default function AdvisorFarmsScreen() {
                               openSprayDetail={openSprayDetail}
                               router={router}
                               showFarmerInfo={true}
+                              onOpenActivities={handleOpenActivities}
                             />
                           ))}
                         </View>
@@ -957,6 +1012,7 @@ export default function AdvisorFarmsScreen() {
                                 openSprayDetail={openSprayDetail}
                                 router={router}
                                 showFarmerInfo={true}
+                                onOpenActivities={handleOpenActivities}
                               />
                             ))}
                           </View>
@@ -975,6 +1031,16 @@ export default function AdvisorFarmsScreen() {
         visible={!!renewingFarmerId}
         farmerId={renewingFarmerId ?? undefined}
         onClose={() => setRenewingFarmerId(null)}
+      />
+
+      <CropActivitiesModal
+        visible={showActivitiesModal}
+        crop={selectedCropForActivities}
+        onClose={() => {
+          setShowActivitiesModal(false);
+          setSelectedCropForActivities(null);
+        }}
+        isAdvisorView={true}
       />
 
       <Modal visible={!!sprayDetailItem} transparent animationType="slide" onRequestClose={() => setSprayDetailItem(null)}>

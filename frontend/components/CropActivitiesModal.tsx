@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrops, RegisteredCropField, CropActivityItem, CropActivityType } from '@/src/store/crops-context';
+import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
@@ -21,6 +22,7 @@ interface CropActivitiesModalProps {
   crop: RegisteredCropField | null;
   onClose: () => void;
   onOpenMediaModal?: () => void;
+  isAdvisorView?: boolean;
 }
 
 export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
@@ -28,15 +30,27 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
   crop,
   onClose,
   onOpenMediaModal,
+  isAdvisorView = false,
 }) => {
   const { colors, isDark, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
+  const { user } = useAuth();
   const { cropActivitiesMap, addCropActivity, cropGpsDataMap } = useCrops();
+
+  // Role check: Is current user viewing as an Advisor / Supervisor?
+  const isAdvisor = Boolean(
+    isAdvisorView ||
+    user?.role === 'ADVISOR' ||
+    user?.role === 'FARM_ADVISOR' ||
+    user?.role === 'GARDEN_ADVISOR' ||
+    user?.role === 'SUPERVISOR' ||
+    (user as any)?.advisorType
+  );
 
   const [activeFilter, setActiveFilter] = useState<'ALL' | CropActivityType | 'MEDIA'>('ALL');
   const [showAddForm, setShowAddForm] = useState(false);
 
   // New activity form state
-  const [formType, setFormType] = useState<CropActivityType>('EXPENSE');
+  const [formType, setFormType] = useState<CropActivityType>(isAdvisor ? 'IRRIGATION' : 'EXPENSE');
   const [formTitle, setFormTitle] = useState('');
   const [formCost, setFormCost] = useState('');
   const [formQuantity, setFormQuantity] = useState('');
@@ -98,20 +112,46 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
         notes: 'Foliar spray for leaf-sucking pests and downy mildew protection.',
         createdAt: new Date().toISOString(),
       },
+      {
+        id: `act_def_5_${crop.id}`,
+        cropId: crop.id,
+        type: 'HARVEST',
+        title: 'Harvest Picking & Produce Lot',
+        date: '15 Oct 2026',
+        cost: 68000,
+        quantity: '45 Quintals Produce Weight',
+        notes: 'Harvested under optimal dry humidity. High grain quality certified.',
+        createdAt: new Date().toISOString(),
+      },
     ];
     return defaults;
   }, [crop, cropActivitiesMap]);
 
+  // Advisor Privacy Filter: strictly exclude pure financial expenses for advisors
+  const effectiveActivities = useMemo(() => {
+    if (isAdvisor) {
+      return rawActivities.filter((a) => a.type !== 'EXPENSE');
+    }
+    return rawActivities;
+  }, [rawActivities, isAdvisor]);
+
   // Filtered list
   const filteredActivities = useMemo(() => {
-    if (activeFilter === 'ALL') return rawActivities;
+    if (activeFilter === 'ALL') return effectiveActivities;
     if (activeFilter === 'MEDIA') return [];
-    return rawActivities.filter((a) => a.type === activeFilter);
-  }, [rawActivities, activeFilter]);
+    return effectiveActivities.filter((a) => a.type === activeFilter);
+  }, [effectiveActivities, activeFilter]);
 
   // Totals
   const totalExpense = useMemo(() => {
     return rawActivities.reduce((sum, a) => sum + (Number(a.cost) || 0), 0);
+  }, [rawActivities]);
+
+  const totalHarvestWeight = useMemo(() => {
+    const harvestActs = rawActivities.filter((a) => a.type === 'HARVEST');
+    if (harvestActs.length === 0) return '0 Quintals';
+    const firstWithQty = harvestActs.find((a) => a.quantity);
+    return firstWithQty?.quantity || `${harvestActs.length} Harvest Lot(s)`;
   }, [rawActivities]);
 
   const totalIrrigations = useMemo(() => {
@@ -137,7 +177,7 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
       type: formType,
       title: formTitle.trim(),
       date: dateStr,
-      cost: formCost ? Number(formCost) : undefined,
+      cost: !isAdvisor && formCost ? Number(formCost) : undefined,
       quantity: formQuantity.trim() || undefined,
       notes: formNotes.trim() || undefined,
     });
@@ -162,7 +202,7 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="calendar-outline" size={20} color="#0284c7" />
                 <Text style={[styles.headerTitle, { color: textColor }]}>
-                  Crop Activities & Timeline
+                  {isAdvisor ? 'Advisor Crop Monitoring & Activities' : 'Crop Activities & Timeline'}
                 </Text>
               </View>
               <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
@@ -178,11 +218,19 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
           <ScrollView style={styles.body} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
             {/* KPI STATS ROW */}
             <View style={styles.kpiRow}>
-              <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
-                <Ionicons name="wallet-outline" size={16} color="#059669" />
-                <Text style={[styles.kpiValue, { color: '#059669' }]}>₹{totalExpense.toLocaleString('en-IN')}</Text>
-                <Text style={[styles.kpiLabel, { color: subTextColor }]}>Total Expenses</Text>
-              </View>
+              {isAdvisor ? (
+                <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                  <Ionicons name="scale-outline" size={16} color="#059669" />
+                  <Text style={[styles.kpiValue, { color: '#059669' }]} numberOfLines={1}>{totalHarvestWeight}</Text>
+                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>Harvest Weight</Text>
+                </View>
+              ) : (
+                <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                  <Ionicons name="wallet-outline" size={16} color="#059669" />
+                  <Text style={[styles.kpiValue, { color: '#059669' }]}>₹{totalExpense.toLocaleString('en-IN')}</Text>
+                  <Text style={[styles.kpiLabel, { color: subTextColor }]}>Total Expenses</Text>
+                </View>
+              )}
 
               <View style={[styles.kpiBox, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                 <Ionicons name="water-outline" size={16} color="#0284c7" />
@@ -203,40 +251,68 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
               </View>
             </View>
 
-            {/* DATA RETENTION & AUTO-ARCHIVE POLICY CALLOUT */}
-            <View
-              style={{
-                backgroundColor: isDark ? 'rgba(2, 132, 199, 0.12)' : '#f0f9ff',
-                borderColor: isDark ? 'rgba(2, 132, 199, 0.3)' : '#bae6fd',
-                borderWidth: 1,
-                borderRadius: 10,
-                padding: 12,
-                marginTop: 12,
-                flexDirection: 'row',
-                gap: 10,
-                alignItems: 'flex-start',
-              }}
-            >
-              <Ionicons name="information-circle" size={20} color="#0284c7" style={{ marginTop: 2 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
-                  Smart Retention & Completion Policy
-                </Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDark ? '#e0f2fe' : '#075985', marginTop: 2, lineHeight: 16 }}>
-                  • <Text style={{ fontFamily: FONT.bold }}>Permanent Activity Ledger</Text>: All expenses, waterings, sprays, and fertilizer records are <Text style={{ fontFamily: FONT.bold }}>permanently preserved forever</Text> in your Farm Records for auditing and yield comparisons.
-                  {'\n'}• <Text style={{ fontFamily: FONT.bold }}>Photos & Video 30-Day Window</Text>: When marked 'Completed', high-resolution field photos and videos remain accessible for 30 days to review harvest quality or export your Crop Dossier before cloud archiving.
-                </Text>
+            {/* ADVISOR PRIVACY POLICY OR RETENTION CALLOUT */}
+            {isAdvisor ? (
+              <View
+                style={{
+                  backgroundColor: isDark ? 'rgba(5, 150, 105, 0.12)' : '#ecfdf5',
+                  borderColor: isDark ? 'rgba(5, 150, 105, 0.3)' : '#a7f3d0',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginTop: 12,
+                  flexDirection: 'row',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Ionicons name="shield-checkmark" size={20} color="#059669" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#34d399' : '#047857' }}>
+                    🛡️ Agronomy Advisory View • Strict Commercial Privacy Active
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDark ? '#d1fae5' : '#065f46', marginTop: 2, lineHeight: 16 }}>
+                    • <Text style={{ fontFamily: FONT.bold }}>Farmer Cost & Rate Privacy</Text>: All monetary expenses, operational costs, and produce sale prices are protected and strictly masked.
+                    {'\n'}• <Text style={{ fontFamily: FONT.bold }}>Full Agronomic Transparency</Text>: Real-time access to irrigation, sprays, fertilizer treatments, ground photos, and harvested produce weight for expert crop health verification.
+                  </Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View
+                style={{
+                  backgroundColor: isDark ? 'rgba(2, 132, 199, 0.12)' : '#f0f9ff',
+                  borderColor: isDark ? 'rgba(2, 132, 199, 0.3)' : '#bae6fd',
+                  borderWidth: 1,
+                  borderRadius: 10,
+                  padding: 12,
+                  marginTop: 12,
+                  flexDirection: 'row',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <Ionicons name="information-circle" size={20} color="#0284c7" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                    Smart Retention & Completion Policy
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: isDark ? '#e0f2fe' : '#075985', marginTop: 2, lineHeight: 16 }}>
+                    • <Text style={{ fontFamily: FONT.bold }}>Permanent Activity Ledger</Text>: All expenses, waterings, sprays, and fertilizer records are <Text style={{ fontFamily: FONT.bold }}>permanently preserved forever</Text> in your Farm Records for auditing and yield comparisons.
+                    {'\n'}• <Text style={{ fontFamily: FONT.bold }}>Photos & Video 30-Day Window</Text>: When marked 'Completed', high-resolution field photos and videos remain accessible for 30 days to review harvest quality or export your Crop Dossier before cloud archiving.
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* FILTER PILLS */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
               {[
-                { key: 'ALL', label: `All (${rawActivities.length})`, icon: 'list-outline' },
-                { key: 'EXPENSE', label: 'Expenses', icon: 'cash-outline' },
+                { key: 'ALL', label: `All (${effectiveActivities.length})`, icon: 'list-outline' },
+                ...(!isAdvisor ? [{ key: 'EXPENSE', label: 'Expenses', icon: 'cash-outline' }] : []),
                 { key: 'IRRIGATION', label: 'Watering', icon: 'water-outline' },
                 { key: 'SPRAY', label: 'Sprays', icon: 'flask-outline' },
                 { key: 'FERTILIZER', label: 'Fertilizers', icon: 'leaf-outline' },
+                { key: 'HARVEST', label: 'Harvest Weight', icon: 'scale-outline' },
                 { key: 'MEDIA', label: `Photos & Video (${fieldPhotos.length})`, icon: 'camera-outline' },
               ].map((f) => {
                 const isSelected = activeFilter === f.key;
@@ -271,12 +347,16 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                   onPress={() => setShowAddForm(true)}
                 >
                   <Ionicons name="add-circle" size={17} color="#0284c7" />
-                  <Text style={[styles.addBtnText, { color: '#0284c7' }]}>Log New Activity or Expense</Text>
+                  <Text style={[styles.addBtnText, { color: '#0284c7' }]}>
+                    {isAdvisor ? 'Log Agronomic Observation / Activity' : 'Log New Activity or Expense'}
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <View style={[styles.formContainer, { backgroundColor: innerBg, borderColor: cardBorder }]}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={[styles.formHeading, { color: textColor }]}>Record Crop Activity</Text>
+                    <Text style={[styles.formHeading, { color: textColor }]}>
+                      {isAdvisor ? 'Record Agronomic Observation' : 'Record Crop Activity'}
+                    </Text>
                     <TouchableOpacity onPress={() => setShowAddForm(false)}>
                       <Ionicons name="close-circle" size={20} color={subTextColor} />
                     </TouchableOpacity>
@@ -284,7 +364,10 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
 
                   {/* Activity Type Selector */}
                   <View style={styles.typeSelectorRow}>
-                    {(['EXPENSE', 'IRRIGATION', 'SPRAY', 'FERTILIZER'] as CropActivityType[]).map((t) => (
+                    {(isAdvisor
+                      ? (['IRRIGATION', 'SPRAY', 'FERTILIZER', 'HARVEST'] as CropActivityType[])
+                      : (['EXPENSE', 'IRRIGATION', 'SPRAY', 'FERTILIZER', 'HARVEST'] as CropActivityType[])
+                    ).map((t) => (
                       <TouchableOpacity
                         key={t}
                         style={[
@@ -303,24 +386,26 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                   {/* Inputs */}
                   <TextInput
                     style={[styles.input, { color: textColor, borderColor: cardBorder }]}
-                    placeholder="Activity title (e.g. Urea Top Dressing, Diesel, Drip Watering)"
+                    placeholder={isAdvisor ? "Activity title (e.g. Zinc Foliar Drench, Canal Watering, First Harvest)" : "Activity title (e.g. Urea Top Dressing, Diesel, Drip Watering)"}
                     placeholderTextColor={subTextColor}
                     value={formTitle}
                     onChangeText={setFormTitle}
                   />
 
                   <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {!isAdvisor && (
+                      <TextInput
+                        style={[styles.input, { flex: 1, color: textColor, borderColor: cardBorder }]}
+                        placeholder="Expense (₹, optional)"
+                        placeholderTextColor={subTextColor}
+                        keyboardType="numeric"
+                        value={formCost}
+                        onChangeText={setFormCost}
+                      />
+                    )}
                     <TextInput
                       style={[styles.input, { flex: 1, color: textColor, borderColor: cardBorder }]}
-                      placeholder="Expense (₹, optional)"
-                      placeholderTextColor={subTextColor}
-                      keyboardType="numeric"
-                      value={formCost}
-                      onChangeText={setFormCost}
-                    />
-                    <TextInput
-                      style={[styles.input, { flex: 1, color: textColor, borderColor: cardBorder }]}
-                      placeholder="Quantity / Duration (e.g. 50kg, 3 hrs)"
+                      placeholder={isAdvisor ? "Weight / Quantity (e.g. 45 Quintals, 250ml, 3 hrs)" : "Quantity / Duration (e.g. 50kg, 3 hrs)"}
                       placeholderTextColor={subTextColor}
                       value={formQuantity}
                       onChangeText={setFormQuantity}
@@ -423,6 +508,7 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                     const isIrrigation = act.type === 'IRRIGATION';
                     const isSpray = act.type === 'SPRAY';
                     const isFertilizer = act.type === 'FERTILIZER';
+                    const isHarvest = act.type === 'HARVEST';
 
                     let iconName: any = 'checkmark-circle-outline';
                     let badgeColor = '#0284c7';
@@ -444,6 +530,10 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                       iconName = 'leaf-outline';
                       badgeColor = '#16a34a';
                       badgeBg = isDark ? 'rgba(22, 163, 74, 0.2)' : '#dcfce7';
+                    } else if (isHarvest) {
+                      iconName = 'scale-outline';
+                      badgeColor = '#7c3aed';
+                      badgeBg = isDark ? 'rgba(124, 58, 237, 0.2)' : '#ede9fe';
                     }
 
                     return (
@@ -454,21 +544,45 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                           </View>
 
                           <View style={{ flex: 1 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
                               <Text style={[styles.activityTitle, { color: textColor }]}>{act.title}</Text>
-                              {act.cost ? (
-                                <Text style={[styles.activityCost, { color: '#059669' }]}>
-                                  ₹{act.cost.toLocaleString('en-IN')}
-                                </Text>
-                              ) : null}
+                              {/* Advisor Privacy: For Harvest show weight only + masked rates; for other acts hide costs */}
+                              {isAdvisor ? (
+                                isHarvest ? (
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                    <View style={{ backgroundColor: isDark ? 'rgba(5, 150, 105, 0.2)' : '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#86efac' }}>
+                                      <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                                        ⚖️ {act.quantity || 'Produce Weight Logged'}
+                                      </Text>
+                                    </View>
+                                    <View style={{ backgroundColor: isDark ? 'rgba(100, 116, 139, 0.2)' : '#f1f5f9', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>
+                                        🔒 Rates Masked
+                                      </Text>
+                                    </View>
+                                  </View>
+                                ) : act.quantity ? (
+                                  <View style={{ backgroundColor: isDark ? 'rgba(2, 132, 199, 0.15)' : '#e0f2fe', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>
+                                      {act.quantity}
+                                    </Text>
+                                  </View>
+                                ) : null
+                              ) : (
+                                act.cost ? (
+                                  <Text style={[styles.activityCost, { color: '#059669' }]}>
+                                    ₹{act.cost.toLocaleString('en-IN')}
+                                  </Text>
+                                ) : null
+                              )}
                             </View>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                               <View style={[styles.activityBadge, { backgroundColor: badgeBg }]}>
                                 <Text style={[styles.activityBadgeText, { color: badgeColor }]}>{act.type}</Text>
                               </View>
                               <Text style={[styles.activityDate, { color: subTextColor }]}>🗓️ {act.date}</Text>
-                              {act.quantity ? (
+                              {act.quantity && (!isAdvisor || !isHarvest) ? (
                                 <Text style={[styles.activityDate, { color: subTextColor }]}>• {act.quantity}</Text>
                               ) : null}
                             </View>

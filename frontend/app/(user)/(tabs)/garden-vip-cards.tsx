@@ -28,7 +28,7 @@ export default function GardenVipCardsScreen() {
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Garden Advisor Support</Text>
-          <Text style={styles.headerSub}>ਬਾਗਬਾਨੀ ਮਾਹਿਰਾਂ ਦੀ ਸਹਾਇਤਾ</Text>
+          <Text style={styles.headerSub}>Expert Horticultural & Plant Care Guidance</Text>
         </View>
         <View style={{ width: 40 }} />
       </LinearGradient>

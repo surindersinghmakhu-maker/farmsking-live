@@ -15,7 +15,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Default language is English ('en') as requested
+  // Default language is English ('en') strictly
   const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
@@ -30,9 +30,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         }
         if (savedLang && VALID_LANGUAGES.has(savedLang)) {
           setLanguageState(savedLang as Language);
+        } else {
+          setLanguageState('en');
         }
       } catch (err) {
         console.warn('Failed to load language preference:', err);
+        setLanguageState('en');
       }
     };
     loadSavedLanguage();

@@ -452,7 +452,7 @@ export default function ShopScreen() {
 
   // 📸 AI Crop Doctor Diagnostic State
   const [diseasePhotoUri, setDiseasePhotoUri] = useState<string | null>(null);
-  const [selectedSymptom, setSelectedSymptom] = useState('Yellow Leaves (ਪੀਲੇ ਪੱਤੇ / ਈਲੋ ਰੱਸਟ)');
+  const [selectedSymptom, setSelectedSymptom] = useState('Yellow Leaves / Rust Symptoms');
   const [diagnosedResult, setDiagnosedResult] = useState<any>(null);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
 
@@ -2299,8 +2299,13 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       ) : (
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
         <View style={{ flex: 1 }}>
-          {/* Official FarmsKing Hero Header */}
-          <LinearGradient colors={colors.headerGradient} style={styles.hero}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: itemCount > 0 && activeSubTab !== 'CHECKOUT' ? 84 : 24 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Official FarmsKing Hero Header */}
+            <LinearGradient colors={colors.headerGradient} style={styles.hero}>
             <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
               <View style={styles.headerTop}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -2531,9 +2536,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </View>
               </View>
 
-              <ScrollView
-                contentContainerStyle={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
-                showsVerticalScrollIndicator={false}
+              <View
+                style={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
               >
                 {isLoadingProducts && (!products || (products as Product[]).length === 0) ? (
                   <View style={{ width: '100%', paddingVertical: 40, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -2571,12 +2575,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     />
                   ))
                 )}
-              </ScrollView>
+              </View>
             </View>
 
           ) : activeSubTab === 'CHECKOUT' ? (
             /* 🛒 COMPLETE CUSTOMER DASHBOARD CART SYSTEM */
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+            <View style={{ padding: SPACING.md, gap: 12, paddingBottom: 40, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
                 <Text style={styles.tableHeaderTitle}>🛒 My Shopping Cart Items ({items.length})</Text>
                 {items.length > 0 && (
@@ -3048,9 +3052,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   </View>
                 )
               )}
-            </ScrollView>
+            </View>
           ) : (
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+            <View style={{ padding: SPACING.md, gap: 12, paddingBottom: 140, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
               {/* 📦 MY ORDERS SUB-TAB UI */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
                 <Text style={styles.tableHeaderTitle}>📦 My Customer Orders ({myOrders?.length ?? 0})</Text>
@@ -3132,8 +3136,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   );
                 })
               )}
-            </ScrollView>
+            </View>
           )}
+          </ScrollView>
 
           {/* Cart Bottom Checkout Banner */}
           {itemCount > 0 && activeSubTab !== 'CHECKOUT' && (

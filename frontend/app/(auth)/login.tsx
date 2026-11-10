@@ -42,11 +42,16 @@ const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.goo
 export default function LoginScreen() {
   const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
-  const { t } = useLanguage();
+  const { setLanguage } = useLanguage();
   const router = useRouter();
   const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
+
+  // Enforce English as default language for Login and Auth
+  useEffect(() => {
+    setLanguage('en');
+  }, []);
 
   // Refs for 6 segmented OTP cells
   const otpCellRefs = [
@@ -721,9 +726,9 @@ export default function LoginScreen() {
 
             {/* Console Header */}
             <View style={styles.authHeadingBox}>
-              <Text style={styles.authTitle}>{t('loginTitle', 'Instant Sign In')}</Text>
+              <Text style={styles.authTitle}>Instant Sign In</Text>
               <Text style={styles.authSubtitle}>
-                {t('welcomeToFarmsKing', '100% passwordless verified access. Enter your 10-digit mobile number to proceed.')}
+                100% passwordless verified access. Enter your 10-digit mobile number to proceed.
               </Text>
             </View>
 
@@ -854,7 +859,7 @@ export default function LoginScreen() {
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="paper-plane" size={16} color="#fff" />
-                      <Text style={styles.buttonText}>{t('sendOtp', 'Get Verification Code')}</Text>
+                      <Text style={styles.buttonText}>Get Verification Code</Text>
                     </View>
                   )}
                 </LinearGradient>
@@ -891,7 +896,7 @@ export default function LoginScreen() {
                   </View>
                 )}
 
-                <Text style={styles.fieldLabel}>{t('enterOtp', 'Enter 6-Digit Code')}</Text>
+                <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
                 
                 {/* 6 Individual Segmented Boxes */}
                 <View style={styles.segmentedRow}>
@@ -935,7 +940,7 @@ export default function LoginScreen() {
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="log-in" size={17} color="#fff" />
-                        <Text style={styles.buttonText}>{t('verifyOtp', 'Verify & Enter')}</Text>
+                        <Text style={styles.buttonText}>Verify & Enter</Text>
                       </View>
                     )}
                   </LinearGradient>
@@ -945,11 +950,11 @@ export default function LoginScreen() {
                 <View style={styles.resendRow}>
                   {resendTimer > 0 ? (
                     <Text style={styles.resendTimerText}>
-                      {t('resendOtp', 'Resend code in')} <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
+                      Resend code in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
                     </Text>
                   ) : (
                     <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                      <Text style={styles.resendActiveText}>{t('resendOtp', 'Resend Verification Code')}</Text>
+                      <Text style={styles.resendActiveText}>Resend Verification Code</Text>
                     </TouchableOpacity>
                   )}
                 </View>

@@ -265,6 +265,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout: async () => {
         await SecureStore.deleteItemAsync(TOKEN_KEY);
         await SecureStore.deleteItemAsync(USER_KEY);
+        try {
+          if (Platform.OS === 'web') {
+            localStorage.removeItem('farmsking_user_language');
+          } else {
+            await SecureStore.deleteItemAsync('farmsking_user_language');
+          }
+        } catch {}
         setUser(null);
         disconnectChatSocket();
         queryClient.clear();

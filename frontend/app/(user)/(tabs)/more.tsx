@@ -19,7 +19,7 @@ import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { apiClient } from '@/src/api/client';
-import { deleteMyAccount } from '@/src/api/users.api';
+import { deleteMyAccount, becomeFarmer, becomeGardener } from '@/src/api/users.api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { DeleteAccountModal } from '@/src/components/DeleteAccountModal';
@@ -66,8 +66,8 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; l
 
 
 export default function MoreScreen() {
-  const { user, logout } = useAuth();
-  const { role } = useRole();
+  const { user, logout, refreshUser } = useAuth();
+  const { role, setRole } = useRole();
   const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const updateAppSettings = useUpdateAppSettings();
@@ -84,6 +84,32 @@ export default function MoreScreen() {
   const brandLogoUri = appSettings?.logoUrl ?? null;
   const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
+
+  // Self-Service Role Upgrade State ("I am also")
+  const [isUpgradingRole, setIsUpgradingRole] = useState(false);
+
+  const handleChooseRole = async (chosenRole: 'FARMER' | 'GARDENER') => {
+    setIsUpgradingRole(true);
+    try {
+      if (chosenRole === 'FARMER') {
+        await becomeFarmer();
+      } else {
+        await becomeGardener();
+      }
+      await refreshUser();
+      setRole(chosenRole);
+      Alert.alert(
+        'Profile Activated ✅',
+        chosenRole === 'FARMER'
+          ? 'Welcome to the Farmer experience! Your farm tools, crops, and ledger records are now active.'
+          : 'Welcome to the Gardener experience! Your garden care, plant health, and nursery tools are now active.'
+      );
+    } catch (err: any) {
+      Alert.alert('Activation Error', err?.response?.data?.message || err?.message || 'Could not activate role. Please try again.');
+    } finally {
+      setIsUpgradingRole(false);
+    }
+  };
   const [showServerModal, setShowServerModal] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showGuidesModal, setShowGuidesModal] = useState(false);
@@ -217,7 +243,94 @@ export default function MoreScreen() {
           
 
 
-              {/* Account Section */}
+          {/* 🌟 "I am also" Section: strictly shown only when user does NOT have Farmer role and does NOT have Gardener role */}
+          {!hasFarmerRole && !isGardener && (
+            <View style={styles.section}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>I am also</Text>
+                <View style={{ backgroundColor: colors.isDark ? 'rgba(16, 185, 129, 0.15)' : '#ecfdf5', borderColor: '#a7f3d0', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#059669' }}>Upgrade Profile</Text>
+                </View>
+              </View>
+
+              <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, padding: 14, gap: 12 }]}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: colors.textMuted, lineHeight: 18 }}>
+                  Unlock dedicated agronomy tools, crop health diagnostics, and smart management by selecting your secondary profile:
+                </Text>
+
+                <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+                  {/* Option 1: Farmer */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      minWidth: 140,
+                      backgroundColor: colors.isDark ? 'rgba(21, 128, 61, 0.15)' : '#f0fdf4',
+                      borderColor: colors.isDark ? '#15803d' : '#86efac',
+                      borderWidth: 1.5,
+                      borderRadius: RADIUS.lg,
+                      padding: 12,
+                      gap: 6,
+                    }}
+                    activeOpacity={0.85}
+                    disabled={isUpgradingRole}
+                    onPress={() => handleChooseRole('FARMER')}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="leaf" size={20} color="#ffffff" />
+                      </View>
+                      <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#16a34a' }}>+ ADD</Text>
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: colors.isDark ? '#ffffff' : '#0f172a' }}>Farmer</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, lineHeight: 15 }}>
+                      Crops, farm records, live mandi & satellite care
+                    </Text>
+                  </TouchableOpacity>
+
+                  {/* Option 2: Gardener */}
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      minWidth: 140,
+                      backgroundColor: colors.isDark ? 'rgba(3, 105, 161, 0.15)' : '#f0f9ff',
+                      borderColor: colors.isDark ? '#0284c7' : '#7dd3fc',
+                      borderWidth: 1.5,
+                      borderRadius: RADIUS.lg,
+                      padding: 12,
+                      gap: 6,
+                    }}
+                    activeOpacity={0.85}
+                    disabled={isUpgradingRole}
+                    onPress={() => handleChooseRole('GARDENER')}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#0284c7', alignItems: 'center', justifyContent: 'center' }}>
+                        <Ionicons name="flower" size={20} color="#ffffff" />
+                      </View>
+                      <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#0284c7' }}>+ ADD</Text>
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: colors.isDark ? '#ffffff' : '#0f172a' }}>Gardener</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, lineHeight: 15 }}>
+                      Gardens, home flora, terrace plants & care
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {isUpgradingRole && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center', marginTop: 4 }}>
+                    <ActivityIndicator size="small" color="#15803d" />
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>Activating profile & tools...</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Account Section */}
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('accountSection')}</Text>
                 <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>

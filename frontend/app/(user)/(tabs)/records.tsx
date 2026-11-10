@@ -928,7 +928,7 @@ export default function RecordsScreen() {
       }
     };
 
-    const confirmMsg = `Are you sure you want to delete Sale Bill #${editingBillNo || editingBillId}?\n\n(ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਇਹ ਸੇਲ ਬਿਲ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`;
+    const confirmMsg = `Are you sure you want to delete Sale Bill #${editingBillNo || editingBillId}?`;
 
     if (Platform.OS === 'web') {
       if (window.confirm(confirmMsg)) {
@@ -939,9 +939,9 @@ export default function RecordsScreen() {
         'Delete Sale Bill?',
         confirmMsg,
         [
-          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Delete)',
+            text: 'Delete',
             style: 'destructive',
             onPress: performDelete,
           },
@@ -1124,8 +1124,8 @@ export default function RecordsScreen() {
   const showUpgradePrompt = (kind: 'bill' | 'receipt') => {
     const message =
       kind === 'bill'
-        ? `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਸੇਲ ਬਿਲ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`
-        : `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਪੇਮੈਂਟ ਰਸੀਦਾਂ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਰਸੀਦਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`;
+        ? `On the Free Pass you can download/share up to ${FREE_SHARE_LIMIT} sale bills. Upgrade your Kisan Card for unlimited bills!`
+        : `On the Free Pass you can download/share up to ${FREE_SHARE_LIMIT} payment receipts. Upgrade your Kisan Card for unlimited receipts!`;
     if (Platform.OS === 'web') {
       alert(`🔒 Upgrade Your Kisan Card\n\n${message}`);
     } else {

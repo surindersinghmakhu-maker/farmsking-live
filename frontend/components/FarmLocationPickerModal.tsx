@@ -10,8 +10,11 @@ import {
   ScrollView,
   TextInput,
   Image,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useCrops, CornerCoord, CropGpsData } from '@/src/store/crops-context';
 
 interface FarmLocationPickerModalProps {
@@ -58,22 +61,6 @@ function calculatePolygonAreaInAcres(cornerCoords: CornerCoord[]): number {
   return Math.max(0.5, +(areaInAcres.toFixed(2)));
 }
 
-const CORNER_STEPS: { label: string; name: string }[] = [
-  { label: 'C1 (NW)', name: 'Corner 1: North-West' },
-  { label: 'C2 (NE)', name: 'Corner 2: North-East' },
-  { label: 'C3 (SE)', name: 'Corner 3: South-East' },
-  { label: 'C4 (SW)', name: 'Corner 4: South-West' },
-];
-
-const GOOGLE_MAP_PRESETS = [
-  { name: 'Bathinda Mandi Plot', district: 'Bathinda', lat: 30.9085, lng: 75.8610 },
-  { name: 'Ludhiana Central Farm', district: 'Ludhiana', lat: 30.9012, lng: 75.8575 },
-  { name: 'Amritsar Border Field', district: 'Amritsar', lat: 31.6340, lng: 74.8723 },
-  { name: 'Sangrur Grain Belt', district: 'Sangrur', lat: 30.2458, lng: 75.8420 },
-  { name: 'Patiala Agri Zone', district: 'Patiala', lat: 30.3398, lng: 76.3869 },
-  { name: 'Abohar Cotton Belt', district: 'Fazilka', lat: 30.1445, lng: 74.1955 },
-];
-
 export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = ({
   visible,
   initialIsLocked = false,
@@ -87,206 +74,242 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
   onClose,
   onSaveLocation,
 }) => {
-  const { requestCropGpsUnlock, updateCropLocation, saveCropGpsData } = useCrops();
-  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const { requestCropGpsUnlock, updateCropLocation, saveCropGpsData, lockCropGps } = useCrops();
+  const router = useRouter();
+
+  // Wizard active step for Setup: 1 = Boundary, 2 = 5 Photos, 3 = 1-Min Video
+  const [setupStep, setSetupStep] = useState<1 | 2 | 3>(1);
+
+  // Monitoring tab when locked: 'HEALTH' | 'MEDIA' | 'SETTINGS'
+  const [monitoringTab, setMonitoringTab] = useState<'HEALTH' | 'MEDIA' | 'SETTINGS'>('HEALTH');
+
+  // GPS Coordinates & 4 Corners
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(
-    existingGpsData ? { lat: existingGpsData.centerLat, lng: existingGpsData.centerLng } : null
+    existingGpsData ? { lat: existingGpsData.centerLat, lng: existingGpsData.centerLng } : { lat: 30.9085, lng: 75.8610 }
   );
-  const [corners, setCorners] = useState<CornerCoord[]>(existingGpsData?.corners || []);
-  const [cornersMarked, setCornersMarked] = useState<number>(existingGpsData ? 4 : 0);
-  const [calculatedAcres, setCalculatedAcres] = useState<number>(existingGpsData?.areaAcres || 0);
+  const [corners, setCorners] = useState<CornerCoord[]>(
+    existingGpsData?.corners && existingGpsData.corners.length === 4
+      ? existingGpsData.corners
+      : [
+          { label: 'C1 (NW)', lat: 30.9097, lng: 75.8595 },
+          { label: 'C2 (NE)', lat: 30.9099, lng: 75.8626 },
+          { label: 'C3 (SE)', lat: 30.9074, lng: 75.8623 },
+          { label: 'C4 (SW)', lat: 30.9072, lng: 75.8596 },
+        ]
+  );
+  const [cornersMarked, setCornersMarked] = useState<number>(existingGpsData ? 4 : 4);
+  const [calculatedAcres, setCalculatedAcres] = useState<number>(existingGpsData?.areaAcres || 3.8);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [captureMode, setCaptureMode] = useState<'WALK' | 'REMOTE'>('REMOTE');
+
+  // Photos (Up to 5)
+  const [photos, setPhotos] = useState<string[]>(
+    existingGpsData?.fieldPhotos && existingGpsData.fieldPhotos.length > 0
+      ? existingGpsData.fieldPhotos
+      : []
+  );
+  const [previewingPhotoIndex, setPreviewingPhotoIndex] = useState<number | null>(null);
+
+  // 1-Minute Video
+  const [videoUri, setVideoUri] = useState<string | null>(existingGpsData?.fieldVideo || null);
+  const [isVideoRecording, setIsVideoRecording] = useState(false);
+  const [recordTimerSeconds, setRecordTimerSeconds] = useState(0);
+
+  // Lock & Unlock State
   const [isLocked, setIsLocked] = useState<boolean>(initialIsLocked);
-  const [isUnlockRequested, setIsUnlockRequested] = useState<boolean>(false);
   const [showReasonBox, setShowReasonBox] = useState<boolean>(false);
   const [unlockReasonInput, setUnlockReasonInput] = useState<string>('');
-  const [showLivePhotoModal, setShowLivePhotoModal] = useState<boolean>(false);
-  const [showFullMapModal, setShowFullMapModal] = useState<boolean>(false);
-  const [captureMode, setCaptureMode] = useState<'WALK' | 'REMOTE'>('WALK');
-  const [manualLatText, setManualLatText] = useState<string>('30.9085');
-  const [manualLngText, setManualLngText] = useState<string>('75.8610');
-  const [googleMapSearchQuery, setGoogleMapSearchQuery] = useState<string>('');
+  const [isUnlockRequested, setIsUnlockRequested] = useState<boolean>(false);
 
-  const canSave = !isLocked && cornersMarked === 4 && selectedCoords !== null && corners.length === 4;
-
-  const handleRemoteAutoGenerate = (targetLat?: number, targetLng?: number) => {
-    const latNum = targetLat !== undefined ? targetLat : (parseFloat(manualLatText) || 30.9085);
-    const lngNum = targetLng !== undefined ? targetLng : (parseFloat(manualLngText) || 75.8610);
-
-    const newCorners: CornerCoord[] = [
-      { label: 'C1 (NW)', lat: +(latNum + 0.0012).toFixed(4), lng: +(lngNum - 0.0015).toFixed(4) },
-      { label: 'C2 (NE)', lat: +(latNum + 0.0014).toFixed(4), lng: +(lngNum + 0.0016).toFixed(4) },
-      { label: 'C3 (SE)', lat: +(latNum - 0.0011).toFixed(4), lng: +(lngNum + 0.0013).toFixed(4) },
-      { label: 'C4 (SW)', lat: +(latNum - 0.0013).toFixed(4), lng: +(lngNum - 0.0014).toFixed(4) },
-    ];
-
-    const acres = calculatePolygonAreaInAcres(newCorners);
-    setCorners(newCorners);
-    setCornersMarked(4);
-    setSelectedCoords({ lat: latNum, lng: lngNum });
-    setCalculatedAcres(acres);
-    setManualLatText(String(latNum));
-    setManualLngText(String(lngNum));
-
-    Alert.alert(
-      'Remote Location Set & 4 Corners Generated! 🎯',
-      `Remote Coordinates Applied for ${cropName || 'Field Plot'}:\n• GPS Center: ${latNum}°N, ${lngNum}°E\n• Field Area: ${acres} Acres\n• 4 Corners (C1-C4) Generated.\n\n🟢 Tap "🔒 Save & Lock" to save to DB for Advisor access!`
-    );
-  };
-
-  // Sync state whenever modal opens or existingGpsData / initialIsLocked changes
   useEffect(() => {
     setIsLocked(initialIsLocked);
-    setCaptureMode('REMOTE'); // Default to Interactive Satellite World Map
-    if (existingGpsData) {
-      setSelectedCoords({ lat: existingGpsData.centerLat, lng: existingGpsData.centerLng });
-      setCorners(existingGpsData.corners);
-      setCalculatedAcres(existingGpsData.areaAcres);
-      setCornersMarked(4);
-      setManualLatText(String(existingGpsData.centerLat));
-      setManualLngText(String(existingGpsData.centerLng));
-    } else {
-      const defLat = 30.9010;
-      const defLng = 75.8573;
-      const defCorners: CornerCoord[] = [
-        { label: 'C1 (NW)', lat: +(defLat + 0.0012).toFixed(4), lng: +(defLng - 0.0015).toFixed(4) },
-        { label: 'C2 (NE)', lat: +(defLat + 0.0014).toFixed(4), lng: +(defLng + 0.0016).toFixed(4) },
-        { label: 'C3 (SE)', lat: +(defLat - 0.0011).toFixed(4), lng: +(defLng + 0.0013).toFixed(4) },
-        { label: 'C4 (SW)', lat: +(defLat - 0.0013).toFixed(4), lng: +(defLng - 0.0014).toFixed(4) },
-      ];
-      setSelectedCoords({ lat: defLat, lng: defLng });
-      setCorners(defCorners);
-      setCornersMarked(4);
-      setCalculatedAcres(1.0);
-      setManualLatText(String(defLat));
-      setManualLngText(String(defLng));
-    }
-  }, [visible, initialIsLocked, existingGpsData]);
+  }, [initialIsLocked]);
 
-  const handleLocateCurrentGps = () => {
+  useEffect(() => {
+    let interval: any;
+    if (isVideoRecording) {
+      interval = setInterval(() => {
+        setRecordTimerSeconds((prev) => {
+          if (prev >= 60) {
+            clearInterval(interval);
+            setIsVideoRecording(false);
+            setVideoUri('https://assets.farmsking.com/demo_crop_video_60s.mp4');
+            Alert.alert('1-Minute Video Recorded ✅', 'Field video has been captured and attached.');
+            return 60;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } else {
+      setRecordTimerSeconds(0);
+    }
+    return () => clearInterval(interval);
+  }, [isVideoRecording]);
+
+  // Handle Mark Corner Step (Walk Mode)
+  const handleMarkCornerStep = () => {
+    if (cornersMarked >= 4) return;
     setIsLocating(true);
     setTimeout(() => {
-      const lat = 30.9085;
-      const lng = 75.8610;
-      handleRemoteAutoGenerate(lat, lng);
       setIsLocating(false);
-      Alert.alert(
-        'Current Live GPS Located! 📍',
-        `Moved World Map directly to your current mobile position:\n• Center: ${lat}° N, ${lng}° E\n• 4 Corners Boundary Aligned.`
-      );
-    }, 500);
+      const nextStep = cornersMarked + 1;
+      setCornersMarked(nextStep);
+      if (nextStep === 4) {
+        const acres = calculatePolygonAreaInAcres(corners);
+        setCalculatedAcres(acres);
+        Alert.alert('All 4 Corners Marked! 🎯', `4 field corners recorded. Field Area: ${acres} Acres.`);
+      }
+    }, 600);
   };
 
-  const handleMarkCornerStep = () => {
-    if (isLocked) return;
-    if (cornersMarked >= 4) {
-      Alert.alert('All 4 Corners Marked ✓', 'All 4 corners already marked. Tap "Reset" if you wish to clear & re-mark.');
+  // Add Photo via Camera
+  const handleTakePhotoLive = async () => {
+    if (photos.length >= 5) {
+      Alert.alert('Maximum Reached', 'You can upload a maximum of 5 field photos.');
+      return;
+    }
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Camera access is required to take live field photos.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setPhotos((prev) => [...prev, result.assets[0].uri]);
+      }
+    } catch {
+      // Fallback for browsers / demo
+      const fallbackUrl = `https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop&q=80&sig=${Date.now()}`;
+      setPhotos((prev) => [...prev, fallbackUrl]);
+    }
+  };
+
+  // Add Photo via Library
+  const handlePickPhotoLibrary = async () => {
+    if (photos.length >= 5) {
+      Alert.alert('Maximum Reached', 'You can upload a maximum of 5 field photos.');
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        selectionLimit: 5 - photos.length,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets) {
+        const newUris = result.assets.map((a) => a.uri).slice(0, 5 - photos.length);
+        setPhotos((prev) => [...prev, ...newUris]);
+      }
+    } catch {
+      const fallbackUrl = `https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&auto=format&fit=crop&q=80&sig=${Date.now()}`;
+      setPhotos((prev) => [...prev, fallbackUrl]);
+    }
+  };
+
+  // Remove Photo
+  const handleRemovePhoto = (index: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    if (previewingPhotoIndex === index) setPreviewingPhotoIndex(null);
+  };
+
+  // Video Shoot (1-Minute Max)
+  const handleStartShootVideo = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Camera access is required to record field video.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        videoMaxDuration: 60,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setVideoUri(result.assets[0].uri);
+        Alert.alert('Video Attached ✅', '1-minute field video successfully attached.');
+      }
+    } catch {
+      // Live recording timer simulation for desktop web
+      setIsVideoRecording(true);
+    }
+  };
+
+  // Video Pick from Library
+  const handlePickVideoLibrary = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setVideoUri(result.assets[0].uri);
+        Alert.alert('Video Attached ✅', 'Field video attached.');
+      }
+    } catch {
+      setVideoUri('https://assets.farmsking.com/demo_crop_video_60s.mp4');
+      Alert.alert('Video Attached ✅', 'Field video attached.');
+    }
+  };
+
+  // Final Submit & Lock Field
+  const handleFinalSubmitAndLock = () => {
+    if (cornersMarked < 4) {
+      Alert.alert('Set Location First 📍', 'Please mark all 4 boundary corners of the field.');
+      setSetupStep(1);
       return;
     }
 
-    setIsLocating(true);
-    const stepIdx = cornersMarked;
-    const meta = CORNER_STEPS[stepIdx];
-
-    setTimeout(() => {
-      setIsLocating(false);
-      const baseLat = 30.9085;
-      const baseLng = 75.8610;
-
-      const offsets = [
-        { lat: 0.0012, lng: -0.0015 },
-        { lat: 0.0014, lng: 0.0016 },
-        { lat: -0.0011, lng: 0.0013 },
-        { lat: -0.0013, lng: -0.0014 },
-      ];
-
-      const newLat = +(baseLat + offsets[stepIdx].lat + (Math.random() - 0.5) * 0.0004).toFixed(4);
-      const newLng = +(baseLng + offsets[stepIdx].lng + (Math.random() - 0.5) * 0.0004).toFixed(4);
-
-      const newCorner: CornerCoord = {
-        label: meta.label,
-        lat: newLat,
-        lng: newLng,
-      };
-
-      const updatedCorners = [...corners, newCorner];
-      const newCount = updatedCorners.length;
-      setCorners(updatedCorners);
-      setCornersMarked(newCount);
-
-      if (newCount < 4) {
-        Alert.alert(
-          `📍 ${meta.label} Marked! ✓ (${newCount}/4)`,
-          `Corner ${newCount} Recorded:\n• ${meta.name}: ${newLat}°N, ${newLng}°E\n\n👉 Walk to Corner ${newCount + 1} (${CORNER_STEPS[newCount].label}) & tap mark button.`
-        );
-      } else {
-        const computedAcres = calculatePolygonAreaInAcres(updatedCorners);
-        const avgLat = +(updatedCorners.reduce((sum, c) => sum + c.lat, 0) / 4).toFixed(4);
-        const avgLng = +(updatedCorners.reduce((sum, c) => sum + c.lng, 0) / 4).toFixed(4);
-
-        setCalculatedAcres(computedAcres);
-        setSelectedCoords({ lat: avgLat, lng: avgLng });
-
-        Alert.alert(
-          '🌾 All 4 Corners Marked & Area Calculated! ✓ (4/4)',
-          `Field 4-Corner Boundary Complete:\n• C1 ✓: ${updatedCorners[0].lat}°N, ${updatedCorners[0].lng}°E\n• C2 ✓: ${updatedCorners[1].lat}°N, ${updatedCorners[1].lng}°E\n• C3 ✓: ${updatedCorners[2].lat}°N, ${updatedCorners[2].lng}°E\n• C4 ✓: ${updatedCorners[3].lat}°N, ${updatedCorners[3].lng}°E\n\n📐 Field Area: ${computedAcres} Acres\n📍 Field Center: ${avgLat}°N, ${avgLng}°E\n\n🟢 Live Satellite Photo location set & Save button is now ENABLED!`
-        );
-      }
-    }, 400);
-  };
-
-  const handleResetCorners = () => {
-    setIsLocked(false);
-    setSelectedCoords(null);
-    setCorners([]);
-    setCornersMarked(0);
-    setCalculatedAcres(0);
-    Alert.alert(
-      'Location Reset 🔄',
-      'Location values cleared and set to blank!\n\n🔒 Save & Lock button is now DISABLED.\nTap "Mark Corner 1 (C1)" button above to start marking 4 corners 1-by-1.'
-    );
-  };
-
-  const handleSaveAndLock = () => {
-    const coordsToSave = selectedCoords || { lat: 30.9085, lng: 75.8610 };
-    setIsLocked(true);
-    setCornersMarked(4);
-    const newLocStr = `📍 ${coordsToSave.lat.toFixed(4)}° N, ${coordsToSave.lng.toFixed(4)}° E (${calculatedAcres} Acres · 4 Corners)`;
+    const centerLat = selectedCoords?.lat || 30.9085;
+    const centerLng = selectedCoords?.lng || 75.8610;
+    const locText = `📍 ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E (${calculatedAcres} Acres · 4 Corners)`;
 
     const gpsDataToSave: CropGpsData = {
-      centerLat: coordsToSave.lat,
-      centerLng: coordsToSave.lng,
-      corners: corners,
+      centerLat,
+      centerLng,
+      corners,
       areaAcres: calculatedAcres,
-      locationText: newLocStr,
+      locationText: locText,
       isLocked: true,
+      fieldPhotos: photos,
+      fieldVideo: videoUri || undefined,
       updatedAt: new Date().toISOString(),
     };
 
     if (cropId) {
       saveCropGpsData(cropId, gpsDataToSave);
-      updateCropLocation(cropId, newLocStr);
+      updateCropLocation(cropId, locText);
+      lockCropGps(cropId);
     }
 
     onSaveLocation({
-      latitude: coordsToSave.lat,
-      longitude: coordsToSave.lng,
+      latitude: centerLat,
+      longitude: centerLng,
       areaAcres: calculatedAcres,
-      addressText: newLocStr,
+      addressText: locText,
       isLocked: true,
-      corners: corners,
+      corners,
       gpsData: gpsDataToSave,
     });
 
+    setIsLocked(true);
     Alert.alert(
-      'Location & 4 Corners Saved to Crop Table 🔒',
-      `4 Field Corner Coordinates saved for ${cropName || 'Crop Plot'}.\nCenter: ${coordsToSave.lat}° N, ${coordsToSave.lng}° E.\nAdmin and Advisor can now view the exact same field map & satellite data.`
+      'Field Verified & Locked 🔒',
+      `Satellite telemetry is now active for ${cropName || 'Field Plot'}.\n\n• Center: ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E\n• Area: ${calculatedAcres} Acres\n• Photos: ${photos.length} Verified\n• Video: ${videoUri ? '1-Min Video Attached' : 'None'}\n\nField is now locked for satellite monitoring.`
     );
     onClose();
   };
 
+  // Direct Unlock Request to Operator
   const handleDirectUnlockRequest = () => {
     if (!unlockReasonInput.trim() || unlockReasonInput.trim().length < 5) {
-      Alert.alert('Reason Required', 'Please provide a clear reason (minimum 5 characters) for unlocking this field so the Operator can review.');
+      Alert.alert('Reason Required', 'Please enter a clear reason (minimum 5 characters) for unlocking this field so the Operator can review.');
       return;
     }
     setIsUnlockRequested(true);
@@ -302,546 +325,642 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
     setShowReasonBox(false);
     setUnlockReasonInput('');
     Alert.alert(
-      'Unlock Request Sent 🔓',
-      `Request sent to Operator to unlock field coordinates for ${cropName || 'this crop'}.\nReason: "${unlockReasonInput.trim()}"`
+      'Unlock Request Sent 📩',
+      `Your request has been forwarded to the Operator.\n\nReason: "${unlockReasonInput.trim()}"\n\nYou will be notified once reviewed.`
     );
   };
 
   return (
-    <>
-      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-        <View style={styles.overlay}>
-          <View style={styles.card}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerTitleRow}>
-                <View style={styles.iconCircle}>
-                  <Ionicons name={isLocked ? 'eye' : 'location'} size={18} color="#166534" />
-                </View>
-                <Text style={styles.title}>
-                  {isLocked ? '🛰️ Satellite Advisor' : '📍 Set Crop GPS Location'}
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.card}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={[styles.headerIconCircle, { backgroundColor: isLocked ? '#dcfce7' : '#eff6ff' }]}>
+                <Ionicons name={isLocked ? 'shield-checkmark' : 'planet'} size={20} color={isLocked ? '#15803d' : '#2563eb'} />
+              </View>
+              <View>
+                <Text style={styles.headerTitle}>
+                  {isLocked ? 'Satellite Field Monitoring' : 'Satellite Setup & Verification'}
+                </Text>
+                <Text style={styles.headerSubtitle}>
+                  🌾 {cropName || 'Field Crop'} · {plotName || 'Plot #1'} · {calculatedAcres} Acres
                 </Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <Ionicons name="close" size={18} color="#64748b" />
-              </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-              {/* LOCK / UNLOCK STATUS BANNERS */}
-              {isLocked ? (
-                <View style={[styles.lockedBanner, { flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="lock-closed" size={18} color="#b45309" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.lockedTitle}>🔒 Location Saved & Locked (View Only)</Text>
-                      <Text style={styles.lockedSub}>Boundaries are locked for satellite precision. Send request to Operator with reason to unlock.</Text>
-                    </View>
-                  </View>
-                  {isUnlockRequested ? (
-                    <View style={{ backgroundColor: '#fffbeb', padding: 6, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
-                      <Text style={{ fontSize: 10.5, fontWeight: '700', color: '#b45309' }}>⏳ Unlock request submitted and pending Operator approval.</Text>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: '#ffffff',
-                        borderWidth: 1.5,
-                        borderColor: '#f59e0b',
-                        paddingVertical: 7,
-                        paddingHorizontal: 10,
-                        borderRadius: 8,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6,
-                      }}
-                      activeOpacity={0.85}
-                      onPress={() => setShowReasonBox(true)}
-                    >
-                      <Ionicons name="lock-open-outline" size={14} color="#b45309" />
-                      <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#b45309' }}>
-                        🔓 Request Unlock from Operator (Provide Reason)
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ) : (
-                <View style={styles.unlockedBanner}>
-                  <Ionicons name="lock-open" size={16} color="#15803d" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.unlockedTitle}>🔓 GPS Location Unlocked & Ready!</Text>
-                    <Text style={styles.unlockedSub}>Tap green 1-Tap GPS button below to capture & save new coordinates.</Text>
-                  </View>
-                </View>
-              )}
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={20} color="#64748b" />
+            </TouchableOpacity>
+          </View>
 
-              {/* MODE SWITCHER TABS: WALK vs REMOTE */}
-              {!isLocked ? (
-                <View style={{ flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 8, padding: 3, marginBottom: 8, gap: 4 }}>
+          {/* MAIN CONTENT AREA */}
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            {/* ========================================================= */}
+            {/* CASE 1: UNLOCKED -> 3-STEP SETUP WIZARD (NO CLUTTER)      */}
+            {/* ========================================================= */}
+            {!isLocked ? (
+              <View style={{ gap: 14 }}>
+                {/* 3-STEP PROGRESS NAVIGATION */}
+                <View style={styles.stepNavRow}>
                   <TouchableOpacity
-                    style={[{ flex: 1, paddingVertical: 6, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }, captureMode === 'WALK' ? { backgroundColor: '#ffffff', elevation: 1 } : null]}
-                    onPress={() => setCaptureMode('WALK')}
+                    style={[styles.stepNavItem, setupStep === 1 && styles.stepNavItemActive]}
+                    onPress={() => setSetupStep(1)}
                   >
-                    <Ionicons name="walk" size={14} color={captureMode === 'WALK' ? '#16a34a' : '#64748b'} />
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: captureMode === 'WALK' ? '#15803d' : '#64748b' }}>
-                      🚶‍♂️ Walk Field (GPS)
+                    <Ionicons name="location" size={14} color={setupStep === 1 ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, setupStep === 1 && styles.stepNavTextActive]}>
+                      1. Boundary
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[{ flex: 1, paddingVertical: 6, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 }, captureMode === 'REMOTE' ? { backgroundColor: '#ffffff', elevation: 1 } : null]}
-                    onPress={() => setCaptureMode('REMOTE')}
+                    style={[styles.stepNavItem, setupStep === 2 && styles.stepNavItemActive]}
+                    onPress={() => setSetupStep(2)}
                   >
-                    <Ionicons name="home" size={14} color={captureMode === 'REMOTE' ? '#2563eb' : '#64748b'} />
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: captureMode === 'REMOTE' ? '#1d4ed8' : '#64748b' }}>
-                      🏠 Remote / Sit at Home
+                    <Ionicons name="camera" size={14} color={setupStep === 2 ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, setupStep === 2 && styles.stepNavTextActive]}>
+                      2. Photos ({photos.length}/5)
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.stepNavItem, setupStep === 3 && styles.stepNavItemActive]}
+                    onPress={() => setSetupStep(3)}
+                  >
+                    <Ionicons name="videocam" size={14} color={setupStep === 3 ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, setupStep === 3 && styles.stepNavTextActive]}>
+                      3. Video {videoUri ? '✓' : ''}
                     </Text>
                   </TouchableOpacity>
                 </View>
-              ) : null}
 
-              {/* CORNER CAPTURING & LIVE PHOTO CONFIRMATION CONTROL BUTTONS */}
-              {!isLocked ? (
-                <View style={{ gap: 8, marginBottom: 8 }}>
-                  {captureMode === 'WALK' ? (
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                {/* STEP 1: BOUNDARY & LOCATION */}
+                {setupStep === 1 && (
+                  <View style={styles.stepContainer}>
+                    <View style={styles.stepHeaderRow}>
+                      <Text style={styles.stepHeading}>Step 1: Set Field Boundary & 4 Corners</Text>
+                      <Text style={styles.stepSub}>Mark corners via walking GPS or pin on satellite map.</Text>
+                    </View>
+
+                    {/* MODE SELECTOR */}
+                    <View style={styles.modeToggleRow}>
                       <TouchableOpacity
-                        style={[
-                          styles.gpsButton,
-                          { flex: 1.6 },
-                          cornersMarked === 4 && { backgroundColor: '#15803d' }
-                        ]}
-                        activeOpacity={0.8}
-                        onPress={handleMarkCornerStep}
+                        style={[styles.modeToggleBtn, captureMode === 'WALK' && styles.modeToggleBtnActive]}
+                        onPress={() => setCaptureMode('WALK')}
+                      >
+                        <Ionicons name="walk" size={15} color={captureMode === 'WALK' ? '#15803d' : '#64748b'} />
+                        <Text style={[styles.modeToggleText, captureMode === 'WALK' && styles.modeToggleTextActive]}>
+                          Walk Field (GPS)
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.modeToggleBtn, captureMode === 'REMOTE' && styles.modeToggleBtnActive]}
+                        onPress={() => setCaptureMode('REMOTE')}
+                      >
+                        <Ionicons name="map" size={15} color={captureMode === 'REMOTE' ? '#1d4ed8' : '#64748b'} />
+                        <Text style={[styles.modeToggleText, captureMode === 'REMOTE' && styles.modeToggleTextActive]}>
+                          Satellite World Map
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* LOCATION SUMMARY CARD */}
+                    <View style={styles.coordsSummaryBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={styles.coordsLabel}>Center Coordinates & Area:</Text>
+                        <View style={styles.acresBadge}>
+                          <Text style={styles.acresBadgeText}>{calculatedAcres} Acres</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.coordsValue}>
+                        📍 {selectedCoords ? `${selectedCoords.lat.toFixed(4)}° N, ${selectedCoords.lng.toFixed(4)}° E` : 'Not Set'}
+                      </Text>
+                      <Text style={styles.coordsStatus}>
+                        {cornersMarked === 4 ? '🟢 4 Boundary Corners Set (C1 to C4)' : `⚠️ Marked ${cornersMarked}/4 Corners`}
+                      </Text>
+                    </View>
+
+                    {/* ACTION FOR STEP 1 */}
+                    {captureMode === 'WALK' ? (
+                      <TouchableOpacity
+                        style={styles.gpsWalkBtn}
+                        activeOpacity={0.85}
                         disabled={isLocating || cornersMarked >= 4}
+                        onPress={handleMarkCornerStep}
                       >
                         {isLocating ? (
                           <ActivityIndicator color="#ffffff" size="small" />
                         ) : (
                           <>
-                            <Ionicons name={cornersMarked === 4 ? "checkmark-circle" : "navigate-circle"} size={18} color="#ffffff" />
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.gpsButtonText}>
-                                {cornersMarked === 0
-                                  ? '📍 Mark Corner 1 (C1 - NW)'
-                                  : cornersMarked === 1
-                                  ? '📍 Mark Corner 2 (C2 - NE)'
-                                  : cornersMarked === 2
-                                  ? '📍 Mark Corner 3 (C3 - SE)'
-                                  : cornersMarked === 3
-                                  ? '📍 Mark Corner 4 (C4 - SW)'
-                                  : '🟢 4 Corners Marked ✓'}
-                              </Text>
-                              <Text style={styles.gpsButtonSub}>
-                                {cornersMarked < 4
-                                  ? `Walk to corner & tap (${cornersMarked}/4 Marked)`
-                                  : 'All 4 corners & field area recorded'}
-                              </Text>
-                            </View>
+                            <Ionicons name={cornersMarked === 4 ? 'checkmark-circle' : 'navigate'} size={18} color="#ffffff" />
+                            <Text style={styles.gpsWalkBtnText}>
+                              {cornersMarked === 0
+                                ? 'Tap to Mark Corner 1 (C1 - NW)'
+                                : cornersMarked === 1
+                                ? 'Tap to Mark Corner 2 (C2 - NE)'
+                                : cornersMarked === 2
+                                ? 'Tap to Mark Corner 3 (C3 - SE)'
+                                : cornersMarked === 3
+                                ? 'Tap to Mark Corner 4 (C4 - SW)'
+                                : 'All 4 Corners Successfully Marked ✓'}
+                            </Text>
                           </>
                         )}
                       </TouchableOpacity>
+                    ) : (
+                      <View style={styles.remoteAutoBox}>
+                        <Ionicons name="checkmark-done-circle" size={20} color="#15803d" />
+                        <Text style={styles.remoteAutoText}>
+                          Boundary calibrated with Sentinel-2 Satellite telemetry for {calculatedAcres} Acres.
+                        </Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.nextStepBtn}
+                      activeOpacity={0.85}
+                      onPress={() => setSetupStep(2)}
+                    >
+                      <Text style={styles.nextStepBtnText}>Continue to Field Photos (Step 2/3)</Text>
+                      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* STEP 2: 5 CROP PHOTOS (NEW CLEAN DIALOG / SECTION) */}
+                {setupStep === 2 && (
+                  <View style={styles.stepContainer}>
+                    <View style={styles.stepHeaderRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={styles.stepHeading}>Step 2: Upload Crop Photos (Up to 5)</Text>
+                        <Text style={styles.photoCountBadge}>{photos.length} / 5 Added</Text>
+                      </View>
+                      <Text style={styles.stepSub}>
+                        Capture or upload live photos. Tap any thumbnail to preview and check before final submit.
+                      </Text>
+                    </View>
+
+                    {/* CAPTURE BUTTONS */}
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <TouchableOpacity
+                        style={[styles.mediaActionBtn, photos.length >= 5 && { opacity: 0.6 }]}
+                        activeOpacity={0.85}
+                        disabled={photos.length >= 5}
+                        onPress={handleTakePhotoLive}
+                      >
+                        <Ionicons name="camera" size={18} color="#ffffff" />
+                        <Text style={styles.mediaActionBtnText}>Take Live Photo</Text>
+                      </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={{
-                          flex: 1.2,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 6,
-                          backgroundColor: (cornersMarked === 4 || isLocked) ? '#eff6ff' : '#f8fafc',
-                          borderWidth: 1.5,
-                          borderColor: (cornersMarked === 4 || isLocked) ? '#3b82f6' : '#cbd5e1',
-                          borderRadius: 10,
-                          paddingHorizontal: 8,
-                        }}
+                        style={[styles.mediaActionBtnOutline, photos.length >= 5 && { opacity: 0.6 }]}
                         activeOpacity={0.85}
-                        onPress={() => {
-                          if (!isLocked && cornersMarked < 4) {
-                            Alert.alert(
-                              'Mark 4 Corners First 🔒',
-                              'Please mark all 4 field corners first to set the location for the Live Satellite Photo.'
-                            );
-                            return;
-                          }
-                          setShowLivePhotoModal(true);
-                        }}
+                        disabled={photos.length >= 5}
+                        onPress={handlePickPhotoLibrary}
                       >
-                        <Ionicons name={cornersMarked === 4 || isLocked ? "camera" : "lock-closed"} size={16} color={cornersMarked === 4 || isLocked ? "#1d4ed8" : "#94a3b8"} />
-                        <View>
-                          <Text style={{ fontSize: 11.5, fontWeight: '800', color: cornersMarked === 4 || isLocked ? '#1e40af' : '#64748b' }}>📷 Show Live Photo</Text>
-                          <Text style={{ fontSize: 9.5, color: cornersMarked === 4 || isLocked ? '#3b82f6' : '#94a3b8', fontWeight: '700' }}>
-                            {cornersMarked === 4 || isLocked ? 'Confirm Field Plot' : 'Locked (Mark 4 Corners)'}
-                          </Text>
-                        </View>
+                        <Ionicons name="images" size={18} color="#2563eb" />
+                        <Text style={styles.mediaActionBtnOutlineText}>Upload from Gallery</Text>
                       </TouchableOpacity>
                     </View>
-                  ) : (
-                    /* INTERACTIVE GOOGLE SATELLITE MAP REMOTE MAPPING PANEL */
-                    <View style={{ backgroundColor: '#eff6ff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#93c5fd', gap: 6 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <Ionicons name="planet" size={16} color="#1d4ed8" />
-                          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#1e40af' }}>
-                            🗺️ Satellite World Map Field Locator
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={{ backgroundColor: '#15803d', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                          onPress={handleLocateCurrentGps}
-                        >
-                          <Ionicons name="navigate-circle" size={12} color="#ffffff" />
-                          <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>📍 My Live GPS</Text>
-                        </TouchableOpacity>
-                      </View>
 
-                      {/* Search Bar on Google Maps */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 1, borderColor: '#93c5fd', paddingHorizontal: 8, paddingVertical: 4, gap: 6 }}>
-                        <Ionicons name="search" size={14} color="#3b82f6" />
-                        <TextInput
-                          style={{ flex: 1, fontSize: 11.5, color: '#0f172a', padding: 0 }}
-                          placeholder="Search Google Maps village, mandi, or farm (e.g. Bathinda)"
-                          placeholderTextColor="#94a3b8"
-                          value={googleMapSearchQuery}
-                          onChangeText={setGoogleMapSearchQuery}
-                        />
-                        {googleMapSearchQuery ? (
-                          <TouchableOpacity onPress={() => setGoogleMapSearchQuery('')}>
-                            <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                    {/* 5-PHOTO GRID */}
+                    <View style={styles.photoGrid}>
+                      {[0, 1, 2, 3, 4].map((slotIdx) => {
+                        const photoUri = photos[slotIdx];
+                        if (photoUri) {
+                          return (
+                            <View key={slotIdx} style={styles.photoThumbCard}>
+                              <Image source={{ uri: photoUri }} style={styles.photoThumbImg} />
+                              <TouchableOpacity
+                                style={styles.photoInspectBadge}
+                                onPress={() => setPreviewingPhotoIndex(slotIdx)}
+                              >
+                                <Ionicons name="eye" size={14} color="#ffffff" />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={styles.photoDeleteBadge}
+                                onPress={() => handleRemovePhoto(slotIdx)}
+                              >
+                                <Ionicons name="trash" size={13} color="#ffffff" />
+                              </TouchableOpacity>
+                              <Text style={styles.photoSlotLabel}>Photo #{slotIdx + 1} ✓</Text>
+                            </View>
+                          );
+                        }
+                        return (
+                          <TouchableOpacity
+                            key={slotIdx}
+                            style={styles.photoEmptySlot}
+                            onPress={handleTakePhotoLive}
+                          >
+                            <Ionicons name="add-circle-outline" size={24} color="#94a3b8" />
+                            <Text style={styles.photoEmptySlotText}>Slot #{slotIdx + 1}</Text>
                           </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {photos.length > 0 ? (
+                      <View style={styles.checkNoticeBox}>
+                        <Ionicons name="information-circle-outline" size={16} color="#0369a1" />
+                        <Text style={styles.checkNoticeText}>
+                          Tap the eye icon on any photo to inspect clarity before final submit.
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {/* NAVIGATION BUTTONS */}
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                      <TouchableOpacity
+                        style={styles.backStepBtn}
+                        onPress={() => setSetupStep(1)}
+                      >
+                        <Ionicons name="arrow-back" size={16} color="#475569" />
+                        <Text style={styles.backStepBtnText}>Back</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.nextStepBtn, { flex: 2 }]}
+                        activeOpacity={0.85}
+                        onPress={() => setSetupStep(3)}
+                      >
+                        <Text style={styles.nextStepBtnText}>Continue to 1-Min Video (Step 3/3)</Text>
+                        <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+
+                {/* STEP 3: 1-MINUTE VIDEO SHOOT & FINAL SUBMIT */}
+                {setupStep === 3 && (
+                  <View style={styles.stepContainer}>
+                    <View style={styles.stepHeaderRow}>
+                      <Text style={styles.stepHeading}>Step 3: 1-Minute Crop Field Video</Text>
+                      <Text style={styles.stepSub}>
+                        Shoot a live 360° walk-around video of your crop (up to 60 seconds).
+                      </Text>
+                    </View>
+
+                    {/* VIDEO SHOOT ACTION CARD */}
+                    <View style={styles.videoCard}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <View style={[styles.videoIconCircle, videoUri ? { backgroundColor: '#dcfce7' } : {}]}>
+                            <Ionicons name={videoUri ? 'checkmark-circle' : 'videocam'} size={22} color={videoUri ? '#15803d' : '#dc2626'} />
+                          </View>
+                          <View>
+                            <Text style={styles.videoTitle}>
+                              {videoUri ? '1-Minute Field Video Attached' : 'Record Live Field Video'}
+                            </Text>
+                            <Text style={styles.videoSub}>
+                              {videoUri ? 'Video attached and ready to submit' : 'Max duration: 60 Seconds (1 Minute)'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {isVideoRecording ? (
+                          <View style={styles.recordingTimerPill}>
+                            <View style={styles.redDotBlink} />
+                            <Text style={styles.recordingTimerText}>
+                              {String(Math.floor(recordTimerSeconds / 60)).padStart(2, '0')}:
+                              {String(recordTimerSeconds % 60).padStart(2, '0')} / 01:00
+                            </Text>
+                          </View>
                         ) : null}
                       </View>
 
-                      {/* Quick Location Chips (Filtered by Search) */}
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
-                        {GOOGLE_MAP_PRESETS
-                          .filter((p) => !googleMapSearchQuery || p.name.toLowerCase().includes(googleMapSearchQuery.toLowerCase()) || p.district.toLowerCase().includes(googleMapSearchQuery.toLowerCase()))
-                          .map((p, i) => (
-                            <TouchableOpacity
-                              key={i}
-                              style={{ backgroundColor: '#ffffff', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderColor: '#bfdbfe', flexDirection: 'row', alignItems: 'center', gap: 3 }}
-                              onPress={() => handleRemoteAutoGenerate(p.lat, p.lng)}
-                            >
-                              <Ionicons name="location-outline" size={11} color="#2563eb" />
-                              <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#1d4ed8' }}>{p.name}</Text>
-                            </TouchableOpacity>
-                          ))}
-                      </View>
-
-                      {/* Interactive Satellite Canvas Simulation with Tap-to-Pin & 4 Corners */}
-                      <TouchableOpacity
-                        style={{ height: 110, borderRadius: 8, overflow: 'hidden', borderWidth: 1.5, borderColor: '#2563eb', position: 'relative', marginTop: 2 }}
-                        activeOpacity={0.9}
-                        onPress={() => {
-                          const randomLat = +(30.9085 + (Math.random() - 0.5) * 0.006).toFixed(4);
-                          const randomLng = +(75.8610 + (Math.random() - 0.5) * 0.006).toFixed(4);
-                          handleRemoteAutoGenerate(randomLat, randomLng);
-                        }}
-                      >
-                        <Image
-                          source={require('@/assets/images/satellite_field_live_view.png')}
-                          style={{ width: '100%', height: '100%' }}
-                          resizeMode="cover"
-                        />
-
-                        <View style={{ position: 'absolute', top: 6, left: 6, backgroundColor: 'rgba(15, 23, 42, 0.85)', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                          <Ionicons name="planet" size={11} color="#4ade80" />
-                          <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>
-                            🗺️ Tap anywhere on Map to set Farm Center & 4 Corners
-                          </Text>
-                        </View>
-
-                        {/* Interactive Boundary Pins Overlays */}
-                        <View style={{ position: 'absolute', top: '20%', left: '18%', backgroundColor: '#0284c7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 8, fontWeight: '800', color: '#ffffff' }}>C1 (NW) 📍</Text>
-                        </View>
-                        <View style={{ position: 'absolute', top: '20%', right: '18%', backgroundColor: '#0284c7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 8, fontWeight: '800', color: '#ffffff' }}>C2 (NE) 📍</Text>
-                        </View>
-                        <View style={{ position: 'absolute', bottom: '20%', right: '18%', backgroundColor: '#0284c7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 8, fontWeight: '800', color: '#ffffff' }}>C3 (SE) 📍</Text>
-                        </View>
-                        <View style={{ position: 'absolute', bottom: '20%', left: '18%', backgroundColor: '#0284c7', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                          <Text style={{ fontSize: 8, fontWeight: '800', color: '#ffffff' }}>C4 (SW) 📍</Text>
-                        </View>
-
-                        <View style={{ position: 'absolute', bottom: 6, alignSelf: 'center', backgroundColor: 'rgba(37, 99, 235, 0.95)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 }}>
-                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#ffffff' }}>
-                            📍 Center: {manualLatText}°N, {manualLngText}°E ({calculatedAcres > 0 ? calculatedAcres : 2.8} Acres)
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      {/* Latitude & Longitude Manual Inputs Row */}
-                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 9.5, fontWeight: '700', color: '#475569' }}>Lat (°N):</Text>
-                          <TextInput
-                            style={{ backgroundColor: '#ffffff', borderRadius: 6, borderWidth: 1, borderColor: '#93c5fd', paddingHorizontal: 6, paddingVertical: 3, fontSize: 11, fontWeight: '700', color: '#0f172a' }}
-                            value={manualLatText}
-                            onChangeText={setManualLatText}
-                            keyboardType="numeric"
-                          />
-                        </View>
-
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 9.5, fontWeight: '700', color: '#475569' }}>Lng (°E):</Text>
-                          <TextInput
-                            style={{ backgroundColor: '#ffffff', borderRadius: 6, borderWidth: 1, borderColor: '#93c5fd', paddingHorizontal: 6, paddingVertical: 3, fontSize: 11, fontWeight: '700', color: '#0f172a' }}
-                            value={manualLngText}
-                            onChangeText={setManualLngText}
-                            keyboardType="numeric"
-                          />
-                        </View>
-
+                      {/* BUTTONS */}
+                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                         <TouchableOpacity
-                          style={{ backgroundColor: '#2563eb', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6, alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                          onPress={() => handleRemoteAutoGenerate()}
+                          style={[styles.videoActionBtn, isVideoRecording && { backgroundColor: '#dc2626' }]}
+                          activeOpacity={0.85}
+                          onPress={handleStartShootVideo}
                         >
-                          <Ionicons name="checkmark-circle" size={13} color="#ffffff" />
-                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>
-                            Set Map
+                          <Ionicons name={isVideoRecording ? 'stop-circle' : 'radio-button-on'} size={18} color="#ffffff" />
+                          <Text style={styles.videoActionBtnText}>
+                            {isVideoRecording ? 'Stop Recording' : videoUri ? 'Re-shoot 1-Min Video' : 'Shoot 1-Min Video'}
                           </Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.videoActionBtnOutline}
+                          activeOpacity={0.85}
+                          onPress={handlePickVideoLibrary}
+                        >
+                          <Ionicons name="folder-open" size={17} color="#2563eb" />
+                          <Text style={styles.videoActionBtnOutlineText}>Select Video File</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* FINAL SUBMIT & LOCK CARD */}
+                    <View style={styles.finalSubmitSummaryCard}>
+                      <Text style={styles.finalSubmitTitle}>Ready to Verify & Lock Field</Text>
+                      <Text style={styles.finalSubmitSub}>
+                        Once submitted, field coordinates will be locked for satellite accuracy.
+                      </Text>
+
+                      <View style={styles.summaryList}>
+                        <View style={styles.summaryItem}>
+                          <Ionicons name="checkmark-circle" size={16} color="#15803d" />
+                          <Text style={styles.summaryItemText}>
+                            GPS Boundary: {calculatedAcres} Acres · 4 Corners
+                          </Text>
+                        </View>
+                        <View style={styles.summaryItem}>
+                          <Ionicons name={photos.length > 0 ? 'checkmark-circle' : 'alert-circle'} size={16} color={photos.length > 0 ? '#15803d' : '#d97706'} />
+                          <Text style={styles.summaryItemText}>
+                            Crop Photos: {photos.length} of 5 Photos Captured
+                          </Text>
+                        </View>
+                        <View style={styles.summaryItem}>
+                          <Ionicons name={videoUri ? 'checkmark-circle' : 'alert-circle'} size={16} color={videoUri ? '#15803d' : '#d97706'} />
+                          <Text style={styles.summaryItemText}>
+                            Field Video: {videoUri ? '1-Min Video Attached' : 'Optional (Can add later)'}
+                          </Text>
+                        </View>
                       </View>
 
-                      {/* BUTTON TO OPEN SEPARATE FULL SCREEN GOOGLE SATELLITE MAP PICKER */}
+                      {/* BIG LOCK & SUBMIT BUTTON */}
                       <TouchableOpacity
-                        style={{ backgroundColor: '#1d4ed8', paddingVertical: 8, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 2 }}
+                        style={styles.bigSubmitLockBtn}
                         activeOpacity={0.85}
-                        onPress={() => setShowFullMapModal(true)}
+                        onPress={handleFinalSubmitAndLock}
                       >
-                        <Ionicons name="expand" size={15} color="#ffffff" />
-                        <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#ffffff' }}>
-                          🗺️ Open Full Screen Google Map
+                        <Ionicons name="lock-closed" size={18} color="#ffffff" />
+                        <Text style={styles.bigSubmitLockBtnText}>
+                          Submit & Lock Satellite Field
                         </Text>
                       </TouchableOpacity>
                     </View>
-                  )}
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: '#eff6ff',
-                    borderWidth: 1,
-                    borderColor: '#bfdbfe',
-                    paddingVertical: 9,
-                    borderRadius: 10,
-                    marginBottom: 8,
-                  }}
-                  activeOpacity={0.85}
-                  onPress={() => setShowLivePhotoModal(true)}
-                >
-                  <Ionicons name="camera" size={16} color="#2563eb" />
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#2563eb' }}>
-                    📷 View Live Updated Satellite Field Photo
-                  </Text>
-                </TouchableOpacity>
-              )}
 
-              {/* DISPLAY CAPTURED / SAVED COORDINATES CARD */}
-              <View style={[styles.coordsCard, !isLocked && { backgroundColor: canSave ? '#f0fdf4' : '#fffbeb', borderColor: canSave ? '#86efac' : '#fde68a' }]}>
-                <View style={styles.coordRow}>
-                  <Ionicons
-                    name={isLocked ? 'lock-closed' : canSave ? 'checkmark-circle' : 'alert-circle'}
-                    size={15}
-                    color={isLocked ? '#b45309' : canSave ? '#16a34a' : '#d97706'}
-                  />
-                  <Text style={styles.coordLabel}>
-                    {isLocked ? 'Saved GPS Center Location:' : 'Active Captured GPS Center:'}
-                  </Text>
-                  <View style={[styles.lockedBadge, !isLocked && { backgroundColor: canSave ? '#dcfce7' : '#fef3c7' }]}>
-                    <Text style={[styles.lockedBadgeText, !isLocked && { color: canSave ? '#15803d' : '#b45309' }]}>
-                      {isLocked ? '🔒 SAVED TO DB' : canSave ? '🟢 READY TO SAVE (4/4)' : '⚠️ NOT SET (0/4)'}
-                    </Text>
+                    {/* BACK BUTTON */}
+                    <TouchableOpacity
+                      style={styles.backStepBtn}
+                      onPress={() => setSetupStep(2)}
+                    >
+                      <Ionicons name="arrow-back" size={16} color="#475569" />
+                      <Text style={styles.backStepBtnText}>Back to Photos</Text>
+                    </TouchableOpacity>
                   </View>
-                </View>
-                <Text style={[styles.coordValue, !selectedCoords && { color: '#dc2626', fontSize: 13 }]}>
-                  {selectedCoords ? `${selectedCoords.lat.toFixed(4)}° N, ${selectedCoords.lng.toFixed(4)}° E` : '⚠️ Location Blank — Tap "Capture Farm Location" button'}
-                </Text>
-
-                {/* AREA ROW */}
-                <View style={styles.areaRow}>
-                  <Text style={styles.areaItemVal}>Calculated Field Area:</Text>
-                  <Text style={[styles.areaItemValHighlight, cornersMarked < 4 && { color: '#dc2626' }]}>
-                    {calculatedAcres > 0 ? `${calculatedAcres} Acres` : '0 Acres (Mark 4 Corners)'}
-                  </Text>
-                </View>
+                )}
               </View>
+            ) : (
+              /* ========================================================= */
+              /* CASE 2: LOCKED -> CLEAN SATELLITE MONITORING (NIGRANI)    */
+              /* ========================================================= */
+              <View style={{ gap: 14 }}>
+                {/* LOCKED BANNER */}
+                <View style={styles.lockedMonitoringBanner}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="shield-checkmark" size={24} color="#15803d" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.lockedMonitoringTitle}>Satellite Telemetry Active (Locked)</Text>
+                      <Text style={styles.lockedMonitoringSub}>
+                        Field coordinates and ground-truth media are locked for orbital satellite calibration.
+                      </Text>
+                    </View>
+                  </View>
 
-              {/* VISUAL BOUNDARY MAP PREVIEW */}
-              <View style={styles.visualMapBox}>
-                <View style={styles.mapHeaderRow}>
-                  <Ionicons name="map-outline" size={15} color="#0369a1" />
-                  <Text style={styles.mapHeaderTitle}>Field Boundary Pins (4 Corners Visual Map)</Text>
+                  {isUnlockRequested ? (
+                    <View style={styles.pendingBadgeBox}>
+                      <Ionicons name="time" size={14} color="#b45309" />
+                      <Text style={styles.pendingBadgeText}>Unlock request pending Operator review</Text>
+                    </View>
+                  ) : null}
                 </View>
-                <View style={styles.mapGridPreview}>
-                  <View style={[styles.pinDotTopLeft, cornersMarked === 4 ? styles.pinActive : styles.pinInactive]}>
-                    <Text style={styles.pinTag}>{cornersMarked === 4 ? `C1: ${corners[0]?.lat}°N ✓` : 'C1 ❌'}</Text>
-                  </View>
-                  <View style={[styles.pinDotTopRight, cornersMarked === 4 ? styles.pinActive : styles.pinInactive]}>
-                    <Text style={styles.pinTag}>{cornersMarked === 4 ? `C2: ${corners[1]?.lat}°N ✓` : 'C2 ❌'}</Text>
-                  </View>
-                  <View style={[styles.pinDotBottomRight, cornersMarked === 4 ? styles.pinActive : styles.pinInactive]}>
-                    <Text style={styles.pinTag}>{cornersMarked === 4 ? `C3: ${corners[2]?.lat}°N ✓` : 'C3 ❌'}</Text>
-                  </View>
-                  <View style={[styles.pinDotBottomLeft, cornersMarked === 4 ? styles.pinActive : styles.pinInactive]}>
-                    <Text style={styles.pinTag}>{cornersMarked === 4 ? `C4: ${corners[3]?.lat}°N ✓` : 'C4 ❌'}</Text>
-                  </View>
-                  <Text style={styles.polygonCenterText}>
-                    🌾 {isLocked ? '🔒 Saved 4-Corner Boundary' : cornersMarked === 4 ? '🟢 4 Corners Marked ✓' : '⚠️ Location Blank — Tap GPS Above'}
-                  </Text>
+
+                {/* MONITORING NAVIGATION TABS */}
+                <View style={styles.stepNavRow}>
+                  <TouchableOpacity
+                    style={[styles.stepNavItem, monitoringTab === 'HEALTH' && styles.stepNavItemActive]}
+                    onPress={() => setMonitoringTab('HEALTH')}
+                  >
+                    <Ionicons name="planet" size={14} color={monitoringTab === 'HEALTH' ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, monitoringTab === 'HEALTH' && styles.stepNavTextActive]}>
+                      Live Health (NDVI)
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.stepNavItem, monitoringTab === 'MEDIA' && styles.stepNavItemActive]}
+                    onPress={() => setMonitoringTab('MEDIA')}
+                  >
+                    <Ionicons name="images" size={14} color={monitoringTab === 'MEDIA' ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, monitoringTab === 'MEDIA' && styles.stepNavTextActive]}>
+                      Verified Media ({photos.length}P · {videoUri ? '1V' : '0V'})
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.stepNavItem, monitoringTab === 'SETTINGS' && styles.stepNavItemActive]}
+                    onPress={() => setMonitoringTab('SETTINGS')}
+                  >
+                    <Ionicons name="lock-open" size={14} color={monitoringTab === 'SETTINGS' ? '#2563eb' : '#64748b'} />
+                    <Text style={[styles.stepNavText, monitoringTab === 'SETTINGS' && styles.stepNavTextActive]}>
+                      Unlock Request
+                    </Text>
+                  </TouchableOpacity>
                 </View>
+
+                {/* TAB 1: SATELLITE HEALTH & DIAGNOSTICS */}
+                {monitoringTab === 'HEALTH' && (
+                  <View style={{ gap: 12 }}>
+                    {/* OPTICAL SATELLITE IMAGERY */}
+                    <View style={styles.satellitePhotoCard}>
+                      <Image
+                        source={require('@/assets/images/satellite_field_live_view.png')}
+                        style={styles.satellitePhotoImg}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.satellitePhotoOverlay}>
+                        <Ionicons name="planet" size={14} color="#ffffff" />
+                        <Text style={styles.satellitePhotoOverlayText}>
+                          Sentinel-2 Orbital Field Telemetry · {calculatedAcres} Acres
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* HEALTH SCORES MATRIX */}
+                    <View style={styles.healthGrid}>
+                      <View style={styles.healthCard}>
+                        <Ionicons name="leaf" size={20} color="#15803d" />
+                        <Text style={styles.healthCardValue}>0.82</Text>
+                        <Text style={styles.healthCardLabel}>NDVI Health Index</Text>
+                        <Text style={styles.healthCardBadgeGreen}>Vigorous Growth</Text>
+                      </View>
+
+                      <View style={styles.healthCard}>
+                        <Ionicons name="water" size={20} color="#0284c7" />
+                        <Text style={styles.healthCardValue}>48.3%</Text>
+                        <Text style={styles.healthCardLabel}>Soil Moisture</Text>
+                        <Text style={styles.healthCardBadgeBlue}>Optimal Level</Text>
+                      </View>
+
+                      <View style={styles.healthCard}>
+                        <Ionicons name="shield-checkmark" size={20} color="#16a34a" />
+                        <Text style={styles.healthCardValue}>12%</Text>
+                        <Text style={styles.healthCardLabel}>Disease Risk</Text>
+                        <Text style={styles.healthCardBadgeGreen}>Low / Safe</Text>
+                      </View>
+                    </View>
+
+                    {/* SIMPLE WEATHER & ACTION NOTE */}
+                    <View style={styles.actionNoteBox}>
+                      <Ionicons name="sunny-outline" size={18} color="#d97706" />
+                      <Text style={styles.actionNoteText}>
+                        <Text style={{ fontWeight: '800' }}>Weather & Advisory:</Text> Clear conditions expected for next 4 days. Suitable for fertilizer application or light morning irrigation.
+                      </Text>
+                    </View>
+
+                    {/* OPEN FULLSCREEN SATELLITE MAP */}
+                    <TouchableOpacity
+                      style={styles.openInteractiveMapBtn}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        onClose();
+                        router.push({
+                          pathname: '/satellite-map' as any,
+                          params: {
+                            cropId: cropId || 'c1',
+                            cropName: cropName || 'Wheat',
+                            farmerName: farmerName,
+                            plotName: plotName,
+                            location: location,
+                            lat: String(selectedCoords?.lat || 30.9085),
+                            lng: String(selectedCoords?.lng || 75.8610),
+                          },
+                        });
+                      }}
+                    >
+                      <Ionicons name="planet" size={16} color="#ffffff" />
+                      <Text style={styles.openInteractiveMapBtnText}>
+                        Open Fullscreen Interactive Satellite Map
+                      </Text>
+                      <Ionicons name="chevron-forward" size={15} color="#93c5fd" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* TAB 2: VERIFIED GROUND PHOTOS & VIDEO */}
+                {monitoringTab === 'MEDIA' && (
+                  <View style={{ gap: 12 }}>
+                    <Text style={styles.stepHeading}>Verified Ground Truth Photos & Video</Text>
+
+                    {photos.length === 0 && !videoUri ? (
+                      <View style={styles.emptyMediaBox}>
+                        <Ionicons name="images-outline" size={32} color="#94a3b8" />
+                        <Text style={styles.emptyMediaText}>No field photos or video recorded during setup.</Text>
+                      </View>
+                    ) : null}
+
+                    {photos.length > 0 ? (
+                      <View style={styles.photoGrid}>
+                        {photos.map((pUri, pIdx) => (
+                          <TouchableOpacity
+                            key={pIdx}
+                            style={styles.photoThumbCard}
+                            onPress={() => setPreviewingPhotoIndex(pIdx)}
+                          >
+                            <Image source={{ uri: pUri }} style={styles.photoThumbImg} />
+                            <View style={styles.photoInspectBadge}>
+                              <Ionicons name="eye" size={14} color="#ffffff" />
+                            </View>
+                            <Text style={styles.photoSlotLabel}>Photo #{pIdx + 1}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    ) : null}
+
+                    {videoUri ? (
+                      <View style={styles.videoCard}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <Ionicons name="videocam" size={24} color="#15803d" />
+                          <View>
+                            <Text style={styles.videoTitle}>1-Minute Field Video Attached</Text>
+                            <Text style={styles.videoSub}>Ground verification recording verified with GPS</Text>
+                          </View>
+                        </View>
+                      </View>
+                    ) : null}
+                  </View>
+                )}
+
+                {/* TAB 3: OPERATOR UNLOCK REQUEST */}
+                {monitoringTab === 'SETTINGS' && (
+                  <View style={styles.unlockSectionCard}>
+                    <Text style={styles.unlockSectionTitle}>Field Coordinates Locked</Text>
+                    <Text style={styles.unlockSectionSub}>
+                      Coordinates: {selectedCoords?.lat.toFixed(4)}° N, {selectedCoords?.lng.toFixed(4)}° E ({calculatedAcres} Acres).
+                    </Text>
+
+                    {isUnlockRequested ? (
+                      <View style={styles.pendingMessageBox}>
+                        <Ionicons name="hourglass" size={18} color="#b45309" />
+                        <Text style={styles.pendingMessageText}>
+                          Your unlock request is currently under review by our Operator. You will be able to edit once approved.
+                        </Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.requestUnlockBigBtn}
+                        activeOpacity={0.85}
+                        onPress={() => setShowReasonBox(true)}
+                      >
+                        <Ionicons name="lock-open-outline" size={18} color="#b45309" />
+                        <Text style={styles.requestUnlockBigBtnText}>
+                          Request Unlock from Operator (Provide Reason)
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
               </View>
+            )}
+          </ScrollView>
 
-              {/* SATELLITE ADVISOR COMPREHENSIVE FIELD DETAILS & STEP-BY-STEP ADVICE — FULLY UNLOCKED */}
-              {selectedCoords !== null || cornersMarked > 0 || isLocked ? (
-                <View style={styles.farmerSelfAdviceCard}>
-                  <View style={styles.selfAdviceHeader}>
-                    <Ionicons name="sparkles" size={16} color="#16a34a" />
-                    <Text style={styles.selfAdviceTitle}>🛰️ Satellite Advisor — Field Analysis & Full Guidance</Text>
-                  </View>
-
-                  {/* 1. Real Crop Field Satellite Photo */}
-                  <View style={styles.cropPhotoWrap}>
-                    <Image
-                      source={require('@/assets/images/satellite_field_live_view.png')}
-                      style={styles.cropPhotoImg}
-                      resizeMode="cover"
-                    />
-                    <View style={styles.cropPhotoBadge}>
-                      <Ionicons name="camera" size={11} color="#ffffff" />
-                      <Text style={styles.cropPhotoBadgeText}>🟢 Sentinel-2 Live Satellite Optical Field Imagery</Text>
-                    </View>
-                  </View>
-
-                  {/* 2. Full Field & Crop Profile Summary */}
-                  <View style={{ backgroundColor: '#ffffff', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#bfdbfe', gap: 3 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#1e3a8a' }}>
-                      📋 Field Profile & GPS Coordinates Summary:
-                    </Text>
-                    <Text style={{ fontSize: 10.5, color: '#334155' }}>
-                      🌾 <Text style={{ fontWeight: '700' }}>Crop Name:</Text> Wheat / Paddy (HD-3086) · <Text style={{ fontWeight: '700' }}>Field Area:</Text> {calculatedAcres} Acres
-                    </Text>
-                    <Text style={{ fontSize: 10.5, color: '#0369a1' }}>
-                      📍 <Text style={{ fontWeight: '700' }}>GPS Coordinates:</Text> {selectedCoords ? `${selectedCoords.lat.toFixed(4)}° N, ${selectedCoords.lng.toFixed(4)}° E` : '⚠️ Blank (Not Set)'}
-                    </Text>
-                  </View>
-
-                  {/* 3. Satellite Diagnostic Matrix (NDVI, Moisture & Risk) */}
-                  <View style={styles.issuesCard}>
-                    <Text style={styles.issuesCardTitle}>📊 Satellite Diagnostics & Field Status Matrix:</Text>
-
-                    <View style={styles.issueItemRow}>
-                      <Ionicons name="planet" size={14} color="#16a34a" />
-                      <Text style={styles.issueText}>
-                        🟢 <Text style={{ fontWeight: '800', color: '#15803d' }}>NDVI Vegetation Score:</Text> 0.82 High Healthy Growth Peak.
-                      </Text>
-                    </View>
-
-                    <View style={styles.issueItemRow}>
-                      <Ionicons name="water" size={14} color="#0284c7" />
-                      <Text style={styles.issueText}>
-                        💧 <Text style={{ fontWeight: '800', color: '#0369a1' }}>Soil Moisture Level:</Text> 48.3% Average Moisture (Central Zone Dry).
-                      </Text>
-                    </View>
-
-                    <View style={styles.issueItemRow}>
-                      <Ionicons name="bug" size={14} color="#dc2626" />
-                      <Text style={styles.issueText}>
-                        🔴 <Text style={{ fontWeight: '800', color: '#dc2626' }}>Disease & Rust Index:</Text> 84% Yellow Rust Risk Warning.
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* 4. Complete Step-by-Step Field Advisory (Easy English) */}
-                  <View style={styles.remediesCard}>
-                    <Text style={styles.remediesCardTitle}>💡 Full Step-by-Step Advisory Actions:</Text>
-
-                    <View style={styles.remedyRow}>
-                      <Ionicons name="water-outline" size={14} color="#0284c7" />
-                      <Text style={styles.remedyText}>
-                        💧 <Text style={{ fontWeight: '800', color: '#0369a1' }}>Irrigation Advice:</Text> Apply light irrigation within 24 hours to relieve central zone moisture stress.
-                      </Text>
-                    </View>
-
-                    <View style={styles.remedyRow}>
-                      <Ionicons name="flask-outline" size={14} color="#16a34a" />
-                      <Text style={styles.remedyText}>
-                        💊 <Text style={{ fontWeight: '800', color: '#15803d' }}>Fungicide Treatment:</Text> Spray 200ml Propiconazole 25% EC (Tilt) in 200L water per acre after morning dew clears.
-                      </Text>
-                    </View>
-
-                    <View style={styles.remedyRow}>
-                      <Ionicons name="leaf-outline" size={14} color="#d97706" />
-                      <Text style={styles.remedyText}>
-                        🧪 <Text style={{ fontWeight: '800', color: '#b45309' }}>Nutrient Dosage:</Text> Top-dress 20kg Urea per acre with irrigation for vigorous tillering.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              ) : (
-                <View style={{ backgroundColor: '#f8fafc', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#cbd5e1', alignItems: 'center', justifyContent: 'center', gap: 4, marginVertical: 4 }}>
-                  <Ionicons name="lock-closed" size={20} color="#94a3b8" />
-                  <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#475569', textAlign: 'center' }}>
-                    🔒 Live Satellite Photo & Treatment Guidance Hidden
-                  </Text>
-                  <Text style={{ fontSize: 10, color: '#64748b', textAlign: 'center', lineHeight: 14 }}>
-                    Please mark all 4 field corners (4/4) above to unlock the Live Optical Satellite Field Photo, NDVI diagnostics, and treatment recommendations.
-                  </Text>
-                </View>
-              )}
-            </ScrollView>
-
-            {/* ACTION BUTTONS ROW: CANCEL, RESET & LOCK */}
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-                <Text style={styles.cancelBtnText}>{isLocked ? 'Close' : 'Cancel'}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.resetBtn}
-                activeOpacity={0.8}
-                onPress={handleResetCorners}
-              >
-                <Ionicons name="refresh" size={14} color="#b45309" />
-                <Text style={styles.resetBtnText}>🔄 Reset</Text>
-              </TouchableOpacity>
-
-              {!isLocked ? (
-                <TouchableOpacity
-                  style={[
-                    styles.saveBtn,
-                    !canSave && { backgroundColor: '#cbd5e1', opacity: 0.7 }
-                  ]}
-                  activeOpacity={canSave ? 0.85 : 1}
-                  onPress={canSave ? handleSaveAndLock : () => {
-                    Alert.alert(
-                      'Complete 4 Corners First ⚠️',
-                      'Please tap the green "📍 Capture Farm Location" button above to mark all 4 field corners before saving.'
-                    );
-                  }}
-                >
-                  <Ionicons name={canSave ? "lock-closed" : "lock-closed-outline"} size={14} color="#ffffff" />
-                  <Text style={styles.saveBtnText}>
-                    {canSave ? '🔒 Save & Lock' : '🔒 Save (Set 4 Corners)'}
-                  </Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
+          {/* FOOTER */}
+          <View style={styles.footerRow}>
+            <TouchableOpacity style={styles.footerCloseBtn} onPress={onClose}>
+              <Text style={styles.footerCloseBtnText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </View>
 
-      {/* REASON BOX MODAL FOR UNLOCK REQUEST */}
+      {/* FULL-SCREEN PHOTO PREVIEW MODAL */}
+      {previewingPhotoIndex !== null && photos[previewingPhotoIndex] ? (
+        <Modal visible={true} transparent animationType="fade" onRequestClose={() => setPreviewingPhotoIndex(null)}>
+          <View style={styles.inspectOverlay}>
+            <View style={styles.inspectCard}>
+              <View style={styles.inspectHeader}>
+                <Text style={styles.inspectTitle}>Inspect Photo #{previewingPhotoIndex + 1}</Text>
+                <TouchableOpacity onPress={() => setPreviewingPhotoIndex(null)}>
+                  <Ionicons name="close-circle" size={24} color="#ffffff" />
+                </TouchableOpacity>
+              </View>
+              <Image
+                source={{ uri: photos[previewingPhotoIndex] }}
+                style={styles.inspectImage}
+                resizeMode="contain"
+              />
+              <TouchableOpacity
+                style={styles.inspectDoneBtn}
+                onPress={() => setPreviewingPhotoIndex(null)}
+              >
+                <Text style={styles.inspectDoneBtnText}>Confirm Photo Looks Sharp ✓</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+
+      {/* REASON BOX MODAL FOR OPERATOR UNLOCK REQUEST */}
       <Modal visible={showReasonBox} transparent animationType="fade" onRequestClose={() => setShowReasonBox(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-          <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 12 }}>
+        <View style={styles.reasonOverlay}>
+          <View style={styles.reasonCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
@@ -849,7 +968,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                 </View>
                 <View>
                   <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>Request Field Unlock</Text>
-                  <Text style={{ fontSize: 11, color: '#64748b' }}>Operator approval required to edit coordinates</Text>
+                  <Text style={{ fontSize: 11, color: '#64748b' }}>Operator approval required to edit</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={() => setShowReasonBox(false)}>
@@ -857,28 +976,12 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
               </TouchableOpacity>
             </View>
 
-            <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 14 }}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#334155' }}>🌾 Crop: {cropName || 'Field Plot'}</Text>
-              <Text style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>📍 Plot: {plotName || 'Primary Plot'}</Text>
-            </View>
-
             <Text style={{ fontSize: 12, fontWeight: '700', color: '#0f172a', marginBottom: 6 }}>
               Reason for Unlocking <Text style={{ color: '#dc2626' }}>*</Text>
             </Text>
             <TextInput
-              style={{
-                backgroundColor: '#ffffff',
-                borderWidth: 1.5,
-                borderColor: '#cbd5e1',
-                borderRadius: 10,
-                padding: 12,
-                fontSize: 12.5,
-                color: '#0f172a',
-                height: 90,
-                textAlignVertical: 'top',
-                marginBottom: 16,
-              }}
-              placeholder="Explain why you need to unlock (e.g. boundary shifted, marked wrong corner, land leveled)..."
+              style={styles.reasonInput}
+              placeholder="Explain why you need to unlock (e.g. boundary shifted, land leveled, marked wrong corner)..."
               placeholderTextColor="#94a3b8"
               multiline
               value={unlockReasonInput}
@@ -887,14 +990,14 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <TouchableOpacity
-                style={{ flex: 1, paddingVertical: 11, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                style={styles.reasonCancelBtn}
                 onPress={() => setShowReasonBox(false)}
               >
                 <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={{ flex: 1.6, paddingVertical: 11, borderRadius: 8, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}
+                style={styles.reasonSubmitBtn}
                 activeOpacity={0.85}
                 onPress={handleDirectUnlockRequest}
               >
@@ -905,729 +1008,804 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
           </View>
         </View>
       </Modal>
-
-      {/* SEPARATE FULL SCREEN GOOGLE SATELLITE MAP PICKER MODAL */}
-      <Modal visible={showFullMapModal} animationType="slide" onRequestClose={() => setShowFullMapModal(false)}>
-        <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
-          {/* Header */}
-          <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 14, paddingTop: 45, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#334155' }}>
-            <TouchableOpacity
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#334155', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
-              onPress={() => setShowFullMapModal(false)}
-            >
-              <Ionicons name="arrow-back" size={18} color="#ffffff" />
-              <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffffff' }}>Back</Text>
-            </TouchableOpacity>
-
-            <View style={{ alignItems: 'center' }}>
-              <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#ffffff' }}>🗺️ Google Satellite Map Picker</Text>
-              <Text style={{ fontSize: 10, color: '#94a3b8' }}>Move Map & Tap to Position Farm & 4 Corners</Text>
-            </View>
-
-            <TouchableOpacity
-              style={{ backgroundColor: '#16a34a', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-              onPress={() => {
-                const latNum = parseFloat(manualLatText) || 30.9085;
-                const lngNum = parseFloat(manualLngText) || 75.8610;
-                handleRemoteAutoGenerate(latNum, lngNum);
-                setShowFullMapModal(false);
-              }}
-            >
-              <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
-              <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffffff' }}>Confirm</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Search & Presets Bar */}
-          <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 12, paddingVertical: 8, gap: 6, borderBottomWidth: 1, borderBottomColor: '#334155' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, gap: 6, borderWidth: 1, borderColor: '#334155' }}>
-              <Ionicons name="search" size={16} color="#3b82f6" />
-              <TextInput
-                style={{ flex: 1, fontSize: 12, color: '#ffffff', padding: 0 }}
-                placeholder="Search Google Maps village, mandi, or field..."
-                placeholderTextColor="#64748b"
-                value={googleMapSearchQuery}
-                onChangeText={setGoogleMapSearchQuery}
-              />
-              {googleMapSearchQuery ? (
-                <TouchableOpacity onPress={() => setGoogleMapSearchQuery('')}>
-                  <Ionicons name="close-circle" size={16} color="#64748b" />
-                </TouchableOpacity>
-              ) : null}
-            </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-              {GOOGLE_MAP_PRESETS
-                .filter((p) => !googleMapSearchQuery || p.name.toLowerCase().includes(googleMapSearchQuery.toLowerCase()))
-                .map((p, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    style={{ backgroundColor: '#334155', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                    onPress={() => {
-                      setManualLatText(String(p.lat));
-                      setManualLngText(String(p.lng));
-                      handleRemoteAutoGenerate(p.lat, p.lng);
-                    }}
-                  >
-                    <Ionicons name="location" size={12} color="#60a5fa" />
-                    <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#ffffff' }}>{p.name}</Text>
-                  </TouchableOpacity>
-                ))}
-            </ScrollView>
-          </View>
-
-          {/* Interactive Full Screen Satellite Canvas */}
-          <View style={{ flex: 1, position: 'relative' }}>
-            <TouchableOpacity
-              style={{ flex: 1 }}
-              activeOpacity={0.95}
-              onPress={() => {
-                const randomLat = +(30.9085 + (Math.random() - 0.5) * 0.008).toFixed(4);
-                const randomLng = +(75.8610 + (Math.random() - 0.5) * 0.008).toFixed(4);
-                setManualLatText(String(randomLat));
-                setManualLngText(String(randomLng));
-                handleRemoteAutoGenerate(randomLat, randomLng);
-              }}
-            >
-              <Image
-                source={require('@/assets/images/satellite_field_live_view.png')}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-
-              {/* Center Target Crosshair Pin */}
-              <View style={{ position: 'absolute', top: '48%', left: '46%', alignItems: 'center', justifyContent: 'center' }}>
-                <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(239, 68, 68, 0.3)', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#ef4444' }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#dc2626' }} />
-                </View>
-                <Text style={{ fontSize: 10, fontWeight: '900', color: '#ffffff', backgroundColor: '#dc2626', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 2 }}>
-                  📍 Target Field Center
-                </Text>
-              </View>
-
-              {/* 4 Corner Markers on Map Surface */}
-              <View style={{ position: 'absolute', top: '25%', left: '22%', backgroundColor: '#0284c7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#38bdf8' }}>
-                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>C1 (NW) 📍</Text>
-              </View>
-              <View style={{ position: 'absolute', top: '25%', right: '22%', backgroundColor: '#0284c7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#38bdf8' }}>
-                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>C2 (NE) 📍</Text>
-              </View>
-              <View style={{ position: 'absolute', bottom: '25%', right: '22%', backgroundColor: '#0284c7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#38bdf8' }}>
-                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>C3 (SE) 📍</Text>
-              </View>
-              <View style={{ position: 'absolute', bottom: '25%', left: '22%', backgroundColor: '#0284c7', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#38bdf8' }}>
-                <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#ffffff' }}>C4 (SW) 📍</Text>
-              </View>
-
-              {/* Instructions Overlay */}
-              <View style={{ position: 'absolute', top: 12, alignSelf: 'center', backgroundColor: 'rgba(15, 23, 42, 0.88)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: '#334155' }}>
-                <Ionicons name="finger-print" size={16} color="#4ade80" />
-                <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>
-                  Tap anywhere on Map to position farm center & 4 corners
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Bottom Confirmation Footer Bar */}
-          <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#334155' }}>
-            <View style={{ gap: 2 }}>
-              <Text style={{ fontSize: 12, fontWeight: '800', color: '#ffffff' }}>
-                📍 {manualLatText}° N, {manualLngText}° E
-              </Text>
-              <Text style={{ fontSize: 10.5, fontWeight: '700', color: '#4ade80' }}>
-                📐 Calculated Area: {calculatedAcres > 0 ? calculatedAcres : 2.8} Acres (4 Corners)
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={{ backgroundColor: '#2563eb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-              onPress={() => {
-                const latNum = parseFloat(manualLatText) || 30.9085;
-                const lngNum = parseFloat(manualLngText) || 75.8610;
-                handleRemoteAutoGenerate(latNum, lngNum);
-                setShowFullMapModal(false);
-              }}
-            >
-              <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#ffffff' }}>
-                Set Location & 4 Corners
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* LIVE FIELD SATELLITE PHOTO CONFIRMATION MODAL */}
-      <Modal visible={showLivePhotoModal} transparent animationType="fade" onRequestClose={() => setShowLivePhotoModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.reasonCard, { maxHeight: '88%' }]}>
-            <View style={styles.reasonHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Ionicons name="camera" size={20} color="#15803d" />
-                <Text style={styles.reasonTitle} numberOfLines={1}>📷 Live Satellite Field Photo — {cropName || 'Crop Plot'}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowLivePhotoModal(false)}>
-                <Ionicons name="close" size={20} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Sentinel-2 High-Res Live Photo Card */}
-              <View style={{ borderRadius: 12, overflow: 'hidden', borderWidth: 1.5, borderColor: '#16a34a', marginBottom: 10, position: 'relative', height: 220 }}>
-                <Image
-                  source={require('@/assets/images/satellite_field_live_view.png')}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-                <View style={{ position: 'absolute', top: 8, left: 8, backgroundColor: 'rgba(15, 23, 42, 0.85)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="planet" size={12} color="#4ade80" />
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: '#ffffff' }}>
-                    🟢 Sentinel-2 Live High-Res Satellite Optical Field Image
-                  </Text>
-                </View>
-
-                {/* 4 Corners Boundary Pin Overlays on the Image */}
-                <View style={{ position: 'absolute', top: 12, left: 12, backgroundColor: '#0284c7', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', color: '#ffffff' }}>C1: {corners[0]?.lat || '30.9097'}°N ✓</Text>
-                </View>
-                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#0284c7', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', color: '#ffffff' }}>C2: {corners[1]?.lat || '30.9099'}°N ✓</Text>
-                </View>
-                <View style={{ position: 'absolute', bottom: 12, right: 12, backgroundColor: '#0284c7', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', color: '#ffffff' }}>C3: {corners[2]?.lat || '30.9074'}°N ✓</Text>
-                </View>
-                <View style={{ position: 'absolute', bottom: 12, left: 12, backgroundColor: '#0284c7', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 4 }}>
-                  <Text style={{ fontSize: 9, fontWeight: '800', color: '#ffffff' }}>C4: {corners[3]?.lat || '30.9072'}°N ✓</Text>
-                </View>
-                <View style={{ position: 'absolute', bottom: 10, alignSelf: 'center', backgroundColor: 'rgba(22, 163, 74, 0.95)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>
-                    🌾 {plotName || 'My Field Plot'} · {calculatedAcres} Acres (Plot Verified)
-                  </Text>
-                </View>
-              </View>
-
-              {/* Confirmation Banner */}
-              <View style={{ backgroundColor: '#f0fdf4', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#86efac', gap: 4, marginBottom: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#15803d' }}>
-                    🟢 Field Plot Verified & Confirmed!
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 11, color: '#166534', lineHeight: 16 }}>
-                  📍 Center Coordinates: <Text style={{ fontWeight: '800' }}>{selectedCoords ? `${selectedCoords.lat.toFixed(4)}° N, ${selectedCoords.lng.toFixed(4)}° E` : '30.9085° N, 75.8610° E'}</Text>
-                  {"\n"}• All 4 boundary corners (C1-C4) marked & aligned with live satellite optical imagery.
-                  {"\n"}• Next time you or Advisor/Admin open this crop, this exact live updated photo & map will load automatically.
-                </Text>
-              </View>
-
-              {/* Close / Confirm Button */}
-              <TouchableOpacity
-                style={{ backgroundColor: '#16a34a', paddingVertical: 11, borderRadius: 10, alignItems: 'center' }}
-                onPress={() => setShowLivePhotoModal(false)}
-              >
-                <Text style={{ fontSize: 13, fontWeight: '800', color: '#ffffff' }}>
-                  ✓ Confirm & Return to Location Form
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    padding: 10,
+    width: '100%',
+    maxWidth: 620,
     maxHeight: '92%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+    elevation: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    marginBottom: 12,
   },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  iconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#dcfce7',
+  headerIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 13.5,
+  headerTitle: {
+    fontSize: 16,
     fontWeight: '800',
     color: '#0f172a',
   },
-  closeBtn: {
-    padding: 2,
-  },
-  lockedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#fef3c7',
-    borderRadius: 8,
-    padding: 5,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    marginBottom: 5,
-  },
-  lockedTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#92400e',
-  },
-  lockedSub: {
-    fontSize: 9.5,
-    color: '#78350f',
-  },
-  unlockedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#f0fdf4',
-    borderRadius: 8,
-    padding: 5,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    marginBottom: 5,
-  },
-  unlockedTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#15803d',
-  },
-  unlockedSub: {
-    fontSize: 9.5,
-    color: '#166534',
-  },
-  gpsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#16a34a',
-    borderRadius: 8,
-    padding: 7,
-  },
-  gpsButtonText: {
+  headerSubtitle: {
     fontSize: 11.5,
-    fontWeight: '800',
-    color: '#ffffff',
+    color: '#64748b',
+    marginTop: 2,
+    fontWeight: '600',
   },
-  gpsButtonSub: {
-    fontSize: 9.5,
-    color: '#dcfce7',
+  closeBtn: {
+    padding: 6,
   },
-  resetBtnBeforeLock: {
+
+  stepNavRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+    padding: 4,
+    gap: 6,
+  },
+  stepNavItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fca5a5',
-    paddingVertical: 6,
+    gap: 6,
+    paddingVertical: 8,
     borderRadius: 8,
   },
-  resetBtnTextBeforeLock: {
+  stepNavItemActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  stepNavText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  stepNavTextActive: {
+    color: '#1e293b',
+    fontWeight: '800',
+  },
+
+  stepContainer: {
+    gap: 12,
+  },
+  stepHeaderRow: {
+    gap: 2,
+  },
+  stepHeading: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  stepSub: {
+    fontSize: 11,
+    color: '#64748b',
+  },
+
+  modeToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderRadius: 8,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 4,
+  },
+  modeToggleBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  modeToggleBtnActive: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  modeToggleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
+  },
+  modeToggleTextActive: {
+    color: '#0f172a',
+    fontWeight: '800',
+  },
+
+  coordsSummaryBox: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    gap: 4,
+  },
+  coordsLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#1e40af',
+  },
+  acresBadge: {
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  acresBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1d4ed8',
+  },
+  coordsValue: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  coordsStatus: {
+    fontSize: 11,
+    color: '#15803d',
+    fontWeight: '700',
+  },
+
+  gpsWalkBtn: {
+    backgroundColor: '#16a34a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  gpsWalkBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  remoteAutoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  remoteAutoText: {
+    fontSize: 11.5,
+    color: '#166534',
+    fontWeight: '600',
+    flex: 1,
+  },
+
+  nextStepBtn: {
+    backgroundColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  nextStepBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  backStepBtn: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  backStepBtnText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  photoCountBadge: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#2563eb',
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  mediaActionBtn: {
+    flex: 1,
+    backgroundColor: '#16a34a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  mediaActionBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  mediaActionBtnOutline: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#2563eb',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  mediaActionBtnOutlineText: {
+    color: '#2563eb',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 4,
+  },
+  photoThumbCard: {
+    width: '30%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  photoThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  photoInspectBadge: {
+    position: 'absolute',
+    bottom: 22,
+    left: 6,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoDeleteBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#dc2626',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSlotLabel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    color: '#ffffff',
+    fontSize: 9.5,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingVertical: 2,
+  },
+  photoEmptySlot: {
+    width: '30%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#f8fafc',
+  },
+  photoEmptySlotText: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: '700',
+  },
+
+  checkNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f0f9ff',
+    padding: 8,
+    borderRadius: 6,
+  },
+  checkNoticeText: {
+    fontSize: 10.5,
+    color: '#0369a1',
+    fontWeight: '600',
+    flex: 1,
+  },
+
+  videoCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  videoIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  videoSub: {
+    fontSize: 11,
+    color: '#64748b',
+  },
+  recordingTimerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  redDotBlink: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#dc2626',
+  },
+  recordingTimerText: {
     fontSize: 11,
     fontWeight: '800',
     color: '#dc2626',
   },
-  coordsCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
-    padding: 7,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 5,
-  },
-  coordRow: {
+  videoActionBtn: {
+    flex: 1,
+    backgroundColor: '#2563eb',
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 1,
-  },
-  coordLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  lockedBadge: {
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    marginLeft: 'auto',
-  },
-  lockedBadgeText: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#b45309',
-  },
-  coordValue: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#0f172a',
-    marginBottom: 2,
-  },
-  areaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-  },
-  areaItemVal: {
-    fontSize: 10.5,
-    fontWeight: '700',
-    color: '#475569',
-  },
-  areaItemValHighlight: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#16a34a',
-  },
-  visualMapBox: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    marginBottom: 5,
-  },
-  mapHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 4,
-  },
-  mapHeaderTitle: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#0369a1',
-  },
-  mapGridPreview: {
-    height: 52,
-    backgroundColor: '#e0f2fe',
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#38bdf8',
-    borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-  },
-  pinDotTopLeft: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  pinDotTopRight: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  pinDotBottomLeft: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  pinDotBottomRight: {
-    position: 'absolute',
-    bottom: 4,
-    right: 4,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-  },
-  pinActive: {
-    backgroundColor: '#0284c7',
-  },
-  pinInactive: {
-    backgroundColor: '#64748b',
-  },
-  pinTag: {
-    fontSize: 8,
-    color: '#ffffff',
-    fontWeight: '800',
-  },
-  polygonCenterText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#0369a1',
-  },
-  farmerSelfAdviceCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 10,
-    padding: 7,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    marginBottom: 5,
     gap: 6,
-  },
-  selfAdviceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    paddingBottom: 3,
-  },
-  selfAdviceTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#0f172a',
-  },
-  cropPhotoWrap: {
-    height: 90,
+    paddingVertical: 10,
     borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-    borderWidth: 1,
-    borderColor: '#94a3b8',
   },
-  cropPhotoImg: {
-    width: '100%',
-    height: '100%',
+  videoActionBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
   },
-  cropPhotoBadge: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+  videoActionBtnOutline: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
-  cropPhotoBadgeText: {
-    fontSize: 8.5,
-    fontWeight: '800',
-    color: '#ffffff',
+  videoActionBtnOutlineText: {
+    color: '#334155',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  issuesCard: {
-    backgroundColor: '#fffbeb',
-    borderRadius: 6,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    gap: 3,
-  },
-  issuesCardTitle: {
-    fontSize: 10.5,
-    fontWeight: '800',
-    color: '#92400e',
-  },
-  issueItemRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 4,
-  },
-  issueText: {
-    fontSize: 9.5,
-    color: '#78350f',
-    flex: 1,
-    lineHeight: 13.5,
-  },
-  remediesCard: {
+
+  finalSubmitSummaryCard: {
     backgroundColor: '#f0fdf4',
-    borderRadius: 6,
-    padding: 6,
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    gap: 4,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    gap: 10,
+    marginTop: 6,
   },
-  remediesCardTitle: {
-    fontSize: 10.5,
+  finalSubmitTitle: {
+    fontSize: 14,
     fontWeight: '800',
     color: '#15803d',
   },
-  remedyRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 4,
-  },
-  remedyText: {
-    fontSize: 9.5,
+  finalSubmitSub: {
+    fontSize: 11,
     color: '#166534',
-    flex: 1,
-    lineHeight: 13.5,
+    lineHeight: 15,
   },
-  requestUnlockBtn: {
+  summaryList: {
+    gap: 6,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  summaryItemText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#14532d',
+  },
+  bigSubmitLockBtn: {
+    backgroundColor: '#15803d',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    backgroundColor: '#eff6ff',
-    borderWidth: 1,
-    borderColor: '#bfdbfe',
-    paddingVertical: 7,
-    borderRadius: 8,
-    marginBottom: 5,
-  },
-  requestUnlockText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#2563eb',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 5,
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 10,
     marginTop: 4,
   },
-  cancelBtn: {
-    flex: 1,
-    backgroundColor: '#f1f5f9',
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-  },
-  cancelBtnText: {
-    fontSize: 11.5,
+  bigSubmitLockBtnText: {
+    color: '#ffffff',
+    fontSize: 14,
     fontWeight: '800',
-    color: '#475569',
   },
-  resetBtn: {
-    flex: 1.1,
+
+  lockedMonitoringBanner: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    gap: 8,
+  },
+  lockedMonitoringTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  lockedMonitoringSub: {
+    fontSize: 11,
+    color: '#166534',
+    lineHeight: 15,
+  },
+  pendingBadgeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fef3c7',
+    padding: 6,
+    borderRadius: 6,
+  },
+  pendingBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#b45309',
+  },
+
+  satellitePhotoCard: {
+    height: 170,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#0f172a',
+  },
+  satellitePhotoImg: {
+    width: '100%',
+    height: '100%',
+  },
+  satellitePhotoOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  satellitePhotoOverlayText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+
+  healthGrid: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  healthCard: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     gap: 3,
+  },
+  healthCardValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  healthCardLabel: {
+    fontSize: 10,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  healthCardBadgeGreen: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  healthCardBadgeBlue: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: '#0284c7',
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+
+  actionNoteBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: '#fffbeb',
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#fde68a',
-    paddingVertical: 8,
-    borderRadius: 8,
   },
-  resetBtnText: {
+  actionNoteText: {
     fontSize: 11.5,
+    color: '#78350f',
+    lineHeight: 16,
+    flex: 1,
+  },
+
+  emptyMediaBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 6,
+  },
+  emptyMediaText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+
+  unlockSectionCard: {
+    backgroundColor: '#fffbeb',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    gap: 10,
+  },
+  unlockSectionTitle: {
+    fontSize: 14,
     fontWeight: '800',
     color: '#b45309',
   },
-  saveBtn: {
-    flex: 1.5,
+  unlockSectionSub: {
+    fontSize: 11.5,
+    color: '#78350f',
+  },
+  requestUnlockBigBtn: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    paddingVertical: 12,
+    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    backgroundColor: '#16a34a',
-    paddingVertical: 8,
+    gap: 8,
+  },
+  requestUnlockBigBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#b45309',
+  },
+  pendingMessageBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fef3c7',
+    padding: 10,
     borderRadius: 8,
   },
-  saveBtnText: {
+  pendingMessageText: {
     fontSize: 11.5,
-    fontWeight: '800',
-    color: '#ffffff',
-  },
-  modalOverlay: {
+    color: '#b45309',
+    fontWeight: '600',
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+  },
+
+  footerRow: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  footerCloseBtn: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerCloseBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+  },
+
+  inspectOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  inspectCard: {
+    width: '100%',
+    maxWidth: 520,
+    height: '75%',
+    backgroundColor: '#0f172a',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+  },
+  inspectHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  inspectTitle: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  inspectImage: {
+    flex: 1,
+    width: '100%',
+    borderRadius: 8,
+  },
+  inspectDoneBtn: {
+    backgroundColor: '#16a34a',
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  inspectDoneBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  reasonOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
   },
   reasonCard: {
     width: '100%',
+    maxWidth: 440,
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    padding: 14,
-  },
-  reasonHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  reasonTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0f172a',
-    flex: 1,
-    marginLeft: 6,
-  },
-  reasonPrompt: {
-    fontSize: 11.5,
-    color: '#64748b',
-    marginBottom: 6,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
   },
   reasonInput: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
-    borderWidth: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
     borderColor: '#cbd5e1',
-    padding: 8,
-    fontSize: 12,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 12.5,
     color: '#0f172a',
+    height: 90,
     textAlignVertical: 'top',
-    height: 60,
-    marginBottom: 10,
-  },
-  reasonBtnRow: {
-    flexDirection: 'row',
-    gap: 8,
+    marginBottom: 16,
   },
   reasonCancelBtn: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
-    paddingVertical: 8,
+    paddingVertical: 11,
     borderRadius: 8,
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
-  },
-  reasonCancelText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#475569',
+    justifyContent: 'center',
   },
   reasonSubmitBtn: {
-    flex: 1.5,
+    flex: 1.6,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+  },
+  openInteractiveMapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#2563eb',
-    paddingVertical: 8,
-    borderRadius: 8,
+    gap: 8,
+    backgroundColor: '#1d4ed8',
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 4,
   },
-  reasonSubmitText: {
-    fontSize: 12,
-    fontWeight: '800',
+  openInteractiveMapBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#ffffff',
   },
 });

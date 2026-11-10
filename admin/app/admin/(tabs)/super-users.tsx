@@ -80,6 +80,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
     { value: 'ALL', label: 'All Partners', icon: 'briefcase-outline' },
     { value: 'BUSINESS_PARTNER', label: 'Agents', icon: 'briefcase-outline' },
     { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
+    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
   ],
@@ -168,7 +169,7 @@ export default function SuperUsersScreen() {
       if (subFilter === 'ALL') {
         if (group === 'ALL') return true;
         if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
-        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER'].includes(r));
+        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER', 'TRADER'].includes(r));
         if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
         return true;
       }

@@ -37,6 +37,8 @@ export interface CropGpsData {
   areaAcres: number;
   locationText: string;
   isLocked: boolean;
+  fieldPhotos?: string[];
+  fieldVideo?: string;
   updatedAt: string;
 }
 

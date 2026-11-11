@@ -14,6 +14,7 @@ export declare class CreateProductDto {
     sellerStoreId?: string;
     hsnCode?: string;
     sku?: string;
+    skuCode?: string;
     gstPercentage?: number;
     weightKg?: number;
     deadWeightKg?: number;

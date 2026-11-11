@@ -63,6 +63,10 @@ export class CreateProductDto {
   sku?: string;
 
   @IsOptional()
+  @IsString()
+  skuCode?: string;
+
+  @IsOptional()
   @IsNumber()
   gstPercentage?: number;
 

@@ -215,20 +215,31 @@ export default function AgriStoreEnterpriseHub() {
     }
   };
 
-  // Delivery Courier Assign Handler (Shiprocket Exclusive)
+  // Delivery Courier Assign Handler (Shiprocket Exclusive — mapped to real Orders endpoints)
   const handleUpdateDelivery = async (orderId: string) => {
     try {
-      await apiClient.patch(`/orders/${orderId}`, {
-        status: deliveryStatusInput,
-        courierPartner: 'Shiprocket Express Courier',
-        awbNumber: awbTrackingInput || `SR-AWB-${Math.floor(100000 + Math.random() * 900000)}`,
-      });
-      showAlert('Shiprocket Order Updated 🚚', `Order status set to ${deliveryStatusInput} via Shiprocket Express`);
+      const awb = awbTrackingInput.trim() || `SR-AWB-${Math.floor(100000 + Math.random() * 900000)}`;
+      if (deliveryStatusInput === 'DELIVERED') {
+        await apiClient.post(`/orders/${orderId}/mark-delivered`);
+      } else {
+        const cur = orders.find((o) => o.id === orderId);
+        if (cur?.status === 'PLACED') {
+          await apiClient.post(`/orders/${orderId}/confirm`);
+          await apiClient.post(`/orders/${orderId}/mark-packed`);
+        } else if (cur?.status === 'CONFIRMED' || cur?.status === 'PACKING') {
+          await apiClient.post(`/orders/${orderId}/mark-packed`);
+        }
+        await apiClient.post(`/orders/${orderId}/dispatch`, {
+          courierName: courierPartnerInput || 'Shiprocket Express Courier',
+          trackingId: awb,
+        });
+      }
+      showAlert('Shiprocket Order Updated', `Order status updated to ${deliveryStatusInput} via Shiprocket Express.`);
       setEditingOrderId(null);
       fetchAllData();
     } catch (err: any) {
-      showAlert('Notice', `Shiprocket courier status updated to ${deliveryStatusInput}`);
-      setEditingOrderId(null);
+      const msg = err?.response?.data?.message || err?.message || 'Could not update delivery status.';
+      showAlert('Dispatch Error', Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 

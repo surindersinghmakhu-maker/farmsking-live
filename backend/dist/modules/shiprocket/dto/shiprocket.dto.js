@@ -89,6 +89,16 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateShiprocketOrderDto.prototype, "height", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateShiprocketOrderDto.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateShiprocketOrderDto.prototype, "customerOrderId", void 0);
 class GenerateAwbDto {
 }
 exports.GenerateAwbDto = GenerateAwbDto;

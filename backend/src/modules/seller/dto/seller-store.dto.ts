@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsEnum, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsEnum, IsObject, Min, Max } from 'class-validator';
 import { SellerKycStatus, SellerType, RtoBearer, CatalogApprovalMode } from '@prisma/client';
 
 export class CreateSellerStoreDto {
@@ -117,6 +117,14 @@ export class CreateSellerStoreDto {
   @IsOptional()
   @IsString()
   tradeLicenseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  sellerPhotoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  logoDocUrl?: string;
 }
 
 export class UpdateSellerKycDto {
@@ -235,6 +243,14 @@ export class UpdateSellerKycDto {
   @IsOptional()
   @IsString()
   tradeLicenseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  sellerPhotoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  logoDocUrl?: string;
 }
 
 export class VerifySellerKycDto {
@@ -271,6 +287,10 @@ export class UpdateSellerSettingsDto {
   @IsOptional()
   @IsBoolean()
   isFssaiApproved?: boolean;
+
+  @IsOptional()
+  @IsObject()
+  categoryCommissions?: Record<string, number>;
 }
 
 

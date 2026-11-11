@@ -1,33 +1,42 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductModerationStatus, CatalogApprovalMode, SellerType, Role } from '@prisma/client';
+import { ProductModerationStatus, CatalogApprovalMode, SellerKycStatus, Role } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(creator: AuthUser, dto: CreateProductDto) {
+    const isAdmin = creator?.role === Role.ADMIN || creator?.role === Role.SUPER_ADMIN;
     let sellerStore: any = null;
 
-    if (dto.sellerStoreId) {
+    if (isAdmin && dto.sellerStoreId) {
       sellerStore = await this.prisma.sellerStore.findUnique({ where: { id: dto.sellerStoreId } });
     } else {
       sellerStore = await this.prisma.sellerStore.findUnique({ where: { sellerId: creator.id } });
-    }
-
-    if (!sellerStore) {
-      const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
-      if (!appSettings?.allowDirectPlatformSales) {
-        throw new BadRequestException('Direct FarmsKing self-selling is currently inactive. Please list products under a registered seller store (e.g. Surinder Agro Store).');
+      if (!isAdmin && dto.sellerStoreId && (!sellerStore || sellerStore.id !== dto.sellerStoreId)) {
+        throw new ForbiddenException('You can only list products under your own verified seller store.');
       }
     }
 
-    const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
+    if (!sellerStore) {
+      if (!isAdmin) {
+        throw new BadRequestException('Please register and verify your Seller Store before listing products.');
+      }
+      const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+      if (!appSettings?.allowDirectPlatformSales) {
+        throw new BadRequestException('Direct FarmsKing self-selling is currently inactive. Please list products under a registered seller store.');
+      }
+    }
 
-    const isAdmin = creator?.role === Role.ADMIN || creator?.role === Role.SUPER_ADMIN;
+    if (sellerStore && !isAdmin && sellerStore.kycStatus !== SellerKycStatus.VERIFIED) {
+      throw new BadRequestException(`Your Seller Store KYC is ${sellerStore.kycStatus}. Store verification is required before listing products.`);
+    }
+
+    const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
 
     if (sellerStore && !isAdmin) {
       // 1. Category Restriction: Seeds & Pesticides strictly require Agri Inputs License No.
@@ -86,7 +95,7 @@ export class ProductsService {
         stockQty: dto.stockQty ?? 0,
         sellerStoreId: sellerStore ? sellerStore.id : dto.sellerStoreId,
         hsnCode: dto.hsnCode,
-        sku: dto.sku,
+        sku: dto.sku || dto.skuCode,
         gstPercentage: dto.gstPercentage ?? 18.0,
         weightKg: billableWeight,
         deadWeightKg,
@@ -114,13 +123,24 @@ export class ProductsService {
     });
   }
 
-  /** Customers browsing only ever see active products */
-  async listAll(includeInactive: boolean, sellerStoreId?: string, slug?: string, categorySlug?: string) {
-    const where: any = includeInactive
-      ? {}
-      : { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE };
+  /** Customers browsing only ever see active & approved products; sellers can view their own inactive items */
+  async listAll(user?: AuthUser, includeInactiveRequested = false, sellerStoreId?: string, slug?: string, categorySlug?: string) {
+    const isAdmin = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN));
+    const isSeller = Boolean(user && (user.role === Role.SELLER || (Array.isArray((user as any).roles) && (user as any).roles.includes(Role.SELLER))));
 
-    if (sellerStoreId) where.sellerStoreId = sellerStoreId;
+    let where: any = { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE };
+
+    if (includeInactiveRequested && isAdmin) {
+      where = {};
+    } else if (includeInactiveRequested && isSeller && user) {
+      const ownStore = await this.prisma.sellerStore.findUnique({ where: { sellerId: user.id }, select: { id: true } });
+      if (!ownStore) return [];
+      where = { sellerStoreId: ownStore.id };
+    }
+
+    if (sellerStoreId && !(includeInactiveRequested && isSeller && !isAdmin)) {
+      where.sellerStoreId = sellerStoreId;
+    }
     if (slug) where.sellerStore = { slug };
     if (categorySlug) where.categorySlug = categorySlug;
 
@@ -174,14 +194,28 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, dto: UpdateProductDto) {
-    await this.findOneOrThrow(id);
-    return this.prisma.product.update({ where: { id }, data: dto as any });
+  async update(user: AuthUser, id: string, dto: UpdateProductDto) {
+    const product = await this.findOneOrThrow(id);
+    const isAdmin = user?.role === Role.ADMIN || user?.role === Role.SUPER_ADMIN;
+    if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
+      throw new ForbiddenException('You can only edit products belonging to your own seller store.');
+    }
+
+    const updateData: Record<string, any> = { ...dto };
+    delete updateData.moderationStatus;
+    delete updateData.sellerStoreId;
+    delete updateData.createdById;
+
+    return this.prisma.product.update({ where: { id }, data: updateData });
   }
 
   /** Soft-delete */
-  async remove(id: string) {
-    await this.findOneOrThrow(id);
+  async remove(user: AuthUser, id: string) {
+    const product = await this.findOneOrThrow(id);
+    const isAdmin = user?.role === Role.ADMIN || user?.role === Role.SUPER_ADMIN;
+    if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
+      throw new ForbiddenException('You can only deactivate products belonging to your own seller store.');
+    }
     return this.prisma.product.update({ where: { id }, data: { isActive: false } });
   }
 

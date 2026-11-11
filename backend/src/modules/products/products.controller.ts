@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -20,6 +21,7 @@ export class ProductsController {
     return this.productsService.create(user, dto);
   }
 
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   listAll(
     @CurrentUser() user?: AuthUser,
@@ -28,8 +30,7 @@ export class ProductsController {
     @Query('slug') slug?: string,
     @Query('categorySlug') categorySlug?: string,
   ) {
-    const canSeeInactive = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN || user.role === Role.SELLER) && includeInactive === 'true');
-    return this.productsService.listAll(canSeeInactive, sellerStoreId, slug, categorySlug);
+    return this.productsService.listAll(user, includeInactive === 'true', sellerStoreId, slug, categorySlug);
   }
 
   /** Admin: List products pending moderation review */
@@ -84,15 +85,15 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.SELLER)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateProductDto) {
+    return this.productsService.update(user, id, dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.SELLER)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+  remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.productsService.remove(user, id);
   }
 }
 

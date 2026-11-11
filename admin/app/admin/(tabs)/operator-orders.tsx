@@ -120,7 +120,7 @@ function OrderFulfillmentCard({
   const itemsSummary = order.items.map((i) => `${i.productName} x${i.quantity}`).join(', ');
 
   const confirmCancel = () => {
-    const message = `Order ${order.orderNumber} ko cancel kar diya jayega. Confirm karein?`;
+    const message = `Are you sure you want to cancel order ${order.orderNumber}?`;
     const doCancel = () => cancelOrder.mutate(order.id);
     if (Platform.OS === 'web') {
       if (confirm(message)) doCancel();

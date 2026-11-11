@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { OrderStatus, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -41,7 +41,7 @@ export class OrdersController {
     return this.ordersService.findAll(status);
   }
 
-  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.SELLER, ...STAFF_ROLES)
   @Get(':id')
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.ordersService.findOneOrThrow(user, id);
@@ -67,8 +67,8 @@ export class OrdersController {
 
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.SELLER, ...STAFF_ROLES)
   @Get('invoices/:invoiceId/html')
-  getInvoiceHtml(@Param('invoiceId') invoiceId: string) {
-    return this.ordersService.getInvoiceHtml(invoiceId);
+  getInvoiceHtml(@CurrentUser() user: AuthUser, @Param('invoiceId') invoiceId: string) {
+    return this.ordersService.getInvoiceHtml(user, invoiceId);
   }
 
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
@@ -128,6 +128,20 @@ export class OrdersController {
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.OPERATOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':id/submit-utr')
   submitUtr(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SubmitUtrDto) {
-    return this.ordersService.submitPaymentUtr(user, id, dto.utrNumber);
+    const utr = (dto.utrNumber || dto.utr || '').trim();
+    if (!utr) {
+      throw new BadRequestException('UTR / Transaction Reference number is required.');
+    }
+    return this.ordersService.submitPaymentUtr(user, id, utr);
+  }
+}
+
+@Controller('orders-public')
+export class OrdersPublicController {
+  constructor(private readonly ordersService: OrdersService) {}
+
+  @Get('track/:orderNumber')
+  trackOrder(@Param('orderNumber') orderNumber: string) {
+    return this.ordersService.trackPublicOrder(orderNumber);
   }
 }

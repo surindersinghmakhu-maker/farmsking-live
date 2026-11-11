@@ -66,17 +66,27 @@ let ShiprocketService = ShiprocketService_1 = class ShiprocketService {
         }
     }
     async addPickupLocation(storeId) {
-        const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
+        const store = await this.prisma.sellerStore.findUnique({
+            where: { id: storeId },
+            include: { seller: { select: { mobile: true, email: true } } },
+        });
         if (!store) {
             throw new common_1.BadRequestException('Seller store not found.');
         }
         const token = await this.getAuthToken();
         const pickupLocationName = `HUB_${store.slug.substring(0, 10).toUpperCase()}`;
+        if (token === 'MOCK_SHIPROCKET_TOKEN') {
+            await this.prisma.sellerStore.update({
+                where: { id: storeId },
+                data: { shiprocketPickupLocationId: pickupLocationName },
+            });
+            return { status: 'SKIPPED_NOT_CONFIGURED', pickup_location: pickupLocationName };
+        }
         const payload = {
             pickup_location: pickupLocationName,
             name: store.storeName,
-            email: `${store.slug}@farmsking.in`,
-            phone: '9876543210',
+            email: store.seller?.email || `${store.slug}@farmsking.in`,
+            phone: store.seller?.mobile || '9876543210',
             address: store.pickupAddress || 'FarmsKing Hub',
             city: store.pickupCity || 'Ludhiana',
             state: store.pickupState || 'Punjab',
@@ -108,6 +118,10 @@ let ShiprocketService = ShiprocketService_1 = class ShiprocketService {
     }
     async createShipmentOrder(dto, sellerStoreId) {
         const token = await this.getAuthToken();
+        if (token === 'MOCK_SHIPROCKET_TOKEN') {
+            this.logger.warn(`Skipping live Shiprocket order creation for ${dto.orderId}: credentials not configured.`);
+            return { status: 'SKIPPED_NOT_CONFIGURED', order_id: null, shipment_id: null };
+        }
         const payload = {
             order_id: dto.orderId,
             order_date: dto.orderDate,
@@ -129,7 +143,7 @@ let ShiprocketService = ShiprocketService_1 = class ShiprocketService {
                 selling_price: item.sellingPrice,
                 hsn: item.hsn || '120991',
             })),
-            payment_method: 'Prepaid',
+            payment_method: dto.paymentMethod === 'COD' ? 'COD' : 'Prepaid',
             sub_total: dto.orderItems.reduce((acc, curr) => acc + curr.sellingPrice * curr.units, 0),
             length: dto.length || 10,
             breadth: dto.width || 10,
@@ -148,7 +162,12 @@ let ShiprocketService = ShiprocketService_1 = class ShiprocketService {
             const resData = await response.json();
             const shiprocketOrderId = resData?.order_id?.toString() || dto.orderId;
             const shipmentId = resData?.shipment_id?.toString() || `SHIP-${dto.orderId}`;
-            const order = await this.prisma.customerOrder.findUnique({ where: { orderNumber: dto.orderId } });
+            const baseOrderNum = dto.orderId.replace(/-[a-f0-9]{4}$/i, '');
+            const order = dto.customerOrderId
+                ? await this.prisma.customerOrder.findUnique({ where: { id: dto.customerOrderId } })
+                : await this.prisma.customerOrder.findFirst({
+                    where: { OR: [{ orderNumber: dto.orderId }, { orderNumber: baseOrderNum }] },
+                });
             if (order) {
                 await this.prisma.shippingLog.create({
                     data: {

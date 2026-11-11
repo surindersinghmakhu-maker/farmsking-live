@@ -332,8 +332,8 @@ export default function SellerPayoutsScreen() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING_PAYOUT' | 'FROZEN'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [stores, setStores] = useState<any[]>(INITIAL_SELLER_ACCOUNTS);
-  const [transactions, setTransactions] = useState<any[]>(INITIAL_TRANSACTIONS);
+  const [stores, setStores] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   // Selected Store Dossier Modal state
   const [dossierModalVisible, setDossierModalVisible] = useState(false);
@@ -363,52 +363,76 @@ export default function SellerPayoutsScreen() {
   const fetchSellerSettlementData = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/seller/admin/stores');
-      if (Array.isArray(res.data) && res.data.length > 0) {
-        const mapped = res.data.map((s: any) => {
-          const gross = s.grossSales || 250000;
-          const commRate = Number(s.commissionRate || 5.0);
-          const comm = (gross * commRate) / 100;
-          const tcs = (gross * 1) / 100;
-          const net = gross - comm - tcs;
+      const [storesRes, payoutsRes] = await Promise.all([
+        apiClient.get('/seller/admin/stores'),
+        apiClient.get('/seller/admin/payouts').catch(() => ({ data: [] })),
+      ]);
+
+      if (Array.isArray(storesRes.data)) {
+        const mapped = storesRes.data.map((s: any) => {
+          const gross = Number(s.grossSales ?? 0);
+          const commRate = Number(s.commissionRate ?? 8.0);
+          const comm = Number(s.commissionAmount ?? 0);
+          const tcs = Number(s.tcsAmount ?? 0);
+          const netSettled = Number(s.settledBalance ?? 0);
+          const pendingBal = Number(s.pendingBalance ?? 0);
+          const heldBal = Number(s.heldBalance ?? 0);
           return {
             id: s.id,
             storeName: s.storeName,
-            sellerType: s.sellerType || 'RETAILER',
-            kycStatus: s.kycStatus || 'VERIFIED',
+            sellerType: s.sellerType || 'FARMER',
+            kycStatus: s.kycStatus || 'PENDING',
             seller: {
               name: s.seller?.name || 'Store Merchant',
-              mobile: s.seller?.mobile || '+91 98000 00000',
-              email: s.seller?.email || 'merchant@farmsking.in',
+              mobile: s.seller?.mobile || 'N/A',
+              email: s.seller?.email || 'N/A',
             },
-            gstin: s.gstin || '03GSTIN9988Z1',
-            panNumber: s.panNumber || 'PAN9988Z',
-            bankName: s.bankName || 'State Bank of India',
-            bankAccountNo: s.bankAccountNo ? `•••• ${s.bankAccountNo.slice(-4)}` : '•••• 4589',
-            bankIfsc: s.bankIfsc || 'SBIN0001234',
-            bankStatus: 'VERIFIED',
+            gstin: s.gstin || 'Exempt / Unregistered',
+            panNumber: s.panNumber || 'N/A',
+            bankName: s.bankName || 'Nodal Bank Account',
+            bankAccountNo: s.bankAccountNo ? `•••• ${s.bankAccountNo.slice(-4)}` : 'Not Linked',
+            bankIfsc: s.bankIfsc || 'N/A',
+            bankStatus: s.bankAccountNo && s.bankIfsc ? 'VERIFIED' : 'PENDING',
             commissionRate: commRate,
-            categoryCommissions: s.categoryCommissions || {
-              fertilizer: 2.0,
-              seeds: 5.0,
-              spray: 4.0,
-              livePlants: 3.0,
-            },
+            categoryCommissions: s.categoryCommissions || {},
             grossSales: gross,
             commissionAmount: comm,
             tcsAmount: tcs,
-            netDisbursed: net,
-            availableBalance: s.pendingBalance || 45000,
-            heldBalance: 0,
-            payoutCycle: 'DAILY',
-            isFrozen: false,
-            status: s.pendingBalance > 0 ? 'PENDING_PAYOUT' : 'ACTIVE',
+            netDisbursed: netSettled,
+            availableBalance: pendingBal,
+            heldBalance: heldBal,
+            payoutCycle: 'DELIVERY_T2',
+            isFrozen: s.kycStatus === 'BLOCKED',
+            status: s.kycStatus === 'BLOCKED' ? 'FROZEN' : pendingBal > 0 ? 'PENDING_PAYOUT' : 'ACTIVE',
           };
         });
         setStores(mapped);
       }
+
+      if (Array.isArray(payoutsRes.data)) {
+        const mappedTx = payoutsRes.data.map((p: any) => ({
+          id: p.id,
+          payoutRefNo: p.payoutRefNo,
+          storeId: p.sellerStoreId,
+          storeName: p.sellerStore?.storeName || 'Seller Store',
+          sellerName: p.sellerStore?.seller?.name || 'Merchant',
+          mobile: p.sellerStore?.seller?.mobile || 'N/A',
+          bankName: 'Bank Transfer',
+          bankAccountNo: p.sellerStore?.bankAccountNo ? `•••• ${p.sellerStore.bankAccountNo.slice(-4)}` : 'N/A',
+          bankIfsc: p.sellerStore?.bankIfsc || 'N/A',
+          transferMode: 'NEFT/IMPS',
+          totalGrossAmount: Number(p.totalGrossAmount || 0),
+          totalCommissionAmount: Number(p.totalCommissionAmount || 0),
+          totalTcsAmount: Number(p.totalTcsAmount || 0),
+          netPayoutAmount: Number(p.netPayoutAmount || 0),
+          cashfreeUtrNo: p.cashfreeUtrNo || '',
+          createdAt: p.createdAt,
+          status: p.status || 'PENDING',
+        }));
+        setTransactions(mappedTx);
+      }
     } catch (err: any) {
-      console.log('Live backend store fetch notice, using verified seed dataset:', err?.message);
+      showAdminToast('WARNING', 'Ledger Sync Error', err?.response?.data?.message || err?.message || 'Could not fetch live seller payouts.');
     } finally {
       setLoading(false);
     }
@@ -473,65 +497,31 @@ export default function SellerPayoutsScreen() {
     setSettlementModalVisible(true);
   };
 
-  const handleExecutePayout = () => {
-    const amount = parseFloat(payoutAmountInput);
-    if (!amount || amount <= 0) {
-      showAdminToast('ALERT', 'Invalid Amount', 'Please enter a valid payout amount.');
+  const handleExecutePayout = async () => {
+    if (!selectedStoreForPayout) return;
+    if (selectedStoreForPayout.availableBalance <= 0) {
+      showAdminToast('WARNING', 'Nothing Pending', 'This store has ₹0 pending payouts to settle.');
       return;
     }
 
-    setIsProcessingPayout(true);
-    setTimeout(() => {
-      const commCut = amount * 0.05;
-      const tcsCut = amount * 0.01;
-      const netTransferred = amount - commCut - tcsCut;
-
-      const newTx = {
-        id: `tx-${Date.now()}`,
-        payoutRefNo: `PAY-FK-${Math.floor(10000 + Math.random() * 90000)}`,
-        storeId: selectedStoreForPayout.id,
-        storeName: selectedStoreForPayout.storeName,
-        sellerName: selectedStoreForPayout.seller.name,
-        mobile: selectedStoreForPayout.seller.mobile,
-        bankName: selectedStoreForPayout.bankName,
-        bankAccountNo: selectedStoreForPayout.bankAccountNo,
-        bankIfsc: selectedStoreForPayout.bankIfsc,
-        transferMode: payoutMode,
-        totalGrossAmount: amount,
-        totalCommissionAmount: commCut,
-        totalTcsAmount: tcsCut,
-        netPayoutAmount: netTransferred,
-        cashfreeUtrNo: payoutUtrInput || `UTR${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        status: 'SETTLED',
-      };
-
-      setTransactions((prev) => [newTx, ...prev]);
-
-      setStores((prev) =>
-        prev.map((s) => {
-          if (s.id === selectedStoreForPayout.id) {
-            const newAvail = Math.max(0, s.availableBalance - amount);
-            return {
-              ...s,
-              availableBalance: newAvail,
-              netDisbursed: s.netDisbursed + netTransferred,
-              status: newAvail === 0 ? 'ACTIVE' : s.status,
-            };
-          }
-          return s;
-        })
-      );
-
-      setIsProcessingPayout(false);
+    try {
+      setIsProcessingPayout(true);
+      const res = await apiClient.post(`/seller/admin/stores/${selectedStoreForPayout.id}/settle-payouts`, {
+        cashfreeUtrNo: payoutUtrInput?.trim() || undefined,
+      });
       setSettlementModalVisible(false);
-
+      await fetchSellerSettlementData();
       showAdminToast(
         'SUCCESS',
         'Bank Settlement Succeeded',
-        `₹${netTransferred.toFixed(2)} disbursed to ${selectedStoreForPayout.storeName} (UTR: ${newTx.cashfreeUtrNo})`
+        `Settled ${res.data?.settledCount || 1} pending payout(s) for ${selectedStoreForPayout.storeName} (UTR: ${res.data?.utr || payoutUtrInput}).`
       );
-    }, 600);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to settle pending payouts.';
+      showAdminToast('ALERT', 'Settlement Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setIsProcessingPayout(false);
+    }
   };
 
   const handleToggleFreeze = (storeId: string) => {

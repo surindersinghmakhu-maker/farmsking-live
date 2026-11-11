@@ -668,7 +668,9 @@ export default function ShopScreen() {
 
   const discountAmount = appliedDiscount?.amount ?? 0;
   const deliveryFeeAmount = (subtotal || 0) >= 999 ? 0 : 100;
-  const finalPayableAmount = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const grossPayable = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const walletDeduction = useWalletBalance ? Math.min(myWalletBal, grossPayable) : 0;
+  const finalPayableAmount = Math.max(grossPayable - walletDeduction, 0);
 
   const composeAddress = (addr: (typeof savedAddresses)[number]) => {
     const parts = [];
@@ -1415,7 +1417,7 @@ export default function ShopScreen() {
       setCheckoutError('Please enter delivery address.');
       return;
     }
-    if (paymentMethod === 'DIRECT_QR' && !utrTransactionId.trim()) {
+    if (paymentMethod === 'DIRECT_QR' && finalPayableAmount > 0 && !utrTransactionId.trim()) {
       setCheckoutError('Please enter 12-digit UTR / Payment Reference ID.');
       return;
     }
@@ -2316,145 +2318,91 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             contentContainerStyle={{ flexGrow: 1, paddingBottom: itemCount > 0 && activeSubTab !== 'CHECKOUT' ? 84 : 24 }}
             showsVerticalScrollIndicator={false}
           >
-            {/* Official FarmsKing Ultra-Premium Hero Header */}
+            {/* Official FarmsKing Compact Premium Hero Header */}
             <LinearGradient
               colors={
                 isDark
                   ? ['#021208', '#052b14', '#083d1c']
-                  : ['#ffffff', '#f0fdf4', '#dcfce7']
+                  : ['#f0fdf4', '#ffffff', '#f0fdf4']
               }
               style={[
                 styles.hero,
                 {
                   borderBottomWidth: 1,
                   borderBottomColor: isDark ? 'rgba(34, 197, 94, 0.25)' : '#bbf7d0',
+                  paddingTop: 10,
+                  paddingBottom: 10,
+                  gap: 8,
                 },
               ]}
             >
-              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
-                <View style={styles.headerTop}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                    <View style={[styles.storeBadgeWrap, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e' }]}>
-                      <Ionicons name="storefront" size={26} color={isDark ? '#4ade80' : '#15803d'} />
-                    </View>
-                    <View style={{ gap: 2 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d', letterSpacing: 0.3 }}>
-                          👋 Welcome back, {user?.name || 'Valued Farmer'}
-                        </Text>
-                        <View style={styles.liveSyncBadge}>
-                          <View style={styles.livePulseDot} />
-                          <Text style={styles.liveSyncText}>Live Mandi Sync</Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Text style={[styles.heroTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
-                          Official Agri Store
-                        </Text>
-                        <View style={styles.verifiedTag}>
-                          <Ionicons name="shield-checkmark" size={12} color="#facc15" />
-                          <Text style={styles.verifiedTagText}>ICAR-Aligned 100% Certified</Text>
-                        </View>
-                      </View>
-                      <Text style={[styles.heroSubtitle, { color: isDark ? 'rgba(255,255,255,0.75)' : '#475569' }]}>
-                        Direct Factory Inputs • High Germination Seeds • Certified Bio-Fertilizers & Plants
-                      </Text>
-                    </View>
+              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 8 }}>
+                {/* Single Compact Row: Logo + Store Info + Search + Cart */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  {/* Store Icon Badge */}
+                  <View style={[styles.storeBadgeWrap, { width: 40, height: 40, borderRadius: 13 }, isDark && { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderColor: '#22c55e' }]}>
+                    <Ionicons name="storefront" size={20} color={isDark ? '#4ade80' : '#15803d'} />
                   </View>
 
-                  <View style={styles.headerActions}>
-                    <TouchableOpacity
-                      style={[
-                        styles.cartIconBtn,
-                        itemCount > 0 && styles.cartIconBtnFilled,
-                        !isDark && { backgroundColor: '#ffffff', borderColor: '#cbd5e1' },
-                      ]}
-                      activeOpacity={0.85}
-                      onPress={() => {
-                        tap();
-                        setActiveSubTab('CHECKOUT');
-                      }}
-                    >
-                      <Ionicons
-                        name="bag-handle"
-                        size={20}
-                        color={itemCount > 0 ? '#ffffff' : isDark ? '#ffffff' : '#0f172a'}
-                      />
-                      {itemCount > 0 ? (
-                        <View style={styles.cartBadge}>
-                          <Text style={styles.cartBadgeText}>{itemCount}</Text>
-                        </View>
-                      ) : null}
-                    </TouchableOpacity>
+                  {/* Store Name */}
+                  <View style={{ flex: 1, gap: 1 }}>
+                    <Text style={[styles.heroTitle, { fontSize: 16, color: isDark ? '#ffffff' : '#0f172a' }]}>
+                      Official Agri Store
+                    </Text>
                   </View>
+
+                  {/* Cart Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.cartIconBtn,
+                      itemCount > 0 && styles.cartIconBtnFilled,
+                      !isDark && { backgroundColor: '#ffffff', borderColor: '#cbd5e1' },
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => { tap(); setActiveSubTab('CHECKOUT'); }}
+                  >
+                    <Ionicons name="bag-handle" size={19} color={itemCount > 0 ? '#ffffff' : isDark ? '#ffffff' : '#0f172a'} />
+                    {itemCount > 0 ? (
+                      <View style={styles.cartBadge}>
+                        <Text style={styles.cartBadgeText}>{itemCount}</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
                 </View>
 
-                {/* Trust Highlights Strip */}
-                <View
-                  style={[
-                    styles.trustHighlightsStrip,
-                    {
-                      backgroundColor: isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(240, 253, 244, 0.85)',
-                      borderColor: isDark ? 'rgba(74, 222, 128, 0.2)' : '#bbf7d0',
-                    },
-                  ]}
-                >
-                  <View style={styles.trustItem}>
-                    <Ionicons name="flash" size={13} color="#facc15" />
-                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
-                      Fast Mandi Dispatch
-                    </Text>
+                {/* Search Row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {/* Search Bar */}
+                  <View
+                    style={[
+                      styles.searchBarBox,
+                      {
+                        flex: 1,
+                        height: 40,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
+                        borderColor: isDark ? 'rgba(74, 222, 128, 0.35)' : '#e2e8f0',
+                        borderWidth: 1.5,
+                      },
+                    ]}
+                  >
+                    <Ionicons name="search" size={16} color="#16a34a" />
+                    <TextInput
+                      style={[styles.searchInput, { color: isDark ? '#ffffff' : '#0f172a', fontSize: 12.5 }]}
+                      placeholder={t('searchStorePlaceholder', 'Search products, seeds, fertilizers...')}
+                      placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                    />
+                    {searchQuery ? (
+                      <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 2 }}>
+                        <Ionicons name="close-circle" size={16} color={isDark ? '#cbd5e1' : '#94a3b8'} />
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={[styles.searchShortcutBadge, { paddingHorizontal: 7, paddingVertical: 2 }]}>
+                        <Text style={[styles.searchShortcutText, { fontSize: 9.5 }]}>Search</Text>
+                      </View>
+                    )}
                   </View>
-                  <View style={styles.trustDivider} />
-                  <View style={styles.trustItem}>
-                    <Ionicons name="checkmark-done-circle" size={13} color="#4ade80" />
-                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
-                      100% Genuine Guaranteed
-                    </Text>
-                  </View>
-                  <View style={styles.trustDivider} />
-                  <View style={styles.trustItem}>
-                    <Ionicons name="pricetags" size={13} color="#38bdf8" />
-                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
-                      Direct Manufacturer Rates
-                    </Text>
-                  </View>
-                  <View style={styles.trustDivider} />
-                  <View style={styles.trustItem}>
-                    <Ionicons name="shield" size={13} color="#a855f7" />
-                    <Text style={[styles.trustItemText, { color: isDark ? '#e2e8f0' : '#166534' }]}>
-                      Doorstep Field Delivery
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Quick Search Input Box */}
-                <View
-                  style={[
-                    styles.searchBarBox,
-                    {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
-                      borderColor: isDark ? 'rgba(74, 222, 128, 0.35)' : '#cbd5e1',
-                    },
-                  ]}
-                >
-                  <Ionicons name="search" size={19} color="#16a34a" />
-                  <TextInput
-                    style={[styles.searchInput, { color: isDark ? '#ffffff' : '#0f172a' }]}
-                    placeholder={t('searchStorePlaceholder', 'Search 100% verified seeds, fertilizers, insecticides, spray pumps...')}
-                    placeholderTextColor={isDark ? '#94a3b8' : '#94a3b8'}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
-                      <Ionicons name="close-circle" size={18} color={isDark ? '#cbd5e1' : '#64748b'} />
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={styles.searchShortcutBadge}>
-                      <Text style={styles.searchShortcutText}>Search Catalog</Text>
-                    </View>
-                  )}
                 </View>
               </View>
             </LinearGradient>
@@ -2917,7 +2865,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         addItem({
                           productId: product.id,
                           name: product.name,
-                          price: Number(product.price),
+                          price: Number(product?.price ?? 0),
                           unit: product.unit,
                           imageUrl: product.imageUrl,
                         })
@@ -3345,6 +3293,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     )}
 
                     {/* Total Amount Summary Bar */}
+                    {useWalletBalance && walletDeduction > 0 && (
+                      <View style={{ backgroundColor: '#f5f3ff', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#ddd6fe', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={{ fontFamily: FONT.bold, fontSize: 12.5, color: '#6d28d9' }}>💜 Wallet Balance Applied:</Text>
+                        <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#6d28d9' }}>-₹{walletDeduction.toLocaleString('en-IN')}</Text>
+                      </View>
+                    )}
                     <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#0f172a' }}>Total Amount Payable:</Text>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
@@ -3383,7 +3337,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             return;
                           }
                           setCheckoutError(null);
-                          if (paymentMethod === 'DIRECT_QR') {
+                          if (finalPayableAmount === 0) {
+                            handlePlaceOrderDirect();
+                          } else if (paymentMethod === 'DIRECT_QR') {
                             setIsQrPaymentModalOpen(true);
                           } else {
                             handlePlaceOrderDirect();
@@ -3391,7 +3347,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         }}
                       >
                         <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold }]}>
-                          {paymentMethod === 'DIRECT_QR'
+                          {finalPayableAmount === 0
+                            ? '🎉 Confirm Order with Wallet (₹0 Payable)'
+                            : paymentMethod === 'DIRECT_QR'
                             ? `📱 Scan QR & Confirm (₹${finalPayableAmount.toLocaleString('en-IN')})`
                             : paymentMethod === 'ONLINE'
                             ? `💳 Pay Online (₹${finalPayableAmount.toLocaleString('en-IN')})`
@@ -5536,10 +5494,10 @@ function FarmsKingProductDetailModal({
   onAddToCart: () => void;
   onBuyNow: () => void;
 }) {
-  if (!product) return null;
 
   const images = useMemo(() => {
     const list: string[] = [];
+    if (!product) return [];
     const pushIfValid = (urlStr?: string | null) => {
       if (!urlStr || typeof urlStr !== 'string') return;
       const parts = parseImageUrls(urlStr);
@@ -5552,7 +5510,7 @@ function FarmsKingProductDetailModal({
     };
 
     // 1. Primary imageUrl
-    pushIfValid(product.imageUrl);
+    pushIfValid(product?.imageUrl);
 
     // 2. Direct array or string fields
     const candidateArrays = [
@@ -5591,12 +5549,12 @@ function FarmsKingProductDetailModal({
     });
 
     // 3. Extract gallery URLs embedded in product.description if present
-    if (product.description) {
-      const galleryMatch = product.description.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
+    if (product?.description) {
+      const galleryMatch = product?.description?.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
       if (galleryMatch && galleryMatch[1]) {
         pushIfValid(galleryMatch[1]);
       }
-      const httpMatches = product.description.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
+      const httpMatches = product?.description?.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
       if (httpMatches) {
         httpMatches.forEach((m) => pushIfValid(m));
       }
@@ -5607,7 +5565,7 @@ function FarmsKingProductDetailModal({
 
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
   const [imgErrorMap, setImgErrorMap] = useState<Record<number, boolean>>({});
-  const [selectedPackSize, setSelectedPackSize] = useState((product as any).packSize || product.unit || '1 Pack');
+  const [selectedPackSize, setSelectedPackSize] = useState((product as any)?.packSize || (product as any)?.unit || '1 Pack');
 
   const mainScrollRef = useRef<ScrollView>(null);
   const [containerWidth, setContainerWidth] = useState(320);
@@ -5638,27 +5596,29 @@ function FarmsKingProductDetailModal({
     }
   }, [product?.id]);
 
-  const desc = product.description || '';
+  const desc = product?.description || '';
 
   const packSizesMatch = desc.match(/PackSizes:\s*([^|]+)/i);
   const PACK_SIZES = useMemo(() => {
+    if (!product) return [];
     if (packSizesMatch && packSizesMatch[1]) {
       const extracted = packSizesMatch[1].split(',').map((s) => s.trim()).filter(Boolean);
       if (extracted.length > 0) return extracted;
     }
-    if ((product as any).packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
+    if ((product as any)?.packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
       return (product as any).packSizes;
     }
-    const unit = product.unit || 'Pack';
+    const unit = product?.unit || 'Pack';
     return [`1 ${unit}`, `2 ${unit}s`, `5 ${unit}s`, `10 ${unit}s`];
   }, [product, desc]);
 
-  const basePrice = Number(product.price);
-  const baseMrp = (product as any).mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
+  const basePrice = Number(product?.price ?? 0);
+  const baseMrp = (product as any)?.mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
 
   const varRatesMatch = desc.match(/VariantRates:\s*([^|]+)/i);
   const variantPrices = useMemo(() => {
     const map: Record<string, { price: number; mrp: number; stock: number; sku: string }> = {};
+    if (!product) return map;
     if (varRatesMatch && varRatesMatch[1]) {
       const parts = varRatesMatch[1].split('|').map((s) => s.trim());
       parts.forEach((pt) => {
@@ -5674,7 +5634,7 @@ function FarmsKingProductDetailModal({
             map[packName] = {
               price: Number(vSelling),
               mrp: Number(vMrp || Math.round(Number(vSelling) * 1.25)),
-              stock: Number(vStock !== undefined ? vStock : product.stockQty),
+              stock: Number(vStock !== undefined ? vStock : (product?.stockQty ?? 0)),
               sku: vSku || '',
             };
           }
@@ -5686,7 +5646,7 @@ function FarmsKingProductDetailModal({
       if (!map[sz]) {
         let p = basePrice;
         let m = baseMrp;
-        if ((product as any).variants && Array.isArray((product as any).variants)) {
+        if ((product as any)?.variants && Array.isArray((product as any).variants)) {
           const found = (product as any).variants.find((v: any) => v.packSize === sz || v.size === sz || v.name === sz);
           if (found) {
             p = Number(found.price || basePrice);
@@ -5701,7 +5661,7 @@ function FarmsKingProductDetailModal({
           p = Math.round(basePrice * mult);
           m = Math.round(baseMrp * mult);
         }
-        map[sz] = { price: p, mrp: m, stock: product.stockQty, sku: '' };
+        map[sz] = { price: p, mrp: m, stock: Number(product?.stockQty ?? 0), sku: '' };
       }
     });
     return map;
@@ -5723,6 +5683,8 @@ function FarmsKingProductDetailModal({
       }
     }
   }, [product?.id, PACK_SIZES]);
+
+  if (!product) return null;
 
   const isFarmerFood = (product as any).isFarmerFood || product.category === 'Natural Farmer Foods' || product.category === 'Farmer Made Foods' || desc.includes('[FARMER_MADE]');
 
@@ -5765,7 +5727,7 @@ function FarmsKingProductDetailModal({
   const moqMatch = desc.match(/MOQ:\s*([^|]+)/i);
   const moqVal = moqMatch ? moqMatch[1].trim() : '1';
 
-  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product.stockQty, sku: mainSkuCode };
+  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product?.stockQty, sku: mainSkuCode };
   const sellingPrice = currentVariant.price;
   const mrpPrice = currentVariant.mrp;
   const variantStock = currentVariant.stock;
@@ -5957,7 +5919,7 @@ function FarmsKingProductDetailModal({
             </View>
 
             {/* 👨‍🌾 Farmer Direct Food Product Certification Banner */}
-            {((product.category === 'Natural Farmer Foods') || (product.description || '').includes('[FARMER_MADE]')) && (
+            {((product.category === 'Natural Farmer Foods') || (product?.description || '').includes('[FARMER_MADE]')) && (
               <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ fontSize: 18 }}>👨‍🌾</Text>
@@ -6175,14 +6137,14 @@ function ProductCard({
   isAdmin?: boolean;
   onToggleActive?: (product: Product) => void;
 }) {
-  const outOfStock = product.stockQty <= 0;
+  const outOfStock = product?.stockQty <= 0;
   const isHidden = !product.isActive;
 
-  const sellingPrice = Number(product.price);
+  const sellingPrice = Number(product?.price ?? 0);
   const mrpPrice = (product as any).mrp ? Number((product as any).mrp) : Math.round(sellingPrice * 1.25);
   const discountPercent = mrpPrice > sellingPrice ? Math.round(((mrpPrice - sellingPrice) / mrpPrice) * 100) : 20;
 
-  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product.description || '').includes('[FARMER_MADE]');
+  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product?.description || '').includes('[FARMER_MADE]');
   const isCouponProduct = product.category === 'Farmer Plan & Coupons' || (product.category || '').includes('Coupon') || (product.category || '').includes('Plan');
 
   if (layoutMode === 'COMPACT_LIST') {

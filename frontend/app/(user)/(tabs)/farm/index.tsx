@@ -46,7 +46,9 @@ import { useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/use
 import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
 import { CropCompletionReview } from '@/src/store/crops-context';
 import { CropDoctorCareView } from '@/src/components/CropDoctorCareView';
+import { MediaRecordHubView } from '@/src/components/MediaRecordHubView';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
+import { computeDaysRemaining, isLocalGpsMediaActive } from '@/src/utils/crop-media';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 import { useLanguage } from '@/src/store/language-context';
@@ -102,7 +104,7 @@ export default function FarmListScreen() {
     return <UnderMaintenanceView moduleName="Farmer & Agri Experts Module" />;
   }
 
-  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'CROP_CARE'>('CROPS');
+  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'MEDIA_RECORDS' | 'CROP_CARE'>('CROPS');
   const getStageLabel = (st: CropStage) => {
     switch (st) {
       case 'PLANTATION':
@@ -219,6 +221,8 @@ export default function FarmListScreen() {
   const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
   const [selectedCropForMedia, setSelectedCropForMedia] = useState<RegisteredCropField | null>(null);
   const [showCropMediaModal, setShowCropMediaModal] = useState(false);
+  const [mediaModalInitialTab, setMediaModalInitialTab] = useState<'CURRENT' | 'ARCHIVE'>('CURRENT');
+  const [mediaRefreshKey, setMediaRefreshKey] = useState(0);
   const [selectedCropForActivities, setSelectedCropForActivities] = useState<RegisteredCropField | null>(null);
   const [showActivitiesModal, setShowActivitiesModal] = useState(false);
   const [completionReviewModalVisible, setCompletionReviewModalVisible] = useState(false);
@@ -771,73 +775,158 @@ export default function FarmListScreen() {
     [activeCropFields]
   );
 
-  const renderHeroHeader = () => (
-    <LinearGradient colors={colors.headerGradient} style={styles.hero}>
-      <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
-      <View style={styles.heroTopRow}>
-        <Text style={[styles.heroGreeting, { color: isDark ? '#ffffff' : '#0f172a' }]} numberOfLines={1}>🌾 {t('myCropsAndDoctor', 'My Crops & Doctor Advisory')}</Text>
-      </View>
+  const renderHeroHeader = () => {
+    const planLabel = plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+    const planColor = plan !== 'FREE' ? '#d97706' : '#16a34a';
+    const planBg = plan !== 'FREE' ? 'rgba(217,119,6,0.18)' : 'rgba(22,163,74,0.18)';
+    const planBorder = plan !== 'FREE' ? 'rgba(217,119,6,0.4)' : 'rgba(22,163,74,0.4)';
+    const totalRevenue = salesRecords.reduce((s: number, r: any) => s + (Number(r.totalAmount) || 0), 0);
+    const revenueDisplay = totalRevenue >= 1000
+      ? (totalRevenue / 1000).toFixed(1) + 'K'
+      : totalRevenue.toLocaleString('en-IN');
 
-      {/* Sub-Tab Switcher: Active Crops vs Crop Doctor Care */}
-      <View style={[styles.subTabBar, { backgroundColor: isDark ? "rgba(0, 0, 0, 0.45)" : "#f1f5f9", borderColor: isDark ? colors.cardBorder : "#cbd5e1", borderWidth: 1, maxWidth: 480, width: '100%' }]}>
-        <TouchableOpacity
-          style={[
-            styles.subTabItem,
-            activeSubTab === 'CROPS' && {
-              backgroundColor: isDark ? '#10b981' : '#15803d',
-              ...premiumShadow(isDark ? '#10b981' : '#15803d', 'xs'),
-            }
-          ]}
-          activeOpacity={0.85}
-          onPress={() => { tap(); setActiveSubTab('CROPS'); }}
-        >
-          <Ionicons
-            name="leaf"
-            size={15}
-            color={activeSubTab === 'CROPS' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
-          />
-          <Text style={[
-            styles.subTabText,
-            { color: isDark ? '#94a3b8' : '#64748b' },
-            activeSubTab === 'CROPS' && {
-              color: isDark ? '#04160c' : '#ffffff',
-              fontFamily: FONT.extraBold,
-            }
-          ]}>
-            {t('activeCrops', 'Active Crops')} ({activeCropFields.length})
-          </Text>
-        </TouchableOpacity>
+    return (
+      <LinearGradient
+        colors={isDark ? ['#020b06', '#041d0f', '#072e18'] : ['#f0fdf4', '#dcfce7', '#bbf7d0']}
+        style={[styles.hero, { gap: 10 }]}
+      >
+        {/* Ambient Glow Orbs */}
+        <View pointerEvents="none" style={{ position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: isDark ? 'rgba(0,255,135,0.07)' : 'rgba(22,163,74,0.08)', top: -80, right: -60 }} />
+        <View pointerEvents="none" style={{ position: 'absolute', width: 150, height: 150, borderRadius: 75, backgroundColor: isDark ? 'rgba(0,255,135,0.05)' : 'rgba(22,163,74,0.05)', bottom: -40, left: -30 }} />
 
-        <TouchableOpacity
-          style={[
-            styles.subTabItem,
-            activeSubTab === 'CROP_CARE' && {
-              backgroundColor: isDark ? '#10b981' : '#15803d',
-              ...premiumShadow(isDark ? '#10b981' : '#15803d', 'xs'),
-            }
-          ]}
-          activeOpacity={0.85}
-          onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
-        >
-          <Ionicons
-            name="medical"
-            size={15}
-            color={activeSubTab === 'CROP_CARE' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
-          />
-          <Text style={[
-            styles.subTabText,
-            { color: isDark ? '#94a3b8' : '#64748b' },
-            activeSubTab === 'CROP_CARE' && {
-              color: isDark ? '#04160c' : '#ffffff',
-              fontFamily: FONT.extraBold,
-            }
-          ]}>
-            {t('cropsCare', 'Crops Care')}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
-  );
+        {/* Row 1: Greeting + Plan Badge */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <View style={{ flex: 1, gap: 1 }}>
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', letterSpacing: -0.3 }} numberOfLines={1}>
+              {'🌾'} My Crops & Farm Advisory
+            </Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? 'rgba(255,255,255,0.6)' : '#374151' }} numberOfLines={1}>
+              {user?.name ? 'Welcome, ' + user.name.split(' ')[0] : 'FarmsKing Agri Platform'} {'·'} ICAR-Aligned AI Platform
+            </Text>
+          </View>
+          <View style={{ backgroundColor: planBg, borderWidth: 1, borderColor: planBorder, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons name={plan === 'FREE' ? 'leaf' : 'star'} size={11} color={planColor} />
+            <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: planColor }}>{planLabel}</Text>
+          </View>
+        </View>
+
+        {/* Row 2: 4-KPI Glass Strip */}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
+            <Ionicons name="leaf" size={14} color={isDark ? '#4ade80' : '#16a34a'} />
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', lineHeight: 22 }}>{activeCropFields.length}</Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Active Crops</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
+            <Ionicons name="checkmark-done-circle" size={14} color={isDark ? '#34d399' : '#059669'} />
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#34d399' : '#059669', lineHeight: 22 }}>{cropHistory.length}</Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Completed Cycles</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
+            <Ionicons name="medical" size={14} color={activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#64748b' : '#94a3b8')} />
+            <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#64748b' : '#94a3b8'), textAlign: 'center' }} numberOfLines={1}>
+              {activeAdvisor ? activeAdvisor.name.split(' ')[0] : 'None'}
+            </Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Crop Doctor</Text>
+          </View>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
+            <Ionicons name="cash" size={14} color={isDark ? '#fbbf24' : '#d97706'} />
+            <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isDark ? '#fbbf24' : '#d97706', lineHeight: 20, textAlign: 'center' }} numberOfLines={1}>
+              {'₹'}{revenueDisplay}
+            </Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Total Revenue</Text>
+          </View>
+        </View>
+
+        {/* Row 3: Sub-Tab Switcher */}
+        <View style={[styles.subTabBar, { backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : '#f1f5f9', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1, maxWidth: 660, width: '100%' }]}>
+          <TouchableOpacity
+            style={[
+              styles.subTabItem,
+              activeSubTab === 'CROPS' && {
+                backgroundColor: isDark ? '#10b981' : '#15803d',
+                ...premiumShadow(isDark ? '#10b981' : '#15803d', 'xs'),
+              }
+            ]}
+            activeOpacity={0.85}
+            onPress={() => { tap(); setActiveSubTab('CROPS'); }}
+          >
+            <Ionicons
+              name="leaf"
+              size={15}
+              color={activeSubTab === 'CROPS' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
+            />
+            <Text style={[
+              styles.subTabText,
+              { color: isDark ? '#94a3b8' : '#64748b' },
+              activeSubTab === 'CROPS' && {
+                color: isDark ? '#04160c' : '#ffffff',
+                fontFamily: FONT.extraBold,
+              }
+            ]}>
+              {t('activeCrops', 'Active Crops')} ({activeCropFields.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.subTabItem,
+              activeSubTab === 'MEDIA_RECORDS' && {
+                backgroundColor: isDark ? '#10b981' : '#15803d',
+                ...premiumShadow(isDark ? '#10b981' : '#15803d', 'xs'),
+              }
+            ]}
+            activeOpacity={0.85}
+            onPress={() => { tap(); setActiveSubTab('MEDIA_RECORDS'); }}
+          >
+            <Ionicons
+              name="film"
+              size={15}
+              color={activeSubTab === 'MEDIA_RECORDS' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
+            />
+            <Text style={[
+              styles.subTabText,
+              { color: isDark ? '#94a3b8' : '#64748b' },
+              activeSubTab === 'MEDIA_RECORDS' && {
+                color: isDark ? '#04160c' : '#ffffff',
+                fontFamily: FONT.extraBold,
+              }
+            ]}>
+              Media Records
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.subTabItem,
+              activeSubTab === 'CROP_CARE' && {
+                backgroundColor: isDark ? '#10b981' : '#15803d',
+                ...premiumShadow(isDark ? '#10b981' : '#15803d', 'xs'),
+              }
+            ]}
+            activeOpacity={0.85}
+            onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
+          >
+            <Ionicons
+              name="medical"
+              size={15}
+              color={activeSubTab === 'CROP_CARE' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
+            />
+            <Text style={[
+              styles.subTabText,
+              { color: isDark ? '#94a3b8' : '#64748b' },
+              activeSubTab === 'CROP_CARE' && {
+                color: isDark ? '#04160c' : '#ffffff',
+                fontFamily: FONT.extraBold,
+              }
+            ]}>
+              {t('cropsCare', 'Crops Care')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -851,30 +940,40 @@ export default function FarmListScreen() {
             <View>
               {renderHeroHeader()}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, marginTop: 14, paddingHorizontal: SPACING.lg }}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('activeCrops', 'Active Crops')} ({activeCropFields.length})</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                  <Ionicons name="leaf" size={15} color={isDark ? '#4ade80' : '#16a34a'} />
+                  <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a', marginBottom: 0 }]}>{t('activeCrops', 'Active Crops')}</Text>
+                  <View style={{ backgroundColor: isDark ? 'rgba(74,222,128,0.18)' : 'rgba(22,163,74,0.12)', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 9, borderWidth: 1, borderColor: isDark ? 'rgba(74,222,128,0.35)' : 'rgba(22,163,74,0.3)' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#16a34a' }}>{activeCropFields.length}</Text>
+                  </View>
+                </View>
                 <TouchableOpacity
-                  style={[styles.topAddCropBtn, { backgroundColor: '#15803d' }]}
+                  style={[styles.topAddCropBtn, { backgroundColor: isDark ? '#10b981' : '#15803d', shadowColor: '#10b981', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 5 }]}
                   activeOpacity={0.85}
                   onPress={handleOpenAddCropModal}
                 >
-                  <Ionicons name="add-circle" size={16} color="#ffffff" />
+                  <Ionicons name="add-circle" size={15} color="#ffffff" />
                   <Text style={[styles.topAddCropBtnText, { color: '#ffffff' }]}>{t('addNewCrop', '+ Add Crop')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           }
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Ionicons name="leaf-outline" size={36} color="#cbd5e1" />
-              <Text style={[styles.emptyText, { color: colors.text }]}>{t('noActiveCrops', 'No active crops right now.')}</Text>
-              <Text style={[styles.emptySub, { color: colors.textMuted }]}>{t('addCropPrompt', 'Click "+ Add Crop" below to register new crop plots & unit rates.')}</Text>
+            <View style={[styles.center, { paddingTop: 24, gap: 10 }]}>
+              <View style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: isDark ? 'rgba(22,163,74,0.14)' : 'rgba(22,163,74,0.1)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: isDark ? 'rgba(74,222,128,0.4)' : 'rgba(22,163,74,0.3)', shadowColor: '#16a34a', shadowOffset: { width: 0, height: 0 }, shadowOpacity: isDark ? 0.55 : 0.25, shadowRadius: 18, elevation: 10 }}>
+                <Ionicons name="leaf" size={36} color={isDark ? '#4ade80' : '#16a34a'} />
+              </View>
+              <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', textAlign: 'center' }}>No Active Crops</Text>
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: isDark ? 'rgba(255,255,255,0.55)' : '#475569', textAlign: 'center', lineHeight: 18, maxWidth: 300 }}>
+                Register your first crop plot to start tracking yield, expenses & AI-powered care plans.
+              </Text>
               <TouchableOpacity
-                style={{ backgroundColor: '#15803d', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}
+                style={{ backgroundColor: isDark ? '#10b981' : '#15803d', paddingHorizontal: 22, paddingVertical: 11, borderRadius: 24, flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 4, shadowColor: '#10b981', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}
                 activeOpacity={0.85}
                 onPress={handleOpenAddCropModal}
               >
                 <Ionicons name="add-circle" size={18} color="#ffffff" />
-                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>{t('addNewCrop', '+ Add Crop')}</Text>
+                <Text style={{ color: '#ffffff', fontFamily: FONT.extraBold, fontSize: 13.5 }}>+ Register First Crop</Text>
               </TouchableOpacity>
             </View>
           }
@@ -885,8 +984,13 @@ export default function FarmListScreen() {
             const isAdvisorHired = item.advisorStatus === 'ACCEPTED' || (activeAdvisor && item.advisorStatus !== 'NONE');
             const advisorName = (item.advisorStatus === 'ACCEPTED' ? activeAdvisor?.name : null) || (isAdvisorHired ? activeAdvisor?.name || 'Assigned Doctor' : null);
 
+            const stageAccent = item.stage === 'PLANTATION' || item.stage === 'SOWING' ? '#d97706'
+              : item.stage === 'VEGETATIVE' || item.stage === 'GROWTH' ? '#0284c7'
+              : item.stage === 'FLOWERING' ? '#e11d48'
+              : item.stage === 'HARVESTING' ? '#16a34a'
+              : '#475569';
             return (
-              <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+              <View style={[styles.card, { backgroundColor: isDark ? 'rgba(4,22,12,0.98)' : '#ffffff', borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0', borderLeftColor: stageAccent, borderLeftWidth: 4 }, premiumShadow(stageAccent, 'sm')]}>
                 {/* Row 1: Plot Name & ID + Top Right Action (Edit Crop if Plantation stage, otherwise Advisor Status) */}
                 <View style={styles.cardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
@@ -1095,34 +1199,46 @@ export default function FarmListScreen() {
                         ) : null}
 
                         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-                          {/* Button 1 (Green - Left): Field Telemetry & Media */}
-                          <TouchableOpacity
-                            style={{
-                              flex: 1,
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: 6,
-                              backgroundColor: isDark ? '#166534' : '#15803d',
-                              paddingVertical: 9,
-                              paddingHorizontal: 8,
-                              borderRadius: 8,
-                            }}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              tap();
-                              setSelectedCropForMedia(item);
-                              setShowCropMediaModal(true);
-                            }}
-                          >
-                            <Ionicons name="shield-checkmark" size={14} color="#ffffff" />
-                            <Text
-                              style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}
-                              numberOfLines={1}
-                            >
-                              Field Telemetry & Media
-                            </Text>
-                          </TouchableOpacity>
+                          {/* Button 1 (Green - Left): Media Record Module */}
+                          {(() => {
+                            const hasActiveMedia = isLocalGpsMediaActive(cropGps);
+                            const mediaDaysLeft = hasActiveMedia
+                              ? computeDaysRemaining(
+                                  cropGps?.mediaDisplayExpiresAt,
+                                  cropGps?.mediaCycleSavedAt || cropGps?.updatedAt,
+                                )
+                              : 0;
+                            return (
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1,
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 6,
+                                  backgroundColor: isDark ? '#166534' : '#15803d',
+                                  paddingVertical: 9,
+                                  paddingHorizontal: 8,
+                                  borderRadius: 8,
+                                }}
+                                activeOpacity={0.85}
+                                onPress={() => {
+                                  tap();
+                                  setMediaModalInitialTab('CURRENT');
+                                  setSelectedCropForMedia(item);
+                                  setShowCropMediaModal(true);
+                                }}
+                              >
+                                <Ionicons name="film" size={14} color="#ffffff" />
+                                <Text
+                                  style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}
+                                  numberOfLines={1}
+                                >
+                                  {mediaDaysLeft > 0 ? `Media Record (${mediaDaysLeft}d Left)` : 'Media Record'}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })()}
 
                           {/* Button 2 (Blue - Right): Satellite Map & Weather */}
                           <TouchableOpacity
@@ -1165,18 +1281,21 @@ export default function FarmListScreen() {
           ListFooterComponent={
             <View style={[styles.historySectionContainer, { borderTopColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0' }]}>
               <TouchableOpacity
-                style={styles.historySectionHeader}
+                style={[styles.historySectionHeader, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.09)' : '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 }]}
                 activeOpacity={0.75}
                 onPress={() => {
                   tap();
                   setIsHistoryExpanded((v) => !v);
                 }}
               >
-                <Ionicons name="time" size={18} color={isDark ? '#38bdf8' : '#15803d'} />
-                <Text style={[styles.historySectionTitle, { color: colors.text, flex: 1 }]}>
-                  Completed Crops History ({cropHistory.length})
+                <Ionicons name="time" size={17} color={isDark ? '#4ade80' : '#15803d'} />
+                <Text style={[styles.historySectionTitle, { color: isDark ? '#ffffff' : '#0f172a', flex: 1 }]}>
+                  Completed Crops History
                 </Text>
-                <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textMuted} />
+                <View style={{ backgroundColor: isDark ? 'rgba(74,222,128,0.18)' : 'rgba(22,163,74,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: isDark ? 'rgba(74,222,128,0.35)' : 'rgba(22,163,74,0.3)', marginRight: 6 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#16a34a' }}>{cropHistory.length}</Text>
+                </View>
+                <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? '#94a3b8' : '#64748b'} />
               </TouchableOpacity>
 
               {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
@@ -1190,15 +1309,11 @@ export default function FarmListScreen() {
                       style={[
                         styles.historyCard,
                         {
-                          backgroundColor: colors.cardBg,
-                          borderRadius: 14,
-                          padding: 10,
-                          marginBottom: 8,
-                          borderWidth: 1,
-                          borderColor: colors.cardBorder,
-                          overflow: 'hidden',
+                          backgroundColor: isDark ? 'rgba(4,22,12,0.98)' : '#ffffff',
+                          borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                          borderLeftColor: summary.isAdvisorHired ? '#0284c7' : '#16a34a',
                         },
-                        premiumShadow(colors.shadowColor, 'sm'),
+                        premiumShadow(isDark ? '#16a34a' : colors.shadowColor, 'sm'),
                       ]}
                       activeOpacity={0.8}
                       onPress={() => openHistoryDetail(hItem)}
@@ -1366,16 +1481,36 @@ export default function FarmListScreen() {
                   );
                 })
               ) : (
-                <View style={[styles.historyEmptyBox, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0' }]}>
-                  <Ionicons name="checkmark-done-circle-outline" size={32} color={isDark ? '#475569' : '#cbd5e1'} />
-                  <Text style={[styles.historyEmptyText, { color: colors.textMuted }]}>No completed crops yet.</Text>
-                  <Text style={[styles.historyEmptySub, { color: isDark ? '#64748b' : '#94a3b8' }]}>
-                    Completed crops will appear here with total sale weight and revenue summary.
+                <View style={[styles.historyEmptyBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : '#f8fafc', borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0', alignItems: 'center', gap: 8 }]}>
+                  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: isDark ? 'rgba(22,163,74,0.12)' : 'rgba(22,163,74,0.08)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(74,222,128,0.3)' : 'rgba(22,163,74,0.2)' }}>
+                    <Ionicons name="checkmark-done-circle-outline" size={28} color={isDark ? '#4ade80' : '#16a34a'} />
+                  </View>
+                  <Text style={[styles.historyEmptyText, { color: isDark ? '#94a3b8' : '#64748b' }]}>No Completed Crops Yet</Text>
+                  <Text style={[styles.historyEmptySub, { color: isDark ? '#64748b' : '#94a3b8', textAlign: 'center' }]}>
+                    Completed crop cycles will appear here with full yield, revenue & profit-loss breakdown.
                   </Text>
                 </View>
               )}
             </View>
           }
+        />
+      ) : activeSubTab === 'MEDIA_RECORDS' ? (
+        /* DEDICATED MEDIA RECORD MODULE VIEW */
+        <MediaRecordHubView
+          headerComponent={renderHeroHeader()}
+          crops={activeCropFields}
+          refreshSignal={mediaRefreshKey}
+          onOpenMediaRecord={(crop, tab = 'CURRENT') => {
+            tap();
+            setMediaModalInitialTab(tab);
+            setSelectedCropForMedia(crop);
+            setShowCropMediaModal(true);
+          }}
+          onOpenCropActivities={(crop) => {
+            tap();
+            setSelectedCropForActivities(crop);
+            setShowActivitiesModal(true);
+          }}
         />
       ) : (
         /* CROP DOCTOR / CROP CARE ADVISORY SECTION */
@@ -2020,7 +2155,7 @@ export default function FarmListScreen() {
         farmerPhone={user?.mobile || selectedCropForGps?.farmerPhone}
         plotName={selectedCropForGps?.fieldName}
         location={selectedCropForGps?.location}
-        existingGpsData={selectedCropForGps?.gpsData}
+        existingGpsData={selectedCropForGps ? cropGpsDataMap[selectedCropForGps.id] || selectedCropForGps?.gpsData : undefined}
         onClose={() => setShowLocationModal(false)}
         onSaveLocation={() => {
           if (selectedCropForGps) {
@@ -2030,23 +2165,34 @@ export default function FarmListScreen() {
         }}
       />
 
-      {/* Dedicated Crop Photos & 1-Min Video Modal */}
+      {/* Dedicated Media Record Module Modal */}
       <CropMediaModal
         visible={showCropMediaModal}
         cropId={selectedCropForMedia?.id}
         cropName={selectedCropForMedia?.cropName}
+        farmerName={user?.farmName || user?.name || selectedCropForMedia?.farmerName}
         fieldName={selectedCropForMedia?.fieldName}
         existingGpsData={selectedCropForMedia ? cropGpsDataMap[selectedCropForMedia.id] || selectedCropForMedia?.gpsData : undefined}
+        initialTab={mediaModalInitialTab}
         onClose={() => setShowCropMediaModal(false)}
+        onSaved={() => setMediaRefreshKey((k) => k + 1)}
+        onOpenActivities={() => {
+          if (selectedCropForMedia) {
+            setShowCropMediaModal(false);
+            setSelectedCropForActivities(selectedCropForMedia);
+            setShowActivitiesModal(true);
+          }
+        }}
       />
 
-      {/* Dedicated Crop Activities Modal (Expenses, Watering, Sprays, Fertilizers & Photos) */}
+      {/* Dedicated Crop Activities Modal (Expenses, Watering, Sprays, Fertilizers & Media Records) */}
       <CropActivitiesModal
         visible={showActivitiesModal}
         crop={selectedCropForActivities}
         onClose={() => setShowActivitiesModal(false)}
         onOpenMediaModal={() => {
           if (selectedCropForActivities) {
+            setMediaModalInitialTab('CURRENT');
             setSelectedCropForMedia(selectedCropForActivities);
             setShowCropMediaModal(true);
           }
@@ -2792,7 +2938,7 @@ const styles = StyleSheet.create({
   },
 
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: SPACING.xxl, overflow: 'hidden' },
+  hero: { paddingTop: 18, paddingBottom: 16, paddingHorizontal: SPACING.lg, overflow: 'hidden' },
   glow: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: theme.accent, opacity: 0.18 },
   glowTop: { top: -70, right: -50 },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -2811,15 +2957,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#15803d',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: RADIUS.pill,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    elevation: 5,
   },
   topAddCropBtnText: {
     fontSize: 12.5,
@@ -2849,17 +2991,19 @@ const styles = StyleSheet.create({
   },
   list: { paddingBottom: 80, flexGrow: 1 },
   marketCardWrap: { marginBottom: SPACING.xs },
-  sectionTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#334155', marginBottom: 6 },
+  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#334155', marginBottom: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30, gap: 6, marginHorizontal: SPACING.lg },
   emptyText: { color: theme.text, fontSize: 15, fontFamily: FONT.bold, textAlign: 'center' },
   emptySub: { color: theme.textMuted, fontSize: 12.5, fontFamily: FONT.medium, textAlign: 'center' },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
+    borderRadius: 16,
     padding: 12,
-    marginBottom: 8,
+    marginBottom: 10,
     borderWidth: 1,
+    borderLeftWidth: 4,
     borderColor: '#e2e8f0',
+    borderLeftColor: '#16a34a',
     marginHorizontal: SPACING.lg,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
@@ -2968,17 +3112,19 @@ const styles = StyleSheet.create({
   },
   deleteBtn: { padding: 4 },
   historySectionContainer: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1.5,
-    borderTopColor: '#e2e8f0',
+    marginTop: 16,
+    paddingTop: 0,
+    borderTopWidth: 0,
     marginHorizontal: SPACING.lg,
+    gap: 0,
   },
   historySectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   historySectionTitle: {
     fontSize: 13.5,
@@ -2986,12 +3132,13 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
   historyCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 12,
+    borderRadius: 16,
+    padding: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderLeftWidth: 3,
+    borderLeftColor: '#16a34a',
+    overflow: 'hidden',
   },
   historyCardHeader: {
     flexDirection: 'row',

@@ -3,5 +3,7 @@ export declare class MarkPaidDto {
     notes?: string;
 }
 export declare class SubmitUtrDto {
-    utrNumber: string;
+    utrNumber?: string;
+    utr?: string;
+    note?: string;
 }

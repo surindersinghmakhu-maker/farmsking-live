@@ -37,6 +37,21 @@ let SellerController = class SellerController {
     getDashboardStats(user) {
         return this.sellerService.getDashboardStats(user);
     }
+    getMyOrders(user) {
+        return this.sellerService.getMyOrders(user);
+    }
+    updateMySubOrderStatus(user, subOrderId, status) {
+        return this.sellerService.updateMySubOrderStatus(user, subOrderId, status);
+    }
+    listAllPayoutsForAdmin(status) {
+        return this.sellerService.listAllPayoutsForAdmin(status);
+    }
+    settleStorePendingPayoutsByAdmin(storeId, cashfreeUtrNo) {
+        return this.sellerService.settleStorePendingPayoutsByAdmin(storeId, cashfreeUtrNo);
+    }
+    settlePayoutByAdmin(payoutId, cashfreeUtrNo) {
+        return this.sellerService.settlePayoutByAdmin(payoutId, cashfreeUtrNo);
+    }
     listStoresForAdmin(kycStatus) {
         return this.sellerService.listStoresForAdmin(kycStatus);
     }
@@ -85,6 +100,53 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], SellerController.prototype, "getDashboardStats", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('orders'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SellerController.prototype, "getMyOrders", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)('orders/:subOrderId/status'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('subOrderId')),
+    __param(2, (0, common_1.Body)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], SellerController.prototype, "updateMySubOrderStatus", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('admin/payouts'),
+    __param(0, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], SellerController.prototype, "listAllPayoutsForAdmin", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('admin/stores/:storeId/settle-payouts'),
+    __param(0, (0, common_1.Param)('storeId')),
+    __param(1, (0, common_1.Body)('cashfreeUtrNo')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], SellerController.prototype, "settleStorePendingPayoutsByAdmin", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('admin/payouts/:payoutId/settle'),
+    __param(0, (0, common_1.Param)('payoutId')),
+    __param(1, (0, common_1.Body)('cashfreeUtrNo')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], SellerController.prototype, "settlePayoutByAdmin", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),

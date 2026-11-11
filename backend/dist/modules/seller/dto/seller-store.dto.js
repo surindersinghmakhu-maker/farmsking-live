@@ -160,6 +160,16 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "tradeLicenseUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "sellerPhotoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "logoDocUrl", void 0);
 class UpdateSellerKycDto {
 }
 exports.UpdateSellerKycDto = UpdateSellerKycDto;
@@ -308,6 +318,16 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "tradeLicenseUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "sellerPhotoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "logoDocUrl", void 0);
 class VerifySellerKycDto {
 }
 exports.VerifySellerKycDto = VerifySellerKycDto;
@@ -354,4 +374,9 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateSellerSettingsDto.prototype, "isFssaiApproved", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], UpdateSellerSettingsDto.prototype, "categoryCommissions", void 0);
 //# sourceMappingURL=seller-store.dto.js.map

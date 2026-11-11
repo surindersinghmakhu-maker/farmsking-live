@@ -18,21 +18,30 @@ let ProductsService = class ProductsService {
         this.prisma = prisma;
     }
     async create(creator, dto) {
+        const isAdmin = creator?.role === client_1.Role.ADMIN || creator?.role === client_1.Role.SUPER_ADMIN;
         let sellerStore = null;
-        if (dto.sellerStoreId) {
+        if (isAdmin && dto.sellerStoreId) {
             sellerStore = await this.prisma.sellerStore.findUnique({ where: { id: dto.sellerStoreId } });
         }
         else {
             sellerStore = await this.prisma.sellerStore.findUnique({ where: { sellerId: creator.id } });
-        }
-        if (!sellerStore) {
-            const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
-            if (!appSettings?.allowDirectPlatformSales) {
-                throw new common_1.BadRequestException('Direct FarmsKing self-selling is currently inactive. Please list products under a registered seller store (e.g. Surinder Agro Store).');
+            if (!isAdmin && dto.sellerStoreId && (!sellerStore || sellerStore.id !== dto.sellerStoreId)) {
+                throw new common_1.ForbiddenException('You can only list products under your own verified seller store.');
             }
         }
+        if (!sellerStore) {
+            if (!isAdmin) {
+                throw new common_1.BadRequestException('Please register and verify your Seller Store before listing products.');
+            }
+            const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+            if (!appSettings?.allowDirectPlatformSales) {
+                throw new common_1.BadRequestException('Direct FarmsKing self-selling is currently inactive. Please list products under a registered seller store.');
+            }
+        }
+        if (sellerStore && !isAdmin && sellerStore.kycStatus !== client_1.SellerKycStatus.VERIFIED) {
+            throw new common_1.BadRequestException(`Your Seller Store KYC is ${sellerStore.kycStatus}. Store verification is required before listing products.`);
+        }
         const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
-        const isAdmin = creator?.role === client_1.Role.ADMIN || creator?.role === client_1.Role.SUPER_ADMIN;
         if (sellerStore && !isAdmin) {
             if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('seed') || categorySlug === 'seeds' || categorySlug.includes('crop-protection')) {
                 if (!sellerStore.agriLicenseNo || !sellerStore.agriLicenseNo.trim()) {
@@ -79,7 +88,7 @@ let ProductsService = class ProductsService {
                 stockQty: dto.stockQty ?? 0,
                 sellerStoreId: sellerStore ? sellerStore.id : dto.sellerStoreId,
                 hsnCode: dto.hsnCode,
-                sku: dto.sku,
+                sku: dto.sku || dto.skuCode,
                 gstPercentage: dto.gstPercentage ?? 18.0,
                 weightKg: billableWeight,
                 deadWeightKg,
@@ -106,12 +115,22 @@ let ProductsService = class ProductsService {
             },
         });
     }
-    async listAll(includeInactive, sellerStoreId, slug, categorySlug) {
-        const where = includeInactive
-            ? {}
-            : { isActive: true, moderationStatus: client_1.ProductModerationStatus.ACTIVE };
-        if (sellerStoreId)
+    async listAll(user, includeInactiveRequested = false, sellerStoreId, slug, categorySlug) {
+        const isAdmin = Boolean(user && (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN));
+        const isSeller = Boolean(user && (user.role === client_1.Role.SELLER || (Array.isArray(user.roles) && user.roles.includes(client_1.Role.SELLER))));
+        let where = { isActive: true, moderationStatus: client_1.ProductModerationStatus.ACTIVE };
+        if (includeInactiveRequested && isAdmin) {
+            where = {};
+        }
+        else if (includeInactiveRequested && isSeller && user) {
+            const ownStore = await this.prisma.sellerStore.findUnique({ where: { sellerId: user.id }, select: { id: true } });
+            if (!ownStore)
+                return [];
+            where = { sellerStoreId: ownStore.id };
+        }
+        if (sellerStoreId && !(includeInactiveRequested && isSeller && !isAdmin)) {
             where.sellerStoreId = sellerStoreId;
+        }
         if (slug)
             where.sellerStore = { slug };
         if (categorySlug)
@@ -161,12 +180,24 @@ let ProductsService = class ProductsService {
         }
         return product;
     }
-    async update(id, dto) {
-        await this.findOneOrThrow(id);
-        return this.prisma.product.update({ where: { id }, data: dto });
+    async update(user, id, dto) {
+        const product = await this.findOneOrThrow(id);
+        const isAdmin = user?.role === client_1.Role.ADMIN || user?.role === client_1.Role.SUPER_ADMIN;
+        if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
+            throw new common_1.ForbiddenException('You can only edit products belonging to your own seller store.');
+        }
+        const updateData = { ...dto };
+        delete updateData.moderationStatus;
+        delete updateData.sellerStoreId;
+        delete updateData.createdById;
+        return this.prisma.product.update({ where: { id }, data: updateData });
     }
-    async remove(id) {
-        await this.findOneOrThrow(id);
+    async remove(user, id) {
+        const product = await this.findOneOrThrow(id);
+        const isAdmin = user?.role === client_1.Role.ADMIN || user?.role === client_1.Role.SUPER_ADMIN;
+        if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
+            throw new common_1.ForbiddenException('You can only deactivate products belonging to your own seller store.');
+        }
         return this.prisma.product.update({ where: { id }, data: { isActive: false } });
     }
     async addReview(user, productId, rating, title, comment, photoUrls) {

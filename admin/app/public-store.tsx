@@ -598,7 +598,9 @@ export default function ShopScreen() {
 
   const discountAmount = appliedDiscount?.amount ?? 0;
   const deliveryFeeAmount = (subtotal || 0) >= 999 ? 0 : 100;
-  const finalPayableAmount = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const grossPayable = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const walletDeduction = useWalletBalance ? Math.min(myWalletBal, grossPayable) : 0;
+  const finalPayableAmount = Math.max(grossPayable - walletDeduction, 0);
 
   const composeAddress = (addr: (typeof savedAddresses)[number]) => {
     const parts = [];
@@ -1344,7 +1346,7 @@ export default function ShopScreen() {
       setCheckoutError('Please enter delivery address.');
       return;
     }
-    if (paymentMethod === 'DIRECT_QR' && !utrTransactionId.trim()) {
+    if (paymentMethod === 'DIRECT_QR' && finalPayableAmount > 0 && !utrTransactionId.trim()) {
       setCheckoutError('Please enter 12-digit UTR / Payment Reference ID.');
       return;
     }
@@ -2255,40 +2257,28 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       ) : (
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
         <View style={{ flex: 1 }}>
-          {/* Official FarmsKing Hero Header - Only shown to logged in users */}
+          {/* Official FarmsKing Compact Premium Hero Header */}
           {user && (
-            <LinearGradient colors={['#0a2417', '#0f3923', '#15803d']} style={styles.hero}>
-              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
-              <View style={styles.headerTop}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={styles.logoBadgeWrap}>
-                    <BrandLogo size={42} useFastBundledOnly={true} useHdQuality={true} />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86efac', letterSpacing: 0.2, marginBottom: 2 }}>
-                      👋 Welcome, {user?.name || 'Farmer'}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.heroTitle}>FarmsKing Store</Text>
-                      <View style={styles.verifiedTag}>
-                        <Ionicons name="checkmark-circle" size={12} color="#facc15" />
-                        <Text style={styles.verifiedTagText}>Verified Official</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.heroSubtitle}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
-                  </View>
-                </View>
+            <LinearGradient colors={['#071a0e', '#0a2417', '#0f3923']} style={[styles.hero, { paddingTop: 10, paddingBottom: 10, gap: 8 }]}>
+              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 8 }}>
 
-                <View style={styles.headerActions}>
+                {/* Row 1: Logo + Store Name + Badges + Cart */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <View style={[styles.logoBadgeWrap, { width: 38, height: 38, borderRadius: 12 }]}>
+                    <BrandLogo size={34} useFastBundledOnly={true} useHdQuality={true} />
+                  </View>
+                  <View style={{ flex: 1, gap: 1 }}>
+                    <Text style={[styles.heroTitle, { fontSize: 15.5 }]}>FarmsKing Store</Text>
+                    <Text style={[styles.heroSubtitle, { fontSize: 10, marginTop: 0 }]}>
+                      {user?.name || 'Farmer'}
+                    </Text>
+                  </View>
                   <TouchableOpacity
-                    style={styles.cartIconBtn}
+                    style={[styles.cartIconBtn, itemCount > 0 && { backgroundColor: '#16a34a', borderColor: '#22c55e' }]}
                     activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      setActiveSubTab('CHECKOUT');
-                    }}
+                    onPress={() => { tap(); setActiveSubTab('CHECKOUT'); }}
                   >
-                    <Ionicons name="bag-handle" size={21} color="#ffffff" />
+                    <Ionicons name="bag-handle" size={19} color="#ffffff" />
                     {itemCount > 0 && (
                       <View style={styles.cartBadge}>
                         <Text style={styles.cartBadgeText}>{itemCount}</Text>
@@ -2296,106 +2286,136 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     )}
                   </TouchableOpacity>
                 </View>
-              </View>
 
-              {/* Quick Search Input Box */}
-              <View style={styles.searchBarBox}>
-                <Ionicons name="search" size={18} color="#15803d" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search: Seeds, Fertilizers, Insecticides, Spray Pumps..."
-                  placeholderTextColor="#94a3b8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {searchQuery ? (
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <Ionicons name="close-circle" size={16} color="#64748b" />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-            </View>
+                {/* Row 2: Search */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={[styles.searchBarBox, { flex: 1, height: 40, borderColor: 'rgba(74,222,128,0.35)', borderWidth: 1.5, backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                    <Ionicons name="search" size={16} color="#16a34a" />
+                    <TextInput
+                      style={[styles.searchInput, { fontSize: 12.5, color: '#ffffff' }]}
+                      placeholder="Search products, seeds, fertilizers..."
+                      placeholderTextColor="#64748b"
+                      value={searchQuery}
+                      onChangeText={setSearchQuery}
+                    />
+                    {searchQuery ? (
+                      <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={{ backgroundColor: 'rgba(34,197,94,0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(74,222,128,0.25)' }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#4ade80' }}>Search</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
 
-          </LinearGradient>
+              </View>
+            </LinearGradient>
           )}
 
-          {/* Sub Nav Bar */}
-          <View style={styles.subTabBar}>
+          {/* Sub Nav Bar — Premium Glassmorphic */}
+          <View style={[styles.subTabBar, { backgroundColor: 'rgba(9,14,23,0.98)', borderBottomColor: 'rgba(34,197,94,0.2)' }]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', minWidth: '100%', maxWidth: 1200, alignSelf: 'center' }}>
               <TouchableOpacity
                 style={[styles.subTabItem, activeSubTab === 'CATALOG' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('CATALOG');
-                }}
+                onPress={() => { tap(); setActiveSubTab('CATALOG'); }}
               >
-                <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>Products</Text>
+                <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#4ade80' : '#64748b'} />
+                <Text numberOfLines={1} style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>Products</Text>
+                <View style={[{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, backgroundColor: activeSubTab === 'CATALOG' ? 'rgba(34,197,94,0.2)' : 'rgba(100,116,139,0.15)', borderWidth: 1, borderColor: activeSubTab === 'CATALOG' ? 'rgba(74,222,128,0.4)' : 'rgba(100,116,139,0.2)' }]}>
+                  <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: activeSubTab === 'CATALOG' ? '#4ade80' : '#64748b' }}>{filteredProducts.length}</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.subTabItem, activeSubTab === 'CHECKOUT' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('CHECKOUT');
-                }}
+                onPress={() => { tap(); setActiveSubTab('CHECKOUT'); }}
               >
-                <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>Cart ({itemCount})</Text>
+                <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#4ade80' : '#64748b'} />
+                <Text numberOfLines={1} style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>Cart</Text>
+                {itemCount > 0 && (
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, backgroundColor: '#16a34a' }}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>{itemCount}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.subTabItem, activeSubTab === 'ORDERS' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('ORDERS');
-                }}
+                onPress={() => { tap(); setActiveSubTab('ORDERS'); }}
               >
-                <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#15803d' : '#64748b'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>My Orders</Text>
+                <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#4ade80' : '#64748b'} />
+                <Text numberOfLines={1} style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>My Orders</Text>
+                {(myOrders?.length ?? 0) > 0 && (
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, backgroundColor: activeSubTab === 'ORDERS' ? 'rgba(34,197,94,0.2)' : 'rgba(100,116,139,0.15)', borderWidth: 1, borderColor: activeSubTab === 'ORDERS' ? 'rgba(74,222,128,0.4)' : 'rgba(100,116,139,0.2)' }}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: activeSubTab === 'ORDERS' ? '#4ade80' : '#64748b' }}>{myOrders?.length}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
-
-
             </ScrollView>
           </View>
 
           {activeSubTab === 'CATALOG' ? (
-            <View style={{ flex: 1 }}>
-              {/* Category Filter Chips Bar */}
-              <View style={{ backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+            <View style={{ flex: 1, backgroundColor: '#090e17' }}>
+              {/* Category Filter Chips Bar — Premium Dark */}
+              <View style={{ width: '100%', backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: 'rgba(34,197,94,0.15)' }}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  style={styles.categoryFilterRow}
-                  contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', maxWidth: 1200, alignSelf: 'center' }}
+                  style={[styles.categoryFilterRow, { height: 50, minHeight: 50 }]}
+                  contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingVertical: 8, alignItems: 'center', maxWidth: 1200, width: '100%', alignSelf: 'center' }}
                 >
                 {categoriesList.map((cat) => {
                   const isHiddenCat = cat === '🔴 Hidden / Off Products';
+                  const isDeals = cat.includes('Deals') || cat.includes('Coupon') || cat.includes('Plan');
                   const isActive = activeCategory === cat;
+                  const cleanLabel = cat.replace(/^[🔥🔴]\s*/, '');
+                  // icon map
+                  const iconMap: Record<string, { name: string; color: string }> = {
+                    'All': { name: 'apps', color: '#4ade80' },
+                    'Seeds': { name: 'leaf', color: '#86efac' },
+                    'Fertilizers': { name: 'flask', color: '#67e8f9' },
+                    'Crop Protection': { name: 'shield-half', color: '#fca5a5' },
+                    'Live Plants & Nursery': { name: 'flower', color: '#86efac' },
+                    'Bio & Organics': { name: 'earth', color: '#6ee7b7' },
+                    'Farmer Made Foods': { name: 'nutrition', color: '#fcd34d' },
+                  };
+                  const icon = iconMap[cat] || { name: isHiddenCat ? 'eye-off' : isDeals ? 'ticket' : 'grid', color: isHiddenCat ? '#fca5a5' : '#94a3b8' };
                   return (
                     <TouchableOpacity
                       key={cat}
                       style={[
-                        styles.filterChip,
-                        isHiddenCat && { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
-                        isActive && {
-                          backgroundColor: isHiddenCat ? '#dc2626' : '#15803d',
-                          borderColor: isHiddenCat ? '#b91c1c' : '#166534',
+                        {
+                          flexDirection: 'row', alignItems: 'center', gap: 5,
+                          paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, minHeight: 34,
+                          borderWidth: 1.5,
                         },
+                        isActive
+                          ? isHiddenCat
+                            ? { backgroundColor: '#dc2626', borderColor: '#b91c1c' }
+                            : isDeals
+                            ? { backgroundColor: '#d97706', borderColor: '#b45309' }
+                            : { backgroundColor: '#15803d', borderColor: '#22c55e' }
+                          : isHiddenCat
+                          ? { backgroundColor: 'rgba(220,38,38,0.12)', borderColor: 'rgba(220,38,38,0.3)' }
+                          : isDeals
+                          ? { backgroundColor: 'rgba(217,119,6,0.12)', borderColor: 'rgba(217,119,6,0.3)' }
+                          : { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' },
                       ]}
-                      onPress={() => {
-                        tap();
-                        setActiveCategory(cat);
-                      }}
+                      onPress={() => { tap(); setActiveCategory(cat); }}
                     >
-                      <Text
-                        style={[
-                          styles.filterChipText,
-                          isHiddenCat && { color: '#991b1b', fontFamily: FONT.extraBold },
-                          isActive && { color: '#ffffff' },
-                        ]}
-                      >
-                        {cat}
+                      <Ionicons
+                        name={icon.name as any}
+                        size={13}
+                        color={isActive ? '#ffffff' : isHiddenCat ? '#fca5a5' : isDeals ? '#fcd34d' : icon.color}
+                      />
+                      <Text style={{
+                        fontSize: 11.5, fontFamily: isActive ? FONT.bold : FONT.semiBold,
+                        color: isActive ? '#ffffff' : isHiddenCat ? '#fca5a5' : isDeals ? '#fcd34d' : '#e2e8f0',
+                        includeFontPadding: false, lineHeight: 16,
+                      }}>
+                        {cleanLabel}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -2405,84 +2425,72 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
               {/* Admin Quick Alert Banner for Hidden / Turned Off Products */}
               {isAdminOrSuperAdmin && inactiveProductCount > 0 && (
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#fef2f2',
-                    borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : '#fca5a5',
-                    borderWidth: 1,
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    marginHorizontal: 12,
-                    marginTop: 8,
-                  }}
-                  onPress={() => {
-                    tap();
-                    setActiveCategory(activeCategory === '🔴 Hidden / Off Products' ? 'All' : '🔴 Hidden / Off Products');
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="eye-off" size={16} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626'} />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#991b1b' }}>
-                      {inactiveProductCount} Product(s) Hidden / Turned OFF
-                    </Text>
-                  </View>
-                  <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
-                      {activeCategory === '🔴 Hidden / Off Products' ? 'Showing Hidden (Click for All)' : '🔴 Show Hidden Products'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                <View style={{ width: '100%', backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: 'rgba(220,38,38,0.2)' }}>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                      backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : 'rgba(220,38,38,0.12)',
+                      borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : 'rgba(220,38,38,0.35)',
+                      borderWidth: 1, borderRadius: 8,
+                      paddingHorizontal: 12, paddingVertical: 8,
+                      marginHorizontal: 16, marginVertical: 8,
+                      maxWidth: 1200, alignSelf: 'center',
+                      width: 'calc(100% - 32px)' as any,
+                    }}
+                    onPress={() => { tap(); setActiveCategory(activeCategory === '🔴 Hidden / Off Products' ? 'All' : '🔴 Hidden / Off Products'); }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="eye-off" size={15} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#fca5a5'} />
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#fca5a5' }}>
+                        {inactiveProductCount} Product(s) Hidden / Turned OFF
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? 'rgba(255,255,255,0.2)' : '#dc2626', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                        {activeCategory === '🔴 Hidden / Off Products' ? 'Show All Products' : '🔴 Show Hidden'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               )}
 
-              {/* Layout View Mode Bar (Grid vs List Toggle) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 6, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#cbd5e1' }}>
-                  {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden / Off Products' : '📦 Available Products'} ({filteredProducts.length})
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'GRID' ? '#15803d' : '#f1f5f9',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'GRID' ? '#166534' : '#cbd5e1',
-                    }}
-                    onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
-                  >
-                    <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b' }}>
-                      2-Col Grid
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'COMPACT_LIST' ? '#15803d' : '#f1f5f9',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'COMPACT_LIST' ? '#166534' : '#cbd5e1',
-                    }}
-                    onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
-                  >
-                    <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b' }}>
-                      Compact List
-                    </Text>
-                  </TouchableOpacity>
+              {/* Layout Toolbar — Premium KPI Bar */}
+              <View style={{ width: '100%', backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: 'rgba(34,197,94,0.15)' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
+                  {/* Left KPI */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? 'rgba(220,38,38,0.15)' : 'rgba(34,197,94,0.15)', borderWidth: 1.5, borderColor: activeCategory === '🔴 Hidden / Off Products' ? 'rgba(220,38,38,0.4)' : 'rgba(74,222,128,0.35)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name={activeCategory === '🔴 Hidden / Off Products' ? 'eye-off' : 'cube'} size={15} color={activeCategory === '🔴 Hidden / Off Products' ? '#fca5a5' : '#4ade80'} />
+                    </View>
+                    <View>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.1 }}>
+                        {activeCategory === '🔴 Hidden / Off Products' ? 'Hidden Products' : 'Available Products'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#4ade80' }} />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#fca5a5' : '#4ade80' }}>
+                          {filteredProducts.length} {filteredProducts.length === 1 ? 'Item' : 'Items'} Verified
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  {/* Right: Segmented Grid/List Toggle */}
+                  <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', padding: 3, gap: 2 }}>
+                    <TouchableOpacity
+                      style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }, storeLayoutMode === 'GRID' && { backgroundColor: '#15803d' }]}
+                      onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
+                    >
+                      <Ionicons name="grid" size={12} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#94a3b8'} />
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'GRID' ? '#ffffff' : '#94a3b8' }}>Grid</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }, storeLayoutMode === 'COMPACT_LIST' && { backgroundColor: '#15803d' }]}
+                      onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
+                    >
+                      <Ionicons name="list" size={12} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#94a3b8'} />
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#94a3b8' }}>List</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
@@ -2491,10 +2499,15 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 showsVerticalScrollIndicator={false}
               >
                 {filteredProducts.length === 0 ? (
-                  <View style={styles.emptyCenter}>
-                    <Ionicons name="storefront-outline" size={44} color="#cbd5e1" />
-                    <Text style={styles.emptyText}>
-                      {activeCategory === '🔴 Hidden / Off Products' ? 'No hidden products found.' : 'No products available right now.'}
+                  <View style={[styles.emptyCenter, { backgroundColor: '#090e17' }]}>
+                    <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 2, borderColor: 'rgba(74,222,128,0.25)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Ionicons name="storefront-outline" size={34} color="#4ade80" />
+                    </View>
+                    <Text style={[styles.emptyText, { color: '#e2e8f0', fontFamily: FONT.bold, fontSize: 14 }]}>
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'No hidden products found' : 'No products available'}
+                    </Text>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'All products are currently active.' : 'Products will appear here once added.'}
                     </Text>
                   </View>
                 ) : (
@@ -2513,7 +2526,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         addItem({
                           productId: product.id,
                           name: product.name,
-                          price: Number(product.price),
+                          price: Number(product?.price ?? 0),
                           unit: product.unit,
                           imageUrl: product.imageUrl,
                         })
@@ -2526,53 +2539,74 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
           ) : activeSubTab === 'CHECKOUT' ? (
             /* 🛒 COMPLETE CUSTOMER DASHBOARD CART SYSTEM */
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
-                <Text style={styles.tableHeaderTitle}>🛒 My Shopping Cart Items ({items.length})</Text>
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 40, backgroundColor: '#090e17' }} showsVerticalScrollIndicator={false}>
+              {/* Cart Header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(74,222,128,0.2)' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(34,197,94,0.15)', borderWidth: 1.5, borderColor: 'rgba(74,222,128,0.35)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="bag-handle" size={16} color="#4ade80" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>Shopping Cart</Text>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>{items.length} {items.length === 1 ? 'item' : 'items'} added</Text>
+                  </View>
+                </View>
                 {items.length > 0 && (
-                  <TouchableOpacity onPress={clearCart} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="trash-outline" size={14} color="#dc2626" />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#dc2626' }}>Clear Cart</Text>
+                  <TouchableOpacity onPress={clearCart} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(220,38,38,0.1)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(220,38,38,0.25)' }}>
+                    <Ionicons name="trash-outline" size={13} color="#fca5a5" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#fca5a5' }}>Clear Cart</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               {items.length === 0 ? (
-                <View style={styles.emptyCenter}>
-                  <Ionicons name="cart-outline" size={48} color="#cbd5e1" />
-                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#cbd5e1' }]}>Your shopping cart is empty</Text>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', marginTop: 2 }}>
-                    Browse our product catalog to add genuine seeds, fertilizers, and farm equipment.
+                <View style={[styles.emptyCenter, { paddingVertical: 60 }]}>
+                  <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 2, borderColor: 'rgba(74,222,128,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="cart-outline" size={34} color="#4ade80" />
+                  </View>
+                  <Text style={[styles.emptyText, { fontSize: 15, fontFamily: FONT.bold, color: '#e2e8f0' }]}>Your cart is empty</Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', maxWidth: 260 }}>
+                    Browse our catalog to add genuine seeds, fertilizers, and farm equipment.
                   </Text>
                   <TouchableOpacity
-                    style={{ marginTop: 12, backgroundColor: '#15803d', paddingHorizontal: 16, paddingVertical: 8, borderRadius: RADIUS.md }}
+                    style={{ marginTop: 14, backgroundColor: '#15803d', paddingHorizontal: 20, paddingVertical: 10, borderRadius: RADIUS.pill, flexDirection: 'row', alignItems: 'center', gap: 6 }}
                     onPress={() => { tap(); setActiveSubTab('CATALOG'); }}
                   >
-                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12.5 }}>🌾 Browse Products</Text>
+                    <Ionicons name="storefront-outline" size={15} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Browse Products</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
                 items.map((item) => (
-                  <View key={item.productId} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#334155' }]}>
-                    <View style={{ width: 44, height: 44, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
-                      <Ionicons name="cube-outline" size={22} color="#15803d" />
+                  <View key={item.productId} style={[{ backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#334155', borderLeftWidth: 3, borderLeftColor: '#22c55e', flexDirection: 'row', alignItems: 'center', gap: 10 }, premiumShadow('#15803d', 'sm')]}>
+                    {/* Product Icon */}
+                    <View style={{ width: 46, height: 46, borderRadius: RADIUS.md, backgroundColor: 'rgba(34,197,94,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74,222,128,0.25)' }}>
+                      <Ionicons name="leaf-outline" size={22} color="#4ade80" />
                     </View>
-                    <View style={{ flex: 1, paddingHorizontal: 6 }}>
-                      <Text style={[styles.mgmtProductName, { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }]}>{item.name}</Text>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>{item.unit}</Text>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 2 }}>₹{item.price.toLocaleString('en-IN')}</Text>
+                    {/* Product Info */}
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>{item.name}</Text>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>{item.unit}</Text>
+                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#4ade80' }}>₹{item.price.toLocaleString('en-IN')}</Text>
                     </View>
-                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                      <TouchableOpacity onPress={() => removeItem(item.productId)} style={{ padding: 2 }}>
+                    {/* Controls */}
+                    <View style={{ alignItems: 'flex-end', gap: 8 }}>
+                      <TouchableOpacity onPress={() => removeItem(item.productId)} style={{ padding: 3 }}>
                         <Ionicons name="trash-outline" size={15} color="#dc2626" />
                       </TouchableOpacity>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#334155', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 4 }}>
-                        <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity - 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="remove" size={14} color="#334155" />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(74,222,128,0.2)', overflow: 'hidden' }}>
+                        <TouchableOpacity
+                          onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+                          style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: item.quantity <= 1 ? 'rgba(220,38,38,0.15)' : 'rgba(255,255,255,0.05)' }}
+                        >
+                          <Ionicons name="remove" size={14} color={item.quantity <= 1 ? '#fca5a5' : '#94a3b8'} />
                         </TouchableOpacity>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff', minWidth: 16, textAlign: 'center' }}>{item.quantity}</Text>
-                        <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity + 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="add" size={14} color="#334155" />
+                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff', minWidth: 24, textAlign: 'center' }}>{item.quantity}</Text>
+                        <TouchableOpacity
+                          onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+                          style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(34,197,94,0.15)' }}
+                        >
+                          <Ionicons name="add" size={14} color="#4ade80" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -2913,8 +2947,14 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     )}
 
                     {/* Total Amount Summary Bar */}
-                    <View style={{ backgroundColor: '#1e293b', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#ffffff' }}>Total Amount Payable:</Text>
+                    {useWalletBalance && walletDeduction > 0 && (
+                      <View style={{ backgroundColor: '#f5f3ff', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#ddd6fe', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={{ fontFamily: FONT.bold, fontSize: 12.5, color: '#6d28d9' }}>💜 Wallet Balance Applied:</Text>
+                        <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#6d28d9' }}>-₹{walletDeduction.toLocaleString('en-IN')}</Text>
+                      </View>
+                    )}
+                    <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#0f172a' }}>Total Amount Payable:</Text>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
                         ₹{finalPayableAmount.toLocaleString('en-IN')}
                       </Text>
@@ -2950,7 +2990,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             return;
                           }
                           setCheckoutError(null);
-                          if (paymentMethod === 'DIRECT_QR') {
+                          if (finalPayableAmount === 0) {
+                            handlePlaceOrderDirect();
+                          } else if (paymentMethod === 'DIRECT_QR') {
                             setIsQrPaymentModalOpen(true);
                           } else {
                             handlePlaceOrderDirect();
@@ -2958,7 +3000,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         }}
                       >
                         <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold }]}>
-                          {paymentMethod === 'DIRECT_QR'
+                          {finalPayableAmount === 0
+                            ? '🎉 Confirm Order with Wallet (₹0 Payable)'
+                            : paymentMethod === 'DIRECT_QR'
                             ? `📱 Scan QR & Confirm (₹${finalPayableAmount.toLocaleString('en-IN')})`
                             : paymentMethod === 'ONLINE'
                             ? `💳 Pay Online (₹${finalPayableAmount.toLocaleString('en-IN')})`
@@ -2971,26 +3015,37 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               )}
             </ScrollView>
           ) : (
-            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 140, backgroundColor: '#090e17' }} showsVerticalScrollIndicator={false}>
               {/* 📦 MY ORDERS SUB-TAB UI */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
-                <Text style={styles.tableHeaderTitle}>📦 My Customer Orders ({myOrders?.length ?? 0})</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(74,222,128,0.2)' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(34,197,94,0.15)', borderWidth: 1.5, borderColor: 'rgba(74,222,128,0.35)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="receipt" size={15} color="#4ade80" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>My Orders</Text>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>{myOrders?.length ?? 0} order{(myOrders?.length ?? 0) !== 1 ? 's' : ''} placed</Text>
+                  </View>
+                </View>
               </View>
 
               {isLoadingMyOrders ? (
-                <ActivityIndicator color="#15803d" style={{ marginTop: 20 }} />
+                <ActivityIndicator color="#4ade80" style={{ marginTop: 30 }} />
               ) : !myOrders || myOrders.length === 0 ? (
-                <View style={styles.emptyCenter}>
-                  <Ionicons name="receipt-outline" size={48} color="#cbd5e1" />
-                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#cbd5e1' }]}>No orders placed yet</Text>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', marginTop: 2 }}>
-                    Your placed seed and fertilizer order history will appear here.
+                <View style={[styles.emptyCenter, { paddingVertical: 60 }]}>
+                  <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 2, borderColor: 'rgba(74,222,128,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="receipt-outline" size={34} color="#4ade80" />
+                  </View>
+                  <Text style={[styles.emptyText, { fontSize: 15, fontFamily: FONT.bold, color: '#e2e8f0' }]}>No orders placed yet</Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', maxWidth: 260 }}>
+                    Your seed and fertilizer order history will appear here.
                   </Text>
                   <TouchableOpacity
-                    style={{ marginTop: 12, backgroundColor: '#15803d', paddingHorizontal: 16, paddingVertical: 8, borderRadius: RADIUS.md }}
+                    style={{ marginTop: 14, backgroundColor: '#15803d', paddingHorizontal: 20, paddingVertical: 10, borderRadius: RADIUS.pill, flexDirection: 'row', alignItems: 'center', gap: 6 }}
                     onPress={() => { tap(); setActiveSubTab('CATALOG'); }}
                   >
-                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12.5 }}>🌾 Start Shopping</Text>
+                    <Ionicons name="storefront-outline" size={15} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Start Shopping</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -2999,52 +3054,65 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   const canCancel = order.status === 'PLACED';
                   const itemsSummary = order.items.map((i) => `${i.productName} x${i.quantity}`).join(', ');
 
+                  // Premium status colors for dark mode
+                  const statusColorMap: Record<string, { bg: string; color: string; border: string }> = {
+                    PLACED:     { bg: 'rgba(59,130,246,0.15)',  color: '#93c5fd', border: 'rgba(59,130,246,0.3)' },
+                    CONFIRMED:  { bg: 'rgba(34,197,94,0.15)',   color: '#86efac', border: 'rgba(34,197,94,0.3)' },
+                    DISPATCHED: { bg: 'rgba(245,158,11,0.15)',  color: '#fcd34d', border: 'rgba(245,158,11,0.3)' },
+                    DELIVERED:  { bg: 'rgba(16,185,129,0.15)',  color: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
+                    CANCELLED:  { bg: 'rgba(220,38,38,0.15)',   color: '#fca5a5', border: 'rgba(220,38,38,0.3)' },
+                  };
+                  const sc = statusColorMap[order.status] || { bg: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: 'rgba(100,116,139,0.3)' };
+
                   return (
-                    <View key={order.id} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#334155', flexDirection: 'column', gap: 10 }]}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
+                    <View key={order.id} style={[{ backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#334155', borderLeftWidth: 3, borderLeftColor: sc.color, gap: 10 }, premiumShadow('#0f172a', 'sm')]}>
+                      {/* Order Header */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <View style={{ width: 34, height: 34, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
-                            <Ionicons name="receipt" size={17} color="#15803d" />
+                          <View style={{ width: 36, height: 36, borderRadius: RADIUS.md, backgroundColor: 'rgba(34,197,94,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(74,222,128,0.2)' }}>
+                            <Ionicons name="receipt" size={17} color="#4ade80" />
                           </View>
                           <View>
                             <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }}>{order.orderNumber}</Text>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
-                              {new Date((order as any).createdAt || (order as any).date || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                              {new Date((order as any).createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </Text>
                           </View>
                         </View>
-                        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, backgroundColor: statusMeta.bg }}>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: statusMeta.color }}>{statusMeta.label}</Text>
+                        <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, backgroundColor: sc.bg, borderWidth: 1, borderColor: sc.border }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: sc.color }}>{statusMeta.label}</Text>
                         </View>
                       </View>
 
-                      <View style={{ width: '100%', gap: 4 }}>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>Items: {itemsSummary}</Text>
-                        {renderDeliveryAddressCard(order)}
-                      </View>
+                      {/* Items Summary */}
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8' }} numberOfLines={2}>{itemsSummary}</Text>
+                      {renderDeliveryAddressCard(order)}
 
+                      {/* Courier Info */}
                       {order.status === 'DISPATCHED' && order.courierName ? (
-                        <View style={{ backgroundColor: '#eff6ff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>
-                            🚚 {order.courierName}{order.trackingId ? ` · Tracking ID: ${order.trackingId}` : ''}
+                        <View style={{ backgroundColor: 'rgba(59,130,246,0.12)', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: 'rgba(59,130,246,0.25)', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="cube-outline" size={14} color="#93c5fd" />
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#93c5fd' }}>
+                            {order.courierName}{order.trackingId ? ` · Track: ${order.trackingId}` : ''}
                           </Text>
                         </View>
                       ) : null}
 
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>Payment Mode:</Text>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>{order.paymentMode || 'COD'}</Text>
+                      {/* Footer: Payment + Total + Cancel */}
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                          <Ionicons name="wallet-outline" size={13} color="#64748b" />
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>{order.paymentMode || 'COD'}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#15803d' }}>₹{Number(order.totalAmount).toLocaleString('en-IN')}</Text>
+                          <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#4ade80' }}>₹{Number(order.totalAmount).toLocaleString('en-IN')}</Text>
                           {canCancel && (
                             <TouchableOpacity
-                              style={{ backgroundColor: '#fee2e2', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md }}
+                              style={{ backgroundColor: 'rgba(220,38,38,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(220,38,38,0.3)' }}
                               disabled={cancelOrder.isPending}
                               onPress={() => { tap(); cancelOrder.mutate(order.id); }}
                             >
-                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626' }}>Cancel Order</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#fca5a5' }}>Cancel</Text>
                             </TouchableOpacity>
                           )}
                         </View>
@@ -4972,10 +5040,10 @@ function FarmsKingProductDetailModal({
   onAddToCart: () => void;
   onBuyNow: () => void;
 }) {
-  if (!product) return null;
 
   const images = useMemo(() => {
     const list: string[] = [];
+    if (!product) return [];
     const pushIfValid = (urlStr?: string | null) => {
       if (!urlStr || typeof urlStr !== 'string') return;
       const parts = parseImageUrls(urlStr);
@@ -4988,7 +5056,7 @@ function FarmsKingProductDetailModal({
     };
 
     // 1. Primary imageUrl
-    pushIfValid(product.imageUrl);
+    pushIfValid(product?.imageUrl);
 
     // 2. Direct array or string fields
     const candidateArrays = [
@@ -5027,12 +5095,12 @@ function FarmsKingProductDetailModal({
     });
 
     // 3. Extract gallery URLs embedded in product.description if present
-    if (product.description) {
-      const galleryMatch = product.description.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
+    if (product?.description) {
+      const galleryMatch = product?.description?.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
       if (galleryMatch && galleryMatch[1]) {
         pushIfValid(galleryMatch[1]);
       }
-      const httpMatches = product.description.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
+      const httpMatches = product?.description?.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
       if (httpMatches) {
         httpMatches.forEach((m) => pushIfValid(m));
       }
@@ -5043,7 +5111,7 @@ function FarmsKingProductDetailModal({
 
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
   const [imgErrorMap, setImgErrorMap] = useState<Record<number, boolean>>({});
-  const [selectedPackSize, setSelectedPackSize] = useState((product as any).packSize || product.unit || '1 Pack');
+  const [selectedPackSize, setSelectedPackSize] = useState((product as any)?.packSize || (product as any)?.unit || '1 Pack');
 
   const mainScrollRef = useRef<ScrollView>(null);
   const [containerWidth, setContainerWidth] = useState(320);
@@ -5074,27 +5142,29 @@ function FarmsKingProductDetailModal({
     }
   }, [product?.id]);
 
-  const desc = product.description || '';
+  const desc = product?.description || '';
 
   const packSizesMatch = desc.match(/PackSizes:\s*([^|]+)/i);
   const PACK_SIZES = useMemo(() => {
+    if (!product) return [];
     if (packSizesMatch && packSizesMatch[1]) {
       const extracted = packSizesMatch[1].split(',').map((s) => s.trim()).filter(Boolean);
       if (extracted.length > 0) return extracted;
     }
-    if ((product as any).packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
+    if ((product as any)?.packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
       return (product as any).packSizes;
     }
-    const unit = product.unit || 'Pack';
+    const unit = product?.unit || 'Pack';
     return [`1 ${unit}`, `2 ${unit}s`, `5 ${unit}s`, `10 ${unit}s`];
   }, [product, desc]);
 
-  const basePrice = Number(product.price);
-  const baseMrp = (product as any).mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
+  const basePrice = Number(product?.price ?? 0);
+  const baseMrp = (product as any)?.mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
 
   const varRatesMatch = desc.match(/VariantRates:\s*([^|]+)/i);
   const variantPrices = useMemo(() => {
     const map: Record<string, { price: number; mrp: number; stock: number; sku: string }> = {};
+    if (!product) return map;
     if (varRatesMatch && varRatesMatch[1]) {
       const parts = varRatesMatch[1].split('|').map((s) => s.trim());
       parts.forEach((pt) => {
@@ -5110,7 +5180,7 @@ function FarmsKingProductDetailModal({
             map[packName] = {
               price: Number(vSelling),
               mrp: Number(vMrp || Math.round(Number(vSelling) * 1.25)),
-              stock: Number(vStock !== undefined ? vStock : product.stockQty),
+              stock: Number(vStock !== undefined ? vStock : (product?.stockQty ?? 0)),
               sku: vSku || '',
             };
           }
@@ -5122,7 +5192,7 @@ function FarmsKingProductDetailModal({
       if (!map[sz]) {
         let p = basePrice;
         let m = baseMrp;
-        if ((product as any).variants && Array.isArray((product as any).variants)) {
+        if ((product as any)?.variants && Array.isArray((product as any).variants)) {
           const found = (product as any).variants.find((v: any) => v.packSize === sz || v.size === sz || v.name === sz);
           if (found) {
             p = Number(found.price || basePrice);
@@ -5137,7 +5207,7 @@ function FarmsKingProductDetailModal({
           p = Math.round(basePrice * mult);
           m = Math.round(baseMrp * mult);
         }
-        map[sz] = { price: p, mrp: m, stock: product.stockQty, sku: '' };
+        map[sz] = { price: p, mrp: m, stock: Number(product?.stockQty ?? 0), sku: '' };
       }
     });
     return map;
@@ -5159,6 +5229,8 @@ function FarmsKingProductDetailModal({
       }
     }
   }, [product?.id, PACK_SIZES]);
+
+  if (!product) return null;
 
   const isFarmerFood = (product as any).isFarmerFood || product.category === 'Natural Farmer Foods' || product.category === 'Farmer Made Foods' || desc.includes('[FARMER_MADE]');
 
@@ -5201,7 +5273,7 @@ function FarmsKingProductDetailModal({
   const moqMatch = desc.match(/MOQ:\s*([^|]+)/i);
   const moqVal = moqMatch ? moqMatch[1].trim() : '1';
 
-  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product.stockQty, sku: mainSkuCode };
+  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product?.stockQty, sku: mainSkuCode };
   const sellingPrice = currentVariant.price;
   const mrpPrice = currentVariant.mrp;
   const variantStock = currentVariant.stock;
@@ -5393,7 +5465,7 @@ function FarmsKingProductDetailModal({
             </View>
 
             {/* 👨‍🌾 Farmer Direct Food Product Certification Banner */}
-            {((product.category === 'Natural Farmer Foods') || (product.description || '').includes('[FARMER_MADE]')) && (
+            {((product.category === 'Natural Farmer Foods') || (product?.description || '').includes('[FARMER_MADE]')) && (
               <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ fontSize: 18 }}>👨‍🌾</Text>
@@ -5609,14 +5681,14 @@ function ProductCard({
   isAdmin?: boolean;
   onToggleActive?: (product: Product) => void;
 }) {
-  const outOfStock = product.stockQty <= 0;
+  const outOfStock = product?.stockQty <= 0;
   const isHidden = !product.isActive;
 
-  const sellingPrice = Number(product.price);
+  const sellingPrice = Number(product?.price ?? 0);
   const mrpPrice = (product as any).mrp ? Number((product as any).mrp) : Math.round(sellingPrice * 1.25);
   const discountPercent = mrpPrice > sellingPrice ? Math.round(((mrpPrice - sellingPrice) / mrpPrice) * 100) : 20;
 
-  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product.description || '').includes('[FARMER_MADE]');
+  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product?.description || '').includes('[FARMER_MADE]');
   const isCouponProduct = product.category === 'Farmer Plan & Coupons' || (product.category || '').includes('Coupon') || (product.category || '').includes('Plan');
 
   if (layoutMode === 'COMPACT_LIST') {
@@ -5916,17 +5988,17 @@ const styles = StyleSheet.create({
   trustItemText: { fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' },
   trustDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
 
-  subTabBar: { backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  subTabBar: { backgroundColor: 'rgba(9,14,23,0.98)', borderBottomWidth: 1, borderBottomColor: 'rgba(34,197,94,0.2)' },
   subTabItem: { flexGrow: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  subTabItemActive: { borderBottomColor: '#15803d' },
+  subTabItemActive: { borderBottomColor: '#22c55e' },
   subTabText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  subTabTextActive: { color: '#15803d', fontFamily: FONT.bold },
-  categoryFilterRow: { backgroundColor: '#1e293b', flexGrow: 0, height: 50, minHeight: 50 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
+  subTabTextActive: { color: '#4ade80', fontFamily: FONT.bold },
+  categoryFilterRow: { backgroundColor: 'transparent', flexGrow: 0, height: 50, minHeight: 50 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
   filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
   grid: { padding: SPACING.md, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, columnGap: 10, paddingBottom: 170, maxWidth: 1200, width: '100%', alignSelf: 'center' },
-  emptyCenter: { width: '100%', alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
-  emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
+  emptyCenter: { width: '100%', alignItems: 'center', justifyContent: 'center', padding: 50, gap: 10 },
+  emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b' },
 
   card: { width: (Platform.OS === 'web' ? 'calc(50% - 6px)' : '48.5%') as any, maxWidth: 280, backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 8, gap: 4, overflow: 'hidden' },
   cardBadgeRow: { position: 'absolute', top: 6, left: 6, zIndex: 10 },

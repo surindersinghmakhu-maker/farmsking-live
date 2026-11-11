@@ -8,7 +8,7 @@ import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { PhonePeModule } from '../phonepe/phonepe.module';
 import { ShiprocketModule } from '../shiprocket/shiprocket.module';
 import { CashfreeModule } from '../cashfree/cashfree.module';
-import { OrdersController } from './orders.controller';
+import { OrdersController, OrdersPublicController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { BillingService } from './billing.service';
 
@@ -24,7 +24,7 @@ import { BillingService } from './billing.service';
     WhatsappBotModule,
     SmsModule,
   ],
-  controllers: [OrdersController],
+  controllers: [OrdersController, OrdersPublicController],
   providers: [OrdersService, BillingService],
   exports: [OrdersService, BillingService],
 })

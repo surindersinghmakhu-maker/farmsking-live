@@ -5,13 +5,14 @@ export declare class UploadsController {
     constructor(uploadsService: UploadsService);
     upload(user: AuthUser, file: any): Promise<{
         provider: string;
+        storageKey: string;
         id: string;
-        createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        createdAt: Date;
+        uploadedById: string;
     }>;
     uploadBase64(user: AuthUser, body: {
         dataUri: string;
@@ -19,12 +20,13 @@ export declare class UploadsController {
         folder?: string;
     }): Promise<{
         provider: string;
+        storageKey: string;
         id: string;
-        createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        createdAt: Date;
+        uploadedById: string;
     }>;
 }

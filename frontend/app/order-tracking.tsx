@@ -63,7 +63,7 @@ export default function OrderTrackingScreen() {
     setHasSearched(true);
 
     try {
-      const res = await apiClient.get(`/orders/${idToSearch}`);
+      const res = await apiClient.get(`/orders-public/track/${encodeURIComponent(idToSearch)}`);
       if (res?.data) {
         setOrder(res.data);
       } else {

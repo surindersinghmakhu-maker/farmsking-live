@@ -48,7 +48,15 @@ export function resolveMediaUrl(path?: string | null): string | undefined {
   let url = path.trim().replace(/[\r\n]/g, '');
 
   // Fix raw base64 strings starting with UklGR (webp), /9j/ (jpeg), or iVBORw0KGgo (png)
-  if (!url.startsWith('data:') && !url.startsWith('http:') && !url.startsWith('https:') && !url.startsWith('file:') && !url.startsWith('content:') && !url.startsWith('ph:')) {
+  if (
+    !url.startsWith('data:') &&
+    !url.startsWith('http:') &&
+    !url.startsWith('https:') &&
+    !url.startsWith('blob:') &&
+    !url.startsWith('file:') &&
+    !url.startsWith('content:') &&
+    !url.startsWith('ph:')
+  ) {
     if (url.startsWith('UklGR')) {
       url = `data:image/webp;base64,${url}`;
     } else if (url.startsWith('/9j/')) {

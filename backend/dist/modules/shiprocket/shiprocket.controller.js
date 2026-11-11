@@ -14,7 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShiprocketController = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
+const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const shiprocket_service_1 = require("./shiprocket.service");
 const shiprocket_dto_1 = require("./dto/shiprocket.dto");
 let ShiprocketController = class ShiprocketController {
@@ -30,13 +33,18 @@ let ShiprocketController = class ShiprocketController {
     assignAwb(dto) {
         return this.shiprocketService.assignAwb(dto);
     }
-    handleWebhook(body) {
+    handleWebhook(body, apiKey) {
+        const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET;
+        if (expectedSecret && apiKey !== expectedSecret) {
+            throw new common_1.UnauthorizedException('Invalid Shiprocket webhook signature.');
+        }
         return this.shiprocketService.handleWebhook(body);
     }
 };
 exports.ShiprocketController = ShiprocketController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
     (0, common_1.Post)('pickup-location/:storeId'),
     __param(0, (0, common_1.Param)('storeId')),
     __metadata("design:type", Function),
@@ -44,7 +52,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ShiprocketController.prototype, "addPickupLocation", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
     (0, common_1.Post)('orders'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -52,7 +61,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ShiprocketController.prototype, "createOrder", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
     (0, common_1.Post)('awb'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -62,8 +72,9 @@ __decorate([
 __decorate([
     (0, common_1.Post)('webhook'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Headers)('x-api-key')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ShiprocketController.prototype, "handleWebhook", null);
 exports.ShiprocketController = ShiprocketController = __decorate([

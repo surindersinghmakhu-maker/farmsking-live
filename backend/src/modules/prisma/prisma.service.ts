@@ -61,6 +61,28 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_cropId_idx" ON "media_store"("cropId");`);
           await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_provider_idx" ON "media_store"("provider");`);
 
+          // Auto-migration: Crop written feedback / remarks (max 150 chars, 7-day display window + permanent history)
+          await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "crop_remarks" (
+              "cropId" TEXT NOT NULL PRIMARY KEY,
+              "uploadedById" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
+              "remarksText" TEXT NOT NULL DEFAULT '',
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+          await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "crop_remarks_history" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "cropId" TEXT NOT NULL,
+              "uploadedById" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
+              "remarksText" TEXT NOT NULL DEFAULT '',
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "expiresAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days')
+            );
+          `);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "crop_remarks_history_cropId_idx" ON "crop_remarks_history"("cropId");`);
+
           // Auto-migration: Ensure all non-admin users who possess a King ID have the 'CUSTOMER' role in their roles array
           await this.$executeRawUnsafe(`
             UPDATE "users"

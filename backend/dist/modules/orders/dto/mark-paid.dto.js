@@ -28,7 +28,18 @@ class SubmitUtrDto {
 }
 exports.SubmitUtrDto = SubmitUtrDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SubmitUtrDto.prototype, "utrNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SubmitUtrDto.prototype, "utr", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], SubmitUtrDto.prototype, "note", void 0);
 //# sourceMappingURL=mark-paid.dto.js.map

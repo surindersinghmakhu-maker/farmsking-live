@@ -29,6 +29,8 @@ export declare class CreateSellerStoreDto {
     aadhaarFrontUrl?: string;
     aadhaarBackUrl?: string;
     tradeLicenseUrl?: string;
+    sellerPhotoUrl?: string;
+    logoDocUrl?: string;
 }
 export declare class UpdateSellerKycDto {
     storeName?: string;
@@ -60,6 +62,8 @@ export declare class UpdateSellerKycDto {
     aadhaarFrontUrl?: string;
     aadhaarBackUrl?: string;
     tradeLicenseUrl?: string;
+    sellerPhotoUrl?: string;
+    logoDocUrl?: string;
 }
 export declare class VerifySellerKycDto {
     status: SellerKycStatus;
@@ -72,4 +76,5 @@ export declare class UpdateSellerSettingsDto {
     rtoSharedVendorRatio?: number;
     catalogApprovalMode?: CatalogApprovalMode;
     isFssaiApproved?: boolean;
+    categoryCommissions?: Record<string, number>;
 }

@@ -264,31 +264,112 @@ let UploadsService = UploadsService_1 = class UploadsService {
         this.logger.log(`[Storage] Saved locally: ${fileUrl}`);
         return { fileUrl, provider: 'LOCAL' };
     }
+    inferExtension(filenameOrOriginal, mimetype) {
+        const rawExt = path.extname(filenameOrOriginal || '').toLowerCase();
+        const valid = [
+            '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg',
+            '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp',
+            '.mp3', '.m4a', '.wav', '.ogg', '.aac', '.opus',
+        ];
+        if (rawExt && valid.includes(rawExt))
+            return rawExt;
+        const mime = (mimetype || '').toLowerCase();
+        if (mime.includes('png'))
+            return '.png';
+        if (mime.includes('webp'))
+            return '.webp';
+        if (mime.includes('heic'))
+            return '.heic';
+        if (mime.includes('heif'))
+            return '.heif';
+        if (mime.includes('webm'))
+            return '.webm';
+        if (mime.includes('mpeg') || mime.includes('mp3'))
+            return '.mp3';
+        if (mime.includes('m4a') || mime.includes('audio/mp4'))
+            return '.m4a';
+        if (mime.includes('ogg') || mime.includes('opus'))
+            return '.ogg';
+        if (mime.includes('wav'))
+            return '.wav';
+        if (mime.includes('aac'))
+            return '.aac';
+        if (mime.includes('quicktime'))
+            return '.mov';
+        if (mime.includes('matroska'))
+            return '.mkv';
+        if (mime.includes('m4v'))
+            return '.m4v';
+        if (mime.includes('3gpp'))
+            return '.3gp';
+        if (mime.startsWith('audio/'))
+            return '.webm';
+        if (mime.startsWith('video/'))
+            return '.mp4';
+        return '.jpg';
+    }
     async create(user, file) {
         let buffer;
+        let tempFilePath;
         if (file.buffer) {
             buffer = file.buffer;
         }
         else if (file.path && fs.existsSync(file.path)) {
-            buffer = fs.readFileSync(file.path);
+            tempFilePath = path.resolve(file.path);
+            buffer = fs.readFileSync(tempFilePath);
         }
         else {
             const localPath = path.resolve(process.cwd(), 'uploads', file.filename || '');
             if (fs.existsSync(localPath)) {
+                tempFilePath = localPath;
                 buffer = fs.readFileSync(localPath);
             }
             else {
                 buffer = Buffer.from([]);
             }
         }
-        const ext = path.extname(file.originalname || file.filename || '').toLowerCase() || '.jpg';
+        if (!buffer.length) {
+            throw new common_1.BadRequestException('Uploaded file is empty.');
+        }
+        const ext = this.inferExtension(file.originalname || file.filename, file.mimetype);
         const cleanFilename = `${(0, crypto_1.randomUUID)()}${ext}`;
-        const { fileUrl, provider } = await this.uploadToActiveStorage(buffer, cleanFilename, file.mimetype || 'image/jpeg', 'crops');
+        const targetLocalPath = path.resolve(process.cwd(), 'uploads', 'crops', cleanFilename);
+        const resolvedMime = file.mimetype && file.mimetype !== 'application/octet-stream'
+            ? file.mimetype
+            : ext === '.mp3'
+                ? 'audio/mpeg'
+                : ext === '.m4a'
+                    ? 'audio/mp4'
+                    : ext === '.wav'
+                        ? 'audio/wav'
+                        : ext === '.ogg' || ext === '.opus'
+                            ? 'audio/ogg'
+                            : ext === '.aac'
+                                ? 'audio/aac'
+                                : ext === '.webm'
+                                    ? 'video/webm'
+                                    : ext === '.mov'
+                                        ? 'video/quicktime'
+                                        : ext === '.mp4' || ext === '.m4v'
+                                            ? 'video/mp4'
+                                            : ext === '.png'
+                                                ? 'image/png'
+                                                : ext === '.webp'
+                                                    ? 'image/webp'
+                                                    : 'image/jpeg';
+        const { fileUrl, provider } = await this.uploadToActiveStorage(buffer, cleanFilename, resolvedMime, 'crops');
+        if (tempFilePath && tempFilePath !== targetLocalPath) {
+            try {
+                fs.unlinkSync(tempFilePath);
+            }
+            catch {
+            }
+        }
         const record = await this.prisma.upload.create({
             data: {
                 uploadedById: user.id,
                 fileUrl,
-                mimeType: file.mimetype || 'image/jpeg',
+                mimeType: resolvedMime,
                 originalName: file.originalname || cleanFilename,
                 sizeBytes: file.size || buffer.length,
             },
@@ -296,33 +377,35 @@ let UploadsService = UploadsService_1 = class UploadsService {
         return {
             ...record,
             provider,
+            storageKey: `crops/${cleanFilename}`,
         };
     }
     async createFromBase64(user, dataUri, customFilename, folder = 'crops') {
-        const match = dataUri.match(/^data:([^;]+);base64,(.+)$/);
+        const trimmed = (dataUri || '').trim();
+        if (!trimmed || /^(blob:|https?:|file:|content:|ph:|\/uploads\/)/i.test(trimmed)) {
+            throw new common_1.BadRequestException('Invalid base64 data URI. Expected data:<mime>;base64,...');
+        }
+        const match = trimmed.match(/^data:([^;]+);base64,(.+)$/);
         let mimetype = 'image/jpeg';
-        let base64Content = dataUri;
+        let base64Content = trimmed;
         if (match) {
             mimetype = match[1];
             base64Content = match[2];
         }
-        else if (dataUri.startsWith('data:')) {
-            const commaIdx = dataUri.indexOf(',');
+        else if (trimmed.startsWith('data:')) {
+            const commaIdx = trimmed.indexOf(',');
             if (commaIdx !== -1) {
-                base64Content = dataUri.slice(commaIdx + 1);
+                base64Content = trimmed.slice(commaIdx + 1);
             }
         }
         const buffer = Buffer.from(base64Content, 'base64');
-        let ext = '.jpg';
-        if (mimetype.includes('png'))
-            ext = '.png';
-        else if (mimetype.includes('webp'))
-            ext = '.webp';
-        else if (mimetype.includes('mp4'))
-            ext = '.mp4';
-        else if (mimetype.includes('webm'))
-            ext = '.webm';
-        const filename = customFilename || `${(0, crypto_1.randomUUID)()}${ext}`;
+        if (!buffer.length) {
+            throw new common_1.BadRequestException('Decoded base64 file content is empty.');
+        }
+        const ext = this.inferExtension(customFilename, mimetype);
+        const filename = customFilename
+            ? `${path.basename(customFilename, path.extname(customFilename))}${ext}`
+            : `${(0, crypto_1.randomUUID)()}${ext}`;
         const { fileUrl, provider } = await this.uploadToActiveStorage(buffer, filename, mimetype, folder);
         const record = await this.prisma.upload.create({
             data: {
@@ -336,6 +419,7 @@ let UploadsService = UploadsService_1 = class UploadsService {
         return {
             ...record,
             provider,
+            storageKey: `${folder}/${filename}`,
         };
     }
 };

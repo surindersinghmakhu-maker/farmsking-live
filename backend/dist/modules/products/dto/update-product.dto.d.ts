@@ -7,4 +7,23 @@ export declare class UpdateProductDto {
     imageUrl?: string;
     stockQty?: number;
     isActive?: boolean;
+    categorySlug?: string;
+    sellingPrice?: number;
+    mrp?: number;
+    hsnCode?: string;
+    sku?: string;
+    gstPercentage?: number;
+    weightKg?: number;
+    deadWeightKg?: number;
+    lengthCm?: number;
+    widthCm?: number;
+    heightCm?: number;
+    isCodAllowed?: boolean;
+    isReturnable?: boolean;
+    returnWindowDays?: number;
+    isReplaceable?: boolean;
+    replacementWindowDays?: number;
+    returnPolicyNotes?: string;
+    bulkDiscountMinQty?: number;
+    bulkDiscountPercentage?: number;
 }

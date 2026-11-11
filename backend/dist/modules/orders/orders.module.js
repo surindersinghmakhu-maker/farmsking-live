@@ -36,7 +36,7 @@ exports.OrdersModule = OrdersModule = __decorate([
             whatsapp_module_1.WhatsappBotModule,
             sms_module_1.SmsModule,
         ],
-        controllers: [orders_controller_1.OrdersController],
+        controllers: [orders_controller_1.OrdersController, orders_controller_1.OrdersPublicController],
         providers: [orders_service_1.OrdersService, billing_service_1.BillingService],
         exports: [orders_service_1.OrdersService, billing_service_1.BillingService],
     })

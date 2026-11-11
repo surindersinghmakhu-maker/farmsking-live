@@ -67,6 +67,26 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
                     await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_cropId_idx" ON "media_store"("cropId");`);
                     await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_provider_idx" ON "media_store"("provider");`);
                     await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "crop_remarks" (
+              "cropId" TEXT NOT NULL PRIMARY KEY,
+              "uploadedById" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
+              "remarksText" TEXT NOT NULL DEFAULT '',
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+                    await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "crop_remarks_history" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "cropId" TEXT NOT NULL,
+              "uploadedById" TEXT REFERENCES "users"("id") ON DELETE SET NULL,
+              "remarksText" TEXT NOT NULL DEFAULT '',
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "expiresAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL '7 days')
+            );
+          `);
+                    await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "crop_remarks_history_cropId_idx" ON "crop_remarks_history"("cropId");`);
+                    await this.$executeRawUnsafe(`
             UPDATE "users"
             SET "roles" = array_append("roles", 'CUSTOMER'::"Role")
             WHERE "kingId" IS NOT NULL

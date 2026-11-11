@@ -27,7 +27,36 @@ export declare class MediaStoreService {
     constructor(prisma: PrismaService, uploadsService: UploadsService);
     uploadFile(user: AuthUser, file: any, cropId?: string, mediaType?: string): Promise<MediaStoreRecord>;
     uploadBase64(user: AuthUser, dataUri: string, cropId?: string, mediaType?: string, customFilename?: string): Promise<MediaStoreRecord>;
-    getMediaForCrop(cropId: string): Promise<MediaStoreRecord[]>;
+    getMediaForCrop(cropId: string, scope?: 'active' | 'all'): Promise<MediaStoreRecord[]>;
+    private ensureCropRemarksTable;
+    getCropRemark(cropId: string): Promise<{
+        cropId: string;
+        remarksText: string;
+        createdAt: Date | null;
+        expiresAt: Date | null;
+        isActiveDisplay: boolean;
+        history: Array<{
+            id: string;
+            remarksText: string;
+            createdAt: Date;
+            expiresAt: Date;
+            isActiveDisplay: boolean;
+        }>;
+    }>;
+    saveCropRemark(user: AuthUser, cropId: string, rawRemarksText: string): Promise<{
+        cropId: string;
+        remarksText: string;
+        createdAt: Date | null;
+        expiresAt: Date | null;
+        isActiveDisplay: boolean;
+        history: Array<{
+            id: string;
+            remarksText: string;
+            createdAt: Date;
+            expiresAt: Date;
+            isActiveDisplay: boolean;
+        }>;
+    }>;
     listAll(cropId?: string, mediaType?: string, provider?: string, limit?: number): Promise<MediaStoreRecord[]>;
     archiveCropMedia(cropId: string, retentionDays?: number): Promise<{
         updatedCount: number;

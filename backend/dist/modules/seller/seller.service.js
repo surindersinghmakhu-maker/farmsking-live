@@ -66,6 +66,10 @@ let SellerService = class SellerService {
                 aadhaarFrontUrl: dto.aadhaarFrontUrl,
                 aadhaarBackUrl: dto.aadhaarBackUrl,
                 tradeLicenseUrl: dto.tradeLicenseUrl,
+                additionalDoc1Title: dto.additionalDoc1Title || (dto.sellerPhotoUrl ? 'Seller Photo' : undefined),
+                additionalDoc1Url: dto.additionalDoc1Url || dto.sellerPhotoUrl,
+                additionalDoc2Title: dto.additionalDoc2Title || (dto.logoDocUrl ? 'Business Logo' : undefined),
+                additionalDoc2Url: dto.additionalDoc2Url || dto.logoDocUrl,
                 shiprocketPickupNickname: `FK_LOC_${user.id.substring(0, 8)}`,
                 kycStatus: client_1.SellerKycStatus.SUBMITTED,
             },
@@ -88,6 +92,14 @@ let SellerService = class SellerService {
         const store = await this.prisma.sellerStore.findUnique({
             where: { sellerId: user.id },
             include: {
+                payouts: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 100,
+                },
+                products: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 150,
+                },
                 _count: {
                     select: {
                         products: true,
@@ -100,7 +112,11 @@ let SellerService = class SellerService {
         if (!store) {
             throw new common_1.NotFoundException('Seller store not found. Please register first.');
         }
-        return store;
+        return {
+            ...store,
+            sellerPhotoUrl: store.additionalDoc1Url || null,
+            logoDocUrl: store.additionalDoc2Url || null,
+        };
     }
     async updateKyc(user, dto) {
         const store = await this.getMyStore(user);
@@ -109,10 +125,15 @@ let SellerService = class SellerService {
                 throw new common_1.BadRequestException('FSSAI License Number must be a valid 14-digit numeric code when listing food products.');
             }
         }
+        const { sellerPhotoUrl, logoDocUrl, ...schemaFields } = dto;
         return this.prisma.sellerStore.update({
             where: { id: store.id },
             data: {
-                ...dto,
+                ...schemaFields,
+                additionalDoc1Title: schemaFields.additionalDoc1Title || (sellerPhotoUrl ? 'Seller Photo' : undefined),
+                additionalDoc1Url: schemaFields.additionalDoc1Url || sellerPhotoUrl,
+                additionalDoc2Title: schemaFields.additionalDoc2Title || (logoDocUrl ? 'Business Logo' : undefined),
+                additionalDoc2Url: schemaFields.additionalDoc2Url || logoDocUrl,
                 fssaiExpiryDate: dto.fssaiExpiryDate ? new Date(dto.fssaiExpiryDate) : undefined,
                 kycStatus: client_1.SellerKycStatus.SUBMITTED,
                 rejectionReason: null,
@@ -174,18 +195,67 @@ let SellerService = class SellerService {
         });
         if (stores.length === 0)
             return [];
+        const storeIds = stores.map((s) => s.id);
+        const [payoutsGrouped, subOrdersGrouped] = await Promise.all([
+            this.prisma.sellerPayout.groupBy({
+                by: ['sellerStoreId', 'status'],
+                where: { sellerStoreId: { in: storeIds } },
+                _sum: { totalGrossAmount: true, totalCommissionAmount: true, totalTcsAmount: true, netPayoutAmount: true },
+            }),
+            this.prisma.subOrder.groupBy({
+                by: ['sellerStoreId', 'settlementStatus'],
+                where: { sellerStoreId: { in: storeIds }, orderStatus: { not: client_1.SubOrderStatus.CANCELLED } },
+                _sum: { subtotal: true, commissionAmount: true, vendorNetPayout: true },
+            }),
+        ]);
+        const metricsMap = new Map();
+        for (const sid of storeIds) {
+            metricsMap.set(sid, { grossSales: 0, commissionAmount: 0, tcsAmount: 0, settledBalance: 0, pendingBalance: 0, heldBalance: 0 });
+        }
+        for (const row of subOrdersGrouped) {
+            const m = metricsMap.get(row.sellerStoreId);
+            if (!m)
+                continue;
+            m.grossSales += Number(row._sum.subtotal || 0);
+            m.commissionAmount += Number(row._sum.commissionAmount || 0);
+            if (row.settlementStatus === client_1.SettlementStatus.HOLD) {
+                m.heldBalance += Number(row._sum.vendorNetPayout || 0);
+            }
+        }
+        for (const row of payoutsGrouped) {
+            const m = metricsMap.get(row.sellerStoreId);
+            if (!m)
+                continue;
+            m.tcsAmount += Number(row._sum.totalTcsAmount || 0);
+            if (row.status === client_1.SellerPayoutStatus.SETTLED) {
+                m.settledBalance += Number(row._sum.netPayoutAmount || 0);
+            }
+            else if (row.status === client_1.SellerPayoutStatus.PENDING || row.status === client_1.SellerPayoutStatus.PROCESSING) {
+                m.pendingBalance += Number(row._sum.netPayoutAmount || 0);
+            }
+        }
+        let commMap = new Map();
         try {
-            const ids = stores.map((s) => `'${s.id}'`).join(',');
-            const rawCommissions = await this.prisma.$queryRawUnsafe(`SELECT "id", "categoryCommissions" FROM "seller_stores" WHERE "id" IN (${ids})`);
-            const commMap = new Map(rawCommissions.map((r) => [r.id, r.categoryCommissions || {}]));
-            return stores.map((s) => ({
-                ...s,
-                categoryCommissions: commMap.get(s.id) || {},
-            }));
+            const rawCommissions = await this.prisma.$queryRaw(client_1.Prisma.sql `SELECT "id", "categoryCommissions" FROM "seller_stores" WHERE "id" IN (${client_1.Prisma.join(storeIds)})`);
+            commMap = new Map(rawCommissions.map((r) => [r.id, r.categoryCommissions || {}]));
         }
         catch {
-            return stores;
         }
+        return stores.map((s) => {
+            const m = metricsMap.get(s.id);
+            return {
+                ...s,
+                sellerPhotoUrl: s.additionalDoc1Url || null,
+                logoDocUrl: s.additionalDoc2Url || null,
+                categoryCommissions: commMap.get(s.id) || {},
+                grossSales: Number(m.grossSales.toFixed(2)),
+                commissionAmount: Number(m.commissionAmount.toFixed(2)),
+                tcsAmount: Number(m.tcsAmount.toFixed(2)),
+                settledBalance: Number(m.settledBalance.toFixed(2)),
+                pendingBalance: Number(m.pendingBalance.toFixed(2)),
+                heldBalance: Number(m.heldBalance.toFixed(2)),
+            };
+        });
     }
     async verifyKycByAdmin(storeId, status, commissionRate, rejectionReason) {
         const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
@@ -245,13 +315,23 @@ let SellerService = class SellerService {
         });
     }
     async generateGstr8Report(sellerStoreId, month, year) {
+        const store = await this.prisma.sellerStore.findUnique({
+            where: { id: sellerStoreId },
+            select: { gstin: true },
+        });
+        const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
         try {
             await this.prisma.$executeRaw `
         UPDATE customer_order_items coi
         SET "sellerStoreId" = p."sellerStoreId",
             "subtotal" = coi.price * coi.quantity,
-            "tcsAmount" = (coi.price * coi.quantity) * 0.01
+            "tcsAmount" = CASE
+              WHEN ss."gstin" IS NOT NULL AND length(trim(ss."gstin")) >= 15
+                THEN (coi.price * coi.quantity) * 0.01
+              ELSE 0
+            END
         FROM products p
+        LEFT JOIN seller_stores ss ON ss.id = p."sellerStoreId"
         WHERE coi."productId" = p.id
           AND coi."sellerStoreId" IS NULL
           AND p."sellerStoreId" IS NOT NULL;
@@ -282,8 +362,8 @@ let SellerService = class SellerService {
         let totalGrossSales = 0;
         let totalTcs = 0;
         items.forEach((item) => {
-            const subtotal = Number(item.subtotal || Number(item.price) * item.quantity);
-            const tcs = Number(item.tcsAmount || subtotal * 0.01);
+            const subtotal = Number(item.subtotal ?? Number(item.price) * item.quantity);
+            const tcs = isGstRegistered ? Number(item.tcsAmount ?? subtotal * 0.01) : 0;
             totalGrossSales += subtotal;
             totalTcs += tcs;
         });
@@ -316,18 +396,162 @@ let SellerService = class SellerService {
         });
         return {
             ...report,
+            isGstRegistered,
             itemCount: items.length,
-            itemsSummary: items.map((i) => ({
-                productName: i.productName,
-                hsnCode: i.product?.hsnCode || '120991',
-                quantity: i.quantity,
-                price: Number(i.price),
-                subtotal: Number(i.subtotal || Number(i.price) * i.quantity),
-                tcsAmount: Number(i.tcsAmount || Number(i.price) * i.quantity * 0.01),
-                orderNumber: i.order?.orderNumber || 'ORD',
-                orderDate: i.order?.orderDate,
-            })),
+            itemsSummary: items.map((i) => {
+                const sub = Number(i.subtotal ?? Number(i.price) * i.quantity);
+                return {
+                    productName: i.productName,
+                    hsnCode: i.product?.hsnCode || '120991',
+                    quantity: i.quantity,
+                    price: Number(i.price),
+                    subtotal: sub,
+                    tcsAmount: isGstRegistered ? Number(i.tcsAmount ?? sub * 0.01) : 0,
+                    orderNumber: i.order?.orderNumber || 'ORD',
+                    orderDate: i.order?.orderDate,
+                };
+            }),
         };
+    }
+    async getMyOrders(user) {
+        const store = await this.prisma.sellerStore.findUnique({
+            where: { sellerId: user.id },
+            select: { id: true, storeName: true },
+        });
+        if (!store) {
+            throw new common_1.NotFoundException('Seller store not found.');
+        }
+        const subOrders = await this.prisma.subOrder.findMany({
+            where: { sellerStoreId: store.id },
+            take: 150,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                order: {
+                    select: {
+                        id: true,
+                        orderNumber: true,
+                        status: true,
+                        paymentMode: true,
+                        paymentStatus: true,
+                        deliveryAddress: true,
+                        orderDate: true,
+                        courierName: true,
+                        trackingId: true,
+                        customer: {
+                            select: { id: true, name: true, district: true, state: true, pincode: true },
+                        },
+                        items: {
+                            where: { sellerStoreId: store.id },
+                            select: {
+                                id: true,
+                                productId: true,
+                                productName: true,
+                                quantity: true,
+                                price: true,
+                                subtotal: true,
+                                tcsAmount: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        return subOrders;
+    }
+    async updateMySubOrderStatus(user, subOrderId, nextStatus) {
+        const store = await this.prisma.sellerStore.findUnique({
+            where: { sellerId: user.id },
+            select: { id: true, kycStatus: true },
+        });
+        if (!store) {
+            throw new common_1.NotFoundException('Seller store not found.');
+        }
+        const subOrder = await this.prisma.subOrder.findUnique({ where: { id: subOrderId } });
+        if (!subOrder) {
+            throw new common_1.NotFoundException('Sub-order not found.');
+        }
+        if (subOrder.sellerStoreId !== store.id) {
+            throw new common_1.ForbiddenException('You can only manage orders belonging to your own seller store.');
+        }
+        const allowedSellerTransitions = {
+            [client_1.SubOrderStatus.PLACED]: [client_1.SubOrderStatus.ACCEPTED, client_1.SubOrderStatus.PACKED],
+            [client_1.SubOrderStatus.ACCEPTED]: [client_1.SubOrderStatus.PACKED],
+        };
+        const allowedNext = allowedSellerTransitions[subOrder.orderStatus] || [];
+        if (!allowedNext.includes(nextStatus)) {
+            throw new common_1.BadRequestException(`Cannot transition sub-order from ${subOrder.orderStatus} to ${nextStatus}.`);
+        }
+        return this.prisma.subOrder.update({
+            where: { id: subOrderId },
+            data: { orderStatus: nextStatus },
+        });
+    }
+    async listAllPayoutsForAdmin(status) {
+        const where = {};
+        if (status && Object.values(client_1.SellerPayoutStatus).includes(status)) {
+            where.status = status;
+        }
+        return this.prisma.sellerPayout.findMany({
+            where,
+            take: 200,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                sellerStore: {
+                    select: {
+                        id: true,
+                        storeName: true,
+                        bankAccountNo: true,
+                        bankIfsc: true,
+                        bankBeneficiaryName: true,
+                        seller: { select: { name: true, mobile: true } },
+                    },
+                },
+            },
+        });
+    }
+    async settleStorePendingPayoutsByAdmin(storeId, cashfreeUtrNo) {
+        const pending = await this.prisma.sellerPayout.findMany({
+            where: { sellerStoreId: storeId, status: client_1.SellerPayoutStatus.PENDING },
+        });
+        if (pending.length === 0) {
+            throw new common_1.BadRequestException('No pending payouts found for this seller store.');
+        }
+        const utr = cashfreeUtrNo?.trim() || `BANK-UTR-${Date.now().toString(36).toUpperCase()}`;
+        const settled = [];
+        for (const p of pending) {
+            settled.push(await this.settlePayoutByAdmin(p.id, utr));
+        }
+        return { settledCount: settled.length, utr, payouts: settled };
+    }
+    async settlePayoutByAdmin(payoutId, cashfreeUtrNo) {
+        const payout = await this.prisma.sellerPayout.findUnique({ where: { id: payoutId } });
+        if (!payout) {
+            throw new common_1.NotFoundException('Seller payout record not found.');
+        }
+        const updated = await this.prisma.sellerPayout.update({
+            where: { id: payoutId },
+            data: {
+                status: client_1.SellerPayoutStatus.SETTLED,
+                cashfreeUtrNo: cashfreeUtrNo?.trim() || payout.cashfreeUtrNo || `BANK-UTR-${Date.now().toString(36).toUpperCase()}`,
+                paidAt: new Date(),
+            },
+        });
+        const refParts = payout.payoutRefNo.split('-');
+        if (refParts.length >= 4 && refParts[0] === 'PAY') {
+            const orderNumGuess = refParts.slice(1, -1).join('-');
+            await this.prisma.subOrder.updateMany({
+                where: {
+                    sellerStoreId: payout.sellerStoreId,
+                    order: { orderNumber: orderNumGuess },
+                    settlementStatus: client_1.SettlementStatus.HOLD,
+                },
+                data: {
+                    settlementStatus: client_1.SettlementStatus.SETTLED,
+                    cashfreeTransferId: updated.cashfreeUtrNo,
+                },
+            });
+        }
+        return updated;
     }
 };
 exports.SellerService = SellerService;

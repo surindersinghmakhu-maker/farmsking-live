@@ -6,7 +6,7 @@ export declare class ShiprocketController {
     addPickupLocation(storeId: string): Promise<any>;
     createOrder(dto: CreateShiprocketOrderDto): Promise<any>;
     assignAwb(dto: GenerateAwbDto): Promise<any>;
-    handleWebhook(body: any): Promise<{
+    handleWebhook(body: any, apiKey?: string): Promise<{
         status: string;
         awbCode?: undefined;
         currentStatus?: undefined;

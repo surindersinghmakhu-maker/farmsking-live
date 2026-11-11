@@ -53,6 +53,11 @@ export interface CropGpsData {
   isLocked: boolean;
   fieldPhotos?: string[];
   fieldVideo?: string;
+  fieldAudio?: string;
+  farmerRemarks?: string;
+  mediaCycleSavedAt?: string;
+  mediaDisplayExpiresAt?: string;
+  saveMediaToCropRecord?: boolean;
   updatedAt: string;
 }
 

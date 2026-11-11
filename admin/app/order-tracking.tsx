@@ -29,7 +29,7 @@ export default function OrderTrackingScreen() {
   const fetchOrderDetails = async (orderId: string) => {
     try {
       setLoading(true);
-      const res = await apiClient.get(`/orders/${orderId}`);
+      const res = await apiClient.get(`/orders-public/track/${encodeURIComponent(orderId)}`);
       const data = res.data;
       setOrder(data);
       if (data?.shippingLogs) {
@@ -64,7 +64,7 @@ export default function OrderTrackingScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🚚 Live Order Tracking / ਟ੍ਰੈਕਿੰਗ</Text>
+        <Text style={styles.headerTitle}>🚚 Live Order Tracking</Text>
         <TouchableOpacity
           style={styles.refreshBtn}
           onPress={() => params.orderId && fetchOrderDetails(params.orderId)}

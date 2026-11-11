@@ -85,17 +85,25 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
     }
     async createSplitOrder(dto) {
         const endpoint = `${this.baseUrl}/orders`;
-        const orderSplits = dto.splits.map((split) => {
-            const commissionPercent = split.commissionRate || 5.0;
-            const tcsPercent = 1.0;
-            const totalDeductionPercent = commissionPercent + tcsPercent;
+        const rawSplits = dto.splits.map((split) => {
+            const commissionPercent = Number(split.commissionRate ?? 8.0);
+            const tcsPercent = split.isGstRegistered ? 1.0 : 0.0;
+            const totalDeductionPercent = Math.min(95, commissionPercent + tcsPercent);
             const vendorAmount = Number((split.itemSubtotal * (1 - totalDeductionPercent / 100)).toFixed(2));
             return {
                 vendor_id: split.cashfreeVendorId,
                 amount: vendorAmount,
-                percentage: undefined,
             };
         });
+        const totalVendorSplits = rawSplits.reduce((s, x) => s + x.amount, 0);
+        const scaleFactor = totalVendorSplits > dto.amount && totalVendorSplits > 0 ? dto.amount / totalVendorSplits : 1;
+        const orderSplits = rawSplits
+            .map((s) => ({
+            vendor_id: s.vendor_id,
+            amount: Number((s.amount * scaleFactor).toFixed(2)),
+            percentage: undefined,
+        }))
+            .filter((s) => s.amount > 0);
         const payload = {
             order_id: dto.orderId,
             order_amount: dto.amount,
@@ -289,12 +297,14 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
         }
         for (const [sellerStoreId, data] of sellerMap.entries()) {
             const store = await this.prisma.sellerStore.findUnique({ where: { id: sellerStoreId } });
-            const commissionRate = Number(store?.commissionRate || 5.0);
-            const commissionAmount = (data.subtotal * commissionRate) / 100;
-            const tcsAmount = (data.subtotal * 1.0) / 100;
-            const netPayoutAmount = data.subtotal - commissionAmount - tcsAmount;
+            const commissionRate = Number(store?.commissionRate ?? 8.0);
+            const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
+            const commissionAmount = Number(((data.subtotal * commissionRate) / 100).toFixed(2));
+            const tcsAmount = isGstRegistered ? Number(((data.subtotal * 1.0) / 100).toFixed(2)) : 0;
+            const netPayoutAmount = Number((data.subtotal - commissionAmount - tcsAmount).toFixed(2));
+            const payoutStatus = store?.cashfreeVendorId ? client_1.SellerPayoutStatus.SETTLED : client_1.SellerPayoutStatus.PENDING;
             const payoutRefNo = `PAY-${order.orderNumber}-${sellerStoreId.substring(0, 6)}`;
-            await this.prisma.sellerPayout.upsert({
+            const payoutRecord = await this.prisma.sellerPayout.upsert({
                 where: { payoutRefNo },
                 create: {
                     sellerStoreId,
@@ -303,19 +313,19 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
                     totalCommissionAmount: commissionAmount,
                     totalTcsAmount: tcsAmount,
                     netPayoutAmount: netPayoutAmount,
-                    status: client_1.SellerPayoutStatus.SETTLED,
-                    paidAt: new Date(),
+                    status: payoutStatus,
+                    paidAt: payoutStatus === client_1.SellerPayoutStatus.SETTLED ? new Date() : null,
                 },
                 update: {
-                    status: client_1.SellerPayoutStatus.SETTLED,
-                    paidAt: new Date(),
+                    status: payoutStatus,
+                    paidAt: payoutStatus === client_1.SellerPayoutStatus.SETTLED ? new Date() : undefined,
                 },
             });
             for (const item of data.items) {
                 const itemSubtotal = Number(item.subtotal || Number(item.price) * item.quantity);
-                const itemCommission = (itemSubtotal * commissionRate) / 100;
-                const itemTcs = (itemSubtotal * 1.0) / 100;
-                const itemNetPayout = itemSubtotal - itemCommission - itemTcs;
+                const itemCommission = Number(((itemSubtotal * commissionRate) / 100).toFixed(2));
+                const itemTcs = isGstRegistered ? Number(((itemSubtotal * 1.0) / 100).toFixed(2)) : 0;
+                const itemNetPayout = Number((itemSubtotal - itemCommission - itemTcs).toFixed(2));
                 await this.prisma.customerOrderItem.update({
                     where: { id: item.id },
                     data: {
@@ -323,6 +333,7 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
                         commissionAmount: itemCommission,
                         tcsAmount: itemTcs,
                         sellerPayoutAmount: itemNetPayout,
+                        sellerPayoutId: payoutRecord.id,
                     },
                 });
             }

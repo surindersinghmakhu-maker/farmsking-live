@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseGuards,
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { MediaStoreService } from './media-store.service';
+import { SaveCropRemarkDto } from './dto/save-crop-remark.dto';
 
 const ALLOWED_MIME_TYPES = [
   'image/jpeg',
@@ -30,10 +32,49 @@ const ALLOWED_MIME_TYPES = [
   'video/mp4',
   'video/webm',
   'video/quicktime',
+  'video/x-matroska',
+  'video/x-m4v',
+  'video/3gpp',
+  'audio/webm',
+  'audio/mp4',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/ogg',
+  'audio/wav',
+  'audio/wave',
+  'audio/x-wav',
+  'audio/aac',
+  'audio/m4a',
+  'audio/x-m4a',
   'application/octet-stream',
 ];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for 1-minute field videos
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.mp4', '.webm', '.mov'];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for 1-minute field videos & audio
+const VALID_EXTENSIONS = [
+  '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif',
+  '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp',
+  '.mp3', '.m4a', '.wav', '.ogg', '.aac', '.opus',
+];
+
+function inferExtFromMime(mimetype?: string): string {
+  const mime = (mimetype || '').toLowerCase();
+  if (mime.includes('png')) return '.png';
+  if (mime.includes('webp')) return '.webp';
+  if (mime.includes('heic')) return '.heic';
+  if (mime.includes('heif')) return '.heif';
+  if (mime.includes('webm')) return '.webm';
+  if (mime.includes('mpeg') || mime.includes('mp3')) return '.mp3';
+  if (mime.includes('m4a') || mime.includes('audio/mp4')) return '.m4a';
+  if (mime.includes('ogg') || mime.includes('opus')) return '.ogg';
+  if (mime.includes('wav')) return '.wav';
+  if (mime.includes('aac')) return '.aac';
+  if (mime.includes('quicktime')) return '.mov';
+  if (mime.includes('matroska')) return '.mkv';
+  if (mime.includes('m4v')) return '.m4v';
+  if (mime.includes('3gpp')) return '.3gp';
+  if (mime.startsWith('audio/')) return '.webm';
+  if (mime.startsWith('video/')) return '.mp4';
+  return '.jpg';
+}
 
 @UseGuards(JwtAuthGuard)
 @Controller('media-store')
@@ -49,19 +90,21 @@ export class MediaStoreController {
       storage: diskStorage({
         destination: './uploads',
         filename: (_req, file, callback) => {
-          const rawExt = extname(file.originalname).toLowerCase();
-          const ext = VALID_EXTENSIONS.includes(rawExt) ? rawExt : '.jpg';
+          const rawExt = extname(file.originalname || '').toLowerCase();
+          const ext = VALID_EXTENSIONS.includes(rawExt) ? rawExt : inferExtFromMime(file.mimetype);
           callback(null, `${randomUUID()}${ext}`);
         },
       }),
       limits: { fileSize: MAX_FILE_SIZE },
       fileFilter: (_req, file, callback) => {
+        const baseMime = (file.mimetype || '').split(';')[0].trim().toLowerCase();
         if (
-          !ALLOWED_MIME_TYPES.includes(file.mimetype) &&
-          !file.mimetype?.startsWith('image/') &&
-          !file.mimetype?.startsWith('video/')
+          !ALLOWED_MIME_TYPES.includes(baseMime) &&
+          !baseMime.startsWith('image/') &&
+          !baseMime.startsWith('video/') &&
+          !baseMime.startsWith('audio/')
         ) {
-          callback(new BadRequestException('Only image and video files are supported.'), false);
+          callback(new BadRequestException('Only image, video, and audio files are supported.'), false);
           return;
         }
         callback(null, true);
@@ -94,12 +137,16 @@ export class MediaStoreController {
       filename?: string;
     },
   ) {
-    if (!body?.dataUri) {
+    if (!body?.dataUri || typeof body.dataUri !== 'string') {
       throw new BadRequestException('No dataUri provided for Media Store upload.');
+    }
+    const trimmed = body.dataUri.trim();
+    if (/^(blob:|https?:|file:|content:|ph:|\/uploads\/)/i.test(trimmed)) {
+      throw new BadRequestException('Invalid base64 payload: URL/blob URIs must be uploaded as multipart files to /media-store/upload.');
     }
     return this.mediaStoreService.uploadBase64(
       user,
-      body.dataUri,
+      trimmed,
       body.cropId,
       body.mediaType,
       body.filename,
@@ -107,11 +154,34 @@ export class MediaStoreController {
   }
 
   /**
-   * Retrieve all photos and videos for a specific crop
+   * Retrieve all photos, videos, and audio notes for a specific crop (`scope=active|all`)
    */
   @Get('crop/:cropId')
-  async getCropMedia(@Param('cropId') cropId: string) {
-    return this.mediaStoreService.getMediaForCrop(cropId);
+  async getCropMedia(
+    @Param('cropId') cropId: string,
+    @Query('scope') scope?: 'active' | 'all',
+  ) {
+    return this.mediaStoreService.getMediaForCrop(cropId, scope === 'active' ? 'active' : 'all');
+  }
+
+  /**
+   * Retrieve saved written remarks for a crop
+   */
+  @Get('crop/:cropId/remark')
+  async getCropRemark(@Param('cropId') cropId: string) {
+    return this.mediaStoreService.getCropRemark(cropId);
+  }
+
+  /**
+   * Save or update farmer's written crop remarks (max 150 characters)
+   */
+  @Put('crop/:cropId/remark')
+  async saveCropRemark(
+    @CurrentUser() user: AuthUser,
+    @Param('cropId') cropId: string,
+    @Body() body: SaveCropRemarkDto,
+  ) {
+    return this.mediaStoreService.saveCropRemark(user, cropId, body.remarksText || '');
   }
 
   /**

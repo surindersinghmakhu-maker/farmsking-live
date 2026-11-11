@@ -21,6 +21,7 @@ export default function SellerPayoutsScreen() {
     totalGross: 0,
     totalCommission: 0,
     totalTcs: 0,
+    pendingPayout: 0,
     netPayout: 0,
   });
 
@@ -48,16 +49,21 @@ export default function SellerPayoutsScreen() {
     let totalGross = 0;
     let totalCommission = 0;
     let totalTcs = 0;
+    let pendingPayout = 0;
     let netPayout = 0;
 
     list.forEach((item) => {
       totalGross += Number(item.totalGrossAmount || 0);
       totalCommission += Number(item.totalCommissionAmount || 0);
       totalTcs += Number(item.totalTcsAmount || 0);
-      netPayout += Number(item.netPayoutAmount || 0);
+      if (item.status === 'SETTLED') {
+        netPayout += Number(item.netPayoutAmount || 0);
+      } else if (item.status === 'PENDING' || item.status === 'PROCESSING') {
+        pendingPayout += Number(item.netPayoutAmount || 0);
+      }
     });
 
-    setSummary({ totalGross, totalCommission, totalTcs, netPayout });
+    setSummary({ totalGross, totalCommission, totalTcs, pendingPayout, netPayout });
   };
 
   return (
@@ -85,18 +91,25 @@ export default function SellerPayoutsScreen() {
               <Text style={styles.summaryVal}>₹{summary.totalGross.toFixed(2)}</Text>
             </View>
             <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>FarmsKing Fee (5%)</Text>
+              <Text style={styles.summaryLabel}>Platform Commission</Text>
               <Text style={[styles.summaryVal, { color: '#F59E0B' }]}>-₹{summary.totalCommission.toFixed(2)}</Text>
             </View>
           </View>
 
           <View style={styles.summaryRow}>
             <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>1% GST TCS Tax</Text>
+              <Text style={styles.summaryLabel}>GST TCS (1% if GSTIN)</Text>
               <Text style={[styles.summaryVal, { color: '#3B82F6' }]}>-₹{summary.totalTcs.toFixed(2)}</Text>
             </View>
             <View style={styles.summaryCol}>
-              <Text style={styles.summaryLabel}>Net Settled</Text>
+              <Text style={styles.summaryLabel}>Pending Payout</Text>
+              <Text style={[styles.summaryVal, { color: '#FBBF24' }]}>₹{(summary.pendingPayout || 0).toFixed(2)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryCol}>
+              <Text style={styles.summaryLabel}>Net Settled to Bank</Text>
               <Text style={[styles.summaryVal, { color: '#10B981', fontSize: 18 }]}>₹{summary.netPayout.toFixed(2)}</Text>
             </View>
           </View>
@@ -130,8 +143,8 @@ export default function SellerPayoutsScreen() {
 
               <View style={styles.breakdownBox}>
                 <Text style={styles.breakdownText}>Gross Sale Amount: ₹{payout.totalGrossAmount}</Text>
-                <Text style={styles.breakdownText}>Platform Commission (5%): -₹{payout.totalCommissionAmount}</Text>
-                <Text style={styles.breakdownText}>1% GST TCS Tax Deducted: -₹{payout.totalTcsAmount}</Text>
+                <Text style={styles.breakdownText}>Platform Commission Deducted: -₹{payout.totalCommissionAmount}</Text>
+                <Text style={styles.breakdownText}>GST TCS Deducted: -₹{payout.totalTcsAmount}</Text>
                 <Text style={styles.netText}>Net Bank Transfer Amount: ₹{payout.netPayoutAmount}</Text>
               </View>
 

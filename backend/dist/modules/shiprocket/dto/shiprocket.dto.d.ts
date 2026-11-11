@@ -20,6 +20,8 @@ export declare class CreateShiprocketOrderDto {
     length?: number;
     width?: number;
     height?: number;
+    paymentMethod?: 'Prepaid' | 'COD';
+    customerOrderId?: string;
 }
 export declare class GenerateAwbDto {
     shipmentId: string;

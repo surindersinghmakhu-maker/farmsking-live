@@ -11,7 +11,16 @@ export class MarkPaidDto {
 }
 
 export class SubmitUtrDto {
+  @IsOptional()
   @IsString()
-  utrNumber: string;
+  utrNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  utr?: string;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
 }
 

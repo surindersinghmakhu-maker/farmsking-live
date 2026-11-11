@@ -40,6 +40,10 @@ export default function SellerDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [hasStore, setHasStore] = useState(false);
   const [storeData, setStoreData] = useState<any>(null);
+  const [sellerOrders, setSellerOrders] = useState<any[]>([]);
+  const [updatingSubOrderId, setUpdatingSubOrderId] = useState<string | null>(null);
+  const [togglingProductId, setTogglingProductId] = useState<string | null>(null);
+  const [sellerWorkspaceTab, setSellerWorkspaceTab] = useState<'ORDERS' | 'PRODUCTS'>('ORDERS');
   const [stats, setStats] = useState<any>({
     activeProducts: 0,
     totalOrders: 0,
@@ -454,6 +458,7 @@ export default function SellerDashboardScreen() {
       setHasStore(true);
       populateStoreFields(res.data);
       fetchStats();
+      fetchSellerOrders();
     } catch (err: any) {
       setHasStore(false);
     } finally {
@@ -467,6 +472,43 @@ export default function SellerDashboardScreen() {
       setStats(res.data);
     } catch (err: any) {
       console.log('Error fetching stats:', err);
+    }
+  };
+
+  const fetchSellerOrders = async () => {
+    try {
+      const res = await apiClient.get('/seller/orders');
+      setSellerOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err: any) {
+      console.log('Error fetching seller orders:', err?.response?.data || err?.message);
+    }
+  };
+
+  const handleUpdateSubOrderStatus = async (subOrderId: string, status: 'ACCEPTED' | 'PACKED') => {
+    try {
+      setUpdatingSubOrderId(subOrderId);
+      await apiClient.patch(`/seller/orders/${subOrderId}/status`, { status });
+      await fetchSellerOrders();
+      showAlert('Order Updated', `Store sub-order marked as ${status}.`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not update sub-order status.';
+      showAlert('Update Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setUpdatingSubOrderId(null);
+    }
+  };
+
+  const handleToggleProductActive = async (prod: any) => {
+    try {
+      setTogglingProductId(prod.id);
+      await apiClient.patch(`/products/${prod.id}`, { isActive: !prod.isActive });
+      await fetchStoreData();
+      showAlert('Catalog Updated', `${prod.name} is now ${!prod.isActive ? 'Active' : 'Paused'}.`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not update product status.';
+      showAlert('Update Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setTogglingProductId(null);
     }
   };
 
@@ -836,23 +878,36 @@ export default function SellerDashboardScreen() {
     try {
       const variantPackNames = productVariants.map((v) => v.packSize);
       const totalStock = productVariants.reduce((sum, v) => sum + parseInt(v.stockQty || '0', 10), 0);
+      const parsedGst = parseFloat((newGstRate || '0').replace(/[^0-9.]/g, '')) || 0;
+      const baseMrpVal = parseFloat(primaryVariant.mrp || String(basePrice)) || basePrice;
+      const variantRatesFormatted = productVariants
+        .map((v) => `${v.packSize}: Selling ₹${v.price || basePrice} MRP ₹${v.mrp || baseMrpVal} Stock ${v.stockQty || 0} SKU: ${v.sku || skuCode}`)
+        .join(' | ');
 
-      const descMeta: string[] = [];
-      if (newProductDescription) descMeta.push(newProductDescription);
+      const headerMeta = `Brand: ${newBrand || storeData?.storeName || 'FarmsKing Certified'} | Crop: ${suitableCrops || newTargetCrop || 'All Crops'} | PrimaryVariant: ${primaryVariant.packSize} | PackSizes: ${variantPackNames.join(', ')} | MRP: ₹${baseMrpVal} | Selling: ₹${basePrice} | VariantRates: ${variantRatesFormatted} | GST: ${parsedGst}% | Formula: ${technicalName || 'Standard'} | Dosage: ${dosageInstructions || 'As per advice'} | SKU: ${primaryVariant.sku}`;
+      const descMeta: string[] = [headerMeta];
+      if (newProductDescription) descMeta.push(`\nDescription:\n${newProductDescription}`);
       descMeta.push(`\nVARIANTS_MATRIX:${JSON.stringify(productVariants)}`);
 
       await apiClient.post('/products', {
         name: productName.trim(),
+        brand: newBrand || storeData?.storeName,
         price: basePrice,
+        sellingPrice: basePrice,
+        mrp: baseMrpVal,
+        unit: newUnit || 'kg',
         categorySlug: productCategorySlug,
         category: productCategorySlug,
         stockQty: totalStock || 50,
         hsnCode: hsnCode || '120991',
+        gstPercentage: parsedGst,
         sellerStoreId: storeData?.id,
+        weightKg: parseFloat(primaryVariant.deadWeightKg || '1.0'),
         deadWeightKg: parseFloat(primaryVariant.deadWeightKg || '1.0'),
         lengthCm: parseFloat(primaryVariant.lengthCm || '15'),
         widthCm: parseFloat(primaryVariant.widthCm || '10'),
         heightCm: parseFloat(primaryVariant.heightCm || '8'),
+        sku: primaryVariant.sku,
         skuCode: primaryVariant.sku,
         technicalName,
         dosageInstructions,
@@ -870,7 +925,7 @@ export default function SellerDashboardScreen() {
       showAlert('Success 🎉', `Product with ${productVariants.length} Variants added successfully to AgriStore catalog!`);
       setShowAddProduct(false);
       resetProductForm();
-      fetchStats();
+      await fetchStoreData();
     } catch (err: any) {
       const rawMsg = err?.response?.data?.message || err?.message || 'Failed to add product.';
       const msg = Array.isArray(rawMsg) ? rawMsg.join(', ') : rawMsg;
@@ -2824,6 +2879,151 @@ export default function SellerDashboardScreen() {
                 </View>
               </View>
             </Modal>
+
+            {/* SELLER WORKSPACE: INCOMING ORDERS & LIVE PRODUCT CATALOG */}
+            <View style={{ backgroundColor: '#111827', borderRadius: 16, padding: 14, marginTop: 8, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)' }}>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 14 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    paddingVertical: 9,
+                    borderRadius: 10,
+                    backgroundColor: sellerWorkspaceTab === 'ORDERS' ? '#10B981' : '#1F2937',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => setSellerWorkspaceTab('ORDERS')}
+                >
+                  <Text style={{ color: sellerWorkspaceTab === 'ORDERS' ? '#04160c' : '#9CA3AF', fontSize: 12.5, fontWeight: '800' }}>
+                    Incoming Orders ({sellerOrders.length})
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    paddingVertical: 9,
+                    borderRadius: 10,
+                    backgroundColor: sellerWorkspaceTab === 'PRODUCTS' ? '#10B981' : '#1F2937',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => setSellerWorkspaceTab('PRODUCTS')}
+                >
+                  <Text style={{ color: sellerWorkspaceTab === 'PRODUCTS' ? '#04160c' : '#9CA3AF', fontSize: 12.5, fontWeight: '800' }}>
+                    My Catalog ({storeData?.products?.length ?? 0})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {sellerWorkspaceTab === 'ORDERS' ? (
+                sellerOrders.length === 0 ? (
+                  <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                    <Ionicons name="receipt-outline" size={30} color="#6B7280" />
+                    <Text style={{ color: '#9CA3AF', fontSize: 13, fontWeight: '700', marginTop: 6 }}>No store orders yet</Text>
+                    <Text style={{ color: '#6B7280', fontSize: 11, marginTop: 2, textAlign: 'center' }}>
+                      Customer orders for your store items will appear here with net payout details.
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 10 }}>
+                    {sellerOrders.map((sub: any) => {
+                      const ord = sub.order || {};
+                      const itemsList = Array.isArray(ord.items) ? ord.items : [];
+                      return (
+                        <View key={sub.id} style={{ backgroundColor: '#1F2937', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#374151', borderLeftWidth: 4, borderLeftColor: sub.orderStatus === 'DELIVERED' ? '#10B981' : sub.orderStatus === 'CANCELLED' ? '#EF4444' : '#3B82F6' }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <Text style={{ color: '#F9FAFB', fontSize: 13.5, fontWeight: '800' }}>{ord.orderNumber || 'Order'}</Text>
+                            <View style={{ backgroundColor: 'rgba(16,185,129,0.16)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                              <Text style={{ color: '#34D399', fontSize: 10.5, fontWeight: '800' }}>{sub.orderStatus}</Text>
+                            </View>
+                          </View>
+                          <Text style={{ color: '#9CA3AF', fontSize: 11.5 }}>
+                            Buyer: {ord.customer?.name || 'Customer'} ({ord.customer?.district || ''}{ord.customer?.state ? `, ${ord.customer.state}` : ''}) · {ord.paymentMode} ({ord.paymentStatus})
+                          </Text>
+                          {itemsList.map((it: any) => (
+                            <Text key={it.id} style={{ color: '#E5E7EB', fontSize: 11.5, marginTop: 3 }}>
+                              • {it.productName} x {it.quantity} — ₹{Number(it.subtotal || Number(it.price) * it.quantity).toFixed(2)}
+                            </Text>
+                          ))}
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#374151' }}>
+                            <Text style={{ color: '#9CA3AF', fontSize: 11 }}>
+                              Subtotal: ₹{Number(sub.subtotal).toFixed(2)} · Comm: -₹{Number(sub.commissionAmount).toFixed(2)}
+                            </Text>
+                            <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '800' }}>
+                              Net: ₹{Number(sub.vendorNetPayout).toFixed(2)}
+                            </Text>
+                          </View>
+                          {ord.trackingId ? (
+                            <Text style={{ color: '#60A5FA', fontSize: 11, marginTop: 4 }}>
+                              Courier: {ord.courierName || 'Shiprocket'} · Tracking: {ord.trackingId}
+                            </Text>
+                          ) : null}
+                          {(sub.orderStatus === 'PLACED' || sub.orderStatus === 'ACCEPTED') && (
+                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                              {sub.orderStatus === 'PLACED' && (
+                                <TouchableOpacity
+                                  style={{ flex: 1, backgroundColor: '#059669', paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
+                                  disabled={updatingSubOrderId === sub.id}
+                                  onPress={() => handleUpdateSubOrderStatus(sub.id, 'ACCEPTED')}
+                                >
+                                  <Text style={{ color: '#FFF', fontSize: 11.5, fontWeight: '800' }}>
+                                    {updatingSubOrderId === sub.id ? 'Updating...' : 'Accept Order'}
+                                  </Text>
+                                </TouchableOpacity>
+                              )}
+                              <TouchableOpacity
+                                style={{ flex: 1, backgroundColor: '#1D4ED8', paddingVertical: 8, borderRadius: 8, alignItems: 'center' }}
+                                disabled={updatingSubOrderId === sub.id}
+                                onPress={() => handleUpdateSubOrderStatus(sub.id, 'PACKED')}
+                              >
+                                <Text style={{ color: '#FFF', fontSize: 11.5, fontWeight: '800' }}>
+                                  {updatingSubOrderId === sub.id ? 'Updating...' : 'Mark Packed'}
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )
+              ) : (storeData?.products || []).length === 0 ? (
+                <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                  <Ionicons name="cube-outline" size={30} color="#6B7280" />
+                  <Text style={{ color: '#9CA3AF', fontSize: 13, fontWeight: '700', marginTop: 6 }}>No products listed yet</Text>
+                  <Text style={{ color: '#6B7280', fontSize: 11, marginTop: 2 }}>
+                    Select Farm or Food Product above to publish your first product.
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ gap: 10 }}>
+                  {(storeData.products || []).map((prod: any) => (
+                    <View key={prod.id} style={{ backgroundColor: '#1F2937', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#374151', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#F9FAFB', fontSize: 13.5, fontWeight: '800' }} numberOfLines={1}>{prod.name}</Text>
+                        <Text style={{ color: '#9CA3AF', fontSize: 11, marginTop: 2 }}>
+                          ₹{Number(prod.price || 0).toFixed(2)} / {prod.unit || 'unit'} · Stock: {prod.stockQty ?? 0} · {prod.moderationStatus || 'ACTIVE'}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: prod.isActive ? '#065F46' : '#7F1D1D',
+                          paddingHorizontal: 10,
+                          paddingVertical: 6,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: prod.isActive ? '#10B981' : '#EF4444',
+                        }}
+                        disabled={togglingProductId === prod.id}
+                        onPress={() => handleToggleProductActive(prod)}
+                      >
+                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+                          {togglingProductId === prod.id ? '...' : prod.isActive ? 'Active (Pause)' : 'Paused (Enable)'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
 
           </>
         )}

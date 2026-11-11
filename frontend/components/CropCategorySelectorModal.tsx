@@ -662,6 +662,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
 
   // Single Unified Form Modal
   const [selectedCrop, setSelectedCrop] = useState<CropItem | null>(null);
+  const [isCatDropdownOpen, setIsCatDropdownOpen] = useState<boolean>(false);
   const [isCropDropdownOpen, setIsCropDropdownOpen] = useState<boolean>(false);
   const [cropSearchQuery, setCropSearchQuery] = useState<string>('');
   const [isCropPickerOpen, setIsCropPickerOpen] = useState<boolean>(false);
@@ -740,6 +741,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       setCustomHarvestType('CONTINUOUS');
       setSowingDate(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
       setSelectedCrop(null);
+      setIsCatDropdownOpen(false);
       setIsCropDropdownOpen(false);
       setCropSearchQuery('');
     }
@@ -888,68 +890,91 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
           ) : null}
 
           <ScrollView style={{ maxHeight: 540 }} showsVerticalScrollIndicator={false}>
-            {/* SECTION 1: CROP IDENTITY */}
+            {/* SECTION 1: CROP IDENTITY & SELECTION */}
             <View style={styles.formSectionCard}>
               <View style={styles.sectionHeaderRow}>
                 <Ionicons name="grid-outline" size={13} color="#16a34a" />
                 <Text style={styles.sectionHeaderTitle}>{dict.cropSelection}</Text>
               </View>
 
-              {/* Category Horizontal Pill Bar */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-                {INITIAL_CROP_CATEGORIES.map((cat) => {
-                  const isSelected = cat.id === selectedCatId;
-                  const catLabel = getCategoryLabel(cat.id, cat.name, dict);
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
-                      style={[
-                        styles.compactCategoryChip,
-                        isSelected
-                          ? { backgroundColor: cat.color, borderColor: cat.color }
-                          : { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
-                      ]}
-                      onPress={() => handleSelectCategory(cat.id)}
-                    >
-                      <Ionicons name={cat.icon as any} size={12} color={isSelected ? '#ffffff' : cat.color} />
-                      <Text
-                        style={[
-                          styles.compactCategoryText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#334155' },
-                        ]}
-                      >
-                        {catLabel}
+              {/* 2-Column Responsive Dropdown Row: Category Dropdown & Crop Item Dropdown */}
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                {/* 1. Category Dropdown Selector */}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>
+                    Crop Category *
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.cropDropdownTriggerBtn,
+                      {
+                        borderColor: isCatDropdownOpen ? '#16a34a' : '#cbd5e1',
+                        backgroundColor: '#ffffff',
+                      },
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsCatDropdownOpen(!isCatDropdownOpen);
+                      setIsCropDropdownOpen(false);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                      <Ionicons name={currentCategory.icon as any} size={14} color={currentCategory.color} />
+                      <Text style={styles.cropDropdownTriggerText} numberOfLines={1}>
+                        {getCategoryLabel(currentCategory.id, currentCategory.name, dict)}
                       </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+                    </View>
+                    <Ionicons
+                      name={isCatDropdownOpen ? "chevron-up" : "chevron-down"}
+                      size={13}
+                      color="#64748b"
+                    />
+                  </TouchableOpacity>
+                </View>
 
-              {/* Crop Name & Variety in 2-Column Row */}
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                {/* 2. Crop Item Dropdown Selector */}
                 <View style={{ flex: 1.2 }}>
-                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.cropName} *</Text>
+                  <Text style={styles.inputLabelCompact} numberOfLines={1}>
+                    {dict.cropName} *
+                  </Text>
                   {selectedCatId !== 'other' ? (
                     <TouchableOpacity
                       style={[
-                        styles.cropSelectBtnLarge,
+                        styles.cropDropdownTriggerBtn,
                         {
-                          borderColor: isCropDropdownOpen ? '#16a34a' : currentCategory.color,
-                          backgroundColor: currentCategory.bg,
-                          height: 38,
+                          borderColor: isCropDropdownOpen ? '#16a34a' : selectedCrop ? '#16a34a' : '#cbd5e1',
+                          backgroundColor: selectedCrop ? '#f0fdf4' : '#ffffff',
                         },
                       ]}
                       activeOpacity={0.8}
                       onPress={() => {
                         tap();
                         setIsCropDropdownOpen(!isCropDropdownOpen);
+                        setIsCatDropdownOpen(false);
                       }}
                     >
-                      <Ionicons name="leaf" size={14} color={currentCategory.color} />
-                      <Text style={[styles.cropSelectTextLarge, { color: currentCategory.color }]} numberOfLines={1}>
-                        {selectedCrop ? selectedCrop.name : `${dict.selectCropCount} (${filteredCrops.length})`}
-                      </Text>
-                      <Ionicons name={isCropDropdownOpen ? "chevron-up" : "chevron-down"} size={13} color={currentCategory.color} />
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <Ionicons
+                          name="leaf"
+                          size={14}
+                          color={selectedCrop ? '#16a34a' : currentCategory.color}
+                        />
+                        <Text
+                          style={[
+                            styles.cropDropdownTriggerText,
+                            selectedCrop && { color: '#16a34a', fontFamily: FONT.bold },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {selectedCrop ? selectedCrop.name : `${dict.selectCropCount} (${filteredCrops.length})`}
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={isCropDropdownOpen ? "chevron-up" : "chevron-down"}
+                        size={13}
+                        color={selectedCrop ? '#16a34a' : "#64748b"}
+                      />
                     </TouchableOpacity>
                   ) : (
                     <TextInput
@@ -964,22 +989,77 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     />
                   )}
                 </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.varietyOptional}</Text>
-                  <TextInput
-                    style={styles.compactFormInput}
-                    placeholder={dict.varietyPlaceholder}
-                    placeholderTextColor="#94a3b8"
-                    value={varietyName}
-                    onChangeText={setVarietyName}
-                  />
-                </View>
               </View>
 
-              {/* INLINE DROPDOWN LIST FOR CROP ITEMS */}
+              {/* Variety Input Row */}
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>{dict.varietyOptional}</Text>
+                <TextInput
+                  style={styles.compactFormInput}
+                  placeholder={dict.varietyPlaceholder}
+                  placeholderTextColor="#94a3b8"
+                  value={varietyName}
+                  onChangeText={setVarietyName}
+                />
+              </View>
+
+              {/* CATEGORY DROPDOWN LIST (Opens when isCatDropdownOpen is true) */}
+              {isCatDropdownOpen && (
+                <View style={[styles.inlineDropdownCard, { marginTop: 8 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, paddingHorizontal: 2 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b' }}>
+                      SELECT CROP CATEGORY ({INITIAL_CROP_CATEGORIES.length})
+                    </Text>
+                    <TouchableOpacity onPress={() => setIsCatDropdownOpen(false)}>
+                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <ScrollView style={{ maxHeight: 220 }} nestedScrollEnabled showsVerticalScrollIndicator={true}>
+                    {INITIAL_CROP_CATEGORIES.map((cat) => {
+                      const isSelected = cat.id === selectedCatId;
+                      const catLabel = getCategoryLabel(cat.id, cat.name, dict);
+                      const count = allCrops.filter((c) => c.categoryId === cat.id).length;
+                      return (
+                        <TouchableOpacity
+                          key={cat.id}
+                          style={[
+                            styles.categoryDropdownListItem,
+                            isSelected && { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
+                          ]}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            handleSelectCategory(cat.id);
+                            setIsCatDropdownOpen(false);
+                            setIsCropDropdownOpen(true);
+                          }}
+                        >
+                          <View style={[styles.cropListIconBadge, { backgroundColor: cat.bg }]}>
+                            <Ionicons name={cat.icon as any} size={14} color={cat.color} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={[styles.cropListItemTitle, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                              {catLabel}
+                            </Text>
+                          </View>
+                          <View style={[styles.compactTileBadge, { backgroundColor: isSelected ? '#dcfce7' : '#f1f5f9' }]}>
+                            <Text style={[styles.compactTileBadgeText, { color: isSelected ? '#15803d' : '#64748b' }]}>
+                              {count > 0 ? `${count} Crops` : 'Custom'}
+                            </Text>
+                          </View>
+                          {isSelected && (
+                            <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 6 }} />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* CROP ITEMS DROPDOWN LIST (Opens when isCropDropdownOpen is true) */}
               {isCropDropdownOpen && selectedCatId !== 'other' && (
-                <View style={styles.inlineDropdownCard}>
+                <View style={[styles.inlineDropdownCard, { marginTop: 8 }]}>
                   {/* Search Bar */}
                   <View style={styles.dropdownSearchRow}>
                     <Ionicons name="search-outline" size={14} color="#64748b" />
@@ -1058,7 +1138,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                             </View>
 
                             {isSelected && (
-                              <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} />
+                              <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 6 }} />
                             )}
                           </TouchableOpacity>
                         );
@@ -1896,6 +1976,35 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#0f172a',
     paddingVertical: 0,
+  },
+  cropDropdownTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    height: 40,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
+  },
+  cropDropdownTriggerText: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+    color: '#0f172a',
+  },
+  categoryDropdownListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    marginBottom: 5,
   },
   cropDropdownListItem: {
     flexDirection: 'row',

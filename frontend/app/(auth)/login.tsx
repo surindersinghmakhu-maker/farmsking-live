@@ -40,13 +40,29 @@ if (Platform.OS !== 'web') {
 const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 
 export default function LoginScreen() {
-  const { user, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
+  const { user, login, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const { setLanguage } = useLanguage();
   const router = useRouter();
-  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
+  const { redirect, portal } = useLocalSearchParams<{ redirect?: string; portal?: string }>();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
+
+  const [portalMode, setPortalMode] = useState<'CLIENT' | 'PARTNER'>(() =>
+    String(portal || '').toLowerCase() === 'partner' ? 'PARTNER' : 'CLIENT',
+  );
+  const [partnerAuthMethod, setPartnerAuthMethod] = useState<'OTP' | 'PASSWORD'>('OTP');
+  const [partnerIdentifier, setPartnerIdentifier] = useState('');
+  const [partnerPassword, setPartnerPassword] = useState('');
+  const [showPartnerPassword, setShowPartnerPassword] = useState(false);
+
+  useEffect(() => {
+    if (String(portal || '').toLowerCase() === 'partner') {
+      setPortalMode('PARTNER');
+    } else if (String(portal || '').toLowerCase() === 'client') {
+      setPortalMode('CLIENT');
+    }
+  }, [portal]);
 
   // Enforce English as default language for Login and Auth
   useEffect(() => {
@@ -81,14 +97,30 @@ export default function LoginScreen() {
       return;
     }
     const targetUser = loggedInUser || user;
-    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
-      targetUser?.role || ''
-    );
-    router.replace(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
+    const allRoles: string[] = [
+      targetUser?.role,
+      ...(Array.isArray(targetUser?.roles) ? targetUser.roles : []),
+    ].filter(Boolean);
+    const partnerDashboardRoles = [
+      'BUSINESS_PARTNER',
+      'ADVISOR',
+      'FARM_ADVISOR',
+      'GARDEN_ADVISOR',
+      'TECHNICAL_TRAINER',
+    ];
+    if (allRoles.some((r) => partnerDashboardRoles.includes(r))) {
+      router.replace('/(partner)/(tabs)');
+      return;
+    }
+    if (allRoles.includes('SELLER')) {
+      router.replace('/seller-dashboard' as any);
+      return;
+    }
+    router.replace('/(user)/(tabs)');
   };
 
   const [mobile, setMobile] = useState('');
-  const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | null>(null);
+  const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | 'partnerId' | 'partnerPass' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -505,6 +537,43 @@ export default function LoginScreen() {
     }
   };
 
+  const handlePartnerPasswordLogin = async () => {
+    setError(null);
+    const idClean = partnerIdentifier.trim();
+    const passClean = partnerPassword.trim();
+    if (!idClean) {
+      setError('Please enter your registered Partner Mobile Number or King ID.');
+      return;
+    }
+    if (!passClean) {
+      setError('Please enter your password.');
+      return;
+    }
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const loggedInUser = await login({ mobile: idClean, password: passClean });
+      handleSuccessNavigation(false, loggedInUser);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.message ??
+        'Partner sign in failed. Check your King ID / Mobile and Password.';
+      setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSwitchPortal = (nextPortal: 'CLIENT' | 'PARTNER') => {
+    if (nextPortal === portalMode) return;
+    setPortalMode(nextPortal);
+    setError(null);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   const autoFillDevOtp = () => {
     const code = '123456';
     setOtpDigits(code.split(''));
@@ -579,12 +648,16 @@ export default function LoginScreen() {
         <View style={[styles.mainConsoleWrap, isDesktop && styles.mainConsoleWrapDesktop]}>
           
           {/* ══════════════════════════════════════════════════════
-              LEFT PANEL: Brand Identity, Live Telemetry & Value Pillars (Desktop)
+              LEFT PANEL: Dynamic Portal Identity & Telemetry Showcase (Desktop)
              ══════════════════════════════════════════════════════ */}
           {isDesktop && (
             <View style={styles.leftShowcasePanel}>
               <LinearGradient
-                colors={['#042f24', '#064e3b', '#022c22']}
+                colors={
+                  portalMode === 'PARTNER'
+                    ? ['#0f172a', '#1e293b', '#0c1322']
+                    : ['#042f24', '#064e3b', '#022c22']
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.leftShowcaseGradient}
@@ -597,7 +670,10 @@ export default function LoginScreen() {
                       {
                         pointerEvents: 'none',
                         zIndex: 2,
-                        background: `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(52, 211, 153, 0.12), transparent 70%)`,
+                        background:
+                          portalMode === 'PARTNER'
+                            ? `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(245, 158, 11, 0.12), transparent 70%)`
+                            : `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(52, 211, 153, 0.12), transparent 70%)`,
                       } as any,
                     ]}
                   />
@@ -607,64 +683,127 @@ export default function LoginScreen() {
                   <BrandLogo size={52} round useGoldRing useHdQuality />
                   <View style={{ marginLeft: 14 }}>
                     <Text style={styles.showcaseBrandName}>FarmsKing</Text>
-                    <Text style={styles.showcaseTagline}>Smart Farming</Text>
+                    <Text
+                      style={[
+                        styles.showcaseTagline,
+                        portalMode === 'PARTNER' && { color: '#fcd34d' },
+                      ]}
+                    >
+                      {portalMode === 'PARTNER'
+                        ? 'Partner Portal · Doctors & Partners'
+                        : 'Client Portal · Farmers, Gardeners & Buyers'}
+                    </Text>
                   </View>
                 </View>
 
                 {/* Institutional Compliance Seal Strip */}
                 <View style={styles.complianceSealRow}>
                   <View style={styles.complianceSealBadge}>
-                    <Ionicons name="shield-checkmark" size={13} color="#34d399" />
+                    <Ionicons
+                      name="shield-checkmark"
+                      size={13}
+                      color={portalMode === 'PARTNER' ? '#fbbf24' : '#34d399'}
+                    />
                     <Text style={styles.complianceSealText}>ISO 27001 SECURED</Text>
                   </View>
                   <View style={styles.complianceSealBadge}>
-                    <Ionicons name="leaf" size={13} color="#a7f3d0" />
-                    <Text style={styles.complianceSealText}>eNAM ALIGNED</Text>
+                    <Ionicons
+                      name={portalMode === 'PARTNER' ? 'briefcase' : 'leaf'}
+                      size={13}
+                      color={portalMode === 'PARTNER' ? '#93c5fd' : '#a7f3d0'}
+                    />
+                    <Text style={styles.complianceSealText}>
+                      {portalMode === 'PARTNER' ? 'VERIFIED PARTNER ACCESS' : 'CLIENT ACCOUNT PORTAL'}
+                    </Text>
                   </View>
                 </View>
 
-                {/* 4 Interactive Feature Telemetry Cards */}
-                <View style={styles.pillarsContainer}>
-                  <View style={styles.pillarCard}>
-                    <View style={styles.pillarIconWrap}>
-                      <Ionicons name="scan-circle" size={22} color="#34d399" />
+                {/* 4 Role-Specific Feature Telemetry Cards */}
+                {portalMode === 'PARTNER' ? (
+                  <View style={styles.pillarsContainer}>
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="people" size={22} color="#fbbf24" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Farmers & Advisory Management</Text>
+                        <Text style={styles.pillarDesc}>Adopt farms, guide crop growth, and monitor active plots</Text>
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.pillarTitle}>AI Crop Pathology</Text>
-                      <Text style={styles.pillarDesc}>5-second disease diagnosis aligned with ICAR agronomy protocols</Text>
-                    </View>
-                  </View>
 
-                  <View style={styles.pillarCard}>
-                    <View style={styles.pillarIconWrap}>
-                      <Ionicons name="trending-up" size={22} color="#60a5fa" />
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="medkit" size={22} color="#38bdf8" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Crop Doctor & Prescriptions</Text>
+                        <Text style={styles.pillarDesc}>Review leaf disease scans, send treatment plans & chat live</Text>
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.pillarTitle}>4D Mandi Telemetry</Text>
-                      <Text style={styles.pillarDesc}>Live APMC market rates & price trends across 2,400+ mandis</Text>
-                    </View>
-                  </View>
 
-                  <View style={styles.pillarCard}>
-                    <View style={styles.pillarIconWrap}>
-                      <Ionicons name="shield-checkmark" size={22} color="#f59e0b" />
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="storefront" size={22} color="#4ade80" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Verified Seller Desk</Text>
+                        <Text style={styles.pillarDesc}>Manage listings, dispatch orders, and view direct settlements</Text>
+                      </View>
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.pillarTitle}>Certified Agri Inputs</Text>
-                      <Text style={styles.pillarDesc}>Direct-to-farm delivery of lab-tested seeds, bio-nutrients & protection</Text>
-                    </View>
-                  </View>
 
-                  <View style={styles.pillarCard}>
-                    <View style={styles.pillarIconWrap}>
-                      <Ionicons name="calendar" size={22} color="#ec4899" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.pillarTitle}>Scientific Spray Schedules</Text>
-                      <Text style={styles.pillarDesc}>Precision phenology calendars & digital spray management</Text>
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="wallet" size={22} color="#f472b6" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Partner Wallet & Earnings</Text>
+                        <Text style={styles.pillarDesc}>Track commissions, training bonuses & instant bank payouts</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
+                ) : (
+                  <View style={styles.pillarsContainer}>
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="scan-circle" size={22} color="#34d399" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>AI Crop Pathology</Text>
+                        <Text style={styles.pillarDesc}>5-second disease diagnosis aligned with ICAR agronomy protocols</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="trending-up" size={22} color="#60a5fa" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>4D Mandi Telemetry</Text>
+                        <Text style={styles.pillarDesc}>Live APMC market rates & price trends across 2,400+ mandis</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="film" size={22} color="#f59e0b" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Crop Media Record</Text>
+                        <Text style={styles.pillarDesc}>Save 7-day crop photos, live video & voice notes with permanent archive</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.pillarCard}>
+                      <View style={styles.pillarIconWrap}>
+                        <Ionicons name="cart" size={22} color="#ec4899" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>Official Agri Store</Text>
+                        <Text style={styles.pillarDesc}>Direct seeds, fertilizers, crop inputs & tracked farm delivery</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
 
                 {/* Trust Metrics & Corporate Regd Seal */}
                 <View style={styles.showcaseFooter}>
@@ -724,13 +863,192 @@ export default function LoginScreen() {
               )}
             </View>
 
+            {/* ── TWO SEPARATE LOGIN PARTS: CLIENTS VS PARTNERS ── */}
+            <View style={styles.portalSwitchSection}>
+              <Text style={styles.portalSectionLabel}>SELECT ACCOUNT TYPE TO SIGN IN</Text>
+              <View style={styles.portalSwitchRow}>
+                {/* PART 1: CLIENTS */}
+                <TouchableOpacity
+                  style={[
+                    styles.portalOptionCard,
+                    portalMode === 'CLIENT' && styles.portalOptionCardClientActive,
+                  ]}
+                  activeOpacity={0.88}
+                  onPress={() => handleSwitchPortal('CLIENT')}
+                >
+                  <View style={styles.portalCardTopRow}>
+                    <View
+                      style={[
+                        styles.portalIconBox,
+                        portalMode === 'CLIENT' && styles.portalIconBoxClientActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="leaf"
+                        size={17}
+                        color={portalMode === 'CLIENT' ? '#10b981' : '#64748b'}
+                      />
+                    </View>
+                    <Ionicons
+                      name={portalMode === 'CLIENT' ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={17}
+                      color={portalMode === 'CLIENT' ? '#10b981' : '#475569'}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.portalCardTitle,
+                      portalMode === 'CLIENT' && { color: '#34d399' },
+                    ]}
+                  >
+                    Client Login
+                  </Text>
+                  <Text style={styles.portalCardSub}>
+                    Farmers, Gardeners &amp; Store Buyers
+                  </Text>
+                </TouchableOpacity>
+
+                {/* PART 2: PARTNERS */}
+                <TouchableOpacity
+                  style={[
+                    styles.portalOptionCard,
+                    portalMode === 'PARTNER' && styles.portalOptionCardPartnerActive,
+                  ]}
+                  activeOpacity={0.88}
+                  onPress={() => handleSwitchPortal('PARTNER')}
+                >
+                  <View style={styles.portalCardTopRow}>
+                    <View
+                      style={[
+                        styles.portalIconBox,
+                        portalMode === 'PARTNER' && styles.portalIconBoxPartnerActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="briefcase"
+                        size={17}
+                        color={portalMode === 'PARTNER' ? '#f59e0b' : '#64748b'}
+                      />
+                    </View>
+                    <Ionicons
+                      name={portalMode === 'PARTNER' ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={17}
+                      color={portalMode === 'PARTNER' ? '#f59e0b' : '#475569'}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.portalCardTitle,
+                      portalMode === 'PARTNER' && { color: '#fbbf24' },
+                    ]}
+                  >
+                    Partner Login
+                  </Text>
+                  <Text style={styles.portalCardSub}>
+                    Crop Doctors, Partners, Trainers &amp; Sellers
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Console Header */}
             <View style={styles.authHeadingBox}>
-              <Text style={styles.authTitle}>Instant Sign In</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <Text style={styles.authTitle}>
+                  {portalMode === 'PARTNER' ? 'Partner Portal Sign In' : 'Client Sign In'}
+                </Text>
+                <View
+                  style={[
+                    styles.portalHeaderTag,
+                    portalMode === 'PARTNER'
+                      ? { backgroundColor: 'rgba(245, 158, 11, 0.14)', borderColor: 'rgba(245, 158, 11, 0.4)' }
+                      : { backgroundColor: 'rgba(16, 185, 129, 0.14)', borderColor: 'rgba(16, 185, 129, 0.4)' },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.portalHeaderTagText,
+                      { color: portalMode === 'PARTNER' ? '#fbbf24' : '#34d399' },
+                    ]}
+                  >
+                    {portalMode === 'PARTNER' ? 'PARTNER ACCESS' : 'CLIENT ACCESS'}
+                  </Text>
+                </View>
+              </View>
               <Text style={styles.authSubtitle}>
-                100% passwordless verified access. Enter your 10-digit mobile number to proceed.
+                {portalMode === 'PARTNER'
+                  ? 'Sign in to your verified Doctor, Business Partner, Trainer, or Seller dashboard.'
+                  : 'Fast verified sign in for Farmers, Home Gardeners, and Buyers using mobile OTP or Google.'}
               </Text>
             </View>
+
+            {/* PARTNER SECTION HEADER & AUTH METHOD TOGGLE */}
+            {portalMode === 'PARTNER' && (
+              <View style={styles.partnerSectionCard}>
+                <View style={styles.partnerRolesChipsRow}>
+                  {['Crop Doctor', 'Business Partner', 'Trainer', 'Verified Seller'].map((roleLabel) => (
+                    <View key={roleLabel} style={styles.partnerRoleChip}>
+                      <Ionicons name="shield-checkmark" size={11} color="#fbbf24" />
+                      <Text style={styles.partnerRoleChipText}>{roleLabel}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.partnerMethodBar}>
+                  <TouchableOpacity
+                    style={[
+                      styles.partnerMethodBtn,
+                      partnerAuthMethod === 'OTP' && styles.partnerMethodBtnActive,
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      setPartnerAuthMethod('OTP');
+                      setError(null);
+                    }}
+                  >
+                    <Ionicons
+                      name="phone-portrait-outline"
+                      size={14}
+                      color={partnerAuthMethod === 'OTP' ? '#0f172a' : '#cbd5e1'}
+                    />
+                    <Text
+                      style={[
+                        styles.partnerMethodText,
+                        partnerAuthMethod === 'OTP' && styles.partnerMethodTextActive,
+                      ]}
+                    >
+                      Mobile OTP
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.partnerMethodBtn,
+                      partnerAuthMethod === 'PASSWORD' && styles.partnerMethodBtnActive,
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      setPartnerAuthMethod('PASSWORD');
+                      setError(null);
+                    }}
+                  >
+                    <Ionicons
+                      name="key-outline"
+                      size={14}
+                      color={partnerAuthMethod === 'PASSWORD' ? '#0f172a' : '#cbd5e1'}
+                    />
+                    <Text
+                      style={[
+                        styles.partnerMethodText,
+                        partnerAuthMethod === 'PASSWORD' && styles.partnerMethodTextActive,
+                      ]}
+                    >
+                      King ID / Password
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {/* Error Banner */}
             {error ? (
@@ -754,211 +1072,353 @@ export default function LoginScreen() {
               }}
             />
 
-            {/* Localhost Testing Mode Banner: Strictly shown only on Localhost */}
-            {isLocalhost && (
-              <View style={styles.devBanner}>
-                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="construct" size={16} color="#10b981" />
-                  <View>
-                    <Text style={styles.devBannerTitle}>Localhost Testing Mode</Text>
-                    <Text style={styles.devBannerSubtitle}>
-                      Standard Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
-                    </Text>
+            {portalMode === 'PARTNER' && partnerAuthMethod === 'PASSWORD' ? (
+              /* ── PARTNER KING ID / MOBILE + PASSWORD SIGN IN ── */
+              <View style={{ gap: 14 }}>
+                <View>
+                  <Text style={styles.fieldLabel}>Partner King ID or Mobile Number</Text>
+                  <View
+                    style={[
+                      styles.mobileInputWrap,
+                      focusedField === 'partnerId' && { borderColor: '#f59e0b' },
+                    ]}
+                  >
+                    <View style={styles.countryCodeBadge}>
+                      <Ionicons name="id-card-outline" size={16} color="#fbbf24" />
+                    </View>
+                    <TextInput
+                      style={styles.mobileInput}
+                      placeholder="Enter Mobile Number or King ID"
+                      placeholderTextColor="#64748b"
+                      value={partnerIdentifier}
+                      onChangeText={setPartnerIdentifier}
+                      onFocus={() => setFocusedField('partnerId')}
+                      onBlur={() => setFocusedField(null)}
+                      autoCapitalize="none"
+                      returnKeyType="next"
+                    />
                   </View>
                 </View>
-                <TouchableOpacity
-                  onPress={autoFillDevOtp}
-                  style={styles.autoFillBtn}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.autoFillBtnText}>Auto-Fill 123456</Text>
-                </TouchableOpacity>
-              </View>
-            )}
 
-            {/* ── STEP 1: Mobile Number Input ── */}
-            <View style={styles.inputSection}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <Text style={styles.fieldLabel}>Mobile Number</Text>
-                {otpSent && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setOtpSent(false);
-                      setOtpDigits(['', '', '', '', '', '']);
-                      setDevOtp(null);
-                      setConfirmationResult(null);
-                      autoSubmittedCodeRef.current = null;
-                    }}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                <View>
+                  <Text style={styles.fieldLabel}>Password</Text>
+                  <View
+                    style={[
+                      styles.mobileInputWrap,
+                      focusedField === 'partnerPass' && { borderColor: '#f59e0b' },
+                    ]}
                   >
-                    <Ionicons name="pencil" size={13} color="#10b981" />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#10b981' }}>Change Number</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <View style={[styles.mobileInputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
-                <View style={styles.countryCodeBadge}>
-                  <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
-                </View>
-                <TextInput
-                  style={styles.mobileInput}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                  placeholder="10-digit mobile number"
-                  placeholderTextColor="#64748b"
-                  value={mobile}
-                  onChangeText={(t) => {
-                    setMobile(t);
-                    if (otpSent) {
-                      setOtpSent(false);
-                      setOtpDigits(['', '', '', '', '', '']);
-                      setDevOtp(null);
-                      setConfirmationResult(null);
-                      autoSubmittedCodeRef.current = null;
-                    }
-                  }}
-                  onFocus={() => setFocusedField('mobile')}
-                  onBlur={() => setFocusedField(null)}
-                  returnKeyType="send"
-                  onSubmitEditing={() => {
-                    if (mobile.trim().length >= 10 && !otpSending) {
-                      handleSendOtp();
-                    }
-                  }}
-                  onKeyPress={(e: any) => {
-                    if (e.nativeEvent.key === 'Enter' && mobile.trim().length >= 10 && !otpSending) {
-                      handleSendOtp();
-                    }
-                  }}
-                  editable={!otpSent}
-                  autoCapitalize="none"
-                />
-                {otpSent && (
-                  <Ionicons name="checkmark-circle" size={18} color="#10b981" style={{ marginRight: 10 }} />
-                )}
-              </View>
-            </View>
-
-            {/* Request OTP Button */}
-            {!otpSent ? (
-              <TouchableOpacity
-                onPress={handleSendOtp}
-                disabled={otpSending || mobile.trim().length < 10}
-                activeOpacity={0.88}
-                style={[styles.primaryActionBtn, (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 }]}
-              >
-                <LinearGradient
-                  colors={['#10b981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.gradientBtn}
-                >
-                  {otpSending ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="paper-plane" size={16} color="#fff" />
-                      <Text style={styles.buttonText}>Get Verification Code</Text>
+                    <View style={styles.countryCodeBadge}>
+                      <Ionicons name="lock-closed-outline" size={16} color="#fbbf24" />
                     </View>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            ) : (
-              /* ── STEP 2: Segmented 6-Cell OTP Input ── */
-              <View style={styles.otpSectionBox}>
-                <View style={styles.otpInfoBar}>
-                  <Ionicons name="shield-checkmark" size={15} color="#34d399" />
-                  <Text style={styles.otpInfoText}>
-                    {isLocalhost ? 'Code sent to ' : 'SMS verification code sent to '}
-                    <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
-                  </Text>
-                </View>
-
-                {/* 🌟 Direct In-Context Test OTP Helper Card (Localhost Only) 🌟 */}
-                {isLocalhost && (
-                  <View style={styles.testOtpCard}>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <Ionicons name="key" size={14} color="#f59e0b" />
-                        <Text style={styles.testOtpLabel}>Standard Test Code:</Text>
-                      </View>
-                      <Text style={styles.testOtpCode}>123456</Text>
-                    </View>
+                    <TextInput
+                      style={styles.mobileInput}
+                      placeholder="Enter your password"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry={!showPartnerPassword}
+                      value={partnerPassword}
+                      onChangeText={setPartnerPassword}
+                      onFocus={() => setFocusedField('partnerPass')}
+                      onBlur={() => setFocusedField(null)}
+                      returnKeyType="done"
+                      onSubmitEditing={handlePartnerPasswordLogin}
+                    />
                     <TouchableOpacity
-                      onPress={autoFillDevOtp}
-                      style={styles.quickFillButton}
-                      activeOpacity={0.8}
+                      onPress={() => setShowPartnerPassword((prev) => !prev)}
+                      style={{ paddingHorizontal: 12 }}
                     >
-                      <Ionicons name="flash" size={13} color="#10b981" />
-                      <Text style={styles.quickFillText}>Auto-Fill 123456</Text>
+                      <Ionicons
+                        name={showPartnerPassword ? 'eye-off-outline' : 'eye-outline'}
+                        size={18}
+                        color="#94a3b8"
+                      />
                     </TouchableOpacity>
                   </View>
-                )}
-
-                <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
-                
-                {/* 6 Individual Segmented Boxes */}
-                <View style={styles.segmentedRow}>
-                  {otpDigits.map((digit, idx) => (
-                    <TextInput
-                      key={idx}
-                      ref={otpCellRefs[idx]}
-                      style={[
-                        styles.otpCell,
-                        digit ? styles.otpCellFilled : null,
-                        focusedField === 'otp' && idx === otpDigits.findIndex(d => !d) ? styles.otpCellActive : null,
-                      ]}
-                      keyboardType="number-pad"
-                      maxLength={idx === 0 ? 6 : 1}
-                      value={digit}
-                      onChangeText={(val) => handleDigitChange(val, idx)}
-                      onKeyPress={(e) => handleKeyPress(e, idx)}
-                      onFocus={() => setFocusedField('otp')}
-                      onBlur={() => setFocusedField(null)}
-                      selectTextOnFocus
-                      textAlign="center"
-                    />
-                  ))}
                 </View>
 
-                {/* Verify & Enter Button */}
                 <TouchableOpacity
-                  onPress={() => handleOtpLogin()}
-                  disabled={isSubmitting || !currentOtpFilled}
+                  onPress={handlePartnerPasswordLogin}
+                  disabled={isSubmitting || !partnerIdentifier.trim() || !partnerPassword.trim()}
                   activeOpacity={0.88}
-                  style={[styles.primaryActionBtn, (!currentOtpFilled || isSubmitting) && { opacity: 0.6 }]}
+                  style={[
+                    styles.primaryActionBtn,
+                    (!partnerIdentifier.trim() || !partnerPassword.trim() || isSubmitting) && {
+                      opacity: 0.55,
+                    },
+                  ]}
                 >
                   <LinearGradient
-                    colors={['#10b981', '#059669']}
+                    colors={['#f59e0b', '#d97706']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.gradientBtn}
                   >
                     {isSubmitting ? (
-                      <ActivityIndicator color="#fff" size="small" />
+                      <ActivityIndicator color="#0f172a" size="small" />
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="log-in" size={17} color="#fff" />
-                        <Text style={styles.buttonText}>Verify & Enter</Text>
+                        <Ionicons name="log-in" size={17} color="#0f172a" />
+                        <Text style={[styles.buttonText, { color: '#0f172a' }]}>
+                          Sign In to Partner Portal
+                        </Text>
                       </View>
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
 
-                {/* Resend Timer / Action */}
-                <View style={styles.resendRow}>
-                  {resendTimer > 0 ? (
-                    <Text style={styles.resendTimerText}>
-                      Resend code in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
-                    </Text>
-                  ) : (
-                    <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                      <Text style={styles.resendActiveText}>Resend Verification Code</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <Text style={styles.partnerHelperNote}>
+                  Partner roles (Crop Doctor, Business Partner, Trainer, Seller) are approved by FarmsKing Admin.
+                </Text>
               </View>
+            ) : (
+              <>
+                {/* Localhost Testing Mode Banner: Strictly shown only on Localhost */}
+                {isLocalhost && (
+                  <View style={styles.devBanner}>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="construct" size={16} color="#10b981" />
+                      <View>
+                        <Text style={styles.devBannerTitle}>Localhost Testing Mode</Text>
+                        <Text style={styles.devBannerSubtitle}>
+                          Standard Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
+                        </Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      onPress={autoFillDevOtp}
+                      style={styles.autoFillBtn}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.autoFillBtnText}>Auto-Fill 123456</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* ── STEP 1: Mobile Number Input ── */}
+                <View style={styles.inputSection}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={styles.fieldLabel}>
+                      {portalMode === 'PARTNER' ? 'Registered Partner Mobile' : 'Mobile Number'}
+                    </Text>
+                    {otpSent && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setOtpSent(false);
+                          setOtpDigits(['', '', '', '', '', '']);
+                          setDevOtp(null);
+                          setConfirmationResult(null);
+                          autoSubmittedCodeRef.current = null;
+                        }}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                      >
+                        <Ionicons name="pencil" size={13} color="#10b981" />
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#10b981' }}>Change Number</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <View
+                    style={[
+                      styles.mobileInputWrap,
+                      focusedField === 'mobile' &&
+                        (portalMode === 'PARTNER'
+                          ? { borderColor: '#f59e0b' }
+                          : styles.inputWrapFocused),
+                    ]}
+                  >
+                    <View style={styles.countryCodeBadge}>
+                      <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
+                    </View>
+                    <TextInput
+                      style={styles.mobileInput}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      placeholder="10-digit mobile number"
+                      placeholderTextColor="#64748b"
+                      value={mobile}
+                      onChangeText={(t) => {
+                        setMobile(t);
+                        if (otpSent) {
+                          setOtpSent(false);
+                          setOtpDigits(['', '', '', '', '', '']);
+                          setDevOtp(null);
+                          setConfirmationResult(null);
+                          autoSubmittedCodeRef.current = null;
+                        }
+                      }}
+                      onFocus={() => setFocusedField('mobile')}
+                      onBlur={() => setFocusedField(null)}
+                      returnKeyType="send"
+                      onSubmitEditing={() => {
+                        if (mobile.trim().length >= 10 && !otpSending) {
+                          handleSendOtp();
+                        }
+                      }}
+                      onKeyPress={(e: any) => {
+                        if (e.nativeEvent.key === 'Enter' && mobile.trim().length >= 10 && !otpSending) {
+                          handleSendOtp();
+                        }
+                      }}
+                      editable={!otpSent}
+                      autoCapitalize="none"
+                    />
+                    {otpSent && (
+                      <Ionicons name="checkmark-circle" size={18} color="#10b981" style={{ marginRight: 10 }} />
+                    )}
+                  </View>
+                </View>
+
+                {/* Request OTP Button */}
+                {!otpSent ? (
+                  <TouchableOpacity
+                    onPress={handleSendOtp}
+                    disabled={otpSending || mobile.trim().length < 10}
+                    activeOpacity={0.88}
+                    style={[styles.primaryActionBtn, (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 }]}
+                  >
+                    <LinearGradient
+                      colors={portalMode === 'PARTNER' ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.gradientBtn}
+                    >
+                      {otpSending ? (
+                        <ActivityIndicator
+                          color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                          size="small"
+                        />
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Ionicons
+                            name="paper-plane"
+                            size={16}
+                            color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                          />
+                          <Text
+                            style={[
+                              styles.buttonText,
+                              portalMode === 'PARTNER' && { color: '#0f172a' },
+                            ]}
+                          >
+                            {portalMode === 'PARTNER'
+                              ? 'Get Partner Verification Code'
+                              : 'Get Verification Code'}
+                          </Text>
+                        </View>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ) : (
+                  /* ── STEP 2: Segmented 6-Cell OTP Input ── */
+                  <View style={styles.otpSectionBox}>
+                    <View style={styles.otpInfoBar}>
+                      <Ionicons name="shield-checkmark" size={15} color="#34d399" />
+                      <Text style={styles.otpInfoText}>
+                        {isLocalhost ? 'Code sent to ' : 'SMS verification code sent to '}
+                        <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
+                      </Text>
+                    </View>
+
+                    {/* 🌟 Direct In-Context Test OTP Helper Card (Localhost Only) 🌟 */}
+                    {isLocalhost && (
+                      <View style={styles.testOtpCard}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                            <Ionicons name="key" size={14} color="#f59e0b" />
+                            <Text style={styles.testOtpLabel}>Standard Test Code:</Text>
+                          </View>
+                          <Text style={styles.testOtpCode}>123456</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={autoFillDevOtp}
+                          style={styles.quickFillButton}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="flash" size={13} color="#10b981" />
+                          <Text style={styles.quickFillText}>Auto-Fill 123456</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+
+                    <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
+                    
+                    {/* 6 Individual Segmented Boxes */}
+                    <View style={styles.segmentedRow}>
+                      {otpDigits.map((digit, idx) => (
+                        <TextInput
+                          key={idx}
+                          ref={otpCellRefs[idx]}
+                          style={[
+                            styles.otpCell,
+                            digit ? styles.otpCellFilled : null,
+                            focusedField === 'otp' && idx === otpDigits.findIndex(d => !d) ? styles.otpCellActive : null,
+                          ]}
+                          keyboardType="number-pad"
+                          maxLength={idx === 0 ? 6 : 1}
+                          value={digit}
+                          onChangeText={(val) => handleDigitChange(val, idx)}
+                          onKeyPress={(e) => handleKeyPress(e, idx)}
+                          onFocus={() => setFocusedField('otp')}
+                          onBlur={() => setFocusedField(null)}
+                          selectTextOnFocus
+                          textAlign="center"
+                        />
+                      ))}
+                    </View>
+
+                    {/* Verify & Enter Button */}
+                    <TouchableOpacity
+                      onPress={() => handleOtpLogin()}
+                      disabled={isSubmitting || !currentOtpFilled}
+                      activeOpacity={0.88}
+                      style={[styles.primaryActionBtn, (!currentOtpFilled || isSubmitting) && { opacity: 0.6 }]}
+                    >
+                      <LinearGradient
+                        colors={portalMode === 'PARTNER' ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.gradientBtn}
+                      >
+                        {isSubmitting ? (
+                          <ActivityIndicator
+                            color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                            size="small"
+                          />
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Ionicons
+                              name="log-in"
+                              size={17}
+                              color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                            />
+                            <Text
+                              style={[
+                                styles.buttonText,
+                                portalMode === 'PARTNER' && { color: '#0f172a' },
+                              ]}
+                            >
+                              {portalMode === 'PARTNER' ? 'Verify & Open Partner Portal' : 'Verify & Enter'}
+                            </Text>
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    {/* Resend Timer / Action */}
+                    <View style={styles.resendRow}>
+                      {resendTimer > 0 ? (
+                        <Text style={styles.resendTimerText}>
+                          Resend code in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
+                        </Text>
+                      ) : (
+                        <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
+                          <Text style={styles.resendActiveText}>Resend Verification Code</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                )}
+              </>
             )}
 
             {/* Alternative Divider */}
@@ -1013,7 +1473,9 @@ export default function LoginScreen() {
               </View>
               <Text style={styles.modalTitle}>Choose Your Primary Profile</Text>
               <Text style={styles.modalSubtitle}>
-                Select how you primarily use FarmsKing. All accounts include full Customer access automatically.
+                {portalMode === 'PARTNER'
+                  ? 'This number is not registered as a Partner yet (Admin approval activates Partner access). You can register below as a Client account.'
+                  : 'Select how you primarily use FarmsKing. All accounts include full Customer access automatically.'}
               </Text>
             </View>
 
@@ -1721,5 +2183,145 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     marginTop: 2,
     lineHeight: 14,
+  },
+
+  // ── Two-Part Client vs Partner Login Selector ──
+  portalSwitchSection: {
+    marginBottom: 18,
+    gap: 8,
+  },
+  portalSectionLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    letterSpacing: 0.7,
+  },
+  portalSwitchRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  portalOptionCard: {
+    flex: 1,
+    backgroundColor: '#111a2e',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 14,
+    padding: 12,
+    gap: 5,
+  },
+  portalOptionCardClientActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderColor: '#10b981',
+  },
+  portalOptionCardPartnerActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderColor: '#f59e0b',
+  },
+  portalCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  portalIconBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  portalIconBoxClientActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  portalIconBoxPartnerActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  },
+  portalCardTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+  },
+  portalCardSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    lineHeight: 14,
+  },
+  portalHeaderTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  portalHeaderTagText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.6,
+  },
+  partnerSectionCard: {
+    backgroundColor: 'rgba(245, 158, 11, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.22)',
+    borderRadius: 14,
+    padding: 10,
+    gap: 10,
+    marginBottom: 14,
+  },
+  partnerRolesChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  partnerRoleChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  partnerRoleChipText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#fde68a',
+  },
+  partnerMethodBar: {
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: 'rgba(7, 12, 24, 0.65)',
+    padding: 4,
+    borderRadius: 10,
+  },
+  partnerMethodBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    borderRadius: 7,
+  },
+  partnerMethodBtnActive: {
+    backgroundColor: '#fbbf24',
+  },
+  partnerMethodText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  partnerMethodTextActive: {
+    color: '#0f172a',
+    fontFamily: FONT.extraBold,
+  },
+  partnerHelperNote: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 15,
   },
 });

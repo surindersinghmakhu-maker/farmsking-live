@@ -258,9 +258,11 @@ export class BillingService {
       let totalCommissionGst = 0;
 
       for (const item of items) {
-        const itemGross = Number(item.price) * item.quantity;
+        const itemGross = Number(item.subtotal || Number(item.price) * item.quantity);
         const gstPct = item.product?.gstPercentage ? Number(item.product.gstPercentage) : 0;
-        const commPct = store?.commissionRate ? Number(store.commissionRate) : 5;
+        const commPct = Number(
+          item.product?.commissionOverridePercentage ?? store?.commissionRate ?? 8.0,
+        );
 
         const calc = this.calculateGstAndTcs({
           grossPrice: itemGross,
@@ -324,8 +326,8 @@ export class BillingService {
           invoiceType: 'COMMISSION_INVOICE',
           customerName: store?.storeName || 'Seller',
           customerGstin: sellerGstin,
-          sellerName: 'FarmsKing Agriculture Pvt Ltd',
-          sellerGstin: '03AAAAF0000A1Z5', // FarmsKing Official GSTIN
+          sellerName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
+          sellerGstin: process.env.COMPANY_GSTIN || 'Registered E-Commerce Operator (Sec 52 CGST)',
           grossAmount: totalCommission + totalCommissionGst,
           netTaxableAmount: totalCommission,
           gstAmount: totalCommissionGst,
@@ -381,24 +383,27 @@ export class BillingService {
   <meta charset="utf-8" />
   <title>${invoice.invoiceNumber}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 30px; color: #222; }
+    @page { size: A4; margin: 12mm 15mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; max-width: 180mm; margin: 0 auto; padding: 10px 0; color: #0f172a; }
     .header { display: flex; justify-content: space-between; border-bottom: 2px solid #16a34a; padding-bottom: 10px; }
-    .title { color: #16a34a; font-size: 20px; font-weight: bold; }
-    .meta { font-size: 13px; text-align: right; }
-    .parties { display: flex; justify-content: space-between; margin: 20px 0; font-size: 14px; }
-    .box { width: 48%; border: 1px solid #ddd; padding: 10px; border-radius: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f4f4f4; }
-    .totals { margin-top: 20px; text-align: right; font-size: 14px; }
-    .footer { margin-top: 40px; font-size: 11px; color: #777; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+    .title { color: #16a34a; font-size: 18px; font-weight: bold; }
+    .meta { font-size: 12px; text-align: right; }
+    .parties { display: flex; justify-content: space-between; margin: 16px 0; font-size: 13px; page-break-inside: avoid; }
+    .box { width: 48%; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12.5px; page-break-inside: avoid; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    th { background: #f8fafc; }
+    .totals { margin-top: 16px; text-align: right; font-size: 13px; page-break-inside: avoid; }
+    .footer { margin-top: 28px; font-size: 11px; color: #475569; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }
   </style>
 </head>
 <body>
   <div class="header">
     <div>
-      <div class="title">FarmsKing Agriculture Marketplace</div>
-      <div style="font-size: 12px; color: #555;">Official E-Commerce Operator (ECO) - Section 52 CGST Act</div>
+      <div class="title">FARMSKING TECHNOLOGIES PRIVATE LIMITED</div>
+      <div style="font-size: 11px; color: #475569; margin-top: 2px;">Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422</div>
+      <div style="font-size: 11px; color: #475569;">E-Commerce Operator (ECO) - Section 52 CGST Act</div>
     </div>
     <div class="meta">
       <strong>${documentTitle}</strong><br/>

@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrdersController = void 0;
+exports.OrdersPublicController = exports.OrdersController = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
@@ -52,8 +52,8 @@ let OrdersController = class OrdersController {
     getOrderInvoices(user, id) {
         return this.ordersService.getOrderInvoices(user, id);
     }
-    getInvoiceHtml(invoiceId) {
-        return this.ordersService.getInvoiceHtml(invoiceId);
+    getInvoiceHtml(user, invoiceId) {
+        return this.ordersService.getInvoiceHtml(user, invoiceId);
     }
     initiateCashfreePayment(user, id) {
         return this.ordersService.initiateCashfreePayment(user, id);
@@ -83,7 +83,11 @@ let OrdersController = class OrdersController {
         return this.ordersService.markPaymentPaid(user, id, dto.transactionId, dto.notes);
     }
     submitUtr(user, id, dto) {
-        return this.ordersService.submitPaymentUtr(user, id, dto.utrNumber);
+        const utr = (dto.utrNumber || dto.utr || '').trim();
+        if (!utr) {
+            throw new common_1.BadRequestException('UTR / Transaction Reference number is required.');
+        }
+        return this.ordersService.submitPaymentUtr(user, id, utr);
     }
 };
 exports.OrdersController = OrdersController;
@@ -120,7 +124,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.SELLER, ...STAFF_ROLES),
     (0, common_1.Get)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -158,9 +162,10 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.SELLER, ...STAFF_ROLES),
     (0, common_1.Get)('invoices/:invoiceId/html'),
-    __param(0, (0, common_1.Param)('invoiceId')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('invoiceId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getInvoiceHtml", null);
 __decorate([
@@ -261,4 +266,24 @@ exports.OrdersController = OrdersController = __decorate([
     (0, common_1.Controller)('orders'),
     __metadata("design:paramtypes", [orders_service_1.OrdersService])
 ], OrdersController);
+let OrdersPublicController = class OrdersPublicController {
+    constructor(ordersService) {
+        this.ordersService = ordersService;
+    }
+    trackOrder(orderNumber) {
+        return this.ordersService.trackPublicOrder(orderNumber);
+    }
+};
+exports.OrdersPublicController = OrdersPublicController;
+__decorate([
+    (0, common_1.Get)('track/:orderNumber'),
+    __param(0, (0, common_1.Param)('orderNumber')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], OrdersPublicController.prototype, "trackOrder", null);
+exports.OrdersPublicController = OrdersPublicController = __decorate([
+    (0, common_1.Controller)('orders-public'),
+    __metadata("design:paramtypes", [orders_service_1.OrdersService])
+], OrdersPublicController);
 //# sourceMappingURL=orders.controller.js.map

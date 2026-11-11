@@ -16,6 +16,7 @@ exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const optional_jwt_auth_guard_1 = require("../../common/guards/optional-jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
@@ -30,8 +31,7 @@ let ProductsController = class ProductsController {
         return this.productsService.create(user, dto);
     }
     listAll(user, includeInactive, sellerStoreId, slug, categorySlug) {
-        const canSeeInactive = Boolean(user && (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN || user.role === client_1.Role.SELLER) && includeInactive === 'true');
-        return this.productsService.listAll(canSeeInactive, sellerStoreId, slug, categorySlug);
+        return this.productsService.listAll(user, includeInactive === 'true', sellerStoreId, slug, categorySlug);
     }
     listPendingForAdmin() {
         return this.productsService.listPendingForAdmin();
@@ -51,11 +51,11 @@ let ProductsController = class ProductsController {
     getReviews(id) {
         return this.productsService.getReviews(id);
     }
-    update(id, dto) {
-        return this.productsService.update(id, dto);
+    update(user, id, dto) {
+        return this.productsService.update(user, id, dto);
     }
-    remove(id) {
-        return this.productsService.remove(id);
+    remove(user, id) {
+        return this.productsService.remove(user, id);
     }
 };
 exports.ProductsController = ProductsController;
@@ -70,6 +70,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "create", null);
 __decorate([
+    (0, common_1.UseGuards)(optional_jwt_auth_guard_1.OptionalJwtAuthGuard),
     (0, common_1.Get)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)('includeInactive')),
@@ -138,19 +139,21 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.SELLER),
     (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDto]),
+    __metadata("design:paramtypes", [Object, String, update_product_dto_1.UpdateProductDto]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "update", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.SELLER),
     (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ProductsController.prototype, "remove", null);
 exports.ProductsController = ProductsController = __decorate([

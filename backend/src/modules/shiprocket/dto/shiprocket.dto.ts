@@ -66,6 +66,14 @@ export class CreateShiprocketOrderDto {
   @IsOptional()
   @IsNumber()
   height?: number;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: 'Prepaid' | 'COD';
+
+  @IsOptional()
+  @IsString()
+  customerOrderId?: string;
 }
 
 export class GenerateAwbDto {

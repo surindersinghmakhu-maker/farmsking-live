@@ -3,7 +3,7 @@ import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { SmsService } from '../sms/sms.service';
 import { randomBytes } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { NotificationType, OrderStatus, OrderPaymentMode, OrderPaymentStatus, Role, SellerType, SubOrderStatus, RtoBearer } from '@prisma/client';
+import { NotificationType, OrderStatus, OrderPaymentMode, OrderPaymentStatus, Prisma, Role, SellerPayoutStatus, SellerType, SubOrderStatus, RtoBearer, WalletTransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
@@ -66,6 +66,65 @@ export class OrdersService {
     private readonly smsService: SmsService,
   ) {}
 
+  private resolveEffectiveUnitPrice(product: any, quantity: number): number {
+    const unitPrice = Number(product.price);
+    const isWholesale =
+      product.bulkDiscountMinQty &&
+      product.bulkDiscountPercentage &&
+      quantity >= product.bulkDiscountMinQty;
+    const effective = isWholesale
+      ? unitPrice * (1 - Number(product.bulkDiscountPercentage) / 100)
+      : unitPrice;
+    return Number(effective.toFixed(2));
+  }
+
+  private resolveStoreCommissionRate(
+    product: any,
+    store: any,
+    categoryCommissions?: Record<string, any> | null,
+  ): number {
+    if (product?.commissionOverridePercentage != null) {
+      return Number(product.commissionOverridePercentage);
+    }
+    const catSlug = String(product?.categorySlug || product?.category || '').toLowerCase();
+    if (categoryCommissions && typeof categoryCommissions === 'object') {
+      if ((catSlug.includes('fertilizer') || catSlug.includes('khad')) && categoryCommissions.fertilizer != null) {
+        return Number(categoryCommissions.fertilizer);
+      }
+      if (catSlug.includes('seed') && categoryCommissions.seeds != null) {
+        return Number(categoryCommissions.seeds);
+      }
+      if ((catSlug.includes('pesticide') || catSlug.includes('spray')) && categoryCommissions.spray != null) {
+        return Number(categoryCommissions.spray);
+      }
+      if ((catSlug.includes('plant') || catSlug.includes('garden')) && categoryCommissions.livePlants != null) {
+        return Number(categoryCommissions.livePlants);
+      }
+      if (catSlug.includes('feed') && categoryCommissions.feed != null) {
+        return Number(categoryCommissions.feed);
+      }
+    }
+    return Number(store?.commissionRate ?? 8.0);
+  }
+
+  private async getCategoryCommissionsMap(storeIds: string[]): Promise<Map<string, Record<string, any>>> {
+    const map = new Map<string, Record<string, any>>();
+    if (storeIds.length === 0) return map;
+    try {
+      const rows: Array<{ id: string; categoryCommissions: any }> = await this.prisma.$queryRaw(
+        Prisma.sql`SELECT "id", "categoryCommissions" FROM "seller_stores" WHERE "id" IN (${Prisma.join(storeIds)})`,
+      );
+      for (const r of rows) {
+        if (r.categoryCommissions && typeof r.categoryCommissions === 'object') {
+          map.set(r.id, r.categoryCommissions);
+        }
+      }
+    } catch {
+      // Column optional in legacy environments
+    }
+    return map;
+  }
+
   async create(customer: AuthUser, dto: CreateOrderDto) {
     const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
     const isStaff = staffRoles.includes(customer.role);
@@ -81,13 +140,10 @@ export class OrdersService {
     let totalWeightKg = 0;
     let anyCodDisabled = false;
 
-    // Detect delivery state from address string or customer user record
-    const deliveryAddressStr = dto.deliveryAddress || '';
     const customerUser = await this.prisma.user.findUnique({ where: { id: targetCustomerId } });
     if (!customerUser) {
       throw new NotFoundException(`Customer account not found.`);
     }
-    const customerState = customerUser?.state?.trim().toLowerCase() || '';
 
     for (const item of dto.items) {
       const product = productMap.get(item.productId);
@@ -104,8 +160,6 @@ export class OrdersService {
       if (!product.isCodAllowed) {
         anyCodDisabled = true;
       }
-
-
     }
 
     // COD Rule Engine Check
@@ -116,54 +170,72 @@ export class OrdersService {
       );
     }
 
-    const subtotal = dto.items.reduce((sum, item) => {
-      const p = productMap.get(item.productId)!;
-      const unitPrice = Number(p.price);
-      const isWholesale = p.bulkDiscountMinQty && p.bulkDiscountPercentage && item.quantity >= p.bulkDiscountMinQty;
-      const effectivePrice = isWholesale
-        ? unitPrice * (1 - Number(p.bulkDiscountPercentage) / 100)
-        : unitPrice;
-      return sum + effectivePrice * item.quantity;
-    }, 0);
+    const subtotal = Number(
+      dto.items
+        .reduce((sum, item) => {
+          const p = productMap.get(item.productId)!;
+          return sum + this.resolveEffectiveUnitPrice(p, item.quantity) * item.quantity;
+        }, 0)
+        .toFixed(2),
+    );
 
     const couponResult = dto.couponCode ? await this.couponsService.getActiveForOrder(dto.couponCode, subtotal) : null;
     const discountAmount = couponResult?.discountAmount ?? 0;
-    let totalAmount = subtotal - discountAmount;
-    let walletDeduction = 0;
-    let walletPlatformFee = 0;
-    let walletGstAmount = 0;
-    let platformExpense = false;
-    let totalWalletDeduction = 0;
+    const postCouponAmount = Number(Math.max(0, subtotal - discountAmount).toFixed(2));
+    const settings = dto.useWalletBalance ? ((await this.appSettingsService.get()) as any) : null;
 
-    if (dto.useWalletBalance) {
-      const walletBalance = await this.walletService.getBalance(targetCustomerId);
-      if (walletBalance > 0) {
-        const settings = await this.appSettingsService.get() as any;
-        const taxEnabled = settings.walletTaxEnabled ?? true;
-        let feeRate = 0;
-        let gstRate = 0;
+    const storeIds = Array.from(
+      new Set(products.map((p) => p.sellerStoreId).filter((sid): sid is string => Boolean(sid))),
+    );
+    const categoryCommMap = await this.getCategoryCommissionsMap(storeIds);
 
-        if (taxEnabled) {
-          feeRate = (settings.walletUsagePlatformFeePercent ?? 2.0) / 100;
-          gstRate = (settings.walletUsageGstPercent ?? 18.0) / 100;
-          platformExpense = true;
-        }
-
-        const costMultiplier = 1 + feeRate + feeRate * gstRate;
-        const maxUsableForOrder = walletBalance / costMultiplier;
-
-        walletDeduction = Math.min(totalAmount, maxUsableForOrder);
-        
-        walletPlatformFee = parseFloat((walletDeduction * feeRate).toFixed(2));
-        walletGstAmount = parseFloat((walletPlatformFee * gstRate).toFixed(2));
-        totalWalletDeduction = parseFloat((walletDeduction + walletPlatformFee + walletGstAmount).toFixed(2));
-        
-        totalAmount = parseFloat((totalAmount - walletDeduction).toFixed(2));
-      }
-    }
-
-    // Master Order & Vendor Sub-Orders Splitting
+    // Master Order & Vendor Sub-Orders Splitting (with atomic wallet check + debit)
     const order = await this.prisma.$transaction(async (tx) => {
+      let totalAmount = postCouponAmount;
+      let walletDeduction = 0;
+      let walletPlatformFee = 0;
+      let walletGstAmount = 0;
+      let platformExpense = false;
+      let totalWalletDeduction = 0;
+
+      if (dto.useWalletBalance && postCouponAmount > 0) {
+        const [credits, debits] = await Promise.all([
+          tx.walletTransaction.aggregate({
+            where: { userId: targetCustomerId, type: WalletTransactionType.CREDIT },
+            _sum: { amount: true },
+          }),
+          tx.walletTransaction.aggregate({
+            where: { userId: targetCustomerId, type: WalletTransactionType.DEBIT },
+            _sum: { amount: true },
+          }),
+        ]);
+        const walletBalance = Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
+
+        if (walletBalance > 0) {
+          const taxEnabled = settings?.walletTaxEnabled ?? true;
+          let feeRate = 0;
+          let gstRate = 0;
+
+          if (taxEnabled) {
+            feeRate = (settings?.walletUsagePlatformFeePercent ?? 2.0) / 100;
+            gstRate = (settings?.walletUsageGstPercent ?? 18.0) / 100;
+            platformExpense = true;
+          }
+
+          const costMultiplier = 1 + feeRate + feeRate * gstRate;
+          const maxUsableForOrder = walletBalance / costMultiplier;
+
+          walletDeduction = Number(Math.min(postCouponAmount, maxUsableForOrder).toFixed(2));
+          walletPlatformFee = Number((walletDeduction * feeRate).toFixed(2));
+          walletGstAmount = Number((walletPlatformFee * gstRate).toFixed(2));
+          totalWalletDeduction = Number((walletDeduction + walletPlatformFee + walletGstAmount).toFixed(2));
+          if (totalWalletDeduction > walletBalance) {
+            totalWalletDeduction = Number(walletBalance.toFixed(2));
+          }
+          totalAmount = Number(Math.max(0, postCouponAmount - walletDeduction).toFixed(2));
+        }
+      }
+
       const created = await tx.customerOrder.create({
         data: {
           customerId: targetCustomerId,
@@ -180,13 +252,17 @@ export class OrdersService {
           items: {
             create: dto.items.map((item) => {
               const product = productMap.get(item.productId)!;
-              const itemSubtotal = Number(product.price) * item.quantity;
-              const itemTcs = itemSubtotal * 0.01;
+              const effectivePrice = this.resolveEffectiveUnitPrice(product, item.quantity);
+              const itemSubtotal = Number((effectivePrice * item.quantity).toFixed(2));
+              const isGstRegistered = Boolean(
+                product.sellerStore?.gstin && product.sellerStore.gstin.trim().length >= 15,
+              );
+              const itemTcs = isGstRegistered ? Number((itemSubtotal * 0.01).toFixed(2)) : 0;
               return {
                 productId: product.id,
                 productName: product.name,
                 quantity: item.quantity,
-                price: product.price,
+                price: effectivePrice,
                 sellerStoreId: product.sellerStoreId,
                 subtotal: itemSubtotal,
                 tcsAmount: itemTcs,
@@ -197,12 +273,17 @@ export class OrdersService {
         include: DETAIL_INCLUDE,
       });
 
-      // Stock Decrement
-      await Promise.all(
-        dto.items.map((item) =>
-          tx.product.update({ where: { id: item.productId }, data: { stockQty: { decrement: item.quantity } } }),
-        ),
-      );
+      // Atomic Stock Decrement (with oversell guard)
+      for (const item of dto.items) {
+        const res = await tx.product.updateMany({
+          where: { id: item.productId, stockQty: { gte: item.quantity } },
+          data: { stockQty: { decrement: item.quantity } },
+        });
+        if (res.count === 0) {
+          const p = productMap.get(item.productId);
+          throw new ConflictException(`Insufficient stock for "${p?.name || item.productId}". Please refresh cart.`);
+        }
+      }
 
       // Coupon redemption increment
       if (couponResult) {
@@ -219,9 +300,16 @@ export class OrdersService {
         });
       }
 
-      // Wallet deduction
-      if (walletDeduction > 0) {
-        await this.walletService.debit(targetCustomerId, walletDeduction, `Paid for Order #${created.orderNumber}`);
+      // Atomic Wallet deduction inside transaction (incl. fee + GST)
+      if (totalWalletDeduction > 0) {
+        await tx.walletTransaction.create({
+          data: {
+            userId: targetCustomerId,
+            type: WalletTransactionType.DEBIT,
+            amount: totalWalletDeduction,
+            reason: `Paid for Order #${created.orderNumber}${walletPlatformFee > 0 ? ` (incl. ₹${(walletPlatformFee + walletGstAmount).toFixed(2)} platform fee & GST)` : ''}`,
+          },
+        });
       }
 
       // Split order into Vendor SubOrders
@@ -242,25 +330,27 @@ export class OrdersService {
 
         let groupSubtotal = 0;
         let groupCommissionAmount = 0;
+        const catComm = categoryCommMap.get(storeId);
 
         groupItems.forEach((item) => {
           const product = productMap.get(item.productId)!;
-          const itemSub = Number(product.price) * item.quantity;
-          const commRate = Number(product.commissionOverridePercentage ?? store.commissionRate ?? 8.0);
-          const commAmt = (itemSub * commRate) / 100;
+          const effectivePrice = this.resolveEffectiveUnitPrice(product, item.quantity);
+          const itemSub = Number((effectivePrice * item.quantity).toFixed(2));
+          const commRate = this.resolveStoreCommissionRate(product, store, catComm);
+          const commAmt = Number(((itemSub * commRate) / 100).toFixed(2));
 
           groupSubtotal += itemSub;
           groupCommissionAmount += commAmt;
         });
 
-        const vendorNetPayout = groupSubtotal - groupCommissionAmount;
+        const vendorNetPayout = Number((groupSubtotal - groupCommissionAmount).toFixed(2));
 
         await tx.subOrder.create({
           data: {
             orderId: created.id,
             sellerStoreId: storeId,
-            subtotal: groupSubtotal,
-            commissionAmount: groupCommissionAmount,
+            subtotal: Number(groupSubtotal.toFixed(2)),
+            commissionAmount: Number(groupCommissionAmount.toFixed(2)),
             vendorNetPayout,
             orderStatus: SubOrderStatus.PLACED,
           },
@@ -303,7 +393,10 @@ export class OrdersService {
 
     for (const subOrder of order.subOrders) {
       const store = subOrder.sellerStore;
-      const pickupNickname = store.shiprocketPickupNickname || `HUB_${store.slug.substring(0, 10).toUpperCase()}`;
+      const pickupNickname =
+        store.shiprocketPickupLocationId ||
+        store.shiprocketPickupNickname ||
+        `HUB_${store.slug.substring(0, 10).toUpperCase()}`;
 
       const vendorItems = order.items.filter((i) => i.sellerStoreId === store.id);
       if (vendorItems.length === 0) continue;
@@ -322,6 +415,8 @@ export class OrdersService {
         const srRes = await this.shiprocketService.createShipmentOrder(
           {
             orderId: `${order.orderNumber}-${store.id.substring(0, 4)}`,
+            customerOrderId: order.id,
+            paymentMethod: order.paymentMode === OrderPaymentMode.COD ? 'COD' : 'Prepaid',
             orderDate: new Date().toISOString().split('T')[0],
             pickupLocation: pickupNickname,
             billingCustomerName: order.customer.name,
@@ -383,13 +478,59 @@ export class OrdersService {
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {
-    const order = await this.prisma.customerOrder.findUnique({ where: { id }, include: DETAIL_INCLUDE });
+    const order = await this.prisma.customerOrder.findFirst({
+      where: { OR: [{ id }, { orderNumber: id }] },
+      include: DETAIL_INCLUDE,
+    });
     if (!order) {
       throw new NotFoundException('Order not found.');
     }
     const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
-    if (order.customerId !== user.id && !staffRoles.includes(user.role)) {
+    const isOrderSeller =
+      user.role === Role.SELLER &&
+      (order.subOrders?.some((so: any) => so.sellerStore?.sellerId === user.id) ||
+        order.items?.some((it: any) => it.sellerStore?.sellerId === user.id));
+    if (order.customerId !== user.id && !isOrderSeller && !staffRoles.includes(user.role)) {
       throw new ForbiddenException('You do not have access to this order.');
+    }
+    return order;
+  }
+
+  /** Safe redacted order tracking lookup by orderNumber or trackingId (no customer PII exposed) */
+  async trackPublicOrder(query: string) {
+    const q = (query || '').trim();
+    if (!q) {
+      throw new BadRequestException('Order number or tracking ID is required.');
+    }
+    const order = await this.prisma.customerOrder.findFirst({
+      where: {
+        OR: [{ orderNumber: q }, { trackingId: q }, { id: q }],
+      },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        orderDate: true,
+        deliveryDate: true,
+        dispatchedAt: true,
+        packedAt: true,
+        courierName: true,
+        trackingId: true,
+        paymentMode: true,
+        paymentStatus: true,
+        totalAmount: true,
+        items: {
+          select: { id: true, productName: true, quantity: true, price: true },
+        },
+        shippingLogs: {
+          select: { status: true, courierName: true, awbCode: true, deliveredAt: true, updatedAt: true },
+          orderBy: { updatedAt: 'desc' },
+          take: 5,
+        },
+      },
+    });
+    if (!order) {
+      throw new NotFoundException(`No consignment found matching "${q}".`);
     }
     return order;
   }
@@ -435,7 +576,8 @@ export class OrdersService {
     const splits = order.subOrders.map(subOrder => ({
       cashfreeVendorId: (subOrder.sellerStore as any)?.cashfreeVendorId,
       itemSubtotal: Number(subOrder.subtotal),
-      commissionRate: Number(subOrder.sellerStore.commissionRate || 8.0)
+      commissionRate: Number(subOrder.sellerStore.commissionRate ?? 8.0),
+      isGstRegistered: Boolean(subOrder.sellerStore?.gstin && subOrder.sellerStore.gstin.trim().length >= 15),
     })).filter(s => s.cashfreeVendorId); // Only include suborders with a cashfree vendor
 
     const result = await this.cashfreeService.createSplitOrder({
@@ -488,6 +630,10 @@ export class OrdersService {
       },
       include: DETAIL_INCLUDE,
     });
+
+    await this.ensurePendingSellerPayoutsForOrder(order.id).catch((err) =>
+      console.warn('Pending seller payout creation notice:', err),
+    );
 
     await this.notifyCustomer(
       order.customerId,
@@ -659,6 +805,9 @@ export class OrdersService {
       'ORDER_CONFIRMED_SMS',
     );
     await this.creditCouponCommission(id);
+    this.triggerShiprocketSubOrders(order.id).catch((err) =>
+      console.warn('Shiprocket confirm trigger notice:', err),
+    );
     return updated;
   }
 
@@ -712,6 +861,34 @@ export class OrdersService {
             tx.product.update({ where: { id: item.productId! }, data: { stockQty: { increment: item.quantity } } }),
           ),
       );
+
+      if (Number(order.walletUsedAmount || 0) > 0) {
+        const debitTx = await tx.walletTransaction.findFirst({
+          where: {
+            userId: order.customerId,
+            type: WalletTransactionType.DEBIT,
+            reason: { contains: `Order #${order.orderNumber}` },
+          },
+        });
+        const alreadyRefunded = await tx.walletTransaction.findFirst({
+          where: {
+            userId: order.customerId,
+            type: WalletTransactionType.CREDIT,
+            reason: { contains: `Refund for Cancelled Order #${order.orderNumber}` },
+          },
+        });
+        if (debitTx && !alreadyRefunded) {
+          await tx.walletTransaction.create({
+            data: {
+              userId: order.customerId,
+              type: WalletTransactionType.CREDIT,
+              amount: Number(debitTx.amount),
+              reason: `Refund for Cancelled Order #${order.orderNumber}`,
+            },
+          });
+        }
+      }
+
       return result;
     });
 
@@ -793,6 +970,10 @@ export class OrdersService {
       data: { orderStatus: SubOrderStatus.DELIVERED },
     });
 
+    await this.ensurePendingSellerPayoutsForOrder(order.id).catch((err) =>
+      console.warn('Delivered payout creation notice:', err),
+    );
+
     await this.notifyCustomer(
       order.customerId,
       '📦 Order Delivered',
@@ -802,6 +983,84 @@ export class OrdersService {
     );
 
     return updated;
+  }
+
+  /** Creates PENDING SellerPayout records for COD / manually paid / delivered orders if not yet created */
+  private async ensurePendingSellerPayoutsForOrder(orderId: string) {
+    const order = await this.prisma.customerOrder.findUnique({
+      where: { id: orderId },
+      include: {
+        items: { include: { product: true, sellerStore: true } },
+      },
+    });
+    if (!order) return;
+
+    const storeIds = Array.from(
+      new Set(order.items.map((i) => i.sellerStoreId).filter((s): s is string => Boolean(s))),
+    );
+    const categoryCommMap = await this.getCategoryCommissionsMap(storeIds);
+
+    const sellerMap = new Map<string, { store: any; items: typeof order.items }>();
+    for (const item of order.items) {
+      if (!item.sellerStoreId || !item.sellerStore) continue;
+      const entry = sellerMap.get(item.sellerStoreId) || { store: item.sellerStore, items: [] };
+      entry.items.push(item);
+      sellerMap.set(item.sellerStoreId, entry);
+    }
+
+    for (const [sellerStoreId, group] of sellerMap.entries()) {
+      const store = group.store;
+      const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
+      const catComm = categoryCommMap.get(sellerStoreId);
+
+      let totalGross = 0;
+      let totalCommission = 0;
+      let totalTcs = 0;
+
+      for (const item of group.items) {
+        const itemSub = Number(item.subtotal || Number(item.price) * item.quantity);
+        const commRate = this.resolveStoreCommissionRate(item.product, store, catComm);
+        const itemComm = Number(((itemSub * commRate) / 100).toFixed(2));
+        const itemTcs = isGstRegistered ? Number(((itemSub * 1.0) / 100).toFixed(2)) : 0;
+        totalGross += itemSub;
+        totalCommission += itemComm;
+        totalTcs += itemTcs;
+      }
+
+      const netPayout = Number((totalGross - totalCommission - totalTcs).toFixed(2));
+      const payoutRefNo = `PAY-${order.orderNumber}-${sellerStoreId.substring(0, 6)}`;
+
+      const existing = await this.prisma.sellerPayout.findUnique({ where: { payoutRefNo } });
+      if (existing) continue;
+
+      const createdPayout = await this.prisma.sellerPayout.create({
+        data: {
+          sellerStoreId,
+          payoutRefNo,
+          totalGrossAmount: Number(totalGross.toFixed(2)),
+          totalCommissionAmount: Number(totalCommission.toFixed(2)),
+          totalTcsAmount: Number(totalTcs.toFixed(2)),
+          netPayoutAmount: netPayout,
+          status: SellerPayoutStatus.PENDING,
+        },
+      });
+
+      for (const item of group.items) {
+        const itemSub = Number(item.subtotal || Number(item.price) * item.quantity);
+        const commRate = this.resolveStoreCommissionRate(item.product, store, catComm);
+        const itemComm = Number(((itemSub * commRate) / 100).toFixed(2));
+        const itemTcs = isGstRegistered ? Number(((itemSub * 1.0) / 100).toFixed(2)) : 0;
+        await this.prisma.customerOrderItem.update({
+          where: { id: item.id },
+          data: {
+            commissionAmount: itemComm,
+            tcsAmount: itemTcs,
+            sellerPayoutAmount: Number((itemSub - itemComm - itemTcs).toFixed(2)),
+            sellerPayoutId: createdPayout.id,
+          },
+        });
+      }
+    }
   }
   /** Update RTO status for sub-order & apply RTO Bearer Fee Policy */
   async processRtoSubOrder(subOrderId: string, rtoShippingFee: number) {
@@ -904,13 +1163,24 @@ export class OrdersService {
     });
   }
 
-  /** Render HTML representation of a specific invoice */
-  async getInvoiceHtml(invoiceId: string) {
+  /** Render HTML representation of a specific invoice (ownership enforced) */
+  async getInvoiceHtml(user: AuthUser, invoiceId: string) {
     const invoice = await this.prisma.orderInvoice.findUnique({
       where: { id: invoiceId },
+      include: {
+        order: { select: { customerId: true } },
+        sellerStore: { select: { sellerId: true } },
+      },
     });
     if (!invoice) {
       throw new NotFoundException('Invoice not found.');
+    }
+    const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
+    const isStaff = staffRoles.includes(user.role);
+    const isBuyer = invoice.order?.customerId === user.id;
+    const isSeller = user.role === Role.SELLER && invoice.sellerStore?.sellerId === user.id;
+    if (!isStaff && !isBuyer && !isSeller) {
+      throw new ForbiddenException('You do not have permission to view this invoice.');
     }
     return this.billingService.renderInvoiceHtml(invoice);
   }

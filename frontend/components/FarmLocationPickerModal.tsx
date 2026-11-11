@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -16,6 +16,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useCrops, CornerCoord, CropGpsData } from '@/src/store/crops-context';
+import { useAuth } from '@/src/store/auth-context';
+import {
+  CropVideoPlayer,
+  WebCameraPhotoModal,
+  WebCameraVideoRecorderModal,
+} from '@/components/CropVideoPlayer';
+import { CropRemarksSection } from '@/components/CropRemarksSection';
+import {
+  computeDaysRemaining,
+  deleteRemovedMediaStoreRecords,
+  detectMediaCaptureSource,
+  fetchCropMediaFromStore,
+  fetchCropRemarkFromStore,
+  formatMediaTimestamp,
+  isLocalGpsMediaActive,
+  MAX_REMARK_CHARS,
+  MEDIA_DISPLAY_DAYS,
+  MEDIA_DISPLAY_MS,
+  MediaCaptureSource,
+  mergeCropMediaLists,
+  pickWebMediaFiles,
+  resolveCropMediaDisplayUri,
+  saveCropRemarkToStore,
+  stampWatermarkOnImage,
+  uploadSingleCropMedia,
+} from '@/src/utils/crop-media';
 
 interface FarmLocationPickerModalProps {
   visible: boolean;
@@ -74,8 +100,13 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
   onClose,
   onSaveLocation,
 }) => {
-  const { requestCropGpsUnlock, updateCropLocation, saveCropGpsData, lockCropGps } = useCrops();
+  const { user } = useAuth();
+  const { cropGpsDataMap, requestCropGpsUnlock, updateCropLocation, saveCropGpsData, lockCropGps, addCropActivity } = useCrops();
   const router = useRouter();
+
+  const effectiveFarmerName = (farmerName || user?.farmName || user?.name || 'Registered Farmer').trim();
+  const effectivePlotName = (plotName || 'Field Plot').trim();
+  const effectiveInitialGps = (cropId ? cropGpsDataMap[cropId] : undefined) || existingGpsData;
 
   // Wizard active step for Setup: 1 = Boundary, 2 = 5 Photos, 3 = 1-Min Video
   const [setupStep, setSetupStep] = useState<1 | 2 | 3>(1);
@@ -85,11 +116,11 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
 
   // GPS Coordinates & 4 Corners
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(
-    existingGpsData ? { lat: existingGpsData.centerLat, lng: existingGpsData.centerLng } : { lat: 30.9085, lng: 75.8610 }
+    effectiveInitialGps ? { lat: effectiveInitialGps.centerLat, lng: effectiveInitialGps.centerLng } : { lat: 30.9085, lng: 75.8610 }
   );
   const [corners, setCorners] = useState<CornerCoord[]>(
-    existingGpsData?.corners && existingGpsData.corners.length === 4
-      ? existingGpsData.corners
+    effectiveInitialGps?.corners && effectiveInitialGps.corners.length === 4
+      ? effectiveInitialGps.corners
       : [
           { label: 'C1 (NW)', lat: 30.9097, lng: 75.8595 },
           { label: 'C2 (NE)', lat: 30.9099, lng: 75.8626 },
@@ -97,23 +128,30 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
           { label: 'C4 (SW)', lat: 30.9072, lng: 75.8596 },
         ]
   );
-  const [cornersMarked, setCornersMarked] = useState<number>(existingGpsData ? 4 : 4);
-  const [calculatedAcres, setCalculatedAcres] = useState<number>(existingGpsData?.areaAcres || 3.8);
+  const [cornersMarked, setCornersMarked] = useState<number>(effectiveInitialGps ? 4 : 4);
+  const [calculatedAcres, setCalculatedAcres] = useState<number>(effectiveInitialGps?.areaAcres || 3.8);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [captureMode, setCaptureMode] = useState<'WALK' | 'REMOTE'>('REMOTE');
 
-  // Photos (Up to 5)
-  const [photos, setPhotos] = useState<string[]>(
-    existingGpsData?.fieldPhotos && existingGpsData.fieldPhotos.length > 0
-      ? existingGpsData.fieldPhotos
-      : []
-  );
+  // Photos (Up to 6) & Live Video
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [photoSources, setPhotoSources] = useState<Record<string, MediaCaptureSource>>({});
   const [previewingPhotoIndex, setPreviewingPhotoIndex] = useState<number | null>(null);
+  const [videoUri, setVideoUri] = useState<string | null>(null);
+  const [videoRecordedAt, setVideoRecordedAt] = useState<string | Date | null>(null);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [audioRecordedAt, setAudioRecordedAt] = useState<string | Date | null>(null);
+  const [remarksText, setRemarksText] = useState<string>('');
+  const [showWebPhotoCamera, setShowWebPhotoCamera] = useState(false);
+  const [showWebVideoRecorder, setShowWebVideoRecorder] = useState(false);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+  const [isSavingMedia, setIsSavingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [mediaDaysRemaining, setMediaDaysRemaining] = useState<number>(0);
+  const [hasExpiredMediaArchive, setHasExpiredMediaArchive] = useState<boolean>(false);
 
-  // 1-Minute Video
-  const [videoUri, setVideoUri] = useState<string | null>(existingGpsData?.fieldVideo || null);
-  const [isVideoRecording, setIsVideoRecording] = useState(false);
-  const [recordTimerSeconds, setRecordTimerSeconds] = useState(0);
+  const recordsByUrlRef = useRef<Record<string, string>>({});
+  const initialUrlsRef = useRef<string[]>([]);
 
   // Lock & Unlock State
   const [isLocked, setIsLocked] = useState<boolean>(initialIsLocked);
@@ -127,25 +165,146 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
   }, [initialIsLocked]);
 
   useEffect(() => {
-    let interval: any;
-    if (isVideoRecording) {
-      interval = setInterval(() => {
-        setRecordTimerSeconds((prev) => {
-          if (prev >= 60) {
-            clearInterval(interval);
-            setIsVideoRecording(false);
-            setVideoUri('https://assets.farmsking.com/demo_crop_video_60s.mp4');
-            Alert.alert('1-Minute Video Recorded ✅', 'Field video has been captured and attached.');
-            return 60;
-          }
-          return prev + 1;
-        });
-      }, 1000);
-    } else {
-      setRecordTimerSeconds(0);
+    if (!visible) {
+      setMediaError(null);
+      setPreviewingPhotoIndex(null);
+      setShowWebPhotoCamera(false);
+      setShowWebVideoRecorder(false);
+      return;
     }
-    return () => clearInterval(interval);
-  }, [isVideoRecording]);
+
+    let cancelled = false;
+    setMediaError(null);
+
+    const snapshot = (cropId ? cropGpsDataMap[cropId] : undefined) || existingGpsData;
+    const localActive = isLocalGpsMediaActive(snapshot);
+    setSelectedCoords(
+      snapshot ? { lat: snapshot.centerLat, lng: snapshot.centerLng } : { lat: 30.9085, lng: 75.8610 },
+    );
+    setCorners(
+      snapshot?.corners && snapshot.corners.length === 4
+        ? snapshot.corners
+        : [
+            { label: 'C1 (NW)', lat: 30.9097, lng: 75.8595 },
+            { label: 'C2 (NE)', lat: 30.9099, lng: 75.8626 },
+            { label: 'C3 (SE)', lat: 30.9074, lng: 75.8623 },
+            { label: 'C4 (SW)', lat: 30.9072, lng: 75.8596 },
+          ],
+    );
+    setCalculatedAcres(snapshot?.areaAcres || 3.8);
+
+    const sanitizedLocal = localActive
+      ? mergeCropMediaLists(
+          [],
+          snapshot?.fieldPhotos,
+          null,
+          snapshot?.fieldVideo || null,
+          null,
+          snapshot?.fieldAudio || null,
+        )
+      : { photos: [], video: null, audio: null };
+    const initialSourceMap: Record<string, MediaCaptureSource> = {};
+    sanitizedLocal.photos.forEach((p) => {
+      initialSourceMap[p] = detectMediaCaptureSource(p);
+    });
+    setPhotos(sanitizedLocal.photos);
+    setPhotoSources(initialSourceMap);
+    setVideoUri(sanitizedLocal.video);
+    setVideoRecordedAt(localActive ? snapshot?.updatedAt || null : null);
+    setAudioUri(sanitizedLocal.audio);
+    setAudioRecordedAt(localActive ? snapshot?.updatedAt || null : null);
+    setRemarksText(
+      localActive ? String(snapshot?.farmerRemarks || '').slice(0, MAX_REMARK_CHARS) : '',
+    );
+
+    const localExpiry =
+      localActive && snapshot?.mediaDisplayExpiresAt
+        ? snapshot.mediaDisplayExpiresAt
+        : localActive && snapshot?.updatedAt
+          ? new Date(new Date(snapshot.updatedAt).getTime() + MEDIA_DISPLAY_MS).toISOString()
+          : null;
+    const localHadPriorMedia = Boolean(
+      snapshot &&
+        ((snapshot.fieldPhotos && snapshot.fieldPhotos.length > 0) ||
+          snapshot.fieldVideo ||
+          snapshot.fieldAudio ||
+          snapshot.farmerRemarks),
+    );
+    setMediaDaysRemaining(localExpiry ? computeDaysRemaining(localExpiry) : 0);
+    setHasExpiredMediaArchive(!localActive && localHadPriorMedia);
+
+    initialUrlsRef.current = [
+      ...sanitizedLocal.photos,
+      ...(sanitizedLocal.video ? [sanitizedLocal.video] : []),
+      ...(sanitizedLocal.audio ? [sanitizedLocal.audio] : []),
+    ];
+    recordsByUrlRef.current = {};
+
+    if (cropId) {
+      setIsLoadingMedia(true);
+      Promise.all([
+        fetchCropMediaFromStore(cropId),
+        fetchCropRemarkFromStore(cropId),
+      ])
+        .then(([storeMedia, savedRemark]) => {
+          if (cancelled) return;
+          recordsByUrlRef.current = storeMedia.recordsByUrl;
+          const merged = mergeCropMediaLists(
+            storeMedia.photos,
+            localActive ? snapshot?.fieldPhotos : undefined,
+            storeMedia.video,
+            localActive ? snapshot?.fieldVideo || null : null,
+            storeMedia.audio,
+            localActive ? snapshot?.fieldAudio || null : null,
+          );
+          const mergedSourceMap: Record<string, MediaCaptureSource> = {};
+          merged.photos.forEach((p) => {
+            mergedSourceMap[p] = storeMedia.sourcesByUrl[p] || detectMediaCaptureSource(p);
+          });
+          setPhotos(merged.photos);
+          setPhotoSources(mergedSourceMap);
+          setVideoUri(merged.video);
+          setAudioUri(merged.audio);
+          if (merged.video && storeMedia.datesByUrl[merged.video]) {
+            setVideoRecordedAt(storeMedia.datesByUrl[merged.video]);
+          }
+          if (merged.audio && storeMedia.datesByUrl[merged.audio]) {
+            setAudioRecordedAt(storeMedia.datesByUrl[merged.audio]);
+          }
+          setRemarksText(
+            (savedRemark.remarksText || (localActive ? snapshot?.farmerRemarks || '' : '')).slice(
+              0,
+              MAX_REMARK_CHARS,
+            ),
+          );
+          const resolvedExpiry =
+            storeMedia.activeWindowExpiresAt || savedRemark.expiresAt || localExpiry;
+          setMediaDaysRemaining(resolvedExpiry ? computeDaysRemaining(resolvedExpiry) : 0);
+          setHasExpiredMediaArchive(
+            storeMedia.hasExpiredArchive ||
+              savedRemark.history.some((h) => !h.isActiveDisplay) ||
+              (!localActive && localHadPriorMedia),
+          );
+          initialUrlsRef.current = [
+            ...merged.photos,
+            ...(merged.video ? [merged.video] : []),
+            ...(merged.audio ? [merged.audio] : []),
+          ];
+        })
+        .catch(() => {
+          // Keep sanitized local cache if server fetch is temporarily unreachable
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoadingMedia(false);
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+    // Hydrate only when modal opens or active cropId changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, cropId]);
 
   // Handle Mark Corner Step (Walk Mode)
   const handleMarkCornerStep = () => {
@@ -163,68 +322,125 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
     }, 600);
   };
 
-  // Add Photo via Camera (Up to 6)
+  // Add Photo via Live Camera ONLY (tagged LIVE; never silently falls back to gallery)
   const handleTakePhotoLive = async () => {
     if (photos.length >= 6) {
-      Alert.alert('Maximum Reached', 'You can upload a maximum of 6 field photos.');
+      Alert.alert('Maximum Reached', 'You can save a maximum of 6 field photos.');
+      return;
+    }
+    setMediaError(null);
+    if (Platform.OS === 'web') {
+      setShowWebPhotoCamera(true);
       return;
     }
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera access is required to take live field photos.');
+        Alert.alert('Permission Required', 'Camera access is required to capture live field photos.');
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        quality: 0.8,
+        quality: 0.85,
       });
       if (!result.canceled && result.assets && result.assets[0]) {
-        setPhotos((prev) => [...prev, result.assets[0].uri]);
+        const stamped = await stampWatermarkOnImage(result.assets[0].uri, {
+          sourceType: 'LIVE',
+          farmerName: effectiveFarmerName,
+          plotName: effectivePlotName,
+          cropName: cropName || 'Field Crop',
+        });
+        setPhotos((prev) => [...prev, stamped].slice(0, 6));
+        setPhotoSources((prev) => ({ ...prev, [stamped]: 'LIVE' }));
       }
     } catch {
-      // Fallback for browsers / demo
-      const fallbackUrl = `https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop&q=80&sig=${Date.now()}`;
-      setPhotos((prev) => [...prev, fallbackUrl]);
+      setMediaError('Camera unavailable. Use "Upload from Gallery" for gallery photos.');
     }
   };
 
-  // Add Photo via Library (Up to 6)
+  // Add Photo via Library (tagged UPLOADED)
   const handlePickPhotoLibrary = async () => {
     if (photos.length >= 6) {
-      Alert.alert('Maximum Reached', 'You can upload a maximum of 6 field photos.');
+      Alert.alert('Maximum Reached', 'You can save a maximum of 6 field photos.');
       return;
     }
+    setMediaError(null);
+    const stampGalleryUri = (uri: string) =>
+      stampWatermarkOnImage(uri, {
+        sourceType: 'UPLOADED',
+        farmerName: effectiveFarmerName,
+        plotName: effectivePlotName,
+        cropName: cropName || 'Field Crop',
+      });
+
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
         selectionLimit: 6 - photos.length,
-        quality: 0.8,
+        quality: 0.85,
       });
       if (!result.canceled && result.assets) {
-        const newUris = result.assets.map((a) => a.uri).slice(0, 6 - photos.length);
-        setPhotos((prev) => [...prev, ...newUris]);
+        const stampedList = await Promise.all(
+          result.assets.slice(0, 6 - photos.length).map((a) => stampGalleryUri(a.uri)),
+        );
+        setPhotos((prev) => [...prev, ...stampedList].slice(0, 6));
+        setPhotoSources((prev) => {
+          const next = { ...prev };
+          stampedList.forEach((u) => {
+            next[u] = 'UPLOADED';
+          });
+          return next;
+        });
       }
     } catch {
-      const fallbackUrl = `https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&auto=format&fit=crop&q=80&sig=${Date.now()}`;
-      setPhotos((prev) => [...prev, fallbackUrl]);
+      if (Platform.OS === 'web') {
+        const picked = await pickWebMediaFiles('image/*', true);
+        if (picked.length > 0) {
+          const stampedList = await Promise.all(
+            picked.slice(0, 6 - photos.length).map((u) => stampGalleryUri(u)),
+          );
+          setPhotos((prev) => [...prev, ...stampedList].slice(0, 6));
+          setPhotoSources((prev) => {
+            const next = { ...prev };
+            stampedList.forEach((u) => {
+              next[u] = 'UPLOADED';
+            });
+            return next;
+          });
+          return;
+        }
+      }
+      setMediaError('Could not open photo library. Please try selecting images again.');
     }
   };
 
   // Remove Photo
   const handleRemovePhoto = (index: number) => {
+    const removedUri = photos[index];
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+    if (removedUri) {
+      setPhotoSources((prev) => {
+        const next = { ...prev };
+        delete next[removedUri];
+        return next;
+      });
+    }
     if (previewingPhotoIndex === index) setPreviewingPhotoIndex(null);
   };
 
-  // Video Shoot (1-Minute Max)
+  // Video Shoot LIVE ONLY (Camera only — no gallery upload)
   const handleStartShootVideo = async () => {
+    setMediaError(null);
+    if (Platform.OS === 'web') {
+      setShowWebVideoRecorder(true);
+      return;
+    }
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera access is required to record field video.');
+        Alert.alert('Permission Required', 'Camera access is required to record live field video.');
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -234,86 +450,166 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
       });
       if (!result.canceled && result.assets && result.assets[0]) {
         setVideoUri(result.assets[0].uri);
-        Alert.alert('Video Attached ✅', '1-minute field video successfully attached.');
+        setVideoRecordedAt(new Date().toISOString());
       }
     } catch {
-      // Live recording timer simulation for desktop web
-      setIsVideoRecording(true);
+      setMediaError('Live video camera unavailable on this device.');
     }
   };
 
-  // Video Pick from Library
-  const handlePickVideoLibrary = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        quality: 0.8,
-      });
-      if (!result.canceled && result.assets && result.assets[0]) {
-        setVideoUri(result.assets[0].uri);
-        Alert.alert('Video Attached ✅', 'Field video attached.');
-      }
-    } catch {
-      setVideoUri('https://assets.farmsking.com/demo_crop_video_60s.mp4');
-      Alert.alert('Video Attached ✅', 'Field video attached.');
-    }
-  };
-
-  // Final Submit & Lock Field (Requires minimum 3 photos; video is optional)
-  const handleFinalSubmitAndLock = () => {
+  // Final Submit & Lock Field (Allows saving 1-6 photos + optional live video)
+  const handleFinalSubmitAndLock = async () => {
     if (cornersMarked < 4) {
       Alert.alert('Set Location First 📍', 'Please mark all 4 boundary corners of the field.');
       setSetupStep(1);
       return;
     }
 
-    if (photos.length < 3) {
+    if (photos.length === 0 && !videoUri) {
       Alert.alert(
-        'Minimum 3 Photos Required',
-        `Please capture or upload at least 3 photos of your crop field before submitting (currently ${photos.length}/3 uploaded). Video is optional.`
+        'Media Required',
+        'Please capture or upload at least 1 crop photo or record a live field video before submitting.',
       );
       setSetupStep(2);
       return;
     }
 
-    const centerLat = selectedCoords?.lat || 30.9085;
-    const centerLng = selectedCoords?.lng || 75.8610;
-    const locText = `📍 ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E (${calculatedAcres} Acres · 4 Corners)`;
+    setMediaError(null);
+    setIsSavingMedia(true);
+    try {
+      const uploadedPhotos: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const p = photos[i];
+        const srcType = photoSources[p] || detectMediaCaptureSource(p);
+        const savedUrl = await uploadSingleCropMedia(p, {
+          cropId: cropId || undefined,
+          mediaType: 'IMAGE',
+          sourceType: srcType,
+          filenamePrefix: `crop_${cropId || 'field'}_${srcType.toLowerCase()}_p${i + 1}`,
+        });
+        uploadedPhotos.push(savedUrl);
+      }
 
-    const gpsDataToSave: CropGpsData = {
-      centerLat,
-      centerLng,
-      corners,
-      areaAcres: calculatedAcres,
-      locationText: locText,
-      isLocked: true,
-      fieldPhotos: photos,
-      fieldVideo: videoUri || undefined,
-      updatedAt: new Date().toISOString(),
-    };
+      let finalVideoUrl: string | undefined;
+      if (videoUri) {
+        finalVideoUrl = await uploadSingleCropMedia(videoUri, {
+          cropId: cropId || undefined,
+          mediaType: 'VIDEO',
+          sourceType: 'LIVE',
+          filenamePrefix: `crop_${cropId || 'field'}_live_vid`,
+        });
+      }
 
-    if (cropId) {
-      saveCropGpsData(cropId, gpsDataToSave);
-      updateCropLocation(cropId, locText);
-      lockCropGps(cropId);
+      let finalAudioUrl: string | undefined;
+      if (audioUri) {
+        finalAudioUrl = await uploadSingleCropMedia(audioUri, {
+          cropId: cropId || undefined,
+          mediaType: 'AUDIO',
+          sourceType: 'LIVE',
+          filenamePrefix: `crop_${cropId || 'field'}_voice_note`,
+        });
+      }
+
+      const trimmedRemarks = remarksText.trim().slice(0, MAX_REMARK_CHARS);
+      if (cropId && trimmedRemarks) {
+        await saveCropRemarkToStore(cropId, trimmedRemarks);
+      }
+
+      const currentUrls = [
+        ...uploadedPhotos,
+        ...(finalVideoUrl ? [finalVideoUrl] : []),
+        ...(finalAudioUrl ? [finalAudioUrl] : []),
+      ];
+      await deleteRemovedMediaStoreRecords(
+        initialUrlsRef.current,
+        currentUrls,
+        recordsByUrlRef.current,
+      );
+
+      const nowIso = new Date().toISOString();
+      const expiresIso = new Date(Date.now() + MEDIA_DISPLAY_MS).toISOString();
+      const hasAttachedMediaOrRemarks =
+        uploadedPhotos.length > 0 ||
+        Boolean(finalVideoUrl) ||
+        Boolean(finalAudioUrl) ||
+        trimmedRemarks.length > 0;
+
+      const centerLat = selectedCoords?.lat || 30.9085;
+      const centerLng = selectedCoords?.lng || 75.8610;
+      const locText = `📍 ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E (${calculatedAcres} Acres · 4 Corners)`;
+
+      const gpsDataToSave: CropGpsData = {
+        centerLat,
+        centerLng,
+        corners,
+        areaAcres: calculatedAcres,
+        locationText: locText,
+        isLocked: true,
+        fieldPhotos: uploadedPhotos,
+        fieldVideo: finalVideoUrl,
+        fieldAudio: finalAudioUrl,
+        farmerRemarks: trimmedRemarks || undefined,
+        mediaCycleSavedAt: hasAttachedMediaOrRemarks ? nowIso : undefined,
+        mediaDisplayExpiresAt: hasAttachedMediaOrRemarks ? expiresIso : undefined,
+        saveMediaToCropRecord: hasAttachedMediaOrRemarks ? true : undefined,
+        updatedAt: nowIso,
+      };
+
+      if (cropId) {
+        saveCropGpsData(cropId, gpsDataToSave);
+        updateCropLocation(cropId, locText);
+        lockCropGps(cropId);
+
+        if (hasAttachedMediaOrRemarks) {
+          const summaryParts: string[] = [];
+          if (uploadedPhotos.length > 0) summaryParts.push(`${uploadedPhotos.length} Photo(s)`);
+          if (finalVideoUrl) summaryParts.push('1 Live Video');
+          if (finalAudioUrl) summaryParts.push('1 Voice Audio');
+          if (trimmedRemarks) summaryParts.push('Written Remarks');
+
+          try {
+            await addCropActivity(cropId, {
+              cropId,
+              type: 'NOTE',
+              title: 'Field Verification & Crop Media Saved',
+              date: formatMediaTimestamp(nowIso).dateStr,
+              quantity: summaryParts.join(', '),
+              notes: trimmedRemarks
+                ? `Remarks: "${trimmedRemarks}". Shown on display for ${MEDIA_DISPLAY_DAYS} days and stored permanently in Crop Activities.`
+                : `Saved ${summaryParts.join(', ')} to Crop Record (${MEDIA_DISPLAY_DAYS}-day display + permanent archive in Crop Activities).`,
+            });
+          } catch {
+            // Do not fail plot lock if activity log note temporarily fails
+          }
+        }
+      }
+
+      onSaveLocation({
+        latitude: centerLat,
+        longitude: centerLng,
+        areaAcres: calculatedAcres,
+        addressText: locText,
+        isLocked: true,
+        corners,
+        gpsData: gpsDataToSave,
+      });
+
+      setIsLocked(true);
+      Alert.alert(
+        'Field Verified & Locked 🔒',
+        `Satellite telemetry is now active for ${cropName || 'Field Plot'}.\n\n• Center: ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E\n• Area: ${calculatedAcres} Acres\n• Photos: ${uploadedPhotos.length} Verified\n• Video: ${finalVideoUrl ? 'Video Attached' : 'None'}\n\nField is now locked for satellite monitoring.`,
+      );
+      onClose();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Could not upload field photos or video to server. Please try again.';
+      setMediaError(msg);
+      Alert.alert('Upload Failed', msg);
+    } finally {
+      setIsSavingMedia(false);
     }
-
-    onSaveLocation({
-      latitude: centerLat,
-      longitude: centerLng,
-      areaAcres: calculatedAcres,
-      addressText: locText,
-      isLocked: true,
-      corners,
-      gpsData: gpsDataToSave,
-    });
-
-    setIsLocked(true);
-    Alert.alert(
-      'Field Verified & Locked 🔒',
-      `Satellite telemetry is now active for ${cropName || 'Field Plot'}.\n\n• Center: ${centerLat.toFixed(4)}° N, ${centerLng.toFixed(4)}° E\n• Area: ${calculatedAcres} Acres\n• Photos: ${photos.length} Verified\n• Video: ${videoUri ? '1-Min Video Attached' : 'None'}\n\nField is now locked for satellite monitoring.`
-    );
-    onClose();
   };
 
   // Direct Unlock Request to Operator
@@ -539,17 +835,23 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                   <View style={styles.stepContainer}>
                     <View style={styles.stepHeaderRow}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Text style={styles.stepHeading}>Step 2: Upload Crop Photos (Up to 6 · Min 3 Required)</Text>
-                        <Text style={[styles.photoCountBadge, photos.length < 3 && { backgroundColor: '#fef3c7', color: '#b45309' }]}>
-                          {photos.length} / 6 {photos.length >= 3 ? '✓' : '(Min 3)'}
+                        <Text style={styles.stepHeading}>Step 2: Crop Photos (Up to 6)</Text>
+                        <Text style={styles.photoCountBadge}>
+                          {photos.length} / 6 Saved
                         </Text>
                       </View>
                       <Text style={styles.stepSub}>
-                        Capture or upload live photos (minimum 3 required to submit). Tap any thumbnail to preview and check before final submit.
+                        Live camera photos carry LIVE; gallery photos carry UPLOADED. All watermarks show the FarmsKing favicon, date, time, farmer name, and plot name.
                       </Text>
                     </View>
 
                     {/* CAPTURE BUTTONS */}
+                    {mediaError ? (
+                      <View style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 10, padding: 10 }}>
+                        <Text style={{ color: '#b91c1c', fontSize: 12, fontWeight: '600' }}>{mediaError}</Text>
+                      </View>
+                    ) : null}
+
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       <TouchableOpacity
                         style={[styles.mediaActionBtn, photos.length >= 6 && { opacity: 0.6 }]}
@@ -572,39 +874,46 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                       </TouchableOpacity>
                     </View>
 
-                    {/* 6-PHOTO GRID */}
+                    {/* 6-PHOTO GRID: SAVED PHOTOS FIRST, REMAINING SHOW "NO PHOTO" */}
                     <View style={styles.photoGrid}>
                       {[0, 1, 2, 3, 4, 5].map((slotIdx) => {
                         const photoUri = photos[slotIdx];
                         if (photoUri) {
+                          const resolvedThumb = resolveCropMediaDisplayUri(photoUri) || photoUri;
                           return (
                             <View key={slotIdx} style={styles.photoThumbCard}>
-                              <Image source={{ uri: photoUri }} style={styles.photoThumbImg} />
                               <TouchableOpacity
-                                style={styles.photoInspectBadge}
+                                style={styles.photoImageWrap}
+                                activeOpacity={0.9}
                                 onPress={() => setPreviewingPhotoIndex(slotIdx)}
                               >
-                                <Ionicons name="eye" size={14} color="#ffffff" />
+                                <Image source={{ uri: resolvedThumb }} style={styles.photoThumbImg} resizeMode="contain" />
                               </TouchableOpacity>
-                              <TouchableOpacity
-                                style={styles.photoDeleteBadge}
-                                onPress={() => handleRemovePhoto(slotIdx)}
-                              >
-                                <Ionicons name="trash" size={13} color="#ffffff" />
-                              </TouchableOpacity>
-                              <Text style={styles.photoSlotLabel}>Photo #{slotIdx + 1} ✓</Text>
+                              <View style={styles.photoActionFooter}>
+                                <Text style={styles.photoFooterCaption}>Photo #{slotIdx + 1}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                                  <TouchableOpacity
+                                    style={styles.photoInspectBadge}
+                                    onPress={() => setPreviewingPhotoIndex(slotIdx)}
+                                  >
+                                    <Ionicons name="eye" size={13} color="#ffffff" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={styles.photoDeleteBadge}
+                                    onPress={() => handleRemovePhoto(slotIdx)}
+                                  >
+                                    <Ionicons name="trash" size={12} color="#ffffff" />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
                             </View>
                           );
                         }
                         return (
-                          <TouchableOpacity
-                            key={slotIdx}
-                            style={styles.photoEmptySlot}
-                            onPress={handleTakePhotoLive}
-                          >
-                            <Ionicons name="add-circle-outline" size={24} color="#94a3b8" />
-                            <Text style={styles.photoEmptySlotText}>Slot #{slotIdx + 1}</Text>
-                          </TouchableOpacity>
+                          <View key={slotIdx} style={styles.photoEmptySlot}>
+                            <Ionicons name="image-outline" size={22} color="#94a3b8" />
+                            <Text style={styles.photoEmptySlotText}>No Photo</Text>
+                          </View>
                         );
                       })}
                     </View>
@@ -650,7 +959,7 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                       </Text>
                     </View>
 
-                    {/* VIDEO SHOOT ACTION CARD */}
+                    {/* VIDEO SHOOT ACTION CARD (LIVE CAMERA ONLY) */}
                     <View style={styles.videoCard}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -659,48 +968,68 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                           </View>
                           <View>
                             <Text style={styles.videoTitle}>
-                              {videoUri ? '1-Minute Field Video Attached' : 'Record Live Field Video'}
+                              {videoUri ? 'Live Field Video Captured' : 'Record Live Field Video (Camera Only)'}
                             </Text>
                             <Text style={styles.videoSub}>
-                              {videoUri ? 'Video attached and ready to submit' : 'Max duration: 60 Seconds (1 Minute)'}
+                              {videoUri ? 'Play below to check video before locking field' : 'Max duration: 60 Seconds · Live recording only'}
                             </Text>
                           </View>
                         </View>
-
-                        {isVideoRecording ? (
-                          <View style={styles.recordingTimerPill}>
-                            <View style={styles.redDotBlink} />
-                            <Text style={styles.recordingTimerText}>
-                              {String(Math.floor(recordTimerSeconds / 60)).padStart(2, '0')}:
-                              {String(recordTimerSeconds % 60).padStart(2, '0')} / 01:00
-                            </Text>
-                          </View>
-                        ) : null}
                       </View>
 
-                      {/* BUTTONS */}
-                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                      {/* LIVE RECORD BUTTON ONLY */}
+                      <View style={{ marginTop: 8 }}>
                         <TouchableOpacity
-                          style={[styles.videoActionBtn, isVideoRecording && { backgroundColor: '#dc2626' }]}
+                          style={styles.videoActionBtn}
                           activeOpacity={0.85}
                           onPress={handleStartShootVideo}
                         >
-                          <Ionicons name={isVideoRecording ? 'stop-circle' : 'radio-button-on'} size={18} color="#ffffff" />
+                          <Ionicons name="radio-button-on" size={18} color="#ffffff" />
                           <Text style={styles.videoActionBtnText}>
-                            {isVideoRecording ? 'Stop Recording' : videoUri ? 'Re-shoot 1-Min Video' : 'Shoot 1-Min Video'}
+                            {videoUri ? 'Re-record Live Video' : 'Record Live Video'}
                           </Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.videoActionBtnOutline}
-                          activeOpacity={0.85}
-                          onPress={handlePickVideoLibrary}
-                        >
-                          <Ionicons name="folder-open" size={17} color="#2563eb" />
-                          <Text style={styles.videoActionBtnOutlineText}>Select Video File</Text>
-                        </TouchableOpacity>
                       </View>
+
+                      {videoUri ? (
+                        <View style={{ marginTop: 10 }}>
+                          <CropVideoPlayer
+                            videoUri={videoUri}
+                            cropName={cropName || 'Field Crop'}
+                            fieldName={effectivePlotName}
+                            farmerName={effectiveFarmerName}
+                            recordedAt={videoRecordedAt}
+                            height={210}
+                            onRemove={() => setVideoUri(null)}
+                          />
+                        </View>
+                      ) : (
+                        <View style={{ marginTop: 10, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed', borderColor: '#cbd5e1', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                          <Text style={{ fontSize: 11.5, fontWeight: '700', color: '#64748b' }}>No Video Recorded</Text>
+                        </View>
+                      )}
                     </View>
+
+                    {/* VOICE AUDIO OR WRITTEN REMARKS SECTION */}
+                    <CropRemarksSection
+                      remarksText={remarksText}
+                      onChangeRemarksText={setRemarksText}
+                      audioUri={audioUri}
+                      onChangeAudioUri={(uri) => {
+                        setAudioUri(uri);
+                        if (uri) setAudioRecordedAt(new Date().toISOString());
+                      }}
+                      audioRecordedAt={audioRecordedAt}
+                      farmerName={effectiveFarmerName}
+                      fieldName={effectivePlotName}
+                      cropName={cropName || 'Field Crop'}
+                    />
+
+                    {mediaError ? (
+                      <View style={{ backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 10, padding: 10, marginBottom: 8 }}>
+                        <Text style={{ color: '#b91c1c', fontSize: 12, fontWeight: '600' }}>{mediaError}</Text>
+                      </View>
+                    ) : null}
 
                     {/* FINAL SUBMIT & LOCK CARD */}
                     <View style={styles.finalSubmitSummaryCard}>
@@ -717,15 +1046,15 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                           </Text>
                         </View>
                         <View style={styles.summaryItem}>
-                          <Ionicons name={photos.length >= 3 ? 'checkmark-circle' : 'alert-circle'} size={16} color={photos.length >= 3 ? '#15803d' : '#d97706'} />
+                          <Ionicons name={photos.length >= 1 ? 'checkmark-circle' : 'alert-circle'} size={16} color={photos.length >= 1 ? '#15803d' : '#d97706'} />
                           <Text style={styles.summaryItemText}>
-                            Crop Photos: {photos.length} of 6 Photos ({photos.length >= 3 ? 'Min 3 Requirement Met ✓' : `Needs ${3 - photos.length} More`})
+                            Crop Photos: {photos.length} of 6 Saved
                           </Text>
                         </View>
                         <View style={styles.summaryItem}>
                           <Ionicons name={videoUri ? 'checkmark-circle' : 'checkmark-circle-outline'} size={16} color={videoUri ? '#15803d' : '#64748b'} />
                           <Text style={styles.summaryItemText}>
-                            Field Video: {videoUri ? '1-Min Video Attached ✓' : 'Optional (Skipped)'}
+                            Field Video: {videoUri ? 'Live Video Attached ✓' : 'Optional (Not Recorded)'}
                           </Text>
                         </View>
                       </View>
@@ -734,15 +1063,21 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                       <TouchableOpacity
                         style={[
                           styles.bigSubmitLockBtn,
-                          photos.length < 3 && { backgroundColor: '#94a3b8', opacity: 0.7 },
+                          ((photos.length === 0 && !videoUri) || isSavingMedia) && { backgroundColor: '#94a3b8', opacity: 0.7 },
                         ]}
-                        activeOpacity={photos.length >= 3 ? 0.85 : 1}
-                        disabled={photos.length < 3}
+                        activeOpacity={(photos.length > 0 || Boolean(videoUri)) && !isSavingMedia ? 0.85 : 1}
+                        disabled={(photos.length === 0 && !videoUri) || isSavingMedia}
                         onPress={handleFinalSubmitAndLock}
                       >
-                        <Ionicons name={photos.length >= 3 ? "lock-closed" : "alert-circle"} size={18} color="#ffffff" />
+                        {isSavingMedia ? (
+                          <ActivityIndicator size="small" color="#ffffff" />
+                        ) : (
+                          <Ionicons name={photos.length > 0 || Boolean(videoUri) ? 'lock-closed' : 'alert-circle'} size={18} color="#ffffff" />
+                        )}
                         <Text style={styles.bigSubmitLockBtnText}>
-                          {photos.length >= 3 ? 'Submit & Lock Satellite Field' : `Submit (Upload ${3 - photos.length} More Photos)`}
+                          {isSavingMedia
+                            ? 'Uploading & Storing Media...'
+                            : 'Submit & Lock Satellite Field'}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -902,79 +1237,86 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
                 {/* TAB 2: VERIFIED GROUND PHOTOS & VIDEO */}
                 {monitoringTab === 'MEDIA' && (
                   <View style={{ gap: 12 }}>
-                    <Text style={styles.stepHeading}>Verified Ground Truth Photos & Video</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                      <Text style={styles.stepHeading}>Verified Ground Truth Photos & Video</Text>
+                      {mediaDaysRemaining > 0 && (photos.length > 0 || Boolean(videoUri) || Boolean(audioUri) || Boolean(remarksText)) ? (
+                        <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 10, fontWeight: '800', color: '#15803d' }}>
+                            7-Day Display · {mediaDaysRemaining}d Left
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
 
-                    {photos.length === 0 && !videoUri ? (
+                    {isLoadingMedia ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8 }}>
+                        <ActivityIndicator size="small" color="#15803d" />
+                        <Text style={{ fontSize: 12, color: '#64748b', fontWeight: '600' }}>Loading saved crop media...</Text>
+                      </View>
+                    ) : null}
+
+                    {photos.length === 0 && !videoUri && !audioUri && !remarksText && !isLoadingMedia ? (
                       <View style={styles.emptyMediaBox}>
                         <Ionicons name="images-outline" size={32} color="#94a3b8" />
-                        <Text style={styles.emptyMediaText}>No field photos or video recorded during setup.</Text>
+                        <Text style={styles.emptyMediaText}>
+                          {hasExpiredMediaArchive
+                            ? '7-Day Display Completed · Past Records Are Saved in Crop Activities'
+                            : 'No Photo or Video Saved'}
+                        </Text>
                       </View>
                     ) : null}
 
                     {photos.length > 0 ? (
                       <View style={styles.photoGrid}>
-                        {photos.map((pUri, pIdx) => (
-                          <TouchableOpacity
-                            key={pIdx}
-                            style={styles.photoThumbCard}
-                            onPress={() => setPreviewingPhotoIndex(pIdx)}
-                          >
-                            <Image source={{ uri: pUri }} style={styles.photoThumbImg} />
-
-                            {/* TOP LIVE & BRAND WATERMARK */}
-                            <View style={{ position: 'absolute', top: 3, left: 3, right: 3, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#dc2626', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3 }}>
-                                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#ffffff' }} />
-                                <Text style={{ fontSize: 7.5, fontWeight: '900', color: '#ffffff' }}>LIVE</Text>
+                        {photos.map((pUri, pIdx) => {
+                          const resolvedP = resolveCropMediaDisplayUri(pUri) || pUri;
+                          return (
+                            <TouchableOpacity
+                              key={pIdx}
+                              style={styles.photoThumbCard}
+                              onPress={() => setPreviewingPhotoIndex(pIdx)}
+                            >
+                              <View style={styles.photoImageWrap}>
+                                <Image source={{ uri: resolvedP }} style={styles.photoThumbImg} resizeMode="contain" />
                               </View>
-                              <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 3, paddingVertical: 1, borderRadius: 3 }}>
-                                <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 42, height: 11 }} resizeMode="contain" />
+                              <View style={styles.photoActionFooter}>
+                                <Text style={styles.photoFooterCaption}>Photo #{pIdx + 1}</Text>
+                                <View style={styles.photoInspectBadge}>
+                                  <Ionicons name="eye" size={13} color="#ffffff" />
+                                </View>
                               </View>
-                            </View>
-
-                            {/* BOTTOM DATE TIME WATERMARK */}
-                            <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.88)', paddingHorizontal: 4, paddingVertical: 2 }}>
-                              <Text style={{ fontSize: 7, color: '#fde047', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }} numberOfLines={1}>
-                                ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                              </Text>
-                              <Text style={{ fontSize: 7, fontWeight: '800', color: '#4ade80' }}>FARMSKING™ · #{pIdx + 1}</Text>
-                            </View>
-
-                            <View style={styles.photoInspectBadge}>
-                              <Ionicons name="eye" size={13} color="#ffffff" />
-                            </View>
-                          </TouchableOpacity>
-                        ))}
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    ) : !isLoadingMedia && (videoUri || audioUri || remarksText) ? (
+                      <View style={styles.emptyMediaBox}>
+                        <Ionicons name="image-outline" size={26} color="#94a3b8" />
+                        <Text style={styles.emptyMediaText}>No Photo</Text>
                       </View>
                     ) : null}
 
                     {videoUri ? (
-                      <View style={[styles.videoCard, { padding: 0, overflow: 'hidden' }]}>
-                        {/* TOP WATERMARK */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 5, backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dc2626', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
-                            <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#ffffff' }} />
-                            <Text style={{ fontSize: 8, fontWeight: '900', color: '#ffffff' }}>● LIVE VIDEO</Text>
-                          </View>
-                          <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 75, height: 18 }} resizeMode="contain" />
-                        </View>
-                        
-                        <View style={{ padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <Ionicons name="videocam" size={24} color="#15803d" />
-                          <View>
-                            <Text style={styles.videoTitle}>1-Minute Field Video Attached</Text>
-                            <Text style={styles.videoSub}>Ground verification recording verified with GPS</Text>
-                          </View>
-                        </View>
+                      <CropVideoPlayer
+                        videoUri={videoUri}
+                        cropName={cropName || 'Field Crop'}
+                        fieldName={effectivePlotName}
+                        farmerName={effectiveFarmerName}
+                        recordedAt={videoRecordedAt}
+                        height={210}
+                      />
+                    ) : null}
 
-                        {/* BOTTOM WATERMARK */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 4, backgroundColor: 'rgba(15, 23, 42, 0.95)' }}>
-                          <Text style={{ fontSize: 8.5, color: '#4ade80', fontWeight: '700' }}>🛡️ FarmsKing Video Telemetry Verified</Text>
-                          <Text style={{ fontSize: 8.5, color: '#fde047', fontWeight: '700', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
-                            ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} · LIVE
-                          </Text>
-                        </View>
-                      </View>
+                    {(audioUri || remarksText) ? (
+                      <CropRemarksSection
+                        remarksText={remarksText}
+                        audioUri={audioUri}
+                        audioRecordedAt={audioRecordedAt}
+                        farmerName={effectiveFarmerName}
+                        fieldName={effectivePlotName}
+                        cropName={cropName || 'Field Crop'}
+                        readOnly
+                      />
                     ) : null}
                   </View>
                 )}
@@ -1027,52 +1369,33 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
           <View style={styles.inspectOverlay}>
             <View style={styles.inspectCard}>
               <View style={styles.inspectHeader}>
-                <Text style={styles.inspectTitle}>Inspect Photo #{previewingPhotoIndex + 1}</Text>
+                <Text style={styles.inspectTitle}>
+                  Photo #{previewingPhotoIndex + 1} · {(photoSources[photos[previewingPhotoIndex]] || detectMediaCaptureSource(photos[previewingPhotoIndex])) === 'UPLOADED' ? 'UPLOADED' : 'LIVE'}
+                </Text>
                 <TouchableOpacity onPress={() => setPreviewingPhotoIndex(null)}>
                   <Ionicons name="close-circle" size={24} color="#ffffff" />
                 </TouchableOpacity>
               </View>
 
-              <View style={{ position: 'relative', width: '100%', height: 360, backgroundColor: '#020617', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
+              <View style={{ position: 'relative', width: '100%', height: 390, backgroundColor: '#020617', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
                 <Image
-                  source={{ uri: photos[previewingPhotoIndex] }}
+                  source={{ uri: resolveCropMediaDisplayUri(photos[previewingPhotoIndex]) || photos[previewingPhotoIndex] }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="contain"
                 />
+              </View>
 
-                {/* TOP WATERMARK: LIVE BADGE & BRAND LOGO */}
-                <View style={{ position: 'absolute', top: 10, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#dc2626', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 5 }}>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#ffffff' }} />
-                    <Text style={{ color: '#ffffff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>● LIVE CAPTURE</Text>
-                  </View>
-                  <Image
-                    source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
-                    style={{ width: 95, height: 22 }}
-                    resizeMode="contain"
-                  />
-                </View>
-
-                {/* BOTTOM WATERMARK: CROP NAME, TELEMETRY & LIVE DATE TIME */}
-                <View style={{ position: 'absolute', bottom: 10, left: 10, right: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(15, 23, 42, 0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.12)' }}>
-                  <View>
-                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>🌾 {cropName || 'Field Crop'} · {plotName || 'Plot #1'}</Text>
-                    <Text style={{ fontSize: 9, fontWeight: '700', color: '#4ade80' }}>🛡️ Official FarmsKing Ground Telemetry Verified</Text>
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ fontSize: 10, fontWeight: '800', color: '#fde047', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' }}>
-                      ⏱️ {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                    </Text>
-                    <Text style={{ fontSize: 8, fontWeight: '900', color: '#ef4444', letterSpacing: 0.5 }}>GEO-STAMPED · LIVE</Text>
-                  </View>
-                </View>
+              <View style={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#334155' }}>
+                <Text style={{ color: '#e2e8f0', fontSize: 12, fontWeight: '600' }}>
+                  Farmer: {effectiveFarmerName} · Plot: {effectivePlotName} ({cropName || 'Field Crop'})
+                </Text>
               </View>
 
               <TouchableOpacity
                 style={styles.inspectDoneBtn}
                 onPress={() => setPreviewingPhotoIndex(null)}
               >
-                <Text style={styles.inspectDoneBtnText}>Confirm Photo Looks Sharp ✓</Text>
+                <Text style={styles.inspectDoneBtnText}>Done</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1130,6 +1453,30 @@ export const FarmLocationPickerModal: React.FC<FarmLocationPickerModalProps> = (
           </View>
         </View>
       </Modal>
+
+      <WebCameraPhotoModal
+        visible={showWebPhotoCamera}
+        farmerName={effectiveFarmerName}
+        plotName={effectivePlotName}
+        cropName={cropName || 'Field Crop'}
+        onClose={() => setShowWebPhotoCamera(false)}
+        onCaptured={(stampedDataUrl) => {
+          setPhotos((prev) => [...prev, stampedDataUrl].slice(0, 6));
+          setPhotoSources((prev) => ({ ...prev, [stampedDataUrl]: 'LIVE' }));
+        }}
+      />
+
+      <WebCameraVideoRecorderModal
+        visible={showWebVideoRecorder}
+        farmerName={effectiveFarmerName}
+        plotName={effectivePlotName}
+        cropName={cropName || 'Field Crop'}
+        onClose={() => setShowWebVideoRecorder(false)}
+        onRecorded={(blobUrl) => {
+          setVideoUri(blobUrl);
+          setVideoRecordedAt(new Date().toISOString());
+        }}
+      />
     </Modal>
   );
 };
@@ -1415,55 +1762,63 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   photoThumbCard: {
-    width: '30%',
-    aspectRatio: 1,
+    width: '31%',
     borderRadius: 10,
     overflow: 'hidden',
-    position: 'relative',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#334155',
+    backgroundColor: '#090e17',
+  },
+  photoImageWrap: {
+    width: '100%',
+    height: 136,
+    backgroundColor: '#090e17',
   },
   photoThumbImg: {
     width: '100%',
     height: '100%',
   },
+  photoActionFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#0f172a',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  photoFooterCaption: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#cbd5e1',
+  },
   photoInspectBadge: {
-    position: 'absolute',
-    bottom: 22,
-    left: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    backgroundColor: '#1e293b',
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#475569',
   },
   photoDeleteBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
     backgroundColor: '#dc2626',
     width: 24,
     height: 24,
-    borderRadius: 12,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   photoSlotLabel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     color: '#ffffff',
     fontSize: 9.5,
     fontWeight: '700',
-    textAlign: 'center',
-    paddingVertical: 2,
   },
   photoEmptySlot: {
-    width: '30%',
-    aspectRatio: 1,
+    width: '31%',
+    height: 173,
     borderRadius: 10,
     borderWidth: 1.5,
     borderColor: '#cbd5e1',

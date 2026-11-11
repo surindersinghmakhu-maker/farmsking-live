@@ -641,7 +641,9 @@ export default function ShopScreen() {
 
   const discountAmount = appliedDiscount?.amount ?? 0;
   const deliveryFeeAmount = (subtotal || 0) >= 999 ? 0 : 100;
-  const finalPayableAmount = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const grossPayable = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
+  const walletDeduction = useWalletBalance ? Math.min(myWalletBal, grossPayable) : 0;
+  const finalPayableAmount = Math.max(grossPayable - walletDeduction, 0);
 
   const composeAddress = (addr: (typeof savedAddresses)[number]) => {
     const parts = [];
@@ -1392,7 +1394,7 @@ export default function ShopScreen() {
       setCheckoutError('Please enter delivery address.');
       return;
     }
-    if (paymentMethod === 'DIRECT_QR' && !utrTransactionId.trim()) {
+    if (paymentMethod === 'DIRECT_QR' && finalPayableAmount > 0 && !utrTransactionId.trim()) {
       setCheckoutError('Please enter 12-digit UTR / Payment Reference ID.');
       return;
     }
@@ -2299,64 +2301,60 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       ) : (
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
         <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          {/* Official Agri Store Hero Header (Accessible Inside & Outside Login) */}
-          <LinearGradient colors={['#0a2417', '#0f3923', '#15803d']} style={styles.hero}>
-            <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
-              <View style={styles.headerTop}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={styles.storeBadgeWrap}>
-                    <Ionicons name="storefront" size={24} color="#4ade80" />
-                  </View>
-                  <View>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86efac', letterSpacing: 0.2, marginBottom: 2 }}>
-                      {user ? `👋 Welcome, ${user.name || 'Farmer'}` : '🌾 Certified Direct Agri Marketplace'}
+          {/* Official Agri Store — Compact Premium Hero Header */}
+          <LinearGradient colors={['#071a0e', '#0a2417', '#0f3923']} style={[styles.hero, { paddingTop: 10, paddingBottom: 10, gap: 8 }]}>
+            <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 8 }}>
+
+              {/* Row 1: Logo + Store Name + Badges + Cart */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={[styles.storeBadgeWrap, { width: 38, height: 38, borderRadius: 12 }]}>
+                  <Ionicons name="storefront" size={19} color="#4ade80" />
+                </View>
+                <View style={{ flex: 1, gap: 1 }}>
+                  <Text style={[styles.heroTitle, { fontSize: 15.5 }]}>Official Agri Store</Text>
+                  {user ? (
+                    <Text style={[styles.heroSubtitle, { fontSize: 10, marginTop: 0 }]}>
+                      {user.name || 'Farmer'}
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.heroTitle}>Official Agri Store</Text>
-                      <View style={styles.verifiedTag}>
-                        <Ionicons name="checkmark-circle" size={12} color="#facc15" />
-                        <Text style={styles.verifiedTagText}>Verified Official</Text>
-                      </View>
+                  ) : null}
+                </View>
+                <TouchableOpacity
+                  style={[styles.cartIconBtn, itemCount > 0 && { backgroundColor: '#16a34a', borderColor: '#22c55e' }]}
+                  activeOpacity={0.85}
+                  onPress={() => { tap(); setActiveSubTab('CHECKOUT'); }}
+                >
+                  <Ionicons name="bag-handle" size={19} color="#ffffff" />
+                  {itemCount > 0 && (
+                    <View style={styles.cartBadge}>
+                      <Text style={styles.cartBadgeText}>{itemCount}</Text>
                     </View>
-                    <Text style={styles.heroSubtitle}>100% Genuine Seeds, Fertilizers, Organics & Live Plants</Text>
-                  </View>
-                </View>
+                  )}
+                </TouchableOpacity>
+              </View>
 
-                <View style={styles.headerActions}>
-                  <TouchableOpacity
-                    style={styles.cartIconBtn}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      setActiveSubTab('CHECKOUT');
-                    }}
-                  >
-                    <Ionicons name="bag-handle" size={21} color="#ffffff" />
-                    {itemCount > 0 && (
-                      <View style={styles.cartBadge}>
-                        <Text style={styles.cartBadgeText}>{itemCount}</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+              {/* Row 2: Search */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={[styles.searchBarBox, { flex: 1, height: 40, borderColor: 'rgba(74,222,128,0.35)', borderWidth: 1.5, backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                  <Ionicons name="search" size={16} color="#16a34a" />
+                  <TextInput
+                    style={[styles.searchInput, { fontSize: 12.5, color: '#ffffff' }]}
+                    placeholder="Search products, seeds, fertilizers..."
+                    placeholderTextColor="#64748b"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
+                  {searchQuery ? (
+                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ backgroundColor: 'rgba(34,197,94,0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(74,222,128,0.25)' }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#4ade80' }}>Search</Text>
+                    </View>
+                  )}
                 </View>
               </View>
 
-              {/* Quick Search Input Box */}
-              <View style={styles.searchBarBox}>
-                <Ionicons name="search" size={18} color="#15803d" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search: Seeds, Fertilizers, Insecticides, Spray Pumps..."
-                  placeholderTextColor="#94a3b8"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {searchQuery ? (
-                  <TouchableOpacity onPress={() => setSearchQuery('')}>
-                    <Ionicons name="close-circle" size={16} color="#64748b" />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
             </View>
           </LinearGradient>
 
@@ -2529,35 +2527,37 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               )}
 
               {/* Layout View Mode Bar (Grid vs List Toggle) */}
-              <View style={styles.layoutModeBar}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b' }}>
-                    {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden Products' : 'Available Products'}
-                  </Text>
-                  <View style={styles.productCountPill}>
-                    <Text style={styles.productCountPillText}>{filteredProducts.length}</Text>
+              <View style={{ width: '100%', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+                <View style={styles.layoutModeBar}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b' }}>
+                      {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden Products' : 'Available Products'}
+                    </Text>
+                    <View style={styles.productCountPill}>
+                      <Text style={styles.productCountPillText}>{filteredProducts.length}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <TouchableOpacity
-                    style={[styles.layoutToggleBtn, storeLayoutMode === 'GRID' && styles.layoutToggleBtnActive]}
-                    onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
-                  >
-                    <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b'} />
-                    <Text style={[styles.layoutToggleText, storeLayoutMode === 'GRID' && styles.layoutToggleTextActive]}>
-                      Grid
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      style={[styles.layoutToggleBtn, storeLayoutMode === 'GRID' && styles.layoutToggleBtnActive]}
+                      onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
+                    >
+                      <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b'} />
+                      <Text style={[styles.layoutToggleText, storeLayoutMode === 'GRID' && styles.layoutToggleTextActive]}>
+                        Grid
+                      </Text>
+                    </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={[styles.layoutToggleBtn, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleBtnActive]}
-                    onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
-                  >
-                    <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b'} />
-                    <Text style={[styles.layoutToggleText, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleTextActive]}>
-                      List
-                    </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.layoutToggleBtn, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleBtnActive]}
+                      onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
+                    >
+                      <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b'} />
+                      <Text style={[styles.layoutToggleText, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleTextActive]}>
+                        List
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
@@ -2590,7 +2590,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         addItem({
                           productId: product.id,
                           name: product.name,
-                          price: Number(product.price),
+                          price: Number(product?.price ?? 0),
                           unit: product.unit,
                           imageUrl: product.imageUrl,
                         })
@@ -3105,6 +3105,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     )}
 
                     {/* Total Amount Summary Bar */}
+                    {useWalletBalance && walletDeduction > 0 && (
+                      <View style={{ backgroundColor: '#f5f3ff', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#ddd6fe', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={{ fontFamily: FONT.bold, fontSize: 12.5, color: '#6d28d9' }}>💜 Wallet Balance Applied:</Text>
+                        <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#6d28d9' }}>-₹{walletDeduction.toLocaleString('en-IN')}</Text>
+                      </View>
+                    )}
                     <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#0f172a' }}>Total Amount Payable:</Text>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
@@ -3142,7 +3148,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             return;
                           }
                           setCheckoutError(null);
-                          if (paymentMethod === 'DIRECT_QR') {
+                          if (finalPayableAmount === 0) {
+                            handlePlaceOrderDirect();
+                          } else if (paymentMethod === 'DIRECT_QR') {
                             setIsQrPaymentModalOpen(true);
                           } else {
                             handlePlaceOrderDirect();
@@ -3150,7 +3158,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         }}
                       >
                         <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold }]}>
-                          {paymentMethod === 'DIRECT_QR'
+                          {finalPayableAmount === 0
+                            ? '🎉 Confirm Order with Wallet (₹0 Payable)'
+                            : paymentMethod === 'DIRECT_QR'
                             ? `📱 Scan QR & Confirm (₹${finalPayableAmount.toLocaleString('en-IN')})`
                             : paymentMethod === 'ONLINE'
                               ? `💳 Pay Online (₹${finalPayableAmount.toLocaleString('en-IN')})`
@@ -5172,10 +5182,10 @@ function FarmsKingProductDetailModal({
   onAddToCart: () => void;
   onBuyNow: () => void;
 }) {
-  if (!product) return null;
 
   const images = useMemo(() => {
     const list: string[] = [];
+    if (!product) return [];
     const pushIfValid = (urlStr?: string | null) => {
       if (!urlStr || typeof urlStr !== 'string') return;
       const parts = parseImageUrls(urlStr);
@@ -5188,7 +5198,7 @@ function FarmsKingProductDetailModal({
     };
 
     // 1. Primary imageUrl
-    pushIfValid(product.imageUrl);
+    pushIfValid(product?.imageUrl);
 
     // 2. Direct array or string fields
     const candidateArrays = [
@@ -5227,12 +5237,12 @@ function FarmsKingProductDetailModal({
     });
 
     // 3. Extract gallery URLs embedded in product.description if present
-    if (product.description) {
-      const galleryMatch = product.description.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
+    if (product?.description) {
+      const galleryMatch = product?.description?.match(/Gallery:\s*([^\n]+(?:\n[^\n]+)*)/i);
       if (galleryMatch && galleryMatch[1]) {
         pushIfValid(galleryMatch[1]);
       }
-      const httpMatches = product.description.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
+      const httpMatches = product?.description?.match(/https?:\/\/[^\s"',]+\.(?:png|jpg|jpeg|webp|gif)/gi);
       if (httpMatches) {
         httpMatches.forEach((m) => pushIfValid(m));
       }
@@ -5243,7 +5253,7 @@ function FarmsKingProductDetailModal({
 
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
   const [imgErrorMap, setImgErrorMap] = useState<Record<number, boolean>>({});
-  const [selectedPackSize, setSelectedPackSize] = useState((product as any).packSize || product.unit || '1 Pack');
+  const [selectedPackSize, setSelectedPackSize] = useState((product as any)?.packSize || (product as any)?.unit || '1 Pack');
 
   const mainScrollRef = useRef<ScrollView>(null);
   const [containerWidth, setContainerWidth] = useState(320);
@@ -5274,27 +5284,29 @@ function FarmsKingProductDetailModal({
     }
   }, [product?.id]);
 
-  const desc = product.description || '';
+  const desc = product?.description || '';
 
   const packSizesMatch = desc.match(/PackSizes:\s*([^|]+)/i);
   const PACK_SIZES = useMemo(() => {
+    if (!product) return [];
     if (packSizesMatch && packSizesMatch[1]) {
       const extracted = packSizesMatch[1].split(',').map((s) => s.trim()).filter(Boolean);
       if (extracted.length > 0) return extracted;
     }
-    if ((product as any).packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
+    if ((product as any)?.packSizes && Array.isArray((product as any).packSizes) && (product as any).packSizes.length > 0) {
       return (product as any).packSizes;
     }
-    const unit = product.unit || 'Pack';
+    const unit = product?.unit || 'Pack';
     return [`1 ${unit}`, `2 ${unit}s`, `5 ${unit}s`, `10 ${unit}s`];
   }, [product, desc]);
 
-  const basePrice = Number(product.price);
-  const baseMrp = (product as any).mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
+  const basePrice = Number(product?.price ?? 0);
+  const baseMrp = (product as any)?.mrp ? Number((product as any).mrp) : Math.round(basePrice * 1.25);
 
   const varRatesMatch = desc.match(/VariantRates:\s*([^|]+)/i);
   const variantPrices = useMemo(() => {
     const map: Record<string, { price: number; mrp: number; stock: number; sku: string }> = {};
+    if (!product) return map;
     if (varRatesMatch && varRatesMatch[1]) {
       const parts = varRatesMatch[1].split('|').map((s) => s.trim());
       parts.forEach((pt) => {
@@ -5310,7 +5322,7 @@ function FarmsKingProductDetailModal({
             map[packName] = {
               price: Number(vSelling),
               mrp: Number(vMrp || Math.round(Number(vSelling) * 1.25)),
-              stock: Number(vStock !== undefined ? vStock : product.stockQty),
+              stock: Number(vStock !== undefined ? vStock : (product?.stockQty ?? 0)),
               sku: vSku || '',
             };
           }
@@ -5322,7 +5334,7 @@ function FarmsKingProductDetailModal({
       if (!map[sz]) {
         let p = basePrice;
         let m = baseMrp;
-        if ((product as any).variants && Array.isArray((product as any).variants)) {
+        if ((product as any)?.variants && Array.isArray((product as any).variants)) {
           const found = (product as any).variants.find((v: any) => v.packSize === sz || v.size === sz || v.name === sz);
           if (found) {
             p = Number(found.price || basePrice);
@@ -5337,7 +5349,7 @@ function FarmsKingProductDetailModal({
           p = Math.round(basePrice * mult);
           m = Math.round(baseMrp * mult);
         }
-        map[sz] = { price: p, mrp: m, stock: product.stockQty, sku: '' };
+        map[sz] = { price: p, mrp: m, stock: Number(product?.stockQty ?? 0), sku: '' };
       }
     });
     return map;
@@ -5359,6 +5371,8 @@ function FarmsKingProductDetailModal({
       }
     }
   }, [product?.id, PACK_SIZES]);
+
+  if (!product) return null;
 
   const isFarmerFood = (product as any).isFarmerFood || product.category === 'Natural Farmer Foods' || product.category === 'Farmer Made Foods' || desc.includes('[FARMER_MADE]');
 
@@ -5401,7 +5415,7 @@ function FarmsKingProductDetailModal({
   const moqMatch = desc.match(/MOQ:\s*([^|]+)/i);
   const moqVal = moqMatch ? moqMatch[1].trim() : '1';
 
-  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product.stockQty, sku: mainSkuCode };
+  const currentVariant = variantPrices[selectedPackSize] || { price: basePrice, mrp: baseMrp, stock: product?.stockQty, sku: mainSkuCode };
   const sellingPrice = currentVariant.price;
   const mrpPrice = currentVariant.mrp;
   const variantStock = currentVariant.stock;
@@ -5593,7 +5607,7 @@ function FarmsKingProductDetailModal({
             </View>
 
             {/* 👨‍🌾 Farmer Direct Food Product Certification Banner */}
-            {((product.category === 'Natural Farmer Foods') || (product.description || '').includes('[FARMER_MADE]')) && (
+            {((product.category === 'Natural Farmer Foods') || (product?.description || '').includes('[FARMER_MADE]')) && (
               <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6 }}>
                 <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ fontSize: 18 }}>👨‍🌾</Text>
@@ -5813,14 +5827,14 @@ function ProductCard({
   isDesktop?: boolean;
   isTablet?: boolean;
 }) {
-  const outOfStock = product.stockQty <= 0;
+  const outOfStock = product?.stockQty <= 0;
   const isHidden = !product.isActive;
 
-  const sellingPrice = Number(product.price);
+  const sellingPrice = Number(product?.price ?? 0);
   const mrpPrice = (product as any).mrp ? Number((product as any).mrp) : Math.round(sellingPrice * 1.25);
   const discountPercent = mrpPrice > sellingPrice ? Math.round(((mrpPrice - sellingPrice) / mrpPrice) * 100) : 20;
 
-  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product.description || '').includes('[FARMER_MADE]');
+  const isFarmerFood = product.category === 'Natural Farmer Foods' || (product?.description || '').includes('[FARMER_MADE]');
   const isCouponProduct = product.category === 'Farmer Plan & Coupons' || (product.category || '').includes('Coupon') || (product.category || '').includes('Plan');
 
   const { width } = useWindowDimensions();

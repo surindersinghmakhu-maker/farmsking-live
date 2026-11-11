@@ -26,9 +26,9 @@ export declare class FarmerPlanPaymentsService {
         cashfreeSessionId: string | null;
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
         id: string;
         amount: import("@prisma/client/runtime/library").Decimal;
@@ -36,9 +36,9 @@ export declare class FarmerPlanPaymentsService {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
+        rejectionReason: string | null;
         advisorKingId: string | null;
         doctorKingId: string | null;
-        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -52,9 +52,9 @@ export declare class FarmerPlanPaymentsService {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -63,9 +63,9 @@ export declare class FarmerPlanPaymentsService {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
+        rejectionReason: string | null;
         advisorKingId: string | null;
         doctorKingId: string | null;
-        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -80,9 +80,9 @@ export declare class FarmerPlanPaymentsService {
     submit(user: AuthUser, id: string, dto: SubmitFarmerPlanPaymentDto): Promise<{
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -91,9 +91,9 @@ export declare class FarmerPlanPaymentsService {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
+        rejectionReason: string | null;
         advisorKingId: string | null;
         doctorKingId: string | null;
-        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -107,9 +107,9 @@ export declare class FarmerPlanPaymentsService {
     listPending(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -118,9 +118,9 @@ export declare class FarmerPlanPaymentsService {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
+        rejectionReason: string | null;
         advisorKingId: string | null;
         doctorKingId: string | null;
-        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -141,9 +141,9 @@ export declare class FarmerPlanPaymentsService {
         request: {
             farmer: {
                 id: string;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             };
         } & {
             id: string;
@@ -152,9 +152,9 @@ export declare class FarmerPlanPaymentsService {
             requestedAt: Date;
             farmerId: string;
             daysGranted: number;
+            rejectionReason: string | null;
             advisorKingId: string | null;
             doctorKingId: string | null;
-            rejectionReason: string | null;
             utr: string | null;
             submittedAt: Date | null;
             confirmedAt: Date | null;
@@ -197,9 +197,9 @@ export declare class FarmerPlanPaymentsService {
     reject(admin: AuthUser, id: string, dto: RejectFarmerPlanPaymentDto): Promise<{
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -208,9 +208,9 @@ export declare class FarmerPlanPaymentsService {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
+        rejectionReason: string | null;
         advisorKingId: string | null;
         doctorKingId: string | null;
-        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;

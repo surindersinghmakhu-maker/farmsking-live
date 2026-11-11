@@ -12,37 +12,37 @@ export declare class ChatService {
     sendMessage(sender: AuthUser, receiverId: string, content: string): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }>;
     getMessages(user: AuthUser, otherUserId: string): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }[]>;
     listConversations(user: AuthUser): Promise<{
         partner: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         lastMessage: {
             id: string;
             createdAt: Date;
+            senderId: string;
             isRead: boolean;
             readAt: Date | null;
-            senderId: string;
-            receiverId: string;
             content: string;
+            receiverId: string;
         } | null;
         unreadCount: number;
         isOnline: boolean;
@@ -54,10 +54,10 @@ export declare class ChatService {
     getMessagesBetweenAsAdmin(userAId: string, userBId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }[]>;
 }

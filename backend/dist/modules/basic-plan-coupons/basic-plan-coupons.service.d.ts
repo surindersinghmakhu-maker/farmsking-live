@@ -23,18 +23,18 @@ export declare class BasicPlanCouponsService {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -53,18 +53,18 @@ export declare class BasicPlanCouponsService {
     listAvailableForPurchase(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -83,18 +83,18 @@ export declare class BasicPlanCouponsService {
     listMinePurchased(partner: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -113,18 +113,18 @@ export declare class BasicPlanCouponsService {
     purchase(partner: AuthUser, code: string): Promise<{
         createdBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         };
         usedByFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
         purchasedBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
         } | null;
     } & {
         id: string;

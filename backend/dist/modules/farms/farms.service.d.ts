@@ -7,13 +7,13 @@ export declare class FarmsService {
     constructor(prisma: PrismaService);
     create(user: AuthUser, dto: CreateFarmDto): import(".prisma/client").Prisma.Prisma__FarmClient<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         soilType: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         ownerId: string;
@@ -23,13 +23,13 @@ export declare class FarmsService {
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findAll(user: AuthUser): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         soilType: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         ownerId: string;
@@ -39,13 +39,13 @@ export declare class FarmsService {
     }[]>;
     findOneOrThrow(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         soilType: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         ownerId: string;
@@ -55,13 +55,13 @@ export declare class FarmsService {
     }>;
     update(user: AuthUser, id: string, dto: UpdateFarmDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         soilType: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         ownerId: string;
@@ -71,13 +71,13 @@ export declare class FarmsService {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         name: string;
         village: string | null;
         district: string | null;
         state: string | null;
         soilType: string | null;
+        createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         ownerId: string;

@@ -16,10 +16,10 @@ export declare class ReferralsController {
         directReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -33,9 +33,9 @@ export declare class ReferralsController {
         extendedReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -49,8 +49,8 @@ export declare class ReferralsController {
         royaltiesHistory: ({
             sourceUser: {
                 id: string;
-                name: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
             id: string;

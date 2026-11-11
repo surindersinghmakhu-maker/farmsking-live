@@ -14,15 +14,15 @@ export declare class CallRequestsController {
         notes: string | null;
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         };
         id: string;
         createdAt: Date;
@@ -35,15 +35,15 @@ export declare class CallRequestsController {
     getMyPending(user: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -57,15 +57,15 @@ export declare class CallRequestsController {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
@@ -79,15 +79,15 @@ export declare class CallRequestsController {
     resolve(user: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;

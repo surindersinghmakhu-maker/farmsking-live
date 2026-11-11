@@ -13,8 +13,8 @@ export declare class VoiceCallService {
         call: {
             host: {
                 id: string;
-                name: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
                 photoUrl: string | null;
             };
             participants: ({
@@ -38,8 +38,8 @@ export declare class VoiceCallService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             title: string;
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
             hostId: string;
             startedAt: Date;
@@ -77,8 +77,8 @@ export declare class VoiceCallService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             title: string;
+            status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
             channelName: string;
             hostId: string;
             startedAt: Date;
@@ -119,8 +119,8 @@ export declare class VoiceCallService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         title: string;
+        status: import(".prisma/client").$Enums.GroupVoiceCallStatus;
         channelName: string;
         hostId: string;
         startedAt: Date;

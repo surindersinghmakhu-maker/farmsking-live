@@ -54,10 +54,10 @@ export declare class ReferralsService {
         directReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -71,9 +71,9 @@ export declare class ReferralsService {
         extendedReferrals: ({
             referredUser: {
                 id: string;
-                createdAt: Date;
-                name: string;
                 kingId: string | null;
+                name: string;
+                createdAt: Date;
             };
         } & {
             id: string;
@@ -87,8 +87,8 @@ export declare class ReferralsService {
         royaltiesHistory: ({
             sourceUser: {
                 id: string;
-                name: string;
                 kingId: string | null;
+                name: string;
             };
         } & {
             id: string;

@@ -80,13 +80,13 @@ export declare class GardenerPlansController {
         };
         assignedGardener: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
         usedByGardener: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -108,9 +108,9 @@ export declare class GardenerPlansController {
         } | null;
         gardener: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;

@@ -211,8 +211,8 @@ export declare class FarmerPlansController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        assignedById: string | null;
         subscriptionId: string | null;
+        assignedById: string | null;
     }>;
     createCoupon(user: AuthUser, dto: CreateFarmerPlanCouponDto): Promise<{
         id: string;
@@ -328,28 +328,28 @@ export declare class FarmerPlansController {
     listMineForAdvisor(user: AuthUser): Promise<({
         createdBy: {
             id: string;
-            name: string;
             kingId: string | null;
+            name: string;
             specialization: string | null;
         };
         assignedFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         } | null;
         assignedAdvisor: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             specialization: string | null;
         } | null;
         usedByFarmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -501,23 +501,23 @@ export declare class FarmerPlansController {
         };
         assignedFarmer: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
         assignedAdvisor: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
         assignedBusinessPartner: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
         usedByFarmer: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
@@ -563,9 +563,9 @@ export declare class FarmerPlansController {
         } | null;
         farmer: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;

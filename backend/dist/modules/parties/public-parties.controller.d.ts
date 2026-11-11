@@ -44,12 +44,12 @@ export declare class PublicPartiesController {
             party: {
                 isUnified: boolean;
                 id: string;
-                createdAt: Date;
-                name: string;
                 mobile: string | null;
+                name: string;
+                createdAt: Date;
                 deletedAt: Date | null;
-                address: string | null;
                 ownerId: string;
+                address: string | null;
                 kingId?: undefined;
             } | {
                 id: string;

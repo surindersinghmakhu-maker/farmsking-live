@@ -57,8 +57,8 @@ export declare class LabourController {
             defaultUnit: string | null;
             farmer: {
                 id: string;
-                name: string;
                 mobile: string;
+                name: string;
                 village: string | null;
                 photoUrl: string | null;
             };
@@ -75,11 +75,11 @@ export declare class LabourController {
             deletedAt: Date | null;
             notes: string | null;
             farmerId: string;
-            farmId: string | null;
             totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
             unit: string;
+            farmId: string | null;
             plotId: string | null;
             cropCycleId: string | null;
             workerId: string;
@@ -112,8 +112,8 @@ export declare class LabourController {
                 defaultUnit: string | null;
                 farmer: {
                     id: string;
-                    name: string;
                     mobile: string;
+                    name: string;
                     village: string | null;
                     photoUrl: string | null;
                 };
@@ -130,11 +130,11 @@ export declare class LabourController {
                 deletedAt: Date | null;
                 notes: string | null;
                 farmerId: string;
-                farmId: string | null;
                 totalAmount: import("@prisma/client/runtime/library").Decimal;
                 recordedById: string;
                 quantity: number;
                 unit: string;
+                farmId: string | null;
                 plotId: string | null;
                 cropCycleId: string | null;
                 workerId: string;
@@ -165,9 +165,9 @@ export declare class LabourController {
         exists: boolean;
         user: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -182,11 +182,11 @@ export declare class LabourController {
         } | null;
     } & {
         id: string;
+        mobile: string | null;
+        name: string;
+        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
-        mobile: string | null;
-        photoUrl: string | null;
         deletedAt: Date | null;
         userId: string | null;
         notes: string | null;
@@ -203,11 +203,11 @@ export declare class LabourController {
         totalPaid: number;
         pendingBalance: number;
         id: string;
+        mobile: string | null;
+        name: string;
+        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
-        mobile: string | null;
-        photoUrl: string | null;
         deletedAt: Date | null;
         userId: string | null;
         notes: string | null;
@@ -222,18 +222,18 @@ export declare class LabourController {
     updateWorker(user: AuthUser, id: string, dto: UpdateLabourWorkerDto): Promise<{
         user: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         } | null;
     } & {
         id: string;
+        mobile: string | null;
+        name: string;
+        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
-        mobile: string | null;
-        photoUrl: string | null;
         deletedAt: Date | null;
         userId: string | null;
         notes: string | null;
@@ -247,11 +247,11 @@ export declare class LabourController {
     }>;
     deleteWorker(user: AuthUser, id: string): Promise<{
         id: string;
+        mobile: string | null;
+        name: string;
+        photoUrl: string | null;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
-        mobile: string | null;
-        photoUrl: string | null;
         deletedAt: Date | null;
         userId: string | null;
         notes: string | null;
@@ -275,11 +275,11 @@ export declare class LabourController {
         deletedAt: Date | null;
         notes: string | null;
         farmerId: string;
-        farmId: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
         unit: string;
+        farmId: string | null;
         plotId: string | null;
         cropCycleId: string | null;
         workerId: string;
@@ -290,8 +290,8 @@ export declare class LabourController {
     getWorkEntries(user: AuthUser, workerId?: string): Promise<({
         worker: {
             id: string;
-            name: string;
             mobile: string | null;
+            name: string;
         };
     } & {
         id: string;
@@ -300,11 +300,11 @@ export declare class LabourController {
         deletedAt: Date | null;
         notes: string | null;
         farmerId: string;
-        farmId: string | null;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
         quantity: number;
         unit: string;
+        farmId: string | null;
         plotId: string | null;
         cropCycleId: string | null;
         workerId: string;
@@ -351,11 +351,11 @@ export declare class LabourController {
     getWorkerStatement(user: AuthUser, workerId: string): Promise<{
         worker: {
             id: string;
+            mobile: string | null;
+            name: string;
+            photoUrl: string | null;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
-            mobile: string | null;
-            photoUrl: string | null;
             deletedAt: Date | null;
             userId: string | null;
             notes: string | null;
@@ -387,11 +387,11 @@ export declare class LabourController {
             deletedAt: Date | null;
             notes: string | null;
             farmerId: string;
-            farmId: string | null;
             totalAmount: import("@prisma/client/runtime/library").Decimal;
             recordedById: string;
             quantity: number;
             unit: string;
+            farmId: string | null;
             plotId: string | null;
             cropCycleId: string | null;
             workerId: string;

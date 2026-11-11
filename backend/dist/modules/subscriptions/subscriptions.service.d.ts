@@ -11,9 +11,9 @@ export declare class SubscriptionsService {
     private upgradePlanForSubscription;
     listPlans(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         description: string | null;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -26,8 +26,8 @@ export declare class SubscriptionsService {
         advisorAssignment: {
             advisor: {
                 id: string;
-                name: string;
                 mobile: string;
+                name: string;
             };
         } & {
             id: string;
@@ -40,14 +40,14 @@ export declare class SubscriptionsService {
             notes: string | null;
             farmerId: string;
             advisorId: string;
-            assignedById: string | null;
             subscriptionId: string | null;
+            assignedById: string | null;
         };
         plan: {
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             isActive: boolean;
             description: string | null;
             price: import("@prisma/client/runtime/library").Decimal;
@@ -75,8 +75,8 @@ export declare class SubscriptionsService {
         advisorAssignment: ({
             advisor: {
                 id: string;
-                name: string;
                 mobile: string;
+                name: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -92,14 +92,14 @@ export declare class SubscriptionsService {
             notes: string | null;
             farmerId: string;
             advisorId: string;
-            assignedById: string | null;
             subscriptionId: string | null;
+            assignedById: string | null;
         }) | null;
         plan: {
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             isActive: boolean;
             description: string | null;
             price: import("@prisma/client/runtime/library").Decimal;

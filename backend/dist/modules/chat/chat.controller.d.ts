@@ -7,19 +7,19 @@ export declare class ChatController {
     listConversations(user: AuthUser): Promise<{
         partner: {
             id: string;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
             photoUrl: string | null;
         };
         lastMessage: {
             id: string;
             createdAt: Date;
+            senderId: string;
             isRead: boolean;
             readAt: Date | null;
-            senderId: string;
-            receiverId: string;
             content: string;
+            receiverId: string;
         } | null;
         unreadCount: number;
         isOnline: boolean;
@@ -30,11 +30,11 @@ export declare class ChatController {
     getMessages(user: AuthUser, userId: string): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }[]>;
     isUserOnline(userId: string): {
         isOnline: boolean;
@@ -42,19 +42,19 @@ export declare class ChatController {
     getMessagesBetweenAsAdmin(userAId: string, userBId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }[]>;
     sendMessage(user: AuthUser, dto: SendMessageDto): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
-        senderId: string;
-        receiverId: string;
         content: string;
+        receiverId: string;
     }>;
 }

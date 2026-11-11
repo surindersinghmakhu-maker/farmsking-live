@@ -11,14 +11,11 @@ export declare class SellerService {
     constructor(prisma: PrismaService, shiprocketService: ShiprocketService, notificationsService: NotificationsService);
     registerStore(user: AuthUser, dto: CreateSellerStoreDto): Promise<{
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -26,6 +23,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -52,9 +50,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -70,24 +70,24 @@ export declare class SellerService {
         };
         products: {
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             isActive: boolean;
             createdById: string;
             description: string | null;
-            unit: string;
             title: string | null;
+            unit: string;
+            rejectionReason: string | null;
+            rating: number;
             category: string | null;
             mrp: Prisma.Decimal | null;
             price: Prisma.Decimal;
             dosageInstructions: string | null;
-            rejectionReason: string | null;
             imageUrl: string | null;
             brand: string | null;
             categorySlug: string | null;
             sellingPrice: Prisma.Decimal | null;
-            rating: number;
             isTopSeller: boolean;
             stockQty: number;
             sellerStoreId: string | null;
@@ -127,23 +127,20 @@ export declare class SellerService {
             status: import(".prisma/client").$Enums.SellerPayoutStatus;
             sellerStoreId: string;
             paidAt: Date | null;
-            cashfreeTransferId: string | null;
             payoutRefNo: string;
             totalGrossAmount: Prisma.Decimal;
             totalCommissionAmount: Prisma.Decimal;
             totalTcsAmount: Prisma.Decimal;
             netPayoutAmount: Prisma.Decimal;
+            cashfreeTransferId: string | null;
             cashfreeUtrNo: string | null;
         }[];
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -151,6 +148,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -177,9 +175,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -187,14 +187,11 @@ export declare class SellerService {
     }>;
     updateKyc(user: AuthUser, dto: UpdateSellerKycDto): Promise<{
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -202,6 +199,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -228,9 +226,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -263,19 +263,16 @@ export declare class SellerService {
         heldBalance: number;
         seller: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
             email: string | null;
         };
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -283,6 +280,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -309,9 +307,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -319,14 +319,11 @@ export declare class SellerService {
     }[]>;
     verifyKycByAdmin(storeId: string, status: SellerKycStatus, commissionRate?: number, rejectionReason?: string): Promise<{
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -334,6 +331,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -360,9 +358,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -370,14 +370,11 @@ export declare class SellerService {
     }>;
     updateSellerSettings(storeId: string, dto: UpdateSellerSettingsDto): Promise<{
         id: string;
+        panNumber: string | null;
+        bankIfsc: string | null;
         createdAt: Date;
         updatedAt: Date;
         isActive: boolean;
-        panNumber: string | null;
-        bankIfsc: string | null;
-        rejectionReason: string | null;
-        rating: number;
-        commissionRate: Prisma.Decimal;
         sellerId: string;
         storeName: string;
         slug: string;
@@ -385,6 +382,7 @@ export declare class SellerService {
         legalName: string | null;
         gstin: string | null;
         kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+        rejectionReason: string | null;
         bankAccountNo: string | null;
         bankBeneficiaryName: string | null;
         cashfreeVendorId: string | null;
@@ -411,9 +409,11 @@ export declare class SellerService {
         aadhaarFrontUrl: string | null;
         aadhaarBackUrl: string | null;
         tradeLicenseUrl: string | null;
+        commissionRate: Prisma.Decimal;
         rtoBearer: import(".prisma/client").$Enums.RtoBearer;
         rtoSharedVendorRatio: Prisma.Decimal;
         catalogApprovalMode: import(".prisma/client").$Enums.CatalogApprovalMode;
+        rating: number;
         isOfficialStore: boolean;
         officialBadgeText: string | null;
         invoicePrefix: string | null;
@@ -456,14 +456,6 @@ export declare class SellerService {
                 pincode: string | null;
             };
             id: string;
-            status: import(".prisma/client").$Enums.OrderStatus;
-            orderNumber: string;
-            deliveryAddress: string | null;
-            orderDate: Date;
-            courierName: string | null;
-            trackingId: string | null;
-            paymentMode: import(".prisma/client").$Enums.OrderPaymentMode;
-            paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
             items: {
                 id: string;
                 quantity: number;
@@ -473,6 +465,14 @@ export declare class SellerService {
                 subtotal: Prisma.Decimal;
                 tcsAmount: Prisma.Decimal;
             }[];
+            status: import(".prisma/client").$Enums.OrderStatus;
+            orderNumber: string;
+            deliveryAddress: string | null;
+            orderDate: Date;
+            courierName: string | null;
+            trackingId: string | null;
+            paymentMode: import(".prisma/client").$Enums.OrderPaymentMode;
+            paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         };
     } & {
         id: string;
@@ -481,17 +481,17 @@ export declare class SellerService {
         orderId: string;
         commissionAmount: Prisma.Decimal;
         sellerStoreId: string;
+        shiprocketOrderId: string | null;
+        shiprocketShipmentId: string | null;
         subtotal: Prisma.Decimal;
+        cashfreeTransferId: string | null;
         shippingFee: Prisma.Decimal;
         rtoFee: Prisma.Decimal;
         vendorNetPayout: Prisma.Decimal;
-        shiprocketOrderId: string | null;
-        shiprocketShipmentId: string | null;
         shiprocketAwbCode: string | null;
         shippingLabelUrl: string | null;
         orderStatus: import(".prisma/client").$Enums.SubOrderStatus;
         settlementStatus: import(".prisma/client").$Enums.SettlementStatus;
-        cashfreeTransferId: string | null;
     })[]>;
     updateMySubOrderStatus(user: AuthUser, subOrderId: string, nextStatus: SubOrderStatus): Promise<{
         id: string;
@@ -500,17 +500,17 @@ export declare class SellerService {
         orderId: string;
         commissionAmount: Prisma.Decimal;
         sellerStoreId: string;
+        shiprocketOrderId: string | null;
+        shiprocketShipmentId: string | null;
         subtotal: Prisma.Decimal;
+        cashfreeTransferId: string | null;
         shippingFee: Prisma.Decimal;
         rtoFee: Prisma.Decimal;
         vendorNetPayout: Prisma.Decimal;
-        shiprocketOrderId: string | null;
-        shiprocketShipmentId: string | null;
         shiprocketAwbCode: string | null;
         shippingLabelUrl: string | null;
         orderStatus: import(".prisma/client").$Enums.SubOrderStatus;
         settlementStatus: import(".prisma/client").$Enums.SettlementStatus;
-        cashfreeTransferId: string | null;
     }>;
     listAllPayoutsForAdmin(status?: string): Promise<({
         sellerStore: {
@@ -520,8 +520,8 @@ export declare class SellerService {
             bankAccountNo: string | null;
             bankBeneficiaryName: string | null;
             seller: {
-                name: string;
                 mobile: string;
+                name: string;
             };
         };
     } & {
@@ -531,12 +531,12 @@ export declare class SellerService {
         status: import(".prisma/client").$Enums.SellerPayoutStatus;
         sellerStoreId: string;
         paidAt: Date | null;
-        cashfreeTransferId: string | null;
         payoutRefNo: string;
         totalGrossAmount: Prisma.Decimal;
         totalCommissionAmount: Prisma.Decimal;
         totalTcsAmount: Prisma.Decimal;
         netPayoutAmount: Prisma.Decimal;
+        cashfreeTransferId: string | null;
         cashfreeUtrNo: string | null;
     })[]>;
     settleStorePendingPayoutsByAdmin(storeId: string, cashfreeUtrNo?: string): Promise<{
@@ -551,12 +551,12 @@ export declare class SellerService {
         status: import(".prisma/client").$Enums.SellerPayoutStatus;
         sellerStoreId: string;
         paidAt: Date | null;
-        cashfreeTransferId: string | null;
         payoutRefNo: string;
         totalGrossAmount: Prisma.Decimal;
         totalCommissionAmount: Prisma.Decimal;
         totalTcsAmount: Prisma.Decimal;
         netPayoutAmount: Prisma.Decimal;
+        cashfreeTransferId: string | null;
         cashfreeUtrNo: string | null;
     }>;
 }

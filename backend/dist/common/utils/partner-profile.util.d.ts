@@ -4,10 +4,10 @@ export type ProfileField = (typeof ADVISOR_PROFILE_FIELDS)[number];
 type ProfileFieldValues = Partial<Record<ProfileField, string | null>>;
 export declare function getPartnerProfileStatus(user: ProfileFieldValues): {
     profileComplete: boolean;
-    missingFields: ("upiId" | "email" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
+    missingFields: ("email" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
 };
 export declare function getAdvisorPayoutProfileStatus(user: ProfileFieldValues): {
     profileComplete: boolean;
-    missingFields: ("upiId" | "email" | "photoUrl" | "qualification" | "profileTitle" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
+    missingFields: ("email" | "photoUrl" | "qualification" | "profileTitle" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
 };
 export {};

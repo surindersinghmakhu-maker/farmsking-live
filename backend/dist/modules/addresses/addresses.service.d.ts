@@ -6,13 +6,13 @@ export declare class AddressesService {
     constructor(prisma: PrismaService);
     create(user: AuthUser, dto: CreateAddressDto): Promise<{
         id: string;
-        createdAt: Date;
-        name: string | null;
         mobile: string | null;
+        name: string | null;
         district: string;
         state: string;
         pincode: string;
         postOffice: string;
+        createdAt: Date;
         ownerId: string;
         tag: string;
         line: string;
@@ -20,13 +20,13 @@ export declare class AddressesService {
     }>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
-        name: string | null;
         mobile: string | null;
+        name: string | null;
         district: string;
         state: string;
         pincode: string;
         postOffice: string;
+        createdAt: Date;
         ownerId: string;
         tag: string;
         line: string;
@@ -34,13 +34,13 @@ export declare class AddressesService {
     }[]>;
     setDefault(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
-        name: string | null;
         mobile: string | null;
+        name: string | null;
         district: string;
         state: string;
         pincode: string;
         postOffice: string;
+        createdAt: Date;
         ownerId: string;
         tag: string;
         line: string;
@@ -51,13 +51,13 @@ export declare class AddressesService {
     }>;
     update(user: AuthUser, id: string, dto: Partial<CreateAddressDto>): Promise<{
         id: string;
-        createdAt: Date;
-        name: string | null;
         mobile: string | null;
+        name: string | null;
         district: string;
         state: string;
         pincode: string;
         postOffice: string;
+        createdAt: Date;
         ownerId: string;
         tag: string;
         line: string;

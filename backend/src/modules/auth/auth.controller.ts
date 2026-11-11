@@ -38,14 +38,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('send-login-otp')
   sendLoginOtp(@Body() body: SendLoginOtpDto) {
-    return this.authService.sendLoginOtp(body.mobile);
+    return this.authService.sendLoginOtp(body.mobile, body.portal);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('verify-login-otp')
   verifyLoginOtp(@Body() body: VerifyLoginOtpDto) {
-    return this.authService.verifyLoginOtp(body.mobile, body.otp);
+    return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal);
   }
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
@@ -72,7 +72,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('firebase-login')
   firebaseLogin(@Body() body: FirebaseLoginDto) {
-    return this.authService.firebaseLogin(body.idToken);
+    return this.authService.firebaseLogin(body.idToken, body.portal);
   }
 
   @UseGuards(JwtAuthGuard)

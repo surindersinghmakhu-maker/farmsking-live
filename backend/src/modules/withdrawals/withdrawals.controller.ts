@@ -15,7 +15,7 @@ export class WithdrawalsController {
   constructor(private readonly withdrawalsService: WithdrawalsService) {}
 
   @Roles(
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADVISOR,
     Role.ADMIN,
     Role.SUPER_ADMIN,
@@ -36,7 +36,7 @@ export class WithdrawalsController {
   }
 
   @Roles(
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADVISOR,
     Role.ADMIN,
     Role.SUPER_ADMIN,

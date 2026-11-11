@@ -13,11 +13,13 @@ exports.ListUsersQueryDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
+const auth_user_util_1 = require("../../../common/utils/auth-user.util");
 class ListUsersQueryDto {
 }
 exports.ListUsersQueryDto = ListUsersQueryDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => (0, auth_user_util_1.normalizeRoleAlias)(value)),
     (0, class_validator_1.IsIn)(Object.values(client_1.Role)),
     __metadata("design:type", String)
 ], ListUsersQueryDto.prototype, "role", void 0);

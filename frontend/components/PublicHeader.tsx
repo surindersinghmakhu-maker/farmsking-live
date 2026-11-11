@@ -316,7 +316,7 @@ export default function PublicHeader({
   const goToDashboard = () => {
     setMoreMenuOpen(false);
     if (
-      ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
+      ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
         user?.role || ''
       )
     ) {

@@ -21,4 +21,10 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], FirebaseLoginDto.prototype, "idToken", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    __metadata("design:type", String)
+], FirebaseLoginDto.prototype, "portal", void 0);
 //# sourceMappingURL=firebase-login.dto.js.map

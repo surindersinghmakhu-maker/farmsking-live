@@ -167,7 +167,7 @@ let AppSettingsService = class AppSettingsService {
             referralOfferPaidPlanBonus: flags.referralOfferPaidPlanBonus ?? settings.referralOfferPaidPlanBonus ?? 9,
             partnerOfferSchemeEnabled: flags.partnerOfferSchemeEnabled ?? settings.partnerOfferSchemeEnabled ?? false,
             partnerOfferExpiryDate: flags.partnerOfferExpiryDate || settings.partnerOfferExpiryDate || '2026-12-31',
-            partnerOfferSchemeName: flags.partnerOfferSchemeName || settings.partnerOfferSchemeName || 'Business Partner Referral Scheme',
+            partnerOfferSchemeName: flags.partnerOfferSchemeName || settings.partnerOfferSchemeName || 'Agent Referral Scheme',
             partnerOfferReferrerBonus: flags.partnerOfferReferrerBonus ?? settings.partnerOfferReferrerBonus ?? 100,
             partnerOfferNewUserBonus: flags.partnerOfferNewUserBonus ?? settings.partnerOfferNewUserBonus ?? 20,
             partnerOfferPaidPlanBonus: flags.partnerOfferPaidPlanBonus ?? settings.partnerOfferPaidPlanBonus ?? 100,

@@ -21,18 +21,18 @@ export declare class BasicPlanCouponsController {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -51,18 +51,18 @@ export declare class BasicPlanCouponsController {
     listAvailable(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -81,18 +81,18 @@ export declare class BasicPlanCouponsController {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -111,18 +111,18 @@ export declare class BasicPlanCouponsController {
     purchase(user: AuthUser, code: string): Promise<{
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;

@@ -7,9 +7,9 @@ export declare class AuditController {
         items: ({
             actor: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             } | null;
         } & {
             id: string;

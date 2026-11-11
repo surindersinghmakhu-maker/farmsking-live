@@ -107,9 +107,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -117,7 +118,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
@@ -146,9 +146,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -156,7 +157,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
@@ -166,16 +166,16 @@ export declare class ExpensesService {
     findAllForAdmin(): import(".prisma/client").Prisma.PrismaPromise<({
         party: {
             id: string;
-            mobile: string | null;
             name: string;
+            mobile: string | null;
         } | null;
         farm: {
             id: string;
             name: string;
             owner: {
                 id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -203,8 +203,8 @@ export declare class ExpensesService {
         };
         recordedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -214,9 +214,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -224,7 +225,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
@@ -234,13 +234,13 @@ export declare class ExpensesService {
     findOneOrThrow(user: AuthUser, id: string): Promise<{
         farm: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             name: string;
             village: string | null;
             district: string | null;
             state: string | null;
             soilType: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             deletedAt: Date | null;
             notes: string | null;
             ownerId: string;
@@ -269,9 +269,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -279,7 +280,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
@@ -308,9 +308,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -318,7 +319,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;
@@ -330,9 +330,10 @@ export declare class ExpensesService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
+        farmId: string;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
@@ -340,7 +341,6 @@ export declare class ExpensesService {
         quantity: number | null;
         unit: string | null;
         receiptPhotoUrl: string | null;
-        farmId: string;
         plotId: string | null;
         cropCycleId: string | null;
         categoryId: string;

@@ -7,7 +7,7 @@ import { usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon } from '../hooks/
 import { useLookupByKingId } from '../hooks/useUsersAdmin';
 
 /**
- * Lets an advisor/admin/business partner apply a farmer-plan coupon on behalf of any farmer, identified by
+ * Lets an advisor/admin/agent apply a farmer-plan coupon on behalf of any farmer, identified by
  * their FarmsKing ID rather than needing an existing assigned-farmer relationship.
  */
 export function RedeemForFarmerModal({ visible, onClose, theme }: { visible: boolean; onClose: () => void; theme: (typeof RoleThemes)['FARMER'] }) {

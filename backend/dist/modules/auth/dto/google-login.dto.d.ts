@@ -5,4 +5,5 @@ export declare class GoogleLoginDto {
     googleId?: string;
     accessToken?: string;
     idToken?: string;
+    portal?: 'CLIENT' | 'PARTNER';
 }

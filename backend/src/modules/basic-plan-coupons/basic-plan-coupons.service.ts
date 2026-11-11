@@ -8,7 +8,7 @@ import { CreateBasicPlanCouponDto } from './dto/create-basic-plan-coupon.dto';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PRICE_PER_DAY = 2;
-/** Business Partners buy a Basic Plan coupon at 90% of its list price (10% discount). */
+/** Agents buy a Basic Plan coupon at 90% of its list price (10% discount). */
 const PARTNER_RATE = 0.9;
 
 function generateCode(): string {
@@ -52,7 +52,7 @@ export class BasicPlanCouponsService {
     });
   }
 
-  /** Business Partner — coupons nobody has bought yet. */
+  /** Agent — coupons nobody has bought yet. */
   listAvailableForPurchase() {
     return this.prisma.basicPlanCoupon.findMany({
       where: { purchasedById: null, isUsed: false },
@@ -61,7 +61,7 @@ export class BasicPlanCouponsService {
     });
   }
 
-  /** Business Partner — coupons they've already bought (to hand the code to a farmer). */
+  /** Agent — coupons they've already bought (to hand the code to a farmer). */
   listMinePurchased(partner: AuthUser) {
     return this.prisma.basicPlanCoupon.findMany({
       where: { purchasedById: partner.id },
@@ -70,7 +70,7 @@ export class BasicPlanCouponsService {
     });
   }
 
-  /** Business Partner buys an unpurchased coupon at 90% of list price, debited from their wallet. */
+  /** Agent buys an unpurchased coupon at 90% of list price, debited from their wallet. */
   async purchase(partner: AuthUser, code: string) {
     const coupon = await this.prisma.basicPlanCoupon.findUnique({ where: { code: code.toUpperCase() } });
     if (!coupon) {

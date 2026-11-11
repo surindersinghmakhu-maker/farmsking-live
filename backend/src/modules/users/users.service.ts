@@ -184,17 +184,17 @@ export class UsersService implements OnModuleInit {
     return { items, total, page, limit };
   }
 
-  /** Advisor-facing type-search: active Business Partners matching a name or king id substring, capped small. */
+  /** Advisor-facing type-search: active Agents matching a name or king id substring, capped small. */
   async searchBusinessPartners(q?: string) {
     const query = (q ?? '').trim();
     return this.prisma.user.findMany({
       where: {
         OR: [
-          { role: Role.BUSINESS_PARTNER },
+          { role: Role.AGENT },
           {
             AND: [
-              { roles: { has: Role.BUSINESS_PARTNER } },
-              { NOT: { deactivatedRoles: { has: Role.BUSINESS_PARTNER } } },
+              { roles: { has: Role.AGENT } },
+              { NOT: { deactivatedRoles: { has: Role.AGENT } } },
             ],
           },
         ],
@@ -506,7 +506,7 @@ export class UsersService implements OnModuleInit {
     const currentRoles = existingUser.roles ?? [];
     const currentDeactivated = existingUser.deactivatedRoles ?? [];
 
-    const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
+    const isPartnerDeactivated = currentDeactivated.includes(Role.AGENT);
     const isSuperAdminMobile = existingUser.mobile === '9872066901';
     const rolesToAdd = isSuperAdminMobile
       ? [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER]
@@ -1271,7 +1271,7 @@ export class UsersService implements OnModuleInit {
       },
       select: SAFE_USER_SELECT,
     });
-    if (role === Role.BUSINESS_PARTNER && !user.roles.includes(Role.BUSINESS_PARTNER)) {
+    if (role === Role.AGENT && !user.roles.includes(Role.AGENT)) {
       await provisionPartnerReferralCoupon(this.prisma, id, caller.id);
     }
 
@@ -1369,7 +1369,7 @@ export class UsersService implements OnModuleInit {
       },
       select: SAFE_USER_SELECT,
     });
-    if (toGrant.includes(Role.BUSINESS_PARTNER) || toReactivate.includes(Role.BUSINESS_PARTNER)) {
+    if (toGrant.includes(Role.AGENT) || toReactivate.includes(Role.AGENT)) {
       await provisionPartnerReferralCoupon(this.prisma, id, caller.id);
     }
     if (toGrant.includes(Role.FARMER) || toReactivate.includes(Role.FARMER)) {
@@ -1826,7 +1826,7 @@ export class UsersService implements OnModuleInit {
     return { ...getAdvisorPayoutProfileStatus(advisor), profile: advisor };
   }
 
-  /** Business Partner self-service: payout details (UPI, bank account, PAN, alternative mobile, email). */
+  /** Agent self-service: payout details (UPI, bank account, PAN, alternative mobile, email). */
   async updatePartnerProfile(user: AuthUser, dto: UpdatePartnerProfileDto) {
     return this.prisma.user.update({
       where: { id: user.id },
@@ -1851,7 +1851,7 @@ export class UsersService implements OnModuleInit {
     });
   }
 
-  /** Whether the Business Partner has filled in every payout field required for their wallet to be withdrawable. */
+  /** Whether the Agent has filled in every payout field required for their wallet to be withdrawable. */
   async getPartnerProfileStatus(user: AuthUser) {
     const partner = await this.prisma.user.findUnique({
       where: { id: user.id },

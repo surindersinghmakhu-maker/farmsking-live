@@ -112,7 +112,7 @@ function RootNavigation() {
       }
 
       if (isAtRootOrIndex) {
-        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
           router.replace('/(partner)/(tabs)');
         } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
           router.replace('/admin');
@@ -123,10 +123,10 @@ function RootNavigation() {
       }
 
       if (currentGroup === '(partner)') {
-        const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
+        const hasPartnerAccess = userRoles.some(r => ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
       } else if (inAuthGroup) {
-        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
           router.replace('/(partner)/(tabs)');
         } else {
           router.replace('/(user)/(tabs)');

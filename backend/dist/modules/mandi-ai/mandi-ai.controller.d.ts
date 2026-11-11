@@ -8,17 +8,17 @@ export declare class MandiAIController {
         createdAt: Date;
         mandiName: string;
         cropName: string;
+        confidenceScore: number;
         predictedDate: Date;
         predictedPrice: import("@prisma/client/runtime/library").Decimal;
-        confidenceScore: number;
     }[]>;
     createPriceLockContract(user: AuthUser, dto: CreatePriceLockDto): Promise<{
         id: string;
         createdAt: Date;
         status: string;
         farmerId: string;
-        cropName: string;
         buyerId: string;
+        cropName: string;
         quantityQuintal: import("@prisma/client/runtime/library").Decimal;
         lockedRate: import("@prisma/client/runtime/library").Decimal;
         escrowDeposit: import("@prisma/client/runtime/library").Decimal;
@@ -26,21 +26,21 @@ export declare class MandiAIController {
     getMyPriceLockContracts(user: AuthUser): Promise<({
         farmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         buyer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
     } & {
         id: string;
         createdAt: Date;
         status: string;
         farmerId: string;
-        cropName: string;
         buyerId: string;
+        cropName: string;
         quantityQuintal: import("@prisma/client/runtime/library").Decimal;
         lockedRate: import("@prisma/client/runtime/library").Decimal;
         escrowDeposit: import("@prisma/client/runtime/library").Decimal;

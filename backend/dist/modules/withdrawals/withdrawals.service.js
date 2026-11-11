@@ -37,7 +37,7 @@ let WithdrawalsService = class WithdrawalsService {
     }
     async assertPayoutProfileComplete(user) {
         const isAdvisor = user.role === client_1.Role.ADVISOR;
-        const isPartner = user.role === client_1.Role.BUSINESS_PARTNER;
+        const isPartner = user.role === client_1.Role.AGENT;
         if (isAdvisor || isPartner) {
             const fields = isAdvisor ? partner_profile_util_1.ADVISOR_PROFILE_FIELDS : partner_profile_util_1.BUSINESS_PARTNER_PROFILE_FIELDS;
             const record = await this.prisma.user.findUnique({

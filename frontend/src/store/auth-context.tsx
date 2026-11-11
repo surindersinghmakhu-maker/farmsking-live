@@ -3,20 +3,60 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert, Platform } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, LoginPortalMode, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
 import { User } from '../types/api';
 
+const PARTNER_PORTAL_ROLES = [
+  'AGENT',
+  'ADVISOR',
+  'FARM_ADVISOR',
+  'GARDEN_ADVISOR',
+  'TECHNICAL_TRAINER',
+  'SELLER',
+];
+
+function normalizeSessionUserRoles<T>(u: T): T {
+  if (!u || typeof u !== 'object') return u;
+  const copy: any = { ...u };
+  const mapRole = (r: any) => (r === 'BUSINESS_PARTNER' ? 'AGENT' : r);
+  if (copy.role) copy.role = mapRole(copy.role);
+  if (Array.isArray(copy.roles)) copy.roles = copy.roles.map(mapRole);
+  if (Array.isArray(copy.deactivatedRoles)) copy.deactivatedRoles = copy.deactivatedRoles.map(mapRole);
+  return copy;
+}
+
+function isPartnerPortalAccount(sessionUser: any): boolean {
+  if (!sessionUser) return false;
+  const deactivated = new Set(Array.isArray(sessionUser.deactivatedRoles) ? sessionUser.deactivatedRoles : []);
+  const combinedRoles = [sessionUser.role, ...(Array.isArray(sessionUser.roles) ? sessionUser.roles : [])].filter(Boolean);
+  return combinedRoles.some((r) => !deactivated.has(r) && PARTNER_PORTAL_ROLES.includes(r));
+}
+
+function assertPortalAccessMatch(sessionUser: any, portal?: LoginPortalMode) {
+  if (!portal || !sessionUser) return;
+  if (sessionUser.role === 'ADMIN' || sessionUser.role === 'SUPER_ADMIN') {
+    throw new Error('Admin and Super Admin accounts cannot sign in here. Please use the Admin Panel.');
+  }
+  const partnerUser = isPartnerPortalAccount(sessionUser);
+  if (portal === 'PARTNER' && !partnerUser) {
+    throw new Error('This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.');
+  }
+  if (portal === 'CLIENT' && partnerUser) {
+    throw new Error('This account is registered as an Agent account (Crop Doctor, Agent, Trainer, or Seller). Please switch to the Agent Login section.');
+  }
+}
+
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<User>;
-  sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>;
-  otpLogin: (payload: { mobile: string; otp: string }) => Promise<any>;
+  sendLoginOtp: (mobile: string, portal?: LoginPortalMode) => Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>;
+  otpLogin: (payload: { mobile: string; otp: string; portal?: LoginPortalMode }) => Promise<any>;
   completeOtpRegistration: (payload: CompleteOtpRegistrationPayload) => Promise<User>;
-  firebaseLogin: (idToken: string) => Promise<any>;
+  firebaseLogin: (idToken: string, portal?: LoginPortalMode) => Promise<any>;
   googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean; user?: User }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
   unlinkGoogle: () => Promise<{ success: boolean; message: string }>;
@@ -40,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const stored = window.localStorage.getItem(USER_KEY);
         const token = window.localStorage.getItem(TOKEN_KEY);
-        if (stored && token) return JSON.parse(stored);
+        if (stored && token) return normalizeSessionUserRoles(JSON.parse(stored));
       } catch {}
     }
     return null;
@@ -87,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
         if (token && storedUser) {
           try {
-            setUser(JSON.parse(storedUser));
+            setUser(normalizeSessionUserRoles(JSON.parse(storedUser)));
           } catch (e) {
             console.warn('Corrupt user session in storage, resetting:', e);
             await SecureStore.deleteItemAsync(TOKEN_KEY);
@@ -102,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Pick up roles/fields granted by an admin (e.g. Business Partner) without requiring re-login:
+  // Pick up roles/fields granted by an admin (e.g. Agent) without requiring re-login:
   // refresh once the session is restored, and again whenever the app returns to the foreground.
   useEffect(() => {
     if (!user) return;
@@ -149,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login: async (payload) => {
         const response = await apiLogin(payload);
+        assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user);
 
         if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {
@@ -183,36 +224,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return response.user;
       },
-      sendLoginOtp: async (mobile) => {
-        return sendLoginOtpApi(mobile);
+      sendLoginOtp: async (mobile, portal) => {
+        return sendLoginOtpApi(mobile, portal);
       },
       otpLogin: async (payload) => {
         const response = await verifyLoginOtpApi(payload);
         if (response.isNewUser) {
+          if (payload.portal === 'PARTNER') {
+            throw new Error('No Partner account is registered with these details. Please switch to the Client Login section for Farmer, Gardener, or Buyer accounts.');
+          }
           return response;
         }
         if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
+        assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user);
         return response.user;
       },
       completeOtpRegistration: async (payload) => {
+        if (payload.portal === 'PARTNER') {
+          throw new Error('New Partner registration requires Admin approval. Please switch to the Client Login section.');
+        }
         const response = await completeOtpRegistrationApi(payload);
         if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
+        assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user);
         return response.user;
       },
-      firebaseLogin: async (idToken) => {
-        const response = await firebaseLoginApi(idToken);
+      firebaseLogin: async (idToken, portal) => {
+        const response = await firebaseLoginApi(idToken, portal);
         if ((response as any).isNewUser) {
+          if (portal === 'PARTNER') {
+            throw new Error('No Partner account is registered with these details. Please switch to the Client Login section for Farmer, Gardener, or Buyer accounts.');
+          }
           return response;
         }
         if (response.user?.role === 'ADMIN' || response.user?.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
+        assertPortalAccessMatch(response.user, portal);
         await persistSession(response.accessToken, response.user);
         return response.user;
       },
@@ -221,6 +274,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
+        assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user);
         return { isProfileIncomplete: response.isProfileIncomplete, user: response.user };
       },

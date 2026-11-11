@@ -61,7 +61,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SubscriptionsController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),

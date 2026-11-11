@@ -6,26 +6,26 @@ export declare class TrainersController {
     getMyAssignedFarmers(user: AuthUser): Promise<({
         farmer: {
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
             sprayTankSizeL: number | null;
-            upiId: string | null;
-            createdAt: Date;
         };
     } & {
         id: string;
-        district: string | null;
-        state: string;
         createdAt: Date;
         updatedAt: Date;
+        district: string | null;
+        state: string;
         status: import(".prisma/client").$Enums.TrainingStatus;
         farmerId: string;
-        rating: number | null;
         payoutAmount: number;
+        rating: number | null;
         trainerId: string;
         isCallRequested: boolean;
         preferredCallSlot: string | null;
@@ -55,14 +55,14 @@ export declare class TrainersController {
         message: string;
         trainingLog: {
             id: string;
-            district: string | null;
-            state: string;
             createdAt: Date;
             updatedAt: Date;
+            district: string | null;
+            state: string;
             status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
-            rating: number | null;
             payoutAmount: number;
+            rating: number | null;
             trainerId: string;
             isCallRequested: boolean;
             preferredCallSlot: string | null;
@@ -103,14 +103,14 @@ export declare class TrainersController {
         message: string;
         log: {
             id: string;
-            district: string | null;
-            state: string;
             createdAt: Date;
             updatedAt: Date;
+            district: string | null;
+            state: string;
             status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
-            rating: number | null;
             payoutAmount: number;
+            rating: number | null;
             trainerId: string;
             isCallRequested: boolean;
             preferredCallSlot: string | null;
@@ -132,16 +132,16 @@ export declare class TrainersController {
         commissionRate?: number;
     }): Promise<{
         id: string;
-        district: string | null;
-        state: string;
         createdAt: Date;
         updatedAt: Date;
-        commissionRate: number;
+        district: string | null;
+        state: string;
         level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
         averageRating: number;
+        commissionRate: number;
         isAvailable: boolean;
         availableFrom: string | null;
         availableTo: string | null;
@@ -150,24 +150,24 @@ export declare class TrainersController {
     listTrainerAssignments(): Promise<({
         trainer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             district: string | null;
             state: string | null;
         };
     } & {
         id: string;
-        district: string | null;
-        state: string;
         createdAt: Date;
         updatedAt: Date;
-        commissionRate: number;
+        district: string | null;
+        state: string;
         level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
         averageRating: number;
+        commissionRate: number;
         isAvailable: boolean;
         availableFrom: string | null;
         availableTo: string | null;
@@ -180,14 +180,14 @@ export declare class TrainersController {
         message: string;
         log: {
             id: string;
-            district: string | null;
-            state: string;
             createdAt: Date;
             updatedAt: Date;
+            district: string | null;
+            state: string;
             status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
-            rating: number | null;
             payoutAmount: number;
+            rating: number | null;
             trainerId: string;
             isCallRequested: boolean;
             preferredCallSlot: string | null;
@@ -210,14 +210,14 @@ export declare class TrainersController {
         message: string;
         log: {
             id: string;
-            district: string | null;
-            state: string;
             createdAt: Date;
             updatedAt: Date;
+            district: string | null;
+            state: string;
             status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
-            rating: number | null;
             payoutAmount: number;
+            rating: number | null;
             trainerId: string;
             isCallRequested: boolean;
             preferredCallSlot: string | null;
@@ -239,16 +239,16 @@ export declare class TrainersController {
         shiftType?: string;
     }): Promise<{
         id: string;
-        district: string | null;
-        state: string;
         createdAt: Date;
         updatedAt: Date;
-        commissionRate: number;
+        district: string | null;
+        state: string;
         level: import(".prisma/client").$Enums.TrainerLevel;
         trainerId: string;
         uplineTrainerId: string | null;
         grade: import(".prisma/client").$Enums.TrainerGrade;
         averageRating: number;
+        commissionRate: number;
         isAvailable: boolean;
         availableFrom: string | null;
         availableTo: string | null;
@@ -264,31 +264,31 @@ export declare class TrainersController {
         };
         logs: ({
             farmer: {
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 district: string | null;
                 state: string | null;
             };
             trainer: {
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             };
             forwardedTo: {
-                mobile: string;
                 name: string;
+                mobile: string;
             } | null;
         } & {
             id: string;
-            district: string | null;
-            state: string;
             createdAt: Date;
             updatedAt: Date;
+            district: string | null;
+            state: string;
             status: import(".prisma/client").$Enums.TrainingStatus;
             farmerId: string;
-            rating: number | null;
             payoutAmount: number;
+            rating: number | null;
             trainerId: string;
             isCallRequested: boolean;
             preferredCallSlot: string | null;

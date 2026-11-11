@@ -80,7 +80,7 @@ const FALLBACK_MODULES: PolicyModule[] = [
     id: 'coupon_rewards_royalty',
     titleEn: 'Advisor & Partner Reward Program',
     titlePa: 'ਸਲਾਹਕਾਰ ਅਤੇ ਬਿਜ਼ਨਸ ਪਾਰਟਨਰ ਕੂਪਨ ਪ੍ਰੋਗਰਾਮ',
-    purposeEn: 'Calculates cashback, referral commissions, and coupon redemptions for authorized Agri Advisors and Business Partners.',
+    purposeEn: 'Calculates cashback, referral commissions, and coupon redemptions for authorized Agri Advisors and Agents.',
     purposePa: 'ਮਾਨਤਾ ਪ੍ਰਾਪਤ ਸਲਾਹਕਾਰਾਂ ਅਤੇ ਪਾਰਟਨਰਾਂ ਲਈ ਕੈਸ਼ਬੈਕ, ਰੈਫਰਲ ਅਤੇ ਕੂਪਨ ਡਿਸਕਾਊਂਟ ਦਾ ਹਿਸਾਬ ਕਰਨ ਲਈ।',
     dataCollected: ['Coupon Redemption History', 'Royalty Earnings Balance', 'UPI ID for Payouts'],
     isMandatory: false,

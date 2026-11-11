@@ -76,7 +76,7 @@ export const PORTALS: Record<PortalId, PortalTheme> = {
     bgGradient: ['#0c0a21', '#141038'],
     sidebarBg: '#0c0a21',
     icon: 'people',
-    allowedRoles: ['MANAGER', 'TECHNICAL_TRAINER', 'BUSINESS_PARTNER', 'SUPER_ADMIN', 'ADMIN'],
+    allowedRoles: ['MANAGER', 'TECHNICAL_TRAINER', 'AGENT', 'SUPER_ADMIN', 'ADMIN'],
   },
 };
 
@@ -92,7 +92,7 @@ export function getPortalForRole(role?: string | null): PortalId {
   if (['GARDENER', 'GARDEN_ADVISOR'].includes(r)) return 'GARDEN';
   if (['SELLER', 'TRADER'].includes(r)) return 'SHOP';
   if (['FARMER', 'SUPERVISOR', 'LABOUR', 'FARM_ADVISOR'].includes(r)) return 'FARMER';
-  if (['MANAGER', 'TECHNICAL_TRAINER', 'BUSINESS_PARTNER', 'OPERATOR'].includes(r)) return 'STAFF';
+  if (['MANAGER', 'TECHNICAL_TRAINER', 'AGENT', 'OPERATOR'].includes(r)) return 'STAFF';
 
   return 'ADMIN_HQ';
 }

@@ -19,9 +19,9 @@ export declare class AdvisorAssignmentController {
                 expiredAt: Date | null;
             } | null;
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -33,9 +33,9 @@ export declare class AdvisorAssignmentController {
         subscription: ({
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -71,8 +71,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     })[]>;
     findFarmerDetail(user: AuthUser, farmerId: string): Promise<{
         farmer: {
@@ -83,9 +83,10 @@ export declare class AdvisorAssignmentController {
                 expiredAt: Date | null;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -93,16 +94,15 @@ export declare class AdvisorAssignmentController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            createdAt: Date;
             deletedAt: Date | null;
         };
         assignment: ({
             subscription: ({
                 plan: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     isActive: boolean;
                     description: string | null;
                     price: import("@prisma/client/runtime/library").Decimal;
@@ -138,16 +138,16 @@ export declare class AdvisorAssignmentController {
             notes: string | null;
             farmerId: string;
             advisorId: string;
-            subscriptionId: string | null;
             assignedById: string | null;
+            subscriptionId: string | null;
         }) | null;
         isExpired: boolean;
     }>;
     findMyAdvisor(user: AuthUser): Promise<({
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -167,8 +167,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }) | null>;
     findMyPendingRequest(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorAssignmentClient<({
         advisor: {
@@ -188,8 +188,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listAvailableAdvisors(user: AuthUser): Promise<{
         rating: number | null;
@@ -222,8 +222,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     cancelMyPendingRequest(user: AuthUser): Promise<{
         id: string;
@@ -236,8 +236,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     create(user: AuthUser, dto: CreateAdvisorAssignmentDto): Promise<{
         id: string;
@@ -250,8 +250,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     revoke(user: AuthUser, id: string): Promise<{
         id: string;
@@ -264,8 +264,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     accept(user: AuthUser, id: string): Promise<{
         id: string;
@@ -278,8 +278,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     reject(user: AuthUser, id: string, dto: RejectAssignmentDto): Promise<{
         id: string;
@@ -292,22 +292,22 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     findPendingDoctorChangeRequests(): Promise<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             district: string | null;
             state: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             photoUrl: string | null;
             specialization: string | null;
         };
@@ -322,8 +322,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     })[]>;
     adminApproveDoctorChange(user: AuthUser, id: string): Promise<{
         id: string;
@@ -336,8 +336,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     adminRejectDoctorChange(user: AuthUser, id: string, body: {
         reason?: string;
@@ -352,8 +352,8 @@ export declare class AdvisorAssignmentController {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     sendRenewalReminder(user: AuthUser, farmerId: string): Promise<{
         success: boolean;

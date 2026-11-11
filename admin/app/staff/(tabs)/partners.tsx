@@ -37,7 +37,7 @@ export default function PartnersScreen() {
         <View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Ionicons name="people" size={20} color="#f59e0b" />
-            <Text style={styles.title}>Strategic Business Partners</Text>
+            <Text style={styles.title}>Strategic Agents</Text>
           </View>
           <Text style={styles.subtitle}>Partner alliances, referral codes, active farmer networks & payouts</Text>
         </View>

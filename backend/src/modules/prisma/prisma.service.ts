@@ -12,8 +12,26 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         await this.$connect();
         this.logger.log('Successfully connected to database.');
 
-        // Auto-heal missing DB columns on production PostgreSQL without needing manual SSH migration scripts
+        // Auto-heal missing DB columns and enum updates on PostgreSQL without manual SSH migration scripts
         try {
+          await this.$executeRawUnsafe(`
+            DO $$
+            BEGIN
+              IF EXISTS (
+                SELECT 1
+                FROM pg_enum e
+                JOIN pg_type t ON e.enumtypid = t.oid
+                WHERE t.typname = 'Role' AND e.enumlabel = 'AGENT'
+              ) AND NOT EXISTS (
+                SELECT 1
+                FROM pg_enum e
+                JOIN pg_type t ON e.enumtypid = t.oid
+                WHERE t.typname = 'Role' AND e.enumlabel = 'AGENT'
+              ) THEN
+                ALTER TYPE "Role" RENAME VALUE 'AGENT' TO 'AGENT';
+              END IF;
+            END $$;
+          `);
           await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "googleId" TEXT;`);
           await this.$executeRawUnsafe(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'users_googleId_key') THEN CREATE UNIQUE INDEX "users_googleId_key" ON "users"("googleId"); END IF; END $$;`);
           await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "supervisorFeaturesConfig" JSONB DEFAULT '{}'::jsonb;`);

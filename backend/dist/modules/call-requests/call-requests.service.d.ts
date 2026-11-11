@@ -18,15 +18,15 @@ export declare class CallRequestsService {
         notes: string | null;
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
         id: string;
         createdAt: Date;
@@ -39,15 +39,15 @@ export declare class CallRequestsService {
     getMyPending(farmer: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
     } & {
         id: string;
@@ -61,15 +61,15 @@ export declare class CallRequestsService {
     listMine(advisor: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
     } & {
         id: string;
@@ -83,15 +83,15 @@ export declare class CallRequestsService {
     resolve(advisor: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
     } & {
         id: string;

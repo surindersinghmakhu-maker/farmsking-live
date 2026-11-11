@@ -90,7 +90,7 @@ export async function createAdmin(payload: CreateStaffPayload): Promise<CreateAd
 }
 
 export async function promoteToBusinessPartner(id: string): Promise<AdminUser> {
-  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/role`, { role: 'BUSINESS_PARTNER' });
+  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/role`, { role: 'AGENT' });
   return data;
 }
 
@@ -165,7 +165,7 @@ export async function resetUserPassword(id: string, newPassword?: string): Promi
 }
 
 /** The checkbox-toggleable roles — staff roles (Admin/Super Admin/Operator) have their own dedicated flows. */
-export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'BUSINESS_PARTNER', 'TECHNICAL_TRAINER' as Role];
+export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'AGENT', 'TECHNICAL_TRAINER' as Role];
 
 export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });
@@ -279,7 +279,7 @@ export interface KingIdLookupResult {
   role: Role;
 }
 
-/** Advisor/Admin/Business Partner: resolve a farmer's FarmsKing ID to their account — e.g. to apply a coupon on their behalf. */
+/** Advisor/Admin/Agent: resolve a farmer's FarmsKing ID to their account — e.g. to apply a coupon on their behalf. */
 export async function lookupByKingId(kingId: string): Promise<KingIdLookupResult> {
   const { data } = await apiClient.get<KingIdLookupResult>(`/users/lookup/${kingId}`);
   return data;
@@ -292,7 +292,7 @@ export interface BusinessPartnerSearchResult {
   mobile: string;
 }
 
-/** Advisor: type-search active Business Partners by name or king id, e.g. to share a self-generated coupon with one. */
+/** Advisor: type-search active Agents by name or king id, e.g. to share a self-generated coupon with one. */
 export async function searchBusinessPartners(q: string): Promise<BusinessPartnerSearchResult[]> {
   const { data } = await apiClient.get<BusinessPartnerSearchResult[]>('/users/search/business-partners', { params: { q } });
   return data;

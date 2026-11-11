@@ -62,14 +62,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BasicPlanCouponsController.prototype, "listAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT),
     (0, common_1.Get)('available'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BasicPlanCouponsController.prototype, "listAvailable", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -77,7 +77,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BasicPlanCouponsController.prototype, "listMine", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT),
     (0, common_1.Post)(':code/purchase'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('code')),

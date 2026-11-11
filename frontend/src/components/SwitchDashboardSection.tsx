@@ -17,7 +17,7 @@ const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   GARDENER: 'flower',
   FARM_ADVISOR: 'school',
   GARDEN_ADVISOR: 'flower-outline',
-  BUSINESS_PARTNER: 'briefcase',
+  AGENT: 'briefcase',
   ADMIN: 'shield-checkmark',
   SUPER_ADMIN: 'shield-half',
   OPERATOR: 'print',
@@ -29,7 +29,7 @@ const tap = () => {
 
 /**
  * Shows the dashboard-switch list when this account already holds more than one granted role (e.g. a
- * Farmer who was also made a Business Partner). For a Customer-only account, instead offers self-service
+ * Farmer who was also made a Agent). For a Customer-only account, instead offers self-service
  * "Become a Farmer" / "Become a Gardener" — granting that role immediately activates its dashboard too.
  */
 type ExtraRow = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void };

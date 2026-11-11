@@ -235,7 +235,7 @@ export function useApplyCouponToFarmerDirectly() {
   });
 }
 
-/** Business Partner's own wallet of plan coupons issued to them, to hand out to farmers — earns a commission on redemption. */
+/** Agent's own wallet of plan coupons issued to them, to hand out to farmers — earns a commission on redemption. */
 export function useMinePartnerFarmerPlanCoupons() {
   return useQuery({ queryKey: ['farmer-plan-coupons', 'mine-partner'], queryFn: listMinePartnerFarmerPlanCoupons });
 }

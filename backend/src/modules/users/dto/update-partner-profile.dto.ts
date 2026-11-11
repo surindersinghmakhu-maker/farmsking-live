@@ -1,7 +1,7 @@
 import { IsEmail, IsOptional, IsString, Matches } from 'class-validator';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
-/** Business Partner self-service: payout details required before their wallet can be withdrawn from. */
+/** Agent self-service: payout details required before their wallet can be withdrawn from. */
 export class UpdatePartnerProfileDto {
   @IsOptional()
   @IsEmail()

@@ -70,7 +70,7 @@ export class WalletService {
           })
         : null;
 
-      const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
+      const isPartner = referrer?.role === 'AGENT' || (Array.isArray(referrer?.roles) && referrer.roles.includes('AGENT'));
 
       // Check scheme active status and expiration date
       const todayStr = new Date().toISOString().split('T')[0];
@@ -112,7 +112,7 @@ export class WalletService {
             await this.credit(
               dbUser.referredById,
               activeBonus,
-              `🎉 Referral Income (${isPartner ? 'Business Partner Commission' : 'New user joined'}: ${dbUser.name || dbUser.kingId || 'User'})`,
+              `🎉 Referral Income (${isPartner ? 'Agent Commission' : 'New user joined'}: ${dbUser.name || dbUser.kingId || 'User'})`,
               { relatedUserId: userId },
             );
           }
@@ -517,7 +517,7 @@ export class WalletService {
         where: { id: referrerId },
         select: { id: true, role: true, roles: true },
       });
-      const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
+      const isPartner = referrer?.role === 'AGENT' || (Array.isArray(referrer?.roles) && referrer.roles.includes('AGENT'));
 
       const stdPlanBonus = Number((settings as any)?.referralPaidPlanBonusAmount ?? (settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
       const partnerPlanBonus = Number((settings as any)?.partnerReferralPaidPlanBonusAmount ?? 100);
@@ -527,7 +527,7 @@ export class WalletService {
         await this.credit(
           referrerId,
           activePlanBonus,
-          `👑 Referral Paid Plan Bonus (${isPartner ? 'Business Partner Bonus' : 'Referee upgraded plan'}: ${dbUser.name || dbUser.kingId || 'User'})`,
+          `👑 Referral Paid Plan Bonus (${isPartner ? 'Agent Bonus' : 'Referee upgraded plan'}: ${dbUser.name || dbUser.kingId || 'User'})`,
           { relatedUserId: referredUserId },
         );
       }

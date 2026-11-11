@@ -31,7 +31,7 @@ const ROLE_DISPLAY: Record<string, { label: string; icon: string }> = {
   FARM_ADVISOR: { label: 'Crop Doctor / Advisor', icon: '🩺' },
   GARDEN_ADVISOR: { label: 'Garden Advisor', icon: '🌱' },
   TECHNICAL_TRAINER: { label: 'Technical Trainer', icon: '🎓' },
-  BUSINESS_PARTNER: { label: 'Agent', icon: '💼' },
+  AGENT: { label: 'Agent', icon: '💼' },
   SELLER: { label: 'Seller Partner', icon: '🏪' },
   CUSTOMER: { label: 'Customer', icon: '🛒' },
   ADMIN: { label: 'Admin', icon: '🛡️' },

@@ -15,7 +15,7 @@ import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
   Role.CUSTOMER,
   Role.GARDENER,
   Role.ADVISOR,
-  Role.BUSINESS_PARTNER,
+  Role.AGENT,
   Role.ADMIN,
   Role.SUPER_ADMIN,
   Role.OPERATOR,

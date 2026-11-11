@@ -25,19 +25,19 @@ export class BasicPlanCouponsController {
     return this.basicPlanCouponsService.listAll();
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Get('available')
   listAvailable() {
     return this.basicPlanCouponsService.listAvailableForPurchase();
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Get('mine')
   listMine(@CurrentUser() user: AuthUser) {
     return this.basicPlanCouponsService.listMinePurchased(user);
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Post(':code/purchase')
   purchase(@CurrentUser() user: AuthUser, @Param('code') code: string) {
     return this.basicPlanCouponsService.purchase(user, code);

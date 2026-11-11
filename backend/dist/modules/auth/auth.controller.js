@@ -37,10 +37,10 @@ let AuthController = class AuthController {
         return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
     }
     sendLoginOtp(body) {
-        return this.authService.sendLoginOtp(body.mobile);
+        return this.authService.sendLoginOtp(body.mobile, body.portal);
     }
     verifyLoginOtp(body) {
-        return this.authService.verifyLoginOtp(body.mobile, body.otp);
+        return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal);
     }
     completeOtpRegistration(body) {
         return this.authService.completeOtpRegistration(body);
@@ -52,7 +52,7 @@ let AuthController = class AuthController {
         return this.authService.googleLogin(dto);
     }
     firebaseLogin(body) {
-        return this.authService.firebaseLogin(body.idToken);
+        return this.authService.firebaseLogin(body.idToken, body.portal);
     }
     linkGoogleAccount(user, dto) {
         return this.authService.linkGoogleAccount(user, dto);

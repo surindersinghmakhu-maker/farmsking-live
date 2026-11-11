@@ -21,6 +21,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendLoginOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    __metadata("design:type", String)
+], SendLoginOtpDto.prototype, "portal", void 0);
 class VerifyLoginOtpDto {
 }
 exports.VerifyLoginOtpDto = VerifyLoginOtpDto;
@@ -36,6 +42,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], VerifyLoginOtpDto.prototype, "otp", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    __metadata("design:type", String)
+], VerifyLoginOtpDto.prototype, "portal", void 0);
 class SendWhatsAppOtpDto {
 }
 exports.SendWhatsAppOtpDto = SendWhatsAppOtpDto;
@@ -96,4 +108,10 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "role", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
+    __metadata("design:type", String)
+], CompleteOtpRegistrationDto.prototype, "portal", void 0);
 //# sourceMappingURL=otp.dto.js.map

@@ -202,11 +202,11 @@ let UsersService = class UsersService {
         return this.prisma.user.findMany({
             where: {
                 OR: [
-                    { role: client_1.Role.BUSINESS_PARTNER },
+                    { role: client_1.Role.AGENT },
                     {
                         AND: [
-                            { roles: { has: client_1.Role.BUSINESS_PARTNER } },
-                            { NOT: { deactivatedRoles: { has: client_1.Role.BUSINESS_PARTNER } } },
+                            { roles: { has: client_1.Role.AGENT } },
+                            { NOT: { deactivatedRoles: { has: client_1.Role.AGENT } } },
                         ],
                     },
                 ],
@@ -463,7 +463,7 @@ let UsersService = class UsersService {
         });
         const currentRoles = existingUser.roles ?? [];
         const currentDeactivated = existingUser.deactivatedRoles ?? [];
-        const isPartnerDeactivated = currentDeactivated.includes(client_1.Role.BUSINESS_PARTNER);
+        const isPartnerDeactivated = currentDeactivated.includes(client_1.Role.AGENT);
         const isSuperAdminMobile = existingUser.mobile === '9872066901';
         const rolesToAdd = isSuperAdminMobile
             ? [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN, client_1.Role.FARMER]
@@ -1071,7 +1071,7 @@ let UsersService = class UsersService {
             },
             select: SAFE_USER_SELECT,
         });
-        if (role === client_1.Role.BUSINESS_PARTNER && !user.roles.includes(client_1.Role.BUSINESS_PARTNER)) {
+        if (role === client_1.Role.AGENT && !user.roles.includes(client_1.Role.AGENT)) {
             await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, id, caller.id);
         }
         const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
@@ -1139,7 +1139,7 @@ let UsersService = class UsersService {
             },
             select: SAFE_USER_SELECT,
         });
-        if (toGrant.includes(client_1.Role.BUSINESS_PARTNER) || toReactivate.includes(client_1.Role.BUSINESS_PARTNER)) {
+        if (toGrant.includes(client_1.Role.AGENT) || toReactivate.includes(client_1.Role.AGENT)) {
             await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, id, caller.id);
         }
         if (toGrant.includes(client_1.Role.FARMER) || toReactivate.includes(client_1.Role.FARMER)) {

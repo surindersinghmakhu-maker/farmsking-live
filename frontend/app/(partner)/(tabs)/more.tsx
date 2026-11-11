@@ -165,8 +165,22 @@ export default function MoreScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 110 }}
+        showsVerticalScrollIndicator={false}
+      >
         <LinearGradient colors={theme.gradient} style={styles.hero}>
+          {/* Always-visible quick Log Out button at top-right of More screen for Mobile */}
+          <TouchableOpacity
+            style={styles.heroLogoutBtn}
+            activeOpacity={0.8}
+            onPress={() => logout()}
+            accessibilityLabel="Logout"
+          >
+            <Ionicons name="log-out-outline" size={14} color="#fecaca" />
+            <Text style={styles.heroLogoutText}>{t('logout')}</Text>
+          </TouchableOpacity>
           <View style={styles.avatarCircle}>
             {isAdminRole && brandLogoUri ? (
               <Avatar uri={brandLogoUri} size={52} />
@@ -574,7 +588,27 @@ const contactStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 12, paddingBottom: 12, alignItems: 'center' },
+  hero: { paddingTop: 14, paddingBottom: 14, alignItems: 'center', position: 'relative' },
+  heroLogoutBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(220, 38, 38, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(254, 202, 202, 0.45)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    zIndex: 10,
+  },
+  heroLogoutText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
   avatarCircle: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)',
@@ -588,7 +622,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 2, marginTop: 4,
   },
   kingIdText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
-  body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 32 },
+  body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 96 },
   section: { marginBottom: 12 },
   sectionTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 },
   sectionCard: {
@@ -631,7 +665,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
 
   const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN') || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || user?.role === 'ADVISOR';
-  const isPartner = userRoles.includes('BUSINESS_PARTNER') || user?.role === 'BUSINESS_PARTNER';
+  const isPartner = userRoles.includes('AGENT') || user?.role === 'AGENT';
 
   const safeRawDocsList = Array.isArray(rawDocsList) ? rawDocsList : [];
   const docsList = safeRawDocsList.filter((doc: any) => {
@@ -644,7 +678,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
     // Advisor Guide for Advisors or multi-role users
     if (doc.key === 'advisor' && (isAdvisor || isPartner)) return true;
 
-    // Business Partner Guide for Partners or multi-role users
+    // Agent Guide for Partners or multi-role users
     if (doc.key === 'partner' && (isPartner || isAdvisor)) return true;
 
     return true; // Fallback: show guide so no user ever gets an empty list

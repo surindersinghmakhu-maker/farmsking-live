@@ -135,7 +135,7 @@ export default function SuperAccountsScreen() {
   const pending = (withdrawals ?? []).filter((w) => w.status === 'PENDING');
   const processed = (withdrawals ?? []).filter((w) => w.status !== 'PENDING');
 
-  const { data: vendorsData, isLoading: isLoadingVendors } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 100 });
+  const { data: vendorsData, isLoading: isLoadingVendors } = useUsersList({ role: 'AGENT', limit: 100 });
   const { data: doctorsData, isLoading: isLoadingDoctors } = useUsersList({ role: 'ADVISOR', limit: 100 });
   const { data: staffData, isLoading: isLoadingStaff } = useUsersList({ role: 'TECHNICAL_TRAINER', limit: 100 });
   const { data: searchResults, isLoading: isSearching } = useUsersList({ search: userSearch.trim() || undefined, limit: 20 });
@@ -305,7 +305,7 @@ export default function SuperAccountsScreen() {
               })}
             </ScrollView>
 
-            {/* Sub-Tab 1: Vendors / Business Partners */}
+            {/* Sub-Tab 1: Vendors / Agents */}
             {partnerSubTab === 'VENDORS' ? (
               <View style={{ gap: 8 }}>
                 {/* Direct Gateway to Market Seller Payments */}
@@ -364,7 +364,7 @@ export default function SuperAccountsScreen() {
                 {isLoadingVendors ? (
                   <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
                 ) : (vendorsData?.items ?? []).length === 0 ? (
-                  <EmptyState icon="briefcase-outline" text="No business partners or vendors yet." />
+                  <EmptyState icon="briefcase-outline" text="No agents or vendors yet." />
                 ) : (
                   (vendorsData?.items ?? []).map((p) => (
                     <TouchableOpacity
@@ -938,7 +938,7 @@ export function WithdrawalCard({ request, onReview }: { request: WithdrawalReque
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
       <IdentityBadge
-        name={request.businessPartner?.name ?? 'Business Partner'}
+        name={request.businessPartner?.name ?? 'Agent'}
         sub={new Date(request.requestedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
       />
       <View style={{ alignItems: 'flex-end', gap: 6 }}>

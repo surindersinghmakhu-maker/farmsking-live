@@ -336,8 +336,8 @@ export declare class FarmerPlansService implements OnModuleInit {
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     grantDaysDirectly(dto: GrantFarmerPlanDaysDto): Promise<{
         plan: any;
@@ -475,28 +475,28 @@ export declare class FarmerPlansService implements OnModuleInit {
     listMineForAdvisor(user: AuthUser): Promise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
             specialization: string | null;
         };
         assignedFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         } | null;
         assignedAdvisor: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             specialization: string | null;
         } | null;
         usedByFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         } | null;
     } & {
         id: string;
@@ -561,23 +561,23 @@ export declare class FarmerPlansService implements OnModuleInit {
         };
         assignedFarmer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         assignedBusinessPartner: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         usedByFarmer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;
@@ -623,9 +623,9 @@ export declare class FarmerPlansService implements OnModuleInit {
         } | null;
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
     } & {
         id: string;

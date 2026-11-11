@@ -129,7 +129,7 @@ export default function NewFinanceCommandHubScreen() {
       id: 'coupons-engine',
       title: 'Coupons & Referral Commission Engine',
       badge: 'Growth Engine',
-      description: 'Create promotional discount codes, manage business partner commission cuts & invite vouchers',
+      description: 'Create promotional discount codes, manage agent commission cuts & invite vouchers',
       icon: 'ticket' as const,
       color: '#7c3aed',
       countText: 'Promo & Vouchers',

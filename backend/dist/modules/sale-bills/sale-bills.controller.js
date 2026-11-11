@@ -95,7 +95,7 @@ __decorate([
 exports.SaleBillsController = SaleBillsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: true })),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('sale-bills'),
     __metadata("design:paramtypes", [sale_bills_service_1.SaleBillsService])
 ], SaleBillsController);

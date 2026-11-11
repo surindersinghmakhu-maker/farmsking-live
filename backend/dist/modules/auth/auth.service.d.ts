@@ -37,6 +37,10 @@ export declare class AuthService {
         success: boolean;
         message: string;
     }>;
+    private static readonly PARTNER_PORTAL_ROLES;
+    private static readonly ADMIN_PANEL_ROLES;
+    private getActiveUserRoles;
+    private assertPortalAllowed;
     googleLogin(dto: GoogleLoginDto): Promise<{
         isProfileIncomplete: boolean;
         missingFields: string[];
@@ -208,7 +212,7 @@ export declare class AuthService {
         success: boolean;
         message: string;
     }>;
-    sendLoginOtp(mobile: string): Promise<{
+    sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER'): Promise<{
         success: boolean;
         isNewUser: boolean;
         waSent: boolean;
@@ -216,7 +220,7 @@ export declare class AuthService {
         devOtp: string | undefined;
         universalTestOtp: string | undefined;
     }>;
-    verifyLoginOtp(mobile: string, otp: string): Promise<{
+    verifyLoginOtp(mobile: string, otp: string, portal?: 'CLIENT' | 'PARTNER'): Promise<{
         isNewUser: boolean;
         mobile: string;
         message: string;
@@ -242,6 +246,7 @@ export declare class AuthService {
         mobile: string;
         name?: string;
         role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+        portal?: 'CLIENT' | 'PARTNER';
     }): Promise<{
         accessToken: string;
         user: {
@@ -258,7 +263,7 @@ export declare class AuthService {
         };
         isNewUser: boolean;
     }>;
-    firebaseLogin(idToken: string): Promise<{
+    firebaseLogin(idToken: string, portal?: 'CLIENT' | 'PARTNER'): Promise<{
         isNewUser: boolean;
         mobile: string;
         message: string;

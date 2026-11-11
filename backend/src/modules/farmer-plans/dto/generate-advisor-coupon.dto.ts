@@ -40,7 +40,7 @@ export class GenerateAdvisorCouponDto {
   @IsUUID()
   assignedFarmerId?: string;
 
-  /** Optional: share the coupon with a Business Partner instead — mutually exclusive with assignedFarmerId. */
+  /** Optional: share the coupon with a Agent instead — mutually exclusive with assignedFarmerId. */
   @IsOptional()
   @IsUUID()
   assignedBusinessPartnerId?: string;

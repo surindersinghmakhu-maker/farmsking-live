@@ -181,7 +181,7 @@ export class AppSettingsService {
       referralOfferPaidPlanBonus: flags.referralOfferPaidPlanBonus ?? (settings as any).referralOfferPaidPlanBonus ?? 9,
       partnerOfferSchemeEnabled: flags.partnerOfferSchemeEnabled ?? (settings as any).partnerOfferSchemeEnabled ?? false,
       partnerOfferExpiryDate: flags.partnerOfferExpiryDate || (settings as any).partnerOfferExpiryDate || '2026-12-31',
-      partnerOfferSchemeName: flags.partnerOfferSchemeName || (settings as any).partnerOfferSchemeName || 'Business Partner Referral Scheme',
+      partnerOfferSchemeName: flags.partnerOfferSchemeName || (settings as any).partnerOfferSchemeName || 'Agent Referral Scheme',
       partnerOfferReferrerBonus: flags.partnerOfferReferrerBonus ?? (settings as any).partnerOfferReferrerBonus ?? 100,
       partnerOfferNewUserBonus: flags.partnerOfferNewUserBonus ?? (settings as any).partnerOfferNewUserBonus ?? 20,
       partnerOfferPaidPlanBonus: flags.partnerOfferPaidPlanBonus ?? (settings as any).partnerOfferPaidPlanBonus ?? 100,

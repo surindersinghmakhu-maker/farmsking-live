@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -104,6 +104,62 @@ export class AuthService {
     return { success, message: success ? 'Email OTP sent directly via Gmail SMTP.' : 'Failed to send Email OTP.' };
   }
 
+  private static readonly PARTNER_PORTAL_ROLES: Role[] = [
+    Role.AGENT,
+    Role.ADVISOR,
+    Role.TECHNICAL_TRAINER,
+    Role.SELLER,
+  ];
+
+  private static readonly ADMIN_PANEL_ROLES: Role[] = [
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+  ];
+
+  private getActiveUserRoles(user: { role: Role; roles?: Role[] | null; deactivatedRoles?: Role[] | null }): Role[] {
+    const deactivated = new Set(user.deactivatedRoles ?? []);
+    const combined = [user.role, ...(user.roles ?? [])].filter(Boolean);
+    return Array.from(new Set(combined)).filter((r) => !deactivated.has(r));
+  }
+
+  private assertPortalAllowed(
+    user: { role: Role; roles?: Role[] | null; deactivatedRoles?: Role[] | null } | null,
+    portal?: 'CLIENT' | 'PARTNER',
+  ) {
+    if (!portal) return;
+
+    if (!user) {
+      if (portal === 'PARTNER') {
+        throw new ForbiddenException(
+          'No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.',
+        );
+      }
+      return;
+    }
+
+    const activeRoles = this.getActiveUserRoles(user);
+    const isAdminAccount = activeRoles.some((r) => AuthService.ADMIN_PANEL_ROLES.includes(r));
+    const isPartnerAccount = activeRoles.some((r) => AuthService.PARTNER_PORTAL_ROLES.includes(r));
+
+    if (isAdminAccount) {
+      throw new ForbiddenException(
+        'Admin and Super Admin accounts cannot sign in here. Please use the Admin Panel.',
+      );
+    }
+
+    if (portal === 'PARTNER' && !isPartnerAccount) {
+      throw new ForbiddenException(
+        'This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.',
+      );
+    }
+
+    if (portal === 'CLIENT' && isPartnerAccount) {
+      throw new ForbiddenException(
+        'This account is registered as an Agent account (Crop Doctor, Agent, Trainer, or Seller). Please switch to the Agent Login section.',
+      );
+    }
+  }
+
   async googleLogin(dto: GoogleLoginDto) {
     let verifiedEmail = dto.email;
     let verifiedName = dto.name;
@@ -155,6 +211,7 @@ export class AuthService {
     });
 
     if (!user) {
+      this.assertPortalAllowed(null, dto.portal);
       const kingId = await generateUniqueKingId(this.prisma);
       const passwordHash = await argon2.hash(Math.random().toString(36).slice(-10));
       user = await this.prisma.user.create({
@@ -172,21 +229,24 @@ export class AuthService {
           isEmailVerified: true,
         },
       });
-    } else if (!user.googleId && dto.googleId) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: { googleId: dto.googleId, isEmailVerified: true },
-      });
-    } else if (user.isEmailVerified !== true) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: { isEmailVerified: true },
-      });
-    } else if (verifiedPhoto && !user.photoUrl) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: { photoUrl: verifiedPhoto },
-      });
+    } else {
+      this.assertPortalAllowed(user, dto.portal);
+      if (!user.googleId && dto.googleId) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { googleId: dto.googleId, isEmailVerified: true },
+        });
+      } else if (user.isEmailVerified !== true) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { isEmailVerified: true },
+        });
+      } else if (verifiedPhoto && !user.photoUrl) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { photoUrl: verifiedPhoto },
+        });
+      }
     }
 
     const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
@@ -769,7 +829,7 @@ export class AuthService {
 
   /**
    * Farmer/Gardener signup grants FARMER or GARDENER role plus FREE plan record.
-   * NOTE: Role.BUSINESS_PARTNER is NOT automatically assigned. Only Super Admin/Admin can assign BUSINESS_PARTNER.
+   * NOTE: Role.AGENT is NOT automatically assigned. Only Super Admin/Admin can assign BUSINESS_PARTNER.
    */
   private async applyAccountType(userId: string, accountType?: 'CUSTOMER' | 'FARMER' | 'GARDENER') {
     if (accountType === 'FARMER') {
@@ -879,6 +939,9 @@ export class AuthService {
       });
 
       if (labourWorker) {
+        if (dto.portal === 'PARTNER') {
+          this.assertPortalAllowed(user ?? { role: Role.LABOUR, roles: [Role.LABOUR, Role.CUSTOMER] }, dto.portal);
+        }
         if (!user) {
           const kingId = await generateUniqueKingId(this.prisma);
           const passwordHash = await argon2.hash(cleanPassword);
@@ -916,6 +979,7 @@ export class AuthService {
           });
         }
 
+        this.assertPortalAllowed(user, dto.portal);
         const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
         return this.buildAuthResponse(safeUser as any);
       }
@@ -1006,6 +1070,8 @@ export class AuthService {
         },
       });
     }
+
+    this.assertPortalAllowed(user, dto.portal);
 
     const { passwordHash: _passwordHash, securityAnswerHash: _securityAnswerHash, ...safeUser } = user;
     return this.buildAuthResponse(safeUser);
@@ -1217,7 +1283,7 @@ export class AuthService {
 
   // ─── OTP-based Login & Passwordless Onboarding ─────────────────────────
   /** Step 1: Send 6-digit OTP for login / passwordless registration */
-  async sendLoginOtp(mobile: string) {
+  async sendLoginOtp(mobile: string, portal?: 'CLIENT' | 'PARTNER') {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
     if (cleanMobile.length !== 10) {
@@ -1237,6 +1303,8 @@ export class AuthService {
       const minutesLeft = Math.ceil(msLeft / (1000 * 60));
       throw new UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
     }
+
+    this.assertPortalAllowed(user, portal);
 
     const isDev = process.env.NODE_ENV !== 'production';
     const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
@@ -1270,7 +1338,7 @@ export class AuthService {
   }
 
   /** Step 2: Verify OTP and return auth session (or flag as isNewUser) */
-  async verifyLoginOtp(mobile: string, otp: string) {
+  async verifyLoginOtp(mobile: string, otp: string, portal?: 'CLIENT' | 'PARTNER') {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
 
@@ -1301,14 +1369,17 @@ export class AuthService {
       where: { mobile: cleanMobile, deletedAt: null },
     });
 
-    // If user does not exist yet, prompt role selection
+    // If user does not exist yet, allow new client onboarding ONLY on Client portal (block Partner portal)
     if (!user) {
+      this.assertPortalAllowed(null, portal);
       return {
         isNewUser: true,
         mobile: cleanMobile,
         message: 'Mobile number verified. Please select your role to proceed.',
       };
     }
+
+    this.assertPortalAllowed(user, portal);
 
     // Reset any failed login attempts on successful OTP login
     if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
@@ -1330,7 +1401,14 @@ export class AuthService {
     mobile: string;
     name?: string;
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+    portal?: 'CLIENT' | 'PARTNER';
   }) {
+    if (dto.portal === 'PARTNER') {
+      throw new ForbiddenException(
+        'New Agent account registration requires Admin approval. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.',
+      );
+    }
+
     const rawDigits = dto.mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
     if (cleanMobile.length !== 10) {
@@ -1342,6 +1420,7 @@ export class AuthService {
     });
 
     if (existing) {
+      this.assertPortalAllowed(existing, dto.portal);
       const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = existing;
       return {
         isNewUser: false,
@@ -1408,7 +1487,7 @@ export class AuthService {
     };
   }
 
-  async firebaseLogin(idToken: string) {
+  async firebaseLogin(idToken: string, portal?: 'CLIENT' | 'PARTNER') {
     if (!idToken) throw new BadRequestException('Firebase ID Token is required.');
     try {
       const decodedToken = await getAuth().verifyIdToken(idToken);
@@ -1421,14 +1500,17 @@ export class AuthService {
         where: { mobile: cleanMobile, deletedAt: null },
       });
       
-      // If user does not exist yet, allow seamless onboarding / role selection
+      // If user does not exist yet, allow seamless onboarding / role selection ONLY on Client portal
       if (!user) {
+        this.assertPortalAllowed(null, portal);
         return {
           isNewUser: true,
           mobile: cleanMobile,
           message: 'Mobile number verified via Firebase. Please select your role to proceed.',
         };
       }
+
+      this.assertPortalAllowed(user, portal);
 
       // Check account lockout / block
       if (user.isPermanentlyBlocked) {
@@ -1454,7 +1536,11 @@ export class AuthService {
         ...this.buildAuthResponse(safeUser as any),
       };
     } catch (err: any) {
-      if (err instanceof UnauthorizedException || err instanceof BadRequestException) {
+      if (
+        err instanceof UnauthorizedException ||
+        err instanceof BadRequestException ||
+        err instanceof ForbiddenException
+      ) {
         throw err;
       }
       throw new UnauthorizedException('Invalid Firebase ID Token: ' + err.message);

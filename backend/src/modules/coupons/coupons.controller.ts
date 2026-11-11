@@ -39,7 +39,7 @@ export class CouponsController {
     return this.couponsService.listAll();
   }
 
-  @Roles(Role.BUSINESS_PARTNER, Role.ADVISOR)
+  @Roles(Role.AGENT, Role.ADVISOR)
   @Get('mine')
   listMine(@CurrentUser() user: AuthUser) {
     return this.couponsService.listMine(user);
@@ -57,7 +57,7 @@ export class CouponsController {
     return this.couponsService.remove(id);
   }
 
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER, Role.ADVISOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.AGENT, Role.ADVISOR)
   @Get(':id/redemptions')
   getRedemptions(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.couponsService.getRedemptions(user, id);

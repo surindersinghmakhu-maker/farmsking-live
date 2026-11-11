@@ -37,10 +37,10 @@ let CouponsService = class CouponsService {
     }
     async create(user, dto) {
         const partner = await this.prisma.user.findFirst({
-            where: { id: dto.businessPartnerId, roles: { hasSome: [client_1.Role.BUSINESS_PARTNER, client_1.Role.ADVISOR] }, deletedAt: null },
+            where: { id: dto.businessPartnerId, roles: { hasSome: [client_1.Role.AGENT, client_1.Role.ADVISOR] }, deletedAt: null },
         });
         if (!partner) {
-            throw new common_1.NotFoundException('Business partner or advisor not found.');
+            throw new common_1.NotFoundException('Agent or advisor not found.');
         }
         let code;
         if (dto.code) {
@@ -156,7 +156,7 @@ let CouponsService = class CouponsService {
         await this.walletService.credit(coupon.businessPartnerId, commissionAmount, `Commission from coupon ${coupon.code}`, { couponRedemptionId: redemption.id });
         if (user.role === client_1.Role.CUSTOMER) {
             const partner = await this.prisma.user.findFirst({
-                where: { id: coupon.businessPartnerId, roles: { has: client_1.Role.BUSINESS_PARTNER }, deletedAt: null },
+                where: { id: coupon.businessPartnerId, roles: { has: client_1.Role.AGENT }, deletedAt: null },
             });
             if (partner) {
                 await this.prisma.partnerAssignment.upsert({
@@ -199,17 +199,17 @@ let CouponsService = class CouponsService {
     async issuePartnerCoupon(caller, dto) {
         if (dto.businessPartnerId) {
             const partner = await this.prisma.user.findFirst({
-                where: { id: dto.businessPartnerId, roles: { has: client_1.Role.BUSINESS_PARTNER }, deletedAt: null },
+                where: { id: dto.businessPartnerId, roles: { has: client_1.Role.AGENT }, deletedAt: null },
             });
             if (!partner) {
-                throw new common_1.NotFoundException('Business partner not found.');
+                throw new common_1.NotFoundException('Agent not found.');
             }
             const coupon = await this.issueOnePartnerCoupon(dto.businessPartnerId, caller.id);
             return { issuedCount: 1, coupons: [coupon] };
         }
         const [partners, settings] = await Promise.all([
             this.prisma.user.findMany({
-                where: { roles: { has: client_1.Role.BUSINESS_PARTNER }, deletedAt: null },
+                where: { roles: { has: client_1.Role.AGENT }, deletedAt: null },
                 select: { id: true },
             }),
             this.prisma.couponSystemSetting.upsert({ where: { id: 'default' }, update: {}, create: { id: 'default' } }),

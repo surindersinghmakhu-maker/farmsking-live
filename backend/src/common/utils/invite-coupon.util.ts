@@ -16,7 +16,7 @@ function generateInviteCode(): string {
   return code;
 }
 
-/** Every user gets exactly one system-issued personal invite coupon, reusing the same Coupon/commission pipeline as Business Partners.
+/** Every user gets exactly one system-issued personal invite coupon, reusing the same Coupon/commission pipeline as Agents.
  * Commission/discount/validity/usage-limit defaults come from AppSetting (Coupon Master → Special) — admin can edit per-user afterwards via PATCH /coupons/:id. */
 export async function provisionInviteCoupon(prisma: PrismaClient, userId: string): Promise<void> {
   const settings = await prisma.couponSystemSetting.upsert({

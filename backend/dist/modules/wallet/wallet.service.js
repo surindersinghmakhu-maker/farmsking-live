@@ -71,7 +71,7 @@ let WalletService = class WalletService {
                     select: { id: true, role: true, roles: true },
                 })
                 : null;
-            const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
+            const isPartner = referrer?.role === 'AGENT' || (Array.isArray(referrer?.roles) && referrer.roles.includes('AGENT'));
             const todayStr = new Date().toISOString().split('T')[0];
             const isStdSchemeActive = (settings?.referralOfferSchemeEnabled ?? false) &&
                 (!(settings?.referralOfferExpiryDate) || settings.referralOfferExpiryDate >= todayStr);
@@ -96,7 +96,7 @@ let WalletService = class WalletService {
                         },
                     });
                     if (!existingReferrerTx) {
-                        await this.credit(dbUser.referredById, activeBonus, `🎉 Referral Income (${isPartner ? 'Business Partner Commission' : 'New user joined'}: ${dbUser.name || dbUser.kingId || 'User'})`, { relatedUserId: userId });
+                        await this.credit(dbUser.referredById, activeBonus, `🎉 Referral Income (${isPartner ? 'Agent Commission' : 'New user joined'}: ${dbUser.name || dbUser.kingId || 'User'})`, { relatedUserId: userId });
                     }
                 }
             }
@@ -449,12 +449,12 @@ let WalletService = class WalletService {
                 where: { id: referrerId },
                 select: { id: true, role: true, roles: true },
             });
-            const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
+            const isPartner = referrer?.role === 'AGENT' || (Array.isArray(referrer?.roles) && referrer.roles.includes('AGENT'));
             const stdPlanBonus = Number(settings?.referralPaidPlanBonusAmount ?? settings?.referralPlanUpgradeBonusAmount ?? 50);
             const partnerPlanBonus = Number(settings?.partnerReferralPaidPlanBonusAmount ?? 100);
             const activePlanBonus = isPartner ? partnerPlanBonus : stdPlanBonus;
             if (activePlanBonus > 0) {
-                await this.credit(referrerId, activePlanBonus, `👑 Referral Paid Plan Bonus (${isPartner ? 'Business Partner Bonus' : 'Referee upgraded plan'}: ${dbUser.name || dbUser.kingId || 'User'})`, { relatedUserId: referredUserId });
+                await this.credit(referrerId, activePlanBonus, `👑 Referral Paid Plan Bonus (${isPartner ? 'Agent Bonus' : 'Referee upgraded plan'}: ${dbUser.name || dbUser.kingId || 'User'})`, { relatedUserId: referredUserId });
             }
         }
         catch (e) {

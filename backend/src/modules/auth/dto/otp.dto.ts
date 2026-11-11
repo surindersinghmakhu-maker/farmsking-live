@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional, IsEmail } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendLoginOtpDto {
@@ -6,6 +6,11 @@ export class SendLoginOtpDto {
   @IsNotEmpty()
   @IsString()
   mobile: string;
+
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @IsOptional()
+  @IsIn(['CLIENT', 'PARTNER'])
+  portal?: 'CLIENT' | 'PARTNER';
 }
 
 export class VerifyLoginOtpDto {
@@ -18,6 +23,11 @@ export class VerifyLoginOtpDto {
   @IsNotEmpty()
   @IsString()
   otp: string;
+
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @IsOptional()
+  @IsIn(['CLIENT', 'PARTNER'])
+  portal?: 'CLIENT' | 'PARTNER';
 }
 
 export class SendWhatsAppOtpDto {
@@ -66,4 +76,9 @@ export class CompleteOtpRegistrationDto {
   @IsNotEmpty()
   @IsString()
   role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @IsOptional()
+  @IsIn(['CLIENT', 'PARTNER'])
+  portal?: 'CLIENT' | 'PARTNER';
 }

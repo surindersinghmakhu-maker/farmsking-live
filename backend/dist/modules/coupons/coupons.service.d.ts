@@ -31,8 +31,8 @@ export declare class CouponsService {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         businessPartner: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
     } & {
         id: string;
@@ -114,13 +114,13 @@ export declare class CouponsService {
     getRedemptions(user: AuthUser, id: string): Promise<({
         customer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;
-        customerId: string | null;
         couponId: string;
+        customerId: string | null;
         discountAmount: import("@prisma/client/runtime/library").Decimal;
         orderId: string | null;
         orderAmount: import("@prisma/client/runtime/library").Decimal;
@@ -161,8 +161,8 @@ export declare class CouponsService {
         commissionAmount: number;
         redemption: {
             id: string;
-            customerId: string | null;
             couponId: string;
+            customerId: string | null;
             discountAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string | null;
             orderAmount: import("@prisma/client/runtime/library").Decimal;

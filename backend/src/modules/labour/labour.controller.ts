@@ -34,28 +34,28 @@ export class LabourController {
   /** Worker Management Endpoints (Available to all authenticated users) */
   @Post('workers')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
   createWorker(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourWorkerDto) {
     return this.labourService.createWorker(user, dto);
   }
 
   @Get('workers')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
   getWorkers(@CurrentUser() user: AuthUser) {
     return this.labourService.getWorkersForFarmer(user);
   }
 
   @Put('workers/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
   updateWorker(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateLabourWorkerDto) {
     return this.labourService.updateWorker(user, id, dto);
   }
 
   @Delete('workers/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
   deleteWorker(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.labourService.deleteWorker(user, id);
   }

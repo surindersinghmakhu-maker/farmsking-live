@@ -1,4 +1,4 @@
-/** Payout fields — required before any Business Partner or Advisor wallet can be withdrawn from. */
+/** Payout fields — required before any Agent or Advisor wallet can be withdrawn from. */
 const PAYOUT_PROFILE_FIELDS = [
   'upiId',
   'panNumber',
@@ -27,7 +27,7 @@ function getProfileStatus<F extends readonly ProfileField[]>(
   return { profileComplete: missingFields.length === 0, missingFields };
 }
 
-/** Whether a Business Partner has filled in every payout field required before their wallet can be withdrawn from. */
+/** Whether a Agent has filled in every payout field required before their wallet can be withdrawn from. */
 export function getPartnerProfileStatus(user: ProfileFieldValues) {
   return getProfileStatus(user, BUSINESS_PARTNER_PROFILE_FIELDS);
 }

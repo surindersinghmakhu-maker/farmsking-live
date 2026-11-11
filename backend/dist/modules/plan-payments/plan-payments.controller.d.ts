@@ -9,16 +9,16 @@ export declare class PlanPaymentsController {
         upiLink: string;
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -49,8 +49,8 @@ export declare class PlanPaymentsController {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
-        rejectionReason: string | null;
         subscriptionId: string;
+        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -60,16 +60,16 @@ export declare class PlanPaymentsController {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -101,8 +101,8 @@ export declare class PlanPaymentsController {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
-        rejectionReason: string | null;
         subscriptionId: string;
+        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -112,16 +112,16 @@ export declare class PlanPaymentsController {
     listPending(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -153,8 +153,8 @@ export declare class PlanPaymentsController {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
-        rejectionReason: string | null;
         subscriptionId: string;
+        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -164,16 +164,16 @@ export declare class PlanPaymentsController {
     submit(user: AuthUser, id: string, dto: SubmitPlanPaymentDto): Promise<{
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -205,8 +205,8 @@ export declare class PlanPaymentsController {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
-        rejectionReason: string | null;
         subscriptionId: string;
+        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;
@@ -217,16 +217,16 @@ export declare class PlanPaymentsController {
         request: {
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             };
             subscription: {
                 plan: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     isActive: boolean;
                     description: string | null;
                     price: import("@prisma/client/runtime/library").Decimal;
@@ -258,8 +258,8 @@ export declare class PlanPaymentsController {
             requestedAt: Date;
             farmerId: string;
             daysGranted: number;
-            rejectionReason: string | null;
             subscriptionId: string;
+            rejectionReason: string | null;
             utr: string | null;
             submittedAt: Date | null;
             confirmedAt: Date | null;
@@ -271,16 +271,16 @@ export declare class PlanPaymentsController {
     reject(user: AuthUser, id: string, dto: RejectPlanPaymentDto): Promise<{
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -312,8 +312,8 @@ export declare class PlanPaymentsController {
         requestedAt: Date;
         farmerId: string;
         daysGranted: number;
-        rejectionReason: string | null;
         subscriptionId: string;
+        rejectionReason: string | null;
         utr: string | null;
         submittedAt: Date | null;
         confirmedAt: Date | null;

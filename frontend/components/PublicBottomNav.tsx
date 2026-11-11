@@ -283,8 +283,9 @@ export default function PublicBottomNav() {
 
   return (
     <>
-      {/* ── Fixed Bottom Tab Bar ── */}
-      <View style={styles.fixedWrapper} pointerEvents="box-none">
+      {/* ── Fixed Bottom Tab Bar (hidden while More sheet is open so zIndex 9999 never covers Logout) ── */}
+      {!showMoreModal && (
+        <View style={styles.fixedWrapper} pointerEvents="box-none">
         <View
           style={[
             styles.barContainer,
@@ -407,6 +408,7 @@ export default function PublicBottomNav() {
           })}
         </View>
       </View>
+      )}
 
       {/* ── 📱 HIGH-END EXECUTIVE "MORE" APP SHEET MODAL ── */}
       <Modal
@@ -491,7 +493,7 @@ export default function PublicBottomNav() {
                           <Text style={sheetStyles.roleBadgeText}>
                             {role === 'FARMER' ? '🌾 Verified Farmer' :
                              role === 'GARDENER' ? '🌿 Home Gardener' :
-                             role === 'BUSINESS_PARTNER' ? '💼 Business Partner' :
+                             role === 'AGENT' ? '💼 Agent' :
                              role === 'CUSTOMER' ? '🛒 Customer' :
                              activeUser.role || 'Member'}
                           </Text>
@@ -704,18 +706,6 @@ export default function PublicBottomNav() {
                 </TouchableOpacity>
               </View>
 
-              {/* Log Out Button */}
-              {Boolean(user) && (
-                <TouchableOpacity
-                  style={sheetStyles.logoutBtn}
-                  activeOpacity={0.85}
-                  onPress={handleLogout}
-                >
-                  <Ionicons name="power" size={18} color="#ef4444" />
-                  <Text style={sheetStyles.logoutBtnText}>Log Out from FarmsKing</Text>
-                </TouchableOpacity>
-              )}
-
               {/* Corporate Footer Seal */}
               <View style={sheetStyles.footerSeal}>
                 <Text style={sheetStyles.footerSealText}>
@@ -726,6 +716,20 @@ export default function PublicBottomNav() {
                 </Text>
               </View>
             </ScrollView>
+
+            {/* Always-Visible Pinned Log Out Footer inside More Sheet */}
+            {Boolean(user) && (
+              <View style={sheetStyles.stickyFooter}>
+                <TouchableOpacity
+                  style={sheetStyles.logoutBtn}
+                  activeOpacity={0.85}
+                  onPress={handleLogout}
+                >
+                  <Ionicons name="power" size={18} color="#ef4444" />
+                  <Text style={sheetStyles.logoutBtnText}>Log Out from FarmsKing</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -872,7 +876,8 @@ const sheetStyles = StyleSheet.create({
     borderTopRightRadius: 24,
     borderTopWidth: 1.2,
     borderColor: 'rgba(16, 185, 129, 0.35)',
-    maxHeight: '88%',
+    maxHeight: '86%',
+    overflow: 'hidden',
     paddingHorizontal: 16,
     paddingTop: 10,
     shadowColor: '#000',
@@ -921,6 +926,7 @@ const sheetStyles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 12,
+    flexShrink: 1,
   },
   userProfileBox: {
     flexDirection: 'row',
@@ -1102,18 +1108,23 @@ const sheetStyles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#34d399',
   },
+  stickyFooter: {
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'web' ? 18 : 22,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.10)',
+    backgroundColor: '#0c1322',
+  },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    backgroundColor: 'rgba(239, 68, 68, 0.14)',
     borderWidth: 1.2,
-    borderColor: 'rgba(239, 68, 68, 0.35)',
+    borderColor: 'rgba(239, 68, 68, 0.45)',
     borderRadius: 12,
     paddingVertical: 12,
-    marginTop: 4,
-    marginBottom: 16,
   },
   logoutBtnText: {
     fontSize: 13.5,

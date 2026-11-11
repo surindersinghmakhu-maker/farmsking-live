@@ -18,7 +18,7 @@ export class PartnerAssignmentController {
     return this.partnerAssignmentService.findMyPartner(user);
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Get('customers')
   findMyCustomers(@CurrentUser() user: AuthUser) {
     return this.partnerAssignmentService.findMyCustomers(user);

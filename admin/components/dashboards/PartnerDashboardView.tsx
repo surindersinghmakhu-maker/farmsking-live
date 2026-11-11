@@ -17,7 +17,7 @@ function startOfDay(d: Date): Date {
 }
 
 export const PartnerDashboardView: React.FC = () => {
-  const theme = RoleThemes.BUSINESS_PARTNER;
+  const theme = RoleThemes.AGENT;
   const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
@@ -64,9 +64,9 @@ export const PartnerDashboardView: React.FC = () => {
     <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
-        currentRole="BUSINESS_PARTNER"
-        profileName={user?.name || 'Business Partner'}
-        subtitle="Business Partner"
+        currentRole="AGENT"
+        profileName={user?.name || 'Agent'}
+        subtitle="Agent"
         avatarUrl={user?.photoUrl || undefined}
       />
 

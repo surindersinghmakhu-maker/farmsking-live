@@ -39,6 +39,95 @@ if (Platform.OS !== 'web') {
 
 const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 
+interface ShowcaseBenefit {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  title: string;
+  desc: string;
+}
+
+const CLIENT_BENEFITS: ShowcaseBenefit[] = [
+  {
+    icon: 'scan-circle',
+    color: '#34d399',
+    title: 'Scan Crop Leaf',
+    desc: 'Click a photo to find disease and spray dose in 5 seconds',
+  },
+  {
+    icon: 'trending-up',
+    color: '#60a5fa',
+    title: 'Daily Mandi Prices',
+    desc: 'Check today crop rates across Mandis near your village',
+  },
+  {
+    icon: 'images',
+    color: '#fbbf24',
+    title: 'Field Photo & Video Diary',
+    desc: 'Save 7-day crop photos, videos & doctor advice safely',
+  },
+  {
+    icon: 'storefront',
+    color: '#f472b6',
+    title: 'Genuine Farm Store',
+    desc: 'Order original seeds, fertilizers & sprays at direct rates',
+  },
+];
+
+const PARTNER_BENEFITS: ShowcaseBenefit[] = [
+  {
+    icon: 'people',
+    color: '#fbbf24',
+    title: 'Manage Adopted Farmers',
+    desc: 'Guide assigned farms and monitor active crop plots',
+  },
+  {
+    icon: 'medkit',
+    color: '#38bdf8',
+    title: 'Crop Doctor Advice',
+    desc: 'Check farmer leaf photos and send clear spray plans',
+  },
+  {
+    icon: 'storefront',
+    color: '#4ade80',
+    title: 'Seller Store & Orders',
+    desc: 'Manage product stock, dispatch orders & settlements',
+  },
+  {
+    icon: 'wallet',
+    color: '#f472b6',
+    title: 'Agent Wallet & Bank Payouts',
+    desc: 'Track agent earnings & withdraw directly to your bank',
+  },
+];
+
+const ONBOARDING_ROLE_CARDS: Array<{
+  role: 'FARMER' | 'GARDENER' | 'CUSTOMER';
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  badge?: string;
+  desc: string;
+}> = [
+  {
+    role: 'FARMER',
+    icon: 'leaf',
+    title: 'Farmer',
+    badge: 'MOST POPULAR',
+    desc: 'Scan crop diseases, check mandi rates & manage your farm',
+  },
+  {
+    role: 'GARDENER',
+    icon: 'flower',
+    title: 'Home Gardener',
+    desc: 'Care for kitchen gardens, terrace pots & home plants',
+  },
+  {
+    role: 'CUSTOMER',
+    icon: 'cart',
+    title: 'Shop Buyer Only',
+    desc: 'Buy certified seeds, sprays, fertilizers & farm tools',
+  },
+];
+
 export default function LoginScreen() {
   const { user, login, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
@@ -51,6 +140,8 @@ export default function LoginScreen() {
   const [portalMode, setPortalMode] = useState<'CLIENT' | 'PARTNER'>(() =>
     String(portal || '').toLowerCase() === 'partner' ? 'PARTNER' : 'CLIENT',
   );
+  const portalModeRef = useRef<'CLIENT' | 'PARTNER'>(portalMode);
+  portalModeRef.current = portalMode;
   const [partnerAuthMethod, setPartnerAuthMethod] = useState<'OTP' | 'PASSWORD'>('OTP');
   const [partnerIdentifier, setPartnerIdentifier] = useState('');
   const [partnerPassword, setPartnerPassword] = useState('');
@@ -102,7 +193,7 @@ export default function LoginScreen() {
       ...(Array.isArray(targetUser?.roles) ? targetUser.roles : []),
     ].filter(Boolean);
     const partnerDashboardRoles = [
-      'BUSINESS_PARTNER',
+      'AGENT',
       'ADVISOR',
       'FARM_ADVISOR',
       'GARDEN_ADVISOR',
@@ -245,11 +336,13 @@ export default function LoginScreen() {
               photoUrl: userInfo.picture,
               googleId: userInfo.sub,
               accessToken: authentication.accessToken,
+              portal: portalModeRef.current,
             });
             handleSuccessNavigation(loggedInUser.isProfileIncomplete, loggedInUser.user);
           })
           .catch((err) => {
-            setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
+            const msg = err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.';
+            setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
           })
           .finally(() => setGoogleLoading(false));
       }
@@ -260,22 +353,18 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    const activePortal = portalMode;
     try {
       if (Platform.OS === 'web') {
         setGoogleLoading(true);
+        let idToken: string | undefined;
+        let credUser: any = null;
         try {
           const provider = new GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
           const cred = await signInWithPopup(auth, provider);
-          const idToken = await cred.user.getIdToken();
-          const res = await googleLogin({
-            idToken,
-            email: cred.user.email || undefined,
-            name: cred.user.displayName || undefined,
-            photoUrl: cred.user.photoURL || undefined,
-            googleId: cred.user.uid,
-          });
-          handleSuccessNavigation(res.isProfileIncomplete, res.user);
+          credUser = cred.user;
+          idToken = await cred.user.getIdToken();
         } catch (fbErr: any) {
           if (fbErr?.code === 'auth/popup-closed-by-user') {
             setGoogleLoading(false);
@@ -286,6 +375,23 @@ export default function LoginScreen() {
           } else {
             setError('Google Sign-In error: ' + (fbErr?.message || 'Please retry.'));
           }
+          setGoogleLoading(false);
+          return;
+        }
+
+        try {
+          const res = await googleLogin({
+            idToken,
+            email: credUser?.email || undefined,
+            name: credUser?.displayName || undefined,
+            photoUrl: credUser?.photoURL || undefined,
+            googleId: credUser?.uid,
+            portal: activePortal,
+          });
+          handleSuccessNavigation(res.isProfileIncomplete, res.user);
+        } catch (apiErr: any) {
+          const msg = apiErr?.response?.data?.message ?? apiErr?.message ?? 'Google Sign-In failed.';
+          setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
         } finally {
           setGoogleLoading(false);
         }
@@ -297,7 +403,8 @@ export default function LoginScreen() {
         }
       }
     } catch (err: any) {
-      setError('Google Sign-In failed: ' + (err?.message || 'Please retry.'));
+      const msg = err?.response?.data?.message ?? err?.message ?? 'Please retry.';
+      setError('Google Sign-In failed: ' + (Array.isArray(msg) ? msg.join(', ') : String(msg)));
       setGoogleLoading(false);
     }
   };
@@ -310,21 +417,27 @@ export default function LoginScreen() {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
+    const activePortal = portalMode;
     setOtpSending(true);
 
     if (isLocalhost) {
-      // 💻 LOCALHOST ONLY: Standard 123456 test mode
+      // 💻 LOCALHOST ONLY: Enforce strict portal match before opening OTP screen
       try {
-        await sendLoginOtp(cleanNum);
-      } catch (err: any) {
-        console.warn('[sendLoginOtp fallback]:', err);
-      } finally {
+        const otpRes = await sendLoginOtp(cleanNum, activePortal);
+        if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
+          setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+          return;
+        }
         setOtpSent(true);
-        setDevOtp('123456');
+        setDevOtp(otpRes?.devOtp || '123456');
         setOtpDigits(['', '', '', '', '', '']);
         setResendTimer(60);
-        setOtpSending(false);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
+        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      } finally {
+        setOtpSending(false);
       }
     } else {
       // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS with Backend Fallback
@@ -370,9 +483,13 @@ export default function LoginScreen() {
 
         // 🛡️ ULTRA-ROBUST LIVE FALLBACK:
         // If Firebase throws auth/internal-error, quota limits, or reCAPTCHA errors,
-        // instantly dispatch verification OTP via backend so the user is NEVER blocked!
+        // instantly dispatch verification OTP via backend so valid users are NEVER blocked!
         try {
-          const fallbackRes = await sendLoginOtp(cleanNum);
+          const fallbackRes = await sendLoginOtp(cleanNum, activePortal);
+          if (activePortal === 'PARTNER' && fallbackRes?.isNewUser) {
+            setError('No Partner account is registered with these details. Please switch to the Client Login section for Farmer, Gardener, or Buyer accounts.');
+            return;
+          }
           setConfirmationResult(null); // Indicates backend OTP verification
           setOtpSent(true);
           setDevOtp(fallbackRes?.devOtp || null);
@@ -382,6 +499,12 @@ export default function LoginScreen() {
           return;
         } catch (backendErr: any) {
           console.warn('[Backend OTP fallback error]:', backendErr);
+          const backendStatus = backendErr?.response?.status;
+          const backendMsg = backendErr?.response?.data?.message;
+          if ((backendStatus === 403 || backendStatus === 401) && backendMsg) {
+            setError(Array.isArray(backendMsg) ? backendMsg.join(', ') : String(backendMsg));
+            return;
+          }
         }
 
         if (typeof window !== 'undefined') {
@@ -478,17 +601,25 @@ export default function LoginScreen() {
         // 🚀 LIVE PRODUCTION: Verify SMS code via Firebase & backend session
         const resConfirm = await confirmationResult.confirm(code);
         const idToken = await resConfirm.user.getIdToken();
-        const res: any = await firebaseLogin(idToken);
+        const res: any = await firebaseLogin(idToken, portalMode);
         if (res?.isNewUser) {
-          setIsNewUserModal(true);
+          if (portalMode === 'PARTNER') {
+            setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+          } else {
+            setIsNewUserModal(true);
+          }
         } else {
           handleSuccessNavigation(false, res);
         }
       } else {
         // 💻 LOCALHOST: Verify via backend OTP store
-        const res = await otpLogin({ mobile: cleanNum, otp: code });
+        const res = await otpLogin({ mobile: cleanNum, otp: code, portal: portalMode });
         if (res?.isNewUser) {
-          setIsNewUserModal(true);
+          if (portalMode === 'PARTNER') {
+            setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+          } else {
+            setIsNewUserModal(true);
+          }
         } else {
           handleSuccessNavigation(false, res);
         }
@@ -502,7 +633,9 @@ export default function LoginScreen() {
       } else if (err?.code === 'auth/code-expired') {
         msg = 'Verification code has expired. Please tap Resend to request a new code.';
       } else if (err?.response?.data?.message) {
-        msg = err.response.data.message;
+        msg = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : String(err.response.data.message);
       } else if (err?.message) {
         msg = err.message;
       }
@@ -515,6 +648,11 @@ export default function LoginScreen() {
   // Step 3: Complete Role Selection for New Users
   const handleCompleteRegistration = async () => {
     setModalError(null);
+    if (portalMode === 'PARTNER') {
+      setIsNewUserModal(false);
+      setError('New Agent account registration requires Admin approval. Please switch to the User Login section.');
+      return;
+    }
     const trimmedName = newUserName.trim();
     if (!trimmedName) {
       setModalError('Please enter your full name to proceed.');
@@ -527,6 +665,7 @@ export default function LoginScreen() {
         mobile: cleanNum,
         name: trimmedName,
         role: selectedRole,
+        portal: portalMode,
       });
       setIsNewUserModal(false);
       handleSuccessNavigation(false, loggedInUser);
@@ -542,7 +681,7 @@ export default function LoginScreen() {
     const idClean = partnerIdentifier.trim();
     const passClean = partnerPassword.trim();
     if (!idClean) {
-      setError('Please enter your registered Partner Mobile Number or King ID.');
+      setError('Please enter your registered Agent Mobile Number or King ID.');
       return;
     }
     if (!passClean) {
@@ -552,13 +691,13 @@ export default function LoginScreen() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      const loggedInUser = await login({ mobile: idClean, password: passClean });
+      const loggedInUser = await login({ mobile: idClean, password: passClean, portal: 'PARTNER' });
       handleSuccessNavigation(false, loggedInUser);
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ??
         err?.message ??
-        'Partner sign in failed. Check your King ID / Mobile and Password.';
+        'Agent sign in failed. Check your King ID / Mobile and Password.';
       setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
     } finally {
       setIsSubmitting(false);
@@ -569,6 +708,12 @@ export default function LoginScreen() {
     if (nextPortal === portalMode) return;
     setPortalMode(nextPortal);
     setError(null);
+    setOtpSent(false);
+    setOtpDigits(['', '', '', '', '', '']);
+    setDevOtp(null);
+    setConfirmationResult(null);
+    setResendTimer(0);
+    autoSubmittedCodeRef.current = null;
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -584,6 +729,7 @@ export default function LoginScreen() {
   };
 
   const currentOtpFilled = otpDigits.join('').length === 6;
+  const activeBenefits = portalMode === 'PARTNER' ? PARTNER_BENEFITS : CLIENT_BENEFITS;
 
   return (
     <KeyboardAvoidingView
@@ -646,9 +792,19 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.mainConsoleWrap, isDesktop && styles.mainConsoleWrapDesktop]}>
-          
+          <LinearGradient
+            colors={
+              portalMode === 'PARTNER'
+                ? ['#f59e0b', '#fbbf24', '#d97706']
+                : ['#10b981', '#34d399', '#059669']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.topAccentRim}
+          />
+          <View style={isDesktop ? styles.consoleColumnsDesktop : undefined}>
           {/* ══════════════════════════════════════════════════════
-              LEFT PANEL: Dynamic Portal Identity & Telemetry Showcase (Desktop)
+              LEFT PANEL: Compact Farmer-Clear Feature Showcase (Desktop)
              ══════════════════════════════════════════════════════ */}
           {isDesktop && (
             <View style={styles.leftShowcasePanel}>
@@ -672,152 +828,83 @@ export default function LoginScreen() {
                         zIndex: 2,
                         background:
                           portalMode === 'PARTNER'
-                            ? `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(245, 158, 11, 0.12), transparent 70%)`
-                            : `radial-gradient(550px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(52, 211, 153, 0.12), transparent 70%)`,
+                            ? `radial-gradient(500px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(245, 158, 11, 0.12), transparent 70%)`
+                            : `radial-gradient(500px circle at ${Math.max(0, mousePos.x - 40)}px ${mousePos.y}px, rgba(52, 211, 153, 0.12), transparent 70%)`,
                       } as any,
                     ]}
                   />
                 )}
-                {/* Brand Emblem & Header */}
-                <View style={styles.showcaseHeader}>
-                  <BrandLogo size={52} round useGoldRing useHdQuality />
-                  <View style={{ marginLeft: 14 }}>
-                    <Text style={styles.showcaseBrandName}>FarmsKing</Text>
-                    <Text
-                      style={[
-                        styles.showcaseTagline,
-                        portalMode === 'PARTNER' && { color: '#fcd34d' },
-                      ]}
-                    >
-                      {portalMode === 'PARTNER'
-                        ? 'Partner Portal · Doctors & Partners'
-                        : 'Client Portal · Farmers, Gardeners & Buyers'}
-                    </Text>
+
+                <View>
+                  {/* Brand Emblem & Compact Header */}
+                  <View style={styles.showcaseHeader}>
+                    <BrandLogo size={42} round useGoldRing useHdQuality />
+                    <View style={{ marginLeft: 12 }}>
+                      <Text style={styles.showcaseBrandName}>FarmsKing</Text>
+                      <Text
+                        style={[
+                          styles.showcaseTagline,
+                          portalMode === 'PARTNER' && { color: '#fcd34d' },
+                        ]}
+                      >
+                        {portalMode === 'PARTNER'
+                          ? 'Agent & Crop Doctor Portal'
+                          : 'Smart Farming & Seeds App'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Compact Trust Seal Strip */}
+                  <View style={styles.complianceSealRow}>
+                    <View style={styles.complianceSealBadge}>
+                      <Ionicons
+                        name="shield-checkmark"
+                        size={12}
+                        color={portalMode === 'PARTNER' ? '#fbbf24' : '#34d399'}
+                      />
+                      <Text style={styles.complianceSealText}>ISO 27001 SAFE</Text>
+                    </View>
+                    <View style={styles.complianceSealBadge}>
+                      <Ionicons
+                        name={portalMode === 'PARTNER' ? 'briefcase' : 'leaf'}
+                        size={12}
+                        color={portalMode === 'PARTNER' ? '#93c5fd' : '#a7f3d0'}
+                      />
+                      <Text style={styles.complianceSealText}>
+                        {portalMode === 'PARTNER' ? 'VERIFIED AGENT DESK' : 'FREE FOR FARMERS'}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
-                {/* Institutional Compliance Seal Strip */}
-                <View style={styles.complianceSealRow}>
-                  <View style={styles.complianceSealBadge}>
-                    <Ionicons
-                      name="shield-checkmark"
-                      size={13}
-                      color={portalMode === 'PARTNER' ? '#fbbf24' : '#34d399'}
-                    />
-                    <Text style={styles.complianceSealText}>ISO 27001 SECURED</Text>
-                  </View>
-                  <View style={styles.complianceSealBadge}>
-                    <Ionicons
-                      name={portalMode === 'PARTNER' ? 'briefcase' : 'leaf'}
-                      size={13}
-                      color={portalMode === 'PARTNER' ? '#93c5fd' : '#a7f3d0'}
-                    />
-                    <Text style={styles.complianceSealText}>
-                      {portalMode === 'PARTNER' ? 'VERIFIED PARTNER ACCESS' : 'CLIENT ACCOUNT PORTAL'}
-                    </Text>
-                  </View>
+                {/* Compact Data-Driven Benefit List */}
+                <View style={styles.pillarsContainer}>
+                  {activeBenefits.map((item) => (
+                    <View key={item.title} style={styles.pillarCard}>
+                      <View style={[styles.pillarIconWrap, { backgroundColor: `${item.color}18` }]}>
+                        <Ionicons name={item.icon} size={18} color={item.color} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pillarTitle}>{item.title}</Text>
+                        <Text style={styles.pillarDesc} numberOfLines={2}>
+                          {item.desc}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
                 </View>
 
-                {/* 4 Role-Specific Feature Telemetry Cards */}
-                {portalMode === 'PARTNER' ? (
-                  <View style={styles.pillarsContainer}>
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="people" size={22} color="#fbbf24" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Farmers & Advisory Management</Text>
-                        <Text style={styles.pillarDesc}>Adopt farms, guide crop growth, and monitor active plots</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="medkit" size={22} color="#38bdf8" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Crop Doctor & Prescriptions</Text>
-                        <Text style={styles.pillarDesc}>Review leaf disease scans, send treatment plans & chat live</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="storefront" size={22} color="#4ade80" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Verified Seller Desk</Text>
-                        <Text style={styles.pillarDesc}>Manage listings, dispatch orders, and view direct settlements</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="wallet" size={22} color="#f472b6" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Partner Wallet & Earnings</Text>
-                        <Text style={styles.pillarDesc}>Track commissions, training bonuses & instant bank payouts</Text>
-                      </View>
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.pillarsContainer}>
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="scan-circle" size={22} color="#34d399" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>AI Crop Pathology</Text>
-                        <Text style={styles.pillarDesc}>5-second disease diagnosis aligned with ICAR agronomy protocols</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="trending-up" size={22} color="#60a5fa" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>4D Mandi Telemetry</Text>
-                        <Text style={styles.pillarDesc}>Live APMC market rates & price trends across 2,400+ mandis</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="film" size={22} color="#f59e0b" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Crop Media Record</Text>
-                        <Text style={styles.pillarDesc}>Save 7-day crop photos, live video & voice notes with permanent archive</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.pillarCard}>
-                      <View style={styles.pillarIconWrap}>
-                        <Ionicons name="cart" size={22} color="#ec4899" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.pillarTitle}>Official Agri Store</Text>
-                        <Text style={styles.pillarDesc}>Direct seeds, fertilizers, crop inputs & tracked farm delivery</Text>
-                      </View>
-                    </View>
-                  </View>
-                )}
-
-                {/* Trust Metrics & Corporate Regd Seal */}
+                {/* Compact Trust Footer */}
                 <View style={styles.showcaseFooter}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 }}>
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <Ionicons key={s} name="star" size={14} color="#facc15" />
+                      <Ionicons key={s} name="star" size={12} color="#facc15" />
                     ))}
-                    <Text style={styles.ratingText}>4.9 / 5.0</Text>
+                    <Text style={styles.ratingText}>4.9 / 5</Text>
+                    <Text style={styles.trustInlineText}> · Trusted by 50,000+ Farmers</Text>
                   </View>
-                  <Text style={styles.trustText}>
-                    Trusted by 50,000+ Cultivators & Agronomists across India
-                  </Text>
                   <Text style={styles.corpAddressNotice}>
-                    Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab
+                    Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab
                   </Text>
                 </View>
               </LinearGradient>
@@ -825,7 +912,7 @@ export default function LoginScreen() {
           )}
 
           {/* ══════════════════════════════════════════════════════
-              RIGHT PANEL: Ultra-Frictionless Auth Console
+              RIGHT PANEL: Compact Farmer-Friendly Auth Console
              ══════════════════════════════════════════════════════ */}
           <View style={[styles.rightAuthPanel, isDesktop && styles.rightAuthPanelDesktop]}>
             {/* 4D Subtle Spotlight Sheen on Login Card */}
@@ -836,13 +923,16 @@ export default function LoginScreen() {
                   {
                     pointerEvents: 'none',
                     zIndex: 0,
-                    borderRadius: 24,
-                    background: `radial-gradient(500px circle at ${Math.max(0, mousePos.x - width * 0.45)}px ${mousePos.y}px, rgba(16, 185, 129, 0.07), transparent 70%)`,
+                    borderRadius: 22,
+                    background:
+                      portalMode === 'PARTNER'
+                        ? `radial-gradient(460px circle at ${Math.max(0, mousePos.x - width * 0.45)}px ${mousePos.y}px, rgba(245, 158, 11, 0.06), transparent 70%)`
+                        : `radial-gradient(460px circle at ${Math.max(0, mousePos.x - width * 0.45)}px ${mousePos.y}px, rgba(16, 185, 129, 0.07), transparent 70%)`,
                   } as any,
                 ]}
               />
             )}
-            
+
             {/* Top Navigation Strip */}
             <View style={styles.topNavRow}>
               <TouchableOpacity
@@ -851,118 +941,21 @@ export default function LoginScreen() {
                 activeOpacity={0.8}
               >
                 <Ionicons name="arrow-back" size={14} color="#94a3b8" />
-                <Text style={styles.backHomeText}>Back to FarmsKing</Text>
+                <Text style={styles.backHomeText}>Back to Home</Text>
               </TouchableOpacity>
 
-              {/* Mobile-only brand badge */}
-              {!isDesktop && (
+              {!isDesktop ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <BrandLogo size={28} round useGoldRing useHdQuality />
-                  <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#f8fafc' }}>FarmsKing</Text>
+                  <BrandLogo size={26} round useGoldRing useHdQuality />
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#f8fafc' }}>FarmsKing</Text>
                 </View>
-              )}
-            </View>
-
-            {/* ── TWO SEPARATE LOGIN PARTS: CLIENTS VS PARTNERS ── */}
-            <View style={styles.portalSwitchSection}>
-              <Text style={styles.portalSectionLabel}>SELECT ACCOUNT TYPE TO SIGN IN</Text>
-              <View style={styles.portalSwitchRow}>
-                {/* PART 1: CLIENTS */}
-                <TouchableOpacity
-                  style={[
-                    styles.portalOptionCard,
-                    portalMode === 'CLIENT' && styles.portalOptionCardClientActive,
-                  ]}
-                  activeOpacity={0.88}
-                  onPress={() => handleSwitchPortal('CLIENT')}
-                >
-                  <View style={styles.portalCardTopRow}>
-                    <View
-                      style={[
-                        styles.portalIconBox,
-                        portalMode === 'CLIENT' && styles.portalIconBoxClientActive,
-                      ]}
-                    >
-                      <Ionicons
-                        name="leaf"
-                        size={17}
-                        color={portalMode === 'CLIENT' ? '#10b981' : '#64748b'}
-                      />
-                    </View>
-                    <Ionicons
-                      name={portalMode === 'CLIENT' ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={17}
-                      color={portalMode === 'CLIENT' ? '#10b981' : '#475569'}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.portalCardTitle,
-                      portalMode === 'CLIENT' && { color: '#34d399' },
-                    ]}
-                  >
-                    Client Login
-                  </Text>
-                  <Text style={styles.portalCardSub}>
-                    Farmers, Gardeners &amp; Store Buyers
-                  </Text>
-                </TouchableOpacity>
-
-                {/* PART 2: PARTNERS */}
-                <TouchableOpacity
-                  style={[
-                    styles.portalOptionCard,
-                    portalMode === 'PARTNER' && styles.portalOptionCardPartnerActive,
-                  ]}
-                  activeOpacity={0.88}
-                  onPress={() => handleSwitchPortal('PARTNER')}
-                >
-                  <View style={styles.portalCardTopRow}>
-                    <View
-                      style={[
-                        styles.portalIconBox,
-                        portalMode === 'PARTNER' && styles.portalIconBoxPartnerActive,
-                      ]}
-                    >
-                      <Ionicons
-                        name="briefcase"
-                        size={17}
-                        color={portalMode === 'PARTNER' ? '#f59e0b' : '#64748b'}
-                      />
-                    </View>
-                    <Ionicons
-                      name={portalMode === 'PARTNER' ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={17}
-                      color={portalMode === 'PARTNER' ? '#f59e0b' : '#475569'}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.portalCardTitle,
-                      portalMode === 'PARTNER' && { color: '#fbbf24' },
-                    ]}
-                  >
-                    Partner Login
-                  </Text>
-                  <Text style={styles.portalCardSub}>
-                    Crop Doctors, Partners, Trainers &amp; Sellers
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Console Header */}
-            <View style={styles.authHeadingBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <Text style={styles.authTitle}>
-                  {portalMode === 'PARTNER' ? 'Partner Portal Sign In' : 'Client Sign In'}
-                </Text>
+              ) : (
                 <View
                   style={[
                     styles.portalHeaderTag,
                     portalMode === 'PARTNER'
-                      ? { backgroundColor: 'rgba(245, 158, 11, 0.14)', borderColor: 'rgba(245, 158, 11, 0.4)' }
-                      : { backgroundColor: 'rgba(16, 185, 129, 0.14)', borderColor: 'rgba(16, 185, 129, 0.4)' },
+                      ? { backgroundColor: 'rgba(245, 158, 11, 0.12)', borderColor: 'rgba(245, 158, 11, 0.35)' }
+                      : { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.35)' },
                   ]}
                 >
                   <Text
@@ -971,90 +964,155 @@ export default function LoginScreen() {
                       { color: portalMode === 'PARTNER' ? '#fbbf24' : '#34d399' },
                     ]}
                   >
-                    {portalMode === 'PARTNER' ? 'PARTNER ACCESS' : 'CLIENT ACCESS'}
+                    {portalMode === 'PARTNER' ? 'AGENT ACCOUNT' : 'FAST OTP LOGIN'}
                   </Text>
                 </View>
-              </View>
-              <Text style={styles.authSubtitle}>
-                {portalMode === 'PARTNER'
-                  ? 'Sign in to your verified Doctor, Business Partner, Trainer, or Seller dashboard.'
-                  : 'Fast verified sign in for Farmers, Home Gardeners, and Buyers using mobile OTP or Google.'}
-              </Text>
+              )}
             </View>
 
-            {/* PARTNER SECTION HEADER & AUTH METHOD TOGGLE */}
+            {/* ── ULTRA-COMPACT & PREMIUM 2-PART SELECTOR: USER VS AGENT (TEXT ONLY) ── */}
+            <View style={styles.portalSwitchTray}>
+              {/* OPTION 1: USER */}
+              <TouchableOpacity
+                style={[
+                  styles.portalPillBtn,
+                  portalMode === 'CLIENT' && styles.portalPillBtnClientActive,
+                ]}
+                activeOpacity={0.9}
+                onPress={() => handleSwitchPortal('CLIENT')}
+              >
+                <Text
+                  style={[
+                    styles.portalPillTitle,
+                    portalMode === 'CLIENT' && { color: '#ecfdf5' },
+                  ]}
+                >
+                  User
+                </Text>
+                <Text
+                  style={[
+                    styles.portalPillSub,
+                    portalMode === 'CLIENT' && { color: '#6ee7b7' },
+                  ]}
+                >
+                  Farmer, Gardener &amp; Buyer
+                </Text>
+              </TouchableOpacity>
+
+              {/* OPTION 2: AGENT */}
+              <TouchableOpacity
+                style={[
+                  styles.portalPillBtn,
+                  portalMode === 'PARTNER' && styles.portalPillBtnAgentActive,
+                ]}
+                activeOpacity={0.9}
+                onPress={() => handleSwitchPortal('PARTNER')}
+              >
+                <Text
+                  style={[
+                    styles.portalPillTitle,
+                    portalMode === 'PARTNER' && { color: '#fffbeb' },
+                  ]}
+                >
+                  Agent
+                </Text>
+                <Text
+                  style={[
+                    styles.portalPillSub,
+                    portalMode === 'PARTNER' && { color: '#fcd34d' },
+                  ]}
+                >
+                  Doctor, Agent, Trainer &amp; Seller
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* AGENT LOGIN METHOD TOGGLE (Mobile OTP vs King ID & Password) */}
             {portalMode === 'PARTNER' && (
-              <View style={styles.partnerSectionCard}>
-                <View style={styles.partnerRolesChipsRow}>
-                  {['Crop Doctor', 'Business Partner', 'Trainer', 'Verified Seller'].map((roleLabel) => (
-                    <View key={roleLabel} style={styles.partnerRoleChip}>
-                      <Ionicons name="shield-checkmark" size={11} color="#fbbf24" />
-                      <Text style={styles.partnerRoleChipText}>{roleLabel}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                <View style={styles.partnerMethodBar}>
-                  <TouchableOpacity
+              <View style={styles.partnerMethodBar}>
+                <TouchableOpacity
+                  style={[
+                    styles.partnerMethodBtn,
+                    partnerAuthMethod === 'OTP' && styles.partnerMethodBtnActive,
+                  ]}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setPartnerAuthMethod('OTP');
+                    setError(null);
+                  }}
+                >
+                  <Ionicons
+                    name="phone-portrait-outline"
+                    size={13}
+                    color={partnerAuthMethod === 'OTP' ? '#0f172a' : '#cbd5e1'}
+                  />
+                  <Text
                     style={[
-                      styles.partnerMethodBtn,
-                      partnerAuthMethod === 'OTP' && styles.partnerMethodBtnActive,
+                      styles.partnerMethodText,
+                      partnerAuthMethod === 'OTP' && styles.partnerMethodTextActive,
                     ]}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      setPartnerAuthMethod('OTP');
-                      setError(null);
-                    }}
                   >
-                    <Ionicons
-                      name="phone-portrait-outline"
-                      size={14}
-                      color={partnerAuthMethod === 'OTP' ? '#0f172a' : '#cbd5e1'}
-                    />
-                    <Text
-                      style={[
-                        styles.partnerMethodText,
-                        partnerAuthMethod === 'OTP' && styles.partnerMethodTextActive,
-                      ]}
-                    >
-                      Mobile OTP
-                    </Text>
-                  </TouchableOpacity>
+                    Mobile OTP
+                  </Text>
+                </TouchableOpacity>
 
-                  <TouchableOpacity
+                <TouchableOpacity
+                  style={[
+                    styles.partnerMethodBtn,
+                    partnerAuthMethod === 'PASSWORD' && styles.partnerMethodBtnActive,
+                  ]}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setPartnerAuthMethod('PASSWORD');
+                    setError(null);
+                  }}
+                >
+                  <Ionicons
+                    name="key-outline"
+                    size={13}
+                    color={partnerAuthMethod === 'PASSWORD' ? '#0f172a' : '#cbd5e1'}
+                  />
+                  <Text
                     style={[
-                      styles.partnerMethodBtn,
-                      partnerAuthMethod === 'PASSWORD' && styles.partnerMethodBtnActive,
+                      styles.partnerMethodText,
+                      partnerAuthMethod === 'PASSWORD' && styles.partnerMethodTextActive,
                     ]}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      setPartnerAuthMethod('PASSWORD');
-                      setError(null);
-                    }}
                   >
-                    <Ionicons
-                      name="key-outline"
-                      size={14}
-                      color={partnerAuthMethod === 'PASSWORD' ? '#0f172a' : '#cbd5e1'}
-                    />
-                    <Text
-                      style={[
-                        styles.partnerMethodText,
-                        partnerAuthMethod === 'PASSWORD' && styles.partnerMethodTextActive,
-                      ]}
-                    >
-                      King ID / Password
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                    King ID &amp; Password
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
             {/* Error Banner */}
             {error ? (
               <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={17} color="#ef4444" style={{ marginTop: 1 }} />
-                <Text style={styles.errorText}>{error}</Text>
+                <Ionicons name="alert-circle" size={16} color="#ef4444" style={{ marginTop: 1 }} />
+                <View style={{ flex: 1, gap: 6 }}>
+                  <Text style={styles.errorText}>{error}</Text>
+                  {((portalMode === 'CLIENT' && (error.includes('Agent Login') || error.includes('Partner Login'))) ||
+                    (portalMode === 'PARTNER' && (error.includes('User Login') || error.includes('Client Login') || error.includes('Farmer')))) && (
+                    <TouchableOpacity
+                      onPress={() => handleSwitchPortal(portalMode === 'CLIENT' ? 'PARTNER' : 'CLIENT')}
+                      activeOpacity={0.85}
+                      style={[
+                        styles.portalSwitchHintBtn,
+                        portalMode === 'CLIENT'
+                          ? { borderColor: 'rgba(245, 158, 11, 0.45)', backgroundColor: 'rgba(245, 158, 11, 0.14)' }
+                          : { borderColor: 'rgba(16, 185, 129, 0.45)', backgroundColor: 'rgba(16, 185, 129, 0.14)' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.portalSwitchHintText,
+                          { color: portalMode === 'CLIENT' ? '#fbbf24' : '#34d399' },
+                        ]}
+                      >
+                        {portalMode === 'CLIENT' ? 'Switch to Agent Login →' : 'Switch to User Login →'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ) : null}
 
@@ -1076,7 +1134,7 @@ export default function LoginScreen() {
               /* ── PARTNER KING ID / MOBILE + PASSWORD SIGN IN ── */
               <View style={{ gap: 14 }}>
                 <View>
-                  <Text style={styles.fieldLabel}>Partner King ID or Mobile Number</Text>
+                  <Text style={styles.fieldLabel}>Agent King ID or Mobile Number</Text>
                   <View
                     style={[
                       styles.mobileInputWrap,
@@ -1159,7 +1217,7 @@ export default function LoginScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="log-in" size={17} color="#0f172a" />
                         <Text style={[styles.buttonText, { color: '#0f172a' }]}>
-                          Sign In to Partner Portal
+                          Sign In to Agent Portal
                         </Text>
                       </View>
                     )}
@@ -1167,7 +1225,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.partnerHelperNote}>
-                  Partner roles (Crop Doctor, Business Partner, Trainer, Seller) are approved by FarmsKing Admin.
+                  Agent, Doctor, Trainer, and Seller accounts are activated by FarmsKing Admin.
                 </Text>
               </View>
             ) : (
@@ -1176,13 +1234,10 @@ export default function LoginScreen() {
                 {isLocalhost && (
                   <View style={styles.devBanner}>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="construct" size={16} color="#10b981" />
-                      <View>
-                        <Text style={styles.devBannerTitle}>Localhost Testing Mode</Text>
-                        <Text style={styles.devBannerSubtitle}>
-                          Standard Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
-                        </Text>
-                      </View>
+                      <Ionicons name="construct" size={14} color="#10b981" />
+                      <Text style={styles.devBannerSubtitle}>
+                        Local Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
+                      </Text>
                     </View>
                     <TouchableOpacity
                       onPress={autoFillDevOtp}
@@ -1196,9 +1251,9 @@ export default function LoginScreen() {
 
                 {/* ── STEP 1: Mobile Number Input ── */}
                 <View style={styles.inputSection}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                     <Text style={styles.fieldLabel}>
-                      {portalMode === 'PARTNER' ? 'Registered Partner Mobile' : 'Mobile Number'}
+                      {portalMode === 'PARTNER' ? 'Registered Agent Mobile' : 'Your Mobile Number'}
                     </Text>
                     {otpSent && (
                       <TouchableOpacity
@@ -1211,8 +1266,8 @@ export default function LoginScreen() {
                         }}
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
                       >
-                        <Ionicons name="pencil" size={13} color="#10b981" />
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#10b981' }}>Change Number</Text>
+                        <Ionicons name="pencil" size={12} color="#10b981" />
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#10b981' }}>Change Number</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -1227,13 +1282,13 @@ export default function LoginScreen() {
                     ]}
                   >
                     <View style={styles.countryCodeBadge}>
-                      <Text style={styles.countryCodeText}>🇮🇳 +91</Text>
+                      <Text style={styles.countryCodeText}>+91</Text>
                     </View>
                     <TextInput
                       style={styles.mobileInput}
                       keyboardType="phone-pad"
                       maxLength={10}
-                      placeholder="10-digit mobile number"
+                      placeholder="Enter 10-digit mobile number"
                       placeholderTextColor="#64748b"
                       value={mobile}
                       onChangeText={(t) => {
@@ -1263,7 +1318,7 @@ export default function LoginScreen() {
                       autoCapitalize="none"
                     />
                     {otpSent && (
-                      <Ionicons name="checkmark-circle" size={18} color="#10b981" style={{ marginRight: 10 }} />
+                      <Ionicons name="checkmark-circle" size={17} color="#10b981" style={{ marginRight: 10 }} />
                     )}
                   </View>
                 </View>
@@ -1291,7 +1346,7 @@ export default function LoginScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <Ionicons
                             name="paper-plane"
-                            size={16}
+                            size={15}
                             color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
                           />
                           <Text
@@ -1301,8 +1356,8 @@ export default function LoginScreen() {
                             ]}
                           >
                             {portalMode === 'PARTNER'
-                              ? 'Get Partner Verification Code'
-                              : 'Get Verification Code'}
+                              ? 'Send Agent OTP Code'
+                              : 'Send OTP on Mobile'}
                           </Text>
                         </View>
                       )}
@@ -1312,36 +1367,24 @@ export default function LoginScreen() {
                   /* ── STEP 2: Segmented 6-Cell OTP Input ── */
                   <View style={styles.otpSectionBox}>
                     <View style={styles.otpInfoBar}>
-                      <Ionicons name="shield-checkmark" size={15} color="#34d399" />
+                      <Ionicons name="shield-checkmark" size={14} color="#34d399" />
                       <Text style={styles.otpInfoText}>
-                        {isLocalhost ? 'Code sent to ' : 'SMS verification code sent to '}
-                        <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
+                        OTP sent to <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
                       </Text>
-                    </View>
-
-                    {/* 🌟 Direct In-Context Test OTP Helper Card (Localhost Only) 🌟 */}
-                    {isLocalhost && (
-                      <View style={styles.testOtpCard}>
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                            <Ionicons name="key" size={14} color="#f59e0b" />
-                            <Text style={styles.testOtpLabel}>Standard Test Code:</Text>
-                          </View>
-                          <Text style={styles.testOtpCode}>123456</Text>
-                        </View>
+                      {isLocalhost && (
                         <TouchableOpacity
                           onPress={autoFillDevOtp}
                           style={styles.quickFillButton}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="flash" size={13} color="#10b981" />
-                          <Text style={styles.quickFillText}>Auto-Fill 123456</Text>
+                          <Ionicons name="flash" size={12} color="#10b981" />
+                          <Text style={styles.quickFillText}>Fill 123456</Text>
                         </TouchableOpacity>
-                      </View>
-                    )}
+                      )}
+                    </View>
 
-                    <Text style={styles.fieldLabel}>Enter 6-Digit Code</Text>
-                    
+                    <Text style={styles.fieldLabel}>Enter 6-Digit OTP</Text>
+
                     {/* 6 Individual Segmented Boxes */}
                     <View style={styles.segmentedRow}>
                       {otpDigits.map((digit, idx) => (
@@ -1388,7 +1431,7 @@ export default function LoginScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <Ionicons
                               name="log-in"
-                              size={17}
+                              size={16}
                               color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
                             />
                             <Text
@@ -1397,7 +1440,7 @@ export default function LoginScreen() {
                                 portalMode === 'PARTNER' && { color: '#0f172a' },
                               ]}
                             >
-                              {portalMode === 'PARTNER' ? 'Verify & Open Partner Portal' : 'Verify & Enter'}
+                              {portalMode === 'PARTNER' ? 'Verify & Open Agent Portal' : 'Verify & Open FarmsKing'}
                             </Text>
                           </View>
                         )}
@@ -1408,11 +1451,11 @@ export default function LoginScreen() {
                     <View style={styles.resendRow}>
                       {resendTimer > 0 ? (
                         <Text style={styles.resendTimerText}>
-                          Resend code in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
+                          Resend OTP in <Text style={{ fontFamily: FONT.bold, color: '#10b981' }}>{resendTimer}s</Text>
                         </Text>
                       ) : (
                         <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                          <Text style={styles.resendActiveText}>Resend Verification Code</Text>
+                          <Text style={styles.resendActiveText}>Resend OTP Code</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -1424,7 +1467,7 @@ export default function LoginScreen() {
             {/* Alternative Divider */}
             <View style={styles.dividerBox}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>OR CONTINUE WITH GOOGLE</Text>
+              <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -1439,7 +1482,7 @@ export default function LoginScreen() {
                 <ActivityIndicator color="#4285F4" size="small" />
               ) : (
                 <>
-                  <Ionicons name="logo-google" size={18} color="#4285F4" />
+                  <Ionicons name="logo-google" size={17} color="#4285F4" />
                   <Text style={styles.googleText}>Continue with Google</Text>
                 </>
               )}
@@ -1447,11 +1490,12 @@ export default function LoginScreen() {
 
             {/* Statutory Corporate Identity Footer */}
             <View style={styles.statutoryFooter}>
-              <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+              <Ionicons name="shield-checkmark" size={13} color="#10b981" />
               <Text style={styles.statutoryFooterText}>
-                FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
               </Text>
             </View>
+          </View>
           </View>
         </View>
       </ScrollView>
@@ -1471,30 +1515,28 @@ export default function LoginScreen() {
               <View style={styles.modalBadge}>
                 <Text style={styles.modalBadgeText}>WELCOME TO FARMSKING</Text>
               </View>
-              <Text style={styles.modalTitle}>Choose Your Primary Profile</Text>
+              <Text style={styles.modalTitle}>Tell Us Who You Are</Text>
               <Text style={styles.modalSubtitle}>
-                {portalMode === 'PARTNER'
-                  ? 'This number is not registered as a Partner yet (Admin approval activates Partner access). You can register below as a Client account.'
-                  : 'Select how you primarily use FarmsKing. All accounts include full Customer access automatically.'}
+                Choose your profile below. Seeds &amp; farm store access is included for all users.
               </Text>
             </View>
 
             {/* Error Message inside Modal */}
             {modalError ? (
-              <View style={[styles.errorBox, { marginBottom: 14 }]}>
+              <View style={[styles.errorBox, { marginBottom: 12 }]}>
                 <Ionicons name="alert-circle" size={16} color="#ef4444" />
                 <Text style={styles.errorText}>{modalError}</Text>
               </View>
             ) : null}
 
             {/* Mandatory Full Name Input */}
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 14 }}>
               <Text style={styles.fieldLabel}>
                 Your Full Name <Text style={{ color: '#ef4444' }}>*</Text>
               </Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Enter your full name"
+                placeholder="Enter your name (e.g. Gurpreet Singh)"
                 placeholderTextColor="#64748b"
                 value={newUserName}
                 onChangeText={(t) => {
@@ -1507,91 +1549,45 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* 3 Role Selection Cards */}
-            <View style={{ gap: 10, marginBottom: 20 }}>
-              {/* Option 1: Customer */}
-              <TouchableOpacity
-                style={[styles.roleCard, selectedRole === 'CUSTOMER' && styles.roleCardActive]}
-                onPress={() => setSelectedRole('CUSTOMER')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.roleCardIcon}>
-                  <Ionicons
-                    name="cart"
-                    size={22}
-                    color={selectedRole === 'CUSTOMER' ? '#10b981' : '#64748b'}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleCardTitle, selectedRole === 'CUSTOMER' && styles.roleCardTitleActive]}>
-                    Customer / Buyer Only
-                  </Text>
-                  <Text style={styles.roleCardDesc}>
-                    Purchase certified seeds, crop protection, tools & fresh farm produce
-                  </Text>
-                </View>
-                <Ionicons
-                  name={selectedRole === 'CUSTOMER' ? 'radio-button-on' : 'radio-button-off'}
-                  size={20}
-                  color={selectedRole === 'CUSTOMER' ? '#10b981' : '#475569'}
-                />
-              </TouchableOpacity>
-
-              {/* Option 2: Farmer */}
-              <TouchableOpacity
-                style={[styles.roleCard, selectedRole === 'FARMER' && styles.roleCardActive]}
-                onPress={() => setSelectedRole('FARMER')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.roleCardIcon}>
-                  <Ionicons
-                    name="leaf"
-                    size={22}
-                    color={selectedRole === 'FARMER' ? '#10b981' : '#64748b'}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleCardTitle, selectedRole === 'FARMER' && styles.roleCardTitleActive]}>
-                    Farmer + Buyer
-                  </Text>
-                  <Text style={styles.roleCardDesc}>
-                    AI crop doctor scanner, live mandi prices, farm logs & precision schedules
-                  </Text>
-                </View>
-                <Ionicons
-                  name={selectedRole === 'FARMER' ? 'radio-button-on' : 'radio-button-off'}
-                  size={20}
-                  color={selectedRole === 'FARMER' ? '#10b981' : '#475569'}
-                />
-              </TouchableOpacity>
-
-              {/* Option 3: Gardener */}
-              <TouchableOpacity
-                style={[styles.roleCard, selectedRole === 'GARDENER' && styles.roleCardActive]}
-                onPress={() => setSelectedRole('GARDENER')}
-                activeOpacity={0.85}
-              >
-                <View style={styles.roleCardIcon}>
-                  <Ionicons
-                    name="flower"
-                    size={22}
-                    color={selectedRole === 'GARDENER' ? '#10b981' : '#64748b'}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleCardTitle, selectedRole === 'GARDENER' && styles.roleCardTitleActive]}>
-                    Home Gardener
-                  </Text>
-                  <Text style={styles.roleCardDesc}>
-                    Terrace gardens, indoor botany, organic remedies & plant care advisory
-                  </Text>
-                </View>
-                <Ionicons
-                  name={selectedRole === 'GARDENER' ? 'radio-button-on' : 'radio-button-off'}
-                  size={20}
-                  color={selectedRole === 'GARDENER' ? '#10b981' : '#475569'}
-                />
-              </TouchableOpacity>
+            {/* Compact Data-Driven Role Selection Cards */}
+            <View style={{ gap: 9, marginBottom: 18 }}>
+              {ONBOARDING_ROLE_CARDS.map((card) => {
+                const active = selectedRole === card.role;
+                return (
+                  <TouchableOpacity
+                    key={card.role}
+                    style={[styles.roleCard, active && styles.roleCardActive]}
+                    onPress={() => setSelectedRole(card.role)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.roleCardIcon}>
+                      <Ionicons
+                        name={card.icon}
+                        size={20}
+                        color={active ? '#10b981' : '#64748b'}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.roleCardTitle, active && styles.roleCardTitleActive]}>
+                          {card.title}
+                        </Text>
+                        {card.badge ? (
+                          <View style={styles.roleRecommendedBadge}>
+                            <Text style={styles.roleRecommendedText}>{card.badge}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.roleCardDesc}>{card.desc}</Text>
+                    </View>
+                    <Ionicons
+                      name={active ? 'radio-button-on' : 'radio-button-off'}
+                      size={19}
+                      color={active ? '#10b981' : '#475569'}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             {/* Confirm & Launch Dashboard */}
@@ -1612,7 +1608,7 @@ export default function LoginScreen() {
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="checkmark-done" size={18} color="#fff" />
-                    <Text style={styles.buttonText}>Complete Profile & Enter</Text>
+                    <Text style={styles.buttonText}>Start Using FarmsKing</Text>
                   </View>
                 )}
               </LinearGradient>
@@ -1661,26 +1657,35 @@ const styles = StyleSheet.create({
   },
   mainConsoleWrap: {
     width: '100%',
-    maxWidth: 480,
-    borderRadius: 24,
+    maxWidth: 440,
+    borderRadius: 22,
     overflow: 'hidden',
     backgroundColor: '#0c1322',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.11)',
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 24px 60px rgba(0, 0, 0, 0.55)' } as any)
+      : {}),
   },
   mainConsoleWrapDesktop: {
-    maxWidth: 1080,
+    maxWidth: 920,
+  },
+  topAccentRim: {
+    height: 3,
+    width: '100%',
+  },
+  consoleColumnsDesktop: {
     flexDirection: 'row',
-    minHeight: 640,
+    alignItems: 'stretch',
   },
 
   // ── Left Showcase Panel (Desktop) ──
   leftShowcasePanel: {
-    flex: 1.1,
+    flex: 0.92,
   },
   leftShowcaseGradient: {
     flex: 1,
-    padding: 36,
+    padding: 24,
     justifyContent: 'space-between',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.08)',
@@ -1690,68 +1695,63 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   showcaseBrandName: {
-    fontSize: 24,
+    fontSize: 21,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.3,
   },
   showcaseTagline: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#a7f3d0',
     marginTop: 1,
   },
   complianceSealRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 18,
+    gap: 6,
+    marginTop: 12,
   },
   complianceSealBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 7,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   complianceSealText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#e2e8f0',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   pillarsContainer: {
-    gap: 12,
-    marginVertical: 24,
+    gap: 8,
+    marginVertical: 16,
   },
   pillarCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.22)',
-    padding: 12,
-    borderRadius: 14,
+    gap: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.24)',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    ...(Platform.OS === 'web'
-      ? ({
-          transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, background-color 0.22s ease',
-        } as any)
-      : {}),
   },
   pillarIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    width: 32,
+    height: 32,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillarTitle: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#f8fafc',
   },
@@ -1759,31 +1759,30 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.medium,
     color: '#cbd5e1',
-    marginTop: 2,
-    lineHeight: 15,
+    marginTop: 1,
+    lineHeight: 14.5,
   },
   showcaseFooter: {
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.10)',
-    paddingTop: 16,
+    paddingTop: 12,
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#fef08a',
-    marginLeft: 4,
+    marginLeft: 2,
   },
-  trustText: {
+  trustInlineText: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#d1fae5',
-    lineHeight: 16,
   },
   corpAddressNotice: {
     fontSize: 10,
     fontFamily: FONT.medium,
     color: '#6ee7b7',
-    marginTop: 6,
+    marginTop: 2,
     opacity: 0.85,
   },
 
@@ -1795,40 +1794,24 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   rightAuthPanelDesktop: {
-    flex: 1,
-    padding: 38,
+    flex: 1.05,
+    padding: 26,
   },
   topNavRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   backHomeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   backHomeText: {
     fontSize: 12,
     fontFamily: FONT.medium,
     color: '#94a3b8',
-  },
-  authHeadingBox: {
-    marginBottom: 22,
-  },
-  authTitle: {
-    fontSize: 24,
-    fontFamily: FONT.extraBold,
-    color: '#f8fafc',
-    letterSpacing: -0.3,
-  },
-  authSubtitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-    marginTop: 4,
-    lineHeight: 18,
   },
   errorBox: {
     flexDirection: 'row',
@@ -1838,38 +1821,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.35)',
     borderRadius: RADIUS.md,
-    padding: 11,
-    marginBottom: 16,
+    padding: 10,
+    marginBottom: 12,
   },
   errorText: {
-    flex: 1,
     fontSize: 12,
     fontFamily: FONT.medium,
     color: '#fca5a5',
     lineHeight: 16,
   },
-  testOtpCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(245, 158, 11, 0.10)',
+  portalSwitchHintBtn: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.35)',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    marginBottom: 16,
-    gap: 8,
   },
-  testOtpLabel: {
-    fontSize: 10.5,
-    fontFamily: FONT.semiBold,
-    color: '#fbbf24',
-  },
-  testOtpCode: {
-    fontSize: 16,
-    fontFamily: FONT.extraBold,
-    color: '#34d399',
-    letterSpacing: 2,
+  portalSwitchHintText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
   quickFillButton: {
     flexDirection: 'row',
@@ -1878,12 +1848,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.20)',
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.50)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   quickFillText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#34d399',
   },
@@ -1891,17 +1861,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    backgroundColor: 'rgba(16, 185, 129, 0.10)',
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.35)',
+    borderColor: 'rgba(16, 185, 129, 0.30)',
     borderRadius: RADIUS.md,
-    padding: 10,
-    marginBottom: 16,
-  },
-  devBannerTitle: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#34d399',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 10,
   },
   devBannerSubtitle: {
     fontSize: 11,
@@ -1910,25 +1876,25 @@ const styles = StyleSheet.create({
   },
   autoFillBtn: {
     backgroundColor: '#10b981',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 6,
   },
   autoFillBtnText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
 
   // ── Inputs & Segmented OTP ──
   inputSection: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#cbd5e1',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   mobileInputWrap: {
     flexDirection: 'row',
@@ -1945,37 +1911,37 @@ const styles = StyleSheet.create({
   },
   countryCodeBadge: {
     paddingHorizontal: 12,
-    paddingVertical: 13,
+    paddingVertical: 11,
     backgroundColor: '#1a263e',
     borderRightWidth: 1,
     borderRightColor: 'rgba(255, 255, 255, 0.08)',
   },
   countryCodeText: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#e2e8f0',
   },
   mobileInput: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 10.5,
+    fontSize: 14.5,
     fontFamily: FONT.bold,
     color: '#f8fafc',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   primaryActionBtn: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    marginTop: 4,
+    marginTop: 2,
   },
   gradientBtn: {
-    paddingVertical: 13,
+    paddingVertical: 11.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
     letterSpacing: 0.2,
@@ -1983,19 +1949,22 @@ const styles = StyleSheet.create({
 
   // ── Segmented 6-Cell OTP Input ──
   otpSectionBox: {
-    marginTop: 4,
-    marginBottom: 8,
+    marginTop: 2,
+    marginBottom: 4,
   },
   otpInfoBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 6,
     backgroundColor: 'rgba(52, 211, 153, 0.10)',
-    padding: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderRadius: 8,
-    marginBottom: 14,
+    marginBottom: 10,
   },
   otpInfoText: {
+    flex: 1,
     fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#a7f3d0',
@@ -2004,16 +1973,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 6,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   otpCell: {
-    width: 44,
-    height: 48,
+    flex: 1,
+    maxWidth: 46,
+    height: 44,
     backgroundColor: '#141d30',
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 10,
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: FONT.bold,
     color: '#f8fafc',
     textAlign: 'center',
@@ -2029,15 +1999,15 @@ const styles = StyleSheet.create({
   },
   resendRow: {
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   resendTimerText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#94a3b8',
   },
   resendActiveText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#34d399',
   },
@@ -2046,7 +2016,7 @@ const styles = StyleSheet.create({
   dividerBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 13,
   },
   dividerLine: {
     flex: 1,
@@ -2058,7 +2028,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#64748b',
     letterSpacing: 0.8,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
   },
   googleIconBtn: {
     flexDirection: 'row',
@@ -2066,14 +2036,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    paddingVertical: 12,
-    gap: 10,
+    paddingVertical: 10.5,
+    gap: 9,
   },
   googleBtnDisabled: {
     opacity: 0.6,
   },
   googleText: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.bold,
     color: '#1e293b',
   },
@@ -2081,11 +2051,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    marginTop: 22,
+    gap: 5,
+    marginTop: 14,
   },
   statutoryFooterText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.bold,
     color: '#475569',
     textAlign: 'center',
@@ -2185,68 +2155,71 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
 
-  // ── Two-Part Client vs Partner Login Selector ──
-  portalSwitchSection: {
-    marginBottom: 18,
-    gap: 8,
+  roleRecommendedBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
-  portalSectionLabel: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#64748b',
-    letterSpacing: 0.7,
+  roleRecommendedText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+    letterSpacing: 0.4,
   },
-  portalSwitchRow: {
+
+  // ── Ultra-Compact & Premium Login Option Switcher ──
+  portalSwitchTray: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  portalOptionCard: {
-    flex: 1,
-    backgroundColor: '#111a2e',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 6,
+    backgroundColor: '#09101f',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.09)',
     borderRadius: 14,
-    padding: 12,
-    gap: 5,
+    padding: 4,
+    marginBottom: 14,
   },
-  portalOptionCardClientActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderColor: '#10b981',
-  },
-  portalOptionCardPartnerActive: {
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
-    borderColor: '#f59e0b',
-  },
-  portalCardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  portalIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  portalPillBtn: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    ...(Platform.OS === 'web'
+      ? ({ transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)', cursor: 'pointer' } as any)
+      : {}),
   },
-  portalIconBoxClientActive: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  portalPillBtnClientActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    borderColor: 'rgba(52, 211, 153, 0.55)',
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 4px 16px rgba(16, 185, 129, 0.16)' } as any)
+      : {}),
   },
-  portalIconBoxPartnerActive: {
-    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  portalPillBtnAgentActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.16)',
+    borderColor: 'rgba(251, 191, 36, 0.55)',
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 4px 16px rgba(245, 158, 11, 0.16)' } as any)
+      : {}),
   },
-  portalCardTitle: {
-    fontSize: 13.5,
+  portalPillTitle: {
+    fontSize: 13,
     fontFamily: FONT.extraBold,
-    color: '#f8fafc',
+    color: '#cbd5e1',
+    letterSpacing: -0.1,
+    textAlign: 'center',
   },
-  portalCardSub: {
-    fontSize: 10.5,
+  portalPillSub: {
+    fontSize: 9.5,
     fontFamily: FONT.medium,
-    color: '#94a3b8',
-    lineHeight: 14,
+    color: '#64748b',
+    marginTop: 2,
+    lineHeight: 13,
+    textAlign: 'center',
   },
   portalHeaderTag: {
     paddingHorizontal: 8,
@@ -2259,42 +2232,15 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     letterSpacing: 0.6,
   },
-  partnerSectionCard: {
-    backgroundColor: 'rgba(245, 158, 11, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.22)',
-    borderRadius: 14,
-    padding: 10,
-    gap: 10,
-    marginBottom: 14,
-  },
-  partnerRolesChipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  partnerRoleChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.25)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  partnerRoleChipText: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#fde68a',
-  },
   partnerMethodBar: {
     flexDirection: 'row',
-    gap: 6,
-    backgroundColor: 'rgba(7, 12, 24, 0.65)',
-    padding: 4,
-    borderRadius: 10,
+    gap: 5,
+    backgroundColor: '#09101f',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.20)',
+    padding: 3.5,
+    borderRadius: 11,
+    marginBottom: 12,
   },
   partnerMethodBtn: {
     flex: 1,

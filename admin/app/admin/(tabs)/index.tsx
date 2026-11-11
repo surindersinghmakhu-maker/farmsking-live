@@ -99,7 +99,7 @@ export default function HomeScreen() {
         return <GardenAdvisorDashboardView />;
       case 'GARDENER':
         return <GardenerDashboardView />;
-      case 'BUSINESS_PARTNER':
+      case 'AGENT':
         return <PartnerDashboardView />;
       case 'ADMIN':
       case 'SUPER_ADMIN':

@@ -71,7 +71,7 @@ const STATIC_COMMANDS: CommandItem[] = [
   { id: 'staff-desk', title: 'Operations Command Desk', subtitle: 'Fleet operations, dispatch, and field activities', icon: 'compass', portal: 'STAFF', path: '/staff/(tabs)' },
   { id: 'staff-trainers', title: 'Technical Field Trainers', subtitle: 'Manage agricultural field trainers and workshops', icon: 'school', portal: 'STAFF', path: '/staff/(tabs)/trainers' },
   { id: 'staff-operators', title: 'Logistics Operators', subtitle: 'Coordinate order dispatch, warehousing, and delivery', icon: 'swap-horizontal', portal: 'STAFF', path: '/staff/(tabs)/operators' },
-  { id: 'staff-partners', title: 'Strategic Business Partners', subtitle: 'Partner earnings, referral codes, and alliance hubs', icon: 'briefcase', portal: 'STAFF', path: '/staff/(tabs)/partners' },
+  { id: 'staff-partners', title: 'Strategic Agents', subtitle: 'Partner earnings, referral codes, and alliance hubs', icon: 'briefcase', portal: 'STAFF', path: '/staff/(tabs)/partners' },
 ];
 
 const SCOPES: { id: PortalId | 'ALL'; label: string }[] = [

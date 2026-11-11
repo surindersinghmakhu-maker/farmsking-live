@@ -39,7 +39,7 @@ export class WithdrawalsService {
   /** Blocks withdrawal until the caller's payout profile is complete. */
   private async assertPayoutProfileComplete(user: AuthUser) {
     const isAdvisor = user.role === Role.ADVISOR;
-    const isPartner = user.role === Role.BUSINESS_PARTNER;
+    const isPartner = user.role === Role.AGENT;
 
     if (isAdvisor || isPartner) {
       const fields = isAdvisor ? ADVISOR_PROFILE_FIELDS : BUSINESS_PARTNER_PROFILE_FIELDS;

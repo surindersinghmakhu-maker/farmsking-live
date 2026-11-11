@@ -7,7 +7,7 @@ import { AuthUser } from '../../common/types/auth-user.type';
 export class PartnerAssignmentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** The logged-in customer's linked business partner, if any (linked automatically on first coupon redemption). */
+  /** The logged-in customer's linked agent, if any (linked automatically on first coupon redemption). */
   findMyPartner(user: AuthUser) {
     return this.prisma.partnerAssignment.findFirst({
       where: { customerId: user.id, status: PartnerAssignmentStatus.ACTIVE },
@@ -17,7 +17,7 @@ export class PartnerAssignmentService {
     });
   }
 
-  /** The logged-in business partner's roster of linked customers. */
+  /** The logged-in agent's roster of linked customers. */
   findMyCustomers(user: AuthUser) {
     return this.prisma.partnerAssignment.findMany({
       where: { businessPartnerId: user.id, status: PartnerAssignmentStatus.ACTIVE },

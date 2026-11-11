@@ -15,7 +15,7 @@ import { UpdateFarmDto } from './dto/update-farm.dto';
   Role.FARMER,
   Role.GARDENER,
   Role.ADVISOR,
-  Role.BUSINESS_PARTNER,
+  Role.AGENT,
   Role.ADMIN,
   Role.SUPER_ADMIN,
   Role.OPERATOR,

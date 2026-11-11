@@ -44,7 +44,7 @@ let WithdrawalsController = class WithdrawalsController {
 };
 exports.WithdrawalsController = WithdrawalsController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.SELLER, client_1.Role.TRADER),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.SELLER, client_1.Role.TRADER),
     (0, common_1.Post)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -53,7 +53,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], WithdrawalsController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.SELLER, client_1.Role.TRADER),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.SELLER, client_1.Role.TRADER),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),

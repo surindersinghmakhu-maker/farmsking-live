@@ -20,8 +20,8 @@ export declare class AdminChatService {
     getAdminFarmerThread(farmerId: string): Promise<{
         farmer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
         } | null;

@@ -23,18 +23,18 @@ export declare class BasicPlanCouponsService {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -53,18 +53,18 @@ export declare class BasicPlanCouponsService {
     listAvailableForPurchase(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -83,18 +83,18 @@ export declare class BasicPlanCouponsService {
     listMinePurchased(partner: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
@@ -113,18 +113,18 @@ export declare class BasicPlanCouponsService {
     purchase(partner: AuthUser, code: string): Promise<{
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;

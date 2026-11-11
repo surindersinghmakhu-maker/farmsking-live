@@ -31,12 +31,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -49,7 +52,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -58,7 +60,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -74,13 +75,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -89,9 +89,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -102,9 +102,9 @@ export declare class UsersService implements OnModuleInit {
     }>;
     searchBusinessPartners(q?: string): Promise<{
         id: string;
+        name: string;
         kingId: string | null;
         mobile: string;
-        name: string;
     }[]>;
     createAdvisor(dto: CreateAdvisorDto): Promise<{
         user: {
@@ -114,12 +114,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -132,7 +135,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -141,7 +143,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -157,13 +158,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -172,9 +172,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -189,12 +189,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -207,7 +210,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -216,7 +218,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -232,13 +233,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -247,9 +247,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -263,12 +263,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -281,7 +284,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -290,7 +292,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -306,13 +307,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -321,9 +321,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -336,12 +336,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -354,7 +357,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -363,7 +365,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -379,13 +380,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -394,9 +394,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -411,10 +411,10 @@ export declare class UsersService implements OnModuleInit {
     getMyReferrals(user: AuthUser): Promise<{
         commissionEarned: number;
         id: string;
+        createdAt: Date;
+        name: string;
         kingId: string | null;
         mobile: string;
-        name: string;
-        createdAt: Date;
     }[]>;
     setReferrer(id: string, referredByKingId: string): Promise<{
         sellerStore: {
@@ -423,12 +423,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -441,7 +444,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -450,7 +452,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -466,13 +467,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -481,9 +481,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -496,12 +496,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -514,7 +517,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -523,7 +525,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -539,13 +540,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -554,9 +554,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -571,12 +571,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -589,7 +592,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -598,7 +600,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -614,13 +615,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -629,9 +629,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -645,12 +645,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -663,7 +666,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -672,7 +674,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -688,13 +689,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -703,9 +703,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -717,12 +717,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -735,7 +738,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -744,7 +746,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -760,13 +761,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -775,9 +775,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -790,12 +790,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -808,7 +811,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -817,7 +819,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -833,13 +834,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -848,9 +848,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -865,12 +865,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -883,7 +886,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -892,7 +894,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -908,13 +909,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -923,9 +923,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -939,12 +939,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -957,7 +960,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -966,7 +968,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -982,13 +983,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -997,9 +997,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1012,12 +1012,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -1030,7 +1033,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1039,7 +1041,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1055,13 +1056,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -1070,9 +1070,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -1106,9 +1106,9 @@ export declare class UsersService implements OnModuleInit {
         message: string;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             farmName: string | null;
         } | null;
@@ -1123,9 +1123,9 @@ export declare class UsersService implements OnModuleInit {
         isAssigned: boolean;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -1147,12 +1147,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1165,7 +1168,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1174,7 +1176,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1190,13 +1191,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1205,9 +1205,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1219,12 +1219,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1237,7 +1240,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1246,7 +1248,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1262,13 +1263,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1277,9 +1277,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1294,12 +1294,15 @@ export declare class UsersService implements OnModuleInit {
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -1312,7 +1315,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1321,7 +1323,6 @@ export declare class UsersService implements OnModuleInit {
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1337,13 +1338,12 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
             deletedAt: Date | null;
             employerFarmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             } | null;
             labourWorkerUser: {
@@ -1352,9 +1352,9 @@ export declare class UsersService implements OnModuleInit {
                 farmerId: string;
                 farmer: {
                     id: string;
+                    name: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                     farmName: string | null;
                 };
             }[];
@@ -1367,12 +1367,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1385,7 +1388,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1394,7 +1396,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1410,13 +1411,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1425,9 +1425,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1440,11 +1440,11 @@ export declare class UsersService implements OnModuleInit {
     lookupByKingId(query: string): Promise<{
         currentEmployerName: string | null;
         id: string;
+        name: string;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
-        name: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -1458,12 +1458,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1476,7 +1479,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1485,7 +1487,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1501,13 +1502,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1516,9 +1516,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1530,12 +1530,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1548,7 +1551,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1557,7 +1559,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1573,13 +1574,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1588,9 +1588,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1598,12 +1598,16 @@ export declare class UsersService implements OnModuleInit {
     getDetail(caller: AuthUser, id: string): Promise<{
         user: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            name: string;
+            upiId: string | null;
+            whatsappGroupJid: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -1619,7 +1623,6 @@ export declare class UsersService implements OnModuleInit {
             preferredLanguage: string;
             notificationsEnabled: boolean;
             whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
             weatherAlertMinTempC: number | null;
             weatherAlertMaxTempC: number | null;
             weatherAlertRainEnabled: boolean;
@@ -1637,7 +1640,6 @@ export declare class UsersService implements OnModuleInit {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             qualification: string | null;
             profileTitle: string | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
@@ -1674,8 +1676,6 @@ export declare class UsersService implements OnModuleInit {
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             deletedAt: Date | null;
         };
         farmCount: number;
@@ -1720,12 +1720,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1738,7 +1741,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1752,7 +1754,6 @@ export declare class UsersService implements OnModuleInit {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         qualification: string | null;
         profileTitle: string | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1773,13 +1774,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1788,9 +1788,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1805,12 +1805,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1823,7 +1826,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1832,7 +1834,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1848,13 +1849,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1863,9 +1863,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1877,12 +1877,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1895,7 +1898,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1904,7 +1906,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1920,13 +1921,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -1935,9 +1935,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -1949,12 +1949,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -1967,7 +1970,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -1976,7 +1978,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -1992,13 +1993,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2007,9 +2007,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2021,12 +2021,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2039,7 +2042,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2048,7 +2050,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2064,13 +2065,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2079,9 +2079,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2093,12 +2093,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2111,7 +2114,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2120,7 +2122,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2136,13 +2137,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2151,9 +2151,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2175,12 +2175,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2193,7 +2196,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2207,7 +2209,6 @@ export declare class UsersService implements OnModuleInit {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         qualification: string | null;
         profileTitle: string | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2228,13 +2229,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2243,20 +2243,20 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
     }>;
     getAdvisorProfileStatus(user: AuthUser): Promise<{
         profile: {
+            upiId: string | null;
             email: string | null;
             photoUrl: string | null;
             qualification: string | null;
             profileTitle: string | null;
-            upiId: string | null;
             panNumber: string | null;
             alternativeMobile: string | null;
             bankAccountNumber: string | null;
@@ -2264,7 +2264,7 @@ export declare class UsersService implements OnModuleInit {
             bankAccountHolderName: string | null;
         };
         profileComplete: boolean;
-        missingFields: ("email" | "photoUrl" | "qualification" | "profileTitle" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
+        missingFields: ("upiId" | "email" | "photoUrl" | "qualification" | "profileTitle" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
     }>;
     updatePartnerProfile(user: AuthUser, dto: UpdatePartnerProfileDto): Promise<{
         sellerStore: {
@@ -2273,12 +2273,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2291,7 +2294,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2300,7 +2302,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2321,13 +2322,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2336,17 +2336,17 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
     }>;
     getPartnerProfileStatus(user: AuthUser): Promise<{
         profile: {
-            email: string | null;
             upiId: string | null;
+            email: string | null;
             panNumber: string | null;
             alternativeMobile: string | null;
             bankAccountNumber: string | null;
@@ -2354,7 +2354,7 @@ export declare class UsersService implements OnModuleInit {
             bankAccountHolderName: string | null;
         };
         profileComplete: boolean;
-        missingFields: ("email" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
+        missingFields: ("upiId" | "email" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
     }>;
     deleteUserByAdmin(caller: AuthUser, id: string): Promise<{
         success: boolean;
@@ -2372,12 +2372,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2390,7 +2393,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2399,7 +2401,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2415,13 +2416,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2430,9 +2430,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2458,12 +2458,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2476,7 +2479,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2485,7 +2487,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2501,13 +2502,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2516,9 +2516,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2530,12 +2530,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2548,7 +2551,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2557,7 +2559,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2573,13 +2574,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2588,9 +2588,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2602,12 +2602,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2620,7 +2623,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2629,7 +2631,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2645,13 +2646,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2660,9 +2660,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];
@@ -2674,12 +2674,15 @@ export declare class UsersService implements OnModuleInit {
             kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
         } | null;
         id: string;
+        createdAt: Date;
+        name: string;
+        upiId: string | null;
+        whatsappGroupJid: string | null;
         kingId: string | null;
         mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
-        name: string;
         email: string | null;
         isEmailVerified: boolean;
         pendingEmail: string | null;
@@ -2692,7 +2695,6 @@ export declare class UsersService implements OnModuleInit {
         preferredLanguage: string;
         notificationsEnabled: boolean;
         whatsappGroupEnabled: boolean;
-        whatsappGroupJid: string | null;
         weatherAlertMinTempC: number | null;
         weatherAlertMaxTempC: number | null;
         weatherAlertRainEnabled: boolean;
@@ -2701,7 +2703,6 @@ export declare class UsersService implements OnModuleInit {
         soilType: import(".prisma/client").$Enums.SoilType | null;
         waterType: import(".prisma/client").$Enums.WaterType | null;
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-        upiId: string | null;
         billPrintingAddress: string | null;
         farmName: string | null;
         farmAddress: string | null;
@@ -2717,13 +2718,12 @@ export declare class UsersService implements OnModuleInit {
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
-        createdAt: Date;
         deletedAt: Date | null;
         employerFarmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             farmName: string | null;
         } | null;
         labourWorkerUser: {
@@ -2732,9 +2732,9 @@ export declare class UsersService implements OnModuleInit {
             farmerId: string;
             farmer: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 farmName: string | null;
             };
         }[];

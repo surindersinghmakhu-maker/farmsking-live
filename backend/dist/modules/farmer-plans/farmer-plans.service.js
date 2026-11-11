@@ -836,7 +836,7 @@ let FarmerPlansService = class FarmerPlansService {
         }
         const lockTargets = [dto.assignedFarmerId, dto.assignedAdvisorId, dto.assignedBusinessPartnerId].filter(Boolean);
         if (lockTargets.length > 1) {
-            throw new common_1.BadRequestException('Lock a coupon to only one of: a farmer, an advisor, or a business partner.');
+            throw new common_1.BadRequestException('Lock a coupon to only one of: a farmer, an advisor, or a agent.');
         }
         let targetPartnerName = 'Partner';
         if (dto.assignedFarmerId) {
@@ -856,10 +856,10 @@ let FarmerPlansService = class FarmerPlansService {
         }
         if (dto.assignedBusinessPartnerId) {
             const partner = await this.prisma.user.findFirst({
-                where: { id: dto.assignedBusinessPartnerId, roles: { has: client_1.Role.BUSINESS_PARTNER }, deletedAt: null },
+                where: { id: dto.assignedBusinessPartnerId, roles: { has: client_1.Role.AGENT }, deletedAt: null },
             });
             if (!partner)
-                throw new common_1.NotFoundException('Business partner not found.');
+                throw new common_1.NotFoundException('Agent not found.');
             targetPartnerName = partner.name;
         }
         const pricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: dto.plan } });
@@ -927,10 +927,10 @@ let FarmerPlansService = class FarmerPlansService {
             throw new common_1.ForbiddenException('Advisors cannot generate coupons directly. Only Senior Doctors or Admins can issue coupons for Advisors.');
         }
         const isAdvisor = activeRoles.includes(client_1.Role.ADVISOR) || isDoctor;
-        const isPartnerOnly = activeRoles.includes(client_1.Role.BUSINESS_PARTNER) && !isAdvisor;
+        const isPartnerOnly = activeRoles.includes(client_1.Role.AGENT) && !isAdvisor;
         if (isPartnerOnly) {
             if (dto.plan === client_1.FarmerSubscriptionPlan.SUPER) {
-                throw new common_1.ForbiddenException('Business Partners can generate Lite (PRO) and Pro (SMART) plan coupons only. Please upgrade to Advisor or contact Admin for Smart (SUPER) plan coupons.');
+                throw new common_1.ForbiddenException('Agents can generate Lite (PRO) and Pro (SMART) plan coupons only. Please upgrade to Advisor or contact Admin for Smart (SUPER) plan coupons.');
             }
         }
         let targetAdvisorId = null;
@@ -1119,7 +1119,7 @@ let FarmerPlansService = class FarmerPlansService {
         for (const c of coupons) {
             const cost = Number(c.generationCostAmount || 0);
             if (cost > 0) {
-                if (c.createdByRole === client_1.Role.BUSINESS_PARTNER) {
+                if (c.createdByRole === client_1.Role.AGENT) {
                     partnerDebitsCollected += cost;
                 }
                 else if (c.createdByRole === client_1.Role.ADVISOR) {
@@ -1216,7 +1216,7 @@ let FarmerPlansService = class FarmerPlansService {
             },
             {
                 key: 'partner',
-                title: 'Business Partner User Handbook',
+                title: 'Agent User Handbook',
                 fileName: 'BUSINESS_PARTNER_GUIDE.md',
                 description: 'Partner coupons, upfront wallet debits, direct farmer assignments',
             },
@@ -1490,7 +1490,7 @@ function getEnglishGuideContent(docKey, fallbackPa) {
 3. **Wallet Share**: Earn instant commission (₹150-₹300) per activated farmer!
 `;
         case 'partner':
-            return `# 🤝 Business Partner Master Guide (English Edition)
+            return `# 🤝 Agent Master Guide (English Edition)
 
 1. **Bulk Stock**: Purchase bulk plan coupons at wholesale discount.
 2. **Direct Activation**: Input farmer's King ID (\`FK-100238\`) to instantly activate their plan.
@@ -1501,7 +1501,7 @@ function getEnglishGuideContent(docKey, fallbackPa) {
 
 1. **20-Referral Milestone**: Refer 20 farmer friends -> Get 1 Year PRO Plan FREE!
 2. **From Advisor**: Get coupon code directly from your local Farm Advisor.
-3. **From Business Partner**: Get coupon code from fertilizer dealers.
+3. **From Agent**: Get coupon code from fertilizer dealers.
 4. **Super Admin Offer**: Redeem promo codes for 100% discount.
 `;
         default:

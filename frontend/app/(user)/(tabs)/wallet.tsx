@@ -35,7 +35,7 @@ import { AdminWalletManagementView } from '@/src/components/AdminWalletManagemen
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
-const staticTheme = RoleThemes.BUSINESS_PARTNER;
+const staticTheme = RoleThemes.AGENT;
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -318,7 +318,7 @@ export default function WalletScreen() {
   const [adminWalletTab, setAdminWalletTab] = useState<'MY_WALLET' | 'ALL_USERS_MANAGEMENT'>('MY_WALLET');
 
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR';
-  const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
+  const isPartner = userRoles.includes('AGENT') || currentRole === 'AGENT';
   const isAdvisorOrPartner = isAdvisor || isPartner;
 
 // Platform Policy: Wallet withdrawals are permanently closed across all wallets and roles
@@ -543,7 +543,7 @@ export default function WalletScreen() {
             {/* Detailed Referral & Bonus Statement Table */}
             <ReferralStatementTable theme={theme} />
 
-            {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
+            {/* Unified Plan Coupons Hub for Advisors & Agents */}
             {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
 
             {/* Unified Wallet & Referral History Table */}
@@ -1644,7 +1644,7 @@ function ShareFarmerPlanCouponModal({
   );
 }
 
-/** Unified Plan Coupons Section for Advisors & Business Partners — combines Advisor & Partner plan coupons into 1 single wallet hub */
+/** Unified Plan Coupons Section for Advisors & Agents — combines Advisor & Partner plan coupons into 1 single wallet hub */
 function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
   const { data: advisorCoupons, isLoading: isLoadingAdvisor } = useMineFarmerPlanCoupons();
   const { data: partnerCoupons, isLoading: isLoadingPartner } = useMinePartnerFarmerPlanCoupons();
@@ -1762,7 +1762,7 @@ function MyRenewalCouponsSection() {
 }
 
 
-/** Plan coupons issued by admin to this business partner — they earn a commission whenever a farmer redeems one. */
+/** Plan coupons issued by admin to this agent — they earn a commission whenever a farmer redeems one. */
 function BasicPlanCouponMarketSection({ theme, balance }: { theme: RoleTheme; balance: number }) {
   const { data: available, isLoading: isLoadingAvailable } = useAvailableBasicPlanCoupons();
   const { data: purchased, isLoading: isLoadingPurchased } = useMyPurchasedBasicPlanCoupons();

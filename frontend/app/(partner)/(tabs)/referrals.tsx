@@ -9,7 +9,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useMyReferralNetwork } from '@/src/hooks/useReferralNetwork';
 
-const theme = RoleThemes.BUSINESS_PARTNER;
+const theme = RoleThemes.AGENT;
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

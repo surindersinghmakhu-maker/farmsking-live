@@ -81,8 +81,8 @@ export declare class SprayScheduleService {
     }>;
     searchCatalog(query: string): Promise<{
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
     }[]>;

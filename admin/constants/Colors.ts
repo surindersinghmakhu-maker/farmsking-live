@@ -5,7 +5,7 @@ export type UserRole =
   | 'GARDEN_ADVISOR'
   | 'GARDENER'
   | 'CUSTOMER'
-  | 'BUSINESS_PARTNER'
+  | 'AGENT'
   | 'ADMIN'
   | 'SUPER_ADMIN'
   | 'OPERATOR'
@@ -111,7 +111,7 @@ export const RoleThemes: Record<UserRole, {
     primaryLight: '#ccfbf1',
     accent: '#14b8a6',
   },
-  BUSINESS_PARTNER: {
+  AGENT: {
     ...SURFACE,
     name: 'Wallet',
     badge: 'Promote, earn & grow together',

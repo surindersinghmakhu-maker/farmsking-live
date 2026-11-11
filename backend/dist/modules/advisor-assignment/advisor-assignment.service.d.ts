@@ -29,9 +29,9 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
                 expiredAt: Date | null;
             } | null;
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -43,9 +43,9 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         subscription: ({
             plan: {
                 id: string;
-                name: string;
                 createdAt: Date;
                 updatedAt: Date;
+                name: string;
                 isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -81,8 +81,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     })[]>;
     findFarmerDetail(user: AuthUser, farmerId: string): Promise<{
         farmer: {
@@ -93,9 +93,10 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
                 expiredAt: Date | null;
             } | null;
             id: string;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -103,16 +104,15 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            createdAt: Date;
             deletedAt: Date | null;
         };
         assignment: ({
             subscription: ({
                 plan: {
                     id: string;
-                    name: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    name: string;
                     isActive: boolean;
                     description: string | null;
                     price: import("@prisma/client/runtime/library").Decimal;
@@ -148,8 +148,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
             notes: string | null;
             farmerId: string;
             advisorId: string;
-            subscriptionId: string | null;
             assignedById: string | null;
+            subscriptionId: string | null;
         }) | null;
         isExpired: boolean;
     }>;
@@ -157,8 +157,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
     findMyAdvisor(user: AuthUser): Promise<({
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -178,8 +178,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }) | null>;
     listAvailableAdvisors(user: AuthUser): Promise<{
         rating: number | null;
@@ -210,8 +210,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     assertAdvisorAssignedToFarmerAnyExpiry(advisorId: string, farmerId: string): Promise<{
         id: string;
@@ -224,16 +224,16 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     private pickAdvisorForAssignment;
     private roleToAdvisorType;
     createFromSubscription(subscriptionId: string, farmerId: string): Promise<{
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         };
     } & {
         id: string;
@@ -246,8 +246,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     findMyPendingRequest(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorAssignmentClient<({
         advisor: {
@@ -267,8 +267,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     requestSpecificAdvisor(farmerId: string, advisorId: string, cropId?: string): Promise<{
         id: string;
@@ -281,22 +281,22 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     findPendingDoctorChangeRequests(): Promise<({
         farmer: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             district: string | null;
             state: string | null;
         };
         advisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             photoUrl: string | null;
             specialization: string | null;
         };
@@ -311,8 +311,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     })[]>;
     adminApproveDoctorChange(adminUser: AuthUser, assignmentId: string): Promise<{
         id: string;
@@ -325,8 +325,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     adminRejectDoctorChange(adminUser: AuthUser, assignmentId: string, reason?: string): Promise<{
         id: string;
@@ -339,8 +339,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     cancelMyPendingRequest(user: AuthUser): Promise<{
         id: string;
@@ -353,8 +353,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     accept(user: AuthUser, id: string): Promise<{
         id: string;
@@ -367,8 +367,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     private payoutAdvisorShareOnAccept;
     reject(user: AuthUser, id: string, reason?: string): Promise<{
@@ -382,8 +382,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     create(user: AuthUser, dto: CreateAdvisorAssignmentDto): Promise<{
         id: string;
@@ -396,8 +396,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     findOneOrThrow(user: AuthUser, id: string): Promise<{
         id: string;
@@ -410,8 +410,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     revoke(user: AuthUser, id: string): Promise<{
         id: string;
@@ -424,8 +424,8 @@ export declare class AdvisorAssignmentService implements OnApplicationBootstrap 
         notes: string | null;
         farmerId: string;
         advisorId: string;
-        subscriptionId: string | null;
         assignedById: string | null;
+        subscriptionId: string | null;
     }>;
     sendRenewalReminder(user: AuthUser, farmerId: string): Promise<{
         success: boolean;

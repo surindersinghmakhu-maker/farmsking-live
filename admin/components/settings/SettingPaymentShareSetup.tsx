@@ -48,8 +48,8 @@ interface RoleOption {
 
 const ALL_SYSTEM_ROLES: RoleOption[] = [
   {
-    key: 'BUSINESS_PARTNER',
-    name: 'Business Partner / Franchise',
+    key: 'AGENT',
+    name: 'Agent / Franchise',
     roleBadge: 'PARTNER',
     description: 'Franchise owners, district distributors & commission partners',
     icon: 'briefcase-outline',
@@ -267,7 +267,7 @@ export default function SettingPaymentShareSetup() {
   };
 
   const handleSelectPartnersAndAdvisorsOnly = () => {
-    updateAppField('allowedWithdrawalRoles', ['BUSINESS_PARTNER', 'ADVISOR', 'ADMIN', 'SUPER_ADMIN']);
+    updateAppField('allowedWithdrawalRoles', ['AGENT', 'ADVISOR', 'ADMIN', 'SUPER_ADMIN']);
     showToast('Permitted commercial partners and crop doctors only');
   };
 

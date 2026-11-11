@@ -27,7 +27,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -43,7 +43,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -63,7 +63,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -73,15 +73,15 @@ export class FarmerPlansController {
     return this.farmerPlansService.getPlanHistory(user, farmerId);
   }
 
-  /** Farmer, or an advisor/admin/business partner previewing on behalf of a farmer (?farmerId=) — shows what a code would grant, without consuming it */
-  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  /** Farmer, or an advisor/admin/agent previewing on behalf of a farmer (?farmerId=) — shows what a code would grant, without consuming it */
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   @Get('coupon/:code/preview')
   previewCoupon(@CurrentUser() user: AuthUser, @Param('code') code: string, @Query('farmerId') farmerId?: string) {
     return this.farmerPlansService.previewCoupon(user, code, farmerId);
   }
 
-  /** Farmer, or an advisor/admin/business partner redeeming on behalf of a farmer — activates BASIC/STANDARD/PREMIUM (new plan, extend, or renew) */
-  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  /** Farmer, or an advisor/admin/agent redeeming on behalf of a farmer — activates BASIC/STANDARD/PREMIUM (new plan, extend, or renew) */
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   @Post('redeem')
   redeemCoupon(@CurrentUser() user: AuthUser, @Body() dto: RedeemFarmerPlanCouponDto) {
     return this.farmerPlansService.redeemCoupon(user, dto);
@@ -102,8 +102,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.createCoupon(user, dto);
   }
 
-  /** Advisor / Business Partner: self-service — generate their own plan coupon, debiting the generation cost from their wallet. */
-  @Roles(Role.ADVISOR, Role.BUSINESS_PARTNER)
+  /** Advisor / Agent: self-service — generate their own plan coupon, debiting the generation cost from their wallet. */
+  @Roles(Role.ADVISOR, Role.AGENT)
   @Post('coupons/generate')
   generateOwnCoupon(@CurrentUser() user: AuthUser, @Body() dto: GenerateAdvisorCouponDto) {
     return this.farmerPlansService.generateOwnCoupon(user, dto);
@@ -123,8 +123,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.listMineForAdvisor(user);
   }
 
-  /** Business Partner: list coupons issued to them, to hand out to farmers — earns a commission on redemption */
-  @Roles(Role.BUSINESS_PARTNER)
+  /** Agent: list coupons issued to them, to hand out to farmers — earns a commission on redemption */
+  @Roles(Role.AGENT)
   @Get('coupons/mine-partner')
   listMineForBusinessPartner(@CurrentUser() user: AuthUser) {
     return this.farmerPlansService.listMineForBusinessPartner(user);
@@ -136,7 +136,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -185,8 +185,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.listAllFarmerPlans();
   }
 
-  /** Advisor/Admin/Business Partner: apply any generated coupon directly to a target farmer without requiring manual entry */
-  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  /** Advisor/Admin/Agent: apply any generated coupon directly to a target farmer without requiring manual entry */
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   @Post('apply-direct')
   applyCouponToFarmerDirectly(@CurrentUser() user: AuthUser, @Body() dto: ApplyCouponToFarmerDto) {
     return this.farmerPlansService.applyCouponToFarmerDirectly(user, dto);
@@ -205,7 +205,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -225,7 +225,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -241,7 +241,7 @@ export class FarmerPlansController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,

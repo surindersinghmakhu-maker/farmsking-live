@@ -89,7 +89,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
   const isPaidUser = React.useMemo(() => {
     if (!user) return false;
     const role = (user.role || '').toUpperCase();
-    if (['SUPER_ADMIN', 'ADMIN', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'SUPERVISOR', 'BUSINESS_PARTNER'].includes(role)) {
+    if (['SUPER_ADMIN', 'ADMIN', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'SUPERVISOR', 'AGENT'].includes(role)) {
       return true;
     }
     if (hasActiveSoftwarePlan) return true;

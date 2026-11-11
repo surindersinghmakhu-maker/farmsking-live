@@ -6,8 +6,6 @@ export declare class CouponSettingsController {
     constructor(couponSettingsService: CouponSettingsService);
     get(): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
@@ -27,12 +25,12 @@ export declare class CouponSettingsController {
         inviteCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
         inviteCouponValidityDays: number;
         inviteCouponUsageLimit: number;
+        createdAt: Date;
+        updatedAt: Date;
         updatedById: string | null;
     }>;
     update(user: AuthUser, dto: UpdateCouponSettingsDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
         partnerCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
@@ -52,6 +50,8 @@ export declare class CouponSettingsController {
         inviteCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
         inviteCouponValidityDays: number;
         inviteCouponUsageLimit: number;
+        createdAt: Date;
+        updatedAt: Date;
         updatedById: string | null;
     }>;
 }

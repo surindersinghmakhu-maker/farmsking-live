@@ -48,7 +48,7 @@ const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.gly
 type UserFilter =
   | 'ALL'
   | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR' | 'TECHNICAL_TRAINER'
-  | 'BUSINESS_PARTNER' | 'SELLER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
+  | 'AGENT' | 'SELLER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
   | 'CUSTOMER' | 'FARMER' | 'GARDENER' | 'SUPERVISOR' | 'LABOUR';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
@@ -56,7 +56,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
     { value: 'ALL', label: 'All Users', icon: 'people-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
-    { value: 'BUSINESS_PARTNER', label: 'Agents', icon: 'briefcase-outline' },
+    { value: 'AGENT', label: 'Agents', icon: 'briefcase-outline' },
     { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
     { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
     { value: 'LABOUR', label: 'Labour Workers', icon: 'body-outline' },
@@ -78,7 +78,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
   ],
   PARTNERS: [
     { value: 'ALL', label: 'All Partners', icon: 'briefcase-outline' },
-    { value: 'BUSINESS_PARTNER', label: 'Agents', icon: 'briefcase-outline' },
+    { value: 'AGENT', label: 'Agents', icon: 'briefcase-outline' },
     { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
     { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
@@ -169,7 +169,7 @@ export default function SuperUsersScreen() {
       if (subFilter === 'ALL') {
         if (group === 'ALL') return true;
         if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
-        if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER', 'TRADER'].includes(r));
+        if (group === 'PARTNERS') return activeRoles.some((r) => ['AGENT', 'ADVISOR', 'SELLER', 'TRADER'].includes(r));
         if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
         return true;
       }
@@ -177,7 +177,7 @@ export default function SuperUsersScreen() {
       if (subFilter === 'ADMIN') return activeRoles.includes('ADMIN') || u.role === 'ADMIN';
       if (subFilter === 'OPERATOR') return activeRoles.includes('OPERATOR') || u.role === 'OPERATOR';
       if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
-      if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
+      if (subFilter === 'AGENT') return activeRoles.includes('AGENT') || u.role === 'AGENT';
       if (subFilter === 'SELLER') return activeRoles.includes('SELLER') || u.role === 'SELLER';
       if (subFilter === 'TRADER') return activeRoles.includes('TRADER') || u.role === 'TRADER';
       if (subFilter === 'FARM_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN';
@@ -208,7 +208,7 @@ export default function SuperUsersScreen() {
         if (f.value === 'ADMIN' && (activeRoles.includes('ADMIN') || u.role === 'ADMIN')) matches = true;
         if (f.value === 'OPERATOR' && (activeRoles.includes('OPERATOR') || u.role === 'OPERATOR')) matches = true;
         if (f.value === 'TECHNICAL_TRAINER' && (activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER')) matches = true;
-        if (f.value === 'BUSINESS_PARTNER' && (activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER')) matches = true;
+        if (f.value === 'AGENT' && (activeRoles.includes('AGENT') || u.role === 'AGENT')) matches = true;
         if (f.value === 'SELLER' && (activeRoles.includes('SELLER') || u.role === 'SELLER')) matches = true;
         if (f.value === 'TRADER' && (activeRoles.includes('TRADER') || u.role === 'TRADER')) matches = true;
         if (f.value === 'FARM_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN') matches = true;
@@ -248,7 +248,7 @@ export default function SuperUsersScreen() {
       const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
       const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
       if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
-      if (group === 'PARTNERS') return activeRoles.some((r) => ['BUSINESS_PARTNER', 'ADVISOR', 'SELLER'].includes(r));
+      if (group === 'PARTNERS') return activeRoles.some((r) => ['AGENT', 'ADVISOR', 'SELLER'].includes(r));
       if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER'].includes(r));
       return true;
     }
@@ -304,7 +304,7 @@ export default function SuperUsersScreen() {
   ).length;
 
   const partnersCount = allUsersList.filter(
-    (u) => !u.deletedAt && (u.role === 'BUSINESS_PARTNER' || (Array.isArray(u.roles) && u.roles.includes('BUSINESS_PARTNER')))
+    (u) => !u.deletedAt && (u.role === 'AGENT' || (Array.isArray(u.roles) && u.roles.includes('AGENT')))
   ).length;
 
   const tradersCount = allUsersList.filter(
@@ -364,12 +364,12 @@ export default function SuperUsersScreen() {
       count: partnersCount,
       icon: 'briefcase' as const,
       color: '#8b5cf6',
-      isSelected: filter === 'BUSINESS_PARTNER' && statusTab === 'ACTIVE',
+      isSelected: filter === 'AGENT' && statusTab === 'ACTIVE',
       action: () => {
         tap();
         setStatusTab('ACTIVE');
         setGroup('PARTNERS');
-        setFilter('BUSINESS_PARTNER');
+        setFilter('AGENT');
       },
     },
     {
@@ -1186,7 +1186,7 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
   const activeRoles = (user.roles ?? [user.role]).filter((r: any) => !(user.deactivatedRoles ?? []).includes(r));
   const isFarmer = activeRoles.includes('FARMER');
   const isAdvisor = activeRoles.includes('ADVISOR');
-  const isPartner = activeRoles.includes('BUSINESS_PARTNER');
+  const isPartner = activeRoles.includes('AGENT');
   const showPayoutFields = isAdvisor || isPartner;
 
   // Advisor-only
@@ -1210,7 +1210,7 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
   const [soilType, setSoilType] = useState(user.soilType ?? '');
   const [waterType, setWaterType] = useState(user.waterType ?? '');
 
-  // Business Partner / Advisor payout profile
+  // Agent / Advisor payout profile
   const [upiId, setUpiId] = useState(user.upiId ?? '');
   const [panNumber, setPanNumber] = useState(user.panNumber ?? '');
   const [alternativeMobile, setAlternativeMobile] = useState(user.alternativeMobile ?? '');
@@ -1540,7 +1540,7 @@ const ROLE_LABELS: Record<Role, string> = {
   FARMER: 'Farmer',
   GARDENER: 'Gardener',
   ADVISOR: 'Advisor',
-  BUSINESS_PARTNER: 'Agent',
+  AGENT: 'Agent',
   ADMIN: 'Admin',
   SUPER_ADMIN: 'Super Admin',
   OPERATOR: 'Operator',
@@ -1703,15 +1703,15 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
       ],
     },
     {
-      title: 'Business Partners',
+      title: 'Agents',
       items: [
         {
-          key: 'BUSINESS_PARTNER',
+          key: 'AGENT',
           label: 'Agent',
-          isChecked: selected.includes('BUSINESS_PARTNER'),
+          isChecked: selected.includes('AGENT'),
           isLocked: false,
-          wasEverGranted: (target.roles ?? []).includes('BUSINESS_PARTNER'),
-          onPress: () => toggle('BUSINESS_PARTNER'),
+          wasEverGranted: (target.roles ?? []).includes('AGENT'),
+          onPress: () => toggle('AGENT'),
         },
         {
           key: 'SELLER',
@@ -1900,7 +1900,7 @@ const getRoleTheme = (role: string) => {
       return { border: '#0284c7', bg: '#f0f9ff', text: '#0284c7', darkBg: 'rgba(2, 132, 199, 0.15)', darkBorder: '#0284c7', darkText: '#38bdf8' };
     case 'GARDEN_ADVISOR':
       return { border: '#0d9488', bg: '#f0fdfa', text: '#0d9488', darkBg: 'rgba(13, 148, 136, 0.15)', darkBorder: '#0d9488', darkText: '#2dd4bf' };
-    case 'BUSINESS_PARTNER':
+    case 'AGENT':
       return { border: '#7c3aed', bg: '#faf5ff', text: '#7c3aed', darkBg: 'rgba(124, 58, 237, 0.15)', darkBorder: '#7c3aed', darkText: '#c084fc' };
     case 'TRADER':
       return { border: '#d97706', bg: '#fffbeb', text: '#d97706', darkBg: 'rgba(217, 119, 6, 0.15)', darkBorder: '#d97706', darkText: '#fbbf24' };

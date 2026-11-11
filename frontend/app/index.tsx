@@ -585,7 +585,7 @@ export default function PublicLandingPage() {
   // Guard: If authenticated, immediately preserve session & redirect to appropriate dashboard
   useEffect(() => {
     if (!isLoading && user) {
-      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+      if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
         router.replace('/(partner)/(tabs)');
       } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         router.replace('/admin');
@@ -1893,7 +1893,7 @@ export default function PublicLandingPage() {
                   style={[S.mandiRate4DBtn, isDay && S.mandiRate4DBtnDay, isMobile && { paddingHorizontal: 6, paddingVertical: 2.5 }]}
                   onPress={() => {
                     if (user) {
-                      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                      if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
                         router.push('/(partner)/(tabs)' as any);
                       } else {
                         router.push('/(user)/(tabs)' as any);
@@ -1965,7 +1965,7 @@ export default function PublicLandingPage() {
                 activeOpacity={0.94}
                 onPress={() => {
                   if (user) {
-                    if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                    if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
                       router.push('/(partner)/(tabs)' as any);
                     } else {
                       router.push('/(user)/(tabs)' as any);
@@ -2268,10 +2268,10 @@ export default function PublicLandingPage() {
               <TouchableOpacity
                 accessibilityRole="link"
                 // @ts-ignore
-                href={user ? (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/ai-doctor'}
+                href={user ? (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/ai-doctor'}
                 onPress={() => {
                   if (user) {
-                    if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                    if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
                       router.push('/(partner)/(tabs)' as any);
                     } else {
                       router.push('/(user)/(tabs)' as any);
@@ -4163,7 +4163,7 @@ export default function PublicLandingPage() {
                   onPress={() => {
                     setMobileMenuOpen(false);
                     if (user) {
-                      const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+                      const isPartner = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
                       router.push(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
                     } else {
                       if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -4368,7 +4368,7 @@ export default function PublicLandingPage() {
                 onPress={() => {
                   setMobileMenuOpen(false);
                   if (user) {
-                    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+                    const isPartner = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
                     router.push(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
                   } else {
                     if (Platform.OS === 'web' && typeof window !== 'undefined') {

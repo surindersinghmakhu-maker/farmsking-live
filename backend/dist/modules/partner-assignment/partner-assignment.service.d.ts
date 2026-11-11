@@ -6,8 +6,8 @@ export declare class PartnerAssignmentService {
     findMyPartner(user: AuthUser): import(".prisma/client").Prisma.Prisma__PartnerAssignmentClient<({
         businessPartner: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             photoUrl: string | null;
         };
     } & {
@@ -17,14 +17,14 @@ export declare class PartnerAssignmentService {
         businessPartnerId: string;
         startDate: Date;
         endDate: Date | null;
-        customerId: string;
         status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
+        customerId: string;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findMyCustomers(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         customer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             photoUrl: string | null;
         };
     } & {
@@ -34,7 +34,7 @@ export declare class PartnerAssignmentService {
         businessPartnerId: string;
         startDate: Date;
         endDate: Date | null;
-        customerId: string;
         status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
+        customerId: string;
     })[]>;
 }

@@ -7,7 +7,6 @@ export declare class SaleBillsController {
     create(user: AuthUser, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
-        items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -20,6 +19,7 @@ export declare class SaleBillsController {
         partyAddress: string | null;
         isCash: boolean;
         amountReceivedMode: string | null;
+        items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
@@ -30,7 +30,6 @@ export declare class SaleBillsController {
     findAllMine(user: AuthUser): Promise<{
         id: string;
         createdAt: Date;
-        items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -43,6 +42,7 @@ export declare class SaleBillsController {
         partyAddress: string | null;
         isCash: boolean;
         amountReceivedMode: string | null;
+        items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
@@ -57,7 +57,6 @@ export declare class SaleBillsController {
     update(user: AuthUser, id: string, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;
-        items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -70,6 +69,7 @@ export declare class SaleBillsController {
         partyAddress: string | null;
         isCash: boolean;
         amountReceivedMode: string | null;
+        items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
@@ -80,7 +80,6 @@ export declare class SaleBillsController {
     remove(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;
-        items: import("@prisma/client/runtime/library").JsonValue;
         notes: string | null;
         farmerId: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -93,6 +92,7 @@ export declare class SaleBillsController {
         partyAddress: string | null;
         isCash: boolean;
         amountReceivedMode: string | null;
+        items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;

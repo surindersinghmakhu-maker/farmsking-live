@@ -91,7 +91,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "listAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.BUSINESS_PARTNER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.AGENT, client_1.Role.ADVISOR),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -116,7 +116,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "remove", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.AGENT, client_1.Role.ADVISOR),
     (0, common_1.Get)(':id/redemptions'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),

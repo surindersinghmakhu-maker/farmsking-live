@@ -93,7 +93,7 @@ export class AdminUpdateUserDto {
   @IsEnum(WaterType)
   waterType?: WaterType;
 
-  // Business Partner / Advisor payout fields
+  // Agent / Advisor payout fields
   @IsOptional()
   @IsIndianMobile()
   alternativeMobile?: string;

@@ -13,19 +13,19 @@ import { StartGroupCallDto } from './dto/start-group-call.dto';
 export class VoiceCallController {
   constructor(private readonly voiceCallService: VoiceCallService) {}
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.BUSINESS_PARTNER, Role.LABOUR)
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.AGENT, Role.LABOUR)
   @Post('start')
   startGroupCall(@CurrentUser() user: AuthUser, @Body() dto: StartGroupCallDto) {
     return this.voiceCallService.startGroupCall(user, dto);
   }
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.BUSINESS_PARTNER, Role.LABOUR)
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.AGENT, Role.LABOUR)
   @Post(':id/join')
   joinGroupCall(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.voiceCallService.joinGroupCall(user, id);
   }
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.BUSINESS_PARTNER, Role.LABOUR)
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.AGENT, Role.LABOUR)
   @Post(':id/end')
   endGroupCall(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.voiceCallService.endGroupCall(user, id);

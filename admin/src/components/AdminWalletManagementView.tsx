@@ -291,7 +291,7 @@ export function AdminWalletManagementView() {
               </Text>
             </TouchableOpacity>
 
-            {['ALL', 'FARMER', 'TECHNICAL_TRAINER', 'BUSINESS_PARTNER', 'ADVISOR', 'CUSTOMER', 'ADMIN'].map((r) => (
+            {['ALL', 'FARMER', 'TECHNICAL_TRAINER', 'AGENT', 'ADVISOR', 'CUSTOMER', 'ADMIN'].map((r) => (
               <TouchableOpacity
                 key={r}
                 style={[styles.chip, roleFilter === r && !onlyActiveBalance && styles.chipActive]}

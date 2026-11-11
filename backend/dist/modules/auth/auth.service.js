@@ -41,6 +41,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -94,6 +95,7 @@ const wallet_service_1 = require("../wallet/wallet.service");
 const user_session_service_1 = require("./user-session.service");
 const email_service_1 = require("../email/email.service");
 let AuthService = class AuthService {
+    static { AuthService_1 = this; }
     constructor(prisma, jwtService, whatsappBotService, whatsappGroupSyncService, appSettingsService, walletService, userSessionService, emailService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
@@ -114,6 +116,43 @@ let AuthService = class AuthService {
     async sendEmailOtp(email, otpCode) {
         const success = await this.emailService.sendEmailOtp(email, otpCode);
         return { success, message: success ? 'Email OTP sent directly via Gmail SMTP.' : 'Failed to send Email OTP.' };
+    }
+    static { this.PARTNER_PORTAL_ROLES = [
+        client_1.Role.AGENT,
+        client_1.Role.ADVISOR,
+        client_1.Role.TECHNICAL_TRAINER,
+        client_1.Role.SELLER,
+    ]; }
+    static { this.ADMIN_PANEL_ROLES = [
+        client_1.Role.ADMIN,
+        client_1.Role.SUPER_ADMIN,
+    ]; }
+    getActiveUserRoles(user) {
+        const deactivated = new Set(user.deactivatedRoles ?? []);
+        const combined = [user.role, ...(user.roles ?? [])].filter(Boolean);
+        return Array.from(new Set(combined)).filter((r) => !deactivated.has(r));
+    }
+    assertPortalAllowed(user, portal) {
+        if (!portal)
+            return;
+        if (!user) {
+            if (portal === 'PARTNER') {
+                throw new common_1.ForbiddenException('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+            }
+            return;
+        }
+        const activeRoles = this.getActiveUserRoles(user);
+        const isAdminAccount = activeRoles.some((r) => AuthService_1.ADMIN_PANEL_ROLES.includes(r));
+        const isPartnerAccount = activeRoles.some((r) => AuthService_1.PARTNER_PORTAL_ROLES.includes(r));
+        if (isAdminAccount) {
+            throw new common_1.ForbiddenException('Admin and Super Admin accounts cannot sign in here. Please use the Admin Panel.');
+        }
+        if (portal === 'PARTNER' && !isPartnerAccount) {
+            throw new common_1.ForbiddenException('This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.');
+        }
+        if (portal === 'CLIENT' && isPartnerAccount) {
+            throw new common_1.ForbiddenException('This account is registered as an Agent account (Crop Doctor, Agent, Trainer, or Seller). Please switch to the Agent Login section.');
+        }
     }
     async googleLogin(dto) {
         let verifiedEmail = dto.email;
@@ -161,6 +200,7 @@ let AuthService = class AuthService {
             where: { email: cleanEmail, deletedAt: null },
         });
         if (!user) {
+            this.assertPortalAllowed(null, dto.portal);
             const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
             const passwordHash = await argon2.hash(Math.random().toString(36).slice(-10));
             user = await this.prisma.user.create({
@@ -179,23 +219,26 @@ let AuthService = class AuthService {
                 },
             });
         }
-        else if (!user.googleId && dto.googleId) {
-            user = await this.prisma.user.update({
-                where: { id: user.id },
-                data: { googleId: dto.googleId, isEmailVerified: true },
-            });
-        }
-        else if (user.isEmailVerified !== true) {
-            user = await this.prisma.user.update({
-                where: { id: user.id },
-                data: { isEmailVerified: true },
-            });
-        }
-        else if (verifiedPhoto && !user.photoUrl) {
-            user = await this.prisma.user.update({
-                where: { id: user.id },
-                data: { photoUrl: verifiedPhoto },
-            });
+        else {
+            this.assertPortalAllowed(user, dto.portal);
+            if (!user.googleId && dto.googleId) {
+                user = await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: { googleId: dto.googleId, isEmailVerified: true },
+                });
+            }
+            else if (user.isEmailVerified !== true) {
+                user = await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: { isEmailVerified: true },
+                });
+            }
+            else if (verifiedPhoto && !user.photoUrl) {
+                user = await this.prisma.user.update({
+                    where: { id: user.id },
+                    data: { photoUrl: verifiedPhoto },
+                });
+            }
         }
         const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
         const isProfileIncomplete = !user.mobile || user.mobile.startsWith('G_') || !user.village || !user.pincode;
@@ -743,6 +786,9 @@ let AuthService = class AuthService {
                 },
             });
             if (labourWorker) {
+                if (dto.portal === 'PARTNER') {
+                    this.assertPortalAllowed(user ?? { role: client_1.Role.LABOUR, roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER] }, dto.portal);
+                }
                 if (!user) {
                     const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
                     const passwordHash = await argon2.hash(cleanPassword);
@@ -780,6 +826,7 @@ let AuthService = class AuthService {
                         },
                     });
                 }
+                this.assertPortalAllowed(user, dto.portal);
                 const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
                 return this.buildAuthResponse(safeUser);
             }
@@ -855,6 +902,7 @@ let AuthService = class AuthService {
                 },
             });
         }
+        this.assertPortalAllowed(user, dto.portal);
         const { passwordHash: _passwordHash, securityAnswerHash: _securityAnswerHash, ...safeUser } = user;
         return this.buildAuthResponse(safeUser);
     }
@@ -1023,7 +1071,7 @@ let AuthService = class AuthService {
             message: 'Password verified successfully.',
         };
     }
-    async sendLoginOtp(mobile) {
+    async sendLoginOtp(mobile, portal) {
         const rawDigits = mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
         if (cleanMobile.length !== 10) {
@@ -1040,6 +1088,7 @@ let AuthService = class AuthService {
             const minutesLeft = Math.ceil(msLeft / (1000 * 60));
             throw new common_1.UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
         }
+        this.assertPortalAllowed(user, portal);
         const isDev = process.env.NODE_ENV !== 'production';
         const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
         this.loginOtpStore.set(cleanMobile, {
@@ -1069,7 +1118,7 @@ let AuthService = class AuthService {
             universalTestOtp: isDev ? '123456' : undefined,
         };
     }
-    async verifyLoginOtp(mobile, otp) {
+    async verifyLoginOtp(mobile, otp, portal) {
         const rawDigits = mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
         const isDev = process.env.NODE_ENV !== 'production';
@@ -1094,12 +1143,14 @@ let AuthService = class AuthService {
             where: { mobile: cleanMobile, deletedAt: null },
         });
         if (!user) {
+            this.assertPortalAllowed(null, portal);
             return {
                 isNewUser: true,
                 mobile: cleanMobile,
                 message: 'Mobile number verified. Please select your role to proceed.',
             };
         }
+        this.assertPortalAllowed(user, portal);
         if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
             user = await this.prisma.user.update({
                 where: { id: user.id },
@@ -1113,6 +1164,9 @@ let AuthService = class AuthService {
         };
     }
     async completeOtpRegistration(dto) {
+        if (dto.portal === 'PARTNER') {
+            throw new common_1.ForbiddenException('New Agent account registration requires Admin approval. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+        }
         const rawDigits = dto.mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
         if (cleanMobile.length !== 10) {
@@ -1122,6 +1176,7 @@ let AuthService = class AuthService {
             where: { mobile: cleanMobile, deletedAt: null },
         });
         if (existing) {
+            this.assertPortalAllowed(existing, dto.portal);
             const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = existing;
             return {
                 isNewUser: false,
@@ -1177,7 +1232,7 @@ let AuthService = class AuthService {
             ...this.buildAuthResponse(safeUser),
         };
     }
-    async firebaseLogin(idToken) {
+    async firebaseLogin(idToken, portal) {
         if (!idToken)
             throw new common_1.BadRequestException('Firebase ID Token is required.');
         try {
@@ -1190,12 +1245,14 @@ let AuthService = class AuthService {
                 where: { mobile: cleanMobile, deletedAt: null },
             });
             if (!user) {
+                this.assertPortalAllowed(null, portal);
                 return {
                     isNewUser: true,
                     mobile: cleanMobile,
                     message: 'Mobile number verified via Firebase. Please select your role to proceed.',
                 };
             }
+            this.assertPortalAllowed(user, portal);
             if (user.isPermanentlyBlocked) {
                 throw new common_1.UnauthorizedException('🔒 Your account has been permanently blocked. Please contact Admin.');
             }
@@ -1217,7 +1274,9 @@ let AuthService = class AuthService {
             };
         }
         catch (err) {
-            if (err instanceof common_1.UnauthorizedException || err instanceof common_1.BadRequestException) {
+            if (err instanceof common_1.UnauthorizedException ||
+                err instanceof common_1.BadRequestException ||
+                err instanceof common_1.ForbiddenException) {
                 throw err;
             }
             throw new common_1.UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
@@ -1349,7 +1408,7 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService,

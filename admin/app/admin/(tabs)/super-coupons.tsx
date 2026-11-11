@@ -235,7 +235,7 @@ const MAIN_SUB_TABS: {
     value: 'REFERRAL_SETTINGS',
     category: 'COUPONS',
     title: 'Partner Referral Coupon Rates 👥',
-    sub: 'Referral Discount % & Business Partner Share',
+    sub: 'Referral Discount % & Agent Share',
     icon: 'people-outline',
     activeIcon: 'people',
     color: '#e11d48',
@@ -473,7 +473,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                     isLoading={isLoading}
                     kind="PARTNER_REFERRAL"
                     title="Referral Coupons"
-                    helperText="Every Business Partner referral code, with its rate, business partner share, customer discount, and admin margin."
+                    helperText="Every Agent referral code, with its rate, agent share, customer discount, and admin margin."
                     emptyText="No referral coupons issued yet."
                     usedOnly
                   />
@@ -1092,7 +1092,7 @@ function EditPlanMultiDurationPricingModal({
                   {!isAdvisorType ? (
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b' }}>
-                        Business Partner Share ({partnerShareType === 'FIXED' ? '₹' : '%'})
+                        Agent Share ({partnerShareType === 'FIXED' ? '₹' : '%'})
                       </Text>
                       <TextInput
                         style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 6 }]}
@@ -1157,7 +1157,7 @@ function EditPlanMultiDurationPricingModal({
   );
 }
 
-/** Defaults for the auto-issued Business Partner Referral coupon — same tap-to-edit-card style as Plan Setting. */
+/** Defaults for the auto-issued Agent Referral coupon — same tap-to-edit-card style as Plan Setting. */
 function ReferralRateSettingSection({ bare }: { bare?: boolean } = {}) {
   const { data: settings, isLoading } = useCouponSettings();
   const [isEditing, setIsEditing] = useState(false);
@@ -1593,7 +1593,7 @@ function CouponCard({ coupon }: { coupon: Coupon }) {
 
 function CreateCouponModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const createCoupon = useCreateCoupon();
-  const { data: partnersData } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 200 });
+  const { data: partnersData } = useUsersList({ role: 'AGENT', limit: 200 });
   const partners = partnersData?.items ?? [];
 
   const [partnerSearch, setPartnerSearch] = useState('');
@@ -1638,7 +1638,7 @@ function CreateCouponModal({ visible, onClose }: { visible: boolean; onClose: ()
 
   const handleSubmit = async () => {
     if (selectedPartnerIds.length === 0) {
-      setError('Select at least one business partner.');
+      setError('Select at least one agent.');
       return;
     }
     if (!commissionValue || !discountValue || !expiresAt || !usageLimit) {
@@ -1704,7 +1704,7 @@ function CreateCouponModal({ visible, onClose }: { visible: boolean; onClose: ()
             </View>
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Text style={styles.label}>Business Partner</Text>
+              <Text style={styles.label}>Agent</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Search by name, king id or mobile..."
@@ -1900,7 +1900,7 @@ function GenerateCouponSection() {
 /** Quick-issue the Settings-default referral coupon to one partner or every active partner at once. */
 function ReferralCouponGenerateSection() {
   const issueCoupon = useIssuePartnerCoupon();
-  const { data: partnersData } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 200 });
+  const { data: partnersData } = useUsersList({ role: 'AGENT', limit: 200 });
   const partners = partnersData?.items ?? [];
   const [partnerId, setPartnerId] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
@@ -1910,7 +1910,7 @@ function ReferralCouponGenerateSection() {
     setError(null);
     setSuccessMsg(null);
     if (target === 'ONE' && !partnerId) {
-      setError('Pick a business partner first.');
+      setError('Pick a agent first.');
       return;
     }
     tap();
@@ -1919,7 +1919,7 @@ function ReferralCouponGenerateSection() {
       setSuccessMsg(
         target === 'ONE'
           ? `Issued coupon ${res.coupons[0]?.code} to ${partners.find((p) => p.id === partnerId)?.name ?? 'the partner'}.`
-          : `Issued ${res.issuedCount} coupon(s) to every active business partner.`,
+          : `Issued ${res.issuedCount} coupon(s) to every active agent.`,
       );
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not issue coupon(s).');
@@ -1930,10 +1930,10 @@ function ReferralCouponGenerateSection() {
     <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
       <Text style={styles.sectionTitle}>Generate Referral Coupon</Text>
       <Text style={styles.helperText}>
-        Uses the discount %, commission %, min order amount, max discount cap and validity set in Settings. Every account already gets one automatically when it becomes a Business Partner — use this to issue an additional one on demand.
+        Uses the discount %, commission %, min order amount, max discount cap and validity set in Settings. Every account already gets one automatically when it becomes a Agent — use this to issue an additional one on demand.
       </Text>
 
-      <Text style={[styles.label, { marginTop: 6 }]}>Business Partner</Text>
+      <Text style={[styles.label, { marginTop: 6 }]}>Agent</Text>
       <View style={styles.chipRow}>
         {partners.map((p) => (
           <TouchableOpacity
@@ -1944,7 +1944,7 @@ function ReferralCouponGenerateSection() {
             <Text style={[styles.partnerChipText, partnerId === p.id && { color: '#ffffff' }]}>{p.name}</Text>
           </TouchableOpacity>
         ))}
-        {partners.length === 0 ? <Text style={styles.emptyText}>No business partners yet.</Text> : null}
+        {partners.length === 0 ? <Text style={styles.emptyText}>No agents yet.</Text> : null}
       </View>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -2017,7 +2017,7 @@ function SpecialCouponGenerateSection() {
 
 function CreateSpecialCouponModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const createCoupon = useCreateCoupon();
-  const { data: partnersData } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 200 });
+  const { data: partnersData } = useUsersList({ role: 'AGENT', limit: 200 });
   const partners = partnersData?.items ?? [];
 
   const [businessPartnerId, setBusinessPartnerId] = useState('');
@@ -2050,7 +2050,7 @@ function CreateSpecialCouponModal({ visible, onClose }: { visible: boolean; onCl
 
   const handleSubmit = async () => {
     if (!businessPartnerId) {
-      setError('Select a business partner.');
+      setError('Select a agent.');
       return;
     }
     if (!code.trim()) {
@@ -2115,7 +2115,7 @@ function CreateSpecialCouponModal({ visible, onClose }: { visible: boolean; onCl
             </View>
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Text style={styles.label}>Business Partner</Text>
+              <Text style={styles.label}>Agent</Text>
               <View style={styles.chipRow}>
                 {partners.map((p) => (
                   <TouchableOpacity
@@ -2126,7 +2126,7 @@ function CreateSpecialCouponModal({ visible, onClose }: { visible: boolean; onCl
                     <Text style={[styles.partnerChipText, businessPartnerId === p.id && { color: '#ffffff' }]}>{p.name}</Text>
                   </TouchableOpacity>
                 ))}
-                {partners.length === 0 ? <Text style={styles.emptyText}>No business partners yet.</Text> : null}
+                {partners.length === 0 ? <Text style={styles.emptyText}>No agents yet.</Text> : null}
               </View>
 
               <Text style={styles.label}>Coupon Code</Text>
@@ -2326,7 +2326,7 @@ function FarmerPlanCouponBrowseSection({
   );
 }
 
-/** Referral coupons (kind === 'PARTNER_REFERRAL') kept separate from custom-issued partner coupons — same fields per coupon: rate, business partner share, customer discount, and the implied admin margin. */
+/** Referral coupons (kind === 'PARTNER_REFERRAL') kept separate from custom-issued partner coupons — same fields per coupon: rate, agent share, customer discount, and the implied admin margin. */
 /** One coupon-kind's Unused/Used list — reused for Referral, Commission Based, and Special categories. */
 function CouponKindListSection({
   coupons,
@@ -2582,7 +2582,7 @@ function CreateFarmerPlanCouponModal({
   const createCoupon = useCreateFarmerPlanCoupon();
   const { data: advisorsData } = useUsersList({ role: 'ADVISOR', limit: 200 });
   const advisors = advisorsData?.items ?? [];
-  const { data: partnersData } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 200 });
+  const { data: partnersData } = useUsersList({ role: 'AGENT', limit: 200 });
   const partners = partnersData?.items ?? [];
 
   const { data: pricing = [] } = useFarmerPlanPricing();
@@ -2667,7 +2667,7 @@ function CreateFarmerPlanCouponModal({
       return;
     }
     if (lockMode === 'PARTNER' && !assignedBusinessPartnerId) {
-      setError('Pick a business partner to issue this code to.');
+      setError('Pick a agent to issue this code to.');
       return;
     }
     const qty = Number(quantity) || 1;
@@ -2840,7 +2840,7 @@ function CreateFarmerPlanCouponModal({
                 <>
                   <TextInput
                     style={styles.input}
-                    placeholder="Search business partner by name..."
+                    placeholder="Search agent by name..."
                     placeholderTextColor="#94a3b8"
                     value={partnerSearch}
                     onChangeText={setPartnerSearch}
@@ -2863,7 +2863,7 @@ function CreateFarmerPlanCouponModal({
                       Issued to partner: {partners.find((p) => p.id === assignedBusinessPartnerId)?.name} — they earn a commission when a farmer redeems it.
                     </Text>
                   ) : (
-                    <Text style={styles.helperText}>Search and pick a business partner above.</Text>
+                    <Text style={styles.helperText}>Search and pick a agent above.</Text>
                   )}
                 </>
               ) : (

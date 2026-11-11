@@ -40,7 +40,7 @@ let VoiceCallController = class VoiceCallController {
 };
 exports.VoiceCallController = VoiceCallController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.BUSINESS_PARTNER, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.AGENT, client_1.Role.LABOUR),
     (0, common_1.Post)('start'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -49,7 +49,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], VoiceCallController.prototype, "startGroupCall", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.BUSINESS_PARTNER, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.AGENT, client_1.Role.LABOUR),
     (0, common_1.Post)(':id/join'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -58,7 +58,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], VoiceCallController.prototype, "joinGroupCall", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.BUSINESS_PARTNER, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.AGENT, client_1.Role.LABOUR),
     (0, common_1.Post)(':id/end'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),

@@ -663,7 +663,7 @@ export class FarmerPlansService implements OnModuleInit {
 
   /**
    * Prorates the plan's configured price by daysGranted/billingPeriodDays and credits the wallets of
-   * whoever issued/serviced this coupon: the business partner who handed it out (if any), and the
+   * whoever issued/serviced this coupon: the agent who handed it out (if any), and the
    * currently-assigned advisor (for STANDARD/PREMIUM). Whatever's left is the platform's own share —
    * nothing to credit there, it just isn't paid out.
    */
@@ -678,7 +678,7 @@ export class FarmerPlansService implements OnModuleInit {
     const farmer = await this.prisma.user.findUnique({ where: { id: farmerId }, select: { name: true, kingId: true } });
     const farmerLabel = farmer ? `${farmer.name}${farmer.kingId ? ` (ID: ${farmer.kingId})` : ''}` : 'a farmer';
 
-    // 100% Admin rule: Super Admin issued Farmer Plan coupons do NOT pay out to any business partner
+    // 100% Admin rule: Super Admin issued Farmer Plan coupons do NOT pay out to any agent
     const isAdminIssuedFarmerCoupon = coupon.createdByRole === Role.SUPER_ADMIN && (coupon.category === PlanCouponCategory.FARMER_PLAN || !coupon.category);
 
     if (coupon.assignedBusinessPartnerId && !isAdminIssuedFarmerCoupon) {
@@ -1105,7 +1105,7 @@ export class FarmerPlansService implements OnModuleInit {
     }
     const lockTargets = [dto.assignedFarmerId, dto.assignedAdvisorId, dto.assignedBusinessPartnerId].filter(Boolean);
     if (lockTargets.length > 1) {
-      throw new BadRequestException('Lock a coupon to only one of: a farmer, an advisor, or a business partner.');
+      throw new BadRequestException('Lock a coupon to only one of: a farmer, an advisor, or a agent.');
     }
 
     let targetPartnerName = 'Partner';
@@ -1124,9 +1124,9 @@ export class FarmerPlansService implements OnModuleInit {
     }
     if (dto.assignedBusinessPartnerId) {
       const partner = await this.prisma.user.findFirst({
-        where: { id: dto.assignedBusinessPartnerId, roles: { has: Role.BUSINESS_PARTNER }, deletedAt: null },
+        where: { id: dto.assignedBusinessPartnerId, roles: { has: Role.AGENT }, deletedAt: null },
       });
-      if (!partner) throw new NotFoundException('Business partner not found.');
+      if (!partner) throw new NotFoundException('Agent not found.');
       targetPartnerName = partner.name;
     }
 
@@ -1195,7 +1195,7 @@ export class FarmerPlansService implements OnModuleInit {
     return created;
   }
 
-  // ─── Advisor / Business Partner: self-service coupon generation ──────────────────────────────
+  // ─── Advisor / Agent: self-service coupon generation ──────────────────────────────
 
   async generateOwnCoupon(user: AuthUser, dto: GenerateAdvisorCouponDto) {
     if (dto.plan === FarmerSubscriptionPlan.FREE) {
@@ -1218,13 +1218,13 @@ export class FarmerPlansService implements OnModuleInit {
     }
 
     const isAdvisor = activeRoles.includes(Role.ADVISOR) || isDoctor;
-    const isPartnerOnly = activeRoles.includes(Role.BUSINESS_PARTNER) && !isAdvisor;
+    const isPartnerOnly = activeRoles.includes(Role.AGENT) && !isAdvisor;
 
-    // Business Partner restriction: ONLY Lite (PRO) and Pro (SMART) plans allowed
+    // Agent restriction: ONLY Lite (PRO) and Pro (SMART) plans allowed
     if (isPartnerOnly) {
       if (dto.plan === FarmerSubscriptionPlan.SUPER) {
         throw new ForbiddenException(
-          'Business Partners can generate Lite (PRO) and Pro (SMART) plan coupons only. Please upgrade to Advisor or contact Admin for Smart (SUPER) plan coupons.',
+          'Agents can generate Lite (PRO) and Pro (SMART) plan coupons only. Please upgrade to Advisor or contact Admin for Smart (SUPER) plan coupons.',
         );
       }
     }
@@ -1418,7 +1418,7 @@ export class FarmerPlansService implements OnModuleInit {
     });
   }
 
-  /** The business partner's own wallet of plan coupons issued to them, to hand out to farmers — earns a commission on redemption. */
+  /** The agent's own wallet of plan coupons issued to them, to hand out to farmers — earns a commission on redemption. */
   listMineForBusinessPartner(user: AuthUser) {
     return this.prisma.farmerPlanCoupon.findMany({
       where: { assignedBusinessPartnerId: user.id },
@@ -1457,7 +1457,7 @@ export class FarmerPlansService implements OnModuleInit {
     for (const c of coupons) {
       const cost = Number(c.generationCostAmount || 0);
       if (cost > 0) {
-        if (c.createdByRole === Role.BUSINESS_PARTNER) {
+        if (c.createdByRole === Role.AGENT) {
           partnerDebitsCollected += cost;
         } else if (c.createdByRole === Role.ADVISOR) {
           advisorPlatformFeesCollected += cost;
@@ -1566,7 +1566,7 @@ export class FarmerPlansService implements OnModuleInit {
       },
       {
         key: 'partner',
-        title: 'Business Partner User Handbook',
+        title: 'Agent User Handbook',
         fileName: 'BUSINESS_PARTNER_GUIDE.md',
         description: 'Partner coupons, upfront wallet debits, direct farmer assignments',
       },
@@ -1854,7 +1854,7 @@ function getEnglishGuideContent(docKey: string, fallbackPa: string): string {
 3. **Wallet Share**: Earn instant commission (₹150-₹300) per activated farmer!
 `;
     case 'partner':
-      return `# 🤝 Business Partner Master Guide (English Edition)
+      return `# 🤝 Agent Master Guide (English Edition)
 
 1. **Bulk Stock**: Purchase bulk plan coupons at wholesale discount.
 2. **Direct Activation**: Input farmer's King ID (\`FK-100238\`) to instantly activate their plan.
@@ -1865,7 +1865,7 @@ function getEnglishGuideContent(docKey: string, fallbackPa: string): string {
 
 1. **20-Referral Milestone**: Refer 20 farmer friends -> Get 1 Year PRO Plan FREE!
 2. **From Advisor**: Get coupon code directly from your local Farm Advisor.
-3. **From Business Partner**: Get coupon code from fertilizer dealers.
+3. **From Agent**: Get coupon code from fertilizer dealers.
 4. **Super Admin Offer**: Redeem promo codes for 100% discount.
 `;
     default:

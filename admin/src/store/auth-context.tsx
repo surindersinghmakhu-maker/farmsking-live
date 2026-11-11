@@ -60,7 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
         if (token && storedUser) {
           try {
-            setUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            const mapRole = (r: any) => (r === 'BUSINESS_PARTNER' ? 'AGENT' : r);
+            if (parsed?.role) parsed.role = mapRole(parsed.role);
+            if (Array.isArray(parsed?.roles)) parsed.roles = parsed.roles.map(mapRole);
+            if (Array.isArray(parsed?.deactivatedRoles)) parsed.deactivatedRoles = parsed.deactivatedRoles.map(mapRole);
+            setUser(parsed);
           } catch (e) {
             console.warn('Corrupt user session in storage, resetting:', e);
             await SecureStore.deleteItemAsync(TOKEN_KEY);
@@ -75,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Pick up roles/fields granted by an admin (e.g. Business Partner) without requiring re-login:
+  // Pick up roles/fields granted by an admin (e.g. Agent) without requiring re-login:
   // refresh once the session is restored, and again whenever the app returns to the foreground.
   useEffect(() => {
     if (!user) return;

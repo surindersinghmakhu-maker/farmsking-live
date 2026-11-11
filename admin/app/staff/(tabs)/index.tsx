@@ -89,8 +89,8 @@ export default function OperationsDeskIndexScreen() {
           <View style={[styles.launchIconBox, { backgroundColor: '#f59e0b' }]}>
             <Ionicons name="people" size={22} color="#ffffff" />
           </View>
-          <Text style={styles.launchTitle}>Strategic Partners</Text>
-          <Text style={styles.launchSub}>Business partner alliances, payouts & commission tiers</Text>
+          <Text style={styles.launchTitle}>Strategic Agents &amp; Partners</Text>
+          <Text style={styles.launchSub}>Agent alliances, payouts &amp; commission tiers</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

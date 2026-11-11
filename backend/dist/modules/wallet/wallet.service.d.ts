@@ -46,9 +46,9 @@ export declare class WalletService {
         transactions: ({
             relatedUser: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             } | null;
         } & {
             id: string;
@@ -70,9 +70,9 @@ export declare class WalletService {
         transactions: ({
             relatedUser: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             } | null;
         } & {
             id: string;
@@ -108,17 +108,17 @@ export declare class WalletService {
             category: "WELCOME" | "REFERRAL_SIGNUP" | "REFERRAL_PLAN" | "OTHER";
             user: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             };
             relatedUser: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             } | null;
         }[];
     }>;
@@ -146,22 +146,22 @@ export declare class WalletService {
             referralEarnings: number;
             commissionEarnings: number;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
-            upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
-            createdAt: Date;
         }[];
         withdrawals: ({
             businessPartner: {
                 id: string;
-                kingId: string | null;
-                mobile: string;
                 name: string;
                 upiId: string | null;
+                kingId: string | null;
+                mobile: string;
                 bankAccountNumber: string | null;
                 bankIfsc: string | null;
             };
@@ -183,10 +183,10 @@ export declare class WalletService {
         manualTransactions: ({
             user: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             };
         } & {
             id: string;
@@ -202,10 +202,10 @@ export declare class WalletService {
         inAppUsageTransactions: ({
             user: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
-                name: string;
             };
         } & {
             id: string;
@@ -227,9 +227,9 @@ export declare class WalletService {
         transactions: ({
             relatedUser: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             } | null;
         } & {
             id: string;
@@ -251,9 +251,9 @@ export declare class WalletService {
         transactions: ({
             relatedUser: {
                 id: string;
+                name: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             } | null;
         } & {
             id: string;
@@ -305,15 +305,15 @@ export declare class WalletService {
             referralEarnings: number;
             commissionEarnings: number;
             id: string;
+            createdAt: Date;
+            name: string;
+            upiId: string | null;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
-            name: string;
-            upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
-            createdAt: Date;
         }[];
     }>;
 }

@@ -37,10 +37,10 @@ export class CouponsService {
 
   async create(user: AuthUser, dto: CreateCouponDto) {
     const partner = await this.prisma.user.findFirst({
-      where: { id: dto.businessPartnerId, roles: { hasSome: [Role.BUSINESS_PARTNER, Role.ADVISOR] }, deletedAt: null },
+      where: { id: dto.businessPartnerId, roles: { hasSome: [Role.AGENT, Role.ADVISOR] }, deletedAt: null },
     });
     if (!partner) {
-      throw new NotFoundException('Business partner or advisor not found.');
+      throw new NotFoundException('Agent or advisor not found.');
     }
 
     let code: string;
@@ -190,7 +190,7 @@ export class CouponsService {
 
     if (user.role === Role.CUSTOMER) {
       const partner = await this.prisma.user.findFirst({
-        where: { id: coupon.businessPartnerId, roles: { has: Role.BUSINESS_PARTNER }, deletedAt: null },
+        where: { id: coupon.businessPartnerId, roles: { has: Role.AGENT }, deletedAt: null },
       });
       if (partner) {
         await this.prisma.partnerAssignment.upsert({
@@ -237,14 +237,14 @@ export class CouponsService {
     });
   }
 
-  /** Super Admin action: issue a fresh Business-Partner-tier referral coupon to one selected partner, or to every active Business Partner at once. */
+  /** Super Admin action: issue a fresh Business-Partner-tier referral coupon to one selected partner, or to every active Agent at once. */
   async issuePartnerCoupon(caller: AuthUser, dto: IssuePartnerCouponDto) {
     if (dto.businessPartnerId) {
       const partner = await this.prisma.user.findFirst({
-        where: { id: dto.businessPartnerId, roles: { has: Role.BUSINESS_PARTNER }, deletedAt: null },
+        where: { id: dto.businessPartnerId, roles: { has: Role.AGENT }, deletedAt: null },
       });
       if (!partner) {
-        throw new NotFoundException('Business partner not found.');
+        throw new NotFoundException('Agent not found.');
       }
       const coupon = await this.issueOnePartnerCoupon(dto.businessPartnerId, caller.id);
       return { issuedCount: 1, coupons: [coupon] };
@@ -252,7 +252,7 @@ export class CouponsService {
 
     const [partners, settings] = await Promise.all([
       this.prisma.user.findMany({
-        where: { roles: { has: Role.BUSINESS_PARTNER }, deletedAt: null },
+        where: { roles: { has: Role.AGENT }, deletedAt: null },
         select: { id: true },
       }),
       this.prisma.couponSystemSetting.upsert({ where: { id: 'default' }, update: {}, create: { id: 'default' } }),

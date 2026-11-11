@@ -10,13 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateRoleDto = void 0;
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
+const auth_user_util_1 = require("../../../common/utils/auth-user.util");
 class UpdateRoleDto {
 }
 exports.UpdateRoleDto = UpdateRoleDto;
 __decorate([
-    (0, class_validator_1.IsIn)([client_1.Role.BUSINESS_PARTNER]),
+    (0, class_transformer_1.Transform)(({ value }) => (0, auth_user_util_1.normalizeRoleAlias)(value)),
+    (0, class_validator_1.IsIn)([client_1.Role.AGENT]),
     __metadata("design:type", String)
 ], UpdateRoleDto.prototype, "role", void 0);
 //# sourceMappingURL=update-role.dto.js.map

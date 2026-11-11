@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
 
-const PARTNER_ROLES = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'];
+const PARTNER_ROLES = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'];
 
 export default function PartnerLayout() {
   const { user, isLoading } = useAuth();

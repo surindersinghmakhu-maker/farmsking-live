@@ -10,13 +10,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateActiveRolesDto = exports.ASSIGNABLE_CHECKBOX_ROLES = void 0;
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
-exports.ASSIGNABLE_CHECKBOX_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.TECHNICAL_TRAINER, client_1.Role.TRADER];
+const auth_user_util_1 = require("../../../common/utils/auth-user.util");
+exports.ASSIGNABLE_CHECKBOX_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.TECHNICAL_TRAINER, client_1.Role.TRADER];
 class UpdateActiveRolesDto {
 }
 exports.UpdateActiveRolesDto = UpdateActiveRolesDto;
 __decorate([
+    (0, class_transformer_1.Transform)(({ value }) => (Array.isArray(value) ? value.map(auth_user_util_1.normalizeRoleAlias) : value)),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsIn)(exports.ASSIGNABLE_CHECKBOX_ROLES, { each: true }),
     __metadata("design:type", Array)

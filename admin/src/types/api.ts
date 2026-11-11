@@ -3,7 +3,7 @@ export type Role =
   | 'ADVISOR'
   | 'GARDENER'
   | 'CUSTOMER'
-  | 'BUSINESS_PARTNER'
+  | 'AGENT'
   | 'ADMIN'
   | 'SUPER_ADMIN'
   | 'MANAGER'
@@ -145,7 +145,7 @@ export interface AdminUser {
   sprayTankSizeL?: SprayTankSizeL | null;
   soilType?: SoilType | null;
   waterType?: WaterType | null;
-  // Business Partner / Advisor payout profile
+  // Agent / Advisor payout profile
   alternativeMobile?: string | null;
   panNumber?: string | null;
   upiId?: string | null;

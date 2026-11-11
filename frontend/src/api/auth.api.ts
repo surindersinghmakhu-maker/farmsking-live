@@ -26,10 +26,13 @@ export interface RegisterPayload {
   whatsappGroupEnabled?: boolean;
 }
 
+export type LoginPortalMode = 'CLIENT' | 'PARTNER';
+
 export interface LoginPayload {
   mobile: string;
   password: string;
   captchaToken?: string;
+  portal?: LoginPortalMode;
 }
 
 export async function registerFarmer(payload: RegisterPayload): Promise<AuthResponse> {
@@ -79,6 +82,7 @@ export interface GoogleLoginPayload {
   googleId?: string;
   accessToken?: string;
   idToken?: string;
+  portal?: LoginPortalMode;
 }
 
 export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }> {
@@ -106,12 +110,22 @@ export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: str
   return data;
 }
 
-export async function sendLoginOtpApi(mobile: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
-  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string }>('/auth/send-login-otp', { mobile });
+export async function sendLoginOtpApi(
+  mobile: string,
+  portal?: LoginPortalMode,
+): Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>(
+    '/auth/send-login-otp',
+    { mobile, ...(portal ? { portal } : {}) },
+  );
   return data;
 }
 
-export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse & { isNewUser?: boolean; mobile?: string }> {
+export async function verifyLoginOtpApi(payload: {
+  mobile: string;
+  otp: string;
+  portal?: LoginPortalMode;
+}): Promise<AuthResponse & { isNewUser?: boolean; mobile?: string }> {
   const { data } = await apiClient.post<AuthResponse & { isNewUser?: boolean; mobile?: string }>('/auth/verify-login-otp', payload);
   return data;
 }
@@ -120,6 +134,7 @@ export interface CompleteOtpRegistrationPayload {
   mobile: string;
   name?: string;
   role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+  portal?: LoginPortalMode;
 }
 
 export async function completeOtpRegistrationApi(
@@ -130,9 +145,13 @@ export async function completeOtpRegistrationApi(
 }
 
 export async function firebaseLoginApi(
-  idToken: string
+  idToken: string,
+  portal?: LoginPortalMode,
 ): Promise<AuthResponse & { isNewUser?: boolean; mobile?: string; message?: string }> {
-  const { data } = await apiClient.post<AuthResponse & { isNewUser?: boolean; mobile?: string; message?: string }>('/auth/firebase-login', { idToken });
+  const { data } = await apiClient.post<AuthResponse & { isNewUser?: boolean; mobile?: string; message?: string }>(
+    '/auth/firebase-login',
+    { idToken, ...(portal ? { portal } : {}) },
+  );
   return data;
 }
 

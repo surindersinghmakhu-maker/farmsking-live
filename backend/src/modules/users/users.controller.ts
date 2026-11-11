@@ -38,7 +38,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -54,7 +54,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -70,7 +70,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -86,7 +86,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -102,7 +102,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -130,7 +130,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -146,7 +146,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -162,7 +162,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
@@ -185,13 +185,13 @@ export class UsersController {
     return this.usersService.getAdvisorProfileStatus(user);
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Patch('me/partner-profile')
   updateMyPartnerProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdatePartnerProfileDto) {
     return this.usersService.updatePartnerProfile(user, dto);
   }
 
-  @Roles(Role.BUSINESS_PARTNER)
+  @Roles(Role.AGENT)
   @Get('me/partner-profile-status')
   getMyPartnerProfileStatus(@CurrentUser() user: AuthUser) {
     return this.usersService.getPartnerProfileStatus(user);
@@ -205,14 +205,14 @@ export class UsersController {
     return this.usersService.list(query);
   }
 
-  /** Farmer/Advisor/Admin/Business Partner: resolve a user's FarmsKing ID to their account. */
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  /** Farmer/Advisor/Admin/Agent: resolve a user's FarmsKing ID to their account. */
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.AGENT)
   @Get('lookup/:kingId')
   lookupByKingId(@Param('kingId') kingId: string) {
     return this.usersService.lookupByKingId(kingId);
   }
 
-  /** Advisor: type-search active Business Partners by name or king id, e.g. to share a self-generated coupon with one. */
+  /** Advisor: type-search active Agents by name or king id, e.g. to share a self-generated coupon with one. */
   @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('search/business-partners')
   searchBusinessPartners(@Query('q') q?: string) {
@@ -432,7 +432,7 @@ export class UsersController {
     Role.FARMER,
     Role.GARDENER,
     Role.ADVISOR,
-    Role.BUSINESS_PARTNER,
+    Role.AGENT,
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,

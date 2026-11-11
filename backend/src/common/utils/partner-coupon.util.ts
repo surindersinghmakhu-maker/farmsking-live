@@ -4,7 +4,7 @@ import { CouponKind, DiscountValueType, PrismaClient } from '@prisma/client';
 const SINGLETON_ID = 'default';
 const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I — avoids look-alike mixups when read aloud/shared
 
-/** 'R' + 5-character alphanumeric code — the default format for Business Partner referral coupons. */
+/** 'R' + 5-character alphanumeric code — the default format for Agent referral coupons. */
 export function generatePartnerCouponCode(): string {
   const bytes = randomBytes(5);
   let code = 'R';

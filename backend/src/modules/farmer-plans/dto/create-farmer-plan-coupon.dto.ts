@@ -31,7 +31,7 @@ export class CreateFarmerPlanCouponDto {
   @IsUUID()
   assignedAdvisorId?: string;
 
-  /** Optional: issue to a business partner instead — they earn a commission when it's redeemed */
+  /** Optional: issue to a agent instead — they earn a commission when it's redeemed */
   @IsOptional()
   @IsUUID()
   assignedBusinessPartnerId?: string;

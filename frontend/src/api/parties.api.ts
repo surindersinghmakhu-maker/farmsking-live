@@ -92,7 +92,7 @@ export async function clearPartyEntries(id: string): Promise<{ message: string; 
 
 
 export type MandiUnit = 'QUINTAL' | 'BAG_50KG' | 'BAG_35KG' | 'MANN' | 'KG';
-export type PartyRole = 'FARMER' | 'CUSTOMER' | 'SUPPLIER' | 'VENDOR' | 'LABOUR' | 'ARHTIYA' | 'BUSINESS_PARTNER' | 'ADVISOR';
+export type PartyRole = 'FARMER' | 'CUSTOMER' | 'SUPPLIER' | 'VENDOR' | 'LABOUR' | 'ARHTIYA' | 'AGENT' | 'ADVISOR';
 export type PartyType = 'INDIVIDUAL' | 'FIRM';
 
 export interface UnifiedParty {

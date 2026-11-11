@@ -236,7 +236,7 @@ async function main() {
   });
 
   const demoPartnerUser = await upsertDemoUser('9999900008', 'partner123', {
-    role: Role.BUSINESS_PARTNER,
+    role: Role.AGENT,
     name: 'Vikram Malhotra',
     village: 'Ludhiana',
     district: 'Ludhiana',
@@ -430,7 +430,7 @@ async function main() {
     });
   }
 
-  // Link the demo customer to the demo business partner via a coupon redemption record equivalent (direct link, no order needed for testing).
+  // Link the demo customer to the demo agent via a coupon redemption record equivalent (direct link, no order needed for testing).
   const demoPartner = await prisma.user.findUnique({ where: { mobile: '9999900008' } });
   if (demoPartner) {
     await prisma.partnerAssignment.upsert({
@@ -446,8 +446,8 @@ async function main() {
       `  Garden Advisor: 9999900004 / gardadv123\n` +
       `  Farmer:         9999900005 / farmer123 (linked to Farm Advisor)\n` +
       `  Gardener:       9999900006 / gardener123 (linked to Garden Advisor)\n` +
-      `  Customer:       9999900007 / customer123 (linked to Business Partner)\n` +
-      `  Business Partner: 9999900008 / partner123\n` +
+      `  Customer:       9999900007 / customer123 (linked to Agent)\n` +
+      `  Agent: 9999900008 / partner123\n` +
       `  Admin:          9999900009 / admin123\n` +
       `  Super Admin:    ${demoSuperAdminMobile} / 12345678\n` +
       `  Operator:       ${demoOperatorMobile} / operator123`

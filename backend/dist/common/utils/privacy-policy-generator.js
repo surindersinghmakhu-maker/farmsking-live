@@ -53,7 +53,7 @@ exports.DYNAMIC_SYSTEM_MODULES = [
         id: 'coupon_rewards_royalty',
         titleEn: 'Advisor & Partner Reward Program',
         titlePa: 'ਸਲਾਹਕਾਰ ਅਤੇ ਬਿਜ਼ਨਸ ਪਾਰਟਨਰ ਕੂਪਨ ਪ੍ਰੋਗਰਾਮ',
-        purposeEn: 'Calculates cashback, referral commissions, and coupon redemptions for authorized Agri Advisors and Business Partners.',
+        purposeEn: 'Calculates cashback, referral commissions, and coupon redemptions for authorized Agri Advisors and Agents.',
         purposePa: 'ਮਾਨਤਾ ਪ੍ਰਾਪਤ ਸਲਾਹਕਾਰਾਂ ਅਤੇ ਪਾਰਟਨਰਾਂ ਲਈ ਕੈਸ਼ਬੈਕ, ਰੈਫਰਲ ਅਤੇ ਕੂਪਨ ਡਿਸਕਾਊਂਟ ਦਾ ਹਿਸਾਬ ਕਰਨ ਲਈ।',
         dataCollected: ['Coupon Redemption History', 'Royalty Earnings Balance', 'UPI ID for Payouts'],
         isMandatory: false,
@@ -212,7 +212,7 @@ function generateDynamicPrivacyPolicyHtml(baseUrl = 'https://farmsking.in') {
 
     <div class="intro-card">
       <h3>🔒 Commitment to Data Privacy & Google Play Compliance</h3>
-      <p>Welcome to FarmsKing (ਫਾਰਮਜ਼ਕਿੰਗ). We respect your privacy and are fully committed to protecting the personal, location, financial, and agricultural data of our Farmers, Gardeners, Customers, Advisors, Business Partners, and Operators.</p>
+      <p>Welcome to FarmsKing (ਫਾਰਮਜ਼ਕਿੰਗ). We respect your privacy and are fully committed to protecting the personal, location, financial, and agricultural data of our Farmers, Gardeners, Customers, Advisors, Agents, and Operators.</p>
       <p class="pa-text">ਫਾਰਮਜ਼ਕਿੰਗ ਪਲੇਟਫਾਰਮ 'ਤੇ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ। ਅਸੀਂ ਤੁਹਾਡੇ ਨਿੱਜੀ ਡਾਟਾ, ਲੋਕੇਸ਼ਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਰਿਕਾਰਡ ਦੀ ਪੂਰੀ ਸੁਰੱਖਿਆ ਕਰਨ ਲਈ ਵਚਨਬੱਧ ਹਾਂ। ਹੇਠਾਂ ਸਾਡੀ ਨੀਤੀ ਦੀ ਪੂਰੀ ਜਾਣਕਾਰੀ ਦਿੱਤੀ ਗਈ ਹੈ।</p>
 
       <div class="auto-sync-box">

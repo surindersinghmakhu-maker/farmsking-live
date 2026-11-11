@@ -21,13 +21,13 @@ export declare class PlanRenewalController {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         assignedFarmer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;

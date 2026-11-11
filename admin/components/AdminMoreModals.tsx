@@ -102,7 +102,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
 
   const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN') || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || user?.role === 'ADVISOR';
-  const isPartner = userRoles.includes('BUSINESS_PARTNER') || user?.role === 'BUSINESS_PARTNER';
+  const isPartner = userRoles.includes('AGENT') || user?.role === 'AGENT';
 
   const safeRawDocsList = Array.isArray(rawDocsList) ? rawDocsList : [];
   const docsList = safeRawDocsList.filter((doc: any) => {

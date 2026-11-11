@@ -53,7 +53,7 @@ export default function OnboardingScreen() {
   };
 
   const finish = () => {
-    const isPartner = ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
+    const isPartner = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '');
     router.replace(isPartner ? '/(partner)/(tabs)' : '/(user)/(tabs)');
   };
 

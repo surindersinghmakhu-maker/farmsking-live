@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GoogleLoginDto {
@@ -31,4 +31,9 @@ export class GoogleLoginDto {
   @IsOptional()
   @IsString()
   idToken?: string;
+
+  @ApiPropertyOptional({ description: 'Login portal side: CLIENT or PARTNER', enum: ['CLIENT', 'PARTNER'] })
+  @IsOptional()
+  @IsIn(['CLIENT', 'PARTNER'])
+  portal?: 'CLIENT' | 'PARTNER';
 }

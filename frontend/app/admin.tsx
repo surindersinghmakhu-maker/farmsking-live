@@ -105,7 +105,7 @@ export default function AdminWebPortalScreen() {
         <View style={styles.quickBox}>
           <Text style={styles.quickTitle}>Restricted Command Access</Text>
           <Text style={{ fontSize: 12, color: '#94a3b8', lineHeight: 18 }}>
-            Sign in with your assigned Admin, Super Admin, Manager, Operator, or Technical Trainer mobile number and password.
+            Sign in with your assigned Admin, Super Admin, Manager, Operator, Accountant, or Technical Staff mobile number and password.
           </Text>
         </View>
       </View>

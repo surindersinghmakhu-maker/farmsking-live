@@ -63,15 +63,11 @@ function assertPortalAccessMatch(sessionUser: any, portal?: LoginPortalMode) {
   if (!portal || !sessionUser) return;
   const activeRoles = getActiveSessionRoles(sessionUser);
   if (activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r))) {
-    throw new Error('Admin and Staff accounts (Super Admin, Admin, Manager, Operator, Accountant, Technical Trainer) cannot sign in here. Please use the Admin Panel.');
+    throw new Error('Admin Staff accounts (Super Admin, Admin, Manager, Operator, Accountant, Technical Staff) must sign in through the dedicated Admin Portal screen.');
   }
   const partnerUser = isPartnerPortalAccount(sessionUser);
-  const explicitClient = hasExplicitClientAccess(sessionUser);
   if (portal === 'PARTNER' && !partnerUser) {
-    throw new Error('This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.');
-  }
-  if (portal === 'CLIENT' && partnerUser && !explicitClient) {
-    throw new Error('This account is registered as an Agent account (Crop Doctor, Agent, or Seller). Please switch to the Agent Login section.');
+    throw new Error('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support to apply, or switch to User Login.');
   }
 }
 

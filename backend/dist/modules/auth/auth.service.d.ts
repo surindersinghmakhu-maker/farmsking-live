@@ -408,7 +408,7 @@ export declare class AuthService {
         userAgent?: string;
     }): Promise<{
         isNewUser: boolean;
-        mobile: string;
+        mobile: any;
         message: string;
     } | {
         accessToken: string;

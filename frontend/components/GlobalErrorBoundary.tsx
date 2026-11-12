@@ -6,14 +6,21 @@ import { useRouter } from 'expo-router';
 
 export function GlobalErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
   const router = useRouter();
+  const handleRetry = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && error?.message?.includes('insertBefore')) {
+      window.location.reload();
+      return;
+    }
+    retry();
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.iconCircle}>
         <Ionicons name="warning" size={32} color="#dc2626" />
       </View>
-      <Text style={styles.title}>ਓਹੋ! ਕੁਝ ਗਲਤ ਹੋ ਗਿਆ</Text>
-      <Text style={styles.subtitle}>(Oops! Something went wrong)</Text>
+      <Text style={styles.title}>Something went wrong</Text>
+      <Text style={styles.subtitle}>Please reload this screen to continue safely.</Text>
       
       <View style={styles.errorBox}>
         <Text style={styles.errorText} numberOfLines={4}>
@@ -21,14 +28,14 @@ export function GlobalErrorBoundary({ error, retry }: { error: Error; retry: () 
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.retryBtn} onPress={retry} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.retryBtn} onPress={handleRetry} activeOpacity={0.8}>
         <Ionicons name="refresh" size={18} color="#ffffff" />
-        <Text style={styles.retryBtnText}>ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ (Try Again)</Text>
+        <Text style={styles.retryBtnText}>Try Again</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.homeBtn} onPress={() => router.replace('/')} activeOpacity={0.8}>
         <Ionicons name="home-outline" size={18} color="#475569" />
-        <Text style={styles.homeBtnText}>ਹੋਮ ਸਕ੍ਰੀਨ 'ਤੇ ਜਾਓ (Go Home)</Text>
+        <Text style={styles.homeBtnText}>Go Home</Text>
       </TouchableOpacity>
     </View>
   );

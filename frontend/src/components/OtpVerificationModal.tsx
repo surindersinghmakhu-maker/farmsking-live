@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost, clearDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 
 interface OtpVerificationModalProps {
@@ -60,17 +61,10 @@ export function OtpVerificationModal({
     setErrorText(null);
     try {
       if (typeof window !== 'undefined') {
-        const el = document.getElementById('recaptcha-container-otp');
-        if (el) el.innerHTML = '';
-        if ((window as any).recaptchaVerifier) {
-          try {
-            (window as any).recaptchaVerifier.clear();
-          } catch {}
-          (window as any).recaptchaVerifier = null;
-        }
+        const hostEl = getFreshDetachedRecaptchaHost('fk-recaptcha-otp-host', 'recaptchaVerifier');
         (window as any).recaptchaVerifier = new RecaptchaVerifier(
           auth,
-          'recaptcha-container-otp',
+          hostEl,
           { size: 'invisible' }
         );
       }
@@ -82,16 +76,7 @@ export function OtpVerificationModal({
       setConfirmationResult(confirmation);
       setTimer(30);
     } catch (err: any) {
-      if (typeof window !== 'undefined') {
-        const el = document.getElementById('recaptcha-container-otp');
-        if (el) el.innerHTML = '';
-        if ((window as any).recaptchaVerifier) {
-          try {
-            (window as any).recaptchaVerifier.clear();
-          } catch {}
-          (window as any).recaptchaVerifier = null;
-        }
-      }
+      clearDetachedRecaptchaHost('fk-recaptcha-otp-host', 'recaptchaVerifier');
       let msg = 'Failed to send OTP via SMS. Please retry.';
       if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
         msg = 'Verification service refreshed. Please tap Resend to try again.';
@@ -147,19 +132,6 @@ export function OtpVerificationModal({
               <Ionicons name="close" size={22} color="#64748b" />
             </TouchableOpacity>
           </View>
-
-          <View
-            nativeID="recaptcha-container-otp"
-            id="recaptcha-container-otp"
-            style={{
-              position: 'absolute',
-              width: 0,
-              height: 0,
-              opacity: 0,
-              overflow: 'hidden',
-              pointerEvents: 'none',
-            }}
-          />
 
           {isSending ? (
             <View style={{ alignItems: 'center', marginVertical: 20 }}>

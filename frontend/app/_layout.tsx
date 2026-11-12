@@ -112,7 +112,7 @@ function RootNavigation() {
 
       const resolveHomeRoute = (): string => {
         if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) return '/admin';
-        if (loginPortal === 'CLIENT' && hasExplicitClientRole) return '/(user)/(tabs)';
+        if (loginPortal === 'CLIENT') return '/(user)/(tabs)';
         if (loginPortal === 'PARTNER' && hasAnyPartnerPortalAccess) {
           return hasPartnerTabsAccess ? '/(partner)/(tabs)' : '/seller-dashboard';
         }

@@ -21,6 +21,7 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
@@ -89,15 +90,10 @@ export default function LoginScreen() {
   const initRecaptcha = () => {
     if (Platform.OS !== 'web') return;
     try {
-      const container = document.getElementById('recaptcha-container');
-      if (!container) return;
       const existing = (window as any).recaptchaVerifier;
-      if (existing && (window as any).recaptchaContainer === container) return;
-      if (existing) {
-        try { existing.clear(); } catch (e) {}
-        (window as any).recaptchaVerifier = null;
-      }
-      container.innerHTML = '';
+      const existingHost = document.getElementById('fk-admin-recaptcha-login-host');
+      if (existing && existingHost && (window as any).recaptchaContainer === existingHost) return;
+      const container = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-login-host', 'recaptchaVerifier');
       (window as any).recaptchaContainer = container;
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
         size: 'invisible',
@@ -324,8 +320,6 @@ export default function LoginScreen() {
 
             <Text style={styles.title}>Welcome Back! 👋</Text>
             <Text style={styles.subtitle}>Sign in to your premium account</Text>
-
-            <div id="recaptcha-container"></div>
 
             {/* Tabs */}
             <View

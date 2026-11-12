@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Aler
 import { Ionicons } from '@expo/vector-icons';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost, clearDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { deleteMyAccount, requestDeleteMeOtp } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
@@ -84,17 +85,10 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
 
     try {
       if (typeof window !== 'undefined') {
-        const el = document.getElementById('recaptcha-container-delete');
-        if (el) el.innerHTML = '';
-        if ((window as any).recaptchaVerifierDelete) {
-          try {
-            (window as any).recaptchaVerifierDelete.clear();
-          } catch {}
-          (window as any).recaptchaVerifierDelete = null;
-        }
+        const hostEl = getFreshDetachedRecaptchaHost('fk-recaptcha-delete-host', 'recaptchaVerifierDelete');
         (window as any).recaptchaVerifierDelete = new RecaptchaVerifier(
           auth,
-          'recaptcha-container-delete',
+          hostEl,
           { size: 'invisible' }
         );
       }
@@ -109,6 +103,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setConfirmationResult(confirmation);
       setOtpSent(true);
     } catch (err: any) {
+      clearDetachedRecaptchaHost('fk-recaptcha-delete-host', 'recaptchaVerifierDelete');
       // Fallback to server-side WhatsApp/Email OTP if Firebase reCAPTCHA is unavailable
       try {
         const res = await requestDeleteMeOtp(cleanNumber);
@@ -192,20 +187,6 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
             <Text style={styles.title}>Delete Account</Text>
             <Text style={styles.subTitle}>Verify via OTP to permanently delete account.</Text>
           </View>
-
-          {/* Invisible Recaptcha */}
-          <View
-            nativeID="recaptcha-container-delete"
-            id="recaptcha-container-delete"
-            style={{
-              position: 'absolute',
-              width: 0,
-              height: 0,
-              opacity: 0,
-              overflow: 'hidden',
-              pointerEvents: 'none',
-            }}
-          />
 
           <View style={{ gap: 12, width: '100%' }}>
             {!otpSent ? (

@@ -41,13 +41,28 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-type UserGroup = 'ALL' | 'CLIENTS' | 'PARTNERS' | 'ADMINS';
+const ADMIN_STAFF_SET = new Set(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT']);
+const PARTNER_ROLES_SET = new Set(['AGENT', 'ADVISOR', 'SELLER', 'TRADER']);
+
+function getActiveRoleStrings(u: AdminUser): string[] {
+  const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? (u.roles as string[]) : [String(u.role)];
+  const deactivated = new Set((u.deactivatedRoles ?? []) as string[]);
+  return roles.filter((r) => !deactivated.has(r));
+}
+
+function classifyDirectoryBucket(u: AdminUser): 'ADMINS' | 'PARTNERS' | 'CLIENTS' {
+  const active = getActiveRoleStrings(u);
+  if (active.some((r) => ADMIN_STAFF_SET.has(r))) return 'ADMINS';
+  if (active.some((r) => PARTNER_ROLES_SET.has(r))) return 'PARTNERS';
+  return 'CLIENTS';
+}
+
+type UserGroup = 'CLIENTS' | 'PARTNERS' | 'ADMINS';
 
 const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'ALL', label: 'All Users', icon: 'people' },
-  { value: 'CLIENTS', label: 'Farmers & Clients', icon: 'leaf' },
-  { value: 'PARTNERS', label: 'Partners & Doctors', icon: 'briefcase' },
-  { value: 'ADMINS', label: 'Staff & Admins', icon: 'shield-checkmark' },
+  { value: 'ADMINS', label: '1. Admin Staff (Admin Login)', icon: 'shield-checkmark' },
+  { value: 'CLIENTS', label: '2. Clients', icon: 'people' },
+  { value: 'PARTNERS', label: '3. Partners', icon: 'briefcase' },
 ];
 
 type UserFilter =
@@ -57,26 +72,8 @@ type UserFilter =
   | 'CUSTOMER' | 'FARMER' | 'GARDENER' | 'SUPERVISOR' | 'LABOUR';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
-  ALL: [
-    { value: 'ALL', label: 'All Users', icon: 'people-outline' },
-    { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
-    { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
-    { value: 'AGENT', label: 'Agents', icon: 'briefcase-outline' },
-    { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
-    { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
-    { value: 'LABOUR', label: 'Labour Workers', icon: 'body-outline' },
-    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
-    { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
-    { value: 'MANAGER', label: 'Managers', icon: 'briefcase-outline' },
-    { value: 'OPERATOR', label: 'Operators', icon: 'print-outline' },
-    { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
-    { value: 'ACCOUNTANT', label: 'Accountants (CA)', icon: 'calculator-outline' },
-    { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
-    { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
-  ],
   CLIENTS: [
-    { value: 'ALL', label: 'All Clients', icon: 'people-outline' },
+    { value: 'ALL', label: 'All Users (Clients)', icon: 'people-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
     { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
     { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
@@ -85,14 +82,14 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
   ],
   PARTNERS: [
     { value: 'ALL', label: 'All Partners', icon: 'briefcase-outline' },
-    { value: 'AGENT', label: 'Agents', icon: 'briefcase-outline' },
-    { value: 'SELLER', label: 'Store Sellers', icon: 'storefront-outline' },
-    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
+    { value: 'AGENT', label: 'Sales Managers', icon: 'briefcase-outline' },
+    { value: 'SELLER', label: 'Sellers', icon: 'storefront-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
+    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
   ],
   ADMINS: [
-    { value: 'ALL', label: 'All Staff', icon: 'shield-outline' },
+    { value: 'ALL', label: 'All Admin Staff', icon: 'shield-outline' },
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
     { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
     { value: 'MANAGER', label: 'Managers', icon: 'briefcase-outline' },
@@ -121,8 +118,8 @@ export default function SuperUsersScreen() {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
   const parseSafeGroup = (rawGroup?: any): UserGroup => {
-    if (rawGroup === 'ALL' || rawGroup === 'ADMINS' || rawGroup === 'PARTNERS' || rawGroup === 'CLIENTS') return rawGroup;
-    return 'ALL';
+    if (rawGroup === 'ADMINS' || rawGroup === 'PARTNERS' || rawGroup === 'CLIENTS') return rawGroup;
+    return 'ADMINS';
   };
 
   const [group, setGroup] = useState<UserGroup>(() => parseSafeGroup(initialGroup));
@@ -180,21 +177,16 @@ export default function SuperUsersScreen() {
   const deleteUser = useDeleteUser();
 
   const allUsersList = allUsersData?.items ?? [];
-  const totalActiveUsersCount = allUsersList.filter((u) => !u.deletedAt).length;
+  const clientUsersCount = allUsersList.filter((u) => !u.deletedAt && classifyDirectoryBucket(u) === 'CLIENTS').length;
+  const totalActiveNonStaffCount = allUsersList.filter((u) => !u.deletedAt && classifyDirectoryBucket(u) !== 'ADMINS').length;
   const totalDeletedUsersCount = allUsersList.filter((u) => !!u.deletedAt).length;
 
   const getSubCategoryCount = (subFilter: UserFilter): number => {
     return allUsersList.filter((u) => {
       if (statusTab === 'DELETED' ? !u.deletedAt : !!u.deletedAt) return false;
-      const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
-      const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
-      if (subFilter === 'ALL') {
-        if (group === 'ALL') return true;
-        if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR', 'TRADER'].includes(r));
-        if (group === 'PARTNERS') return activeRoles.some((r) => ['AGENT', 'ADVISOR', 'SELLER', 'TRADER'].includes(r));
-        if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'].includes(r));
-        return true;
-      }
+      if (classifyDirectoryBucket(u) !== group) return false;
+      const activeRoles = getActiveRoleStrings(u);
+      if (subFilter === 'ALL') return true;
       if (subFilter === 'SUPER_ADMIN') return activeRoles.includes('SUPER_ADMIN');
       if (subFilter === 'ADMIN') return activeRoles.includes('ADMIN');
       if (subFilter === 'MANAGER') return activeRoles.includes('MANAGER');
@@ -216,38 +208,10 @@ export default function SuperUsersScreen() {
   };
 
   const getGroupCount = (groupKey: UserGroup): number => {
-    if (groupKey === 'ALL') {
-      return statusTab === 'DELETED' ? totalDeletedUsersCount : totalActiveUsersCount;
-    }
-    const filters = FILTERS_BY_GROUP[groupKey] || [];
-    const uniqueUserIds = new Set<string>();
-    filters.forEach((f) => {
-      if (f.value === 'ALL') return;
-      allUsersList.forEach((u) => {
-        if (statusTab === 'DELETED' ? !u.deletedAt : !!u.deletedAt) return;
-        const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
-        const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
-        let matches = false;
-        if (f.value === 'SUPER_ADMIN' && activeRoles.includes('SUPER_ADMIN')) matches = true;
-        if (f.value === 'ADMIN' && activeRoles.includes('ADMIN')) matches = true;
-        if (f.value === 'MANAGER' && activeRoles.includes('MANAGER')) matches = true;
-        if (f.value === 'OPERATOR' && activeRoles.includes('OPERATOR')) matches = true;
-        if (f.value === 'TECHNICAL_TRAINER' && activeRoles.includes('TECHNICAL_TRAINER')) matches = true;
-        if (f.value === 'ACCOUNTANT' && activeRoles.includes('ACCOUNTANT')) matches = true;
-        if (f.value === 'AGENT' && activeRoles.includes('AGENT')) matches = true;
-        if (f.value === 'SELLER' && activeRoles.includes('SELLER')) matches = true;
-        if (f.value === 'TRADER' && activeRoles.includes('TRADER')) matches = true;
-        if (f.value === 'FARM_ADVISOR' && activeRoles.includes('ADVISOR') && u.advisorType !== 'GARDEN') matches = true;
-        if (f.value === 'GARDEN_ADVISOR' && activeRoles.includes('ADVISOR') && u.advisorType === 'GARDEN') matches = true;
-        if (f.value === 'CUSTOMER' && activeRoles.includes('CUSTOMER')) matches = true;
-        if (f.value === 'FARMER' && activeRoles.includes('FARMER')) matches = true;
-        if (f.value === 'GARDENER' && activeRoles.includes('GARDENER')) matches = true;
-        if (f.value === 'SUPERVISOR' && activeRoles.includes('SUPERVISOR')) matches = true;
-        if (f.value === 'LABOUR' && activeRoles.includes('LABOUR')) matches = true;
-        if (matches) uniqueUserIds.add(u.id);
-      });
-    });
-    return uniqueUserIds.size;
+    return allUsersList.filter((u) => {
+      if (statusTab === 'DELETED' ? !u.deletedAt : !!u.deletedAt) return false;
+      return classifyDirectoryBucket(u) === groupKey;
+    }).length;
   };
 
   const [deleteVerificationTarget, setDeleteVerificationTarget] = useState<AdminUser | null>(null);
@@ -269,15 +233,8 @@ export default function SuperUsersScreen() {
   };
 
   const currentRoleRawUsers = (data?.items ?? []).filter((u) => {
-    if (filter === 'ALL') {
-      if (group === 'ALL') return true;
-      const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
-      const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
-      if (group === 'CLIENTS') return activeRoles.some((r) => ['FARMER', 'CUSTOMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
-      if (group === 'PARTNERS') return activeRoles.some((r) => ['AGENT', 'ADVISOR', 'SELLER', 'TRADER'].includes(r));
-      if (group === 'ADMINS') return activeRoles.some((r) => ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'].includes(r));
-      return true;
-    }
+    if (classifyDirectoryBucket(u) !== group) return false;
+    if (filter === 'ALL') return true;
     return filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true;
   });
 
@@ -343,16 +300,30 @@ export default function SuperUsersScreen() {
 
   const telemetryStats = [
     {
-      id: 'ALL',
-      title: 'Total Users',
-      count: totalActiveUsersCount,
-      icon: 'people' as const,
-      color: '#16a34a',
-      isSelected: group === 'ALL' && filter === 'ALL' && statusTab === 'ACTIVE',
+      id: 'STAFF',
+      title: '1. Admin Staff',
+      count: staffCount,
+      icon: 'shield-checkmark' as const,
+      color: '#6366f1',
+      isSelected: group === 'ADMINS' && filter === 'ALL' && statusTab === 'ACTIVE',
       action: () => {
         tap();
         setStatusTab('ACTIVE');
-        setGroup('ALL');
+        setGroup('ADMINS');
+        setFilter('ALL');
+      },
+    },
+    {
+      id: 'CLIENTS',
+      title: '2. Clients',
+      count: clientUsersCount,
+      icon: 'people' as const,
+      color: '#16a34a',
+      isSelected: group === 'CLIENTS' && filter === 'ALL' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('CLIENTS');
         setFilter('ALL');
       },
     },
@@ -362,12 +333,26 @@ export default function SuperUsersScreen() {
       count: farmersCount,
       icon: 'leaf' as const,
       color: '#15803d',
-      isSelected: filter === 'FARMER' && statusTab === 'ACTIVE',
+      isSelected: group === 'CLIENTS' && filter === 'FARMER' && statusTab === 'ACTIVE',
       action: () => {
         tap();
         setStatusTab('ACTIVE');
         setGroup('CLIENTS');
         setFilter('FARMER');
+      },
+    },
+    {
+      id: 'PARTNERS_ALL',
+      title: '3. Partners',
+      count: getGroupCount('PARTNERS'),
+      icon: 'briefcase' as const,
+      color: '#f59e0b',
+      isSelected: group === 'PARTNERS' && filter === 'ALL' && statusTab === 'ACTIVE',
+      action: () => {
+        tap();
+        setStatusTab('ACTIVE');
+        setGroup('PARTNERS');
+        setFilter('ALL');
       },
     },
     {
@@ -385,10 +370,10 @@ export default function SuperUsersScreen() {
       },
     },
     {
-      id: 'PARTNERS',
-      title: 'Partners',
+      id: 'SALES_MANAGERS',
+      title: 'Sales Managers',
       count: partnersCount,
-      icon: 'briefcase' as const,
+      icon: 'ribbon' as const,
       color: '#8b5cf6',
       isSelected: filter === 'AGENT' && statusTab === 'ACTIVE',
       action: () => {
@@ -400,7 +385,7 @@ export default function SuperUsersScreen() {
     },
     {
       id: 'TRADERS',
-      title: 'Store & Traders',
+      title: 'Traders & Buyers',
       count: tradersCount,
       icon: 'storefront' as const,
       color: '#d97706',
@@ -408,22 +393,8 @@ export default function SuperUsersScreen() {
       action: () => {
         tap();
         setStatusTab('ACTIVE');
-        setGroup('CLIENTS');
+        setGroup('PARTNERS');
         setFilter('TRADER');
-      },
-    },
-    {
-      id: 'STAFF',
-      title: 'Staff & Admins',
-      count: staffCount,
-      icon: 'shield-checkmark' as const,
-      color: '#6366f1',
-      isSelected: group === 'ADMINS' && filter === 'ALL' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('ADMINS');
-        setFilter('ALL');
       },
     },
   ];
@@ -439,7 +410,7 @@ export default function SuperUsersScreen() {
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
   const currentFilterLabel = filter === 'ALL'
-    ? (group === 'ALL' ? 'All Users' : group === 'CLIENTS' ? 'All Clients' : group === 'PARTNERS' ? 'All Partners' : 'All Staff')
+    ? (group === 'CLIENTS' ? 'Users (Clients)' : group === 'PARTNERS' ? 'All Partners' : 'Admin Staff')
     : Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
 
   return (
@@ -567,7 +538,7 @@ export default function SuperUsersScreen() {
               >
                 <Ionicons name="checkmark-circle" size={12} color={statusTab === 'ACTIVE' ? '#00ff87' : '#64748b'} />
                 <Text style={[styles.compactStatusText, statusTab === 'ACTIVE' && styles.compactStatusTextActive]}>
-                  Active ({totalActiveUsersCount})
+                  Active ({totalActiveNonStaffCount})
                 </Text>
               </TouchableOpacity>
 
@@ -720,7 +691,7 @@ export default function SuperUsersScreen() {
             style={{ marginTop: 6 }}
             contentContainerStyle={{ gap: 6, alignItems: 'center' }}
           >
-            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.ALL).map((f) => {
+            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.CLIENTS).map((f) => {
               const subCount = getSubCategoryCount(f.value);
               const isActive = filter === f.value;
               return (
@@ -1637,8 +1608,8 @@ const ROLE_LABELS: Record<Role, string> = {
   CUSTOMER: 'Customer',
   FARMER: 'Farmer',
   GARDENER: 'Gardener',
-  ADVISOR: 'Advisor',
-  AGENT: 'Agent',
+  ADVISOR: 'Crop Doctor / Advisor',
+  AGENT: 'Sales Manager',
   ADMIN: 'Admin',
   SUPER_ADMIN: 'Super Admin',
   OPERATOR: 'Operator',
@@ -1858,12 +1829,12 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
       ],
     },
     {
-      title: 'Agents, Sellers & Market',
+      title: 'Partners (Seller, Doctor & Sales Mgr)',
       subtitle: 'Can combine with Farmer / Gardener on one number',
       items: [
         {
           key: 'AGENT',
-          label: 'Agent (Commission)',
+          label: 'Sales Manager',
           isChecked: selected.includes('AGENT'),
           isLocked: isTargetStaff,
           isIncompatible: hasFarmStaffSelected,
@@ -1938,7 +1909,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(56, 189, 248, 0.1)', borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.25)', paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginBottom: 10 }}>
               <Ionicons name="shield-checkmark" size={16} color="#38bdf8" />
               <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#38bdf8', flex: 1, lineHeight: 16 }}>
-                Admin Panel Staff Account ({ROLE_LABELS[target.role] || target.role}): Super Admin, Admin, Manager, Operator, and Technical Trainer are strictly single-role Admin accounts and cannot hold Farmer, Staff, Agent, or Seller roles.
+                Admin Panel Staff Account ({ROLE_LABELS[target.role] || target.role}): Super Admin, Admin, Manager, Operator, Accountant, and Technical Staff are strictly single-role Admin accounts created by Admin and cannot hold Farmer, Partner, Sales Manager, or Seller roles.
               </Text>
             </View>
           ) : null}

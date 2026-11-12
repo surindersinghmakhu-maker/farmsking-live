@@ -3,6 +3,7 @@ import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Aler
 import { Ionicons } from '@expo/vector-icons';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { deleteMyAccount } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
@@ -54,10 +55,11 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
     setIsSendingOtp(true);
     setErrorMsg(null);
     try {
-      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifierDelete) {
+      if (typeof window !== 'undefined') {
+        const hostEl = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-delete-host', 'recaptchaVerifierDelete');
         (window as any).recaptchaVerifierDelete = new RecaptchaVerifier(
           auth,
-          'recaptcha-container-delete',
+          hostEl,
           { size: 'invisible' }
         );
       }
@@ -127,9 +129,6 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
             <Text style={styles.title}>Delete Account</Text>
             <Text style={styles.subTitle}>Verify via OTP to permanently delete account.</Text>
           </View>
-
-          {/* Invisible Recaptcha */}
-          <View id="recaptcha-container-delete" style={{ display: 'none' }} />
 
           <View style={{ gap: 12, width: '100%' }}>
             {!otpSent ? (

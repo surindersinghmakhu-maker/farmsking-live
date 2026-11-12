@@ -17,6 +17,7 @@ import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { firebaseForgotPasswordReset } from '@/src/api/auth.api';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const theme = RoleThemes.FARMER;
@@ -48,15 +49,10 @@ export default function ForgotPasswordScreen() {
   const initRecaptcha = () => {
     if (Platform.OS !== 'web') return;
     try {
-      const container = document.getElementById('recaptcha-container');
-      if (!container) return;
       const existing = (window as any).recaptchaVerifier;
-      if (existing && (window as any).recaptchaContainer === container) return;
-      if (existing) {
-        try { existing.clear(); } catch (e) {}
-        (window as any).recaptchaVerifier = null;
-      }
-      container.innerHTML = '';
+      const existingHost = document.getElementById('fk-admin-recaptcha-forgot-host');
+      if (existing && existingHost && (window as any).recaptchaContainer === existingHost) return;
+      const container = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-forgot-host', 'recaptchaVerifier');
       (window as any).recaptchaContainer = container;
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
         size: 'invisible',
@@ -187,8 +183,6 @@ export default function ForgotPasswordScreen() {
           {step === 'new-password' && 'Enter and confirm your new account password.'}
           {step === 'done' && 'Your password has been updated successfully!'}
         </Text>
-
-        <div id="recaptcha-container"></div>
 
         {/* STEP 1: PHONE */}
         {step === 'phone' && (

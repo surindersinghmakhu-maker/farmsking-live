@@ -131,7 +131,7 @@ function evaluatePortalEligibility(user, portal) {
         if (portal === 'PARTNER') {
             return {
                 allowed: false,
-                reason: 'No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.',
+                reason: 'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support to register, or switch to User Login.',
             };
         }
         return { allowed: true };
@@ -140,21 +140,14 @@ function evaluatePortalEligibility(user, portal) {
     if (activeRoles.some((r) => exports.ADMIN_STAFF_ROLES.includes(r))) {
         return {
             allowed: false,
-            reason: 'Admin and Staff accounts (Super Admin, Admin, Manager, Operator, Technical Trainer) cannot sign in here. Please use the Admin Panel.',
+            reason: 'Admin Staff accounts (Super Admin, Admin, Manager, Accountant, Operator, Technical Staff) must sign in through the dedicated Admin Portal screen.',
         };
     }
     const isPartnerAccount = activeRoles.some((r) => exports.PARTNER_PORTAL_ROLES.includes(r));
-    const hasExplicitClientRole = activeRoles.some((r) => exports.EXPLICIT_CLIENT_ROLES.includes(r));
     if (portal === 'PARTNER' && !isPartnerAccount) {
         return {
             allowed: false,
-            reason: 'This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.',
-        };
-    }
-    if (portal === 'CLIENT' && isPartnerAccount && !hasExplicitClientRole) {
-        return {
-            allowed: false,
-            reason: 'This account is registered as an Agent account (Crop Doctor, Agent, or Seller). Please switch to the Agent Login section.',
+            reason: 'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below, or switch to User Login.',
         };
     }
     return { allowed: true };

@@ -3,11 +3,12 @@ import { type PropsWithChildren } from 'react';
 
 export default function Root({ children }: PropsWithChildren) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no" className="notranslate">
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="google" content="notranslate" />
         {/* Modern High-End Emerald & Slate Scrollbar */}
         <style dangerouslySetInnerHTML={{ __html: `
           html, body {

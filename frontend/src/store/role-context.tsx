@@ -56,9 +56,24 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       if (!finalRoles.includes('CUSTOMER')) {
         finalRoles.push('CUSTOMER');
       }
+      return finalRoles;
+    }
+
+    // Strict portal separation: User Login shows Client roles only; Partner Login shows Partner roles only
+    if (loginPortal === 'CLIENT') {
+      const clientOnly = finalRoles.filter((r) =>
+        ['FARMER', 'GARDENER', 'TRADER', 'SUPERVISOR', 'LABOUR', 'CUSTOMER'].includes(r),
+      );
+      return clientOnly.length > 0 ? clientOnly : ['CUSTOMER'];
+    }
+    if (loginPortal === 'PARTNER') {
+      const partnerOnly = finalRoles.filter((r) =>
+        ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'SELLER'].includes(r),
+      );
+      if (partnerOnly.length > 0) return partnerOnly;
     }
     return finalRoles;
-  }, [user]);
+  }, [user, loginPortal]);
 
   const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER'].some(
     r => user?.role === r || (user?.roles && user.roles.includes(r as Role))

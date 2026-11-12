@@ -1896,7 +1896,7 @@ let AuthService = class AuthService {
     }
     async completeOtpRegistration(dto) {
         if (dto.portal === 'PARTNER') {
-            throw new common_1.ForbiddenException('New Agent account registration requires Admin approval. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+            throw new common_1.ForbiddenException('New Partner registration (Seller, Crop Doctor, Garden Advisor, or Sales Manager) requires Admin approval. Please apply via Partner Signup or switch to User Login.');
         }
         const rawDigits = dto.mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
@@ -1967,61 +1967,57 @@ let AuthService = class AuthService {
     async firebaseLogin(idToken, portal, meta) {
         if (!idToken)
             throw new common_1.BadRequestException('Firebase ID Token is required.');
+        let decodedToken;
         try {
-            const decodedToken = await (0, auth_1.getAuth)().verifyIdToken(idToken);
-            const phone = decodedToken.phone_number;
-            if (!phone)
-                throw new common_1.UnauthorizedException('No phone number attached to this Firebase credential.');
-            const cleanMobile = phone.replace(/\D/g, '').slice(-10);
-            let user = await this.findActiveUserByMobile(cleanMobile);
-            if (!user && portal !== 'PARTNER') {
-                user = await this.ensureLabourWorkerProvisioned(cleanMobile);
-            }
-            if (!user) {
-                await this.assertPortalAccessOrPartnerStatus(cleanMobile, null, portal, true);
-                this.verifiedOtpMobiles.set(cleanMobile, Date.now() + 15 * 60 * 1000);
-                await this.recordVerifiedSignupLead({
-                    mobile: cleanMobile,
-                    sourceChannel: 'FIREBASE_PHONE_OTP',
-                    portal: portal || 'CLIENT',
-                    ipAddress: meta?.ipAddress,
-                    userAgent: meta?.userAgent,
-                });
-                return {
-                    isNewUser: true,
-                    mobile: cleanMobile,
-                    message: 'Mobile number verified via Firebase. Please select your role to proceed.',
-                };
-            }
-            await this.assertPortalAccessOrPartnerStatus(cleanMobile, user, portal, true);
-            if (user.isPermanentlyBlocked) {
-                throw new common_1.UnauthorizedException('Your account has been permanently blocked. Please contact Admin Support.');
-            }
-            if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
-                const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
-                const minutesLeft = Math.ceil(msLeft / (1000 * 60));
-                throw new common_1.UnauthorizedException(`Account is locked for ${minutesLeft} minutes. Please try later.`);
-            }
-            if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null || !user.isPhoneVerified) {
-                user = await this.prisma.user.update({
-                    where: { id: user.id },
-                    data: { failedLoginAttempts: 0, lockoutUntil: null, isPhoneVerified: true },
-                });
-            }
-            const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
-            return {
-                isNewUser: false,
-                ...this.buildAuthResponse(safeUser),
-            };
+            decodedToken = await (0, auth_1.getAuth)().verifyIdToken(idToken);
         }
         catch (err) {
-            if (err instanceof common_1.UnauthorizedException ||
-                err instanceof common_1.BadRequestException ||
-                err instanceof common_1.ForbiddenException) {
-                throw err;
-            }
-            throw new common_1.UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
+            throw new common_1.UnauthorizedException('Invalid Firebase ID Token: ' + (err?.message || 'Verification failed.'));
         }
+        const phone = decodedToken.phone_number;
+        if (!phone)
+            throw new common_1.UnauthorizedException('No phone number attached to this Firebase credential.');
+        const cleanMobile = phone.replace(/\D/g, '').slice(-10);
+        let user = await this.findActiveUserByMobile(cleanMobile);
+        if (!user && portal !== 'PARTNER') {
+            user = await this.ensureLabourWorkerProvisioned(cleanMobile);
+        }
+        if (!user) {
+            await this.assertPortalAccessOrPartnerStatus(cleanMobile, null, portal, true);
+            this.verifiedOtpMobiles.set(cleanMobile, Date.now() + 15 * 60 * 1000);
+            await this.recordVerifiedSignupLead({
+                mobile: cleanMobile,
+                sourceChannel: 'FIREBASE_PHONE_OTP',
+                portal: portal || 'CLIENT',
+                ipAddress: meta?.ipAddress,
+                userAgent: meta?.userAgent,
+            });
+            return {
+                isNewUser: true,
+                mobile: cleanMobile,
+                message: 'Mobile number verified via Firebase. Please select your role to proceed.',
+            };
+        }
+        await this.assertPortalAccessOrPartnerStatus(cleanMobile, user, portal, true);
+        if (user.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('Your account has been permanently blocked. Please contact Admin Support.');
+        }
+        if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+            const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
+            const minutesLeft = Math.ceil(msLeft / (1000 * 60));
+            throw new common_1.UnauthorizedException(`Account is locked for ${minutesLeft} minutes. Please try later.`);
+        }
+        if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null || !user.isPhoneVerified) {
+            user = await this.prisma.user.update({
+                where: { id: user.id },
+                data: { failedLoginAttempts: 0, lockoutUntil: null, isPhoneVerified: true },
+            });
+        }
+        const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+        return {
+            isNewUser: false,
+            ...this.buildAuthResponse(safeUser),
+        };
     }
     buildAuthResponse(user, deviceInfo) {
         const sessionInfo = this.userSessionService.createSession(user.id, deviceInfo);

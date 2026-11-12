@@ -178,7 +178,7 @@ export declare class AuthController {
     }>;
     firebaseLogin(body: FirebaseLoginDto, req: any): Promise<{
         isNewUser: boolean;
-        mobile: string;
+        mobile: any;
         message: string;
     } | {
         accessToken: string;

@@ -21,7 +21,7 @@ export const FARM_STAFF_ROLES: readonly Role[] = [
   Role.LABOUR,
 ];
 
-/** Roles permitted inside the Agent / Partner login tab. */
+/** Roles permitted inside the Partner (Seller, Crop Doctor, Garden Advisor, Sales Manager) login tab. */
 export const PARTNER_PORTAL_ROLES: readonly Role[] = [
   Role.AGENT,
   Role.ADVISOR,
@@ -160,7 +160,7 @@ export function evaluatePortalEligibility(
       return {
         allowed: false,
         reason:
-          'No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.',
+          'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support to register, or switch to User Login.',
       };
     }
     return { allowed: true };
@@ -171,28 +171,21 @@ export function evaluatePortalEligibility(
     return {
       allowed: false,
       reason:
-        'Admin and Staff accounts (Super Admin, Admin, Manager, Operator, Technical Trainer) cannot sign in here. Please use the Admin Panel.',
+        'Admin Staff accounts (Super Admin, Admin, Manager, Accountant, Operator, Technical Staff) must sign in through the dedicated Admin Portal screen.',
     };
   }
 
   const isPartnerAccount = activeRoles.some((r) => PARTNER_PORTAL_ROLES.includes(r));
-  const hasExplicitClientRole = activeRoles.some((r) => EXPLICIT_CLIENT_ROLES.includes(r));
 
   if (portal === 'PARTNER' && !isPartnerAccount) {
     return {
       allowed: false,
       reason:
-        'This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.',
+        'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below, or switch to User Login.',
     };
   }
 
-  if (portal === 'CLIENT' && isPartnerAccount && !hasExplicitClientRole) {
-    return {
-      allowed: false,
-      reason:
-        'This account is registered as an Agent account (Crop Doctor, Agent, or Seller). Please switch to the Agent Login section.',
-    };
-  }
-
+  // Same user signing in through User Login (CLIENT) is always allowed as a Client
+  // (Farmer, Gardener, or Customer/Buyer), while Partner dashboards stay scoped to Partner Login.
   return { allowed: true };
 }

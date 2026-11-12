@@ -109,7 +109,7 @@ export function PartnerApplicationsPanel() {
             Partner Self-Signup Approvals &amp; KYC Verification
           </Text>
           <Text style={[styles.panelSub, { color: subTextColor }]}>
-            Review Agent, Advisor, and Store Seller KYC submissions. Approving links the role to any existing Client King ID or issues a new King ID after Step-Up 2FA verification.
+            Review Sales Manager, Crop Doctor, Garden Advisor, and Seller KYC submissions. Approving links the role to any existing Client King ID or issues a new King ID after Step-Up 2FA verification.
           </Text>
         </View>
 
@@ -211,8 +211,13 @@ export function PartnerApplicationsPanel() {
                         <Text style={[styles.appName, { color: textColor }]}>{app.name}</Text>
                         <View style={[styles.rolePill, { backgroundColor: 'rgba(245, 158, 11, 0.16)', borderColor: '#f59e0b' }]}>
                           <Text style={styles.rolePillText}>
-                            {app.requestedRole}
-                            {app.requestedRole === 'ADVISOR' && app.advisorType ? ` (${app.advisorType})` : ''}
+                            {app.requestedRole === 'AGENT'
+                              ? 'Sales Manager'
+                              : app.requestedRole === 'SELLER'
+                                ? 'Seller'
+                                : app.advisorType === 'GARDEN'
+                                  ? 'Garden Advisor'
+                                  : 'Crop Doctor / Advisor'}
                             {app.requestedRole === 'SELLER' && app.sellerType ? ` (${app.sellerType})` : ''}
                           </Text>
                         </View>

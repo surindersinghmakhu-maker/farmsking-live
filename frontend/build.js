@@ -238,6 +238,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     `;
 
     const metaCacheHeaders = `
+    <meta name="google" content="notranslate" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -558,6 +559,12 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     `;
 
     indexHtml = indexHtml.replace('<div id="root"></div>', `<div id="root"></div>\n${webSplashHtml}`);
+    indexHtml = indexHtml.replace(/<html([^>]*)>/i, (match, attrs) => {
+      let updated = attrs;
+      if (!/\btranslate=/i.test(updated)) updated += ' translate="no"';
+      if (!/\bclass=/i.test(updated)) updated += ' class="notranslate"';
+      return `<html${updated}>`;
+    });
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 

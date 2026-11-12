@@ -1235,7 +1235,6 @@ export default function ProfileScreen() {
 
 
           {/* 📲 Mobile Number OTP Verification Modal */}
-          <View id="recaptcha-container-profile" style={{ display: 'none' }} />
           <Modal
             visible={isOtpModalOpen}
             animationType="fade"

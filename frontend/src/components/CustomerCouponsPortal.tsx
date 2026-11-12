@@ -141,7 +141,7 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
         <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
           <Text style={styles.cardTitle}>Verify Promo Code or Redeem Plan Key</Text>
           <Text style={styles.cardSub}>
-            Enter a FarmsKing store promo code, business partner code, or pre-paid plan pass key:
+            Enter a FarmsKing store promo code, partner invite code, or pre-paid plan pass key:
           </Text>
 
           <View style={styles.inputRow}>
@@ -223,7 +223,7 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
             <Ionicons name="pricetags-outline" size={26} color="#64748b" />
             <Text style={styles.emptyOfferTitle}>No Public Store Campaigns Active Right Now</Text>
             <Text style={styles.emptyOfferSub}>
-              If your advisor or FarmsKing business partner gave you an invite code, enter it above to check your discount and apply it during Agri Store checkout.
+              If your advisor or FarmsKing sales partner gave you an invite code, enter it above to check your discount and apply it during Agri Store checkout.
             </Text>
           </View>
         ) : (

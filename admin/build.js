@@ -210,6 +210,7 @@ try {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <meta name="google" content="notranslate" />
     <link rel="preload" href="/favicon.png?v=7" as="image" />
     <title>FarmsKing - Admin Staff</title>
     <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
@@ -409,6 +410,12 @@ try {
     `;
 
     indexHtml = indexHtml.replace('<div id="root"></div>', `<div id="root"></div>\n${adminSplashHtml}`);
+    indexHtml = indexHtml.replace(/<html([^>]*)>/i, (match, attrs) => {
+      let updated = attrs;
+      if (!/\btranslate=/i.test(updated)) updated += ' translate="no"';
+      if (!/\bclass=/i.test(updated)) updated += ' class="notranslate"';
+      return `<html${updated}>`;
+    });
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 

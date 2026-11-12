@@ -27,6 +27,7 @@ import {
   ConfirmationResult,
 } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { clearDetachedRecaptchaHost, getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useLanguage } from '@/src/store/language-context';
@@ -97,8 +98,8 @@ const PARTNER_BENEFITS: ShowcaseBenefit[] = [
   {
     icon: 'wallet',
     color: '#f472b6',
-    title: 'Agent Wallet & Bank Payouts',
-    desc: 'Track agent earnings & withdraw directly to your bank',
+    title: 'Partner Wallet & Bank Payouts',
+    desc: 'Track partner earnings & withdraw directly to your bank',
   },
 ];
 
@@ -491,7 +492,7 @@ export default function LoginScreen() {
         const otpRes = await sendLoginOtp(cleanNum, activePortal);
         if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
           setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-          setError('No Partner account is active on this number yet. Apply as Agent, Advisor, or Seller below.');
+          setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
           return;
         }
         setOtpSent(true);
@@ -511,24 +512,7 @@ export default function LoginScreen() {
       // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS with Backend Fallback
       try {
         if (typeof window !== 'undefined') {
-          if ((window as any).recaptchaVerifierLogin) {
-            try {
-              (window as any).recaptchaVerifierLogin.clear();
-            } catch {}
-            (window as any).recaptchaVerifierLogin = null;
-          }
-          const oldEl = document.getElementById('recaptcha-container-login');
-          if (oldEl && oldEl.parentNode) {
-            oldEl.parentNode.removeChild(oldEl);
-          }
-          const el = document.createElement('div');
-          el.id = 'recaptcha-container-login';
-          el.style.position = 'fixed';
-          el.style.bottom = '0';
-          el.style.right = '0';
-          el.style.zIndex = '9999';
-          document.body.appendChild(el);
-
+          const el = getFreshDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
           (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
             auth,
             el,
@@ -557,7 +541,8 @@ export default function LoginScreen() {
         try {
           const fallbackRes = await sendLoginOtp(cleanNum, activePortal);
           if (activePortal === 'PARTNER' && fallbackRes?.isNewUser) {
-            setError('No Partner account is registered with these details. Please switch to the Client Login section for Farmer, Gardener, or Buyer accounts.');
+            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
             return;
           }
           setConfirmationResult(null); // Indicates backend OTP verification
@@ -580,16 +565,7 @@ export default function LoginScreen() {
           }
         }
 
-        if (typeof window !== 'undefined') {
-          const el = document.getElementById('recaptcha-container-login');
-          if (el) el.innerHTML = '';
-          if ((window as any).recaptchaVerifierLogin) {
-            try {
-              (window as any).recaptchaVerifierLogin.clear();
-            } catch {}
-            (window as any).recaptchaVerifierLogin = null;
-          }
-        }
+        clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
 
         let msg = 'Failed to send verification code. Please try again.';
         if (err?.code === 'auth/invalid-phone-number') {
@@ -677,7 +653,8 @@ export default function LoginScreen() {
         const res: any = await firebaseLogin(idToken, portalMode);
         if (res?.isNewUser) {
           if (portalMode === 'PARTNER') {
-            setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
           } else {
             setIsNewUserModal(true);
           }
@@ -689,7 +666,8 @@ export default function LoginScreen() {
         const res = await otpLogin({ mobile: cleanNum, otp: code, portal: portalMode });
         if (res?.isNewUser) {
           if (portalMode === 'PARTNER') {
-            setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
           } else {
             setIsNewUserModal(true);
           }
@@ -726,7 +704,7 @@ export default function LoginScreen() {
     setModalError(null);
     if (portalMode === 'PARTNER') {
       setIsNewUserModal(false);
-      setError('New Agent account registration requires Admin approval. Please switch to the User Login section.');
+      setError('New Partner registration (Seller, Crop Doctor, Garden Advisor, or Sales Manager) requires Admin approval. Please apply below or switch to User Login.');
       return;
     }
     const trimmedName = newUserName.trim();
@@ -763,7 +741,7 @@ export default function LoginScreen() {
     const idClean = partnerIdentifier.trim();
     const passClean = partnerPassword.trim();
     if (!idClean) {
-      setError('Please enter your registered Agent Mobile Number or King ID.');
+      setError('Please enter your registered Partner Mobile Number or King ID.');
       return;
     }
     if (!passClean) {
@@ -1049,13 +1027,13 @@ export default function LoginScreen() {
                       { color: portalMode === 'PARTNER' ? '#fbbf24' : '#34d399' },
                     ]}
                   >
-                    {portalMode === 'PARTNER' ? 'AGENT ACCOUNT' : 'FAST OTP LOGIN'}
+                    {portalMode === 'PARTNER' ? 'PARTNER PORTAL' : 'FAST OTP LOGIN'}
                   </Text>
                 </View>
               )}
             </View>
 
-            {/* ── ULTRA-COMPACT & PREMIUM 2-PART SELECTOR: USER VS AGENT (TEXT ONLY) ── */}
+            {/* ── ULTRA-COMPACT & PREMIUM 2-PART SELECTOR: USER VS PARTNER ── */}
             <View style={styles.portalSwitchTray}>
               {/* OPTION 1: USER */}
               <TouchableOpacity
@@ -1084,7 +1062,7 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {/* OPTION 2: AGENT */}
+              {/* OPTION 2: PARTNER */}
               <TouchableOpacity
                 style={[
                   styles.portalPillBtn,
@@ -1099,7 +1077,7 @@ export default function LoginScreen() {
                     portalMode === 'PARTNER' && { color: '#fffbeb' },
                   ]}
                 >
-                  Agent
+                  Partners
                 </Text>
                 <Text
                   style={[
@@ -1107,12 +1085,12 @@ export default function LoginScreen() {
                     portalMode === 'PARTNER' && { color: '#fcd34d' },
                   ]}
                 >
-                  Doctor, Agent &amp; Seller
+                  Seller, Crop Doctor, Garden Advisor &amp; Sales Manager
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* AGENT LOGIN METHOD TOGGLE (Mobile OTP vs King ID & Password) */}
+            {/* PARTNER LOGIN METHOD TOGGLE (Mobile OTP vs King ID & Password) */}
             {portalMode === 'PARTNER' && (
               <View style={styles.partnerMethodBar}>
                 <TouchableOpacity
@@ -1206,6 +1184,20 @@ export default function LoginScreen() {
                       </Text>
                     </TouchableOpacity>
                   ) : null}
+                  {portalMode === 'PARTNER' ? (
+                    <TouchableOpacity
+                      onPress={() => router.push('/contact-us' as any)}
+                      activeOpacity={0.85}
+                      style={[
+                        styles.portalSwitchHintBtn,
+                        { borderColor: 'rgba(56, 189, 248, 0.45)', backgroundColor: 'rgba(56, 189, 248, 0.14)' },
+                      ]}
+                    >
+                      <Text style={[styles.portalSwitchHintText, { color: '#38bdf8' }]}>
+                        Contact FarmsKing Support →
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
                   {((portalMode === 'CLIENT' && (error.includes('Agent Login') || error.includes('Partner Login'))) ||
                     (portalMode === 'PARTNER' && (error.includes('User Login') || error.includes('Client Login') || error.includes('Farmer')))) && (
                     <TouchableOpacity
@@ -1224,7 +1216,7 @@ export default function LoginScreen() {
                           { color: portalMode === 'CLIENT' ? '#fbbf24' : '#34d399' },
                         ]}
                       >
-                        {portalMode === 'CLIENT' ? 'Switch to Agent Login →' : 'Switch to User Login →'}
+                        {portalMode === 'CLIENT' ? 'Switch to Partner Login →' : 'Switch to User Login →'}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -1232,25 +1224,13 @@ export default function LoginScreen() {
               </View>
             ) : null}
 
-            {/* Invisible Firebase reCAPTCHA container for Web Phone Auth */}
-            <View
-              nativeID="recaptcha-container-login"
-              id="recaptcha-container-login"
-              style={{
-                position: 'absolute',
-                width: 0,
-                height: 0,
-                opacity: 0,
-                overflow: 'hidden',
-                pointerEvents: 'none',
-              }}
-            />
+            {/* Partner / User login form continues below */}
 
             {portalMode === 'PARTNER' && partnerAuthMethod === 'PASSWORD' ? (
               /* ── PARTNER KING ID / MOBILE + PASSWORD SIGN IN ── */
               <View style={{ gap: 14 }}>
                 <View>
-                  <Text style={styles.fieldLabel}>Agent King ID or Mobile Number</Text>
+                  <Text style={styles.fieldLabel}>Partner King ID or Mobile Number</Text>
                   <View
                     style={[
                       styles.mobileInputWrap,
@@ -1556,7 +1536,7 @@ export default function LoginScreen() {
                                 portalMode === 'PARTNER' && { color: '#0f172a' },
                               ]}
                             >
-                              {portalMode === 'PARTNER' ? 'Verify & Open Agent Portal' : 'Verify & Open FarmsKing'}
+                              {portalMode === 'PARTNER' ? 'Verify & Open Partner Portal' : 'Verify & Open FarmsKing'}
                             </Text>
                           </View>
                         )}
@@ -1588,7 +1568,7 @@ export default function LoginScreen() {
                     Need a Partner role or Rejected Profile update?
                   </Text>
                   <Text style={styles.partnerApplySub}>
-                    Apply as Agent, Advisor, or Seller. Existing Farmer/Buyer accounts keep their exact same King ID after Admin approval.
+                    Apply as Seller, Crop Doctor / Advisor, Garden Advisor, or Sales Manager. Existing accounts keep their exact same King ID after Admin approval.
                   </Text>
                 </View>
                 <TouchableOpacity

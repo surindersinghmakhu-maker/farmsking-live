@@ -44,34 +44,55 @@ type DocFieldKey =
   | 'gstDocUrl';
 
 const PARTNER_ROLE_CARDS: {
+  id: 'SELLER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'AGENT';
   role: 'AGENT' | 'ADVISOR' | 'SELLER';
+  advisorType?: 'FARM' | 'GARDEN';
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   accent: string;
 }[] = [
   {
-    role: 'AGENT',
-    title: 'Agent / Business Partner',
-    subtitle: 'Refer farmers & buyers, earn commission on plans and orders (TDS Sec 194-H)',
-    icon: 'briefcase',
-    accent: '#f59e0b',
-  },
-  {
-    role: 'ADVISOR',
-    title: 'Crop Doctor / Advisor',
-    subtitle: 'Provide crop advisory, spray schedules & visits (TDS Sec 194-J)',
-    icon: 'medical',
-    accent: '#10b981',
-  },
-  {
+    id: 'SELLER',
     role: 'SELLER',
-    title: 'Marketplace Store Seller',
+    title: 'Seller',
     subtitle: 'Sell certified seeds, agri inputs & farm products (Sec 194-O / GST Sec 52)',
     icon: 'storefront',
     accent: '#38bdf8',
   },
+  {
+    id: 'FARM_ADVISOR',
+    role: 'ADVISOR',
+    advisorType: 'FARM',
+    title: 'Crop Doctor / Advisor',
+    subtitle: 'Provide crop advisory, spray schedules & farm visits (TDS Sec 194-J)',
+    icon: 'medical',
+    accent: '#10b981',
+  },
+  {
+    id: 'GARDEN_ADVISOR',
+    role: 'ADVISOR',
+    advisorType: 'GARDEN',
+    title: 'Garden Advisor',
+    subtitle: 'Guide home gardens, kitchen gardens & nurseries (TDS Sec 194-J)',
+    icon: 'flower',
+    accent: '#ec4899',
+  },
+  {
+    id: 'AGENT',
+    role: 'AGENT',
+    title: 'Sales Manager',
+    subtitle: 'Manage farmer outreach & earn commission on plans and orders (TDS Sec 194-H)',
+    icon: 'briefcase',
+    accent: '#f59e0b',
+  },
 ];
+
+function formatPartnerRoleLabel(role: 'AGENT' | 'ADVISOR' | 'SELLER', advType?: 'FARM' | 'GARDEN' | null) {
+  if (role === 'SELLER') return 'Seller';
+  if (role === 'AGENT') return 'Sales Manager';
+  return advType === 'GARDEN' ? 'Garden Advisor' : 'Crop Doctor / Advisor';
+}
 
 export function PartnerSignupModal({
   visible,
@@ -677,7 +698,7 @@ export function PartnerSignupModal({
                 </View>
                 <Text style={styles.statusTitle}>Application Under Admin Review</Text>
                 <Text style={styles.statusDesc}>
-                  Your application for <Text style={{ color: '#fbbf24', fontFamily: FONT.bold }}>{existingApp.requestedRole}</Text> on mobile <Text style={{ color: '#fff', fontFamily: FONT.bold }}>+91 {existingApp.mobile}</Text> has been received and is awaiting Admin verification.
+                  Your application for <Text style={{ color: '#fbbf24', fontFamily: FONT.bold }}>{formatPartnerRoleLabel(existingApp.requestedRole, existingApp.advisorType)}</Text> on mobile <Text style={{ color: '#fff', fontFamily: FONT.bold }}>+91 {existingApp.mobile}</Text> has been received and is awaiting Admin verification.
                 </Text>
                 <Text style={styles.statusMeta}>
                   You will be able to sign in on the Partner Login tab immediately once an Admin approves your KYC documents.
@@ -709,18 +730,23 @@ export function PartnerSignupModal({
                 <Text style={styles.sectionTitle}>1. Select Partner Role</Text>
                 <View style={{ gap: 8 }}>
                   {PARTNER_ROLE_CARDS.map((card) => {
-                    const selected = requestedRole === card.role;
+                    const selected =
+                      requestedRole === card.role &&
+                      (card.role !== 'ADVISOR' || advisorType === card.advisorType);
                     const alreadyHasRole = existingUser?.activeRoles?.includes(card.role);
                     return (
                       <TouchableOpacity
-                        key={card.role}
+                        key={card.id}
                         style={[
                           styles.roleOption,
                           selected && { borderColor: card.accent, backgroundColor: 'rgba(245, 158, 11, 0.08)' },
                           alreadyHasRole && { opacity: 0.5 },
                         ]}
                         disabled={Boolean(alreadyHasRole)}
-                        onPress={() => setRequestedRole(card.role)}
+                        onPress={() => {
+                          setRequestedRole(card.role);
+                          if (card.advisorType) setAdvisorType(card.advisorType);
+                        }}
                         activeOpacity={0.85}
                       >
                         <View style={[styles.roleIconBox, { backgroundColor: `${card.accent}22` }]}>

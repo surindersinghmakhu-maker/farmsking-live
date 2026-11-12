@@ -65,27 +65,30 @@ describe('Role Policy Matrix & Portal Eligibility', () => {
       expect(evaluatePortalEligibility(dualUser, 'PARTNER').allowed).toBe(true);
     });
 
-    it('blocks pure Agent / Seller / Advisor (with baseline CUSTOMER) from User (CLIENT) login tab', () => {
+    it('allows Seller / Advisor / Sales Manager (AGENT) signing in on User (CLIENT) tab as a Client', () => {
       const pureAgent = { role: Role.AGENT, roles: [Role.CUSTOMER, Role.AGENT], deactivatedRoles: [] };
       const pureSeller = { role: Role.SELLER, roles: [Role.CUSTOMER, Role.SELLER], deactivatedRoles: [] };
       const pureAdvisor = { role: Role.ADVISOR, roles: [Role.CUSTOMER, Role.ADVISOR], deactivatedRoles: [] };
 
-      expect(evaluatePortalEligibility(pureAgent, 'CLIENT').allowed).toBe(false);
+      expect(evaluatePortalEligibility(pureAgent, 'CLIENT').allowed).toBe(true);
       expect(evaluatePortalEligibility(pureAgent, 'PARTNER').allowed).toBe(true);
-      expect(evaluatePortalEligibility(pureSeller, 'CLIENT').allowed).toBe(false);
+      expect(evaluatePortalEligibility(pureSeller, 'CLIENT').allowed).toBe(true);
       expect(evaluatePortalEligibility(pureSeller, 'PARTNER').allowed).toBe(true);
-      expect(evaluatePortalEligibility(pureAdvisor, 'CLIENT').allowed).toBe(false);
+      expect(evaluatePortalEligibility(pureAdvisor, 'CLIENT').allowed).toBe(true);
       expect(evaluatePortalEligibility(pureAdvisor, 'PARTNER').allowed).toBe(true);
     });
 
-    it('blocks pure Farmer, Gardener, Buyer, Supervisor, Labour from Agent (PARTNER) login tab', () => {
+    it('blocks non-partner accounts (Farmer, Buyer, Supervisor, Labour, or unregistered) from Partner login tab', () => {
       const farmer = { role: Role.FARMER, roles: [Role.CUSTOMER, Role.FARMER], deactivatedRoles: [] };
       const buyer = { role: Role.CUSTOMER, roles: [Role.CUSTOMER], deactivatedRoles: [] };
       const supervisor = { role: Role.SUPERVISOR, roles: [Role.SUPERVISOR, Role.CUSTOMER], deactivatedRoles: [] };
       const labour = { role: Role.LABOUR, roles: [Role.LABOUR, Role.CUSTOMER], deactivatedRoles: [] };
 
+      expect(evaluatePortalEligibility(null, 'PARTNER').allowed).toBe(false);
+      expect(evaluatePortalEligibility(null, 'PARTNER').reason).toContain('Not registered as a FarmsKing Partner');
       expect(evaluatePortalEligibility(farmer, 'CLIENT').allowed).toBe(true);
       expect(evaluatePortalEligibility(farmer, 'PARTNER').allowed).toBe(false);
+      expect(evaluatePortalEligibility(farmer, 'PARTNER').reason).toContain('Not registered as a FarmsKing Partner');
       expect(evaluatePortalEligibility(buyer, 'CLIENT').allowed).toBe(true);
       expect(evaluatePortalEligibility(buyer, 'PARTNER').allowed).toBe(false);
       expect(evaluatePortalEligibility(supervisor, 'CLIENT').allowed).toBe(true);

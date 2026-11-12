@@ -73,6 +73,7 @@ const sms_module_1 = require("./modules/sms/sms.module");
 const ai_chat_module_1 = require("./modules/ai-chat/ai-chat.module");
 const iso_controls_module_1 = require("./modules/iso-controls/iso-controls.module");
 const compliance_module_1 = require("./modules/compliance/compliance.module");
+const seo_module_1 = require("./modules/seo/seo.module");
 const prisma_exception_filter_1 = require("./common/filters/prisma-exception.filter");
 const audit_log_interceptor_1 = require("./common/interceptors/audit-log.interceptor");
 const redis_module_1 = require("./modules/redis/redis.module");
@@ -145,6 +146,7 @@ exports.AppModule = AppModule = __decorate([
             sms_module_1.SmsModule,
             ai_chat_module_1.AiChatModule,
             compliance_module_1.ComplianceModule,
+            seo_module_1.SeoModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

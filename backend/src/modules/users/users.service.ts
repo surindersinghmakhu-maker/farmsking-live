@@ -41,6 +41,7 @@ import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import {
   ADMIN_STAFF_ROLES,
   FARM_STAFF_ROLES,
+  PARTNER_PORTAL_ROLES,
   assertRoleCombinationAllowed,
   getActiveRolesList,
   pickBestPrimaryRole,
@@ -3348,7 +3349,16 @@ export class UsersService implements OnModuleInit {
     }
   }
 
-  private async checkAdminCreateMobileAvailability(cleanMobile: string) {
+  private mapAdminCreateRoleKeyToPrismaRole(roleKey: AdminCreateRoleKey): Role {
+    if (roleKey === 'FARM_ADVISOR' || roleKey === 'GARDEN_ADVISOR') return Role.ADVISOR;
+    return roleKey as Role;
+  }
+
+  private async checkAdminCreateMobileAvailability(
+    cleanMobile: string,
+    category?: AdminCreateCategory,
+    targetRoleKey?: AdminCreateRoleKey,
+  ) {
     const existing = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -3358,7 +3368,23 @@ export class UsersService implements OnModuleInit {
         ],
         AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
       },
-      select: { id: true, kingId: true, name: true, role: true, isPermanentlyBlocked: true },
+      select: {
+        id: true,
+        kingId: true,
+        name: true,
+        role: true,
+        roles: true,
+        deactivatedRoles: true,
+        email: true,
+        pincode: true,
+        postOffice: true,
+        village: true,
+        district: true,
+        state: true,
+        farmName: true,
+        photoUrl: true,
+        isPermanentlyBlocked: true,
+      },
     });
 
     if (existing?.isPermanentlyBlocked) {
@@ -3366,11 +3392,83 @@ export class UsersService implements OnModuleInit {
         `Mobile number ${cleanMobile} is permanently blocked by Admin (King ID: ${existing.kingId || existing.id}). Unblock it from Deleted / Blocked Archive first.`,
       );
     }
+
     if (existing) {
-      throw new ConflictException(
-        `An active FarmsKing account already exists on ${cleanMobile} (${existing.name} · King ID: ${existing.kingId || existing.id} · Role: ${existing.role}).`,
-      );
+      const activeRoles = getActiveRolesList(existing);
+
+      if (category === 'STAFF') {
+        const existingStaff = activeRoles.find((r) => ADMIN_STAFF_ROLES.includes(r));
+        if (existingStaff) {
+          throw new ConflictException(
+            `This mobile number already has a Staff role (${existing.name} · ${existingStaff} · King ID: ${existing.kingId || existing.id}). Staff accounts can hold only one Staff role.`,
+          );
+        }
+      } else if (category === 'PARTNERS') {
+        const existingPartnerRoles = activeRoles.filter((r) => PARTNER_PORTAL_ROLES.includes(r) || r === Role.TRADER);
+        if (targetRoleKey) {
+          const targetRole = this.mapAdminCreateRoleKeyToPrismaRole(targetRoleKey);
+          if (activeRoles.includes(targetRole)) {
+            throw new ConflictException(
+              `This account already holds an active ${targetRole} role (${existing.name} · King ID: ${existing.kingId || existing.id}).`,
+            );
+          }
+          assertRoleCombinationAllowed([...activeRoles, targetRole]);
+        } else if (existingPartnerRoles.length > 0) {
+          const canAddAgentOrAdvisor =
+            existingPartnerRoles.length === 1 &&
+            (existingPartnerRoles[0] === Role.ADVISOR || existingPartnerRoles[0] === Role.AGENT);
+          if (!canAddAgentOrAdvisor) {
+            throw new ConflictException(
+              `This mobile number already holds a Partner role (${existingPartnerRoles.join(', ')} · King ID: ${existing.kingId || existing.id}).`,
+            );
+          }
+        }
+      } else if (category === 'CLIENTS') {
+        if (targetRoleKey === 'CUSTOMER' && activeRoles.includes(Role.CUSTOMER)) {
+          throw new ConflictException(
+            `This mobile number already has a Customer account (${existing.name} · King ID: ${existing.kingId || existing.id}).`,
+          );
+        }
+        const clientOpRoles: Role[] = [Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.LABOUR];
+        const existingClientOp = activeRoles.find((r) => clientOpRoles.includes(r));
+        if (existingClientOp && targetRoleKey !== 'CUSTOMER') {
+          throw new ConflictException(
+            `In the Client category, this mobile number already holds ${existingClientOp} (${existing.name} · King ID: ${existing.kingId || existing.id}). Only one Farmer or Gardener role is allowed.`,
+          );
+        }
+        if (targetRoleKey) {
+          const targetRole = this.mapAdminCreateRoleKeyToPrismaRole(targetRoleKey);
+          assertRoleCombinationAllowed([...activeRoles, targetRole]);
+        }
+      } else {
+        // Legacy default when no category specified
+        throw new ConflictException(
+          `An active FarmsKing account already exists on ${cleanMobile} (${existing.name} · King ID: ${existing.kingId || existing.id} · Role: ${existing.role}).`,
+        );
+      }
+
+      return {
+        isExistingUser: true,
+        existingUser: {
+          id: existing.id,
+          kingId: existing.kingId ?? null,
+          name: existing.name,
+          email: existing.email ?? null,
+          pincode: existing.pincode ?? null,
+          postOffice: existing.postOffice ?? null,
+          village: existing.village ?? null,
+          district: existing.district ?? null,
+          state: existing.state ?? null,
+          farmName: existing.farmName ?? null,
+          photoUrl: existing.photoUrl ?? null,
+          activeRoles,
+          roles: existing.roles ?? [existing.role],
+          deactivatedRoles: existing.deactivatedRoles ?? [],
+        },
+      };
     }
+
+    return { isExistingUser: false, existingUser: null };
   }
 
   private assertAdminCreateCategoryAndRole(
@@ -3391,9 +3489,9 @@ export class UsersService implements OnModuleInit {
     }
   }
 
-  async sendAdminCreateOtp(caller: AuthUser, mobile: string) {
+  async sendAdminCreateOtp(caller: AuthUser, mobile: string, category?: AdminCreateCategory) {
     const cleanMobile = this.normalizeAdminCreateMobile(mobile);
-    await this.checkAdminCreateMobileAvailability(cleanMobile);
+    const availability = await this.checkAdminCreateMobileAvailability(cleanMobile, category);
 
     const isDev = process.env.NODE_ENV !== 'production';
     const otpCode = isDev ? '123456' : randomInt(100000, 1000000).toString();
@@ -3418,6 +3516,8 @@ export class UsersService implements OnModuleInit {
       success: true,
       mobile: cleanMobile,
       waSent,
+      isExistingUser: availability.isExistingUser,
+      existingUser: availability.existingUser,
       message: isDev
         ? 'Localhost test mode active. Use verification code: 123456'
         : waSent
@@ -3428,7 +3528,7 @@ export class UsersService implements OnModuleInit {
     };
   }
 
-  async verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string) {
+  async verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string, category?: AdminCreateCategory) {
     const cleanMobile = this.normalizeAdminCreateMobile(mobile);
     const key = `${caller.id}:${cleanMobile}`;
     const stored = this.adminCreateOtpStore.get(key);
@@ -3462,7 +3562,7 @@ export class UsersService implements OnModuleInit {
     }
 
     this.adminCreateOtpStore.delete(key);
-    await this.checkAdminCreateMobileAvailability(cleanMobile);
+    const availability = await this.checkAdminCreateMobileAvailability(cleanMobile, category);
 
     const otpVerificationToken = this.signAdminCreateOtpToken(caller.id, cleanMobile);
     return {
@@ -3470,7 +3570,11 @@ export class UsersService implements OnModuleInit {
       verified: true,
       mobile: cleanMobile,
       otpVerificationToken,
-      message: `Mobile number ${cleanMobile} verified successfully.`,
+      isExistingUser: availability.isExistingUser,
+      existingUser: availability.existingUser,
+      message: availability.isExistingUser
+        ? `Verified! Existing account (${availability.existingUser?.name} · King ID: ${availability.existingUser?.kingId}) found. Profile prefilled to assign ${category || 'new'} role.`
+        : `Mobile number ${cleanMobile} verified successfully.`,
     };
   }
 
@@ -3478,13 +3582,14 @@ export class UsersService implements OnModuleInit {
     this.assertAdminCreateCategoryAndRole(caller, dto.category, dto.role);
     const cleanMobile = this.normalizeAdminCreateMobile(dto.mobile);
     this.verifyAdminCreateOtpToken(dto.otpVerificationToken, caller.id, cleanMobile);
-    await this.checkAdminCreateMobileAvailability(cleanMobile);
+    const availability = await this.checkAdminCreateMobileAvailability(cleanMobile, dto.category, dto.role);
 
     const cleanEmail = dto.email?.trim() ? dto.email.trim().toLowerCase() : null;
     if (cleanEmail) {
       const emailOwner = await this.prisma.user.findFirst({
         where: {
           email: cleanEmail,
+          ...(availability.existingUser ? { id: { not: availability.existingUser.id } } : {}),
           AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
         },
         select: { id: true, isPermanentlyBlocked: true },
@@ -3581,58 +3686,115 @@ export class UsersService implements OnModuleInit {
     const isPasswordRole = dto.category === 'STAFF' || dto.category === 'PARTNERS';
     const plainPassword = customPassword || (isPasswordRole ? generateTempPassword() : randomBytes(24).toString('hex'));
     const passwordHash = await argon2.hash(plainPassword);
-    const kingId = await generateUniqueKingId(this.prisma);
+    const kingId = availability.existingUser?.kingId || (await generateUniqueKingId(this.prisma));
 
     const createdUser = await this.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          kingId,
-          mobile: cleanMobile,
-          passwordHash,
-          name: dto.name.trim(),
-          email: cleanEmail,
-          isPhoneVerified: true,
-          isEmailVerified: Boolean(cleanEmail),
-          pincode: dto.pincode?.trim() || null,
-          postOffice: dto.postOffice?.trim() || null,
-          village: dto.village?.trim() || null,
-          district: dto.district?.trim() || null,
-          state: dto.state?.trim() || null,
-          billPrintingAddress: dto.address?.trim() || null,
-          farmAddress: dto.role === 'FARMER' ? (dto.address?.trim() || null) : null,
-          farmName: dto.role === 'FARMER' ? (dto.farmName?.trim() || null) : null,
-          sprayTankSizeL: dto.role === 'FARMER' ? (dto.sprayTankSizeL ?? null) : null,
-          soilType: dto.role === 'FARMER' ? (dto.soilType ?? null) : null,
-          waterType: dto.role === 'FARMER' ? (dto.waterType ?? null) : null,
-          role: primaryRole,
-          roles: assignedRoles,
-          advisorType,
-          specialization: primaryRole === Role.ADVISOR ? (dto.specialization?.trim() || null) : null,
-          qualification: primaryRole === Role.ADVISOR ? (dto.qualification?.trim() || null) : null,
-          yearsExperience: primaryRole === Role.ADVISOR ? (dto.yearsExperience ?? null) : null,
-          doctorConsultationFee: primaryRole === Role.ADVISOR ? (dto.doctorConsultationFee ?? null) : null,
-          bio: primaryRole === Role.ADVISOR ? (dto.bio?.trim() || null) : null,
-          panNumber: dto.panNumber?.trim().toUpperCase() || null,
-          upiId: dto.upiId?.trim() || null,
-          alternativeMobile: dto.alternativeMobile?.trim() || null,
-          bankAccountHolderName: dto.bankAccountHolderName?.trim() || null,
-          bankAccountNumber: dto.bankAccountNumber?.trim() || null,
-          bankIfsc: dto.bankIfsc?.trim().toUpperCase() || null,
-          employerFarmerId,
-          supervisorPermissions:
-            primaryRole === Role.SUPERVISOR
-              ? [
-                  SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
-                  SupervisorPermission.MANAGE_LABOUR_EXPENSES,
-                  SupervisorPermission.CROP_DOCTOR_CHAT,
-                  SupervisorPermission.MANAGE_HARVEST_SALES,
-                ]
-              : [],
-          termsAcceptedAt: new Date(),
-          privacyPolicyVersion: '2026.11',
-        },
-        select: SAFE_USER_SELECT,
-      });
+      let user: any;
+      if (availability.isExistingUser && availability.existingUser) {
+        const nextRoles = Array.from(new Set([...(availability.existingUser.roles ?? []), ...assignedRoles]));
+        assertRoleCombinationAllowed(nextRoles);
+        const nextDeactivated = (availability.existingUser.deactivatedRoles ?? []).filter((r) => !assignedRoles.includes(r));
+        const nextPrimaryRole = pickBestPrimaryRole(nextRoles);
+
+        user = await tx.user.update({
+          where: { id: availability.existingUser.id },
+          data: {
+            kingId,
+            name: dto.name.trim(),
+            ...(cleanEmail ? { email: cleanEmail, isEmailVerified: true } : {}),
+            ...(dto.pincode?.trim() ? { pincode: dto.pincode.trim() } : {}),
+            ...(dto.postOffice?.trim() ? { postOffice: dto.postOffice.trim() } : {}),
+            ...(dto.village?.trim() ? { village: dto.village.trim() } : {}),
+            ...(dto.district?.trim() ? { district: dto.district.trim() } : {}),
+            ...(dto.state?.trim() ? { state: dto.state.trim() } : {}),
+            ...(dto.address?.trim() ? { billPrintingAddress: dto.address.trim() } : {}),
+            ...(dto.role === 'FARMER' && dto.address?.trim() ? { farmAddress: dto.address.trim() } : {}),
+            ...(dto.role === 'FARMER' && dto.farmName?.trim() ? { farmName: dto.farmName.trim() } : {}),
+            ...(dto.role === 'FARMER' && dto.sprayTankSizeL ? { sprayTankSizeL: dto.sprayTankSizeL } : {}),
+            ...(dto.role === 'FARMER' && dto.soilType ? { soilType: dto.soilType } : {}),
+            ...(dto.role === 'FARMER' && dto.waterType ? { waterType: dto.waterType } : {}),
+            role: nextPrimaryRole,
+            roles: nextRoles,
+            deactivatedRoles: nextDeactivated,
+            ...(advisorType ? { advisorType } : {}),
+            ...(primaryRole === Role.ADVISOR && dto.specialization?.trim() ? { specialization: dto.specialization.trim() } : {}),
+            ...(primaryRole === Role.ADVISOR && dto.qualification?.trim() ? { qualification: dto.qualification.trim() } : {}),
+            ...(primaryRole === Role.ADVISOR && dto.yearsExperience !== undefined ? { yearsExperience: dto.yearsExperience } : {}),
+            ...(primaryRole === Role.ADVISOR && dto.doctorConsultationFee !== undefined ? { doctorConsultationFee: dto.doctorConsultationFee } : {}),
+            ...(primaryRole === Role.ADVISOR && dto.bio?.trim() ? { bio: dto.bio.trim() } : {}),
+            ...(dto.panNumber?.trim() ? { panNumber: dto.panNumber.trim().toUpperCase() } : {}),
+            ...(dto.upiId?.trim() ? { upiId: dto.upiId.trim() } : {}),
+            ...(dto.alternativeMobile?.trim() ? { alternativeMobile: dto.alternativeMobile.trim() } : {}),
+            ...(dto.bankAccountHolderName?.trim() ? { bankAccountHolderName: dto.bankAccountHolderName.trim() } : {}),
+            ...(dto.bankAccountNumber?.trim() ? { bankAccountNumber: dto.bankAccountNumber.trim() } : {}),
+            ...(dto.bankIfsc?.trim() ? { bankIfsc: dto.bankIfsc.trim().toUpperCase() } : {}),
+            ...(employerFarmerId ? { employerFarmerId } : {}),
+            ...(primaryRole === Role.SUPERVISOR
+              ? {
+                  supervisorPermissions: [
+                    SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+                    SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+                    SupervisorPermission.CROP_DOCTOR_CHAT,
+                    SupervisorPermission.MANAGE_HARVEST_SALES,
+                  ],
+                }
+              : {}),
+            ...(isPasswordRole || customPassword ? { passwordHash } : {}),
+            isPhoneVerified: true,
+          },
+          select: SAFE_USER_SELECT,
+        });
+      } else {
+        user = await tx.user.create({
+          data: {
+            kingId,
+            mobile: cleanMobile,
+            passwordHash,
+            name: dto.name.trim(),
+            email: cleanEmail,
+            isPhoneVerified: true,
+            isEmailVerified: Boolean(cleanEmail),
+            pincode: dto.pincode?.trim() || null,
+            postOffice: dto.postOffice?.trim() || null,
+            village: dto.village?.trim() || null,
+            district: dto.district?.trim() || null,
+            state: dto.state?.trim() || null,
+            billPrintingAddress: dto.address?.trim() || null,
+            farmAddress: dto.role === 'FARMER' ? (dto.address?.trim() || null) : null,
+            farmName: dto.role === 'FARMER' ? (dto.farmName?.trim() || null) : null,
+            sprayTankSizeL: dto.role === 'FARMER' ? (dto.sprayTankSizeL ?? null) : null,
+            soilType: dto.role === 'FARMER' ? (dto.soilType ?? null) : null,
+            waterType: dto.role === 'FARMER' ? (dto.waterType ?? null) : null,
+            role: primaryRole,
+            roles: assignedRoles,
+            advisorType,
+            specialization: primaryRole === Role.ADVISOR ? (dto.specialization?.trim() || null) : null,
+            qualification: primaryRole === Role.ADVISOR ? (dto.qualification?.trim() || null) : null,
+            yearsExperience: primaryRole === Role.ADVISOR ? (dto.yearsExperience ?? null) : null,
+            doctorConsultationFee: primaryRole === Role.ADVISOR ? (dto.doctorConsultationFee ?? null) : null,
+            bio: primaryRole === Role.ADVISOR ? (dto.bio?.trim() || null) : null,
+            panNumber: dto.panNumber?.trim().toUpperCase() || null,
+            upiId: dto.upiId?.trim() || null,
+            alternativeMobile: dto.alternativeMobile?.trim() || null,
+            bankAccountHolderName: dto.bankAccountHolderName?.trim() || null,
+            bankAccountNumber: dto.bankAccountNumber?.trim() || null,
+            bankIfsc: dto.bankIfsc?.trim().toUpperCase() || null,
+            employerFarmerId,
+            supervisorPermissions:
+              primaryRole === Role.SUPERVISOR
+                ? [
+                    SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+                    SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+                    SupervisorPermission.CROP_DOCTOR_CHAT,
+                    SupervisorPermission.MANAGE_HARVEST_SALES,
+                  ]
+                : [],
+            termsAcceptedAt: new Date(),
+            privacyPolicyVersion: '2026.11',
+          },
+          select: SAFE_USER_SELECT,
+        });
+      }
 
       if (primaryRole === Role.FARMER) {
         await tx.farmerPlan.upsert({

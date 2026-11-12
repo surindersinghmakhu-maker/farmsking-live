@@ -15,6 +15,7 @@ import { AppSettingsService } from './modules/app-settings/app-settings.service'
 import { AuthService } from './modules/auth/auth.service';
 import { UserSessionService } from './modules/auth/user-session.service';
 import { UsersService } from './modules/users/users.service';
+import { evaluatePortalEligibility, validateRoleCombination } from './common/utils/role-policy.util';
 
 describe('Partner Self-Signup, Server OTP & Mandatory Step-Up 2FA Security Suite', () => {
   describe('AppSettingsService Mandatory Step-Up 2FA', () => {
@@ -1016,6 +1017,12 @@ describe('Partner Self-Signup, Server OTP & Mandatory Step-Up 2FA Security Suite
             usersMap.set(created.id, created);
             return created;
           }),
+          update: jest.fn(async ({ where, data }: any) => {
+            const existing = usersMap.get(where.id);
+            const updated = { ...existing, ...data };
+            usersMap.set(where.id, updated);
+            return updated;
+          }),
         },
         farmerPlan: {
           upsert: jest.fn(async ({ where }: any) => {
@@ -1131,6 +1138,138 @@ describe('Partner Self-Signup, Server OTP & Mandatory Step-Up 2FA Security Suite
       });
       expect(staffRes.user.role).toBe(Role.OPERATOR);
       expect(staffRes.tempPassword).toBeTruthy();
+    });
+
+    it('supports creating all 3 categories (Client + Partner + Staff) on the same mobile & King ID while enforcing single-role limits per category', async () => {
+      // 1. Validate category role combination rules
+      expect(validateRoleCombination([Role.CUSTOMER, Role.FARMER, Role.SELLER, Role.OPERATOR]).valid).toBe(true);
+      expect(validateRoleCombination([Role.CUSTOMER, Role.FARMER, Role.ADVISOR, Role.AGENT, Role.ADMIN]).valid).toBe(true);
+      // Staff gets only ONE staff role
+      expect(validateRoleCombination([Role.ADMIN, Role.OPERATOR]).valid).toBe(false);
+      // Client gets only ONE of Farmer or Gardener
+      expect(validateRoleCombination([Role.CUSTOMER, Role.FARMER, Role.GARDENER]).valid).toBe(false);
+      // Partner allows Advisor + Agent, disallows Seller + Advisor
+      expect(validateRoleCombination([Role.ADVISOR, Role.AGENT]).valid).toBe(true);
+      expect(validateRoleCombination([Role.SELLER, Role.ADVISOR]).valid).toBe(false);
+
+      // 2. Same user (King ID preserved) holds Client -> Partner -> Staff on SAME mobile 9876501010
+      const usersMap = new Map<string, any>();
+      const stores: any[] = [];
+      const prismaMock: any = {
+        user: {
+          findFirst: jest.fn(async ({ where }: any) => {
+            if (where?.email) return null;
+            const orList = where?.OR || [];
+            for (const u of usersMap.values()) {
+              for (const cond of orList) {
+                if (cond.mobile && u.mobile === cond.mobile) return { ...u };
+              }
+            }
+            return null;
+          }),
+          findUnique: jest.fn(async ({ where }: any) => {
+            if (where?.kingId) {
+              for (const u of usersMap.values()) if (u.kingId === where.kingId) return u;
+            }
+            return null;
+          }),
+          create: jest.fn(async ({ data }: any) => {
+            const created = { id: `u-multi-${usersMap.size + 1}`, ...data, createdAt: new Date(), deletedAt: null };
+            usersMap.set(created.id, created);
+            return created;
+          }),
+          update: jest.fn(async ({ where, data }: any) => {
+            const cur = usersMap.get(where.id);
+            const next = { ...cur, ...data };
+            usersMap.set(where.id, next);
+            return next;
+          }),
+        },
+        farmerPlan: { upsert: jest.fn().mockResolvedValue({}) },
+        gardenerPlan: { upsert: jest.fn().mockResolvedValue({}) },
+        sellerStore: { create: jest.fn(async ({ data }: any) => { stores.push(data); return data; }) },
+        verifiedSignupLead: { findUnique: jest.fn().mockResolvedValue(null), update: jest.fn() },
+        isoAuditLog: { create: jest.fn().mockResolvedValue({}) },
+        couponSystemSetting: {
+          upsert: jest.fn().mockResolvedValue({
+            inviteCouponCommissionPercent: 5,
+            inviteCouponDiscountPercent: 5,
+            inviteCouponValidityDays: 90,
+            inviteCouponUsageLimit: 100,
+          }),
+        },
+        coupon: { findFirst: jest.fn().mockResolvedValue(null), findUnique: jest.fn().mockResolvedValue(null), create: jest.fn().mockResolvedValue({ code: 'FK01' }) },
+      };
+      prismaMock.$transaction = jest.fn(async (cb: any) => cb(prismaMock));
+
+      const usersService = new UsersService(
+        prismaMock,
+        { ensureWelcomeBonus: jest.fn().mockResolvedValue({}) } as any,
+        { autoAddNewUser: jest.fn().mockResolvedValue({}) } as any,
+        { create: jest.fn().mockResolvedValue({}) } as any,
+        undefined,
+        { sendOtpMessage: jest.fn().mockResolvedValue({ success: true }), sendDirectTextMessage: jest.fn().mockResolvedValue({}) } as any,
+      );
+      const adminCaller: any = { id: 'super-1', name: 'Super Admin', role: Role.SUPER_ADMIN, roles: [Role.SUPER_ADMIN] };
+
+      // A) Create in CLIENTS (Farmer)
+      const otp1 = await usersService.sendAdminCreateOtp(adminCaller, '9876501010', 'CLIENTS');
+      const v1 = await usersService.verifyAdminCreateOtp(adminCaller, '9876501010', otp1.devOtp!, 'CLIENTS');
+      const res1 = await usersService.adminCreateUser(adminCaller, {
+        otpVerificationToken: v1.otpVerificationToken,
+        category: 'CLIENTS',
+        role: 'FARMER',
+        mobile: '9876501010',
+        name: 'Harjot Singh',
+        village: 'Khadur Sahib',
+      });
+      const sharedKingId = res1.user.kingId;
+
+      // Trying to add GARDENER in same CLIENTS category fails ("already holds FARMER")
+      await expect(usersService.sendAdminCreateOtp(adminCaller, '9876501010', 'CLIENTS')).rejects.toThrow(ConflictException);
+
+      // B) Add PARTNERS (SELLER) on SAME mobile -> pre-fills Harjot Singh, requires firm storeName, preserves King ID!
+      const otp2 = await usersService.sendAdminCreateOtp(adminCaller, '9876501010', 'PARTNERS');
+      const v2 = await usersService.verifyAdminCreateOtp(adminCaller, '9876501010', otp2.devOtp!, 'PARTNERS');
+      expect(v2.isExistingUser).toBe(true);
+      expect(v2.existingUser?.name).toBe('Harjot Singh');
+      expect(v2.existingUser?.kingId).toBe(sharedKingId);
+
+      const res2 = await usersService.adminCreateUser(adminCaller, {
+        otpVerificationToken: v2.otpVerificationToken,
+        category: 'PARTNERS',
+        role: 'SELLER',
+        mobile: '9876501010',
+        name: 'Harjot Singh Gill', // Editable owner name
+        storeName: 'Gill Agri Seeds Firm',
+      });
+      expect(res2.user.kingId).toBe(sharedKingId);
+      expect(res2.user.roles).toContain(Role.FARMER);
+      expect(res2.user.roles).toContain(Role.SELLER);
+      expect(stores[0].storeName).toBe('Gill Agri Seeds Firm');
+      expect(stores[0].legalName).toBe('Harjot Singh Gill');
+
+      // C) Add STAFF (OPERATOR) on SAME mobile -> preserves King ID!
+      const otp3 = await usersService.sendAdminCreateOtp(adminCaller, '9876501010', 'STAFF');
+      const v3 = await usersService.verifyAdminCreateOtp(adminCaller, '9876501010', otp3.devOtp!, 'STAFF');
+      expect(v3.existingUser?.kingId).toBe(sharedKingId);
+
+      const res3 = await usersService.adminCreateUser(adminCaller, {
+        otpVerificationToken: v3.otpVerificationToken,
+        category: 'STAFF',
+        role: 'OPERATOR',
+        mobile: '9876501010',
+        name: 'Harjot Singh Gill',
+      });
+      expect(res3.user.kingId).toBe(sharedKingId);
+      expect(res3.user.roles).toEqual(expect.arrayContaining([Role.CUSTOMER, Role.FARMER, Role.SELLER, Role.OPERATOR]));
+
+      // Second Staff role (ACCOUNTANT) on same mobile is blocked!
+      await expect(usersService.sendAdminCreateOtp(adminCaller, '9876501010', 'STAFF')).rejects.toThrow(ConflictException);
+
+      // D) Portal login check: allowed in both CLIENT and PARTNER portals for this multi-category user
+      expect(evaluatePortalEligibility(res3.user, 'CLIENT').allowed).toBe(true);
+      expect(evaluatePortalEligibility(res3.user, 'PARTNER').allowed).toBe(true);
     });
   });
 });

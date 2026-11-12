@@ -3,6 +3,9 @@ export declare const ADMIN_STAFF_ROLES: readonly Role[];
 export declare const FARM_STAFF_ROLES: readonly Role[];
 export declare const PARTNER_PORTAL_ROLES: readonly Role[];
 export declare const EXPLICIT_CLIENT_ROLES: readonly Role[];
+export declare const STAFF_CATEGORY_ROLES: readonly Role[];
+export declare const PARTNER_CATEGORY_ROLES: readonly Role[];
+export declare const CLIENT_CATEGORY_ROLES: readonly Role[];
 export declare function getActiveRolesList(user: {
     role: Role;
     roles?: Role[] | null;

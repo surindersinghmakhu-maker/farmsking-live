@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EXPLICIT_CLIENT_ROLES = exports.PARTNER_PORTAL_ROLES = exports.FARM_STAFF_ROLES = exports.ADMIN_STAFF_ROLES = void 0;
+exports.CLIENT_CATEGORY_ROLES = exports.PARTNER_CATEGORY_ROLES = exports.STAFF_CATEGORY_ROLES = exports.EXPLICIT_CLIENT_ROLES = exports.PARTNER_PORTAL_ROLES = exports.FARM_STAFF_ROLES = exports.ADMIN_STAFF_ROLES = void 0;
 exports.getActiveRolesList = getActiveRolesList;
 exports.validateRoleCombination = validateRoleCombination;
 exports.assertRoleCombinationAllowed = assertRoleCombinationAllowed;
@@ -60,6 +60,9 @@ const PRIMARY_ROLE_PRIORITY = [
     client_1.Role.SELLER,
     client_1.Role.CUSTOMER,
 ];
+exports.STAFF_CATEGORY_ROLES = exports.ADMIN_STAFF_ROLES;
+exports.PARTNER_CATEGORY_ROLES = [client_1.Role.AGENT, client_1.Role.ADVISOR, client_1.Role.SELLER, client_1.Role.TRADER];
+exports.CLIENT_CATEGORY_ROLES = [client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
 function getActiveRolesList(user) {
     const deactivated = new Set(user.deactivatedRoles ?? []);
     const combined = [user.role, ...(user.roles ?? [])].filter(Boolean);
@@ -67,45 +70,41 @@ function getActiveRolesList(user) {
 }
 function validateRoleCombination(roles) {
     const unique = Array.from(new Set(roles));
-    const adminMatches = unique.filter((r) => exports.ADMIN_STAFF_ROLES.includes(r));
-    if (adminMatches.length > 1) {
+    const staffMatches = unique.filter((r) => exports.ADMIN_STAFF_ROLES.includes(r));
+    if (staffMatches.length > 1) {
         return {
             valid: false,
-            error: 'Admin Panel staff roles (Super Admin, Admin, Manager, Accountant, Operator, Technical Trainer) are single-role only and cannot be combined.',
+            error: 'Staff accounts can hold only one Staff role (Admin, Manager, Operator, Technical Staff, or Accountant).',
         };
-    }
-    if (adminMatches.length === 1) {
-        const nonBaseline = unique.filter((r) => r !== client_1.Role.CUSTOMER && !exports.ADMIN_STAFF_ROLES.includes(r));
-        if (nonBaseline.length > 0) {
-            return {
-                valid: false,
-                error: 'Admin Panel staff accounts cannot hold Farmer, Gardener, Supervisor, Labour, Agent, Seller, Advisor, or Trader roles.',
-            };
-        }
-        return { valid: true };
     }
     if (unique.includes(client_1.Role.FARMER) && unique.includes(client_1.Role.GARDENER)) {
         return {
             valid: false,
-            error: 'An account cannot be both Farmer and Gardener at the same time.',
+            error: 'In the Client category, an account can hold only one role: Farmer OR Gardener.',
         };
     }
     const farmStaffMatches = unique.filter((r) => exports.FARM_STAFF_ROLES.includes(r));
-    if (farmStaffMatches.length > 0) {
-        if (farmStaffMatches.length > 1) {
-            return {
-                valid: false,
-                error: 'An account cannot hold both Supervisor and Labour Worker roles.',
-            };
-        }
-        const staffRole = farmStaffMatches[0];
-        const otherOperational = unique.filter((r) => r !== staffRole && r !== client_1.Role.CUSTOMER && OPERATIONAL_NON_CUSTOMER_ROLES.includes(r));
-        if (otherOperational.length > 0) {
-            return {
-                valid: false,
-                error: 'Farm Staff accounts (Supervisor and Labour Worker) are single-role only and cannot combine with Farmer, Gardener, Agent, Seller, Advisor, or Trader roles.',
-            };
-        }
+    if (farmStaffMatches.length > 1) {
+        return {
+            valid: false,
+            error: 'An account cannot hold both Supervisor and Labour Worker roles.',
+        };
+    }
+    if ((unique.includes(client_1.Role.FARMER) || unique.includes(client_1.Role.GARDENER)) && farmStaffMatches.length > 0) {
+        return {
+            valid: false,
+            error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Farmer or Gardener on the same account.',
+        };
+    }
+    const partnerMatches = unique.filter((r) => exports.PARTNER_CATEGORY_ROLES.includes(r));
+    const isAdvisorAndAgentOnly = partnerMatches.length === 2 &&
+        partnerMatches.includes(client_1.Role.ADVISOR) &&
+        partnerMatches.includes(client_1.Role.AGENT);
+    if (partnerMatches.length > 1 && !isAdvisorAndAgentOnly) {
+        return {
+            valid: false,
+            error: 'In the Partner category, only Advisor (Crop Doctor / Garden Advisor) and Sales Manager (Agent) can combine on the same account. Seller and Trader accounts are dedicated.',
+        };
     }
     return { valid: true };
 }
@@ -137,18 +136,26 @@ function evaluatePortalEligibility(user, portal) {
         return { allowed: true };
     }
     const activeRoles = getActiveRolesList(user);
-    if (activeRoles.some((r) => exports.ADMIN_STAFF_ROLES.includes(r))) {
-        return {
-            allowed: false,
-            reason: 'Admin Staff accounts (Super Admin, Admin, Manager, Accountant, Operator, Technical Staff) must sign in through the dedicated Admin Portal screen.',
-        };
+    if (portal === 'CLIENT') {
+        const clientRolesList = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TRADER];
+        const hasClientRole = activeRoles.some((r) => clientRolesList.includes(r));
+        if (!hasClientRole) {
+            return {
+                allowed: false,
+                reason: 'This account has no active Client role. Please sign in through Partner Login or the Admin Portal.',
+            };
+        }
+        return { allowed: true };
     }
-    const isPartnerAccount = activeRoles.some((r) => exports.PARTNER_PORTAL_ROLES.includes(r));
-    if (portal === 'PARTNER' && !isPartnerAccount) {
-        return {
-            allowed: false,
-            reason: 'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below, or switch to User Login.',
-        };
+    if (portal === 'PARTNER') {
+        const hasPartnerRole = activeRoles.some((r) => exports.PARTNER_PORTAL_ROLES.includes(r));
+        if (!hasPartnerRole) {
+            return {
+                allowed: false,
+                reason: 'Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below, or switch to User Login.',
+            };
+        }
+        return { allowed: true };
     }
     return { allowed: true };
 }

@@ -1,35 +1,119 @@
 # FarmsKing - Smart Agriculture & Crop Intelligence Platform
 
-> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (CIN: U01100PB2026PTC063294, ROC Chandigarh), governed by its Board of Directors and certified executive management team, supported by certified agronomists, software engineers, and progressive farmers across India.
+> FarmsKing (https://farmsking.in | https://farmsking.com) is India's leading Smart Farming and Agricultural Intelligence Platform, operated by **FARMSKING TECHNOLOGIES PRIVATE LIMITED** (CIN: U01100PB2026PTC063294, ROC Chandigarh). Governed by its Board of Directors and certified executive management team, supported by certified agronomists, software engineers, and progressive farmers across India.
 
-## Corporate Governance & Administration
-- **Statutory Administration**: Governed by the Board of Directors under the Companies Act, 2013 and ROC Chandigarh.
-- **Central Agronomy Operations**: Directing nationwide agronomic validation, mandi networks, and field quality assurance.
-- **Technical Support & Systems Engineering**: Managing 24/7 cloud reliability, IoT telemetry, and platform infrastructure.
-- **Specialist Agronomy Advisory**: Certified FarmsKing Agronomist Panel, soil scientists, and commercial floriculture experts.
-
-## Corporate Offices
-- **Statutory Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India.
+## Corporate Identity & Statutory Governance
+- **Legal Entity**: FARMSKING TECHNOLOGIES PRIVATE LIMITED
+- **Corporate Identity Number (CIN)**: U01100PB2026PTC063294
+- **Registrar of Companies**: ROC Chandigarh, Punjab
+- **Standards & Certifications**: Adheres to strict institutional ISO 9001 (Quality Management) and ISO 27001 (Data Security) standards with ICAR-calibrated agronomic protocols.
+- **Registered Office**: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India.
 - **Corporate Headquarters & Operational Office**: Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India.
 - **Helpline**: 95776-22000 (Monday – Saturday • 10:00 AM – 5:00 PM IST)
 - **Official Emails**: support@farmsking.in / farmskingindia@gmail.com / grievance@farmsking.in
+- **Official Motto**: "Farming Easy, Farming Smart"
 
-## Core Mission & Philosophy
-- **Farming Easy, Farming Smart**: Making advanced agricultural AI and satellite telemetry effortless, accessible, and highly profitable for Indian farmers.
-- **Practical Problem Solving**: Built to resolve real-time crop disease detection (<820ms), APMC market price discovery, and soil degradation issues.
-- **100% Genuine Organic Inputs**: Guaranteed zero fake products, delivering microbial vermicompost, marigold farming blueprints, and bio-nutrients.
-- **Strict Scope Boundaries**: Zero sales of hardware or physical machinery, zero equipment rentals, and zero machinery manufacturing. 100% dedicated to digital software, AI diagnostics, live mandi rates, and organic bio-inputs.
+---
 
-## Platform Capabilities & Offerings
-- **AI Crop Doctor**: Real-time multimodal computer vision leaf disease pathology and ICAR-calibrated spray recommendations.
-- **Live Mandi Intelligence**: Daily wholesale arrivals and price trends across 50+ crops and major APMC markets nationwide.
-- **Satellite Telemetry**: 6-constellation satellite remote sensing (Sentinel-2, ISRO Bhuvan) providing NDVI crop health and moisture index.
-- **Digital Bahi-Khata (Account King)**: Transparent digital ledger and farm accounting for cultivators.
-- **Upcoming Live Plants Delivery (Garden King)**: Doorstep delivery of healthy live nursery plants, herbs, and ornamental flora.
+## Complete User Feature & Access Directory (All Platform Capabilities)
 
-## Key Links
-- Web App Platform: https://farmsking.in
-- About FarmsKing: https://farmsking.in/about-farmsking.html
-- Corporate Compliance: https://farmsking.in/compliance
-- Contact Support: https://farmsking.in/contact-us
-- Kisan Crop Intelligence Engine: https://farmsking.in/kisan-crop-intelligence-engine.html
+Every feature in FarmsKing is built for instant, transparent access to solve real farming, gardening, and agribusiness challenges:
+
+### 1. AI Crop Doctor & Multimodal Leaf Disease Scanner
+- **Direct Access URL**: https://farmsking.in/ai-doctor (also at https://farmsking.in/crop-disease-scanner)
+- **Target Users**: Farmers, Gardeners, Agronomists
+- **Capability**: Instant computer-vision leaf disease detection in under 820 milliseconds. Diagnoses fungal blights, bacterial spots, viruses, and nutrient deficiencies.
+- **Output**: Dual recommendations—100% biological/organic remedies and exact ICAR-calibrated chemical spray dosages.
+- **Trust Guarantee**: Benchmarked against ICAR protocols; prevents crop losses and stops chemical overuse.
+
+### 2. Live APMC Mandi Rates & Wholesale Intelligence
+- **Direct Access URL**: https://farmsking.in/
+- **Target Users**: Farmers, Traders, Buyers, Agribusinesses
+- **Capability**: Real-time wholesale arrivals, minimum, maximum, and modal market rates across 50+ crops.
+- **Coverage**: Major Punjab mandis (Khanna, Makhu, Goindwal Sahib, Tarn Taran, Jalandhar, Ludhiana, etc.) and nationwide APMC trading yards.
+- **Benefit**: Ensures farmers know the true wholesale market value before selling their harvest.
+
+### 3. Precision Spray Dosage Calculator
+- **Direct Access URL**: https://farmsking.in/dose
+- **Target Users**: Farmers, Sprayers, Farm Supervisors
+- **Capability**: Calculates exact pesticide, fungicide, herbicide, and bio-spray quantities per acre, per pump, and per water tank volume.
+- **Benefit**: Eliminates guesswork, cuts unnecessary chemical expenses, and protects crop foliage from spray burns.
+
+### 4. Kisan Crop Intelligence & Agronomy Engine
+- **Direct Access URL**: https://farmsking.in/crop-intelligence (also at https://farmsking.in/kisan-crop-intelligence-engine.html)
+- **Target Users**: Farmers, Agronomists, Technical Field Staff
+- **Capability**: Multi-stage crop advisory, hyper-local weather alerts, sowing window guidelines, and pest outbreak advisories.
+
+### 5. Punjab Kheti Advisory (Punjab Agriculture Guide)
+- **Direct Access URL**: https://farmsking.in/punjab-kheti-advisory.html
+- **Target Users**: Punjab Farmers, Extension Workers
+- **Capability**: Dedicated stage-by-stage agronomic advisories for Wheat (ਕਣਕ), Paddy/Basmati (ਝੋਨਾ), Mustard (ਸਰ੍ਹੋਂ), Potato (ਆਲੂ), Cotton (ਨਰਮਾ), and Seasonal Vegetables.
+
+### 6. Reverse Sowing Engine & Harvest Window Planner
+- **Direct Access URL**: https://farmsking.in/reverse-sowing-engine.html
+- **Target Users**: Progressive Farmers, Commercial Growers
+- **Capability**: Reverse-calculates the ideal sowing date based on expected target harvest dates, peak mandi pricing windows, and local temperature curves.
+
+### 7. Certified Agri Store (100% Genuine Organic Inputs)
+- **Direct Access URL**: https://farmsking.in/shop
+- **Target Users**: Farmers, Gardeners, Retail Buyers
+- **Capability**: Verified online marketplace for lab-tested organic bio-fertilizers, microbial vermicompost, cold-pressed neem oils, and certified high-yield seeds.
+- **Trust Guarantee**: 100% Zero Fake Products guarantee; direct dispatch from verified manufacturers and certified sellers.
+
+### 8. Real-Time Order Tracking Desk
+- **Direct Access URL**: https://farmsking.in/order-tracking
+- **Target Users**: Customers, Farmers, Sellers
+- **Capability**: Live tracking of input deliveries with shipping partners, courier tracking links, and instant GST tax invoice download.
+
+### 9. Satellite Remote Sensing & Plot Telemetry
+- **Direct Access URL**: https://farmsking.in/you (accessible in User Login)
+- **Target Users**: Farmers, Estate Managers
+- **Capability**: 6-Constellation satellite imagery (Sentinel-2, ISRO Bhuvan) providing NDVI (crop vigor/greenness) and NDWI (moisture stress) heatmaps.
+
+### 10. Urban & Terrace Gardening Portal (Garden King)
+- **Direct Access URL**: https://farmsking.in/topic/Gardening
+- **Target Users**: Terrace Gardeners, Home Plant Lovers, Balcony Growers
+- **Capability**: Potting soil advisory, organic vermicompost dosages, flowering stimulants, and specialized Garden Advisor chats.
+
+### 11. Digital Bahi-Khata Farm Accounting (Account King)
+- **Direct Access URL**: https://farmsking.in/you
+- **Target Users**: Cultivators, Farm Managers
+- **Capability**: Simplified double-entry digital farm ledger. Records seed, fertilizer, diesel, labor, and machine costs, matched against harvest mandi sales to display net profit per acre.
+
+### 12. Verified Seller Store & Payouts Console
+- **Direct Access URL**: https://farmsking.in/seller-dashboard (Payouts: https://farmsking.in/seller-payouts)
+- **Target Users**: Registered Agri Sellers & Input Dealers
+- **Capability**: Inventory management, order dispatch, and automated bank settlements under Section 194-O / GST regulations.
+
+### 13. Crop Doctor & Advisor Consultation Portal
+- **Direct Access URL**: https://farmsking.in/login?portal=partner (Advisory: https://farmsking.in/kisan-doctor-advisory.html)
+- **Target Users**: Certified Agronomists, Soil Scientists
+- **Capability**: Review farmer leaf scans, manage adopted farm plots, and prescribe ICAR-calibrated spray treatments.
+
+### 14. Sales Manager (Agent) Outreach & Commission Desk
+- **Direct Access URL**: https://farmsking.in/login?portal=partner
+- **Target Users**: Regional Sales Managers & Rural Agents
+- **Capability**: Issue referral discount coupons, onboard new farmers, and earn transparent commissions (TDS Section 194-H).
+
+### 15. Statutory Corporate Compliance & ISO Disclosures
+- **Direct Access URL**: https://farmsking.in/compliance
+- **Target Users**: Regulators, Partners, General Public
+- **Capability**: Full corporate transparency: CIN U01100PB2026PTC063294, ROC Chandigarh filings, ISO 9001 and ISO 27001 compliance, and statutory disclosures.
+
+### 16. Surinder Agro Research & Demonstration Farm
+- **Direct Access URL**: https://farmsking.in/surinder-agro-farm.html
+- **Target Users**: Agronomists, Farmers, Researchers
+- **Capability**: Real-world field testbed showcasing organic crop yield experiments, marigold bio-barriers, and vermicompost soil trials.
+
+### 17. 24/7 Farmer Helpline & Support Desk
+- **Direct Access URL**: https://farmsking.in/contact-us (also https://farmsking.in/support)
+- **Target Users**: All Users
+- **Capability**: Direct helpline access (95776-22000), support ticket tracking, and official grievance redressal.
+
+---
+
+## Unified 3-Category Multi-Role Onboarding (Single Mobile / King ID)
+FarmsKing provides unified identity management where a single mobile number holds roles across all 3 spaces:
+1. **Clients Portal**: Farmers, Gardeners, Customers, Supervisors
+2. **Partners Portal**: Sellers, Crop Doctors, Garden Advisors, Sales Managers, Traders
+3. **Staff Command Center**: Admin, Super Admin, Manager, Operator, Technical Staff, CA

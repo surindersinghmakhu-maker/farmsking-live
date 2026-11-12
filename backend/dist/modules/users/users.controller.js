@@ -138,10 +138,10 @@ let UsersController = class UsersController {
         return this.usersService.updateOperatorPermissions(id, dto.permissions);
     }
     sendAdminCreateOtp(user, dto) {
-        return this.usersService.sendAdminCreateOtp(user, dto.mobile);
+        return this.usersService.sendAdminCreateOtp(user, dto.mobile, dto.category);
     }
     verifyAdminCreateOtp(user, dto) {
-        return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp);
+        return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp, dto.category);
     }
     adminCreateUser(user, dto) {
         return this.usersService.adminCreateUser(user, dto);

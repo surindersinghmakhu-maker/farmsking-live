@@ -651,25 +651,51 @@ export interface AdminCreateUserPayload {
   employerFarmerKingIdOrMobile?: string;
 }
 
-export async function sendAdminCreateUserOtp(mobile: string): Promise<{
+export interface AdminCreateExistingUserSummary {
+  id: string;
+  kingId: string | null;
+  name: string;
+  email: string | null;
+  pincode: string | null;
+  postOffice: string | null;
+  village: string | null;
+  district: string | null;
+  state: string | null;
+  farmName: string | null;
+  photoUrl: string | null;
+  activeRoles: Role[];
+}
+
+export async function sendAdminCreateUserOtp(
+  mobile: string,
+  category?: AdminCreateCategory,
+): Promise<{
   success: boolean;
   mobile: string;
   waSent: boolean;
+  isExistingUser?: boolean;
+  existingUser?: AdminCreateExistingUserSummary | null;
   message: string;
   devOtp?: string;
 }> {
-  const { data } = await apiClient.post('/users/admin-create/send-otp', { mobile });
+  const { data } = await apiClient.post('/users/admin-create/send-otp', { mobile, category });
   return data;
 }
 
-export async function verifyAdminCreateUserOtp(mobile: string, otp: string): Promise<{
+export async function verifyAdminCreateUserOtp(
+  mobile: string,
+  otp: string,
+  category?: AdminCreateCategory,
+): Promise<{
   success: boolean;
   verified: boolean;
   mobile: string;
   otpVerificationToken: string;
+  isExistingUser?: boolean;
+  existingUser?: AdminCreateExistingUserSummary | null;
   message: string;
 }> {
-  const { data } = await apiClient.post('/users/admin-create/verify-otp', { mobile, otp });
+  const { data } = await apiClient.post('/users/admin-create/verify-otp', { mobile, otp, category });
   return data;
 }
 

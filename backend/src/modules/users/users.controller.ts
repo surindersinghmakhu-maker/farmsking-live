@@ -218,7 +218,7 @@ export class UsersController {
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('admin-create/send-otp')
   sendAdminCreateOtp(@CurrentUser() user: AuthUser, @Body() dto: AdminCreateSendOtpDto) {
-    return this.usersService.sendAdminCreateOtp(user, dto.mobile);
+    return this.usersService.sendAdminCreateOtp(user, dto.mobile, dto.category);
   }
 
   /** Admin/Super Admin: Verify user's 6-digit OTP and issue short-lived signed verification token */
@@ -226,7 +226,7 @@ export class UsersController {
   @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @Post('admin-create/verify-otp')
   verifyAdminCreateOtp(@CurrentUser() user: AuthUser, @Body() dto: AdminCreateVerifyOtpDto) {
-    return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp);
+    return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp, dto.category);
   }
 
   /** Admin/Super Admin: Unified 3-step user onboarding (Staff, Partners, Clients) requiring verified mobile OTP */

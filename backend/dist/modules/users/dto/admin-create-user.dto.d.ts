@@ -5,10 +5,12 @@ export declare const ADMIN_CREATE_ROLES: readonly ["ADMIN", "MANAGER", "OPERATOR
 export type AdminCreateRoleKey = (typeof ADMIN_CREATE_ROLES)[number];
 export declare class AdminCreateSendOtpDto {
     mobile: string;
+    category?: AdminCreateCategory;
 }
 export declare class AdminCreateVerifyOtpDto {
     mobile: string;
     otp: string;
+    category?: AdminCreateCategory;
 }
 export declare class AdminCreateUserDto {
     otpVerificationToken: string;

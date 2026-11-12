@@ -213,6 +213,7 @@ export function PartnerSignupModal({
       }
     } else if (userSummary) {
       setName(userSummary.name || '');
+      setLegalName(userSummary.name || '');
       setEmail(userSummary.email || '');
       setPincode(userSummary.pincode || '');
       setPostOffice(userSummary.postOffice || '');
@@ -960,7 +961,7 @@ export function PartnerSignupModal({
                     </View>
                     <View style={styles.gridTwo}>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Store Display Name *</Text>
+                        <Text style={styles.label}>Firm / Store Name *</Text>
                         <TextInput
                           style={styles.input}
                           placeholder="e.g. Punjab Kisan Kendra"
@@ -970,13 +971,16 @@ export function PartnerSignupModal({
                         />
                       </View>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Legal Business Name</Text>
+                        <Text style={styles.label}>Owner / Proprietor Legal Name (Editable) *</Text>
                         <TextInput
                           style={styles.input}
-                          placeholder="Firm / Proprietor Name"
+                          placeholder="Firm Owner / Proprietor Name"
                           placeholderTextColor="#64748b"
-                          value={legalName}
-                          onChangeText={setLegalName}
+                          value={legalName || name}
+                          onChangeText={(v) => {
+                            setLegalName(v);
+                            setName(v);
+                          }}
                         />
                       </View>
                     </View>

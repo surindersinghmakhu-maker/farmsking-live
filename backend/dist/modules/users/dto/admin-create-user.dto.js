@@ -39,6 +39,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], AdminCreateSendOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: exports.ADMIN_CREATE_CATEGORIES }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(exports.ADMIN_CREATE_CATEGORIES),
+    __metadata("design:type", String)
+], AdminCreateSendOtpDto.prototype, "category", void 0);
 class AdminCreateVerifyOtpDto {
 }
 exports.AdminCreateVerifyOtpDto = AdminCreateVerifyOtpDto;
@@ -54,6 +60,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], AdminCreateVerifyOtpDto.prototype, "otp", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: exports.ADMIN_CREATE_CATEGORIES }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(exports.ADMIN_CREATE_CATEGORIES),
+    __metadata("design:type", String)
+], AdminCreateVerifyOtpDto.prototype, "category", void 0);
 class AdminCreateUserDto {
 }
 exports.AdminCreateUserDto = AdminCreateUserDto;

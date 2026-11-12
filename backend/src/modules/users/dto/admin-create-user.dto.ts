@@ -42,6 +42,11 @@ export class AdminCreateSendOtpDto {
   @IsNotEmpty({ message: 'Mobile number is required.' })
   @IsString()
   mobile: string;
+
+  @ApiPropertyOptional({ enum: ADMIN_CREATE_CATEGORIES })
+  @IsOptional()
+  @IsIn(ADMIN_CREATE_CATEGORIES)
+  category?: AdminCreateCategory;
 }
 
 export class AdminCreateVerifyOtpDto {
@@ -54,6 +59,11 @@ export class AdminCreateVerifyOtpDto {
   @IsNotEmpty({ message: '6-digit OTP is required.' })
   @IsString()
   otp: string;
+
+  @ApiPropertyOptional({ enum: ADMIN_CREATE_CATEGORIES })
+  @IsOptional()
+  @IsIn(ADMIN_CREATE_CATEGORIES)
+  category?: AdminCreateCategory;
 }
 
 export class AdminCreateUserDto {

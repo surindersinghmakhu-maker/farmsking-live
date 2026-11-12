@@ -468,16 +468,24 @@ export class AuthService {
   private assertPartnerEligibilityForExistingUser(user: any, requestedRole?: Role) {
     if (!user) return;
     const activeRoles = getActiveRolesList(user);
-    if (activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r) || FARM_STAFF_ROLES.includes(r))) {
+    if (activeRoles.some((r) => FARM_STAFF_ROLES.includes(r))) {
       throw new ConflictException(
-        'Supervisor, Labour Worker, and Admin Staff accounts cannot combine with Partner roles. Please apply with a dedicated mobile number.',
+        'Supervisor and Labour Worker accounts cannot combine with Partner roles. Please apply with a dedicated mobile number.',
       );
     }
+    const existingPartnerRoles = activeRoles.filter((r) => PARTNER_PORTAL_ROLES.includes(r));
     if (requestedRole) {
-      if (activeRoles.includes(requestedRole)) {
+      if (existingPartnerRoles.includes(requestedRole)) {
         throw new ConflictException(`Your FarmsKing account already holds an active ${requestedRole} role.`);
       }
       assertRoleCombinationAllowed([...activeRoles, requestedRole]);
+    } else if (
+      existingPartnerRoles.length > 0 &&
+      !(existingPartnerRoles.length === 1 && (existingPartnerRoles[0] === Role.ADVISOR || existingPartnerRoles[0] === Role.AGENT))
+    ) {
+      throw new ConflictException(
+        `Your FarmsKing account already holds an active Partner role (${existingPartnerRoles.join(', ')}).`,
+      );
     }
   }
 
@@ -879,7 +887,7 @@ export class AuthService {
 
     if (portal === 'PARTNER') {
       const activeRoles = user ? getActiveRolesList(user) : [];
-      if (activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r) || FARM_STAFF_ROLES.includes(r))) {
+      if (activeRoles.some((r) => FARM_STAFF_ROLES.includes(r))) {
         throw new ForbiddenException(check.reason);
       }
 

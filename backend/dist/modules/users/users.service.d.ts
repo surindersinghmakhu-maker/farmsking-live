@@ -20,7 +20,7 @@ import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
-import { AdminCreateUserDto } from './dto/admin-create-user.dto';
+import { AdminCreateCategory, AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 export declare class UsersService implements OnModuleInit {
@@ -3374,101 +3374,61 @@ export declare class UsersService implements OnModuleInit {
     private normalizeAdminCreateMobile;
     private signAdminCreateOtpToken;
     private verifyAdminCreateOtpToken;
+    private mapAdminCreateRoleKeyToPrismaRole;
     private checkAdminCreateMobileAvailability;
     private assertAdminCreateCategoryAndRole;
-    sendAdminCreateOtp(caller: AuthUser, mobile: string): Promise<{
+    sendAdminCreateOtp(caller: AuthUser, mobile: string, category?: AdminCreateCategory): Promise<{
         success: boolean;
         mobile: string;
         waSent: boolean;
+        isExistingUser: boolean;
+        existingUser: {
+            id: string;
+            kingId: string | null;
+            name: string;
+            email: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            farmName: string | null;
+            photoUrl: string | null;
+            activeRoles: import(".prisma/client").$Enums.Role[];
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        } | null;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
     }>;
-    verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string): Promise<{
+    verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string, category?: AdminCreateCategory): Promise<{
         success: boolean;
         verified: boolean;
         mobile: string;
         otpVerificationToken: string;
+        isExistingUser: boolean;
+        existingUser: {
+            id: string;
+            kingId: string | null;
+            name: string;
+            email: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            farmName: string | null;
+            photoUrl: string | null;
+            activeRoles: import(".prisma/client").$Enums.Role[];
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+        } | null;
         message: string;
     }>;
     adminCreateUser(caller: AuthUser, dto: AdminCreateUserDto): Promise<{
         success: boolean;
-        user: {
-            sellerStore: {
-                id: string;
-                storeName: string;
-                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-            } | null;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
-            id: string;
-            kingId: string | null;
-            mobile: string;
-            role: import(".prisma/client").$Enums.Role;
-            name: string;
-            email: string | null;
-            isEmailVerified: boolean;
-            pendingEmail: string | null;
-            googleId: string | null;
-            village: string | null;
-            district: string | null;
-            state: string | null;
-            pincode: string | null;
-            postOffice: string | null;
-            preferredLanguage: string;
-            notificationsEnabled: boolean;
-            whatsappGroupEnabled: boolean;
-            whatsappGroupJid: string | null;
-            weatherAlertMinTempC: number | null;
-            weatherAlertMaxTempC: number | null;
-            weatherAlertRainEnabled: boolean;
-            photoUrl: string | null;
-            sprayTankSizeL: number | null;
-            soilType: import(".prisma/client").$Enums.SoilType | null;
-            waterType: import(".prisma/client").$Enums.WaterType | null;
-            advisorType: import(".prisma/client").$Enums.AdvisorType | null;
-            upiId: string | null;
-            billPrintingAddress: string | null;
-            farmName: string | null;
-            farmAddress: string | null;
-            farmMobile: string | null;
-            kycVerified: boolean;
-            termsAcceptedAt: Date | null;
-            isSeniorDoctor: boolean;
-            seniorDoctorId: string | null;
-            doctorConsultationFee: Prisma.Decimal | null;
-            operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
-            adminStaffPermissions: import(".prisma/client").$Enums.AdminStaffPermission[];
-            supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
-            employerFarmerId: string | null;
-            referredById: string | null;
-            isPhoneVerified: boolean;
-            isPermanentlyBlocked: boolean;
-            profileStatus: string | null;
-            assignedStaffId: string | null;
-            profileRejectionReason: string | null;
-            createdAt: Date;
-            deletedAt: Date | null;
-            employerFarmer: {
-                id: string;
-                kingId: string | null;
-                mobile: string;
-                name: string;
-                farmName: string | null;
-            } | null;
-            labourWorkerUser: {
-                id: string;
-                name: string;
-                farmerId: string;
-                farmer: {
-                    id: string;
-                    kingId: string | null;
-                    mobile: string;
-                    name: string;
-                    farmName: string | null;
-                };
-            }[];
-        };
+        user: any;
         tempPassword: string | null;
         message: string;
     }>;

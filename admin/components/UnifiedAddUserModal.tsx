@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS } from '@/constants/theme';
 import {
   AdminCreateCategory,
+  AdminCreateExistingUserSummary,
   AdminCreateRoleKey,
   AdminCreateUserPayload,
   lookupByKingId,
@@ -122,6 +123,7 @@ export function UnifiedAddUserModal({
   const [otpSent, setOtpSent] = useState(false);
   const [otpInfoMsg, setOtpInfoMsg] = useState<string | null>(null);
   const [otpVerificationToken, setOtpVerificationToken] = useState<string | null>(null);
+  const [existingUserSummary, setExistingUserSummary] = useState<AdminCreateExistingUserSummary | null>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
@@ -184,6 +186,7 @@ export function UnifiedAddUserModal({
     setOtpSent(false);
     setOtpInfoMsg(null);
     setOtpVerificationToken(null);
+    setExistingUserSummary(null);
     setIsSendingOtp(false);
     setIsVerifyingOtp(false);
     setName('');
@@ -241,11 +244,25 @@ export function UnifiedAddUserModal({
     setStep(2);
   };
 
+  const applyExistingPrefill = (eu: AdminCreateExistingUserSummary | null | undefined) => {
+    setExistingUserSummary(eu ?? null);
+    if (!eu) return;
+    if (eu.name) setName(eu.name);
+    if (eu.email) setEmail(eu.email);
+    if (eu.pincode) setPincode(eu.pincode);
+    if (eu.postOffice) setPostOffice(eu.postOffice);
+    if (eu.village) setVillage(eu.village);
+    if (eu.district) setDistrict(eu.district);
+    if (eu.state) setStateName(eu.state);
+    if (eu.farmName) setFarmName(eu.farmName);
+  };
+
   const handleMobileChange = (val: string) => {
     const cleaned = val.replace(/\D/g, '').slice(-10);
     setMobile(cleaned);
     if (otpVerificationToken || otpSent) {
       setOtpVerificationToken(null);
+      setExistingUserSummary(null);
       setOtpSent(false);
       setOtpInput('');
       setOtpInfoMsg(null);
@@ -261,9 +278,10 @@ export function UnifiedAddUserModal({
     setError(null);
     setIsSendingOtp(true);
     try {
-      const res = await sendAdminCreateUserOtp(mobile);
+      const res = await sendAdminCreateUserOtp(mobile, category ?? undefined);
       setOtpSent(true);
       setOtpVerificationToken(null);
+      applyExistingPrefill(res.existingUser);
       setOtpInfoMsg(res.devOtp ? `${res.message} (Test OTP: ${res.devOtp})` : res.message);
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Could not send OTP.');
@@ -280,8 +298,9 @@ export function UnifiedAddUserModal({
     setError(null);
     setIsVerifyingOtp(true);
     try {
-      const res = await verifyAdminCreateUserOtp(mobile, otpInput.trim());
+      const res = await verifyAdminCreateUserOtp(mobile, otpInput.trim(), category ?? undefined);
       setOtpVerificationToken(res.otpVerificationToken);
+      applyExistingPrefill(res.existingUser);
       setOtpInfoMsg(res.message);
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || 'Invalid OTP code.');
@@ -730,10 +749,41 @@ export function UnifiedAddUserModal({
                   </TouchableOpacity>
                 </View>
 
-                <Text style={[styles.sectionLabel, { color: titleCol }]}>Basic Information</Text>
+                {existingUserSummary && (
+                  <View
+                    style={{
+                      padding: 10,
+                      borderRadius: RADIUS.md,
+                      backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                      borderWidth: 1,
+                      borderColor: 'rgba(16, 185, 129, 0.35)',
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#34d399' }}>
+                      ✓ Existing Account Found — King ID: {existingUserSummary.kingId}
+                    </Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.regular, color: mutedCol, marginTop: 2 }}>
+                      Existing profile data is pre-filled below (editable). Adding {selectedRoleMeta?.label} links it to this exact same King ID.
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={[styles.sectionLabel, { color: titleCol }]}>
+                  {selectedRole === 'SELLER'
+                    ? 'Owner / Proprietor Name (Editable) *'
+                    : category === 'STAFF'
+                    ? 'Staff Member Name *'
+                    : 'Personal Name (Editable) *'}
+                </Text>
                 <TextInput
                   style={[styles.input, { color: titleCol, borderColor: borderCol, backgroundColor: subSurface }]}
-                  placeholder="Full Name *"
+                  placeholder={
+                    selectedRole === 'SELLER'
+                      ? 'Owner / Proprietor Legal Name *'
+                      : category === 'STAFF'
+                      ? 'Staff Member Full Name *'
+                      : 'Client Personal Name *'
+                  }
                   placeholderTextColor={mutedCol}
                   value={name}
                   onChangeText={setName}
@@ -910,11 +960,13 @@ export function UnifiedAddUserModal({
                 {/* Seller Store fields */}
                 {selectedRole === 'SELLER' && (
                   <View style={{ gap: 8 }}>
-                    <Text style={[styles.sectionLabel, { color: '#f59e0b' }]}>Seller Store Details</Text>
+                    <Text style={[styles.sectionLabel, { color: '#f59e0b' }]}>
+                      Firm / Store Details (Mandatory for Seller) *
+                    </Text>
                     <View style={styles.twoColRow}>
                       <TextInput
                         style={[styles.input, { flex: 1, color: titleCol, borderColor: borderCol, backgroundColor: subSurface }]}
-                        placeholder="Store Name *"
+                        placeholder="Firm / Store Name *"
                         placeholderTextColor={mutedCol}
                         value={storeName}
                         onChangeText={setStoreName}

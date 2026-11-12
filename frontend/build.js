@@ -238,6 +238,10 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     `;
 
     const metaCacheHeaders = `
+    <meta name="google-site-verification" content="googlecLbkUgC7i1XUv8vvPcjQP-UuD3FKtdXKH2o" />
+    <meta name="indexnow-key" content="farmskinge4b8a2c1f9d3750862a4b6c8" />
+    <link rel="canonical" href="https://farmsking.in" />
+    <link rel="alternate" hreflang="en" href="https://farmsking.in" />
     <meta name="google" content="notranslate" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
@@ -338,7 +342,23 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
           "postalCode": "142044",
           "addressCountry": "IN"
         }
-      ]
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "FarmsKing Platform Capabilities & User Features",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "AI Crop Doctor & Leaf Disease Scanner", "url": "https://farmsking.in/ai-doctor", "description": "Instant computer-vision leaf disease detection (<820ms) providing ICAR-calibrated chemical spray schedules and 100% organic remedies across 50+ crops." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Live APMC Mandi Rates & Wholesale Intelligence", "url": "https://farmsking.in/", "description": "Daily wholesale commodity arrivals, min, max, and modal prices across 50+ crops in Punjab and national mandis." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Precision Spray Dosage Calculator", "url": "https://farmsking.in/dose", "description": "Exact chemical and organic spray dosages per acre, per water tank, and per crop variety." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Kisan Crop Intelligence & Agronomy Engine", "url": "https://farmsking.in/crop-intelligence", "description": "Dynamic crop stage advisories, weather risk alerts, and irrigation schedules." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Punjab Kheti Advisory Guide", "url": "https://farmsking.in/punjab-kheti-advisory.html", "description": "Comprehensive agronomy guides for Wheat, Paddy, Mustard, Potato, Cotton, and seasonal vegetables in Punjab." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Reverse Sowing Engine & Harvest Planner", "url": "https://farmsking.in/reverse-sowing-engine.html", "description": "Reverse-calculates optimal planting dates based on target harvest windows and market price projections." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Certified Organic Agri Store", "url": "https://farmsking.in/shop", "description": "100% Genuine, verified bio-fertilizers, microbial vermicompost, and certified high-yield seeds with doorstep delivery." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Live Order Tracking & Tax Invoices", "url": "https://farmsking.in/order-tracking", "description": "Real-time dispatch tracking and instant download of official GST tax invoices." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Satellite Remote Sensing Telemetry (NDVI/EVI)", "url": "https://farmsking.in/you", "description": "6-Constellation satellite imagery (Sentinel-2, ISRO Bhuvan) for farm vegetation health and moisture stress monitoring." } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Digital Bahi-Khata Farm Accounting (Account King)", "url": "https://farmsking.in/you", "description": "Automated farm ledger recording inputs, labor, diesel, and harvest sales to calculate net profit per acre." } }
+        ]
+      }
     }
     </script>
 
@@ -615,6 +635,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
       'refund-policy',
       'shipping-policy',
       'order-tracking',
+      'dose',
       'crop-intelligence',
       'ai-doctor',
       'crop-disease-scanner',
@@ -646,6 +667,18 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     });
 
     console.log(`✅ Preserved and deployed static HTML entrypoints for ${staticRoutes.length} official routes and subdirectories`);
+  }
+
+  // 📡 Automated Real-Time Search Engine Submission (IndexNow & SEO)
+  try {
+    const seoScriptPath = path.join(currentDir, 'scripts', 'seo-submit.js');
+    if (fs.existsSync(seoScriptPath)) {
+      console.log('📡 Auto-submitting latest URLs to search engines (IndexNow & Bing)...');
+      const { submitSeoData } = require(seoScriptPath);
+      submitSeoData().catch((seoErr) => console.warn('⚠️ SEO auto-submission skipped:', seoErr.message));
+    }
+  } catch (seoErr) {
+    console.warn('⚠️ SEO submit trigger warning:', seoErr.message);
   }
 
   console.log('✅ Expo Web build completed successfully!');

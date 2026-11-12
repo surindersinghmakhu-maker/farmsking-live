@@ -1,29 +1,256 @@
 {
-  "platform": "FarmsKing",
-  "corporate_entity": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
-  "cin": "U01100PB2026PTC063294",
-  "roc": "ROC Chandigarh (Punjab)",
-  "domains": ["https://farmsking.in", "https://www.farmsking.in"],
-  "category": "Smart Farming & Agricultural Intelligence Platform",
-  "motto": "Farming Easy, Farming Smart",
-  "registered_office": "VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab, India - 143422",
-  "corporate_headquarters": "Near Grain Market, Makhu, District Ferozepur, Punjab, India - 142044",
-  "helpline": "95776-22000 (Mon-Sat 10:00 AM - 5:00 PM IST)",
-  "emails": {
-    "support": "support@farmsking.in",
-    "corporate": "farmskingindia@gmail.com",
-    "grievance": "grievance@farmsking.in"
-  },
-  "governance": {
-    "statutory_administration": "Governed by the Board of Directors under the Companies Act, 2013",
-    "operations_desk": "Central Agronomy Operations & Quality Assurance",
-    "technical_support": "Cloud Systems & AI Engineering Desk",
-    "agronomy_panel": "Certified FarmsKing Agronomist Panel & Soil Scientists"
-  },
-  "strict_boundaries": {
-    "hardware_sales": false,
-    "machinery_rentals": false,
-    "machinery_manufacturing": false,
-    "core_focus": "Digital agritech software, AI plant pathology, live APMC mandi rates, satellite telemetry, and pure organic inputs."
-  }
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Corporation",
+      "@id": "https://farmsking.in/#corporation",
+      "name": "FARMSKING TECHNOLOGIES PRIVATE LIMITED",
+      "alternateName": [
+        "FarmsKing",
+        "farmsking.in",
+        "FarmsKing App",
+        "FarmsKing Platform",
+        "FarmsKing India",
+        "FarmsKing Farmers",
+        "Smart Farming",
+        "Farming Easy Farming Smart",
+        "Garden King",
+        "Nature King",
+        "AI King",
+        "Organic King",
+        "Account King"
+      ],
+      "url": "https://farmsking.in",
+      "logo": "https://farmsking.in/brand_logo.png",
+      "image": "https://farmsking.in/brand_logo.png",
+      "slogan": "Farming Easy, Farming Smart",
+      "description": "FARMSKING TECHNOLOGIES PRIVATE LIMITED (farmsking.in) is India's leading Smart Farming Platform & Agriculture App. Delivering real-time multimodal AI Crop Doctor leaf diagnosis (<820ms), live APMC mandi wholesale rates across 50+ crops, satellite telemetry (NDVI/EVI), 100% genuine organic bio-inputs, and transparent farmer accounting.",
+      "telephone": "+91-95776-22000",
+      "email": "support@farmsking.in",
+      "foundingDate": "2026",
+      "address": [
+        {
+          "@type": "PostalAddress",
+          "streetAddress": "VPO Goindwal Sahib, Tehsil Khadur Sahib",
+          "addressLocality": "Goindwal Sahib, District Tarn Taran",
+          "addressRegion": "Punjab",
+          "postalCode": "143422",
+          "addressCountry": "IN"
+        },
+        {
+          "@type": "PostalAddress",
+          "streetAddress": "Near Grain Market, Makhu",
+          "addressLocality": "Makhu, District Ferozepur",
+          "addressRegion": "Punjab",
+          "postalCode": "142044",
+          "addressCountry": "IN"
+        }
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+91-95776-22000",
+        "contactType": "Customer Support & Farmer Advisory Desk",
+        "areaServed": "IN",
+        "availableLanguage": ["English", "Punjabi", "Hindi"]
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "FarmsKing Platform Capabilities & User Features",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "AI Crop Doctor & Leaf Disease Scanner",
+              "url": "https://farmsking.in/ai-doctor",
+              "description": "Instant computer-vision leaf disease detection (<820ms) providing ICAR-aligned chemical spray schedules and 100% organic remedies across 50+ crops."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Live APMC Mandi Rates & Wholesale Intelligence",
+              "url": "https://farmsking.in/",
+              "description": "Daily wholesale commodity arrivals, min, max, and modal prices across 50+ crops in Punjab and national mandis."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Precision Spray Dosage Calculator",
+              "url": "https://farmsking.in/dose",
+              "description": "Exact chemical and organic spray dosages per acre, per water tank, and per crop variety."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Kisan Crop Intelligence & Agronomy Engine",
+              "url": "https://farmsking.in/crop-intelligence",
+              "description": "Dynamic crop stage advisories, weather risk alerts, and irrigation schedules."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Punjab Kheti Advisory Guide",
+              "url": "https://farmsking.in/punjab-kheti-advisory.html",
+              "description": "Comprehensive agronomy guides for Wheat, Paddy, Mustard, Potato, Cotton, and seasonal vegetables in Punjab."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Reverse Sowing Engine & Harvest Planner",
+              "url": "https://farmsking.in/reverse-sowing-engine.html",
+              "description": "Reverse-calculates optimal planting dates based on target harvest windows and market price projections."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Certified Organic Agri Store",
+              "url": "https://farmsking.in/shop",
+              "description": "100% Genuine, verified bio-fertilizers, microbial vermicompost, and certified high-yield seeds with doorstep delivery."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Live Order Tracking & Tax Invoices",
+              "url": "https://farmsking.in/order-tracking",
+              "description": "Real-time dispatch tracking and instant download of official GST tax invoices."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Satellite Remote Sensing Telemetry (NDVI/EVI)",
+              "url": "https://farmsking.in/you",
+              "description": "6-Constellation satellite imagery (Sentinel-2, ISRO Bhuvan) for farm vegetation health and moisture stress monitoring."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Urban & Terrace Gardening Portal (Garden King)",
+              "url": "https://farmsking.in/topic/Gardening",
+              "description": "Dedicated care for kitchen garden plants, balcony pots, and specialized Garden Advisor chats."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Digital Bahi-Khata Farm Accounting (Account King)",
+              "url": "https://farmsking.in/you",
+              "description": "Automated farm ledger recording inputs, labor, diesel, and harvest sales to calculate net profit per acre."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Seller Store & Payouts Console",
+              "url": "https://farmsking.in/seller-dashboard",
+              "description": "Input seller dashboard for inventory control, dispatching, and automated Section 194-O bank payouts."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Crop Doctor Consultation Desk",
+              "url": "https://farmsking.in/login?portal=partner",
+              "description": "Agronomist portal to adopt farmer plots, review leaf scans, and write verified spray prescriptions."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Sales Manager (Agent) Outreach Desk",
+              "url": "https://farmsking.in/login?portal=partner",
+              "description": "Field manager portal for issuing referral discount coupons and earning Section 194-H commissions."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Corporate Compliance & ISO Center",
+              "url": "https://farmsking.in/compliance",
+              "description": "Statutory entity disclosures, CIN U01100PB2026PTC063294, ISO 9001 and ISO 27001 compliance standards."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Surinder Agro Research & Demo Farm",
+              "url": "https://farmsking.in/surinder-agro-farm.html",
+              "description": "Verified field testbed showcasing organic crop yield trials, marigold pest shields, and vermicompost soil data."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "24/7 Farmer Support & Helpline",
+              "url": "https://farmsking.in/contact-us",
+              "description": "Multi-lingual farmer helpline 95776-22000, chat support, and grievance redressal desk."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://farmsking.in/#website",
+      "url": "https://farmsking.in",
+      "name": "FarmsKing",
+      "alternateName": "FarmsKing: Smart Farming Platform & Agriculture App",
+      "publisher": { "@id": "https://farmsking.in/#corporation" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://farmsking.in/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://farmsking.in/#application",
+      "name": "FarmsKing App",
+      "operatingSystem": "Android, iOS, Web",
+      "applicationCategory": "BusinessApplication, AgricultureApplication",
+      "url": "https://farmsking.in",
+      "author": { "@id": "https://farmsking.in/#corporation" },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "featureList": [
+        "Instant AI Crop Doctor leaf diagnosis (<820ms)",
+        "Live APMC mandi wholesale rates across 50+ crops",
+        "Precision spray dosage calculation per acre and tank",
+        "6-Constellation satellite vegetation telemetry (NDVI/EVI)",
+        "Certified organic farm inputs with zero counterfeits guarantee",
+        "Digital farmer bahi-khata double-entry ledger",
+        "Urban & terrace gardening care (Garden King)",
+        "Adopted farmer supervision by verified Crop Doctors",
+        "Seller store management with automated bank payouts",
+        "Multi-category access for Clients, Partners & Staff on a single mobile number"
+      ]
+    }
+  ]
 }

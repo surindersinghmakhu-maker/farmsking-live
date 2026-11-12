@@ -3,8 +3,11 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 
-# Search Engine Crawlers
+# Primary Search Engine Crawlers
 User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
 Allow: /
 
 User-agent: Bingbot
@@ -13,7 +16,19 @@ Allow: /
 User-agent: Applebot
 Allow: /
 
-# AI Search & LLM Crawlers
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Generative AI & LLM Search Engine Crawlers (GEO / Answer Engines)
 User-agent: GPTBot
 Allow: /
 
@@ -29,15 +44,30 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: Claude-Web
+Allow: /
+
 User-agent: Bytespider
 Allow: /
 
 User-agent: cohere-ai
 Allow: /
 
-# Canonical Sitemaps & LLM Knowledge Endpoints
+User-agent: Amazonbot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Canonical Sitemaps & Knowledge Repositories
 Sitemap: https://farmsking.in/sitemap.xml
 Sitemap: https://farmsking.com/sitemap.xml
-# LLM Knowledge Standard: https://farmsking.in/llms.txt
+
+# LLM Standard Discovery Endpoints (Generative Engine Optimization)
+# LLM Knowledge Overview: https://farmsking.in/llms.txt
 # LLM Comprehensive Profile: https://farmsking.in/llms-full.txt
 # AI Knowledge Graph JSON: https://farmsking.in/ai-knowledge.json
+# IndexNow Protocol Key: https://farmsking.in/farmskinge4b8a2c1f9d3750862a4b6c8.txt

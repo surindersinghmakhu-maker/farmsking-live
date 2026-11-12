@@ -65,6 +65,7 @@ import { SmsModule } from './modules/sms/sms.module';
 import { AiChatModule } from './modules/ai-chat/ai-chat.module';
 import { IsoControlsModule } from './modules/iso-controls/iso-controls.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
+import { SeoModule } from './modules/seo/seo.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -136,6 +137,7 @@ import { RedisModule } from './modules/redis/redis.module';
     SmsModule,
     AiChatModule,
     ComplianceModule,
+    SeoModule,
   ],
 
 

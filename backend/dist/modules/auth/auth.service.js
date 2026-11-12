@@ -417,14 +417,19 @@ let AuthService = class AuthService {
         if (!user)
             return;
         const activeRoles = (0, role_policy_util_1.getActiveRolesList)(user);
-        if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r) || role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
-            throw new common_1.ConflictException('Supervisor, Labour Worker, and Admin Staff accounts cannot combine with Partner roles. Please apply with a dedicated mobile number.');
+        if (activeRoles.some((r) => role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
+            throw new common_1.ConflictException('Supervisor and Labour Worker accounts cannot combine with Partner roles. Please apply with a dedicated mobile number.');
         }
+        const existingPartnerRoles = activeRoles.filter((r) => role_policy_util_1.PARTNER_PORTAL_ROLES.includes(r));
         if (requestedRole) {
-            if (activeRoles.includes(requestedRole)) {
+            if (existingPartnerRoles.includes(requestedRole)) {
                 throw new common_1.ConflictException(`Your FarmsKing account already holds an active ${requestedRole} role.`);
             }
             (0, role_policy_util_1.assertRoleCombinationAllowed)([...activeRoles, requestedRole]);
+        }
+        else if (existingPartnerRoles.length > 0 &&
+            !(existingPartnerRoles.length === 1 && (existingPartnerRoles[0] === client_1.Role.ADVISOR || existingPartnerRoles[0] === client_1.Role.AGENT))) {
+            throw new common_1.ConflictException(`Your FarmsKing account already holds an active Partner role (${existingPartnerRoles.join(', ')}).`);
         }
     }
     async sendPartnerSignupOtp(mobile) {
@@ -759,7 +764,7 @@ let AuthService = class AuthService {
             return;
         if (portal === 'PARTNER') {
             const activeRoles = user ? (0, role_policy_util_1.getActiveRolesList)(user) : [];
-            if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r) || role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
+            if (activeRoles.some((r) => role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
                 throw new common_1.ForbiddenException(check.reason);
             }
             const latestApp = await this.prisma.partnerApplication?.findFirst({

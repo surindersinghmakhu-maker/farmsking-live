@@ -1,43 +1,10 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -46,12 +13,8 @@ exports.LabourService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
-const argon2 = __importStar(require("argon2"));
-const crypto = __importStar(require("crypto"));
-const king_id_util_1 = require("../../common/utils/king-id.util");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
 const auth_user_util_1 = require("../../common/utils/auth-user.util");
-const role_policy_util_1 = require("../../common/utils/role-policy.util");
 const supervisor_permission_util_1 = require("../../common/utils/supervisor-permission.util");
 let LabourService = class LabourService {
     constructor(prisma) {
@@ -179,39 +142,13 @@ let LabourService = class LabourService {
             if (duplicateNameWorker) {
                 throw new common_1.BadRequestException(`Worker "${dto.name}" is already registered under mobile ${cleanMobile}. Duplicate names are not allowed.`);
             }
-            let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
-            if (!linkedUser) {
-                const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
-                const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
-                linkedUser = await this.prisma.user.create({
-                    data: {
-                        kingId,
-                        mobile: cleanMobile,
-                        passwordHash,
-                        name: dto.name,
-                        role: client_1.Role.LABOUR,
-                        roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
-                    },
-                });
+            const existingUser = await this.prisma.user.findFirst({
+                where: { mobile: cleanMobile, deletedAt: null },
+                select: { id: true },
+            });
+            if (existingUser) {
+                userId = existingUser.id;
             }
-            else {
-                const activeExistingRoles = (0, role_policy_util_1.getActiveRolesList)(linkedUser);
-                const incompatibleRoles = activeExistingRoles.filter((r) => r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
-                if (incompatibleRoles.length > 0) {
-                    throw new common_1.ConflictException(`This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`);
-                }
-                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
-                const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.LABOUR);
-                await this.prisma.user.update({
-                    where: { id: linkedUser.id },
-                    data: {
-                        role: client_1.Role.LABOUR,
-                        roles: updatedRoles,
-                        deactivatedRoles: nextDeactivated,
-                    },
-                });
-            }
-            userId = linkedUser.id;
             if (!sharedAddress) {
                 const existingWithAddress = await this.prisma.labourWorker.findFirst({
                     where: { mobile: cleanMobile, address: { not: null } },
@@ -295,43 +232,17 @@ let LabourService = class LabourService {
         }
         let userId = existing.userId;
         const cleanMobile = dto.mobile !== undefined ? (dto.mobile?.trim() || null) : existing.mobile;
-        const effectiveMobile = cleanMobile || (existing.userId === user.id ? user.mobile : null);
-        if (effectiveMobile) {
-            let linkedUser = await this.prisma.user.findUnique({ where: { mobile: effectiveMobile } });
-            if (!linkedUser) {
-                const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
-                const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
-                linkedUser = await this.prisma.user.create({
-                    data: {
-                        kingId,
-                        mobile: effectiveMobile,
-                        passwordHash,
-                        name: dto.name || existing.name,
-                        role: client_1.Role.LABOUR,
-                        roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
-                    },
+        if (dto.mobile !== undefined) {
+            if (cleanMobile) {
+                const existingUser = await this.prisma.user.findFirst({
+                    where: { mobile: cleanMobile, deletedAt: null },
+                    select: { id: true },
                 });
+                userId = existingUser?.id ?? null;
             }
             else {
-                const activeExistingRoles = (0, role_policy_util_1.getActiveRolesList)(linkedUser);
-                const incompatibleRoles = activeExistingRoles.filter((r) => r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
-                if (incompatibleRoles.length > 0) {
-                    throw new common_1.ConflictException(`This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`);
-                }
-                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
-                const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.LABOUR);
-                await this.prisma.user.update({
-                    where: { id: linkedUser.id },
-                    data: {
-                        role: client_1.Role.LABOUR,
-                        roles: updatedRoles,
-                        deactivatedRoles: nextDeactivated,
-                        ...(dto.name && { name: dto.name.trim() }),
-                        ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
-                    },
-                }).catch(() => null);
+                userId = null;
             }
-            userId = linkedUser.id;
         }
         const updatedWorker = await this.prisma.labourWorker.update({
             where: { id },
@@ -350,16 +261,6 @@ let LabourService = class LabourService {
                 user: { select: { id: true, mobile: true, kingId: true, name: true, photoUrl: true } },
             },
         });
-        const targetUserId = userId || existing.userId || (existing.mobile === user.mobile ? user.id : null);
-        if (targetUserId) {
-            await this.prisma.user.update({
-                where: { id: targetUserId },
-                data: {
-                    ...(dto.name && { name: dto.name.trim() }),
-                    ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
-                },
-            }).catch(() => null);
-        }
         return updatedWorker;
     }
     async deleteWorker(user, id) {

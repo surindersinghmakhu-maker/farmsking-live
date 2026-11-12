@@ -182,6 +182,13 @@ export default function LoginScreen() {
       window.location.hostname.includes('192.168.'));
 
   const handleSuccessNavigation = (isProfileIncomplete = false, loggedInUser?: any) => {
+    const targetUser = loggedInUser || user;
+    const needsMobileOtp =
+      !targetUser?.mobile || String(targetUser.mobile).startsWith('G_');
+    if (needsMobileOtp) {
+      router.replace('/verify-mobile' as any);
+      return;
+    }
     if (isProfileIncomplete) {
       router.replace('/farmer-profile-setup');
       return;
@@ -190,7 +197,6 @@ export default function LoginScreen() {
       router.replace(redirect as any);
       return;
     }
-    const targetUser = loggedInUser || user;
     const deactivatedSet = new Set<string>(
       Array.isArray((targetUser as any)?.deactivatedRoles) ? (targetUser as any).deactivatedRoles : [],
     );

@@ -5,7 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { FirebaseLoginDto } from './dto/firebase-login.dto';
 import { LinkGoogleDto } from './dto/link-google.dto';
-import { SendLoginOtpDto, VerifyLoginOtpDto, SendWhatsAppOtpDto, SendEmailOtpDto, SendMobileLinkOtpDto, CompleteOtpRegistrationDto, SendMobileOtpDto, VerifyMobileOtpDto } from './dto/otp.dto';
+import { SendLoginOtpDto, VerifyLoginOtpDto, SendWhatsAppOtpDto, SendEmailOtpDto, SendMobileLinkOtpDto, VerifyMobileLinkOtpDto, FirebaseMobileLinkDto, CompleteOtpRegistrationDto, SendMobileOtpDto, VerifyMobileOtpDto } from './dto/otp.dto';
 import { PartnerApplyDto } from './dto/partner-apply.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
@@ -160,6 +160,7 @@ export declare class AuthController {
         message: string;
     }>;
     googleLogin(dto: GoogleLoginDto): Promise<{
+        requiresMobileVerification: boolean;
         isProfileIncomplete: boolean;
         missingFields: string[];
         accessToken: string;
@@ -227,6 +228,7 @@ export declare class AuthController {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -259,6 +261,7 @@ export declare class AuthController {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -307,6 +310,7 @@ export declare class AuthController {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -345,6 +349,7 @@ export declare class AuthController {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -352,6 +357,20 @@ export declare class AuthController {
         success: boolean;
         message: string;
         devOtp: string | undefined;
+    }>;
+    verifyMobileLinkOtp(user: AuthUser, dto: VerifyMobileLinkOtpDto): Promise<{
+        success: boolean;
+        message: string;
+        isMerged: boolean;
+        user: any;
+        accessToken: string;
+    }>;
+    firebaseMobileLink(user: AuthUser, dto: FirebaseMobileLinkDto): Promise<{
+        success: boolean;
+        message: string;
+        isMerged: boolean;
+        user: any;
+        accessToken: string;
     }>;
     register(dto: RegisterDto): Promise<{
         accessToken: string;

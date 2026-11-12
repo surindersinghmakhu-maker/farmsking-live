@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert, Platform } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, LoginPortalMode, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, firebaseMobileLinkApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, LoginPortalMode, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -81,11 +81,12 @@ interface AuthContextValue {
   otpLogin: (payload: { mobile: string; otp: string; portal?: LoginPortalMode }) => Promise<any>;
   completeOtpRegistration: (payload: CompleteOtpRegistrationPayload) => Promise<User>;
   firebaseLogin: (idToken: string, portal?: LoginPortalMode) => Promise<any>;
-  googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean; user?: User }>;
+  googleLogin: (payload: GoogleLoginPayload) => Promise<{ requiresMobileVerification?: boolean; isProfileIncomplete?: boolean; user?: User }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
   unlinkGoogle: () => Promise<{ success: boolean; message: string }>;
   sendMobileLinkOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
-  verifyMobileLinkOtp: (payload: { mobile: string; otp: string; password?: string }) => Promise<{ success: boolean; message: string; isMerged?: boolean }>;
+  verifyMobileLinkOtp: (payload: { mobile: string; otp: string; password?: string }) => Promise<{ success: boolean; message: string; isMerged?: boolean; user?: User }>;
+  firebaseMobileLink: (payload: { idToken: string; password?: string }) => Promise<{ success: boolean; message: string; isMerged?: boolean; user?: User }>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   /** Merges fresh fields (e.g. after a profile-update API call) into the cached session user and persists them. */
@@ -330,7 +331,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
-        return { isProfileIncomplete: response.isProfileIncomplete, user: response.user };
+        return {
+          requiresMobileVerification: response.requiresMobileVerification,
+          isProfileIncomplete: response.isProfileIncomplete,
+          user: response.user,
+        };
       },
       linkGoogle: async (payload) => {
         const response = await linkGoogleApi(payload);
@@ -364,7 +369,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
           setUser(merged);
         }
-        return { success: res.success, message: res.message, isMerged: res.isMerged };
+        return { success: res.success, message: res.message, isMerged: res.isMerged, user: res.user };
+      },
+      firebaseMobileLink: async (payload) => {
+        const res = await firebaseMobileLinkApi(payload);
+        if (res.accessToken && res.user) {
+          await persistSession(res.accessToken, res.user);
+        } else if (res.user && userRef.current) {
+          const merged = { ...userRef.current, ...res.user };
+          await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
+          setUser(merged);
+        }
+        return { success: res.success, message: res.message, isMerged: res.isMerged, user: res.user };
       },
       register: async (payload) => {
         const response = await apiRegister(payload);

@@ -18,6 +18,15 @@ export declare class SendEmailOtpDto {
 export declare class SendMobileLinkOtpDto {
     mobile: string;
 }
+export declare class VerifyMobileLinkOtpDto {
+    mobile: string;
+    otp: string;
+    password?: string;
+}
+export declare class FirebaseMobileLinkDto {
+    idToken: string;
+    password?: string;
+}
 export declare class CompleteOtpRegistrationDto {
     mobile: string;
     name?: string;

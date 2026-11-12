@@ -29,6 +29,7 @@ import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 import { AssignStaffRoleDto } from './dto/assign-staff-role.dto';
 import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
+import { AdminCreateSendOtpDto, AdminCreateUserDto, AdminCreateVerifyOtpDto } from './dto/admin-create-user.dto';
 
 const ALL_AUTHENTICATED_ROLES: Role[] = [
   Role.CUSTOMER,
@@ -210,6 +211,29 @@ export class UsersController {
   @Patch(':id/operator-permissions')
   updateOperatorPermissions(@Param('id') id: string, @Body() dto: UpdateOperatorPermissionsDto) {
     return this.usersService.updateOperatorPermissions(id, dto.permissions);
+  }
+
+  /** Admin/Super Admin: Send mobile OTP prior to creating any user account via 3-step Directory modal */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('admin-create/send-otp')
+  sendAdminCreateOtp(@CurrentUser() user: AuthUser, @Body() dto: AdminCreateSendOtpDto) {
+    return this.usersService.sendAdminCreateOtp(user, dto.mobile);
+  }
+
+  /** Admin/Super Admin: Verify user's 6-digit OTP and issue short-lived signed verification token */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
+  @Post('admin-create/verify-otp')
+  verifyAdminCreateOtp(@CurrentUser() user: AuthUser, @Body() dto: AdminCreateVerifyOtpDto) {
+    return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp);
+  }
+
+  /** Admin/Super Admin: Unified 3-step user onboarding (Staff, Partners, Clients) requiring verified mobile OTP */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('admin-create')
+  adminCreateUser(@CurrentUser() user: AuthUser, @Body() dto: AdminCreateUserDto) {
+    return this.usersService.adminCreateUser(user, dto);
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)

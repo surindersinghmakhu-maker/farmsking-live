@@ -1,5 +1,6 @@
-import { randomBytes, randomInt, timingSafeEqual } from 'crypto';
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit, Optional } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   AdminStaffPermission,
   FarmerSubscriptionPlan,
@@ -20,6 +21,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { EmailService } from '../email/email.service';
+import { UserSessionService } from '../auth/user-session.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -32,6 +34,7 @@ import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
+import { AdminCreateCategory, AdminCreateRoleKey, AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { generateUniqueKingId } from '../../common/utils/king-id.util';
@@ -64,6 +67,7 @@ const SAFE_USER_SELECT = {
   name: true,
   email: true,
   isEmailVerified: true,
+  isPhoneVerified: true,
   pendingEmail: true,
   googleId: true,
   village: true,
@@ -103,6 +107,7 @@ const SAFE_USER_SELECT = {
   termsAcceptedAt: true,
   createdAt: true,
   deletedAt: true,
+  isPermanentlyBlocked: true,
   sellerStore: {
     select: {
       id: true,
@@ -146,6 +151,7 @@ function generateTempPassword(): string {
 @Injectable()
 export class UsersService implements OnModuleInit {
   private readonly deleteMeOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
+  private readonly adminCreateOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -155,10 +161,78 @@ export class UsersService implements OnModuleInit {
     @Optional() private readonly appSettingsService?: AppSettingsService,
     @Optional() private readonly whatsappBotService?: WhatsappBotService,
     @Optional() private readonly emailService?: EmailService,
+    @Optional() private readonly userSessionService?: UserSessionService,
+    @Optional() private readonly jwtService?: JwtService,
   ) {}
 
   async onModuleInit() {
     // Intentionally left blank to avoid blocking app boot.
+  }
+
+  private stripDeletedMarkers(value: string): string {
+    return value
+      .trim()
+      .replace(/^DEL_/i, '')
+      .replace(/_del_[a-z0-9_]+$/i, '')
+      .replace(/_\d{10,}$/i, '');
+  }
+
+  /** Generates a unique, changing character suffix for deleted mobile/email values so repeat deletions never collide. */
+  private async generateUniqueDeletedIdentifier(
+    currentValue: string | null | undefined,
+    field: 'mobile' | 'email',
+    fallbackId: string,
+    excludeUserId?: string,
+  ): Promise<string | null> {
+    if (!currentValue) {
+      if (field === 'email') return null;
+      return `UNKNOWN_${fallbackId}_del_A`;
+    }
+
+    const base = this.stripDeletedMarkers(currentValue) || (field === 'mobile' ? `UNKNOWN_${fallbackId}` : currentValue);
+    const prefix = `${base}_del_`;
+
+    if (currentValue.startsWith(prefix)) {
+      return currentValue;
+    }
+
+    const usedValues = new Set<string>();
+    if (typeof this.prisma.user?.findMany === 'function') {
+      try {
+        const existing = await this.prisma.user.findMany({
+          where: {
+            [field]: { startsWith: prefix },
+            ...(excludeUserId ? { id: { not: excludeUserId } } : {}),
+          },
+          select: field === 'mobile' ? { mobile: true } : { email: true },
+        });
+        for (const row of existing) {
+          const val = field === 'mobile' ? (row as { mobile?: string | null }).mobile : (row as { email?: string | null }).email;
+          if (val) usedValues.add(val);
+        }
+      } catch {
+        // Fallback to randomized suffix below if lookup fails
+      }
+    }
+
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (let i = 0; i < alphabet.length; i += 1) {
+      const candidate = `${prefix}${alphabet[i]}`;
+      if (!usedValues.has(candidate)) {
+        return candidate;
+      }
+    }
+
+    for (let i = 0; i < alphabet.length; i += 1) {
+      for (let j = 0; j < alphabet.length; j += 1) {
+        const candidate = `${prefix}${alphabet[i]}${alphabet[j]}`;
+        if (!usedValues.has(candidate)) {
+          return candidate;
+        }
+      }
+    }
+
+    return `${prefix}${randomBytes(4).toString('hex').toUpperCase()}`;
   }
 
   async list(query: ListUsersQueryDto) {
@@ -200,16 +274,32 @@ export class UsersService implements OnModuleInit {
 
     const where: Prisma.UserWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       this.prisma.user.findMany({
         where,
-        select: SAFE_USER_SELECT,
+        select: {
+          ...SAFE_USER_SELECT,
+          passwordHash: true,
+        },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
       this.prisma.user.count({ where }),
     ]);
+
+    const items = rawItems.map(({ passwordHash, ...rest }) => {
+      const presence =
+        !rest.deletedAt && !rest.isPermanentlyBlocked
+          ? this.userSessionService?.getUserPresence(rest.id)
+          : undefined;
+      return {
+        ...rest,
+        isPermanentlyDeleted: passwordHash === 'ACCOUNT_DELETED_PERMANENTLY',
+        isOnline: Boolean(presence?.isOnline),
+        lastSeenAt: presence?.lastSeenAt ? new Date(presence.lastSeenAt).toISOString() : null,
+      };
+    });
 
     return { items, total, page, limit };
   }
@@ -510,21 +600,20 @@ export class UsersService implements OnModuleInit {
 
     // 3. Scrub & anonymize PII — Google Play Store Account Deletion Policy Compliance.
     //    IMPORTANT: kingId is intentionally NOT changed — all linked historical records
-    //    (bills, orders, salary entries, workers, wallet transactions) stay traceable.
-    //    Mobile & Email get a DEL_ prefix so they are unusable for login
-    //    but still uniquely distinguishable in the DB for auditing.
-    const ts = Date.now();
-    const delMobile = dbUser.mobile ? `${dbUser.mobile}_del_${ts}` : `UNKNOWN_${user.id}_del_${ts}`;
-    const delEmail  = dbUser.email  ? `${dbUser.email}_del_${ts}`  : null;
-    const delKingId = dbUser.kingId ? `${dbUser.kingId}_del_${ts}` : null;
+    //    (bills, orders, salary entries, workers, wallet transactions) stay traceable across accounts.
+    //    Mobile & Email get a changing character suffix (_del_A, _del_B, ...) so login is blocked
+    //    and repeat deletions of the same mobile number never collide.
+    const delMobile = (await this.generateUniqueDeletedIdentifier(dbUser.mobile, 'mobile', user.id, user.id))!;
+    const delEmail = await this.generateUniqueDeletedIdentifier(dbUser.email, 'email', user.id, user.id);
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         name: 'Deleted Account',
-        mobile: delMobile,       // Appended _del so login is blocked but recovery/signup is possible
-        email: delEmail,         // Appended _del
-        kingId: delKingId,       // Appended _del to disable login via kingId and allow freeing up the ID if needed
+        mobile: delMobile,       // Appended changing _del_<char> so login is blocked and repeat deletes stay unique
+        email: delEmail,         // Appended changing _del_<char>
+        googleId: null,          // Clear unique googleId so user can sign in again with Google if needed
+        // kingId intentionally preserved so linked records across accounts can continue referencing it
         photoUrl: null,
         village: null,
         district: null,
@@ -1652,8 +1741,18 @@ export class UsersService implements OnModuleInit {
 
     const { passwordHash: _passwordHash, securityAnswerHash: _securityAnswerHash, ...safeUser } = user;
 
+    const presence =
+      !safeUser.deletedAt && !safeUser.isPermanentlyBlocked
+        ? this.userSessionService?.getUserPresence(safeUser.id)
+        : undefined;
+
     return {
-      user: safeUser,
+      user: {
+        ...safeUser,
+        isPermanentlyDeleted: _passwordHash === 'ACCOUNT_DELETED_PERMANENTLY',
+        isOnline: Boolean(presence?.isOnline),
+        lastSeenAt: presence?.lastSeenAt ? new Date(presence.lastSeenAt).toISOString() : null,
+      },
       farmCount,
       walletBalance,
       couponsUsed,
@@ -1777,28 +1876,27 @@ export class UsersService implements OnModuleInit {
   async deactivate(caller: AuthUser, id: string) {
     const user = await this.findActiveOrThrow(id);
     this.assertCanManageTarget(caller, user);
+    if (user.mobile === '9872066901') {
+      throw new ConflictException('Primary Super Admin account 9872066901 cannot be blocked.');
+    }
     if (caller.role !== Role.SUPER_ADMIN && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN)) {
-      throw new ConflictException('An admin account cannot be deactivated.');
+      throw new ConflictException('An admin account cannot be blocked.');
     }
-    if (user.deletedAt) {
-      throw new ConflictException('User is already deactivated.');
+    if (user.deletedAt || user.isPermanentlyBlocked) {
+      throw new ConflictException('User is already blocked or deleted.');
     }
 
-    const timestamp = Date.now();
-    const newMobile = user.mobile.includes('_del_') ? user.mobile : `${user.mobile}_del_${timestamp}`;
-    const newEmail = user.email ? (user.email.includes('_del_') ? user.email : `${user.email}_del_${timestamp}`) : null;
-
+    // Keep mobile & email intact on Block so the same mobile number cannot sign up or sign in again until Unblocked
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
         deletedAt: new Date(),
-        mobile: newMobile,
-        email: newEmail,
+        isPermanentlyBlocked: true,
       },
       select: SAFE_USER_SELECT,
     });
 
-    // 📲 WhatsApp Group: remove deactivated user from group
+    // 📲 WhatsApp Group: remove blocked user from group
     this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
 
     return updated;
@@ -1807,31 +1905,55 @@ export class UsersService implements OnModuleInit {
   async reactivate(caller: AuthUser, id: string) {
     const user = await this.findActiveOrThrow(id);
     this.assertCanManageTarget(caller, user);
-    if (!user.deletedAt) {
+    if (!user.deletedAt && !user.isPermanentlyBlocked) {
       throw new ConflictException('User is already active.');
     }
-    if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY') {
-      throw new ConflictException('Permanently deleted user accounts cannot be reactivated.');
-    }
 
-    const restoredMobile = user.mobile.replace(/^DEL_/, '').replace(/_del_\d+$/, '');
-    const restoredEmail = user.email ? user.email.replace(/_del_\d+$/, '') : null;
-    const restoredKingId = user.kingId ? user.kingId.replace(/_del_\d+$/, '') : undefined;
+    const restoredMobile = this.stripDeletedMarkers(user.mobile);
+    const restoredEmail = user.email ? this.stripDeletedMarkers(user.email) : null;
+    const restoredKingId = user.kingId ? user.kingId.replace(/_del_[a-z0-9_]+$/i, '') : undefined;
+
+    const cleanDigits = restoredMobile.replace(/\D/g, '');
+    const clean10 = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : '';
 
     const existing = await this.prisma.user.findFirst({
-      where: { mobile: restoredMobile, deletedAt: null, id: { not: id } },
+      where: {
+        deletedAt: null,
+        id: { not: id },
+        OR: [
+          { mobile: restoredMobile },
+          ...(clean10 ? [{ mobile: clean10 }, { mobile: `+91${clean10}` }] : []),
+        ],
+      },
+      select: { id: true, kingId: true, name: true },
     });
     if (existing) {
-      throw new ConflictException(`Cannot reactivate: Mobile ${restoredMobile} is already in use by another active account.`);
+      throw new ConflictException(
+        `Cannot restore: Another active account (${existing.kingId || existing.name}) already exists on mobile ${restoredMobile}.`,
+      );
     }
+
+    const wasAnonymized = user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY';
+    const nextPasswordHash = wasAnonymized ? await argon2.hash(generateTempPassword()) : undefined;
+    const nextName =
+      user.name === 'Deleted Account'
+        ? restoredMobile.startsWith('G_')
+          ? 'Restored Account'
+          : `User ${restoredMobile.slice(-4)}`
+        : undefined;
 
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
         deletedAt: null,
+        isPermanentlyBlocked: false,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
         mobile: restoredMobile,
         email: restoredEmail,
         ...(restoredKingId ? { kingId: restoredKingId } : {}),
+        ...(nextPasswordHash ? { passwordHash: nextPasswordHash } : {}),
+        ...(nextName ? { name: nextName } : {}),
       },
       select: SAFE_USER_SELECT,
     });
@@ -2122,8 +2244,8 @@ export class UsersService implements OnModuleInit {
     if (user.mobile === '9872066901') {
       throw new ConflictException('Primary Super Admin account 9872066901 cannot be deleted.');
     }
-    if (!user.deletedAt) {
-      throw new BadRequestException('User must be soft-deleted (deactivated) before this operation. Please deactivate the user first.');
+    if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY') {
+      throw new ConflictException('This user account is already permanently deleted.');
     }
     if (this.appSettingsService) {
       this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
@@ -2132,10 +2254,10 @@ export class UsersService implements OnModuleInit {
     // Soft-delete — same policy as self-service deleteMe:
     // KingID stays intact so all linked historical records (bills, orders, salary,
     // workers, wallet transactions) remain fully traceable for audit.
-    // Mobile & Email get a DEL_ prefix — login is permanently blocked.
-    const ts = Date.now();
-    const delMobile = user.mobile ? `DEL_${user.mobile}_${ts}` : `DEL_UNKNOWN_${id}_${ts}`;
-    const delEmail  = user.email  ? `DEL_${user.email}_${ts}`  : null;
+    // Mobile & Email get a changing character suffix (_del_A, _del_B, ...) so login is blocked
+    // and repeat deletions of the same mobile number never collide.
+    const delMobile = (await this.generateUniqueDeletedIdentifier(user.mobile, 'mobile', id, id))!;
+    const delEmail = await this.generateUniqueDeletedIdentifier(user.email, 'email', id, id);
 
     await this.prisma.user.update({
       where: { id },
@@ -2143,7 +2265,8 @@ export class UsersService implements OnModuleInit {
         name: 'Deleted Account',
         mobile: delMobile,
         email: delEmail,
-        // kingId → intentionally unchanged
+        googleId: null,
+        // kingId → intentionally unchanged so linked records across accounts remain traceable
         photoUrl: null,
         village: null,
         district: null,
@@ -2919,7 +3042,7 @@ export class UsersService implements OnModuleInit {
 
     let nextStatus: VerifiedLeadStatus | undefined;
     if (dto.status === VerifiedLeadStatus.DISMISSED || dto.status === VerifiedLeadStatus.OTP_CONFIRMED) {
-      if (existing.convertedUserId) {
+      if (existing.convertedUserId && existing.portal !== 'PARTNER') {
         throw new BadRequestException('Cannot change status after an account has already been created for this lead.');
       }
       nextStatus = dto.status as VerifiedLeadStatus;
@@ -2973,9 +3096,9 @@ export class UsersService implements OnModuleInit {
       lead: updated,
       message:
         nextStatus === VerifiedLeadStatus.DISMISSED
-          ? 'Lead moved to Dismissed.'
+          ? 'Lead marked as Done / Read.'
           : nextStatus === VerifiedLeadStatus.OTP_CONFIRMED
-            ? 'Lead restored to Waiting Follow-Up.'
+            ? 'Lead marked as Unread (Follow-Up Pending).'
             : 'Follow-up details and notes saved.',
     };
   }
@@ -3168,6 +3291,469 @@ export class UsersService implements OnModuleInit {
       user: txResult.createdUser,
       lead: txResult.updatedLead,
       message: `${txResult.createdUser.name} account created with King ID ${txResult.createdUser.kingId}.`,
+    };
+  }
+
+  // ─── Unified 3-Step Admin User Onboarding with Mandatory Mobile OTP Verification ───
+
+  private normalizeAdminCreateMobile(rawMobile: string): string {
+    const cleanMobile = (rawMobile || '').replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      throw new BadRequestException('Please enter a valid 10-digit Indian mobile number.');
+    }
+    return cleanMobile;
+  }
+
+  private signAdminCreateOtpToken(adminId: string, mobile: string): string {
+    const payload = { scope: 'ADMIN_CREATE_USER_OTP', adminId, mobile };
+    if (this.jwtService?.sign) {
+      return this.jwtService.sign(payload, { expiresIn: '30m' });
+    }
+    const secret = process.env.JWT_SECRET || 'farmsking-admin-create-fallback';
+    const data = Buffer.from(JSON.stringify({ ...payload, exp: Date.now() + 30 * 60 * 1000 })).toString('base64url');
+    const sig = createHmac('sha256', secret).update(data).digest('base64url');
+    return `${data}.${sig}`;
+  }
+
+  private verifyAdminCreateOtpToken(token: string, expectedAdminId: string, expectedMobile: string): void {
+    let payload: any;
+    if (this.jwtService?.verify) {
+      try {
+        payload = this.jwtService.verify(token);
+      } catch {
+        throw new UnauthorizedException('Mobile OTP verification session expired. Please verify mobile OTP again.');
+      }
+    } else {
+      const [data, sig] = (token || '').split('.');
+      if (!data || !sig) {
+        throw new UnauthorizedException('Invalid mobile OTP verification token.');
+      }
+      const secret = process.env.JWT_SECRET || 'farmsking-admin-create-fallback';
+      const expectedSig = createHmac('sha256', secret).update(data).digest('base64url');
+      if (sig.length !== expectedSig.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+        throw new UnauthorizedException('Invalid mobile OTP verification token.');
+      }
+      payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+      if (payload?.exp && Date.now() > payload.exp) {
+        throw new UnauthorizedException('Mobile OTP verification session expired. Please verify mobile OTP again.');
+      }
+    }
+
+    if (
+      payload?.scope !== 'ADMIN_CREATE_USER_OTP' ||
+      payload?.adminId !== expectedAdminId ||
+      payload?.mobile !== expectedMobile
+    ) {
+      throw new UnauthorizedException('Mobile OTP verification token does not match this mobile number or Admin session.');
+    }
+  }
+
+  private async checkAdminCreateMobileAvailability(cleanMobile: string) {
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+          { mobile: { endsWith: cleanMobile } },
+        ],
+        AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
+      },
+      select: { id: true, kingId: true, name: true, role: true, isPermanentlyBlocked: true },
+    });
+
+    if (existing?.isPermanentlyBlocked) {
+      throw new ConflictException(
+        `Mobile number ${cleanMobile} is permanently blocked by Admin (King ID: ${existing.kingId || existing.id}). Unblock it from Deleted / Blocked Archive first.`,
+      );
+    }
+    if (existing) {
+      throw new ConflictException(
+        `An active FarmsKing account already exists on ${cleanMobile} (${existing.name} · King ID: ${existing.kingId || existing.id} · Role: ${existing.role}).`,
+      );
+    }
+  }
+
+  private assertAdminCreateCategoryAndRole(
+    caller: AuthUser,
+    category: AdminCreateCategory,
+    roleKey: AdminCreateRoleKey,
+  ) {
+    const allowedByCategory: Record<AdminCreateCategory, readonly AdminCreateRoleKey[]> = {
+      STAFF: ['ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'],
+      PARTNERS: ['AGENT', 'SELLER', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TRADER'],
+      CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR'],
+    };
+    if (!allowedByCategory[category]?.includes(roleKey)) {
+      throw new BadRequestException(`Role ${roleKey} does not belong to category ${category}.`);
+    }
+    if ((roleKey === 'ADMIN' || roleKey === 'MANAGER') && caller.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only the Super Admin can create Admin or Manager accounts.');
+    }
+  }
+
+  async sendAdminCreateOtp(caller: AuthUser, mobile: string) {
+    const cleanMobile = this.normalizeAdminCreateMobile(mobile);
+    await this.checkAdminCreateMobileAvailability(cleanMobile);
+
+    const isDev = process.env.NODE_ENV !== 'production';
+    const otpCode = isDev ? '123456' : randomInt(100000, 1000000).toString();
+    const key = `${caller.id}:${cleanMobile}`;
+    this.adminCreateOtpStore.set(key, {
+      otp: otpCode,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      attempts: 0,
+    });
+
+    let waSent = false;
+    if (!isDev && this.whatsappBotService) {
+      try {
+        const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+        waSent = Boolean(waRes?.success);
+      } catch {
+        waSent = false;
+      }
+    }
+
+    return {
+      success: true,
+      mobile: cleanMobile,
+      waSent,
+      message: isDev
+        ? 'Localhost test mode active. Use verification code: 123456'
+        : waSent
+          ? `6-digit verification OTP sent to ${cleanMobile} via WhatsApp.`
+          : '6-digit verification OTP generated for onboarding.',
+      devOtp: isDev ? otpCode : undefined,
+      expiresInSeconds: 600,
+    };
+  }
+
+  async verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string) {
+    const cleanMobile = this.normalizeAdminCreateMobile(mobile);
+    const key = `${caller.id}:${cleanMobile}`;
+    const stored = this.adminCreateOtpStore.get(key);
+    const provided = (otp || '').trim();
+    const isDev = process.env.NODE_ENV !== 'production';
+
+    if (!stored) {
+      throw new BadRequestException('OTP not requested or expired. Please click Send OTP first.');
+    }
+    if (Date.now() > stored.expiresAt) {
+      this.adminCreateOtpStore.delete(key);
+      throw new BadRequestException('OTP has expired. Please request a fresh OTP.');
+    }
+    if (stored.attempts >= 5) {
+      this.adminCreateOtpStore.delete(key);
+      throw new BadRequestException('Too many invalid OTP attempts. Please request a fresh OTP.');
+    }
+
+    const expectedBuf = Buffer.from(stored.otp, 'utf8');
+    const providedBuf = Buffer.from(provided, 'utf8');
+    const isExactMatch = expectedBuf.length === providedBuf.length && timingSafeEqual(expectedBuf, providedBuf);
+    const isMatch = isExactMatch || (isDev && provided === '123456');
+
+    if (!isMatch) {
+      stored.attempts += 1;
+      if (stored.attempts >= 5) {
+        this.adminCreateOtpStore.delete(key);
+        throw new BadRequestException('Too many invalid OTP attempts. Code invalidated; please request a fresh OTP.');
+      }
+      throw new BadRequestException(`Invalid OTP. ${5 - stored.attempts} attempt(s) remaining.`);
+    }
+
+    this.adminCreateOtpStore.delete(key);
+    await this.checkAdminCreateMobileAvailability(cleanMobile);
+
+    const otpVerificationToken = this.signAdminCreateOtpToken(caller.id, cleanMobile);
+    return {
+      success: true,
+      verified: true,
+      mobile: cleanMobile,
+      otpVerificationToken,
+      message: `Mobile number ${cleanMobile} verified successfully.`,
+    };
+  }
+
+  async adminCreateUser(caller: AuthUser, dto: AdminCreateUserDto) {
+    this.assertAdminCreateCategoryAndRole(caller, dto.category, dto.role);
+    const cleanMobile = this.normalizeAdminCreateMobile(dto.mobile);
+    this.verifyAdminCreateOtpToken(dto.otpVerificationToken, caller.id, cleanMobile);
+    await this.checkAdminCreateMobileAvailability(cleanMobile);
+
+    const cleanEmail = dto.email?.trim() ? dto.email.trim().toLowerCase() : null;
+    if (cleanEmail) {
+      const emailOwner = await this.prisma.user.findFirst({
+        where: {
+          email: cleanEmail,
+          AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
+        },
+        select: { id: true, isPermanentlyBlocked: true },
+      });
+      if (emailOwner) {
+        throw new ConflictException(
+          emailOwner.isPermanentlyBlocked
+            ? 'This email belongs to a permanently blocked account.'
+            : 'This email address is already registered with another FarmsKing account.',
+        );
+      }
+    }
+
+    // Resolve employer farmer if creating a Supervisor
+    let employerFarmerId: string | null = null;
+    if (dto.role === 'SUPERVISOR') {
+      const employerQuery = dto.employerFarmerKingIdOrMobile?.trim();
+      if (!employerQuery) {
+        throw new BadRequestException('Employer Farmer King ID or 10-digit Mobile Number is required for Supervisor.');
+      }
+      const empDigits = employerQuery.replace(/\D/g, '').slice(-10);
+      const employer = await this.prisma.user.findFirst({
+        where: {
+          deletedAt: null,
+          OR: [
+            { kingId: employerQuery },
+            ...(empDigits.length === 10
+              ? [{ mobile: empDigits }, { mobile: `+91${empDigits}` }, { mobile: { endsWith: empDigits } }]
+              : []),
+          ],
+        },
+        select: { id: true, role: true, roles: true, deactivatedRoles: true, name: true, kingId: true },
+      });
+      if (!employer) {
+        throw new NotFoundException('Employer Farmer account not found by that King ID or Mobile Number.');
+      }
+      const empRoles = getActiveRolesList(employer);
+      if (!empRoles.includes(Role.FARMER)) {
+        throw new BadRequestException(`User ${employer.name} (${employer.kingId}) does not hold an active Farmer role.`);
+      }
+      employerFarmerId = employer.id;
+    }
+
+    if (dto.role === 'SELLER' && !dto.storeName?.trim()) {
+      throw new BadRequestException('Store Name is required when onboarding a Seller.');
+    }
+
+    let primaryRole: Role;
+    let assignedRoles: Role[];
+    let advisorType: 'FARM' | 'GARDEN' | null = null;
+
+    switch (dto.role) {
+      case 'ADMIN':
+      case 'MANAGER':
+      case 'OPERATOR':
+      case 'TECHNICAL_TRAINER':
+      case 'ACCOUNTANT':
+        primaryRole = dto.role as Role;
+        assignedRoles = [primaryRole];
+        break;
+      case 'FARM_ADVISOR':
+        primaryRole = Role.ADVISOR;
+        assignedRoles = [Role.ADVISOR, Role.CUSTOMER];
+        advisorType = 'FARM';
+        break;
+      case 'GARDEN_ADVISOR':
+        primaryRole = Role.ADVISOR;
+        assignedRoles = [Role.ADVISOR, Role.CUSTOMER];
+        advisorType = 'GARDEN';
+        break;
+      case 'AGENT':
+      case 'SELLER':
+      case 'TRADER':
+        primaryRole = dto.role as Role;
+        assignedRoles = [primaryRole, Role.CUSTOMER];
+        break;
+      case 'FARMER':
+      case 'GARDENER':
+        primaryRole = dto.role as Role;
+        assignedRoles = [Role.CUSTOMER, primaryRole];
+        break;
+      case 'SUPERVISOR':
+        primaryRole = Role.SUPERVISOR;
+        assignedRoles = [Role.SUPERVISOR, Role.CUSTOMER];
+        break;
+      case 'CUSTOMER':
+      default:
+        primaryRole = Role.CUSTOMER;
+        assignedRoles = [Role.CUSTOMER];
+        break;
+    }
+
+    const customPassword = dto.password?.trim();
+    const isPasswordRole = dto.category === 'STAFF' || dto.category === 'PARTNERS';
+    const plainPassword = customPassword || (isPasswordRole ? generateTempPassword() : randomBytes(24).toString('hex'));
+    const passwordHash = await argon2.hash(plainPassword);
+    const kingId = await generateUniqueKingId(this.prisma);
+
+    const createdUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          kingId,
+          mobile: cleanMobile,
+          passwordHash,
+          name: dto.name.trim(),
+          email: cleanEmail,
+          isPhoneVerified: true,
+          isEmailVerified: Boolean(cleanEmail),
+          pincode: dto.pincode?.trim() || null,
+          postOffice: dto.postOffice?.trim() || null,
+          village: dto.village?.trim() || null,
+          district: dto.district?.trim() || null,
+          state: dto.state?.trim() || null,
+          billPrintingAddress: dto.address?.trim() || null,
+          farmAddress: dto.role === 'FARMER' ? (dto.address?.trim() || null) : null,
+          farmName: dto.role === 'FARMER' ? (dto.farmName?.trim() || null) : null,
+          sprayTankSizeL: dto.role === 'FARMER' ? (dto.sprayTankSizeL ?? null) : null,
+          soilType: dto.role === 'FARMER' ? (dto.soilType ?? null) : null,
+          waterType: dto.role === 'FARMER' ? (dto.waterType ?? null) : null,
+          role: primaryRole,
+          roles: assignedRoles,
+          advisorType,
+          specialization: primaryRole === Role.ADVISOR ? (dto.specialization?.trim() || null) : null,
+          qualification: primaryRole === Role.ADVISOR ? (dto.qualification?.trim() || null) : null,
+          yearsExperience: primaryRole === Role.ADVISOR ? (dto.yearsExperience ?? null) : null,
+          doctorConsultationFee: primaryRole === Role.ADVISOR ? (dto.doctorConsultationFee ?? null) : null,
+          bio: primaryRole === Role.ADVISOR ? (dto.bio?.trim() || null) : null,
+          panNumber: dto.panNumber?.trim().toUpperCase() || null,
+          upiId: dto.upiId?.trim() || null,
+          alternativeMobile: dto.alternativeMobile?.trim() || null,
+          bankAccountHolderName: dto.bankAccountHolderName?.trim() || null,
+          bankAccountNumber: dto.bankAccountNumber?.trim() || null,
+          bankIfsc: dto.bankIfsc?.trim().toUpperCase() || null,
+          employerFarmerId,
+          supervisorPermissions:
+            primaryRole === Role.SUPERVISOR
+              ? [
+                  SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+                  SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+                  SupervisorPermission.CROP_DOCTOR_CHAT,
+                  SupervisorPermission.MANAGE_HARVEST_SALES,
+                ]
+              : [],
+          termsAcceptedAt: new Date(),
+          privacyPolicyVersion: '2026.11',
+        },
+        select: SAFE_USER_SELECT,
+      });
+
+      if (primaryRole === Role.FARMER) {
+        await tx.farmerPlan.upsert({
+          where: { farmerId: user.id },
+          create: { farmerId: user.id },
+          update: {},
+        });
+      } else if (primaryRole === Role.GARDENER) {
+        await tx.gardenerPlan.upsert({
+          where: { gardenerId: user.id },
+          create: { gardenerId: user.id },
+          update: {},
+        });
+      } else if (primaryRole === Role.SELLER) {
+        const rawBase =
+          (dto.storeName || dto.name || 'seller-store')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 32) || 'farmsking-store';
+        const slug = `${rawBase}-${randomBytes(3).toString('hex')}`;
+        await tx.sellerStore.create({
+          data: {
+            sellerId: user.id,
+            storeName: dto.storeName!.trim(),
+            slug,
+            sellerType: dto.sellerType || SellerType.COMMERCIAL,
+            legalName: dto.name.trim(),
+            gstin: dto.gstin?.trim().toUpperCase() || null,
+            panNumber: dto.panNumber?.trim().toUpperCase() || null,
+            upiId: dto.upiId?.trim() || null,
+            kycStatus: SellerKycStatus.VERIFIED,
+            kycVerifiedAt: new Date(),
+            kycVerifiedById: caller.id,
+            bankAccountNo: dto.bankAccountNumber?.trim() || null,
+            bankIfsc: dto.bankIfsc?.trim().toUpperCase() || null,
+            bankBeneficiaryName: dto.bankAccountHolderName?.trim() || null,
+            pickupAddress: dto.address?.trim() || null,
+            pickupCity: dto.district?.trim() || null,
+            pickupState: dto.state?.trim() || null,
+            pickupPincode: dto.pincode?.trim() || null,
+            sellerAgreementAcceptedAt: new Date(),
+            sellerAgreementVersion: '2026.11',
+          },
+        });
+      }
+
+      // Auto-convert matching VerifiedSignupLead if user had verified OTP earlier in OTP Follow-Ups
+      if (tx.verifiedSignupLead?.findUnique && tx.verifiedSignupLead?.update) {
+        const existingLead = await tx.verifiedSignupLead.findUnique({ where: { mobile: cleanMobile } });
+        if (existingLead) {
+          await tx.verifiedSignupLead.update({
+            where: { id: existingLead.id },
+            data: {
+              status: VerifiedLeadStatus.CONVERTED_BY_ADMIN,
+              convertedUserId: user.id,
+              convertedById: caller.id,
+              convertedAt: new Date(),
+              intendedRole: primaryRole,
+              capturedName: user.name,
+              capturedEmail: user.email,
+              pincode: user.pincode,
+              district: user.district,
+              state: user.state,
+              village: user.village,
+            },
+          });
+        }
+      }
+
+      await tx.isoAuditLog?.create({
+        data: {
+          action: 'ADMIN_CREATED_USER_WITH_OTP',
+          actorId: caller.id,
+          actorName: caller.name,
+          details: {
+            createdUserId: user.id,
+            kingId: user.kingId,
+            mobile: cleanMobile,
+            category: dto.category,
+            role: dto.role,
+          },
+        },
+      });
+
+      return user;
+    });
+
+    try {
+      await provisionInviteCoupon(this.prisma, createdUser.id);
+    } catch {}
+    if (dto.category !== 'STAFF') {
+      try {
+        await this.walletService.ensureWelcomeBonus(createdUser.id);
+      } catch {}
+    }
+    try {
+      await this.notificationsService.create(
+        createdUser.id,
+        NotificationType.SYSTEM,
+        'Welcome to FarmsKing!',
+        `Hello ${createdUser.name}! Your FarmsKing (${dto.role.replace(/_/g, ' ')}) account is now active. King ID: ${createdUser.kingId}.`,
+      );
+    } catch {}
+
+    this.whatsappBotService
+      ?.sendDirectTextMessage(
+        cleanMobile,
+        `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${createdUser.name}*,\nYour FarmsKing *${dto.role.replace(/_/g, ' ')}* account has been activated by Admin!\n\n🔑 *King ID:* ${createdUser.kingId}\n📱 *Mobile:* ${cleanMobile}${isPasswordRole && !customPassword ? `\n🔐 *Temporary Password:* ${plainPassword}` : ''}\n\nVisit https://farmsking.in to get started.\n\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`,
+      )
+      .catch(() => {});
+
+    this.whatsappGroupSyncService
+      ?.autoAddNewUser(createdUser.id, cleanMobile, createdUser.name)
+      .catch(() => {});
+
+    return {
+      success: true,
+      user: createdUser,
+      tempPassword: isPasswordRole && !customPassword ? plainPassword : null,
+      message: `${createdUser.name} created successfully with King ID ${createdUser.kingId}.`,
     };
   }
 }

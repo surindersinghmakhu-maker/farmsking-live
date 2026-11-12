@@ -92,7 +92,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     if (!user?.id) return primaryRole;
     if (isStaffUser) return user.role as UserRole;
     if (assignedRoles.includes('SUPERVISOR')) return 'SUPERVISOR';
-    if (assignedRoles.includes('LABOUR') || user.role === 'LABOUR') return 'LABOUR';
+    if (user.role === 'LABOUR') return 'LABOUR';
 
     if (loginPortal === 'CLIENT') {
       if (hasFarmerRole) return 'FARMER';

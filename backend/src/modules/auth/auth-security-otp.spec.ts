@@ -13,6 +13,7 @@ import { ConflictException, ForbiddenException, UnauthorizedException } from '@n
 import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { UserSessionService } from './user-session.service';
+import { LabourService } from '../labour/labour.service';
 
 describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
   const createDeps = () => {
@@ -73,7 +74,7 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
     }
   });
 
-  it('allows pre-added LabourWorker to sign in with verified OTP and auto-provisions LABOUR user', async () => {
+  it('allows pre-added LabourWorker without account to sign in with verified OTP, issuing a King ID and default CUSTOMER role', async () => {
     const { service, prisma } = createDeps();
     prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
     prisma.labourWorker.findFirst.mockResolvedValue({
@@ -87,8 +88,8 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
       kingId: '12345678',
       mobile: '9811122233',
       name: 'Raju Worker',
-      role: Role.LABOUR,
-      roles: [Role.LABOUR, Role.CUSTOMER],
+      role: Role.CUSTOMER,
+      roles: [Role.CUSTOMER],
       deactivatedRoles: [],
       isPermanentlyBlocked: false,
       lockoutUntil: null,
@@ -100,8 +101,8 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
       kingId: '12345678',
       mobile: '9811122233',
       name: 'Raju Worker',
-      role: Role.LABOUR,
-      roles: [Role.LABOUR, Role.CUSTOMER],
+      role: Role.CUSTOMER,
+      roles: [Role.CUSTOMER],
       deactivatedRoles: [],
       ...data,
     }));
@@ -112,12 +113,14 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
 
     expect(res.isNewUser).toBe(false);
     expect((res as any).accessToken).toBe('mock.jwt.token');
+    expect((res as any).user.kingId).toBe('12345678');
+    expect((res as any).user.role).toBe(Role.CUSTOMER);
     expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           mobile: '9811122233',
-          role: Role.LABOUR,
-          roles: [Role.LABOUR, Role.CUSTOMER],
+          role: Role.CUSTOMER,
+          roles: [Role.CUSTOMER],
           isPhoneVerified: true,
         }),
       }),
@@ -188,6 +191,105 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
 
     sessionSvc.logoutSession('u-1', s2.sessionId);
     expect(sessionSvc.isValidSession('u-1', s2.sessionId)).toBe(false);
+  });
+
+  it('does not create any User account or King ID when Farmer adds a LabourWorker', async () => {
+    const prisma: any = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn(),
+        update: jest.fn(),
+      },
+      labourWorker: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({
+          id: 'lw-new',
+          farmerId: 'farmer-1',
+          userId: null,
+          name: 'Sohan Worker',
+          mobile: '9811122244',
+        }),
+      },
+    };
+    const labourService = new LabourService(prisma);
+    const created = await labourService.createWorker(
+      { id: 'farmer-1', role: Role.FARMER, roles: [Role.FARMER, Role.CUSTOMER], deactivatedRoles: [] } as any,
+      { name: 'Sohan Worker', mobile: '9811122244' } as any,
+    );
+
+    expect(created.userId).toBeNull();
+    expect(prisma.user.create).not.toHaveBeenCalled();
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('requires mobile OTP verification after Gmail signup and activates verified mobile via sendMobileLinkOtp + verifyMobileLinkOtp', async () => {
+    const { service, prisma } = createDeps();
+    (service as any).emailService = {
+      sendEmailLinkedNotification: jest.fn().mockResolvedValue({}),
+      sendMobileUpdatedEmailNotification: jest.fn().mockResolvedValue({}),
+      sendEmailDisconnectedNotification: jest.fn().mockResolvedValue({}),
+    };
+
+    // Mock Google userinfo fetch
+    const origFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        email: 'kisan.gmail@gmail.com',
+        email_verified: true,
+        name: 'Kisan Gmail',
+        sub: 'google-sub-123',
+      }),
+    }) as any;
+
+    try {
+      prisma.user.findFirst.mockResolvedValueOnce(null);
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: 'u-google-1',
+        kingId: '10009911',
+        email: 'kisan.gmail@gmail.com',
+        googleId: 'google-sub-123',
+        name: 'Kisan Gmail',
+        mobile: 'G_9988776655',
+        role: Role.CUSTOMER,
+        roles: [Role.CUSTOMER],
+        deactivatedRoles: [],
+        isPhoneVerified: false,
+        isEmailVerified: true,
+      });
+
+      const gRes = await service.googleLogin({ accessToken: 'valid-google-token', portal: 'CLIENT' });
+      expect(gRes.requiresMobileVerification).toBe(true);
+      expect(gRes.user.isPhoneVerified).toBe(false);
+
+      // Step 2: Send & verify mobile OTP
+      prisma.user.findFirst.mockResolvedValue(null);
+      const otpSend = await service.sendMobileLinkOtp({ id: 'u-google-1', mobile: 'G_9988776655' } as any, '9876543211');
+      expect(otpSend.success).toBe(true);
+
+      prisma.user.update.mockResolvedValue({
+        id: 'u-google-1',
+        kingId: '10009911',
+        email: 'kisan.gmail@gmail.com',
+        name: 'Kisan Gmail',
+        mobile: '9876543211',
+        role: Role.CUSTOMER,
+        roles: [Role.CUSTOMER],
+        isPhoneVerified: true,
+        isEmailVerified: true,
+      });
+
+      const linkRes = await service.verifyMobileLinkOtp(
+        { id: 'u-google-1', mobile: 'G_9988776655' } as any,
+        { mobile: '9876543211', otp: otpSend.devOtp! },
+      );
+      expect(linkRes.success).toBe(true);
+      expect(linkRes.user.mobile).toBe('9876543211');
+      expect(linkRes.user.isPhoneVerified).toBe(true);
+    } finally {
+      global.fetch = origFetch;
+    }
   });
 });
 

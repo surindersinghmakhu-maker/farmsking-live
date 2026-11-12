@@ -1,4 +1,5 @@
 import { OnModuleInit } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AdminStaffPermission, OperatorPermission, Prisma, Role, SupervisorPermission } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -6,6 +7,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { EmailService } from '../email/email.service';
+import { UserSessionService } from '../auth/user-session.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -18,6 +20,7 @@ import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
+import { AdminCreateUserDto } from './dto/admin-create-user.dto';
 import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 export declare class UsersService implements OnModuleInit {
@@ -28,11 +31,19 @@ export declare class UsersService implements OnModuleInit {
     private readonly appSettingsService?;
     private readonly whatsappBotService?;
     private readonly emailService?;
+    private readonly userSessionService?;
+    private readonly jwtService?;
     private readonly deleteMeOtpStore;
-    constructor(prisma: PrismaService, walletService: WalletService, whatsappGroupSyncService: WhatsAppGroupSyncService, notificationsService: NotificationsService, appSettingsService?: AppSettingsService | undefined, whatsappBotService?: WhatsappBotService | undefined, emailService?: EmailService | undefined);
+    private readonly adminCreateOtpStore;
+    constructor(prisma: PrismaService, walletService: WalletService, whatsappGroupSyncService: WhatsAppGroupSyncService, notificationsService: NotificationsService, appSettingsService?: AppSettingsService | undefined, whatsappBotService?: WhatsappBotService | undefined, emailService?: EmailService | undefined, userSessionService?: UserSessionService | undefined, jwtService?: JwtService | undefined);
     onModuleInit(): Promise<void>;
+    private stripDeletedMarkers;
+    private generateUniqueDeletedIdentifier;
     list(query: ListUsersQueryDto): Promise<{
         items: {
+            isPermanentlyDeleted: boolean;
+            isOnline: boolean;
+            lastSeenAt: string | null;
             sellerStore: {
                 id: string;
                 storeName: string;
@@ -81,6 +92,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -166,6 +179,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -243,6 +258,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -319,6 +336,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -394,6 +413,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -493,6 +514,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -568,6 +591,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -645,6 +670,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -721,6 +748,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -795,6 +824,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -870,6 +901,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -947,6 +980,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1024,6 +1059,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1100,6 +1137,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1175,6 +1214,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1312,6 +1353,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1386,6 +1429,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1463,6 +1508,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1538,6 +1585,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1631,6 +1680,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1705,6 +1756,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1732,6 +1785,9 @@ export declare class UsersService implements OnModuleInit {
     }>;
     getDetail(caller: AuthUser, id: string): Promise<{
         user: {
+            isPermanentlyDeleted: boolean;
+            isOnline: boolean;
+            lastSeenAt: string | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
@@ -1920,6 +1976,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1997,6 +2055,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2071,6 +2131,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2145,6 +2207,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2219,6 +2283,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2293,6 +2359,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2387,6 +2455,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2482,6 +2552,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2578,6 +2650,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2670,6 +2744,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2744,6 +2820,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2818,6 +2896,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2892,6 +2972,8 @@ export declare class UsersService implements OnModuleInit {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -3219,6 +3301,8 @@ export declare class UsersService implements OnModuleInit {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -3285,6 +3369,107 @@ export declare class UsersService implements OnModuleInit {
             convertedById: string | null;
             convertedAt: Date | null;
         };
+        message: string;
+    }>;
+    private normalizeAdminCreateMobile;
+    private signAdminCreateOtpToken;
+    private verifyAdminCreateOtpToken;
+    private checkAdminCreateMobileAvailability;
+    private assertAdminCreateCategoryAndRole;
+    sendAdminCreateOtp(caller: AuthUser, mobile: string): Promise<{
+        success: boolean;
+        mobile: string;
+        waSent: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
+    verifyAdminCreateOtp(caller: AuthUser, mobile: string, otp: string): Promise<{
+        success: boolean;
+        verified: boolean;
+        mobile: string;
+        otpVerificationToken: string;
+        message: string;
+    }>;
+    adminCreateUser(caller: AuthUser, dto: AdminCreateUserDto): Promise<{
+        success: boolean;
+        user: {
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            notificationsEnabled: boolean;
+            whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
+            weatherAlertMinTempC: number | null;
+            weatherAlertMaxTempC: number | null;
+            weatherAlertRainEnabled: boolean;
+            photoUrl: string | null;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
+            kycVerified: boolean;
+            termsAcceptedAt: Date | null;
+            isSeniorDoctor: boolean;
+            seniorDoctorId: string | null;
+            doctorConsultationFee: Prisma.Decimal | null;
+            operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
+            adminStaffPermissions: import(".prisma/client").$Enums.AdminStaffPermission[];
+            supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
+            employerFarmerId: string | null;
+            referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
+            profileStatus: string | null;
+            assignedStaffId: string | null;
+            profileRejectionReason: string | null;
+            createdAt: Date;
+            deletedAt: Date | null;
+            employerFarmer: {
+                id: string;
+                kingId: string | null;
+                mobile: string;
+                name: string;
+                farmName: string | null;
+            } | null;
+            labourWorkerUser: {
+                id: string;
+                name: string;
+                farmerId: string;
+                farmer: {
+                    id: string;
+                    kingId: string | null;
+                    mobile: string;
+                    name: string;
+                    farmName: string | null;
+                };
+            }[];
+        };
+        tempPassword: string | null;
         message: string;
     }>;
 }

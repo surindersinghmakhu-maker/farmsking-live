@@ -9,6 +9,8 @@ export declare class UserSessionService {
     private readonly userSessions;
     private readonly revokedSessionIds;
     private readonly revokedBeforeEpochSec;
+    private readonly lastSeenAt;
+    private readonly onlineSocketCounts;
     createSession(userId: string, deviceInfo?: string): {
         sessionId: string;
         totalActiveSessions: number;
@@ -17,7 +19,13 @@ export declare class UserSessionService {
         evictedOldest: boolean;
     };
     isValidSession(userId: string, sessionId?: string, tokenIatSec?: number): boolean;
+    touchActivity(userId: string): void;
     touchSession(userId: string, sessionId?: string): void;
+    setSocketConnected(userId: string, connected: boolean): void;
+    getUserPresence(userId: string, onlineWindowMs?: number): {
+        isOnline: boolean;
+        lastSeenAt: number | null;
+    };
     logoutOtherSessions(userId: string, currentSessionId: string): {
         loggedOutCount: number;
     };

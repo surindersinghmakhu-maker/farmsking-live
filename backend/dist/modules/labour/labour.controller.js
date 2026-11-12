@@ -76,7 +76,7 @@ exports.LabourController = LabourController;
 __decorate([
     (0, common_1.Get)('my-dashboard'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

@@ -133,6 +133,10 @@ export interface AdminUser {
   operatorPermissions?: OperatorPermission[];
   createdAt: string;
   deletedAt?: string | null;
+  isPermanentlyDeleted?: boolean;
+  isPermanentlyBlocked?: boolean;
+  isOnline?: boolean;
+  lastSeenAt?: string | null;
   // Advisor-only
   specialization?: string | null;
   bio?: string | null;

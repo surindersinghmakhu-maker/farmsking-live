@@ -8,6 +8,7 @@ export function useUsersList(params: api.ListUsersParams, options?: { enabled?: 
     queryKey: ['users', 'admin-list', params],
     queryFn: () => api.listUsers(params),
     enabled: options?.enabled ?? true,
+    refetchInterval: 20_000,
   });
 }
 
@@ -247,6 +248,17 @@ export function useConvertVerifiedLead() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', 'verified-leads'] });
       queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}
+
+export function useAdminCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: api.AdminCreateUserPayload) => api.adminCreateUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'verified-leads'] });
     },
   });
 }

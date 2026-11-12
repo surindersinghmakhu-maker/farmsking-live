@@ -33,6 +33,7 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 import { PickerModal } from '@/src/components/PickerModal';
 import { PartnerApplicationsPanel } from '@/components/PartnerApplicationsPanel';
 import { VerifiedLeadsPanel } from '@/components/VerifiedLeadsPanel';
+import { UnifiedAddUserModal } from '@/components/UnifiedAddUserModal';
 import { exportUsersToExcel } from '@/src/utils/excelExport';
 
 const theme = RoleThemes.SUPER_ADMIN;
@@ -60,9 +61,9 @@ function classifyDirectoryBucket(u: AdminUser): 'ADMINS' | 'PARTNERS' | 'CLIENTS
 type UserGroup = 'CLIENTS' | 'PARTNERS' | 'ADMINS';
 
 const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'ADMINS', label: '1. Admin Staff (Admin Login)', icon: 'shield-checkmark' },
-  { value: 'CLIENTS', label: '2. Clients', icon: 'people' },
-  { value: 'PARTNERS', label: '3. Partners', icon: 'briefcase' },
+  { value: 'ADMINS', label: 'Staff', icon: 'shield-checkmark' },
+  { value: 'PARTNERS', label: 'Partners', icon: 'briefcase' },
+  { value: 'CLIENTS', label: 'Clients', icon: 'people' },
 ];
 
 type UserFilter =
@@ -73,7 +74,7 @@ type UserFilter =
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
   CLIENTS: [
-    { value: 'ALL', label: 'All Users (Clients)', icon: 'people-outline' },
+    { value: 'ALL', label: 'All Clients', icon: 'people-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
     { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
     { value: 'SUPERVISOR', label: 'Supervisors', icon: 'shield-checkmark-outline' },
@@ -89,7 +90,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
     { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
   ],
   ADMINS: [
-    { value: 'ALL', label: 'All Admin Staff', icon: 'shield-outline' },
+    { value: 'ALL', label: 'All Staff', icon: 'shield-outline' },
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
     { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
     { value: 'MANAGER', label: 'Managers', icon: 'briefcase-outline' },
@@ -109,6 +110,32 @@ function filterToBackendRole(filter: UserFilter): Role | undefined {
   if (filter === 'SUPERVISOR') return 'SUPERVISOR' as Role;
   if (filter === 'LABOUR') return 'LABOUR' as Role;
   return filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR' ? 'ADVISOR' : (filter as Role);
+}
+
+type CustomSubFilter =
+  | 'ONLINE'
+  | 'RECENTLY_ADDED'
+  | 'TODAY'
+  | 'THIS_WEEK'
+  | 'THIS_MONTH'
+  | 'THIS_YEAR'
+  | 'CUSTOM_DATE';
+
+const CUSTOM_SUB_FILTERS: { value: CustomSubFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'ONLINE', label: 'Online', icon: 'radio' },
+  { value: 'RECENTLY_ADDED', label: 'Recently Added', icon: 'sparkles-outline' },
+  { value: 'TODAY', label: 'Today', icon: 'today-outline' },
+  { value: 'THIS_WEEK', label: 'This Week', icon: 'calendar-outline' },
+  { value: 'THIS_MONTH', label: 'This Month', icon: 'calendar-number-outline' },
+  { value: 'THIS_YEAR', label: 'This Year', icon: 'time-outline' },
+  { value: 'CUSTOM_DATE', label: 'Custom Date', icon: 'options-outline' },
+];
+
+function formatLocalYmd(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 export default function SuperUsersScreen() {
@@ -156,8 +183,10 @@ export default function SuperUsersScreen() {
     }
   };
 
-  const [statusTab, setStatusTab] = useState<'ACTIVE' | 'DELETED' | 'PARTNER_APPS' | 'VERIFIED_LEADS'>('ACTIVE');
-  const [deletedFilterMode, setDeletedFilterMode] = useState<'ALL_ROLES' | 'CURRENT_ROLE'>('ALL_ROLES');
+  const [statusTab, setStatusTab] = useState<'ACTIVE' | 'DELETED' | 'PARTNER_APPS' | 'VERIFIED_LEADS' | 'CUSTOM'>('ACTIVE');
+  const [customSubFilter, setCustomSubFilter] = useState<CustomSubFilter>('ONLINE');
+  const [customFromDate, setCustomFromDate] = useState<string>(() => formatLocalYmd(new Date()));
+  const [customToDate, setCustomToDate] = useState<string>(() => formatLocalYmd(new Date()));
 
   const backendRoleFilter = filterToBackendRole(filter);
   const trimmedSearch = search.trim() || undefined;
@@ -177,13 +206,12 @@ export default function SuperUsersScreen() {
   const deleteUser = useDeleteUser();
 
   const allUsersList = allUsersData?.items ?? [];
-  const clientUsersCount = allUsersList.filter((u) => !u.deletedAt && classifyDirectoryBucket(u) === 'CLIENTS').length;
-  const totalActiveNonStaffCount = allUsersList.filter((u) => !u.deletedAt && classifyDirectoryBucket(u) !== 'ADMINS').length;
+  const totalActiveUsersCount = allUsersList.filter((u) => !u.deletedAt).length;
   const totalDeletedUsersCount = allUsersList.filter((u) => !!u.deletedAt).length;
 
   const getSubCategoryCount = (subFilter: UserFilter): number => {
     return allUsersList.filter((u) => {
-      if (statusTab === 'DELETED' ? !u.deletedAt : !!u.deletedAt) return false;
+      if (!!u.deletedAt) return false;
       if (classifyDirectoryBucket(u) !== group) return false;
       const activeRoles = getActiveRoleStrings(u);
       if (subFilter === 'ALL') return true;
@@ -209,7 +237,7 @@ export default function SuperUsersScreen() {
 
   const getGroupCount = (groupKey: UserGroup): number => {
     return allUsersList.filter((u) => {
-      if (statusTab === 'DELETED' ? !u.deletedAt : !!u.deletedAt) return false;
+      if (!!u.deletedAt) return false;
       return classifyDirectoryBucket(u) === groupKey;
     }).length;
   };
@@ -223,10 +251,10 @@ export default function SuperUsersScreen() {
       else Alert.alert('Cannot Delete', msg);
       return;
     }
-    if (!targetUser.deletedAt) {
-      const msg = '⚠️ User must be deactivated first before permanent deletion. Please click "Deactivate" first.';
+    if (targetUser.deletedAt || targetUser.isPermanentlyDeleted || targetUser.name === 'Deleted Account') {
+      const msg = 'This account is already in the Deleted list and cannot be deleted again.';
       if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Deactivation Required', msg);
+      else Alert.alert('Already Deleted', msg);
       return;
     }
     setDeleteVerificationTarget(targetUser);
@@ -238,16 +266,35 @@ export default function SuperUsersScreen() {
     return filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true;
   });
 
+  const stripDelMobile = (raw: string) =>
+    raw.replace(/^DEL_/i, '').replace(/_del_[a-z0-9_]+$/i, '').replace(/_\d{10,}$/i, '');
+
+  const activeMobileSet = new Set<string>();
+  for (const activeU of allUsersList) {
+    if (activeU.deletedAt) continue;
+    const clean = stripDelMobile(activeU.mobile);
+    if (clean) activeMobileSet.add(clean);
+    const digits10 = clean.replace(/\D/g, '').slice(-10);
+    if (digits10.length === 10) activeMobileSet.add(digits10);
+  }
+
+  const hasNewActiveAccountOnMobile = (u: AdminUser): boolean => {
+    if (!u.deletedAt) return false;
+    const clean = stripDelMobile(u.mobile);
+    const digits10 = clean.replace(/\D/g, '').slice(-10);
+    return activeMobileSet.has(clean) || (digits10.length === 10 && activeMobileSet.has(digits10));
+  };
+
   const filteredUsers = currentRoleRawUsers.filter((u) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
-    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '').replace(/_\d+$/i, '');
+    const cleanMob = stripDelMobile(u.mobile);
     const location = [u.village, u.district, u.state].filter(Boolean).join(' ').toLowerCase();
     const rolesStr = (Array.isArray(u.roles) ? u.roles.join(' ') : u.role || '').toLowerCase();
     return (
       (u.name && u.name.toLowerCase().includes(q)) ||
       u.mobile.toLowerCase().includes(q) ||
-      cleanMob.includes(q) ||
+      cleanMob.toLowerCase().includes(q) ||
       (u.kingId && u.kingId.toLowerCase().includes(q)) ||
       location.includes(q) ||
       rolesStr.includes(q)
@@ -255,162 +302,105 @@ export default function SuperUsersScreen() {
   });
 
   const currentRoleActiveUsers = filteredUsers.filter((u) => !u.deletedAt);
-  const currentRoleDeletedUsers = filteredUsers.filter((u) => !!u.deletedAt);
 
   const allDeletedUsers = allUsersList.filter((u) => {
     if (!u.deletedAt) return false;
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
-    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '').replace(/_\d+$/i, '');
+    const cleanMob = stripDelMobile(u.mobile);
     const location = [u.village, u.district, u.state].filter(Boolean).join(' ').toLowerCase();
     const rolesStr = (Array.isArray(u.roles) ? u.roles.join(' ') : u.role || '').toLowerCase();
     return (
       (u.name && u.name.toLowerCase().includes(q)) ||
       u.mobile.toLowerCase().includes(q) ||
-      cleanMob.includes(q) ||
+      cleanMob.toLowerCase().includes(q) ||
       (u.kingId && u.kingId.toLowerCase().includes(q)) ||
       location.includes(q) ||
       rolesStr.includes(q)
     );
   });
 
-  const items = statusTab === 'ACTIVE'
-    ? currentRoleActiveUsers
-    : (deletedFilterMode === 'ALL_ROLES' ? allDeletedUsers : currentRoleDeletedUsers);
+  const matchesCustomSubFilter = (u: AdminUser, sub: CustomSubFilter): boolean => {
+    if (u.deletedAt || u.isPermanentlyBlocked) return false;
+    if (sub === 'ONLINE') return Boolean(u.isOnline);
+    const createdMs = new Date(u.createdAt).getTime();
+    if (Number.isNaN(createdMs)) return false;
+    const now = new Date();
+    if (sub === 'RECENTLY_ADDED') {
+      return Date.now() - createdMs <= 48 * 60 * 60 * 1000;
+    }
+    if (sub === 'TODAY') {
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      return createdMs >= startOfToday;
+    }
+    if (sub === 'THIS_WEEK') {
+      const day = now.getDay();
+      const diffToMonday = day === 0 ? 6 : day - 1;
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday).getTime();
+      return createdMs >= startOfWeek;
+    }
+    if (sub === 'THIS_MONTH') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      return createdMs >= startOfMonth;
+    }
+    if (sub === 'THIS_YEAR') {
+      const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+      return createdMs >= startOfYear;
+    }
+    // CUSTOM_DATE
+    const fromValid = /^\d{4}-\d{2}-\d{2}$/.test(customFromDate.trim());
+    const toValid = /^\d{4}-\d{2}-\d{2}$/.test(customToDate.trim());
+    const startMs = fromValid ? new Date(`${customFromDate.trim()}T00:00:00`).getTime() : -Infinity;
+    const endMs = toValid ? new Date(`${customToDate.trim()}T23:59:59.999`).getTime() : Infinity;
+    return createdMs >= startMs && createdMs <= endMs;
+  };
 
-  const farmersCount = allUsersList.filter(
-    (u) => !u.deletedAt && (u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER')))
-  ).length;
+  const getCustomSubCount = (sub: CustomSubFilter): number =>
+    allUsersList.filter((u) => matchesCustomSubFilter(u, sub)).length;
 
-  const doctorsCount = allUsersList.filter(
-    (u) => !u.deletedAt && ((u.role === 'ADVISOR' || (Array.isArray(u.roles) && u.roles.includes('ADVISOR'))) && u.advisorType !== 'GARDEN')
-  ).length;
+  const customFilteredUsers = allUsersList
+    .filter((u) => {
+      if (!matchesCustomSubFilter(u, customSubFilter)) return false;
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      const cleanMob = stripDelMobile(u.mobile);
+      const location = [u.village, u.district, u.state].filter(Boolean).join(' ').toLowerCase();
+      const rolesStr = (Array.isArray(u.roles) ? u.roles.join(' ') : u.role || '').toLowerCase();
+      return (
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        u.mobile.toLowerCase().includes(q) ||
+        cleanMob.toLowerCase().includes(q) ||
+        (u.kingId && u.kingId.toLowerCase().includes(q)) ||
+        location.includes(q) ||
+        rolesStr.includes(q)
+      );
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const partnersCount = allUsersList.filter(
-    (u) => !u.deletedAt && (u.role === 'AGENT' || (Array.isArray(u.roles) && u.roles.includes('AGENT')))
-  ).length;
+  const totalOnlineUsersCount = allUsersList.filter((u) => !u.deletedAt && !u.isPermanentlyBlocked && Boolean(u.isOnline)).length;
 
-  const tradersCount = allUsersList.filter(
-    (u) => !u.deletedAt && (u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER')))
-  ).length;
-
-  const staffCount = allUsersList.filter(
-    (u) => !u.deletedAt && ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'].some((r) => u.role === r || (Array.isArray(u.roles) && u.roles.includes(r as any)))
-  ).length;
-
-  const telemetryStats = [
-    {
-      id: 'STAFF',
-      title: '1. Admin Staff',
-      count: staffCount,
-      icon: 'shield-checkmark' as const,
-      color: '#6366f1',
-      isSelected: group === 'ADMINS' && filter === 'ALL' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('ADMINS');
-        setFilter('ALL');
-      },
-    },
-    {
-      id: 'CLIENTS',
-      title: '2. Clients',
-      count: clientUsersCount,
-      icon: 'people' as const,
-      color: '#16a34a',
-      isSelected: group === 'CLIENTS' && filter === 'ALL' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('CLIENTS');
-        setFilter('ALL');
-      },
-    },
-    {
-      id: 'FARMERS',
-      title: 'Farmers',
-      count: farmersCount,
-      icon: 'leaf' as const,
-      color: '#15803d',
-      isSelected: group === 'CLIENTS' && filter === 'FARMER' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('CLIENTS');
-        setFilter('FARMER');
-      },
-    },
-    {
-      id: 'PARTNERS_ALL',
-      title: '3. Partners',
-      count: getGroupCount('PARTNERS'),
-      icon: 'briefcase' as const,
-      color: '#f59e0b',
-      isSelected: group === 'PARTNERS' && filter === 'ALL' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('PARTNERS');
-        setFilter('ALL');
-      },
-    },
-    {
-      id: 'DOCTORS',
-      title: 'Crop Doctors',
-      count: doctorsCount,
-      icon: 'medical' as const,
-      color: '#0284c7',
-      isSelected: filter === 'FARM_ADVISOR' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('PARTNERS');
-        setFilter('FARM_ADVISOR');
-      },
-    },
-    {
-      id: 'SALES_MANAGERS',
-      title: 'Sales Managers',
-      count: partnersCount,
-      icon: 'ribbon' as const,
-      color: '#8b5cf6',
-      isSelected: filter === 'AGENT' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('PARTNERS');
-        setFilter('AGENT');
-      },
-    },
-    {
-      id: 'TRADERS',
-      title: 'Traders & Buyers',
-      count: tradersCount,
-      icon: 'storefront' as const,
-      color: '#d97706',
-      isSelected: filter === 'TRADER' && statusTab === 'ACTIVE',
-      action: () => {
-        tap();
-        setStatusTab('ACTIVE');
-        setGroup('PARTNERS');
-        setFilter('TRADER');
-      },
-    },
-  ];
+  const items =
+    statusTab === 'CUSTOM'
+      ? customFilteredUsers
+      : statusTab === 'ACTIVE'
+      ? currentRoleActiveUsers
+      : allDeletedUsers;
 
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
   useEffect(() => {
     setPage(1);
-  }, [filter, search, statusTab, deletedFilterMode]);
+  }, [filter, search, statusTab, customSubFilter, customFromDate, customToDate]);
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
+  const currentCustomSubLabel =
+    CUSTOM_SUB_FILTERS.find((c) => c.value === customSubFilter)?.label || 'Custom';
+
   const currentFilterLabel = filter === 'ALL'
-    ? (group === 'CLIENTS' ? 'Users (Clients)' : group === 'PARTNERS' ? 'All Partners' : 'Admin Staff')
+    ? (group === 'CLIENTS' ? 'Clients' : group === 'PARTNERS' ? 'Partners' : 'Staff')
     : Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
 
   return (
@@ -444,7 +434,9 @@ export default function SuperUsersScreen() {
                       {statusTab === 'PARTNER_APPS'
                         ? 'Partner Approvals & KYC'
                         : statusTab === 'DELETED'
-                        ? 'Deleted Archive'
+                        ? 'Deleted & Blocked Archive'
+                        : statusTab === 'CUSTOM'
+                        ? `Custom: ${currentCustomSubLabel}`
                         : `View: ${currentFilterLabel}`}
                     </Text>
                   </View>
@@ -470,6 +462,24 @@ export default function SuperUsersScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                style={[
+                  styles.compactExportBtn,
+                  isLight && { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.35)' },
+                  statusTab === 'PARTNER_APPS' && { backgroundColor: 'rgba(245, 158, 11, 0.22)', borderColor: '#f59e0b' },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  tap();
+                  setStatusTab(statusTab === 'PARTNER_APPS' ? 'ACTIVE' : 'PARTNER_APPS');
+                }}
+              >
+                <Ionicons name="document-attach" size={13} color="#f59e0b" />
+                <Text style={[styles.compactExportBtnText, { color: '#f59e0b' }]}>
+                  Partner Approvals ({pendingPartnerApps.length})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 style={[styles.compactExportBtn, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
                 activeOpacity={0.85}
                 onPress={() => {
@@ -485,14 +495,99 @@ export default function SuperUsersScreen() {
             </View>
           </View>
 
-          {/* Executive KPI Telemetry Metric Bar (Clickable 1-Click Role Filters) */}
+          {/* 5-Card Category Telemetry Bar: 3 User Categories + Deleted + Unread OTP Follow-Ups */}
           <View style={styles.telemetryBarContainer}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.telemetryBarContent}
             >
-              {telemetryStats.map((item) => (
+              {[
+                {
+                  id: 'STAFF',
+                  title: '1. Staff',
+                  count: getGroupCount('ADMINS'),
+                  icon: 'shield-checkmark' as const,
+                  color: '#6366f1',
+                  isSelected: statusTab === 'ACTIVE' && group === 'ADMINS',
+                  hasUnreadDot: false,
+                  action: () => {
+                    tap();
+                    setStatusTab('ACTIVE');
+                    setGroup('ADMINS');
+                    setFilter('ALL');
+                  },
+                },
+                {
+                  id: 'PARTNERS',
+                  title: '2. Partners',
+                  count: getGroupCount('PARTNERS'),
+                  icon: 'briefcase' as const,
+                  color: '#f59e0b',
+                  isSelected: statusTab === 'ACTIVE' && group === 'PARTNERS',
+                  hasUnreadDot: false,
+                  action: () => {
+                    tap();
+                    setStatusTab('ACTIVE');
+                    setGroup('PARTNERS');
+                    setFilter('ALL');
+                  },
+                },
+                {
+                  id: 'CLIENTS',
+                  title: '3. Clients',
+                  count: getGroupCount('CLIENTS'),
+                  icon: 'people' as const,
+                  color: '#16a34a',
+                  isSelected: statusTab === 'ACTIVE' && group === 'CLIENTS',
+                  hasUnreadDot: false,
+                  action: () => {
+                    tap();
+                    setStatusTab('ACTIVE');
+                    setGroup('CLIENTS');
+                    setFilter('ALL');
+                  },
+                },
+                {
+                  id: 'DELETED',
+                  title: '4. Deleted / Blocked',
+                  count: totalDeletedUsersCount,
+                  icon: 'trash-bin' as const,
+                  color: '#ef4444',
+                  isSelected: statusTab === 'DELETED',
+                  hasUnreadDot: false,
+                  action: () => {
+                    tap();
+                    setStatusTab('DELETED');
+                  },
+                },
+                {
+                  id: 'OTP_FOLLOWUPS',
+                  title: '5. OTP Follow-Ups (Unread)',
+                  count: waitingVerifiedLeads?.counts?.otpConfirmed ?? 0,
+                  icon: 'mail-unread' as const,
+                  color: '#10b981',
+                  isSelected: statusTab === 'VERIFIED_LEADS',
+                  hasUnreadDot: (waitingVerifiedLeads?.counts?.otpConfirmed ?? 0) > 0,
+                  action: () => {
+                    tap();
+                    setStatusTab('VERIFIED_LEADS');
+                  },
+                },
+                {
+                  id: 'CUSTOM',
+                  title: '6. Custom',
+                  count: statusTab === 'CUSTOM' ? customFilteredUsers.length : totalOnlineUsersCount,
+                  icon: 'funnel' as const,
+                  color: '#06b6d4',
+                  isSelected: statusTab === 'CUSTOM',
+                  hasUnreadDot: totalOnlineUsersCount > 0,
+                  action: () => {
+                    tap();
+                    setStatusTab('CUSTOM');
+                  },
+                },
+              ].map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={[
@@ -516,97 +611,23 @@ export default function SuperUsersScreen() {
                       {item.title}
                     </Text>
                   </View>
-                  {item.isSelected && (
+                  {item.hasUnreadDot ? (
+                    <View style={[styles.telemetryActiveDot, { backgroundColor: '#f59e0b' }]} />
+                  ) : item.isSelected ? (
                     <View style={[styles.telemetryActiveDot, { backgroundColor: item.color }]} />
-                  )}
+                  ) : null}
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
-          {/* Unified Compact Control Bar: Status Switch + Search + Group Chips */}
+          {/* Search Bar Only (5 Category Cards above handle all directory views) */}
           <View style={[styles.compactControlBar, isDesktop && styles.compactControlBarDesktop]}>
-            {/* Status Switch (Active vs Deleted) */}
-            <View style={styles.compactStatusSwitch}>
-              <TouchableOpacity
-                style={[styles.compactStatusTab, statusTab === 'ACTIVE' && styles.compactStatusTabActive]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setStatusTab('ACTIVE');
-                }}
-              >
-                <Ionicons name="checkmark-circle" size={12} color={statusTab === 'ACTIVE' ? '#00ff87' : '#64748b'} />
-                <Text style={[styles.compactStatusText, statusTab === 'ACTIVE' && styles.compactStatusTextActive]}>
-                  Active ({totalActiveNonStaffCount})
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.compactStatusTab, statusTab === 'DELETED' && styles.compactStatusTabDeletedActive]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setStatusTab('DELETED');
-                }}
-              >
-                <Ionicons name="trash-bin" size={12} color={statusTab === 'DELETED' ? '#ef4444' : '#64748b'} />
-                <Text style={[styles.compactStatusText, statusTab === 'DELETED' && styles.compactStatusTextDeletedActive]}>
-                  Deleted ({totalDeletedUsersCount})
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.compactStatusTab,
-                  statusTab === 'PARTNER_APPS' && { backgroundColor: 'rgba(245, 158, 11, 0.16)', borderColor: '#f59e0b' },
-                ]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setStatusTab('PARTNER_APPS');
-                }}
-              >
-                <Ionicons name="document-attach" size={12} color={statusTab === 'PARTNER_APPS' ? '#f59e0b' : '#64748b'} />
-                <Text
-                  style={[
-                    styles.compactStatusText,
-                    statusTab === 'PARTNER_APPS' && { color: '#f59e0b', fontFamily: FONT.bold },
-                  ]}
-                >
-                  Partner Approvals ({pendingPartnerApps.length})
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.compactStatusTab,
-                  statusTab === 'VERIFIED_LEADS' && { backgroundColor: 'rgba(16, 185, 129, 0.16)', borderColor: '#10b981' },
-                ]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setStatusTab('VERIFIED_LEADS');
-                }}
-              >
-                <Ionicons name="checkmark-done-circle" size={12} color={statusTab === 'VERIFIED_LEADS' ? '#10b981' : '#64748b'} />
-                <Text
-                  style={[
-                    styles.compactStatusText,
-                    statusTab === 'VERIFIED_LEADS' && { color: '#10b981', fontFamily: FONT.bold },
-                  ]}
-                >
-                  Verified OTP Leads ({waitingVerifiedLeads?.counts?.otpConfirmed ?? 0})
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Search Box */}
             <View style={[styles.compactSearchBox, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }]}>
               <Ionicons name="search" size={14} color={isLight ? '#16a34a' : '#00ff87'} style={{ marginRight: 6 }} />
               <TextInput
                 style={[styles.compactSearchInput, isLight && { color: '#0f172a' }]}
-                placeholder={`Search by name, mobile, King ID, or location...`}
+                placeholder={`Search by name, mobile, King ID, role, or location...`}
                 placeholderTextColor={isLight ? '#94a3b8' : 'rgba(148, 163, 184, 0.6)'}
                 value={search}
                 onChangeText={setSearch}
@@ -623,105 +644,187 @@ export default function SuperUsersScreen() {
                 </TouchableOpacity>
               )}
             </View>
+          </View>
 
-            {/* Group Tabs (All Users, Clients, Partners, Admins) */}
-            <View style={styles.compactGroupRow}>
-              {GROUPS.map((g) => {
-                const groupCount = getGroupCount(g.value);
-                const isActive = group === g.value;
+          {/* Custom Sub-Category Filter Buttons — shown when 6. Custom card is selected */}
+          {statusTab === 'CUSTOM' && (
+            <View style={{ marginTop: 6, gap: 6 }}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 6, alignItems: 'center' }}
+              >
+                {CUSTOM_SUB_FILTERS.map((cf) => {
+                  const subCount = getCustomSubCount(cf.value);
+                  const isActive = customSubFilter === cf.value;
+                  const isOnlineChip = cf.value === 'ONLINE';
+                  return (
+                    <TouchableOpacity
+                      key={cf.value}
+                      style={[
+                        styles.compactFilterChip,
+                        isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                        isActive && (isLight ? { backgroundColor: 'rgba(6, 182, 212, 0.14)', borderColor: '#06b6d4' } : styles.compactFilterChipActive),
+                      ]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        tap();
+                        setCustomSubFilter(cf.value);
+                      }}
+                    >
+                      {isOnlineChip ? (
+                        <View
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: 4,
+                            backgroundColor: subCount > 0 ? '#00ff87' : '#64748b',
+                          }}
+                        />
+                      ) : (
+                        <Ionicons name={cf.icon} size={12} color={isActive ? (isLight ? '#0891b2' : '#00ff87') : '#94a3b8'} />
+                      )}
+                      <Text
+                        style={[
+                          styles.compactFilterChipText,
+                          isLight && { color: '#64748b' },
+                          isActive && { color: isLight ? '#0891b2' : '#00ff87' },
+                        ]}
+                      >
+                        {cf.label} ({subCount})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              {customSubFilter === 'CUSTOM_DATE' && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    backgroundColor: isLight ? '#f8fafc' : 'rgba(6, 182, 212, 0.08)',
+                    borderWidth: 1,
+                    borderColor: isLight ? '#cbd5e1' : 'rgba(6, 182, 212, 0.3)',
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#334155' : '#67e8f9' }}>
+                    Created Date Range:
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#475569' : '#94a3b8' }}>From</Text>
+                    {Platform.OS === 'web' ? (
+                      <input
+                        type="date"
+                        value={customFromDate}
+                        onChange={(e: any) => setCustomFromDate(e.target.value)}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          border: isLight ? '1px solid #cbd5e1' : '1px solid rgba(255,255,255,0.2)',
+                          backgroundColor: isLight ? '#ffffff' : '#020d06',
+                          color: isLight ? '#0f172a' : '#f8fafc',
+                          fontSize: 12,
+                        }}
+                      />
+                    ) : (
+                      <TextInput
+                        style={[styles.compactSearchInput, { minWidth: 105, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#334155', borderRadius: 6 }]}
+                        value={customFromDate}
+                        onChangeText={setCustomFromDate}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor="#64748b"
+                      />
+                    )}
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#475569' : '#94a3b8' }}>To</Text>
+                    {Platform.OS === 'web' ? (
+                      <input
+                        type="date"
+                        value={customToDate}
+                        onChange={(e: any) => setCustomToDate(e.target.value)}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          border: isLight ? '1px solid #cbd5e1' : '1px solid rgba(255,255,255,0.2)',
+                          backgroundColor: isLight ? '#ffffff' : '#020d06',
+                          color: isLight ? '#0f172a' : '#f8fafc',
+                          fontSize: 12,
+                        }}
+                      />
+                    ) : (
+                      <TextInput
+                        style={[styles.compactSearchInput, { minWidth: 105, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#334155', borderRadius: 6 }]}
+                        value={customToDate}
+                        onChangeText={setCustomToDate}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor="#64748b"
+                      />
+                    )}
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.compactFilterChip, isLight && { backgroundColor: '#ffffff', borderColor: '#cbd5e1' }]}
+                    onPress={() => {
+                      tap();
+                      const today = formatLocalYmd(new Date());
+                      setCustomFromDate(today);
+                      setCustomToDate(today);
+                    }}
+                  >
+                    <Ionicons name="refresh" size={11} color={isLight ? '#0891b2' : '#67e8f9'} />
+                    <Text style={[styles.compactFilterChipText, { color: isLight ? '#0891b2' : '#67e8f9' }]}>Today</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Role Sub-Filter Chips — shown only for Active users */}
+          {statusTab === 'ACTIVE' && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginTop: 6 }}
+              contentContainerStyle={{ gap: 6, alignItems: 'center' }}
+            >
+              {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.CLIENTS).map((f) => {
+                const subCount = getSubCategoryCount(f.value);
+                const isActive = filter === f.value;
                 return (
                   <TouchableOpacity
-                    key={g.value}
+                    key={f.value}
                     style={[
-                      styles.compactGroupChip,
+                      styles.compactFilterChip,
                       isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
-                      isActive && (isLight ? { backgroundColor: 'rgba(22, 163, 74, 0.12)', borderColor: '#16a34a' } : styles.compactGroupChipActive),
+                      isActive && (isLight ? { backgroundColor: 'rgba(22, 163, 74, 0.15)', borderColor: '#16a34a' } : styles.compactFilterChipActive),
                     ]}
                     activeOpacity={0.8}
-                    onPress={() => selectGroup(g.value)}
+                    onPress={() => {
+                      tap();
+                      setFilter(f.value);
+                    }}
                   >
-                    <Ionicons name={g.icon} size={12} color={isActive ? (isLight ? '#16a34a' : '#00ff87') : '#64748b'} />
+                    <Ionicons name={f.icon} size={12} color={isActive ? (isLight ? '#16a34a' : '#00ff87') : '#94a3b8'} />
                     <Text
                       style={[
-                        styles.compactGroupChipText,
+                        styles.compactFilterChipText,
                         isLight && { color: '#64748b' },
                         isActive && { color: isLight ? '#16a34a' : '#00ff87' },
                       ]}
-                      numberOfLines={1}
                     >
-                      {g.label} ({groupCount})
+                      {f.label} ({subCount})
                     </Text>
                   </TouchableOpacity>
                 );
               })}
-            </View>
-          </View>
-
-          {statusTab === 'DELETED' && (
-            <View style={styles.compactDeletedBannerBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                <Ionicons name="archive" size={13} color="#f87171" />
-                <Text style={styles.deletedBannerTitle}>Deleted Accounts Archive</Text>
-              </View>
-              <View style={styles.deletedScopePills}>
-                <TouchableOpacity
-                  style={[styles.deletedScopePill, deletedFilterMode === 'ALL_ROLES' && styles.deletedScopePillActive]}
-                  onPress={() => { tap(); setDeletedFilterMode('ALL_ROLES'); }}
-                >
-                  <Text style={[styles.deletedScopePillText, deletedFilterMode === 'ALL_ROLES' && styles.deletedScopePillTextActive]}>
-                    All Roles ({totalDeletedUsersCount})
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.deletedScopePill, deletedFilterMode === 'CURRENT_ROLE' && styles.deletedScopePillActive]}
-                  onPress={() => { tap(); setDeletedFilterMode('CURRENT_ROLE'); }}
-                >
-                  <Text style={[styles.deletedScopePillText, deletedFilterMode === 'CURRENT_ROLE' && styles.deletedScopePillTextActive]}>
-                    {currentFilterLabel} ({currentRoleDeletedUsers.length})
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+            </ScrollView>
           )}
-
-          {/* Role Sub-Filter Chips — Single Sleek Horizontal Scroll */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 6 }}
-            contentContainerStyle={{ gap: 6, alignItems: 'center' }}
-          >
-            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.CLIENTS).map((f) => {
-              const subCount = getSubCategoryCount(f.value);
-              const isActive = filter === f.value;
-              return (
-                <TouchableOpacity
-                  key={f.value}
-                  style={[
-                    styles.compactFilterChip,
-                    isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
-                    isActive && (isLight ? { backgroundColor: 'rgba(22, 163, 74, 0.15)', borderColor: '#16a34a' } : styles.compactFilterChipActive),
-                  ]}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setFilter(f.value);
-                  }}
-                >
-                  <Ionicons name={f.icon} size={12} color={isActive ? (isLight ? '#16a34a' : '#00ff87') : '#94a3b8'} />
-                  <Text
-                    style={[
-                      styles.compactFilterChipText,
-                      isLight && { color: '#64748b' },
-                      isActive && { color: isLight ? '#16a34a' : '#00ff87' },
-                    ]}
-                  >
-                    {f.label} ({subCount})
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
         </View>
       </View>
 
@@ -797,11 +900,11 @@ export default function SuperUsersScreen() {
             </Text>
             <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
               {statusTab === 'DELETED'
-                ? deletedFilterMode === 'ALL_ROLES'
-                  ? 'There are no deleted or soft-deleted user accounts in the system.'
-                  : `There are no deleted accounts in ${currentFilterLabel}.`
+                ? 'There are no deleted or blocked user accounts.'
                 : search.trim()
-                  ? `No active accounts matching "${search}".`
+                  ? `No accounts matching "${search}".`
+                  : statusTab === 'CUSTOM'
+                  ? `No users found for "${currentCustomSubLabel}".`
                   : `No active ${currentFilterLabel.toLowerCase()} registered.`}
             </Text>
           </View>
@@ -810,15 +913,26 @@ export default function SuperUsersScreen() {
             <View style={[styles.usersGridContainer, isDesktop && styles.usersGridContainerDesktop]}>
               {visibleItems.map((u) => {
                 const isUserOperator = u.role === 'OPERATOR' || (Array.isArray(u.roles) && u.roles.includes('OPERATOR'));
+                const isDeletedUser = Boolean(u.deletedAt);
+                const canRestoreUser = isDeletedUser && !hasNewActiveAccountOnMobile(u);
                 return (
                   <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
                     <UserRow
                       user={u}
                       isDesktop={isDesktop}
                       isOperator={isUserOperator}
+                      canRestore={canRestoreUser}
                       onDeactivate={() => deactivate.mutate(u.id)}
-                      onReactivate={() => reactivate.mutate(u.id)}
-                      onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
+                      onReactivate={() => {
+                        reactivate.mutate(u.id, {
+                          onError: (err: any) => {
+                            const msg = err?.response?.data?.message || err?.message || 'Cannot restore this account.';
+                            if (Platform.OS === 'web') alert(msg);
+                            else Alert.alert('Restore Blocked', msg);
+                          },
+                        });
+                      }}
+                      onDelete={isSuperAdmin && !isDeletedUser ? () => handleDeleteUser(u) : undefined}
                       onEditPermissions={isUserOperator ? () => setPermissionsTarget(u) : undefined}
                       onEditRoles={u.role !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
                       onOpenDetail={() => setDetailTargetId(u.id)}
@@ -887,26 +1001,10 @@ export default function SuperUsersScreen() {
         onClose={() => setIsPageSizePickerOpen(false)}
       />
 
-      <AddUserTypePickerModal
+      <UnifiedAddUserModal
         visible={isAddUserModalOpen}
+        isSuperAdmin={isSuperAdmin}
         onClose={() => setIsAddUserModalOpen(false)}
-        onSelectType={(type) => {
-          setIsAddUserModalOpen(false);
-          if (type === 'FARMER') {
-            router.push('/admin/(tabs)/farmer-profile-setup');
-          } else if (type === 'DOCTOR') {
-            setAddAdvisorType('FARM');
-            setIsAddAdvisorOpen(true);
-          } else if (type === 'STAFF') {
-            setAddStaffKind('ADMIN');
-            setIsAddStaffOpen(true);
-          } else if (type === 'ACCOUNTANT') {
-            setAddStaffKind('ACCOUNTANT');
-            setIsAddStaffOpen(true);
-          } else if (type === 'TRAINER') {
-            setIsAddTrainerOpen(true);
-          }
-        }}
       />
 
       <AddAdvisorModal
@@ -1188,17 +1286,28 @@ function UserDetailModal({ userId, onClose }: { userId: string | null; onClose: 
               {data.user.village ? <Text style={styles.detailMeta}>📍 {data.user.village}, {data.user.district}, {data.user.state}</Text> : null}
               <Text style={styles.detailMeta}>Joined: {new Date(data.user.createdAt).toLocaleDateString('en-IN')}</Text>
 
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={[styles.submitBtn, { flex: 1, marginTop: 0 }]} onPress={() => { tap(); setIsEditing(true); }}>
-                  <Text style={styles.submitBtnText}>✏️ Edit Details</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.submitBtn, { flex: 1, marginTop: 0, backgroundColor: '#dc2626' }]}
-                  onPress={() => { tap(); setIsResettingPw(true); }}
-                >
-                  <Text style={styles.submitBtnText}>🔒 Reset Password</Text>
-                </TouchableOpacity>
-              </View>
+              {data.user.isPermanentlyDeleted || data.user.name === 'Deleted Account' ? (
+                <View style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.35)', borderRadius: RADIUS.md, padding: 10, marginTop: 6 }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>
+                    Account Permanently Deleted
+                  </Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#94a3b8', marginTop: 2 }}>
+                    King ID and linked historical records remain retained for audit and cross-account linking.
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                  <TouchableOpacity style={[styles.submitBtn, { flex: 1, marginTop: 0 }]} onPress={() => { tap(); setIsEditing(true); }}>
+                    <Text style={styles.submitBtnText}>✏️ Edit Details</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.submitBtn, { flex: 1, marginTop: 0, backgroundColor: '#dc2626' }]}
+                    onPress={() => { tap(); setIsResettingPw(true); }}
+                  >
+                    <Text style={styles.submitBtnText}>🔒 Reset Password</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               <View style={styles.detailStatsRow}>
                 <View style={styles.detailStatBox}>
@@ -2051,6 +2160,7 @@ function UserRow({
   user,
   isDesktop,
   isOperator,
+  canRestore = true,
   onDeactivate,
   onReactivate,
   onDelete,
@@ -2061,6 +2171,7 @@ function UserRow({
   user: AdminUser;
   isDesktop?: boolean;
   isOperator?: boolean;
+  canRestore?: boolean;
   onDeactivate: () => void;
   onReactivate: () => void;
   onDelete?: () => void;
@@ -2069,19 +2180,27 @@ function UserRow({
   onOpenDetail?: () => void;
 }) {
   const { isLight } = useExecutiveTheme();
-  const isDeactivated = !!user.deletedAt;
+  const isBlocked = Boolean(user.isPermanentlyBlocked);
+  const isDeactivated = Boolean(user.deletedAt) || isBlocked;
+  const isOnline = !isDeactivated && Boolean(user.isOnline);
+  const isPrimarySuperAdmin = user.mobile === '9872066901';
   const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p: any) => p[0] ?? '').join('').toUpperCase() || '?';
   const activeAssignedRoles = Array.from(
-    new Set([
-      user.role,
-      ...(user.roles ?? []).filter((r: any) => !(user.deactivatedRoles ?? []).includes(r)),
-    ]),
+    new Set(
+      isDeactivated
+        ? [user.role, ...(user.roles ?? [])].filter(Boolean)
+        : [
+            user.role,
+            ...(user.roles ?? []).filter((r: any) => !(user.deactivatedRoles ?? []).includes(r)),
+          ],
+    ),
   );
 
   const locationStr = [user.village, user.district, user.state].filter(Boolean).join(', ');
   const joinedDateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
   const deletedDateStr = user.deletedAt ? new Date(user.deletedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-  const cleanMobile = user.mobile.replace(/^DEL_/i, '').replace(/_del_\d+$/i, '').replace(/_\d+$/i, '');
+  const cleanMobile = user.mobile.replace(/^DEL_/i, '').replace(/_del_[a-z0-9_]+$/i, '').replace(/_\d{10,}$/i, '');
+  const displayMobile = isDeactivated ? user.mobile : cleanMobile;
 
   const copyToClipboard = (text: string, label: string) => {
     tap();
@@ -2100,6 +2219,9 @@ function UserRow({
       isLight && {
         backgroundColor: '#ffffff',
         borderColor: '#e2e8f0',
+      },
+      isOnline && {
+        borderColor: isLight ? 'rgba(22, 163, 74, 0.5)' : 'rgba(0, 255, 135, 0.45)',
       },
       isDeactivated && styles.userCardDeactivated,
     ]}>
@@ -2126,10 +2248,19 @@ function UserRow({
               ]}>{initials}</Text>
             )}
           </View>
-          <View style={[styles.statusDotCompact, isDeactivated ? styles.statusDotOffline : styles.statusDotOnline]} />
+          <View
+            style={[
+              styles.statusDotCompact,
+              isDeactivated
+                ? styles.statusDotOffline
+                : isOnline
+                ? styles.statusDotOnline
+                : { backgroundColor: '#64748b' },
+            ]}
+          />
         </TouchableOpacity>
 
-        {/* Name + King ID + Status */}
+        {/* Name + King ID + Online/Status */}
         <TouchableOpacity
           style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}
           activeOpacity={0.8}
@@ -2142,11 +2273,22 @@ function UserRow({
 
           {user.kingId ? (
             <TouchableOpacity
-              style={[styles.kingIdChipCompact, isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
+              style={[
+                styles.kingIdChipCompact,
+                isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                isOnline && {
+                  borderColor: isLight ? '#16a34a' : '#00ff87',
+                  backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(0, 255, 135, 0.14)',
+                },
+              ]}
               onPress={() => copyToClipboard(user.kingId!, 'King ID')}
               activeOpacity={0.7}
             >
-              <Ionicons name="key" size={9} color={isLight ? '#16a34a' : '#00ff87'} />
+              {isOnline ? (
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: isLight ? '#16a34a' : '#00ff87' }} />
+              ) : (
+                <Ionicons name="key" size={9} color={isLight ? '#16a34a' : '#00ff87'} />
+              )}
               <Text style={[styles.kingIdChipTextCompact, isLight && { color: '#16a34a' }]}>{user.kingId}</Text>
               <Ionicons name="copy-outline" size={9} color={isLight ? '#16a34a' : '#00ff87'} />
             </TouchableOpacity>
@@ -2154,13 +2296,35 @@ function UserRow({
 
           {isDeactivated ? (
             <View style={styles.deactivatedBadgeCompact}>
-              <Ionicons name="trash" size={9} color="#ef4444" />
-              <Text style={styles.deactivatedBadgeTextCompact}>Deleted</Text>
+              <Ionicons name={isBlocked ? 'ban' : 'trash'} size={9} color="#ef4444" />
+              <Text style={styles.deactivatedBadgeTextCompact}>{isBlocked ? 'Blocked' : 'Deleted'}</Text>
+            </View>
+          ) : isOnline ? (
+            <View
+              style={[
+                styles.activePillBadgeCompact,
+                {
+                  backgroundColor: isLight ? 'rgba(22, 163, 74, 0.14)' : 'rgba(0, 255, 135, 0.16)',
+                  borderColor: isLight ? '#16a34a' : '#00ff87',
+                  borderWidth: 1,
+                },
+              ]}
+            >
+              <View style={[styles.activePillDotCompact, { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]} />
+              <Text style={[styles.activePillTextCompact, { color: isLight ? '#15803d' : '#00ff87' }]}>Online</Text>
             </View>
           ) : (
-            <View style={styles.activePillBadgeCompact}>
-              <View style={styles.activePillDotCompact} />
-              <Text style={styles.activePillTextCompact}>Active</Text>
+            <View
+              style={[
+                styles.activePillBadgeCompact,
+                {
+                  backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.14)',
+                  borderColor: isLight ? '#cbd5e1' : 'rgba(148, 163, 184, 0.25)',
+                },
+              ]}
+            >
+              <View style={[styles.activePillDotCompact, { backgroundColor: '#64748b' }]} />
+              <Text style={[styles.activePillTextCompact, { color: isLight ? '#475569' : '#94a3b8' }]}>Active</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -2201,26 +2365,40 @@ function UserRow({
           ) : null}
 
           {isDeactivated ? (
-            <TouchableOpacity
-              style={[styles.actionBtnCompact, styles.actionBtnRestore]}
-              activeOpacity={0.8}
-              onPress={onReactivate}
-            >
-              <Ionicons name="refresh" size={12} color="#00ff87" />
-              <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>Restore</Text>
-            </TouchableOpacity>
-          ) : (
+            canRestore ? (
+              <TouchableOpacity
+                style={[styles.actionBtnCompact, styles.actionBtnRestore]}
+                activeOpacity={0.8}
+                onPress={onReactivate}
+              >
+                <Ionicons name={isBlocked ? 'lock-open-outline' : 'refresh'} size={12} color="#00ff87" />
+                <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>
+                  {isBlocked ? 'Unblock' : 'Restore'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View
+                style={[
+                  styles.actionBtnCompact,
+                  { backgroundColor: 'rgba(100, 116, 139, 0.14)', borderColor: 'rgba(100, 116, 139, 0.35)' },
+                ]}
+              >
+                <Ionicons name="ban-outline" size={12} color="#94a3b8" />
+                <Text style={[styles.actionBtnTextCompact, { color: '#94a3b8' }]}>New ID Active</Text>
+              </View>
+            )
+          ) : !isPrimarySuperAdmin ? (
             <TouchableOpacity
               style={[styles.actionBtnCompact, styles.actionBtnDeactivate]}
               activeOpacity={0.8}
               onPress={onDeactivate}
             >
-              <Ionicons name="pause-circle-outline" size={12} color="#f87171" />
-              <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Pause</Text>
+              <Ionicons name="ban-outline" size={12} color="#f87171" />
+              <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Block</Text>
             </TouchableOpacity>
-          )}
+          ) : null}
 
-          {onDelete ? (
+          {!isDeactivated && onDelete ? (
             <TouchableOpacity
               style={[styles.actionBtnCompact, styles.actionBtnDelete]}
               activeOpacity={0.8}
@@ -2241,7 +2419,7 @@ function UserRow({
           activeOpacity={0.7}
         >
           <Ionicons name="call" size={11} color={isLight ? '#16a34a' : '#10b981'} />
-          <Text style={[styles.mobileChipTextCompact, isLight && { color: '#0f172a' }]}>{cleanMobile}</Text>
+          <Text style={[styles.mobileChipTextCompact, isLight && { color: '#0f172a' }]}>{displayMobile}</Text>
           <Ionicons name="copy-outline" size={9} color="#64748b" />
         </TouchableOpacity>
 

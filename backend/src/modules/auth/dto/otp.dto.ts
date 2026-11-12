@@ -64,6 +64,36 @@ export class SendMobileLinkOtpDto {
   mobile: string;
 }
 
+export class VerifyMobileLinkOtpDto {
+  @ApiProperty({ description: '10-digit mobile number' })
+  @IsNotEmpty()
+  @IsString()
+  mobile: string;
+
+  @ApiProperty({ description: '6-digit OTP code' })
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\d{6}$/, { message: 'OTP must be 6 digits.' })
+  otp: string;
+
+  @ApiPropertyOptional({ description: 'Optional account password' })
+  @IsOptional()
+  @IsString()
+  password?: string;
+}
+
+export class FirebaseMobileLinkDto {
+  @ApiProperty({ description: 'Firebase Phone Auth ID token' })
+  @IsNotEmpty()
+  @IsString()
+  idToken: string;
+
+  @ApiPropertyOptional({ description: 'Optional account password' })
+  @IsOptional()
+  @IsString()
+  password?: string;
+}
+
 export class CompleteOtpRegistrationDto {
   @ApiProperty({ description: '10-digit mobile number' })
   @IsNotEmpty()

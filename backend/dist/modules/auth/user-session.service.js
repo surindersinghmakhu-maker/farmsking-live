@@ -47,6 +47,8 @@ let UserSessionService = class UserSessionService {
         this.userSessions = new Map();
         this.revokedSessionIds = new Set();
         this.revokedBeforeEpochSec = new Map();
+        this.lastSeenAt = new Map();
+        this.onlineSocketCounts = new Map();
     }
     createSession(userId, deviceInfo) {
         let sessions = this.userSessions.get(userId) || [];
@@ -68,6 +70,7 @@ let UserSessionService = class UserSessionService {
             evictedOldest = true;
         }
         this.userSessions.set(userId, sessions);
+        this.lastSeenAt.set(userId, Date.now());
         const totalActiveSessions = sessions.length;
         const hasMultipleLogins = totalActiveSessions > 1;
         let warningMessage;
@@ -109,16 +112,40 @@ let UserSessionService = class UserSessionService {
         const sessions = this.userSessions.get(userId);
         return sessions.some((s) => s.sessionId === sessionId);
     }
+    touchActivity(userId) {
+        this.lastSeenAt.set(userId, Date.now());
+    }
     touchSession(userId, sessionId) {
+        const now = Date.now();
+        this.lastSeenAt.set(userId, now);
         if (!sessionId)
             return;
         const sessions = this.userSessions.get(userId);
         if (sessions) {
             const session = sessions.find((s) => s.sessionId === sessionId);
             if (session) {
-                session.lastActiveAt = Date.now();
+                session.lastActiveAt = now;
             }
         }
+    }
+    setSocketConnected(userId, connected) {
+        const current = this.onlineSocketCounts.get(userId) ?? 0;
+        if (connected) {
+            this.onlineSocketCounts.set(userId, current + 1);
+            this.lastSeenAt.set(userId, Date.now());
+        }
+        else if (current <= 1) {
+            this.onlineSocketCounts.delete(userId);
+        }
+        else {
+            this.onlineSocketCounts.set(userId, current - 1);
+        }
+    }
+    getUserPresence(userId, onlineWindowMs = 5 * 60 * 1000) {
+        const sockets = this.onlineSocketCounts.get(userId) ?? 0;
+        const lastSeen = this.lastSeenAt.get(userId) ?? null;
+        const isOnline = sockets > 0 || (lastSeen !== null && Date.now() - lastSeen <= onlineWindowMs);
+        return { isOnline, lastSeenAt: lastSeen };
     }
     logoutOtherSessions(userId, currentSessionId) {
         const sessions = this.userSessions.get(userId) || [];
@@ -139,6 +166,9 @@ let UserSessionService = class UserSessionService {
         const sessions = this.userSessions.get(userId) || [];
         const remaining = sessions.filter((s) => s.sessionId !== sessionId);
         this.userSessions.set(userId, remaining);
+        if (remaining.length === 0) {
+            this.lastSeenAt.delete(userId);
+        }
     }
     clearAllSessions(userId) {
         const sessions = this.userSessions.get(userId) || [];
@@ -147,6 +177,8 @@ let UserSessionService = class UserSessionService {
         }
         this.userSessions.set(userId, []);
         this.revokedBeforeEpochSec.set(userId, Math.floor(Date.now() / 1000) + 1);
+        this.lastSeenAt.delete(userId);
+        this.onlineSocketCounts.delete(userId);
     }
     getActiveSessions(userId) {
         return this.userSessions.get(userId) || [];

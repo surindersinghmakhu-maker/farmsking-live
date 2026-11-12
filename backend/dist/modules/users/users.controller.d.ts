@@ -20,6 +20,7 @@ import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 import { AssignStaffRoleDto } from './dto/assign-staff-role.dto';
 import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
+import { AdminCreateSendOtpDto, AdminCreateUserDto, AdminCreateVerifyOtpDto } from './dto/admin-create-user.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
@@ -72,6 +73,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -180,6 +183,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -254,6 +259,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -328,6 +335,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -412,6 +421,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -496,6 +507,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -591,6 +604,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -631,6 +646,9 @@ export declare class UsersController {
     }>;
     list(query: ListUsersQueryDto): Promise<{
         items: {
+            isPermanentlyDeleted: boolean;
+            isOnline: boolean;
+            lastSeenAt: string | null;
             sellerStore: {
                 id: string;
                 storeName: string;
@@ -679,6 +697,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -776,6 +796,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -860,6 +882,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -937,6 +961,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -961,6 +987,102 @@ export declare class UsersController {
                 farmName: string | null;
             };
         }[];
+    }>;
+    sendAdminCreateOtp(user: AuthUser, dto: AdminCreateSendOtpDto): Promise<{
+        success: boolean;
+        mobile: string;
+        waSent: boolean;
+        message: string;
+        devOtp: string | undefined;
+        expiresInSeconds: number;
+    }>;
+    verifyAdminCreateOtp(user: AuthUser, dto: AdminCreateVerifyOtpDto): Promise<{
+        success: boolean;
+        verified: boolean;
+        mobile: string;
+        otpVerificationToken: string;
+        message: string;
+    }>;
+    adminCreateUser(user: AuthUser, dto: AdminCreateUserDto): Promise<{
+        success: boolean;
+        user: {
+            sellerStore: {
+                id: string;
+                storeName: string;
+                kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
+            } | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            role: import(".prisma/client").$Enums.Role;
+            name: string;
+            email: string | null;
+            isEmailVerified: boolean;
+            pendingEmail: string | null;
+            googleId: string | null;
+            village: string | null;
+            district: string | null;
+            state: string | null;
+            pincode: string | null;
+            postOffice: string | null;
+            preferredLanguage: string;
+            notificationsEnabled: boolean;
+            whatsappGroupEnabled: boolean;
+            whatsappGroupJid: string | null;
+            weatherAlertMinTempC: number | null;
+            weatherAlertMaxTempC: number | null;
+            weatherAlertRainEnabled: boolean;
+            photoUrl: string | null;
+            sprayTankSizeL: number | null;
+            soilType: import(".prisma/client").$Enums.SoilType | null;
+            waterType: import(".prisma/client").$Enums.WaterType | null;
+            advisorType: import(".prisma/client").$Enums.AdvisorType | null;
+            upiId: string | null;
+            billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
+            kycVerified: boolean;
+            termsAcceptedAt: Date | null;
+            isSeniorDoctor: boolean;
+            seniorDoctorId: string | null;
+            doctorConsultationFee: import("@prisma/client/runtime/library").Decimal | null;
+            operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
+            adminStaffPermissions: import(".prisma/client").$Enums.AdminStaffPermission[];
+            supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
+            employerFarmerId: string | null;
+            referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
+            profileStatus: string | null;
+            assignedStaffId: string | null;
+            profileRejectionReason: string | null;
+            createdAt: Date;
+            deletedAt: Date | null;
+            employerFarmer: {
+                id: string;
+                kingId: string | null;
+                mobile: string;
+                name: string;
+                farmName: string | null;
+            } | null;
+            labourWorkerUser: {
+                id: string;
+                name: string;
+                farmerId: string;
+                farmer: {
+                    id: string;
+                    kingId: string | null;
+                    mobile: string;
+                    name: string;
+                    farmName: string | null;
+                };
+            }[];
+        };
+        tempPassword: string | null;
+        message: string;
     }>;
     createAdvisor(dto: CreateAdvisorDto): Promise<{
         user: {
@@ -1012,6 +1134,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1089,6 +1213,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1165,6 +1291,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1240,6 +1368,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1317,6 +1447,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1394,6 +1526,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1471,6 +1605,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1548,6 +1684,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1624,6 +1762,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1699,6 +1839,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -1830,6 +1972,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1910,6 +2054,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -1987,6 +2133,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -2062,6 +2210,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2394,6 +2544,8 @@ export declare class UsersController {
             supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
             employerFarmerId: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
+            isPermanentlyBlocked: boolean;
             profileStatus: string | null;
             assignedStaffId: string | null;
             profileRejectionReason: string | null;
@@ -2464,6 +2616,9 @@ export declare class UsersController {
     }>;
     getDetail(user: AuthUser, id: string): Promise<{
         user: {
+            isPermanentlyDeleted: boolean;
+            isOnline: boolean;
+            lastSeenAt: string | null;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
@@ -2642,6 +2797,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2716,6 +2873,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2790,6 +2949,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2864,6 +3025,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -2944,6 +3107,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -3018,6 +3183,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -3092,6 +3259,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -3166,6 +3335,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;
@@ -3240,6 +3411,8 @@ export declare class UsersController {
         supervisorPermissions: import(".prisma/client").$Enums.SupervisorPermission[];
         employerFarmerId: string | null;
         referredById: string | null;
+        isPhoneVerified: boolean;
+        isPermanentlyBlocked: boolean;
         profileStatus: string | null;
         assignedStaffId: string | null;
         profileRejectionReason: string | null;

@@ -599,3 +599,87 @@ export async function convertVerifiedLeadToUser(
   return data;
 }
 
+export type AdminCreateCategory = 'STAFF' | 'PARTNERS' | 'CLIENTS';
+export type AdminCreateRoleKey =
+  | 'ADMIN'
+  | 'MANAGER'
+  | 'OPERATOR'
+  | 'TECHNICAL_TRAINER'
+  | 'ACCOUNTANT'
+  | 'AGENT'
+  | 'SELLER'
+  | 'FARM_ADVISOR'
+  | 'GARDEN_ADVISOR'
+  | 'TRADER'
+  | 'FARMER'
+  | 'GARDENER'
+  | 'CUSTOMER'
+  | 'SUPERVISOR';
+
+export interface AdminCreateUserPayload {
+  otpVerificationToken: string;
+  category: AdminCreateCategory;
+  role: AdminCreateRoleKey;
+  mobile: string;
+  name: string;
+  email?: string;
+  password?: string;
+  pincode?: string;
+  postOffice?: string;
+  village?: string;
+  district?: string;
+  state?: string;
+  address?: string;
+  sprayTankSizeL?: number;
+  soilType?: string;
+  waterType?: string;
+  farmName?: string;
+  specialization?: string;
+  qualification?: string;
+  yearsExperience?: number;
+  doctorConsultationFee?: number;
+  bio?: string;
+  panNumber?: string;
+  upiId?: string;
+  alternativeMobile?: string;
+  bankAccountHolderName?: string;
+  bankAccountNumber?: string;
+  bankIfsc?: string;
+  storeName?: string;
+  sellerType?: string;
+  gstin?: string;
+  employerFarmerKingIdOrMobile?: string;
+}
+
+export async function sendAdminCreateUserOtp(mobile: string): Promise<{
+  success: boolean;
+  mobile: string;
+  waSent: boolean;
+  message: string;
+  devOtp?: string;
+}> {
+  const { data } = await apiClient.post('/users/admin-create/send-otp', { mobile });
+  return data;
+}
+
+export async function verifyAdminCreateUserOtp(mobile: string, otp: string): Promise<{
+  success: boolean;
+  verified: boolean;
+  mobile: string;
+  otpVerificationToken: string;
+  message: string;
+}> {
+  const { data } = await apiClient.post('/users/admin-create/verify-otp', { mobile, otp });
+  return data;
+}
+
+export async function adminCreateUser(payload: AdminCreateUserPayload): Promise<{
+  success: boolean;
+  user: AdminUser;
+  tempPassword: string | null;
+  message: string;
+}> {
+  const { data } = await apiClient.post('/users/admin-create', payload);
+  return data;
+}
+

@@ -96,6 +96,14 @@ function RootNavigation() {
     } else if (user) {
       const deactivated = new Set(Array.isArray((user as any).deactivatedRoles) ? (user as any).deactivatedRoles : []);
       const userRoles = Array.from(new Set([user.role, ...(user.roles || [])])).filter((r) => !deactivated.has(r));
+      const isAdminAccount = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
+      const needsMobileOtp = !isAdminAccount && (!user.mobile || String(user.mobile).startsWith('G_'));
+      if (needsMobileOtp) {
+        if (segmentsPath !== 'verify-mobile' && !inAuthGroup) {
+          router.replace('/verify-mobile' as any);
+        }
+        return;
+      }
       const isStaff = STAFF_ROLES.includes(user.role);
       const profileSubmitted = !!(user as any).staffProfileSubmitted || (user as any).profileStatus === 'UNDER_REVIEW' || (user as any).profileStatus === 'APPROVED';
 
@@ -111,6 +119,7 @@ function RootNavigation() {
       const hasExplicitClientRole = userRoles.some((r) => ['FARMER', 'GARDENER', 'TRADER', 'SUPERVISOR', 'LABOUR'].includes(r));
 
       const resolveHomeRoute = (): string => {
+        if (needsMobileOtp) return '/verify-mobile';
         if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) return '/admin';
         if (loginPortal === 'CLIENT') return '/(user)/(tabs)';
         if (loginPortal === 'PARTNER' && hasAnyPartnerPortalAccess) {
@@ -176,6 +185,7 @@ function RootNavigation() {
         <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="verify-mobile" options={{ headerShown: false, title: 'FarmsKing - Verify Mobile' }} />
         <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />

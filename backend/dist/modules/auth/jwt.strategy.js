@@ -60,6 +60,9 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
             this.userSessionService.touchSession(user.id, payload.sid);
             user.sessionId = payload.sid;
         }
+        else {
+            this.userSessionService.touchActivity(user.id);
+        }
         return user;
     }
 };

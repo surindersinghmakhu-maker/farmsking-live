@@ -43,6 +43,7 @@ const admin_update_user_dto_1 = require("./dto/admin-update-user.dto");
 const reset_user_password_dto_1 = require("./dto/reset-user-password.dto");
 const assign_staff_role_dto_1 = require("./dto/assign-staff-role.dto");
 const convert_verified_lead_dto_1 = require("./dto/convert-verified-lead.dto");
+const admin_create_user_dto_1 = require("./dto/admin-create-user.dto");
 const ALL_AUTHENTICATED_ROLES = [
     client_1.Role.CUSTOMER,
     client_1.Role.FARMER,
@@ -135,6 +136,15 @@ let UsersController = class UsersController {
     }
     updateOperatorPermissions(id, dto) {
         return this.usersService.updateOperatorPermissions(id, dto.permissions);
+    }
+    sendAdminCreateOtp(user, dto) {
+        return this.usersService.sendAdminCreateOtp(user, dto.mobile);
+    }
+    verifyAdminCreateOtp(user, dto) {
+        return this.usersService.verifyAdminCreateOtp(user, dto.mobile, dto.otp);
+    }
+    adminCreateUser(user, dto) {
+        return this.usersService.adminCreateUser(user, dto);
     }
     createAdvisor(dto) {
         return this.usersService.createAdvisor(dto);
@@ -446,6 +456,35 @@ __decorate([
     __metadata("design:paramtypes", [String, update_operator_permissions_dto_1.UpdateOperatorPermissionsDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateOperatorPermissions", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.Post)('admin-create/send-otp'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, admin_create_user_dto_1.AdminCreateSendOtpDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "sendAdminCreateOtp", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, throttler_1.Throttle)({ default: { limit: 15, ttl: 60_000 } }),
+    (0, common_1.Post)('admin-create/verify-otp'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, admin_create_user_dto_1.AdminCreateVerifyOtpDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "verifyAdminCreateOtp", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('admin-create'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, admin_create_user_dto_1.AdminCreateUserDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "adminCreateUser", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('advisors'),

@@ -124,7 +124,8 @@ export default function FarmerProfileSetupScreen() {
     const selectedTankSize = sprayTankSizeL ?? 20;
     const finalFarmName = farmName.trim() || user?.name || '';
     const finalFarmAddress = farmAddress.trim();
-    const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
+    const cleanUserMobile = getCleanMobile(user?.mobile);
+    const finalFarmMobile = farmMobile.trim() || cleanUserMobile || '';
     const finalUpiId = upiId.trim();
 
     try {

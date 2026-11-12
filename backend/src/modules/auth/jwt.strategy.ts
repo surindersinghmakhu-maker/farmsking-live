@@ -67,6 +67,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (payload.sid) {
       this.userSessionService.touchSession(user.id, payload.sid);
       (user as any).sessionId = payload.sid;
+    } else {
+      this.userSessionService.touchActivity(user.id);
     }
 
     return user as AuthUser;

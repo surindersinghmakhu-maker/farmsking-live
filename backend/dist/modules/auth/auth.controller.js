@@ -116,6 +116,12 @@ let AuthController = class AuthController {
     sendMobileLinkOtp(user, body) {
         return this.authService.sendMobileLinkOtp(user, body.mobile);
     }
+    verifyMobileLinkOtp(user, dto) {
+        return this.authService.verifyMobileLinkOtp(user, dto);
+    }
+    firebaseMobileLink(user, dto) {
+        return this.authService.firebaseMobileLink(user, dto);
+    }
     register(dto) {
         return this.authService.register(dto);
     }
@@ -350,6 +356,26 @@ __decorate([
     __metadata("design:paramtypes", [Object, otp_dto_1.SendMobileLinkOtpDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendMobileLinkOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('verify-mobile-link-otp'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, otp_dto_1.VerifyMobileLinkOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyMobileLinkOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('firebase-mobile-link'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, otp_dto_1.FirebaseMobileLinkDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "firebaseMobileLink", null);
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
     (0, common_1.Post)('register'),

@@ -30,10 +30,10 @@ const CHANNEL_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 const STATUS_BADGES: Record<VerifiedLeadStatusType, { label: string; color: string }> = {
-  OTP_CONFIRMED: { label: 'OTP Confirmed · Waiting Follow-Up', color: '#f59e0b' },
-  CONVERTED_BY_ADMIN: { label: 'Continued by Admin', color: '#10b981' },
-  COMPLETED_SELF: { label: 'Completed Self-Signup', color: '#38bdf8' },
-  DISMISSED: { label: 'Dismissed', color: '#94a3b8' },
+  OTP_CONFIRMED: { label: 'Unread · Follow-Up Pending', color: '#f59e0b' },
+  CONVERTED_BY_ADMIN: { label: 'Done · Created by Admin', color: '#10b981' },
+  COMPLETED_SELF: { label: 'Done · Self-Completed', color: '#38bdf8' },
+  DISMISSED: { label: 'Done · Read', color: '#10b981' },
 };
 
 function formatDateTime(value?: string | null): string {
@@ -256,11 +256,11 @@ export function VerifiedLeadsPanel() {
   };
 
   const filterPills: { key: VerifiedLeadStatusType | 'ALL'; label: string; color: string }[] = [
-    { key: 'OTP_CONFIRMED', label: `Waiting Follow-Up (${counts.otpConfirmed})`, color: '#f59e0b' },
-    { key: 'CONVERTED_BY_ADMIN', label: `Continued by Admin (${counts.convertedByAdmin})`, color: '#10b981' },
+    { key: 'OTP_CONFIRMED', label: `Unread Follow-Up (${counts.otpConfirmed})`, color: '#f59e0b' },
+    { key: 'DISMISSED', label: `Done / Read (${counts.dismissed})`, color: '#10b981' },
+    { key: 'CONVERTED_BY_ADMIN', label: `Created by Admin (${counts.convertedByAdmin})`, color: '#10b981' },
     { key: 'COMPLETED_SELF', label: `Self-Completed (${counts.completedSelf})`, color: '#38bdf8' },
-    { key: 'DISMISSED', label: `Dismissed (${counts.dismissed})`, color: '#94a3b8' },
-    { key: 'ALL', label: `All Verified (${counts.total})`, color: '#a78bfa' },
+    { key: 'ALL', label: `All (${counts.total})`, color: '#a78bfa' },
   ];
 
   return (
@@ -271,11 +271,11 @@ export function VerifiedLeadsPanel() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="shield-checkmark" size={18} color="#10b981" />
             <Text style={[styles.panelTitle, { color: textColor }]}>
-              First-Time Verified OTP Signup Leads
+              Verified OTP Follow-Ups (Incomplete Signups &amp; Partner Tries)
             </Text>
           </View>
           <Text style={[styles.panelSub, { color: subTextColor }]}>
-            Strictly logs unregistered phone numbers only after OTP confirmation succeeds (mistyped unconfirmed numbers are excluded). Follow up with the caller, add details, or continue their profile into an active account.
+            Shows users who confirmed OTP during first-time login or signup without finishing, as well as existing Clients trying to join the Partner portal. Mark each lead as Done / Read after follow-up.
           </Text>
         </View>
 
@@ -355,24 +355,42 @@ export function VerifiedLeadsPanel() {
               color: '#38bdf8',
             };
             const statusMeta = STATUS_BADGES[lead.status] || STATUS_BADGES.OTP_CONFIRMED;
+            const isUnread = lead.status === 'OTP_CONFIRMED';
+            const isExistingClientTryingPartner = Boolean(lead.convertedUser && lead.portal === 'PARTNER');
+            const isSelfOrAdminCompleted = lead.status === 'COMPLETED_SELF' || lead.status === 'CONVERTED_BY_ADMIN';
             const locationParts = [lead.village, lead.district, lead.state, lead.pincode ? `PIN ${lead.pincode}` : null].filter(Boolean);
 
             return (
               <View
                 key={lead.id}
-                style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
+                style={[
+                  styles.card,
+                  {
+                    backgroundColor: cardBg,
+                    borderColor: isUnread ? '#f59e0b' : cardBorder,
+                    borderWidth: isUnread ? 1.5 : 1,
+                  },
+                ]}
               >
                 {/* Top Summary Bar */}
                 <View style={styles.cardTopRow}>
                   <View style={{ flex: 1, minWidth: 260, gap: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {isUnread ? (
+                        <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: '#f59e0b' }} />
+                      ) : null}
+
                       <Text style={[styles.mobileText, { color: textColor }]}>+91 {lead.mobile}</Text>
 
                       <View style={[styles.badge, { borderColor: channelMeta.color, backgroundColor: `${channelMeta.color}1C` }]}>
                         <Text style={[styles.badgeText, { color: channelMeta.color }]}>{channelMeta.label}</Text>
                       </View>
 
-                      {lead.portal ? (
+                      {isExistingClientTryingPartner ? (
+                        <View style={[styles.badge, { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.16)' }]}>
+                          <Text style={[styles.badgeText, { color: '#f59e0b' }]}>Existing Client → Trying Partner</Text>
+                        </View>
+                      ) : lead.portal ? (
                         <View style={[styles.badge, { borderColor: '#64748b', backgroundColor: 'rgba(100,116,139,0.14)' }]}>
                           <Text style={[styles.badgeText, { color: isLight ? '#334155' : '#cbd5e1' }]}>{lead.portal} PORTAL</Text>
                         </View>
@@ -397,16 +415,18 @@ export function VerifiedLeadsPanel() {
                   </View>
 
                   <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    {lead.status !== 'COMPLETED_SELF' && lead.status !== 'CONVERTED_BY_ADMIN' ? (
+                    {!isSelfOrAdminCompleted ? (
                       <>
-                        <TouchableOpacity
-                          style={styles.convertBtn}
-                          onPress={() => openConvertModal(lead)}
-                          activeOpacity={0.85}
-                        >
-                          <Ionicons name="person-add" size={14} color="#041b11" />
-                          <Text style={styles.convertBtnText}>Continue &amp; Create Account</Text>
-                        </TouchableOpacity>
+                        {!isExistingClientTryingPartner ? (
+                          <TouchableOpacity
+                            style={styles.convertBtn}
+                            onPress={() => openConvertModal(lead)}
+                            activeOpacity={0.85}
+                          >
+                            <Ionicons name="person-add" size={14} color="#041b11" />
+                            <Text style={styles.convertBtnText}>Continue &amp; Create Account</Text>
+                          </TouchableOpacity>
+                        ) : null}
 
                         <TouchableOpacity
                           style={[styles.secondaryBtn, { borderColor: cardBorder }]}
@@ -418,23 +438,29 @@ export function VerifiedLeadsPanel() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          style={[styles.secondaryBtn, { borderColor: lead.status === 'DISMISSED' ? '#10b981' : '#64748b' }]}
+                          style={[
+                            styles.secondaryBtn,
+                            {
+                              borderColor: lead.status === 'DISMISSED' ? '#f59e0b' : '#10b981',
+                              backgroundColor: lead.status === 'DISMISSED' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.12)',
+                            },
+                          ]}
                           onPress={() => handleToggleDismiss(lead)}
                           disabled={updateNotesMutation.isPending}
                           activeOpacity={0.85}
                         >
                           <Ionicons
-                            name={lead.status === 'DISMISSED' ? 'refresh-circle-outline' : 'close-circle-outline'}
+                            name={lead.status === 'DISMISSED' ? 'mail-unread-outline' : 'checkmark-done-outline'}
                             size={14}
-                            color={lead.status === 'DISMISSED' ? '#10b981' : '#94a3b8'}
+                            color={lead.status === 'DISMISSED' ? '#f59e0b' : '#10b981'}
                           />
                           <Text
                             style={[
                               styles.secondaryBtnText,
-                              { color: lead.status === 'DISMISSED' ? '#10b981' : '#94a3b8' },
+                              { color: lead.status === 'DISMISSED' ? '#f59e0b' : '#10b981' },
                             ]}
                           >
-                            {lead.status === 'DISMISSED' ? 'Restore Lead' : 'Dismiss'}
+                            {lead.status === 'DISMISSED' ? 'Mark Unread' : 'Mark as Done / Read'}
                           </Text>
                         </TouchableOpacity>
                       </>

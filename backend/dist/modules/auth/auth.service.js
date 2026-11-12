@@ -74,6 +74,7 @@ const SAFE_USER_SELECT = {
     name: true,
     email: true,
     isEmailVerified: true,
+    isPhoneVerified: true,
     pendingEmail: true,
     googleId: true,
     village: true,
@@ -192,6 +193,12 @@ let AuthService = class AuthService {
     }
     async sendRegisterOtp(mobile) {
         const cleanMobile = this.normalizeIndianMobile(mobile);
+        if (typeof this.prisma.user?.findFirst === 'function') {
+            const existing = await this.findActiveUserByMobile(cleanMobile);
+            if (existing?.isPermanentlyBlocked) {
+                throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+            }
+        }
         return this.issueMobileOtpChallenge(this.registerOtpStore, cleanMobile, cleanMobile, 10 * 60 * 1000, 4);
     }
     async recordVerifiedSignupLead(params) {
@@ -206,11 +213,13 @@ let AuthService = class AuthService {
                 select: { id: true, attemptCount: true, status: true },
             })
                 .catch(() => null);
-            const nextStatus = existingLead &&
-                existingLead.status !== client_1.VerifiedLeadStatus.OTP_CONFIRMED &&
-                existingLead.status !== client_1.VerifiedLeadStatus.DISMISSED
-                ? existingLead.status
-                : client_1.VerifiedLeadStatus.OTP_CONFIRMED;
+            const nextStatus = params.forceUnread
+                ? client_1.VerifiedLeadStatus.OTP_CONFIRMED
+                : existingLead &&
+                    existingLead.status !== client_1.VerifiedLeadStatus.OTP_CONFIRMED &&
+                    existingLead.status !== client_1.VerifiedLeadStatus.DISMISSED
+                    ? existingLead.status
+                    : client_1.VerifiedLeadStatus.OTP_CONFIRMED;
             const saved = await this.prisma.verifiedSignupLead.upsert({
                 where: { mobile: cleanMobile },
                 create: {
@@ -230,6 +239,7 @@ let AuthService = class AuthService {
                     state: params.state?.trim() || null,
                     village: params.village?.trim() || null,
                     intendedRole: params.intendedRole || null,
+                    convertedUserId: params.convertedUserId || null,
                     status: client_1.VerifiedLeadStatus.OTP_CONFIRMED,
                 },
                 update: {
@@ -247,6 +257,7 @@ let AuthService = class AuthService {
                     ...(params.state?.trim() ? { state: params.state.trim() } : {}),
                     ...(params.village?.trim() ? { village: params.village.trim() } : {}),
                     ...(params.intendedRole ? { intendedRole: params.intendedRole } : {}),
+                    ...(params.convertedUserId ? { convertedUserId: params.convertedUserId } : {}),
                     status: nextStatus,
                 },
             });
@@ -320,6 +331,10 @@ let AuthService = class AuthService {
         this.verifyMobileOtpChallenge(this.registerOtpStore, cleanMobile, otp);
         this.verifiedOtpMobiles.set(cleanMobile, Date.now() + 30 * 60 * 1000);
         const existingUser = await this.findActiveUserByMobile(cleanMobile);
+        if (existingUser?.isPermanentlyBlocked) {
+            this.verifiedOtpMobiles.delete(cleanMobile);
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
         if (!existingUser) {
             await this.recordVerifiedSignupLead({
                 mobile: cleanMobile,
@@ -428,17 +443,11 @@ let AuthService = class AuthService {
         this.verifyMobileOtpChallenge(this.partnerSignupOtpStore, cleanMobile, otp);
         this.partnerVerifiedMap.set(cleanMobile, Date.now() + 30 * 60 * 1000);
         const existingUser = await this.findActiveUserByMobile(cleanMobile);
+        if (existingUser?.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
         if (existingUser) {
             this.assertPartnerEligibilityForExistingUser(existingUser);
-        }
-        else {
-            await this.recordVerifiedSignupLead({
-                mobile: cleanMobile,
-                sourceChannel: 'PARTNER_SIGNUP_OTP',
-                portal: 'PARTNER',
-                ipAddress: meta?.ipAddress,
-                userAgent: meta?.userAgent,
-            });
         }
         const latestApp = await this.prisma.partnerApplication?.findFirst({
             where: { mobile: cleanMobile },
@@ -446,6 +455,23 @@ let AuthService = class AuthService {
         });
         const activeRoles = existingUser ? (0, role_policy_util_1.getActiveRolesList)(existingUser) : [];
         const activePartnerRoles = activeRoles.filter((r) => role_policy_util_1.PARTNER_PORTAL_ROLES.includes(r));
+        if (!latestApp || latestApp.status !== client_1.PartnerApplicationStatus.PENDING) {
+            await this.recordVerifiedSignupLead({
+                mobile: cleanMobile,
+                sourceChannel: 'PARTNER_SIGNUP_OTP',
+                portal: 'PARTNER',
+                ipAddress: meta?.ipAddress,
+                userAgent: meta?.userAgent,
+                capturedName: existingUser?.name || undefined,
+                capturedEmail: existingUser?.email || undefined,
+                pincode: existingUser?.pincode || undefined,
+                district: existingUser?.district || undefined,
+                state: existingUser?.state || undefined,
+                village: existingUser?.village || undefined,
+                convertedUserId: existingUser?.id || null,
+                forceUnread: true,
+            });
+        }
         return {
             success: true,
             verified: true,
@@ -652,11 +678,12 @@ let AuthService = class AuthService {
                 data: appPayload,
             });
         this.partnerVerifiedMap.delete(cleanMobile);
-        if (!existingUser && this.prisma.verifiedSignupLead?.updateMany) {
+        if (this.prisma.verifiedSignupLead?.updateMany) {
             await this.prisma.verifiedSignupLead
                 .updateMany({
                 where: { mobile: cleanMobile, status: client_1.VerifiedLeadStatus.OTP_CONFIRMED },
                 data: {
+                    status: client_1.VerifiedLeadStatus.COMPLETED_SELF,
                     capturedName: savedApp.name,
                     capturedEmail: savedApp.email,
                     pincode: savedApp.pincode,
@@ -664,6 +691,7 @@ let AuthService = class AuthService {
                     state: savedApp.state,
                     village: savedApp.village,
                     intendedRole: dto.requestedRole,
+                    convertedAt: new Date(),
                 },
             })
                 .catch(() => { });
@@ -777,6 +805,21 @@ let AuthService = class AuthService {
             }
             if (includeEditableAppOnProof) {
                 this.partnerVerifiedMap.set(cleanMobile, Date.now() + 30 * 60 * 1000);
+                if (user) {
+                    await this.recordVerifiedSignupLead({
+                        mobile: cleanMobile,
+                        sourceChannel: 'PARTNER_SIGNUP_OTP',
+                        portal: 'PARTNER',
+                        capturedName: user.name || undefined,
+                        capturedEmail: user.email || undefined,
+                        pincode: user.pincode || undefined,
+                        district: user.district || undefined,
+                        state: user.state || undefined,
+                        village: user.village || undefined,
+                        convertedUserId: user.id,
+                        forceUnread: true,
+                    });
+                }
             }
             throw new common_1.ForbiddenException({
                 statusCode: 403,
@@ -839,7 +882,10 @@ let AuthService = class AuthService {
         }
         const cleanEmail = verifiedEmail.trim().toLowerCase();
         let user = await this.prisma.user.findFirst({
-            where: { email: cleanEmail, deletedAt: null },
+            where: {
+                email: cleanEmail,
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
+            },
         });
         if (!user) {
             this.assertPortalAllowed(null, dto.portal);
@@ -896,12 +942,14 @@ let AuthService = class AuthService {
             }
         }
         const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
-        const isProfileIncomplete = !user.mobile || user.mobile.startsWith('G_') || !user.village || !user.pincode;
+        const requiresMobileVerification = !user.mobile || user.mobile.startsWith('G_');
+        const isProfileIncomplete = requiresMobileVerification || !user.village || !user.pincode;
         return {
             ...this.buildAuthResponse(safeUser),
+            requiresMobileVerification,
             isProfileIncomplete,
             missingFields: [
-                ...(!user.mobile || user.mobile.startsWith('G_') ? ['mobile'] : []),
+                ...(requiresMobileVerification ? ['mobile'] : []),
                 ...(!user.pincode ? ['pincode'] : []),
                 ...(!user.village ? ['village'] : []),
             ],
@@ -993,13 +1041,24 @@ let AuthService = class AuthService {
         }
         const existingMobileUser = await this.prisma.user.findFirst({
             where: {
-                mobile: cleanMobile,
-                deletedAt: null,
                 id: { not: user.id },
+                OR: [
+                    { mobile: cleanMobile },
+                    { mobile: `+91${cleanMobile}` },
+                    { mobile: { endsWith: cleanMobile } },
+                ],
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
             },
+            select: { id: true, kingId: true, role: true, isPermanentlyBlocked: true },
         });
+        if (existingMobileUser?.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
+        const isPlaceholderGoogleAccount = !user.mobile || user.mobile.startsWith('G_');
         if (existingMobileUser) {
-            throw new common_1.BadRequestException(`This mobile number is already attached to King ID: ${existingMobileUser.kingId}. Please use a different number.`);
+            if (!isPlaceholderGoogleAccount || role_policy_util_1.ADMIN_STAFF_ROLES.includes(existingMobileUser.role)) {
+                throw new common_1.BadRequestException(`This mobile number is already attached to King ID: ${existingMobileUser.kingId}. Please use a different number.`);
+            }
         }
         const isDev = process.env.NODE_ENV !== 'production';
         const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
@@ -1032,6 +1091,9 @@ let AuthService = class AuthService {
     async verifyMobileLinkOtp(user, dto) {
         const rawDigits = dto.mobile.replace(/\D/g, '');
         const cleanMobile = rawDigits.slice(-10);
+        if (cleanMobile.length !== 10) {
+            throw new common_1.BadRequestException('Please enter a valid 10-digit mobile number.');
+        }
         const stored = this.mobileLinkOtpStore.get(user.id);
         if (!stored || stored.mobile !== cleanMobile) {
             throw new common_1.BadRequestException('OTP expired or not requested for this mobile number.');
@@ -1044,17 +1106,53 @@ let AuthService = class AuthService {
         if (stored.otp !== dto.otp.trim() && (!isDev || dto.otp.trim() !== '123456')) {
             throw new common_1.BadRequestException('Invalid OTP. Please check the 6-digit code and try again.');
         }
+        this.mobileLinkOtpStore.delete(user.id);
+        return this.completeMobileLinkForUser(user, cleanMobile, dto.password);
+    }
+    async firebaseMobileLink(user, dto) {
+        if (!dto.idToken) {
+            throw new common_1.BadRequestException('Firebase ID Token is required.');
+        }
+        let decodedToken;
+        try {
+            decodedToken = await (0, auth_1.getAuth)().verifyIdToken(dto.idToken);
+        }
+        catch (err) {
+            throw new common_1.UnauthorizedException('Invalid Firebase ID Token: ' + (err?.message || 'Verification failed.'));
+        }
+        const phone = decodedToken?.phone_number;
+        if (!phone) {
+            throw new common_1.UnauthorizedException('No verified phone number attached to this Firebase credential.');
+        }
+        const cleanMobile = String(phone).replace(/\D/g, '').slice(-10);
+        if (cleanMobile.length !== 10) {
+            throw new common_1.BadRequestException('Please verify a valid 10-digit Indian mobile number.');
+        }
+        return this.completeMobileLinkForUser(user, cleanMobile, dto.password);
+    }
+    async completeMobileLinkForUser(user, cleanMobile, rawPassword) {
         let passwordHash = undefined;
-        if (dto.password && dto.password.trim().length >= 4) {
-            passwordHash = await argon2.hash(dto.password.trim());
+        if (rawPassword && rawPassword.trim().length >= 4) {
+            passwordHash = await argon2.hash(rawPassword.trim());
         }
         const existingMobileUser = await this.prisma.user.findFirst({
             where: {
-                mobile: cleanMobile,
-                deletedAt: null,
                 id: { not: user.id },
+                OR: [
+                    { mobile: cleanMobile },
+                    { mobile: `+91${cleanMobile}` },
+                    { mobile: { endsWith: cleanMobile } },
+                ],
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
             },
         });
+        if (existingMobileUser?.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
+        const isPlaceholderGoogleAccount = !user.mobile || user.mobile.startsWith('G_');
+        if (existingMobileUser && (!isPlaceholderGoogleAccount || role_policy_util_1.ADMIN_STAFF_ROLES.includes(existingMobileUser.role))) {
+            throw new common_1.BadRequestException(`This mobile number is already attached to King ID: ${existingMobileUser.kingId}. Please use a different number.`);
+        }
         let targetUser;
         let isMerged = false;
         if (existingMobileUser) {
@@ -1062,8 +1160,10 @@ let AuthService = class AuthService {
             targetUser = await this.prisma.user.update({
                 where: { id: existingMobileUser.id },
                 data: {
-                    ...(currentUserData?.email ? { email: currentUserData.email } : {}),
+                    ...(currentUserData?.email ? { email: currentUserData.email, isEmailVerified: true } : {}),
+                    ...(currentUserData?.googleId && !existingMobileUser.googleId ? { googleId: currentUserData.googleId } : {}),
                     ...(currentUserData?.photoUrl && !existingMobileUser.photoUrl ? { photoUrl: currentUserData.photoUrl } : {}),
+                    isPhoneVerified: true,
                     ...(passwordHash ? { passwordHash } : {}),
                 },
                 select: SAFE_USER_SELECT,
@@ -1071,7 +1171,10 @@ let AuthService = class AuthService {
             await this.reassignUserRecords(user.id, existingMobileUser.id);
             await this.prisma.user.update({
                 where: { id: user.id },
-                data: { deletedAt: new Date() },
+                data: {
+                    deletedAt: new Date(),
+                    googleId: null,
+                },
             });
             isMerged = true;
         }
@@ -1103,12 +1206,11 @@ let AuthService = class AuthService {
                 .sendEmailDisconnectedNotification(existingMobileUser.email, existingMobileUser.name || 'FarmsKing Member', cleanMobile, targetUser.email)
                 .catch((e) => console.warn('[AuthService] sendEmailDisconnectedNotification error:', e?.message));
         }
-        this.mobileLinkOtpStore.delete(user.id);
         const authResponse = this.buildAuthResponse(targetUser);
         return {
             success: true,
             message: isMerged
-                ? 'Accounts merged successfully! On your Free Plan, your 3 latest crops remain active for editing. Older crops stay visible in View-Only mode (upgrade plan to edit older crops).'
+                ? 'Mobile verified and linked to your existing FarmsKing account!'
                 : 'Mobile number verified and linked successfully!',
             isMerged,
             user: targetUser,
@@ -1142,9 +1244,12 @@ let AuthService = class AuthService {
                         { mobile: { endsWith: cleanMobileNum } },
                     ] : []),
                 ],
-                deletedAt: null,
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
             },
         });
+        if (existing?.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
         let referrer = null;
         if (dto.referralCode?.trim()) {
             const cleanCode = dto.referralCode.trim();
@@ -1404,7 +1509,7 @@ let AuthService = class AuthService {
                     ...(identifier.length === 10 ? [{ mobile: `+91${identifier}` }] : []),
                     { kingId: identifier },
                 ],
-                deletedAt: null,
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
             },
         });
         if (!user) {
@@ -1450,6 +1555,9 @@ let AuthService = class AuthService {
                 }
             }
             throw new common_1.UnauthorizedException('Invalid mobile number or password.');
+        }
+        if (user.isPermanentlyBlocked) {
+            throw new common_1.UnauthorizedException('Your account has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
         }
         const activeRoles = this.getActiveUserRoles(user);
         const hasPasswordPortalRole = activeRoles.some((r) => role_policy_util_1.PARTNER_PORTAL_ROLES.includes(r) || role_policy_util_1.ADMIN_STAFF_ROLES.includes(r));
@@ -1701,7 +1809,7 @@ let AuthService = class AuthService {
                     { mobile: `+91${cleanMobile}` },
                     { mobile: { endsWith: cleanMobile } },
                 ],
-                deletedAt: null,
+                AND: [{ OR: [{ deletedAt: null }, { isPermanentlyBlocked: true }] }],
             },
         });
     }
@@ -1725,12 +1833,18 @@ let AuthService = class AuthService {
                 kingId,
                 mobile: cleanMobile,
                 passwordHash,
-                name: worker.name || `Worker ${cleanMobile.slice(-4)}`,
-                role: client_1.Role.LABOUR,
-                roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
+                name: worker.name || `User ${cleanMobile.slice(-4)}`,
+                role: client_1.Role.CUSTOMER,
+                roles: [client_1.Role.CUSTOMER],
                 isPhoneVerified: true,
             },
         });
+        try {
+            await this.walletService.ensureWelcomeBonus(user.id);
+        }
+        catch (e) {
+            console.warn('[Wallet] Worker auto-provision wallet notice:', e);
+        }
         await this.prisma.labourWorker.updateMany({
             where: {
                 OR: [
@@ -1775,7 +1889,7 @@ let AuthService = class AuthService {
             existingWorker = Boolean(worker);
         }
         if (portal === 'PARTNER') {
-            const candidateUser = user ?? (existingWorker ? { role: client_1.Role.LABOUR, roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER] } : null);
+            const candidateUser = user ?? (existingWorker ? { role: client_1.Role.CUSTOMER, roles: [client_1.Role.CUSTOMER] } : null);
             const eligibility = (0, role_policy_util_1.evaluatePortalEligibility)(candidateUser, 'PARTNER');
             if (!eligibility.allowed) {
                 const candidateRoles = candidateUser ? (0, role_policy_util_1.getActiveRolesList)(candidateUser) : [];
@@ -1802,7 +1916,7 @@ let AuthService = class AuthService {
             }
         }
         else {
-            this.assertPortalAllowed(user ?? (existingWorker ? { role: client_1.Role.LABOUR, roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER] } : null), portal);
+            this.assertPortalAllowed(user ?? (existingWorker ? { role: client_1.Role.CUSTOMER, roles: [client_1.Role.CUSTOMER] } : null), portal);
         }
         const isDev = process.env.NODE_ENV !== 'production';
         const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
@@ -1909,6 +2023,10 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Please verify your mobile number with OTP before creating an account.');
         }
         const existing = await this.findActiveUserByMobile(cleanMobile);
+        if (existing?.isPermanentlyBlocked) {
+            this.verifiedOtpMobiles.delete(cleanMobile);
+            throw new common_1.UnauthorizedException('This mobile number has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
+        }
         if (existing) {
             this.verifiedOtpMobiles.delete(cleanMobile);
             throw new common_1.ConflictException('This mobile number is already registered with FarmsKing. Please sign in using Mobile OTP.');
@@ -1998,10 +2116,10 @@ let AuthService = class AuthService {
                 message: 'Mobile number verified via Firebase. Please select your role to proceed.',
             };
         }
-        await this.assertPortalAccessOrPartnerStatus(cleanMobile, user, portal, true);
         if (user.isPermanentlyBlocked) {
-            throw new common_1.UnauthorizedException('Your account has been permanently blocked. Please contact Admin Support.');
+            throw new common_1.UnauthorizedException('Your account has been permanently blocked by Admin. You cannot sign in or sign up again. Please contact Admin Support.');
         }
+        await this.assertPortalAccessOrPartnerStatus(cleanMobile, user, portal, true);
         if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
             const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
             const minutesLeft = Math.ceil(msLeft / (1000 * 60));

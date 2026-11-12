@@ -30,6 +30,8 @@ import {
   SendWhatsAppOtpDto,
   SendEmailOtpDto,
   SendMobileLinkOtpDto,
+  VerifyMobileLinkOtpDto,
+  FirebaseMobileLinkDto,
   CompleteOtpRegistrationDto,
   SendMobileOtpDto,
   VerifyMobileOtpDto,
@@ -225,25 +227,25 @@ export class AuthController {
     return this.authService.sendMobileLinkOtp(user, body.mobile);
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @HttpCode(HttpStatus.OK)
-  // @Post('verify-mobile-link-otp')
-  // verifyMobileLinkOtp(
-  //   @CurrentUser() user: AuthUser,
-  //   @Body() dto: { mobile: string; otp: string; password?: string },
-  // ) {
-  //   // return this.authService.verifyMobileLinkOtp(user, dto);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-mobile-link-otp')
+  verifyMobileLinkOtp(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: VerifyMobileLinkOtpDto,
+  ) {
+    return this.authService.verifyMobileLinkOtp(user, dto);
+  }
 
-  // @UseGuards(JwtAuthGuard)
-  // @HttpCode(HttpStatus.OK)
-  // @Post('firebase-mobile-link')
-  // firebaseMobileLink(
-  //   @CurrentUser() user: AuthUser,
-  //   @Body() body: { idToken: string; password?: string }
-  // ) {
-  //   // return this.authService.firebaseMobileLink(user, body);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('firebase-mobile-link')
+  firebaseMobileLink(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: FirebaseMobileLinkDto,
+  ) {
+    return this.authService.firebaseMobileLink(user, dto);
+  }
 
   @Throttle({ default: { limit: 1000, ttl: 60_000 } })
   @Post('register')

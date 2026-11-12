@@ -173,6 +173,7 @@ export declare class AuthService {
     private assertPortalAllowed;
     private assertPortalAccessOrPartnerStatus;
     googleLogin(dto: GoogleLoginDto): Promise<{
+        requiresMobileVerification: boolean;
         isProfileIncomplete: boolean;
         missingFields: string[];
         accessToken: string;
@@ -218,6 +219,7 @@ export declare class AuthService {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -250,6 +252,7 @@ export declare class AuthService {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;
@@ -269,6 +272,17 @@ export declare class AuthService {
         user: any;
         accessToken: string;
     }>;
+    firebaseMobileLink(user: AuthUser, dto: {
+        idToken: string;
+        password?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        isMerged: boolean;
+        user: any;
+        accessToken: string;
+    }>;
+    private completeMobileLinkForUser;
     private reassignUserRecords;
     register(dto: RegisterDto): Promise<{
         accessToken: string;
@@ -469,6 +483,7 @@ export declare class AuthService {
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
+            isPhoneVerified: boolean;
             createdAt: Date;
         };
     }>;

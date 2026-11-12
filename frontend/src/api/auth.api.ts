@@ -86,8 +86,8 @@ export interface GoogleLoginPayload {
   portal?: LoginPortalMode;
 }
 
-export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }> {
-  const { data } = await apiClient.post<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }>('/auth/google-login', payload);
+export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { requiresMobileVerification?: boolean; isProfileIncomplete?: boolean; missingFields?: string[] }> {
+  const { data } = await apiClient.post<AuthResponse & { requiresMobileVerification?: boolean; isProfileIncomplete?: boolean; missingFields?: string[] }>('/auth/google-login', payload);
   return data;
 }
 
@@ -108,6 +108,11 @@ export async function sendMobileLinkOtpApi(mobile: string): Promise<{ success: b
 
 export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: string; password?: string }): Promise<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }> {
   const { data } = await apiClient.post<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }>('/auth/verify-mobile-link-otp', payload);
+  return data;
+}
+
+export async function firebaseMobileLinkApi(payload: { idToken: string; password?: string }): Promise<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }>('/auth/firebase-mobile-link', payload);
   return data;
 }
 

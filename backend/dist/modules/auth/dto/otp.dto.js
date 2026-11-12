@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.VerifyMobileOtpDto = exports.SendMobileOtpDto = exports.CompleteOtpRegistrationDto = exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
+exports.VerifyMobileOtpDto = exports.SendMobileOtpDto = exports.CompleteOtpRegistrationDto = exports.FirebaseMobileLinkDto = exports.VerifyMobileLinkOtpDto = exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class SendLoginOtpDto {
@@ -90,6 +90,43 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendMobileLinkOtpDto.prototype, "mobile", void 0);
+class VerifyMobileLinkOtpDto {
+}
+exports.VerifyMobileLinkOtpDto = VerifyMobileLinkOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], VerifyMobileLinkOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '6-digit OTP code' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{6}$/, { message: 'OTP must be 6 digits.' }),
+    __metadata("design:type", String)
+], VerifyMobileLinkOtpDto.prototype, "otp", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Optional account password' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], VerifyMobileLinkOtpDto.prototype, "password", void 0);
+class FirebaseMobileLinkDto {
+}
+exports.FirebaseMobileLinkDto = FirebaseMobileLinkDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Firebase Phone Auth ID token' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FirebaseMobileLinkDto.prototype, "idToken", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Optional account password' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FirebaseMobileLinkDto.prototype, "password", void 0);
 class CompleteOtpRegistrationDto {
 }
 exports.CompleteOtpRegistrationDto = CompleteOtpRegistrationDto;

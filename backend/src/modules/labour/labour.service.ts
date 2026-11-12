@@ -1,16 +1,12 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentMode, Role } from '@prisma/client';
 import type { AuthUser } from '../../common/types/auth-user.type';
-import * as argon2 from 'argon2';
-import * as crypto from 'crypto';
-import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { CreateLabourWorkerDto, UpdateLabourWorkerDto } from './dto/create-labour-worker.dto';
 import { CreateWorkEntryDto } from './dto/create-work-entry.dto';
 import { CreateLabourPaymentDto } from './dto/create-labour-payment.dto';
 import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
-import { getActiveRolesList } from '../../common/utils/role-policy.util';
 import { assertSupervisorPermission } from '../../common/utils/supervisor-permission.util';
 
 @Injectable()
@@ -121,14 +117,9 @@ export class LabourService {
   }
 
   /**
-   * Create a new Labour worker.
-   * If a mobile number is provided, automatically links/creates 1 single User account with role LABOUR (1 King ID per mobile number).
-   * Enforces duplicate name prevention under the same mobile number.
-   */
-  /**
-   * Create a new Labour worker.
-   * If a mobile number is provided, automatically links/creates 1 single User account with role LABOUR (1 King ID per mobile number).
-   * Enforces duplicate name prevention under the same mobile number.
+   * Create a new Labour worker record.
+   * Workers do NOT get a User account or King ID upfront; if they later sign in via Mobile OTP,
+   * auth provisions their account with a King ID and default CUSTOMER role.
    */
   assertSupervisorLabourAccess(user: AuthUser, mode: 'view' | 'entry') {
     return assertSupervisorPermission(this.prisma, user, 'labour', mode);
@@ -173,44 +164,14 @@ export class LabourService {
         );
       }
 
-      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
+      const existingUser = await this.prisma.user.findFirst({
+        where: { mobile: cleanMobile, deletedAt: null },
+        select: { id: true },
+      });
 
-      if (!linkedUser) {
-        const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
-        const kingId = await generateUniqueKingId(this.prisma);
-        linkedUser = await this.prisma.user.create({
-          data: {
-            kingId,
-            mobile: cleanMobile,
-            passwordHash,
-            name: dto.name,
-            role: Role.LABOUR,
-            roles: [Role.LABOUR, Role.CUSTOMER],
-          },
-        });
-      } else {
-        const activeExistingRoles = getActiveRolesList(linkedUser);
-        const incompatibleRoles = activeExistingRoles.filter(
-          (r) => r !== Role.LABOUR && r !== Role.CUSTOMER,
-        );
-        if (incompatibleRoles.length > 0) {
-          throw new ConflictException(
-            `This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`,
-          );
-        }
-        const updatedRoles = Array.from(new Set([...linkedUser.roles, Role.LABOUR, Role.CUSTOMER]));
-        const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== Role.LABOUR);
-        await this.prisma.user.update({
-          where: { id: linkedUser.id },
-          data: {
-            role: Role.LABOUR,
-            roles: updatedRoles,
-            deactivatedRoles: nextDeactivated,
-          },
-        });
+      if (existingUser) {
+        userId = existingUser.id;
       }
-
-      userId = linkedUser.id;
 
       // Share address from existing worker under same mobile if available
       if (!sharedAddress) {
@@ -304,49 +265,19 @@ export class LabourService {
       throw new ForbiddenException('You can only update workers belonging to your own farm.');
     }
 
-    let userId = existing.userId;
+    let userId: string | null = existing.userId;
     const cleanMobile = dto.mobile !== undefined ? (dto.mobile?.trim() || null) : existing.mobile;
-    const effectiveMobile = cleanMobile || (existing.userId === user.id ? user.mobile : null);
 
-    if (effectiveMobile) {
-      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: effectiveMobile } });
-      if (!linkedUser) {
-        const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
-        const kingId = await generateUniqueKingId(this.prisma);
-        linkedUser = await this.prisma.user.create({
-          data: {
-            kingId,
-            mobile: effectiveMobile,
-            passwordHash,
-            name: dto.name || existing.name,
-            role: Role.LABOUR,
-            roles: [Role.LABOUR, Role.CUSTOMER],
-          },
+    if (dto.mobile !== undefined) {
+      if (cleanMobile) {
+        const existingUser = await this.prisma.user.findFirst({
+          where: { mobile: cleanMobile, deletedAt: null },
+          select: { id: true },
         });
+        userId = existingUser?.id ?? null;
       } else {
-        const activeExistingRoles = getActiveRolesList(linkedUser);
-        const incompatibleRoles = activeExistingRoles.filter(
-          (r) => r !== Role.LABOUR && r !== Role.CUSTOMER,
-        );
-        if (incompatibleRoles.length > 0) {
-          throw new ConflictException(
-            `This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`,
-          );
-        }
-        const updatedRoles = Array.from(new Set([...linkedUser.roles, Role.LABOUR, Role.CUSTOMER]));
-        const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== Role.LABOUR);
-        await this.prisma.user.update({
-          where: { id: linkedUser.id },
-          data: {
-            role: Role.LABOUR,
-            roles: updatedRoles,
-            deactivatedRoles: nextDeactivated,
-            ...(dto.name && { name: dto.name.trim() }),
-            ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
-          },
-        }).catch(() => null);
+        userId = null;
       }
-      userId = linkedUser.id;
     }
 
     const updatedWorker = await this.prisma.labourWorker.update({
@@ -366,17 +297,6 @@ export class LabourService {
         user: { select: { id: true, mobile: true, kingId: true, name: true, photoUrl: true } },
       },
     });
-
-    const targetUserId = userId || existing.userId || (existing.mobile === user.mobile ? user.id : null);
-    if (targetUserId) {
-      await this.prisma.user.update({
-        where: { id: targetUserId },
-        data: {
-          ...(dto.name && { name: dto.name.trim() }),
-          ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
-        },
-      }).catch(() => null);
-    }
 
     return updatedWorker;
   }

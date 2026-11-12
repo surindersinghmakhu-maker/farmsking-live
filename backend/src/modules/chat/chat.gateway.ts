@@ -68,6 +68,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private setOnline(userId: string) {
     const wasOnline = this.isUserOnline(userId);
     this.onlineSocketCounts.set(userId, (this.onlineSocketCounts.get(userId) ?? 0) + 1);
+    this.userSessionService.setSocketConnected(userId, true);
     if (!wasOnline) {
       this.server.emit('presence_update', { userId, isOnline: true });
     }
@@ -75,6 +76,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private setOffline(userId: string) {
     const current = this.onlineSocketCounts.get(userId) ?? 0;
+    this.userSessionService.setSocketConnected(userId, false);
     if (current <= 1) {
       this.onlineSocketCounts.delete(userId);
       this.server.emit('presence_update', { userId, isOnline: false });

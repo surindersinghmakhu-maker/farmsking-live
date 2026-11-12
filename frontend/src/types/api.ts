@@ -49,6 +49,7 @@ export interface User {
   name: string;
   email?: string | null;
   isEmailVerified?: boolean | null;
+  isPhoneVerified?: boolean;
   pendingEmail?: string | null;
   googleId?: string | null;
   village?: string | null;
@@ -166,6 +167,7 @@ export interface AdminUser {
   name: string;
   email?: string | null;
   isEmailVerified?: boolean | null;
+  isPhoneVerified?: boolean;
   pendingEmail?: string | null;
   village?: string | null;
   district?: string | null;

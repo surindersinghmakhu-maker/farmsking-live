@@ -18,7 +18,7 @@ export class LabourController {
   /** Labour Dashboard Endpoint - for logged-in Labourer user account */
   @Get('my-dashboard')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.CUSTOMER, Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
   getLabourDashboard(@CurrentUser() user: AuthUser) {
     return this.labourService.getLabourDashboard(user.id);
   }

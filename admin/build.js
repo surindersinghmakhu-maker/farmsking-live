@@ -223,14 +223,14 @@ try {
     <meta name="twitter:description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
     <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
-    <!-- 🌟 Global Official FarmsKing Brand Favicons & Icons -->
-    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=6" />
-    <link rel="shortcut icon" href="/favicon.ico?v=6" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=6" />
+    <!-- 🌟 Global Official K Brand Favicons & Icons -->
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=7" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=7" />
 
     <!-- Google & AI Search Engine Structured Data (JSON-LD) -->
     <script type="application/ld+json">
@@ -361,7 +361,7 @@ try {
 
     const adminSplashHtml = `
     <div id="farmsking-admin-splash" style="position: fixed; inset: 0; background: #022c22; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 16px;" />
+      <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 16px;" />
       <div style="color: #fef08a; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 10px;">Smart Farming</div>
       <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
         🌾 India’s Intelligent Agriculture Platform

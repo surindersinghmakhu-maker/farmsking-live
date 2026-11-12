@@ -255,15 +255,14 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     <meta name="twitter:description" content="FarmsKing (farmsking.in) is India's leading Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Real-time AI Crop Doctor, live APMC mandi rates, satellite telemetry, and pure organic inputs for farmers across India." />
     <meta name="twitter:image" content="https://farmsking.in/brand_logo.png" />
 
-    <!-- 🌟 Global Official FarmsKing Brand Favicons & Icons -->
-    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=6" />
-    <link rel="shortcut icon" href="/favicon.ico?v=6" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=6" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=6" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=6" />
+    <!-- 🌟 Global Official K Brand Favicons & Icons -->
+    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=7" />
+    <link rel="shortcut icon" href="/favicon.ico?v=7" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=7" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=7" />
 
     <!-- Google WebSite Schema for Site Name & Brand Authority -->
     <script type="application/ld+json">
@@ -524,7 +523,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     </style>
     <div id="farmsking-web-splash">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img src="/favicon.png?v=6" alt="FarmsKing" style="width: 76px; height: 76px; border-radius: 20px; filter: drop-shadow(0 4px 22px rgba(16, 185, 129, 0.5)); margin-bottom: 16px;" />
+        <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 76px; height: 76px; border-radius: 20px; filter: drop-shadow(0 4px 22px rgba(16, 185, 129, 0.5)); margin-bottom: 16px;" />
         <div style="color: #fef08a; font-size: 17px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing Smart Farming</div>
         <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 18px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
           🌾 India's Intelligent Agriculture Platform

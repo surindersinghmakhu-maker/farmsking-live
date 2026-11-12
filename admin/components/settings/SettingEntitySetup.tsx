@@ -1125,7 +1125,7 @@ export default function SettingEntitySetup() {
                     position: 'relative',
                   }}>
                     {favImageError ? (
-                      <BrandLogo size={52} useHdQuality={true} />
+                      <BrandLogo size={52} useFavicon={true} />
                     ) : (
                       <Image
                         source={{ uri: resolvedFaviconUri }}

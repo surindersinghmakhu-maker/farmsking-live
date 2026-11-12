@@ -10,42 +10,40 @@ export function updateWebFavicon(url?: string | null) {
     if (rawUrl.includes('localhost:3000') || rawUrl.includes('192.168.1.79') || rawUrl.includes('/uploads/')) {
       rawUrl = '/favicon.png';
     }
-    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=6`;
+    const versionedPng = rawUrl.includes('?') ? rawUrl : `${rawUrl}?v=7`;
     const resolvedUrl = versionedPng.startsWith('http') || versionedPng.startsWith('blob:') || versionedPng.startsWith('data:')
       ? versionedPng
       : `${window.location.origin}${versionedPng.startsWith('/') ? '' : '/'}${versionedPng}`;
 
-    const pngUrl = resolvedUrl;
+    const pngUrl = resolvedUrl.endsWith('.ico') ? resolvedUrl.replace('.ico', '.png') : resolvedUrl;
 
-    // 1. Standard rel="icon" PNG
-    let linkPng = document.querySelector("link[rel='icon'][type='image/png']") as HTMLLinkElement | null;
-    if (!linkPng) {
-      linkPng = document.createElement('link');
-      linkPng.rel = 'icon';
-      linkPng.type = 'image/png';
-      document.head.appendChild(linkPng);
+    // 1. Update ALL existing rel="icon" tags so sizes="192x192" / "512x512" never fall back to stale cache
+    const iconLinks = document.querySelectorAll("link[rel='icon']") as NodeListOf<HTMLLinkElement>;
+    if (iconLinks.length === 0) {
+      const created = document.createElement('link');
+      created.rel = 'icon';
+      created.type = 'image/png';
+      created.href = pngUrl;
+      document.head.appendChild(created);
+    } else {
+      iconLinks.forEach((lnk) => {
+        lnk.type = 'image/png';
+        lnk.href = pngUrl;
+      });
     }
-    linkPng.href = pngUrl;
 
-    // 2. Generic rel="icon"
-    let link = document.querySelector("link[rel='icon']:not([type='image/png'])") as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    link.href = pngUrl;
-
-    // 3. rel="shortcut icon"
+    // 2. rel="shortcut icon"
     let shortcutLink = document.querySelector("link[rel='shortcut icon']") as HTMLLinkElement | null;
     if (!shortcutLink) {
       shortcutLink = document.createElement('link');
       shortcutLink.rel = 'shortcut icon';
       document.head.appendChild(shortcutLink);
     }
-    shortcutLink.href = pngUrl;
+    shortcutLink.href = resolvedUrl.includes('/favicon.png')
+      ? resolvedUrl.replace('/favicon.png', '/favicon.ico')
+      : pngUrl;
 
-    // 4. rel="apple-touch-icon"
+    // 3. rel="apple-touch-icon"
     let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement | null;
     if (!appleLink) {
       appleLink = document.createElement('link');

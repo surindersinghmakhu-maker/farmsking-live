@@ -162,10 +162,19 @@ export default function SuperUsersScreen() {
   const [statusTab, setStatusTab] = useState<'ACTIVE' | 'DELETED' | 'PARTNER_APPS' | 'VERIFIED_LEADS'>('ACTIVE');
   const [deletedFilterMode, setDeletedFilterMode] = useState<'ALL_ROLES' | 'CURRENT_ROLE'>('ALL_ROLES');
 
-  const { data: allUsersData } = useUsersList({ limit: 1000 });
+  const backendRoleFilter = filterToBackendRole(filter);
+  const trimmedSearch = search.trim() || undefined;
+  const needsFilteredUsersQuery = Boolean(backendRoleFilter || trimmedSearch);
+
+  const { data: allUsersData, isLoading: allUsersLoading } = useUsersList({ limit: 1000 });
   const { data: pendingPartnerApps = [] } = usePartnerApplications('PENDING');
   const { data: waitingVerifiedLeads } = useVerifiedLeads({ status: 'OTP_CONFIRMED' });
-  const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 1000 });
+  const { data: filteredUsersData, isLoading: filteredUsersLoading } = useUsersList(
+    { role: backendRoleFilter, search: trimmedSearch, limit: 1000 },
+    { enabled: needsFilteredUsersQuery },
+  );
+  const data = needsFilteredUsersQuery ? filteredUsersData : allUsersData;
+  const isLoading = needsFilteredUsersQuery ? filteredUsersLoading : allUsersLoading;
   const deactivate = useDeactivateUser();
   const reactivate = useReactivateUser();
   const deleteUser = useDeleteUser();

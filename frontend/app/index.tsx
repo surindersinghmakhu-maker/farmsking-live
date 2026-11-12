@@ -578,6 +578,379 @@ const AI_DEMO_DATA = {
   },
 };
 
+/** Isolated 5-sec live mandi ticker card so its timer only re-renders itself instead of all 10k lines of the landing page. */
+const HeroLiveMandiRoller = React.memo(function HeroLiveMandiRoller({
+  isDay,
+  isMobile,
+  isAuthenticated,
+  userRole,
+  onOpenOfficialRates,
+  router,
+}: {
+  isDay: boolean;
+  isMobile: boolean;
+  isAuthenticated: boolean;
+  userRole?: string;
+  onOpenOfficialRates: () => void;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const [activeMandiRollIdx, setActiveMandiRollIdx] = useState(0);
+  const [isRollPaused, setIsRollPaused] = useState(false);
+
+  useEffect(() => {
+    if (isRollPaused) return;
+    const interval = setInterval(() => {
+      setActiveMandiRollIdx((prev) => (prev + 1) % ALL_INDIA_LIVE_MANDI_FEED.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isRollPaused]);
+
+  const item = ALL_INDIA_LIVE_MANDI_FEED[activeMandiRollIdx] || ALL_INDIA_LIVE_MANDI_FEED[0];
+
+  return (
+    <>
+      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8, marginTop: 2 }}>
+        {ALL_INDIA_LIVE_MANDI_FEED.slice(0, 5).map((mItem, mIdx) => (
+          <TouchableOpacity
+            key={`quick-mandi-${mIdx}`}
+            onPress={() => setActiveMandiRollIdx(mIdx)}
+            activeOpacity={0.75}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingHorizontal: isMobile ? 8 : 10,
+              paddingVertical: isMobile ? 3.5 : 4.5,
+              borderRadius: RADIUS.pill,
+              backgroundColor:
+                mIdx === activeMandiRollIdx
+                  ? (isDay ? 'rgba(5,150,105,0.14)' : 'rgba(52,211,153,0.22)')
+                  : (isDay ? '#f1f5f9' : 'rgba(255,255,255,0.06)'),
+              borderWidth: 1,
+              borderColor:
+                mIdx === activeMandiRollIdx
+                  ? (isDay ? '#059669' : '#34d399')
+                  : (isDay ? '#e2e8f0' : 'rgba(255,255,255,0.08)'),
+            }}
+          >
+            <Text style={{ fontSize: isMobile ? 11 : 12 }}>{mItem.emoji}</Text>
+            <Text
+              style={{
+                fontSize: isMobile ? 10.5 : 11.5,
+                fontFamily: mIdx === activeMandiRollIdx ? FONT.bold : FONT.medium,
+                color:
+                  mIdx === activeMandiRollIdx
+                    ? (isDay ? '#059669' : '#34d399')
+                    : (isDay ? '#475569' : '#94a3b8'),
+              }}
+            >
+              {mItem.crop}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TouchableOpacity
+        style={[
+          S.mandiRollerSlot,
+          isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight,
+          { height: isMobile ? 54 : 76, paddingVertical: 0, paddingHorizontal: 0 },
+        ]}
+        activeOpacity={0.94}
+        onPress={() => {
+          if (isAuthenticated) {
+            if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(userRole || '')) {
+              router.push('/(partner)/(tabs)' as any);
+            } else {
+              router.push('/(user)/(tabs)' as any);
+            }
+          } else {
+            onOpenOfficialRates();
+          }
+        }}
+        // @ts-ignore
+        className="mandi-single-card-window"
+        // @ts-ignore
+        onMouseEnter={() => setIsRollPaused(true)}
+        // @ts-ignore
+        onMouseLeave={() => setIsRollPaused(false)}
+      >
+        <View
+          key={`mandi-splash-${activeMandiRollIdx}`}
+          style={[
+            S.mandiRollerRowItem,
+            isDay && S.mandiRollerRowItemDay,
+            {
+              height: '100%',
+              width: '100%',
+              borderWidth: 0,
+              backgroundColor: 'transparent',
+              borderRadius: 14,
+              paddingHorizontal: isMobile ? 10 : 14,
+            },
+          ]}
+          // @ts-ignore
+          className="mandi-splash-content"
+        >
+          <View
+            style={[
+              S.rollerCropBadge,
+              isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
+              { flexShrink: 0 },
+              isMobile && { paddingHorizontal: 7, paddingVertical: 4, gap: 5 },
+            ]}
+          >
+            <Text style={{ fontSize: isMobile ? 18 : 22 }}>{item.emoji}</Text>
+            <View style={{ flexDirection: 'column' }}>
+              <Text
+                style={[
+                  S.rollerCropText,
+                  isDay ? S.rollerCropTextDay : S.rollerCropTextNight,
+                  isMobile && { fontSize: 13 },
+                ]}
+                numberOfLines={1}
+              >
+                {item.crop}
+              </Text>
+              <Text
+                style={[
+                  S.rollerVarietyText,
+                  isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight,
+                  isMobile && { fontSize: 9.5 },
+                ]}
+                numberOfLines={1}
+              >
+                {item.variety}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={[
+              S.rollerMandiInfo,
+              { flex: 1, minWidth: 0, flexShrink: 1, overflow: 'hidden' },
+              isMobile && { marginHorizontal: 6 },
+            ]}
+          >
+            <Text
+              style={[S.rollerMandiName, isDay && S.rollerMandiNameDay, isMobile && { fontSize: 11.5 }]}
+              numberOfLines={1}
+            >
+              📍 {item.mandi}
+            </Text>
+            <Text
+              style={[S.rollerStateSub, isDay && S.rollerStateSubDay, isMobile && { fontSize: 9.5 }]}
+              numberOfLines={1}
+            >
+              {item.state} • {item.tag}
+            </Text>
+          </View>
+
+          <View style={[S.rollerPriceGroup, { flexShrink: 0, alignItems: 'flex-end' }]}>
+            <View style={S.rollerPriceValueRow}>
+              <Text
+                style={[S.rollerPriceVal, isDay ? S.rollerPriceValDay : S.rollerPriceValNight, isMobile && { fontSize: 14.5 }]}
+              >
+                {item.price}
+              </Text>
+              <Text
+                style={[S.rollerPriceUnit, isDay && S.rollerPriceUnitDay, isMobile && { fontSize: 9.5 }]}
+              >
+                /{item.unit}
+              </Text>
+            </View>
+            <View
+              style={[
+                S.rollerTrendPill,
+                isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight,
+                isMobile && { paddingHorizontal: 5, paddingVertical: 1.5 },
+              ]}
+            >
+              <Ionicons name="caret-up" size={isMobile ? 10 : 12} color={isDay ? '#047857' : '#34d399'} />
+              <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay, isMobile && { fontSize: 9.5 }]}>
+                {item.change}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View
+          key={`prog-line-${activeMandiRollIdx}`}
+          // @ts-ignore
+          className="mandi-splash-progressbar"
+        />
+      </TouchableOpacity>
+
+      <View style={[S.rollerIndicatorsRow, isMobile && { marginTop: 6, paddingHorizontal: 0 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Ionicons name="pulse" size={11} color={isDay ? '#059669' : '#34d399'} />
+          <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay, isMobile && { fontSize: 9 }]}>
+            {isMobile ? `Crop ${activeMandiRollIdx + 1}/9 • 5s` : `Crop ${activeMandiRollIdx + 1} of ${ALL_INDIA_LIVE_MANDI_FEED.length} • 5-Sec Splash Cycle`}
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: isMobile ? 3 : 4 }}>
+          {ALL_INDIA_LIVE_MANDI_FEED.map((_, dotIdx) => (
+            <TouchableOpacity
+              key={`mandi-dot-${dotIdx}`}
+              onPress={() => setActiveMandiRollIdx(dotIdx)}
+              activeOpacity={0.7}
+              style={{
+                width: dotIdx === activeMandiRollIdx ? (isMobile ? 11 : 14) : (isMobile ? 3.5 : 4.5),
+                height: isMobile ? 3.5 : 4.5,
+                borderRadius: 2,
+                backgroundColor:
+                  dotIdx === activeMandiRollIdx
+                    ? (isDay ? '#059669' : '#34d399')
+                    : (isDay ? '#cbd5e1' : 'rgba(255, 255, 255, 0.22)'),
+              }}
+            />
+          ))}
+        </View>
+
+        <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight, isMobile && { paddingHorizontal: 5, paddingVertical: 1 }]}>
+          <Ionicons name="sparkles" size={9} color={isDay ? '#047857' : '#34d399'} />
+          <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight, isMobile && { fontSize: 8.5 }]}>
+            LIVE APMC
+          </Text>
+        </View>
+      </View>
+    </>
+  );
+});
+
+/** Isolated 3.8-sec AI leaf pathology showcase card so crop cycling does not re-render the landing page. */
+const AiCropDoctorDemoBox = React.memo(function AiCropDoctorDemoBox({
+  isDay,
+  isMobile,
+  isAuthenticated,
+  router,
+}: {
+  isDay: boolean;
+  isMobile: boolean;
+  isAuthenticated: boolean;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const [selectedDemoCrop, setSelectedDemoCrop] = useState<'wheat' | 'paddy' | 'cotton' | 'mustard'>('wheat');
+
+  useEffect(() => {
+    const crops: ('wheat' | 'paddy' | 'cotton' | 'mustard')[] = ['wheat', 'paddy', 'cotton', 'mustard'];
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx = (idx + 1) % crops.length;
+      setSelectedDemoCrop(crops[idx]);
+    }, 3800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeData = AI_DEMO_DATA[selectedDemoCrop];
+  return (
+    <View style={[S.aiDemoDisplayCard, isDay && S.aiDemoDisplayCardDay, isMobile && S.aiDemoDisplayCardMobile]}>
+      <View style={[S.aiDemoViewfinder, isMobile && S.aiDemoViewfinderMobile]}>
+        <View style={[S.aiDemoScreenGlow, { backgroundColor: activeData.leafBg }]} />
+
+        <View style={S.aiDemoHudHeader}>
+          <View style={S.aiDemoLiveIndicator}>
+            <View style={S.aiDemoLivePulse} />
+            <Text style={S.aiDemoHudTitle}>NEURAL SCAN • 0.8s LATENCY</Text>
+          </View>
+          <View style={S.aiDemoHudConfidence}>
+            <Ionicons name="sparkles" size={12} color="#10b981" />
+            <Text style={S.aiDemoHudConfidenceText}>{activeData.confidence}</Text>
+          </View>
+        </View>
+
+        <View style={S.aiDemoLeafContainer}>
+          <Text style={{ fontSize: 72 }}>{activeData.icon}</Text>
+          {Platform.OS === 'web' && (
+            <div
+              className="cyber-laser-beam"
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                height: '2px',
+                background: 'linear-gradient(90deg, transparent, #10b981, #38bdf8, transparent)',
+                boxShadow: '0 0 14px #10b981',
+              }}
+            />
+          )}
+          <View style={[S.aiDemoTargetPin, { top: '25%', left: '20%' }]}>
+            <View style={S.aiDemoTargetBox} />
+            <Text style={S.aiDemoTargetLabel}>Foliar Stress Zone</Text>
+          </View>
+          <View style={[S.aiDemoTargetPin, { bottom: '28%', right: '18%' }]}>
+            <View style={[S.aiDemoTargetBox, { borderColor: '#f59e0b' }]} />
+            <Text style={[S.aiDemoTargetLabel, { color: '#f59e0b' }]}>Pathogen Match</Text>
+          </View>
+        </View>
+
+        <View style={S.aiDemoHudFooter}>
+          <Text style={S.aiDemoHudFooterText}>Sensor: Optical + Multispectral</Text>
+          <Text style={[S.aiDemoHudFooterText, { color: '#10b981' }]}>Status: Analyzed</Text>
+        </View>
+      </View>
+
+      <View style={[S.aiDemoReport, isMobile && S.aiDemoReportMobile]}>
+        <View style={[S.aiDemoReportHeader, isMobile && S.aiDemoReportHeaderMobile]}>
+          <View style={S.aiDemoCropMeta}>
+            <Text style={[S.aiDemoCropTitle, isDay && S.aiDemoCropTitleDay, isMobile && S.aiDemoCropTitleMobile]}>{activeData.crop}</Text>
+            <View style={S.aiDemoSeverityBadge}>
+              <View style={[S.aiDemoSeverityDot, { backgroundColor: activeData.statusColor }]} />
+              <Text style={S.aiDemoSeverityText}>{activeData.severity}</Text>
+            </View>
+          </View>
+          <View style={S.aiDemoAccuracyPill}>
+            <Text style={S.aiDemoAccuracyText}>{activeData.confidence} Precision</Text>
+          </View>
+        </View>
+
+        <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
+          <Text style={S.aiDemoFieldLabel}>DIAGNOSED PATHOLOGY</Text>
+          <Text style={[S.aiDemoFieldValue, { color: isDay ? '#b91c1c' : '#f87171' }]}>
+            {activeData.disease}
+          </Text>
+        </View>
+
+        <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
+          <Text style={S.aiDemoFieldLabel}>CERTIFIED BIO-ORGANIC PRESCRIPTION</Text>
+          <Text style={[S.aiDemoFieldValue, isDay && { color: '#0f172a' }]}>
+            {activeData.remedy}
+          </Text>
+        </View>
+
+        <View style={[S.aiDemoStatsGrid, isMobile && S.aiDemoStatsGridMobile]}>
+          <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
+            <Text style={S.aiDemoMiniStatLabel}>Estimated Recovery</Text>
+            <Text style={[S.aiDemoMiniStatVal, { color: '#10b981' }]}>{activeData.yieldImpact}</Text>
+          </View>
+          <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
+            <Text style={S.aiDemoMiniStatLabel}>APMC Market Benchmark</Text>
+            <Text style={[S.aiDemoMiniStatVal, { color: isDay ? '#0369a1' : '#38bdf8' }]}>{activeData.mandiPrice}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
+          onPress={() => {
+            if (isAuthenticated) {
+              router.push('/crop-disease-scanner');
+            } else {
+              router.push('/login');
+            }
+          }}
+          activeOpacity={0.88}
+        >
+          <Ionicons name={isAuthenticated ? 'scan-circle' : 'log-in-outline'} size={19} color="#ffffff" />
+          <Text style={S.aiDemoActionBtnText}>
+            {isAuthenticated ? 'Open AI Leaf Doctor & Scan Leaf →' : 'Sign Up / Sign In to Use Free Leaf Scanner →'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
 export default function PublicLandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
@@ -601,20 +974,6 @@ export default function PublicLandingPage() {
   const isDesktop = width > 1024;
   const isTablet = width > 768 && width <= 1024;
   const isMobile = width <= 768;
-
-  // ── Bottom Docked Bar Animated Glider State (Admin Mobile Spring Style) ──
-  const [selectedDemoCrop, setSelectedDemoCrop] = useState<'wheat' | 'paddy' | 'cotton' | 'mustard'>('wheat');
-  
-  // Auto-cycle through crops in AI Leaf Scanner to keep live animation running continuously
-  useEffect(() => {
-    const crops: ('wheat' | 'paddy' | 'cotton' | 'mustard')[] = ['wheat', 'paddy', 'cotton', 'mustard'];
-    let idx = 0;
-    const interval = setInterval(() => {
-      idx = (idx + 1) % crops.length;
-      setSelectedDemoCrop(crops[idx]);
-    }, 3800);
-    return () => clearInterval(interval);
-  }, []);
 
 
   // ── Farmers Audio Advisory Voice Assistant State ──
@@ -695,9 +1054,10 @@ export default function PublicLandingPage() {
             farmerCount: '48,000+',
             rating: '4.95/5',
           });
+          return;
         }
 
-        // Fast IP Location check with timeout
+        // Fast IP Location check with timeout (only runs if not yet cached)
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3500);
 
@@ -865,16 +1225,7 @@ export default function PublicLandingPage() {
   const [selectedCrop, setSelectedCrop] = useState<string>('Wheat');
   const [selectedMandi, setSelectedMandi] = useState<string>('Ludhiana APMC');
   const [officialRatesModalVisible, setOfficialRatesModalVisible] = useState(false);
-  const [activeMandiRollIdx, setActiveMandiRollIdx] = useState(0);
-  const [isRollPaused, setIsRollPaused] = useState(false);
-
-  useEffect(() => {
-    if (isRollPaused) return;
-    const interval = setInterval(() => {
-      setActiveMandiRollIdx((prev) => (prev + 1) % ALL_INDIA_LIVE_MANDI_FEED.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isRollPaused]);
+  const openOfficialRatesModal = React.useCallback(() => setOfficialRatesModalVisible(true), []);
 
   // Theme state: 'day' (default) vs 'night'
   const [themeMode, setThemeMode] = useState<'day' | 'night'>('day');
@@ -1913,242 +2264,14 @@ export default function PublicLandingPage() {
                 </TouchableOpacity>
               </View>
 
-              {/* ── Quick Commodity 1-Tap Filter Pills ── */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8, marginTop: 2 }}>
-                {ALL_INDIA_LIVE_MANDI_FEED.slice(0, 5).map((mItem, mIdx) => (
-                  <TouchableOpacity
-                    key={`quick-mandi-${mIdx}`}
-                    onPress={() => setActiveMandiRollIdx(mIdx)}
-                    activeOpacity={0.75}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: isMobile ? 8 : 10,
-                      paddingVertical: isMobile ? 3.5 : 4.5,
-                      borderRadius: RADIUS.pill,
-                      backgroundColor:
-                        mIdx === activeMandiRollIdx
-                          ? (isDay ? 'rgba(5,150,105,0.14)' : 'rgba(52,211,153,0.22)')
-                          : (isDay ? '#f1f5f9' : 'rgba(255,255,255,0.06)'),
-                      borderWidth: 1,
-                      borderColor:
-                        mIdx === activeMandiRollIdx
-                          ? (isDay ? '#059669' : '#34d399')
-                          : (isDay ? '#e2e8f0' : 'rgba(255,255,255,0.08)'),
-                    }}
-                  >
-                    <Text style={{ fontSize: isMobile ? 11 : 12 }}>{mItem.emoji}</Text>
-                    <Text
-                      style={{
-                        fontSize: isMobile ? 10.5 : 11.5,
-                        fontFamily: mIdx === activeMandiRollIdx ? FONT.bold : FONT.medium,
-                        color:
-                          mIdx === activeMandiRollIdx
-                            ? (isDay ? '#059669' : '#34d399')
-                            : (isDay ? '#475569' : '#94a3b8'),
-                      }}
-                    >
-                      {mItem.crop}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* ── Single Crop 5-Second Splash APMC Mandi Rate Board ── */}
-              <TouchableOpacity
-                style={[
-                  S.mandiRollerSlot,
-                  isDay ? S.mandiRollerSlotDay : S.mandiRollerSlotNight,
-                  { height: isMobile ? 54 : 76, paddingVertical: 0, paddingHorizontal: 0 },
-                ]}
-                activeOpacity={0.94}
-                onPress={() => {
-                  if (user) {
-                    if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
-                      router.push('/(partner)/(tabs)' as any);
-                    } else {
-                      router.push('/(user)/(tabs)' as any);
-                    }
-                  } else {
-                    setOfficialRatesModalVisible(true);
-                  }
-                }}
-                // @ts-ignore
-                className="mandi-single-card-window"
-                // @ts-ignore
-                onMouseEnter={() => setIsRollPaused(true)}
-                // @ts-ignore
-                onMouseLeave={() => setIsRollPaused(false)}
-              >
-                {/* Single Active Crop with Key-driven Splash Animation */}
-                {(() => {
-                  const item = ALL_INDIA_LIVE_MANDI_FEED[activeMandiRollIdx] || ALL_INDIA_LIVE_MANDI_FEED[0];
-                  return (
-                    <View
-                      key={`mandi-splash-${activeMandiRollIdx}`}
-                      style={[
-                        S.mandiRollerRowItem,
-                        isDay && S.mandiRollerRowItemDay,
-                        {
-                          height: '100%',
-                          width: '100%',
-                          borderWidth: 0,
-                          backgroundColor: 'transparent',
-                          borderRadius: 14,
-                          paddingHorizontal: isMobile ? 10 : 14,
-                        },
-                      ]}
-                      // @ts-ignore
-                      className="mandi-splash-content"
-                    >
-                      {/* Left: High-Contrast Crop Badge with Clear Name */}
-                      <View
-                        style={[
-                          S.rollerCropBadge,
-                          isDay ? S.rollerCropBadgeDay : S.rollerCropBadgeNight,
-                          { flexShrink: 0 },
-                          isMobile && { paddingHorizontal: 7, paddingVertical: 4, gap: 5 },
-                        ]}
-                      >
-                        <Text style={{ fontSize: isMobile ? 18 : 22 }}>{item.emoji}</Text>
-                        <View style={{ flexDirection: 'column' }}>
-                          <Text
-                            style={[
-                              S.rollerCropText,
-                              isDay ? S.rollerCropTextDay : S.rollerCropTextNight,
-                              isMobile && { fontSize: 13 },
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {item.crop}
-                          </Text>
-                          <Text
-                            style={[
-                              S.rollerVarietyText,
-                              isDay ? S.rollerVarietyTextDay : S.rollerVarietyTextNight,
-                              isMobile && { fontSize: 9.5 },
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {item.variety}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Middle: Mandi & State (flex: 1 with minWidth: 0 for reliable text clipping) */}
-                      <View
-                        style={[
-                          S.rollerMandiInfo,
-                          { flex: 1, minWidth: 0, flexShrink: 1, overflow: 'hidden' },
-                          isMobile && { marginHorizontal: 6 },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            S.rollerMandiName,
-                            isDay && S.rollerMandiNameDay,
-                            isMobile && { fontSize: 11.5 },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          📍 {item.mandi}
-                        </Text>
-                        <Text
-                          style={[
-                            S.rollerStateSub,
-                            isDay && S.rollerStateSubDay,
-                            isMobile && { fontSize: 9.5 },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {item.state} • {item.tag}
-                        </Text>
-                      </View>
-
-                      {/* Right: Live Price & Up Trend (flexShrink: 0) */}
-                      <View style={[S.rollerPriceGroup, { flexShrink: 0, alignItems: 'flex-end' }]}>
-                        <View style={S.rollerPriceValueRow}>
-                          <Text
-                            style={[
-                              S.rollerPriceVal,
-                              isDay ? S.rollerPriceValDay : S.rollerPriceValNight,
-                              isMobile && { fontSize: 14.5 },
-                            ]}
-                          >
-                            {item.price}
-                          </Text>
-                          <Text
-                            style={[
-                              S.rollerPriceUnit,
-                              isDay && S.rollerPriceUnitDay,
-                              isMobile && { fontSize: 9.5 },
-                            ]}
-                          >
-                            /{item.unit}
-                          </Text>
-                        </View>
-                        <View
-                          style={[
-                            S.rollerTrendPill,
-                            isDay ? S.rollerTrendPillDay : S.rollerTrendPillNight,
-                            isMobile && { paddingHorizontal: 5, paddingVertical: 1.5 },
-                          ]}
-                        >
-                          <Ionicons name="caret-up" size={isMobile ? 10 : 12} color={isDay ? '#047857' : '#34d399'} />
-                          <Text style={[S.rollerTrendText, isDay && S.rollerTrendTextDay, isMobile && { fontSize: 9.5 }]}>
-                            {item.change}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })()}
-
-                {/* 5-Second Splash Progress Countdown Bar */}
-                <View
-                  key={`prog-line-${activeMandiRollIdx}`}
-                  // @ts-ignore
-                  className="mandi-splash-progressbar"
-                />
-              </TouchableOpacity>
-
-              {/* ── Roller Micro Indicators (5-Sec Single Crop Splash Radar) ── */}
-              <View style={[S.rollerIndicatorsRow, isMobile && { marginTop: 6, paddingHorizontal: 0 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="pulse" size={11} color={isDay ? '#059669' : '#34d399'} />
-                  <Text style={[S.rollerCounterText, isDay && S.rollerCounterTextDay, isMobile && { fontSize: 9 }]}>
-                    {isMobile ? `Crop ${activeMandiRollIdx + 1}/9 • 5s` : `Crop ${activeMandiRollIdx + 1} of ${ALL_INDIA_LIVE_MANDI_FEED.length} • 5-Sec Splash Cycle`}
-                  </Text>
-                </View>
-
-                {/* Interactive Crop Dot Indicators */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: isMobile ? 3 : 4 }}>
-                  {ALL_INDIA_LIVE_MANDI_FEED.map((_, dotIdx) => (
-                    <TouchableOpacity
-                      key={`mandi-dot-${dotIdx}`}
-                      onPress={() => setActiveMandiRollIdx(dotIdx)}
-                      activeOpacity={0.7}
-                      style={{
-                        width: dotIdx === activeMandiRollIdx ? (isMobile ? 11 : 14) : (isMobile ? 3.5 : 4.5),
-                        height: isMobile ? 3.5 : 4.5,
-                        borderRadius: 2,
-                        backgroundColor:
-                          dotIdx === activeMandiRollIdx
-                            ? (isDay ? '#059669' : '#34d399')
-                            : (isDay ? '#cbd5e1' : 'rgba(255, 255, 255, 0.22)'),
-                      }}
-                    />
-                  ))}
-                </View>
-
-                <View style={[S.upwardMovingIndicatorBadge, isDay ? S.upwardMovingIndicatorBadgeDay : S.upwardMovingIndicatorBadgeNight, isMobile && { paddingHorizontal: 5, paddingVertical: 1 }]}>
-                  <Ionicons name="sparkles" size={9} color={isDay ? '#047857' : '#34d399'} />
-                  <Text style={[S.upwardMovingIndicatorText, isDay ? S.upwardMovingIndicatorTextDay : S.upwardMovingIndicatorTextNight, isMobile && { fontSize: 8.5 }]}>
-                    LIVE APMC
-                  </Text>
-                </View>
-              </View>
+              <HeroLiveMandiRoller
+                isDay={isDay}
+                isMobile={isMobile}
+                isAuthenticated={Boolean(user)}
+                userRole={user?.role}
+                onOpenOfficialRates={openOfficialRatesModal}
+                router={router}
+              />
 
               {/* ── Transparency & Trust Footer Strip ── */}
               <View style={[S.mandiVerifiedFooter, isDay && S.mandiVerifiedFooterDay, isMobile && { marginTop: 6, paddingTop: 6 }]}>
@@ -3554,129 +3677,12 @@ export default function PublicLandingPage() {
           </View>
 
           {/* Interactive 2-Column AI Pathology Showcase Box */}
-          {(() => {
-            const activeData = AI_DEMO_DATA[selectedDemoCrop];
-            return (
-              <View style={[S.aiDemoDisplayCard, isDay && S.aiDemoDisplayCardDay, isMobile && S.aiDemoDisplayCardMobile]}>
-                {/* Left Column: Live AI Viewfinder HUD */}
-                <View style={[S.aiDemoViewfinder, isMobile && S.aiDemoViewfinderMobile]}>
-                  <View style={[S.aiDemoScreenGlow, { backgroundColor: activeData.leafBg }]} />
-                  
-                  {/* Top HUD Telemetry */}
-                  <View style={S.aiDemoHudHeader}>
-                    <View style={S.aiDemoLiveIndicator}>
-                      <View style={S.aiDemoLivePulse} />
-                      <Text style={S.aiDemoHudTitle}>NEURAL SCAN • 0.8s LATENCY</Text>
-                    </View>
-                    <View style={S.aiDemoHudConfidence}>
-                      <Ionicons name="sparkles" size={12} color="#10b981" />
-                      <Text style={S.aiDemoHudConfidenceText}>{activeData.confidence}</Text>
-                    </View>
-                  </View>
-
-                  {/* Leaf Focus Area with Dynamic Laser Sweep & Targets */}
-                  <View style={S.aiDemoLeafContainer}>
-                    <Text style={{ fontSize: 72 }}>{activeData.icon}</Text>
-
-                    {/* Cyber Laser Scanner Sweep */}
-                    {Platform.OS === 'web' && (
-                      <div
-                        className="cyber-laser-beam"
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          right: 0,
-                          height: '2px',
-                          background: 'linear-gradient(90deg, transparent, #10b981, #38bdf8, transparent)',
-                          boxShadow: '0 0 14px #10b981',
-                        }}
-                      />
-                    )}
-
-                    {/* Reticle Target 1 */}
-                    <View style={[S.aiDemoTargetPin, { top: '25%', left: '20%' }]}>
-                      <View style={S.aiDemoTargetBox} />
-                      <Text style={S.aiDemoTargetLabel}>Foliar Stress Zone</Text>
-                    </View>
-
-                    {/* Reticle Target 2 */}
-                    <View style={[S.aiDemoTargetPin, { bottom: '28%', right: '18%' }]}>
-                      <View style={[S.aiDemoTargetBox, { borderColor: '#f59e0b' }]} />
-                      <Text style={[S.aiDemoTargetLabel, { color: '#f59e0b' }]}>Pathogen Match</Text>
-                    </View>
-                  </View>
-
-                  {/* Bottom Viewfinder Telemetry Strip */}
-                  <View style={S.aiDemoHudFooter}>
-                    <Text style={S.aiDemoHudFooterText}>Sensor: Optical + Multispectral</Text>
-                    <Text style={[S.aiDemoHudFooterText, { color: '#10b981' }]}>Status: Analyzed</Text>
-                  </View>
-                </View>
-
-                {/* Right Column: Instant Diagnostic Clinical Report */}
-                <View style={[S.aiDemoReport, isMobile && S.aiDemoReportMobile]}>
-                  <View style={[S.aiDemoReportHeader, isMobile && S.aiDemoReportHeaderMobile]}>
-                    <View style={S.aiDemoCropMeta}>
-                      <Text style={[S.aiDemoCropTitle, isDay && S.aiDemoCropTitleDay, isMobile && S.aiDemoCropTitleMobile]}>{activeData.crop}</Text>
-                      <View style={S.aiDemoSeverityBadge}>
-                        <View style={[S.aiDemoSeverityDot, { backgroundColor: activeData.statusColor }]} />
-                        <Text style={S.aiDemoSeverityText}>{activeData.severity}</Text>
-                      </View>
-                    </View>
-                    <View style={S.aiDemoAccuracyPill}>
-                      <Text style={S.aiDemoAccuracyText}>{activeData.confidence} Precision</Text>
-                    </View>
-                  </View>
-
-                  {/* Disease Diagnostic */}
-                  <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
-                    <Text style={S.aiDemoFieldLabel}>DIAGNOSED PATHOLOGY</Text>
-                    <Text style={[S.aiDemoFieldValue, { color: isDay ? '#b91c1c' : '#f87171' }]}>
-                      {activeData.disease}
-                    </Text>
-                  </View>
-
-                  {/* Certified Treatment Protocol */}
-                  <View style={[S.aiDemoFieldBox, isDay && S.aiDemoFieldBoxDay]}>
-                    <Text style={S.aiDemoFieldLabel}>CERTIFIED BIO-ORGANIC PRESCRIPTION</Text>
-                    <Text style={[S.aiDemoFieldValue, isDay && { color: '#0f172a' }]}>
-                      {activeData.remedy}
-                    </Text>
-                  </View>
-
-                  {/* Economic Yield & Mandi Benchmark */}
-                  <View style={[S.aiDemoStatsGrid, isMobile && S.aiDemoStatsGridMobile]}>
-                    <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
-                      <Text style={S.aiDemoMiniStatLabel}>Estimated Recovery</Text>
-                      <Text style={[S.aiDemoMiniStatVal, { color: '#10b981' }]}>{activeData.yieldImpact}</Text>
-                    </View>
-                    <View style={[S.aiDemoMiniStat, isDay && S.aiDemoMiniStatDay]}>
-                      <Text style={S.aiDemoMiniStatLabel}>APMC Market Benchmark</Text>
-                      <Text style={[S.aiDemoMiniStatVal, { color: isDay ? '#0369a1' : '#38bdf8' }]}>{activeData.mandiPrice}</Text>
-                    </View>
-                  </View>
-
-                  {/* Action Button: Sign Up / Sign In to use Free Leaf Scanner */}
-                  <TouchableOpacity
-                    style={[S.aiDemoActionBtn, isDay && S.aiDemoActionBtnDay, isMobile && S.aiDemoActionBtnMobile]}
-                    onPress={() => {
-                      if (user) {
-                        router.push('/crop-disease-scanner');
-                      } else {
-                        router.push('/login');
-                      }
-                    }}
-                    activeOpacity={0.88}
-                  >
-                    <Ionicons name={user ? "scan-circle" : "log-in-outline"} size={19} color="#ffffff" />
-                    <Text style={S.aiDemoActionBtnText}>
-                      {user ? 'Open AI Leaf Doctor & Scan Leaf →' : 'Sign Up / Sign In to Use Free Leaf Scanner →'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          })()}
+          <AiCropDoctorDemoBox
+            isDay={isDay}
+            isMobile={isMobile}
+            isAuthenticated={Boolean(user)}
+            router={router}
+          />
         </View>
         {/* ══ VERIFIED CULTIVATOR FIELD SUCCESS STORIES ══ */}
         <View style={S.testimonialsSection}>

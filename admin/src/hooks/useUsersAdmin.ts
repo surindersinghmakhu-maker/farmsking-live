@@ -3,10 +3,11 @@ import * as api from '../api/users.api';
 import { OperatorPermission, Role } from '../types/api';
 import { executeWithAdminStepUpOtp } from '@/components/AdminStepUpProvider';
 
-export function useUsersList(params: api.ListUsersParams) {
+export function useUsersList(params: api.ListUsersParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['users', 'admin-list', params],
     queryFn: () => api.listUsers(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

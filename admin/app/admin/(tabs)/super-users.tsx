@@ -42,7 +42,7 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-const ADMIN_STAFF_SET = new Set(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT']);
+const ADMIN_STAFF_SET = new Set(['ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT']);
 const PARTNER_ROLES_SET = new Set(['AGENT', 'ADVISOR', 'SELLER', 'TRADER']);
 
 function getActiveRoleStrings(u: AdminUser): string[] {
@@ -51,8 +51,9 @@ function getActiveRoleStrings(u: AdminUser): string[] {
   return roles.filter((r) => !deactivated.has(r));
 }
 
-function classifyDirectoryBucket(u: AdminUser): 'ADMINS' | 'PARTNERS' | 'CLIENTS' {
+function classifyDirectoryBucket(u: AdminUser): 'ADMINS' | 'PARTNERS' | 'CLIENTS' | 'HIDDEN_SUPER_ADMIN' {
   const active = getActiveRoleStrings(u);
+  if (u.role === 'SUPER_ADMIN' || active.includes('SUPER_ADMIN')) return 'HIDDEN_SUPER_ADMIN';
   if (active.some((r) => ADMIN_STAFF_SET.has(r))) return 'ADMINS';
   if (active.some((r) => PARTNER_ROLES_SET.has(r))) return 'PARTNERS';
   return 'CLIENTS';
@@ -91,7 +92,6 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
   ],
   ADMINS: [
     { value: 'ALL', label: 'All Staff', icon: 'shield-outline' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
     { value: 'ADMIN', label: 'Admins', icon: 'shield-checkmark-outline' },
     { value: 'MANAGER', label: 'Managers', icon: 'briefcase-outline' },
     { value: 'OPERATOR', label: 'Operators', icon: 'print-outline' },

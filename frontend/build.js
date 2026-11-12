@@ -239,7 +239,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
 
     const metaCacheHeaders = `
     <meta name="google-site-verification" content="googlecLbkUgC7i1XUv8vvPcjQP-UuD3FKtdXKH2o" />
-    <meta name="indexnow-key" content="farmskinge4b8a2c1f9d3750862a4b6c8" />
+    <meta name="indexnow-key" content="7c23f4c12cd8c5dcddf6d149b8339b9f" />
     <link rel="canonical" href="https://farmsking.in" />
     <link rel="alternate" hreflang="en" href="https://farmsking.in" />
     <meta name="google" content="notranslate" />

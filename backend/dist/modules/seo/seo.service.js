@@ -43,7 +43,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeoService = exports.OFFICIAL_SEO_URLS = exports.INDEXNOW_KEY = void 0;
 const common_1 = require("@nestjs/common");
 const https = __importStar(require("https"));
-exports.INDEXNOW_KEY = 'farmskinge4b8a2c1f9d3750862a4b6c8';
+exports.INDEXNOW_KEY = '7c23f4c12cd8c5dcddf6d149b8339b9f';
 exports.OFFICIAL_SEO_URLS = [
     'https://farmsking.in/',
     'https://farmsking.in/ai-doctor',

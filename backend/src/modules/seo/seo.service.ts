@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnApplicationBootstrap, OnModuleDestroy } from '@nestjs/common';
 import * as https from 'https';
 
-export const INDEXNOW_KEY = 'farmskinge4b8a2c1f9d3750862a4b6c8';
+export const INDEXNOW_KEY = '7c23f4c12cd8c5dcddf6d149b8339b9f';
 
 export const OFFICIAL_SEO_URLS = [
   'https://farmsking.in/',

@@ -1,6 +1,6 @@
 const https = require('https');
 
-const INDEXNOW_KEY = 'farmskinge4b8a2c1f9d3750862a4b6c8';
+const INDEXNOW_KEY = '7c23f4c12cd8c5dcddf6d149b8339b9f';
 
 const CANONICAL_URLS = [
   'https://farmsking.in/',

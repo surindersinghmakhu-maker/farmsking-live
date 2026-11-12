@@ -101,26 +101,12 @@ export default function AdminWebPortalScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Quick One-Click Demo Admin Buttons */}
+        {/* Security Notice */}
         <View style={styles.quickBox}>
-          <Text style={styles.quickTitle}>⚡ Quick Admin Login Presets</Text>
-          <View style={styles.presetRow}>
-            <TouchableOpacity
-              style={styles.presetBtnSuper}
-              onPress={() => handleAdminLogin('9872066901', '12345678')}
-            >
-              <Ionicons name="key" size={14} color="#00ff87" />
-              <Text style={styles.presetTextSuper}>👑 Super Admin (9872066901)</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.presetBtnAdmin}
-              onPress={() => handleAdminLogin('9999900009', 'admin123')}
-            >
-              <Ionicons name="shield" size={14} color="#38bdf8" />
-              <Text style={styles.presetTextAdmin}>🛡️ Standard Admin (9999900009)</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.quickTitle}>Restricted Command Access</Text>
+          <Text style={{ fontSize: 12, color: '#94a3b8', lineHeight: 18 }}>
+            Sign in with your assigned Admin, Super Admin, Manager, Operator, or Technical Trainer mobile number and password.
+          </Text>
         </View>
       </View>
     </View>

@@ -33,7 +33,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
 
-    const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'ADVISOR'];
+    const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'ACCOUNTANT', 'ADVISOR'];
     const isStaffUser = staffRoles.some(r => user.role === r || (user.roles && user.roles.includes(r as Role)));
 
     const granted = user.roles && user.roles.length > 0 ? user.roles : [user.role];
@@ -59,7 +59,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     return finalRoles;
   }, [user]);
 
-  const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER'].some(
+  const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'ACCOUNTANT'].some(
     r => user?.role === r || (user?.roles && user.roles.includes(r as Role))
   );
 
@@ -82,30 +82,36 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
   useEffect(() => {
-    if (!user?.id) {
-      setRoleState(primaryRole);
-      return;
-    }
+    let active = true;
+    const syncRole = async () => {
+      if (!user?.id) {
+        if (active) setRoleState(primaryRole);
+        return;
+      }
+      if (isStaffUser) {
+        if (active) setRoleState(user.role as UserRole);
+        return;
+      }
+      if (user.role === 'LABOUR') {
+        if (active) setRoleState('LABOUR');
+        return;
+      }
 
-    if (isStaffUser) {
-      setRoleState(user.role as UserRole);
-      return;
-    }
+      const savedRole = (await AppStorage.getItemAsync(`${LAST_DASHBOARD_KEY_PREFIX}${user.id}`).catch(() => null)) as UserRole | null;
+      if (!active) return;
 
-    if (user.role === 'LABOUR') {
-      setRoleState('LABOUR');
-      return;
-    }
-
-    // Priority 1: If Doctor or Advisor role is assigned -> Default to Doctor/Advisor tab
-    const advisorRole = assignedRoles.find(isAdvisorOrDoctor);
-    if (advisorRole) {
-      setRoleState(advisorRole);
-      return;
-    }
-
-    // Priority 2: Use user's assigned primary role (GARDENER or FARMER or CUSTOMER)
-    setRoleState(primaryRole);
+      setRoleState((prev) => {
+        if (prev && assignedRoles.includes(prev)) return prev;
+        if (savedRole && assignedRoles.includes(savedRole)) return savedRole;
+        const advisorRole = assignedRoles.find(isAdvisorOrDoctor);
+        if (advisorRole) return advisorRole;
+        return primaryRole;
+      });
+    };
+    syncRole();
+    return () => {
+      active = false;
+    };
   }, [user?.id, user?.role, primaryRole, assignedRoles, isStaffUser]);
 
   const setRole = (next: UserRole) => {

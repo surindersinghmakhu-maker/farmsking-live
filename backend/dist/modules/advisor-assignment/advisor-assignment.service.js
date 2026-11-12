@@ -108,6 +108,9 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             include: { subscription: { include: { plan: true } } },
             orderBy: { startDate: 'desc' },
         });
+        if (!assignment && !(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) && !(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN)) {
+            throw new common_1.ForbiddenException('You are not assigned to view this farmer profile.');
+        }
         const isExpired = assignment ? this.isAssignmentExpired(assignment) : false;
         const farmer = await this.prisma.user.findFirst({
             where: { id: farmerId },

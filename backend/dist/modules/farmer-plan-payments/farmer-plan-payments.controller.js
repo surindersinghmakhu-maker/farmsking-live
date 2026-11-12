@@ -66,7 +66,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], FarmerPlanPaymentsController.prototype, "listMine", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('pending'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

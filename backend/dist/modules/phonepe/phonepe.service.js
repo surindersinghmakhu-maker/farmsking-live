@@ -112,7 +112,12 @@ let PhonePeService = PhonePeService_1 = class PhonePeService {
         if (!username || !password || !authorizationHeader)
             return false;
         const expected = (0, crypto_1.createHash)('sha256').update(`${username}:${password}`).digest('hex');
-        return authorizationHeader === expected;
+        const a = Buffer.from(authorizationHeader.trim(), 'utf8');
+        const b = Buffer.from(expected, 'utf8');
+        if (a.length !== b.length)
+            return false;
+        const { timingSafeEqual } = require('crypto');
+        return timingSafeEqual(a, b);
     }
 };
 exports.PhonePeService = PhonePeService;

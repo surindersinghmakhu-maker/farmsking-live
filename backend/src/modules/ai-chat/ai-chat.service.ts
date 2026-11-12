@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 
 export interface ChatMessageDto {
@@ -13,15 +13,24 @@ export type AiChatMode = 'agri' | 'garden';
 export class AiChatRequestDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(1000)
   message: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   history?: ChatMessageDto[];
 
   @IsOptional()
-  @IsString()
+  @IsIn(['agri', 'garden'])
   mode?: AiChatMode;
+}
+
+export class DiagnoseLeafDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(8_000_000)
+  imageBase64: string;
 }
 
 export interface LeafDiagnosisResult {
@@ -334,7 +343,11 @@ CRITICAL INSTRUCTIONS:
     if (rawBase64.startsWith('data:')) {
       const parts = rawBase64.split(';base64,');
       if (parts.length === 2) {
-        mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+        const candidateMime = parts[0].replace('data:', '').trim().toLowerCase();
+        if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(candidateMime)) {
+          return this.getFallbackDiagnosis();
+        }
+        mimeType = candidateMime;
         rawBase64 = parts[1];
       }
     }

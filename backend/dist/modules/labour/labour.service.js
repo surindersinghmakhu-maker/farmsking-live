@@ -47,8 +47,12 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const argon2 = __importStar(require("argon2"));
+const crypto = __importStar(require("crypto"));
 const king_id_util_1 = require("../../common/utils/king-id.util");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
+const role_policy_util_1 = require("../../common/utils/role-policy.util");
+const supervisor_permission_util_1 = require("../../common/utils/supervisor-permission.util");
 let LabourService = class LabourService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -105,8 +109,8 @@ let LabourService = class LabourService {
                     id: `user-${u.id}`,
                     name: u.name.trim(),
                     relation: 'Head / Self',
-                    mobile: u.mobile,
-                    address: [u.village, u.district, u.state].filter(Boolean).join(', ') || null,
+                    mobile: `XXXXXX${cleanMobile.slice(-4)}`,
+                    address: [u.district, u.state].filter(Boolean).join(', ') || null,
                     photoUrl: u.photoUrl,
                     defaultRate: null,
                     defaultUnit: 'Days',
@@ -122,25 +126,31 @@ let LabourService = class LabourService {
                     id: p.id,
                     name: p.name.trim(),
                     relation: p.relation || 'Member',
-                    mobile: p.mobile || cleanMobile,
-                    address: p.address,
+                    mobile: `XXXXXX${cleanMobile.slice(-4)}`,
+                    address: null,
                     photoUrl: p.photoUrl,
-                    defaultRate: p.defaultRate,
+                    defaultRate: null,
                     defaultUnit: p.defaultUnit || 'Days',
-                    farmerName: p.farmer?.name || null,
+                    farmerName: null,
                 });
             }
         }
         const profiles = Array.from(profileMap.values());
         return {
             exists: users.length > 0 || profiles.length > 0,
-            user: primaryUser,
+            user: primaryUser
+                ? { id: primaryUser.id, kingId: primaryUser.kingId, name: primaryUser.name, photoUrl: primaryUser.photoUrl }
+                : null,
             profiles,
         };
     }
+    assertSupervisorLabourAccess(user, mode) {
+        return (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', mode);
+    }
     async createWorker(user, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         let farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
-        if (user.role === client_1.Role.LABOUR) {
+        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.LABOUR)) {
             const myWorkerRecord = await this.prisma.labourWorker.findFirst({
                 where: {
                     OR: [
@@ -171,7 +181,7 @@ let LabourService = class LabourService {
             }
             let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
             if (!linkedUser) {
-                const passwordHash = await argon2.hash(cleanMobile);
+                const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
                 const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
                 linkedUser = await this.prisma.user.create({
                     data: {
@@ -185,13 +195,21 @@ let LabourService = class LabourService {
                 });
             }
             else {
-                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
-                if (updatedRoles.length !== linkedUser.roles.length) {
-                    await this.prisma.user.update({
-                        where: { id: linkedUser.id },
-                        data: { roles: updatedRoles },
-                    });
+                const activeExistingRoles = (0, role_policy_util_1.getActiveRolesList)(linkedUser);
+                const incompatibleRoles = activeExistingRoles.filter((r) => r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
+                if (incompatibleRoles.length > 0) {
+                    throw new common_1.ConflictException(`This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`);
                 }
+                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
+                const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.LABOUR);
+                await this.prisma.user.update({
+                    where: { id: linkedUser.id },
+                    data: {
+                        role: client_1.Role.LABOUR,
+                        roles: updatedRoles,
+                        deactivatedRoles: nextDeactivated,
+                    },
+                });
             }
             userId = linkedUser.id;
             if (!sharedAddress) {
@@ -225,8 +243,9 @@ let LabourService = class LabourService {
         return worker;
     }
     async getWorkersForFarmer(user) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'view');
         let farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
-        if (user.role === client_1.Role.LABOUR) {
+        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.LABOUR)) {
             const myWorkerRecord = await this.prisma.labourWorker.findFirst({
                 where: {
                     OR: [
@@ -262,11 +281,17 @@ let LabourService = class LabourService {
         });
     }
     async updateWorker(user, id, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         const existing = await this.prisma.labourWorker.findFirst({
             where: { id, deletedAt: null },
         });
         if (!existing) {
             throw new common_1.NotFoundException('Worker not found');
+        }
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        const isSelfWorker = existing.userId === user.id || (existing.mobile && existing.mobile === user.mobile);
+        if (!isAdmin && existing.farmerId !== (0, effective_farmer_util_1.getEffectiveFarmerId)(user) && !isSelfWorker) {
+            throw new common_1.ForbiddenException('You can only update workers belonging to your own farm.');
         }
         let userId = existing.userId;
         const cleanMobile = dto.mobile !== undefined ? (dto.mobile?.trim() || null) : existing.mobile;
@@ -274,7 +299,7 @@ let LabourService = class LabourService {
         if (effectiveMobile) {
             let linkedUser = await this.prisma.user.findUnique({ where: { mobile: effectiveMobile } });
             if (!linkedUser) {
-                const passwordHash = await argon2.hash(effectiveMobile);
+                const passwordHash = await argon2.hash(crypto.randomBytes(24).toString('hex'));
                 const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
                 linkedUser = await this.prisma.user.create({
                     data: {
@@ -288,11 +313,19 @@ let LabourService = class LabourService {
                 });
             }
             else {
+                const activeExistingRoles = (0, role_policy_util_1.getActiveRolesList)(linkedUser);
+                const incompatibleRoles = activeExistingRoles.filter((r) => r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
+                if (incompatibleRoles.length > 0) {
+                    throw new common_1.ConflictException(`This mobile number already belongs to another role (${incompatibleRoles.join(', ')}). Labour workers must use their own dedicated mobile number.`);
+                }
                 const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
+                const nextDeactivated = (linkedUser.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.LABOUR);
                 await this.prisma.user.update({
                     where: { id: linkedUser.id },
                     data: {
+                        role: client_1.Role.LABOUR,
                         roles: updatedRoles,
+                        deactivatedRoles: nextDeactivated,
                         ...(dto.name && { name: dto.name.trim() }),
                         ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
                     },
@@ -330,11 +363,16 @@ let LabourService = class LabourService {
         return updatedWorker;
     }
     async deleteWorker(user, id) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         const existing = await this.prisma.labourWorker.findFirst({
             where: { id, deletedAt: null },
         });
         if (!existing) {
             throw new common_1.NotFoundException('Worker not found');
+        }
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!isAdmin && existing.farmerId !== (0, effective_farmer_util_1.getEffectiveFarmerId)(user)) {
+            throw new common_1.ForbiddenException('You can only delete workers belonging to your own farm.');
         }
         return this.prisma.labourWorker.update({
             where: { id },

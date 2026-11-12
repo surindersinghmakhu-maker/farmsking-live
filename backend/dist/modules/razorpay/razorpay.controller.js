@@ -42,8 +42,13 @@ let RazorpayController = class RazorpayController {
     verifyPayment(dto) {
         return this.razorpayService.verifyPayment(dto);
     }
-    handleWebhook(body, signature) {
-        return this.razorpayService.handleWebhook(body, signature);
+    handleWebhook(req, body, signature) {
+        const rawBody = req.rawBody
+            ? Buffer.isBuffer(req.rawBody)
+                ? req.rawBody.toString('utf8')
+                : String(req.rawBody)
+            : JSON.stringify(body);
+        return this.razorpayService.handleWebhook(rawBody, signature);
     }
 };
 exports.RazorpayController = RazorpayController;
@@ -66,6 +71,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], RazorpayController.prototype, "createSubscription", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('verify'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -74,10 +80,11 @@ __decorate([
 ], RazorpayController.prototype, "verifyPayment", null);
 __decorate([
     (0, common_1.Post)('webhook'),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Headers)('x-razorpay-signature')),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('x-razorpay-signature')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, Object, String]),
     __metadata("design:returntype", void 0)
 ], RazorpayController.prototype, "handleWebhook", null);
 exports.RazorpayController = RazorpayController = __decorate([

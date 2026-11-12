@@ -26,21 +26,6 @@ export class GardensController {
     return this.gardensService.findAll(user);
   }
 
-  @Get(':id')
-  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.gardensService.findOneOrThrow(user, id);
-  }
-
-  @Post(':id/plants')
-  addPlant(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CreatePlantDto) {
-    return this.gardensService.addPlant(user, id, dto);
-  }
-
-  @Get(':id/plants')
-  listPlants(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.gardensService.listPlants(user, id);
-  }
-
   @Post('expenses')
   addExpense(@CurrentUser() user: AuthUser, @Body() dto: CreateGardenExpenseDto) {
     return this.gardensService.addExpense(user, dto);
@@ -54,5 +39,20 @@ export class GardensController {
   @Delete('expenses/:id')
   deleteExpense(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.gardensService.deleteExpense(user, id);
+  }
+
+  @Get(':id')
+  findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.gardensService.findOneOrThrow(user, id);
+  }
+
+  @Post(':id/plants')
+  addPlant(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CreatePlantDto) {
+    return this.gardensService.addPlant(user, id, dto);
+  }
+
+  @Get(':id/plants')
+  listPlants(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.gardensService.listPlants(user, id);
   }
 }

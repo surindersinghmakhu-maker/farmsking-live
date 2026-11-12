@@ -28,18 +28,29 @@ const ALLOWED_MIME_TYPES = [
     'image/webp',
     'image/heic',
     'image/heif',
-    'image/x-icon',
-    'image/vnd.microsoft.icon',
-    'image/svg+xml',
     'image/x-png',
     'video/mp4',
     'video/webm',
     'video/quicktime',
     'video/x-matroska',
-    'application/octet-stream',
+    'audio/webm',
+    'audio/mp4',
+    'audio/mpeg',
+    'audio/mp3',
+    'audio/ogg',
+    'audio/wav',
+    'audio/wave',
+    'audio/x-wav',
+    'audio/aac',
+    'audio/m4a',
+    'audio/x-m4a',
 ];
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
-const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg', '.mp4', '.webm', '.mov'];
+const VALID_EXTENSIONS = [
+    '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif',
+    '.mp4', '.webm', '.mov', '.mkv',
+    '.mp3', '.m4a', '.wav', '.ogg', '.aac', '.opus',
+];
 let UploadsController = class UploadsController {
     constructor(uploadsService) {
         this.uploadsService = uploadsService;
@@ -85,10 +96,23 @@ __decorate([
         }),
         limits: { fileSize: MAX_FILE_SIZE_BYTES },
         fileFilter: (_req, file, callback) => {
-            if (!ALLOWED_MIME_TYPES.includes(file.mimetype) &&
-                !file.mimetype?.startsWith('image/') &&
-                !file.mimetype?.startsWith('video/')) {
-                callback(new common_1.BadRequestException('Only image and video files are allowed.'), false);
+            const baseMime = String(file.mimetype || '').split(';')[0].trim().toLowerCase();
+            const rawExt = (0, path_1.extname)(file.originalname || '').toLowerCase();
+            if (baseMime.includes('svg') ||
+                baseMime.includes('html') ||
+                baseMime.includes('javascript') ||
+                rawExt === '.svg' ||
+                rawExt === '.html' ||
+                rawExt === '.htm' ||
+                rawExt === '.js' ||
+                rawExt === '.ico') {
+                callback(new common_1.BadRequestException('SVG, HTML, and executable files are not allowed.'), false);
+                return;
+            }
+            const isSafeOctet = baseMime === 'application/octet-stream' && VALID_EXTENSIONS.includes(rawExt);
+            if (!isSafeOctet &&
+                !ALLOWED_MIME_TYPES.includes(baseMime)) {
+                callback(new common_1.BadRequestException('Only safe image, video, and audio files are allowed.'), false);
                 return;
             }
             callback(null, true);

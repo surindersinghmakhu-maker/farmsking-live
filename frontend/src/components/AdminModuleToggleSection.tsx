@@ -22,7 +22,7 @@ export const AdminModuleToggleSection: React.FC = () => {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-slate-200">
         <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-        <p className="text-slate-500 font-medium">ਮੋਡਿਊਲ ਸੈਟਿੰਗਜ਼ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ...</p>
+        <p className="text-slate-500 font-medium">Loading module settings...</p>
       </div>
     );
   }
@@ -77,9 +77,9 @@ export const AdminModuleToggleSection: React.FC = () => {
     try {
       setSaving(true);
       await updateFlags(localFlags);
-      alert('✅ ਕੈਟੇਗਰੀ ਸੈਟਿੰਗਜ਼ ਸਫਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈਆਂ ਹਨ!');
+      alert('Category settings saved successfully.');
     } catch (err) {
-      alert('❌ ਸੈਟਿੰਗਜ਼ ਸੇਵ ਕਰਨ ਵੇਲੇ ਐਰਰ ਆਇਆ।');
+      alert('Failed to save category settings. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -95,7 +95,7 @@ export const AdminModuleToggleSection: React.FC = () => {
           </div>
           <h2 className="text-2xl font-extrabold text-white">Category & Sub-Category Live Switches</h2>
           <p className="text-slate-400 text-sm mt-1">
-            ਕਿਸੇ ਵੀ ਮੋਡਿਊਲ ਜਾਂ ਸੁਵਿਧਾ ਨੂੰ 1-ਕਲਿੱਕ ਨਾਲ ਐਪ ਅੰਦਰ ਲਾਈਵ ON / OFF ਕਰੋ।
+            Turn any module or feature ON or OFF live across the app with one click.
           </p>
         </div>
         <button
@@ -103,7 +103,7 @@ export const AdminModuleToggleSection: React.FC = () => {
           disabled={saving}
           className="px-6 py-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/25 active:scale-95 transition-all disabled:opacity-50"
         >
-          {saving ? 'ਸੇਵ ਹੋ ਰਿਹਾ ਹੈ...' : '💾 Save Changes'}
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -134,8 +134,7 @@ export const AdminModuleToggleSection: React.FC = () => {
                   <span className="text-xl">{isExpanded ? '🔽' : '▶️'}</span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-base text-white">{category.namePa}</h3>
-                      <span className="text-xs text-slate-400 font-mono">({category.nameEn})</span>
+                      <h3 className="font-bold text-base text-white">{category.nameEn}</h3>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">
                       Sub-categories active: {activeSubCount} / {subCount}
@@ -185,8 +184,7 @@ export const AdminModuleToggleSection: React.FC = () => {
                           }`}
                         >
                           <div>
-                            <p className="text-sm font-semibold text-slate-200">{subItem.namePa}</p>
-                            <p className="text-xs text-slate-400 font-mono">{subItem.nameEn}</p>
+                            <p className="text-sm font-semibold text-slate-200">{subItem.nameEn}</p>
                           </div>
 
                           <button

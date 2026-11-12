@@ -15,6 +15,7 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const wallet_service_1 = require("../wallet/wallet.service");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
 const partner_coupon_util_1 = require("../../common/utils/partner-coupon.util");
 const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCouponCode() {
@@ -108,7 +109,8 @@ let CouponsService = class CouponsService {
     }
     async getRedemptions(user, id) {
         const coupon = await this.findOneOrThrow(id);
-        if (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && coupon.businessPartnerId !== user.id) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!isAdmin && coupon.businessPartnerId !== user.id) {
             throw new common_1.ForbiddenException('You do not have access to this coupon.');
         }
         return this.prisma.couponRedemption.findMany({
@@ -140,9 +142,19 @@ let CouponsService = class CouponsService {
         return { discountAmount, commissionAmount, finalAmount: orderAmount - discountAmount };
     }
     async redeem(user, code, dto) {
+        if (!(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) && !(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN)) {
+            throw new common_1.ForbiddenException('Standalone coupon redemption is disabled. Apply coupons at checkout.');
+        }
         const { coupon, discountAmount, commissionAmount } = await this.getActiveForOrder(code, dto.orderAmount);
-        const [redemption] = await this.prisma.$transaction([
-            this.prisma.couponRedemption.create({
+        const redemption = await this.prisma.$transaction(async (tx) => {
+            const updatedCount = await tx.coupon.updateMany({
+                where: { id: coupon.id, usedCount: { lt: coupon.usageLimit } },
+                data: { usedCount: { increment: 1 } },
+            });
+            if (updatedCount.count === 0) {
+                throw new common_1.ConflictException('This coupon has reached its usage limit.');
+            }
+            return tx.couponRedemption.create({
                 data: {
                     couponId: coupon.id,
                     customerId: user.id,
@@ -150,15 +162,15 @@ let CouponsService = class CouponsService {
                     discountAmount,
                     commissionAmount,
                 },
-            }),
-            this.prisma.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } }),
-        ]);
+            });
+        });
         await this.walletService.credit(coupon.businessPartnerId, commissionAmount, `Commission from coupon ${coupon.code}`, { couponRedemptionId: redemption.id });
-        if (user.role === client_1.Role.CUSTOMER) {
+        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.CUSTOMER)) {
             const partner = await this.prisma.user.findFirst({
                 where: { id: coupon.businessPartnerId, roles: { has: client_1.Role.AGENT }, deletedAt: null },
+                select: { id: true, role: true, roles: true, deactivatedRoles: true },
             });
-            if (partner) {
+            if (partner && (0, auth_user_util_1.hasActiveRole)(partner, client_1.Role.AGENT)) {
                 await this.prisma.partnerAssignment.upsert({
                     where: { customerId: user.id },
                     create: { businessPartnerId: partner.id, customerId: user.id },

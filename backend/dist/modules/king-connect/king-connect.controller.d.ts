@@ -229,9 +229,9 @@ export declare class KingConnectController {
         status: import(".prisma/client").$Enums.DemandStatus;
         notes: string | null;
         farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        rejectionReason: string | null;
         cropName: string;
         orderId: string | null;
         linkId: string;
@@ -262,9 +262,9 @@ export declare class KingConnectController {
         status: import(".prisma/client").$Enums.DemandStatus;
         notes: string | null;
         farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        rejectionReason: string | null;
         cropName: string;
         orderId: string | null;
         linkId: string;
@@ -288,9 +288,9 @@ export declare class KingConnectController {
         status: import(".prisma/client").$Enums.DemandStatus;
         notes: string | null;
         farmerId: string;
+        rejectionReason: string | null;
         quantity: number;
         unit: string;
-        rejectionReason: string | null;
         cropName: string;
         orderId: string | null;
         linkId: string;

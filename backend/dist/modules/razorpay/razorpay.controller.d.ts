@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { RazorpayService } from './razorpay.service';
 import { CreateRazorpayOrderDto, CreateRazorpaySubscriptionDto, VerifyRazorpayPaymentDto } from './dto/razorpay.dto';
@@ -23,7 +24,7 @@ export declare class RazorpayController {
         success: boolean;
         message: string;
     }>;
-    handleWebhook(body: any, signature?: string): Promise<{
+    handleWebhook(req: Request, body: any, signature?: string): Promise<{
         status: string;
         event: any;
     }>;

@@ -25,10 +25,12 @@ const app_settings_service_1 = require("../app-settings/app-settings.service");
 const phonepe_service_1 = require("../phonepe/phonepe.service");
 const shiprocket_service_1 = require("../shiprocket/shiprocket.service");
 const cashfree_service_1 = require("../cashfree/cashfree.service");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
 const upi_util_1 = require("../../common/utils/upi.util");
+const tax_compliance_util_1 = require("../../common/utils/tax-compliance.util");
 const billing_service_1 = require("./billing.service");
 const DETAIL_INCLUDE = {
-    items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true, gstPercentage: true } }, sellerStore: true } },
+    items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true, gstPercentage: true, hsnCode: true } }, sellerStore: true } },
     subOrders: { include: { sellerStore: { select: { id: true, storeName: true, slug: true, sellerType: true, rtoBearer: true, rtoSharedVendorRatio: true, gstin: true, commissionRate: true } } } },
     customer: { select: { id: true, name: true, mobile: true, state: true } },
     packedBy: { select: { id: true, name: true } },
@@ -117,9 +119,14 @@ let OrdersService = class OrdersService {
         }
         return map;
     }
+    isOrderStaff(user) {
+        return ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) ||
+            (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN) ||
+            (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.MANAGER) ||
+            (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.OPERATOR));
+    }
     async create(customer, dto) {
-        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
-        const isStaff = staffRoles.includes(customer.role);
+        const isStaff = this.isOrderStaff(customer);
         const targetCustomerId = (isStaff && dto.customerId) ? dto.customerId : customer.id;
         const productIds = dto.items.map((i) => i.productId);
         const products = await this.prisma.product.findMany({
@@ -171,6 +178,7 @@ let OrdersService = class OrdersService {
             let platformExpense = false;
             let totalWalletDeduction = 0;
             if (dto.useWalletBalance && postCouponAmount > 0) {
+                await tx.$executeRaw `SELECT "id" FROM "users" WHERE "id" = ${targetCustomerId} FOR UPDATE`;
                 const [credits, debits] = await Promise.all([
                     tx.walletTransaction.aggregate({
                         where: { userId: targetCustomerId, type: client_1.WalletTransactionType.CREDIT },
@@ -181,7 +189,7 @@ let OrdersService = class OrdersService {
                         _sum: { amount: true },
                     }),
                 ]);
-                const walletBalance = Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
+                const walletBalance = Math.max(0, Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0));
                 if (walletBalance > 0) {
                     const taxEnabled = settings?.walletTaxEnabled ?? true;
                     let feeRate = 0;
@@ -192,13 +200,17 @@ let OrdersService = class OrdersService {
                         platformExpense = true;
                     }
                     const costMultiplier = 1 + feeRate + feeRate * gstRate;
-                    const maxUsableForOrder = walletBalance / costMultiplier;
+                    const maxUsableForOrder = Math.floor((walletBalance / costMultiplier) * 100) / 100;
                     walletDeduction = Number(Math.min(postCouponAmount, maxUsableForOrder).toFixed(2));
                     walletPlatformFee = Number((walletDeduction * feeRate).toFixed(2));
                     walletGstAmount = Number((walletPlatformFee * gstRate).toFixed(2));
                     totalWalletDeduction = Number((walletDeduction + walletPlatformFee + walletGstAmount).toFixed(2));
                     if (totalWalletDeduction > walletBalance) {
-                        totalWalletDeduction = Number(walletBalance.toFixed(2));
+                        const safeRatio = walletBalance / totalWalletDeduction;
+                        walletDeduction = Number((walletDeduction * safeRatio).toFixed(2));
+                        walletPlatformFee = Number((walletPlatformFee * safeRatio).toFixed(2));
+                        walletGstAmount = Number(Math.max(0, walletBalance - walletDeduction - walletPlatformFee).toFixed(2));
+                        totalWalletDeduction = Number((walletDeduction + walletPlatformFee + walletGstAmount).toFixed(2));
                     }
                     totalAmount = Number(Math.max(0, postCouponAmount - walletDeduction).toFixed(2));
                 }
@@ -221,8 +233,13 @@ let OrdersService = class OrdersService {
                             const product = productMap.get(item.productId);
                             const effectivePrice = this.resolveEffectiveUnitPrice(product, item.quantity);
                             const itemSubtotal = Number((effectivePrice * item.quantity).toFixed(2));
-                            const isGstRegistered = Boolean(product.sellerStore?.gstin && product.sellerStore.gstin.trim().length >= 15);
-                            const itemTcs = isGstRegistered ? Number((itemSubtotal * 0.01).toFixed(2)) : 0;
+                            const isGstRegistered = (0, tax_compliance_util_1.isValidGstin)(product.sellerStore?.gstin);
+                            const settle = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                                grossAmount: itemSubtotal,
+                                gstPercentage: Number(product.gstPercentage || 0),
+                                commissionPercent: Number(product.sellerStore?.commissionRate ?? 8.0),
+                                isSellerGstRegistered: isGstRegistered,
+                            });
                             return {
                                 productId: product.id,
                                 productName: product.name,
@@ -230,7 +247,7 @@ let OrdersService = class OrdersService {
                                 price: effectivePrice,
                                 sellerStoreId: product.sellerStoreId,
                                 subtotal: itemSubtotal,
-                                tcsAmount: itemTcs,
+                                tcsAmount: settle.tcsAmount,
                             };
                         }),
                     },
@@ -248,7 +265,17 @@ let OrdersService = class OrdersService {
                 }
             }
             if (couponResult) {
-                await tx.coupon.update({ where: { id: couponResult.coupon.id }, data: { usedCount: { increment: 1 } } });
+                const couponClaim = await tx.coupon.updateMany({
+                    where: {
+                        id: couponResult.coupon.id,
+                        isActive: true,
+                        usedCount: { lt: couponResult.coupon.usageLimit },
+                    },
+                    data: { usedCount: { increment: 1 } },
+                });
+                if (couponClaim.count === 0) {
+                    throw new common_1.ConflictException('This coupon has reached its usage limit.');
+                }
                 await tx.couponRedemption.create({
                     data: {
                         couponId: couponResult.coupon.id,
@@ -286,17 +313,27 @@ let OrdersService = class OrdersService {
                     continue;
                 let groupSubtotal = 0;
                 let groupCommissionAmount = 0;
+                let groupCommissionGstAmount = 0;
+                let groupTcsAmount = 0;
+                const isStoreGst = (0, tax_compliance_util_1.isValidGstin)(store.gstin);
                 const catComm = categoryCommMap.get(storeId);
                 groupItems.forEach((item) => {
                     const product = productMap.get(item.productId);
                     const effectivePrice = this.resolveEffectiveUnitPrice(product, item.quantity);
                     const itemSub = Number((effectivePrice * item.quantity).toFixed(2));
                     const commRate = this.resolveStoreCommissionRate(product, store, catComm);
-                    const commAmt = Number(((itemSub * commRate) / 100).toFixed(2));
+                    const settle = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                        grossAmount: itemSub,
+                        gstPercentage: Number(product.gstPercentage || 0),
+                        commissionPercent: commRate,
+                        isSellerGstRegistered: isStoreGst,
+                    });
                     groupSubtotal += itemSub;
-                    groupCommissionAmount += commAmt;
+                    groupCommissionAmount += settle.commissionAmount;
+                    groupCommissionGstAmount += settle.commissionGstAmount;
+                    groupTcsAmount += settle.tcsAmount;
                 });
-                const vendorNetPayout = Number((groupSubtotal - groupCommissionAmount).toFixed(2));
+                const vendorNetPayout = Number(Math.max(0, groupSubtotal - groupCommissionAmount - groupCommissionGstAmount - groupTcsAmount).toFixed(2));
                 await tx.subOrder.create({
                     data: {
                         orderId: created.id,
@@ -407,11 +444,10 @@ let OrdersService = class OrdersService {
         if (!order) {
             throw new common_1.NotFoundException('Order not found.');
         }
-        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
-        const isOrderSeller = user.role === client_1.Role.SELLER &&
+        const isOrderSeller = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SELLER) &&
             (order.subOrders?.some((so) => so.sellerStore?.sellerId === user.id) ||
                 order.items?.some((it) => it.sellerStore?.sellerId === user.id));
-        if (order.customerId !== user.id && !isOrderSeller && !staffRoles.includes(user.role)) {
+        if (order.customerId !== user.id && !isOrderSeller && !this.isOrderStaff(user)) {
             throw new common_1.ForbiddenException('You do not have access to this order.');
         }
         return order;
@@ -536,13 +572,13 @@ let OrdersService = class OrdersService {
             include: DETAIL_INCLUDE,
         });
         await this.ensurePendingSellerPayoutsForOrder(order.id).catch((err) => console.warn('Pending seller payout creation notice:', err));
+        await this.creditCouponCommission(order.id).catch((err) => console.warn('Paid order coupon commission credit notice:', err));
         await this.notifyCustomer(order.customerId, '💳 Payment Received', `Payment of ₹${order.totalAmount} for FarmsKing Order #${order.orderNumber} has been verified and confirmed.`, id, 'ORDER_CONFIRMED_SMS');
         return updated;
     }
     async submitPaymentUtr(customer, id, utrNumber) {
         const order = await this.findOneOrThrow(customer, id);
-        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
-        if (order.customerId !== customer.id && !staffRoles.includes(customer.role)) {
+        if (order.customerId !== customer.id && !this.isOrderStaff(customer)) {
             throw new common_1.ForbiddenException('You cannot update payment reference for this order.');
         }
         return this.prisma.customerOrder.update({
@@ -670,24 +706,34 @@ let OrdersService = class OrdersService {
             data: { orderStatus: client_1.SubOrderStatus.ACCEPTED },
         });
         await this.notifyCustomer(order.customerId, '✅ Order Confirmed', `Your FarmsKing Order #${order.orderNumber} has been confirmed by seller. Packing in progress.`, id, 'ORDER_CONFIRMED_SMS');
-        await this.creditCouponCommission(id);
+        if (order.paymentStatus === client_1.OrderPaymentStatus.PAID || order.paymentMode !== client_1.OrderPaymentMode.COD) {
+            if (order.paymentStatus === client_1.OrderPaymentStatus.PAID) {
+                await this.creditCouponCommission(id);
+            }
+        }
         this.triggerShiprocketSubOrders(order.id).catch((err) => console.warn('Shiprocket confirm trigger notice:', err));
         return updated;
     }
     async creditCouponCommission(orderId) {
-        const redemption = await this.prisma.couponRedemption.findFirst({
+        const claimed = await this.prisma.couponRedemption.updateMany({
             where: { orderId, creditedAt: null },
+            data: { creditedAt: new Date() },
+        });
+        if (claimed.count === 0) {
+            return;
+        }
+        const redemption = await this.prisma.couponRedemption.findFirst({
+            where: { orderId },
             include: { coupon: true },
         });
         if (!redemption) {
             return;
         }
         await this.walletService.credit(redemption.coupon.businessPartnerId, Number(redemption.commissionAmount), `Commission from coupon ${redemption.coupon.code}`, { couponRedemptionId: redemption.id });
-        await this.prisma.couponRedemption.update({ where: { id: redemption.id }, data: { creditedAt: new Date() } });
     }
     async cancel(user, id) {
         const order = await this.findOneOrThrow(user, id);
-        const isStaff = user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN || user.role === client_1.Role.OPERATOR;
+        const isStaff = this.isOrderStaff(user);
         if (order.customerId !== user.id && !isStaff) {
             throw new common_1.ForbiddenException('You cannot cancel this order.');
         }
@@ -710,6 +756,30 @@ let OrdersService = class OrdersService {
             await Promise.all(order.items
                 .filter((item) => item.productId)
                 .map((item) => tx.product.update({ where: { id: item.productId }, data: { stockQty: { increment: item.quantity } } })));
+            const creditedRedemption = await tx.couponRedemption.findFirst({
+                where: { orderId: id, creditedAt: { not: null } },
+                include: { coupon: true },
+            });
+            if (creditedRedemption && Number(creditedRedemption.commissionAmount) > 0) {
+                const existingClawback = await tx.walletTransaction.findFirst({
+                    where: {
+                        userId: creditedRedemption.coupon.businessPartnerId,
+                        type: client_1.WalletTransactionType.DEBIT,
+                        reason: { contains: `Clawback for Cancelled Order #${order.orderNumber}` },
+                    },
+                });
+                if (!existingClawback) {
+                    await tx.walletTransaction.create({
+                        data: {
+                            userId: creditedRedemption.coupon.businessPartnerId,
+                            type: client_1.WalletTransactionType.DEBIT,
+                            amount: Number(creditedRedemption.commissionAmount),
+                            reason: `Clawback for Cancelled Order #${order.orderNumber}`,
+                            couponRedemptionId: creditedRedemption.id,
+                        },
+                    });
+                }
+            }
             if (Number(order.walletUsedAmount || 0) > 0) {
                 const debitTx = await tx.walletTransaction.findFirst({
                     where: {
@@ -822,21 +892,35 @@ let OrdersService = class OrdersService {
         }
         for (const [sellerStoreId, group] of sellerMap.entries()) {
             const store = group.store;
-            const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
+            const isGstRegistered = (0, tax_compliance_util_1.isValidGstin)(store?.gstin);
             const catComm = categoryCommMap.get(sellerStoreId);
             let totalGross = 0;
             let totalCommission = 0;
+            let totalCommissionGst = 0;
             let totalTcs = 0;
+            let netPayout = 0;
+            const itemBreakdowns = [];
             for (const item of group.items) {
                 const itemSub = Number(item.subtotal || Number(item.price) * item.quantity);
                 const commRate = this.resolveStoreCommissionRate(item.product, store, catComm);
-                const itemComm = Number(((itemSub * commRate) / 100).toFixed(2));
-                const itemTcs = isGstRegistered ? Number(((itemSub * 1.0) / 100).toFixed(2)) : 0;
+                const calc = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                    grossAmount: itemSub,
+                    gstPercentage: Number(item.product?.gstPercentage || 0),
+                    commissionPercent: commRate,
+                    isSellerGstRegistered: isGstRegistered,
+                });
                 totalGross += itemSub;
-                totalCommission += itemComm;
-                totalTcs += itemTcs;
+                totalCommission += calc.commissionAmount;
+                totalCommissionGst += calc.commissionGstAmount;
+                totalTcs += calc.tcsAmount;
+                netPayout += calc.netSellerPayout;
+                itemBreakdowns.push({
+                    id: item.id,
+                    itemComm: calc.commissionAmount,
+                    itemTcs: calc.tcsAmount,
+                    itemNet: calc.netSellerPayout,
+                });
             }
-            const netPayout = Number((totalGross - totalCommission - totalTcs).toFixed(2));
             const payoutRefNo = `PAY-${order.orderNumber}-${sellerStoreId.substring(0, 6)}`;
             const existing = await this.prisma.sellerPayout.findUnique({ where: { payoutRefNo } });
             if (existing)
@@ -847,22 +931,19 @@ let OrdersService = class OrdersService {
                     payoutRefNo,
                     totalGrossAmount: Number(totalGross.toFixed(2)),
                     totalCommissionAmount: Number(totalCommission.toFixed(2)),
+                    commissionGstAmount: Number(totalCommissionGst.toFixed(2)),
                     totalTcsAmount: Number(totalTcs.toFixed(2)),
-                    netPayoutAmount: netPayout,
+                    netPayoutAmount: Number(netPayout.toFixed(2)),
                     status: client_1.SellerPayoutStatus.PENDING,
                 },
             });
-            for (const item of group.items) {
-                const itemSub = Number(item.subtotal || Number(item.price) * item.quantity);
-                const commRate = this.resolveStoreCommissionRate(item.product, store, catComm);
-                const itemComm = Number(((itemSub * commRate) / 100).toFixed(2));
-                const itemTcs = isGstRegistered ? Number(((itemSub * 1.0) / 100).toFixed(2)) : 0;
+            for (const br of itemBreakdowns) {
                 await this.prisma.customerOrderItem.update({
-                    where: { id: item.id },
+                    where: { id: br.id },
                     data: {
-                        commissionAmount: itemComm,
-                        tcsAmount: itemTcs,
-                        sellerPayoutAmount: Number((itemSub - itemComm - itemTcs).toFixed(2)),
+                        commissionAmount: br.itemComm,
+                        tcsAmount: br.itemTcs,
+                        sellerPayoutAmount: br.itemNet,
                         sellerPayoutId: createdPayout.id,
                     },
                 });
@@ -917,7 +998,7 @@ let OrdersService = class OrdersService {
                     pickupCity: store?.pickupCity || '',
                     pickupState: store?.pickupState || '',
                     pickupPincode: store?.pickupPincode || '',
-                    panNumber: store?.panNumber || 'EXEMPT_FARMER_PAN',
+                    panNumber: store?.panNumber || 'Form 60 / Exempt Primary Producer',
                     fssaiNo: store?.fssaiNo || undefined,
                     agriLicenseNo: store?.agriLicenseNo || undefined,
                 },
@@ -929,7 +1010,7 @@ let OrdersService = class OrdersService {
                 product: {
                     id: item.productId,
                     name: item.product?.name || item.productName || 'Farm Product',
-                    hsnCode: item.product?.categorySlug === 'pesticides' ? '380899' : '120991',
+                    hsnCode: item.product?.hsnCode || (item.product?.categorySlug === 'pesticides' ? '380899' : '120991'),
                     quantity: item.quantity,
                     unitPrice,
                     totalPrice,
@@ -963,10 +1044,9 @@ let OrdersService = class OrdersService {
         if (!invoice) {
             throw new common_1.NotFoundException('Invoice not found.');
         }
-        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
-        const isStaff = staffRoles.includes(user.role);
+        const isStaff = this.isOrderStaff(user);
         const isBuyer = invoice.order?.customerId === user.id;
-        const isSeller = user.role === client_1.Role.SELLER && invoice.sellerStore?.sellerId === user.id;
+        const isSeller = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SELLER) && invoice.sellerStore?.sellerId === user.id;
         if (!isStaff && !isBuyer && !isSeller) {
             throw new common_1.ForbiddenException('You do not have permission to view this invoice.');
         }

@@ -23,7 +23,8 @@ const orders_service_1 = require("./orders.service");
 const create_order_dto_1 = require("./dto/create-order.dto");
 const dispatch_order_dto_1 = require("./dto/dispatch-order.dto");
 const mark_paid_dto_1 = require("./dto/mark-paid.dto");
-const STAFF_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
+const STAFF_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT];
+const BUYER_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.SELLER, client_1.Role.TRADER, client_1.Role.SUPERVISOR];
 let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
@@ -92,7 +93,7 @@ let OrdersController = class OrdersController {
 };
 exports.OrdersController = OrdersController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Post)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -101,7 +102,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -124,7 +125,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findAll", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.SELLER, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -133,7 +134,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "findOne", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)(':id/upi-link'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -142,7 +143,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getUpiLink", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)(':id/farmer-bill-of-supply'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -151,7 +152,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "generateFarmerBillOfSupply", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.SELLER, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)(':id/invoices'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -160,7 +161,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getOrderInvoices", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.SELLER, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)('invoices/:invoiceId/html'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('invoiceId')),
@@ -169,7 +170,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getInvoiceHtml", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Post)(':id/cashfree/initiate'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -178,7 +179,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "initiateCashfreePayment", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Get)(':id/cashfree/status'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -187,7 +188,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getCashfreePaymentStatus", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/confirm'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -196,7 +197,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "confirm", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Post)(':id/cancel'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -205,7 +206,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "cancel", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/start-packing'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -214,7 +215,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "startPacking", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/mark-packed'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -223,7 +224,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "markPacked", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/dispatch'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -233,7 +234,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "dispatch", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/mark-delivered'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -242,7 +243,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "markDelivered", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.OPERATOR, client_1.Role.MANAGER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':id/mark-paid'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -252,7 +253,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "markPaid", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.OPERATOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(...BUYER_ROLES, ...STAFF_ROLES),
     (0, common_1.Post)(':id/submit-utr'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),

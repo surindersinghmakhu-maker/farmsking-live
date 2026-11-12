@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Patch, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -59,7 +59,9 @@ export class AppSettingsController {
     return this.appSettingsService.updateSeo(dto);
   }
 
-  /** Get all active system integrations (SMS, Gateway, WhatsApp, Product, Social, OTP, About) */
+  /** Get all active system integrations (Super Admin / Admin only — protects third-party API secrets) */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Get('integrations')
   getIntegrations() {
     return this.appSettingsService.getIntegrations();
@@ -77,8 +79,15 @@ export class AppSettingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Patch('integrations')
-  updateIntegrations(@CurrentUser() user: AuthUser, @Body() payload: any) {
-    return this.appSettingsService.updateIntegrations(user, payload);
+  updateIntegrations(
+    @CurrentUser() user: AuthUser,
+    @Body() payload: any,
+    @Headers('x-admin-otp') headerOtp?: string,
+  ) {
+    return this.appSettingsService.updateIntegrations(user, {
+      ...payload,
+      adminConfirmationOtp: payload?.adminConfirmationOtp || headerOtp,
+    });
   }
 
   /** Get third-party service provider credentials & active providers */
@@ -93,8 +102,15 @@ export class AppSettingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Post('service-config')
-  updateServiceConfig(@CurrentUser() user: AuthUser, @Body() body: any) {
-    return this.appSettingsService.updateServiceConfig(user, body);
+  updateServiceConfig(
+    @CurrentUser() user: AuthUser,
+    @Body() body: any,
+    @Headers('x-admin-otp') headerOtp?: string,
+  ) {
+    return this.appSettingsService.updateServiceConfig(user, {
+      ...body,
+      adminConfirmationOtp: body?.adminConfirmationOtp || headerOtp,
+    });
   }
 
   @Get('public-master-data')

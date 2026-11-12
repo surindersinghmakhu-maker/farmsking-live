@@ -24,6 +24,7 @@ export interface RegisterPayload {
   farmAddress?: string;
   farmMobile?: string;
   whatsappGroupEnabled?: boolean;
+  termsAccepted?: boolean;
 }
 
 export type LoginPortalMode = 'CLIENT' | 'PARTNER';
@@ -135,6 +136,7 @@ export interface CompleteOtpRegistrationPayload {
   name?: string;
   role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
   portal?: LoginPortalMode;
+  termsAccepted?: boolean;
 }
 
 export async function completeOtpRegistrationApi(
@@ -173,5 +175,188 @@ export async function verifyEmailApi(
     '/auth/verify-email',
     { token },
   );
+  return data;
+}
+
+export interface PartnerUserSummary {
+  id: string;
+  kingId: string | null;
+  name: string;
+  mobile: string;
+  email?: string | null;
+  activeRoles: string[];
+  pincode?: string | null;
+  postOffice?: string | null;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+  photoUrl?: string | null;
+  qualification?: string | null;
+  specialization?: string | null;
+  yearsExperience?: number | null;
+  bio?: string | null;
+  panNumber?: string | null;
+  panDocUrl?: string | null;
+  aadhaarLast4?: string | null;
+  aadhaarDocUrl?: string | null;
+  aadhaarBackUrl?: string | null;
+  gstin?: string | null;
+  gstDocUrl?: string | null;
+  bankAccountHolderName?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfsc?: string | null;
+  upiId?: string | null;
+  chequeDocUrl?: string | null;
+}
+
+export interface PartnerApplicationDto {
+  id: string;
+  mobile: string;
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  advisorType?: 'FARM' | 'GARDEN' | null;
+  name: string;
+  email?: string | null;
+  pincode?: string | null;
+  postOffice?: string | null;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+  qualification?: string | null;
+  specialization?: string | null;
+  yearsExperience?: number | null;
+  bio?: string | null;
+  panNumber?: string | null;
+  panDocUrl?: string | null;
+  aadhaarLast4?: string | null;
+  aadhaarDocUrl?: string | null;
+  aadhaarBackUrl?: string | null;
+  gstin?: string | null;
+  gstDocUrl?: string | null;
+  bankAccountHolderName?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfsc?: string | null;
+  upiId?: string | null;
+  chequeDocUrl?: string | null;
+  photoUrl?: string | null;
+  storeName?: string | null;
+  legalName?: string | null;
+  sellerType?: 'FARMER' | 'COMMERCIAL' | null;
+  pickupAddress?: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string | null;
+  resubmissionCount: number;
+  hasPassword: boolean;
+  reviewedAt?: string | null;
+  updatedAt: string;
+}
+
+export interface PartnerApplyPayload {
+  mobile: string;
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  advisorType?: 'FARM' | 'GARDEN';
+  name: string;
+  email?: string;
+  password?: string;
+  pincode?: string;
+  postOffice?: string;
+  village?: string;
+  district?: string;
+  state?: string;
+  qualification?: string;
+  specialization?: string;
+  yearsExperience?: number;
+  bio?: string;
+  panNumber: string;
+  panDocUrl: string;
+  aadhaarLast4: string;
+  aadhaarDocUrl: string;
+  aadhaarBackUrl?: string;
+  gstin?: string;
+  gstDocUrl?: string;
+  bankAccountHolderName: string;
+  bankAccountNumber: string;
+  bankIfsc: string;
+  upiId?: string;
+  chequeDocUrl: string;
+  photoUrl: string;
+  storeName?: string;
+  legalName?: string;
+  sellerType?: 'FARMER' | 'COMMERCIAL';
+  pickupAddress?: string;
+  termsAccepted: boolean;
+}
+
+export async function sendPartnerOtpApi(mobile: string): Promise<{
+  success: boolean;
+  mobile: string;
+  sentViaWhatsApp: boolean;
+  message: string;
+  devOtp?: string;
+}> {
+  const { data } = await apiClient.post('/auth/partner-otp/send', { mobile });
+  return data;
+}
+
+export async function verifyPartnerOtpApi(mobile: string, otp: string): Promise<{
+  success: boolean;
+  verified: boolean;
+  mobile: string;
+  partnerUploadToken: string;
+  existingUserSummary: PartnerUserSummary | null;
+  existingApplication: PartnerApplicationDto | null;
+  activePartnerRoles: string[];
+  message: string;
+}> {
+  const { data } = await apiClient.post('/auth/partner-otp/verify', { mobile, otp });
+  return data;
+}
+
+export async function uploadPartnerKycDocApi(
+  localUri: string,
+  partnerUploadToken: string,
+): Promise<{ success: boolean; fileUrl: string; provider?: string }> {
+  const rawFilename = localUri.split('/').pop()?.split('?')[0] ?? `kyc-${Date.now()}.jpg`;
+  const match = /\.(\w+)$/.exec(rawFilename);
+  const rawExt = match?.[1]?.toLowerCase() ?? '';
+  const validExts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+  const ext = validExts.includes(rawExt) ? rawExt : 'jpg';
+  const filename = rawFilename.replace(/\.\w+$/, '') + `.${ext}`;
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+  const formData = new FormData();
+  if (typeof window !== 'undefined' && typeof Blob !== 'undefined' && (localUri.startsWith('blob:') || localUri.startsWith('data:'))) {
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+    formData.append('file', blob, filename);
+  } else {
+    formData.append('file', {
+      uri: localUri,
+      name: filename,
+      type: mimeType,
+    } as unknown as Blob);
+  }
+
+  const { data } = await apiClient.post<{ success: boolean; fileUrl: string; provider?: string }>(
+    '/auth/partner-upload',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'x-partner-upload-token': partnerUploadToken,
+      },
+    },
+  );
+  return data;
+}
+
+export async function submitPartnerApplicationApi(payload: PartnerApplyPayload): Promise<{
+  success: boolean;
+  applicationId: string;
+  status: string;
+  requestedRole: string;
+  existingKingId: string | null;
+  message: string;
+}> {
+  const { data } = await apiClient.post('/auth/partner-apply', payload);
   return data;
 }

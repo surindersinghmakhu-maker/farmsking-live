@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { deleteMyAccount } from '@/src/api/users.api';
+import { deleteMyAccount, requestDeleteMeOtp } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
 
 interface DeleteAccountModalProps {
@@ -23,6 +23,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpSent, setOtpSent] = useState(false);
+  const [useServerOtp, setUseServerOtp] = useState(false);
+  const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const isLocalhost =
@@ -39,6 +41,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setDeleteConfirmInput('');
       setConfirmationResult(null);
       setOtpSent(false);
+      setUseServerOtp(false);
+      setServerDevOtp(null);
       setErrorMsg(null);
       setIsSendingOtp(false);
       setIsVerifying(false);
@@ -58,15 +62,26 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       return;
     }
 
+    setIsSendingOtp(true);
+    setErrorMsg(null);
+    setServerDevOtp(null);
+
     if (isLocalhost) {
-      setOtpSent(true);
-      setErrorMsg(null);
-      setIsSendingOtp(false);
+      try {
+        const res = await requestDeleteMeOtp(cleanNumber);
+        setUseServerOtp(true);
+        if (res?.devOtp) {
+          setServerDevOtp(String(res.devOtp));
+        }
+        setOtpSent(true);
+      } catch (err: any) {
+        setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to generate verification OTP.');
+      } finally {
+        setIsSendingOtp(false);
+      }
       return;
     }
 
-    setIsSendingOtp(true);
-    setErrorMsg(null);
     try {
       if (typeof window !== 'undefined') {
         const el = document.getElementById('recaptcha-container-delete');
@@ -90,10 +105,22 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
         (window as any).recaptchaVerifierDelete
       );
 
+      setUseServerOtp(false);
       setConfirmationResult(confirmation);
       setOtpSent(true);
     } catch (err: any) {
-      console.warn('Firebase OTP Error:', err);
+      // Fallback to server-side WhatsApp/Email OTP if Firebase reCAPTCHA is unavailable
+      try {
+        const res = await requestDeleteMeOtp(cleanNumber);
+        setUseServerOtp(true);
+        if (res?.devOtp) {
+          setServerDevOtp(String(res.devOtp));
+        }
+        setOtpSent(true);
+        return;
+      } catch (srvErr: any) {
+        console.warn('OTP Dispatch Error:', err, srvErr);
+      }
       let msg = 'Failed to send OTP. Please try again.';
       if (err?.code === 'auth/invalid-phone-number') {
         msg = 'Invalid mobile number format. Please check the 10-digit number.';
@@ -121,38 +148,28 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       return;
     }
 
-    if (isLocalhost) {
-      setIsVerifying(true);
-      setErrorMsg(null);
-      try {
-        setIsDeletingAccount(true);
-        await deleteMyAccount();
-        await logout();
-      } catch (err: any) {
-        console.warn('Verification/Deletion Error:', err);
-        setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to delete account.');
-        setIsDeletingAccount(false);
-      } finally {
-        setIsVerifying(false);
-      }
-      return;
-    }
-
-    if (!confirmationResult) {
-      setErrorMsg('OTP session expired. Please request a new OTP.');
-      return;
-    }
-
     setIsVerifying(true);
     setErrorMsg(null);
     try {
-      // 1. Verify OTP with Firebase
-      await confirmationResult.confirm(otpInput.trim());
-      
-      // 2. Delete Account on Backend
-      setIsDeletingAccount(true);
-      await deleteMyAccount();
-      
+      if (useServerOtp) {
+        // Verify server-issued 6-digit OTP atomically inside DELETE /users/me
+        setIsDeletingAccount(true);
+        await deleteMyAccount({ otp: otpInput.trim() });
+      } else {
+        if (!confirmationResult) {
+          setErrorMsg('OTP session expired. Please request a new OTP.');
+          setIsVerifying(false);
+          return;
+        }
+        // 1. Verify OTP with Firebase and obtain signed ID token for server verification
+        const cred = await confirmationResult.confirm(otpInput.trim());
+        const firebaseIdToken = await cred.user.getIdToken();
+
+        // 2. Delete Account on Backend with cryptographic verification proof
+        setIsDeletingAccount(true);
+        await deleteMyAccount({ firebaseIdToken });
+      }
+
       // 3. Logout
       await logout();
     } catch (err: any) {
@@ -237,7 +254,10 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
               <>
                 <View style={styles.successBox}>
                   <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <Text style={styles.successText}>OTP sent to {mobileInput}</Text>
+                  <Text style={styles.successText}>
+                    OTP sent to {mobileInput}
+                    {serverDevOtp ? ` (Local dev code: ${serverDevOtp})` : ''}
+                  </Text>
                 </View>
 
                 <View>

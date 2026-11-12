@@ -19,7 +19,7 @@ import { apiClient } from '../api/client';
 interface OtpVerificationModalProps {
   visible: boolean;
   mobileNumber: string;
-  generatedOtp: string;
+  generatedOtp?: string;
   adminWhatsAppNumber?: string;
   onVerifySuccess: () => void;
   onClose: () => void;
@@ -28,7 +28,6 @@ interface OtpVerificationModalProps {
 export function OtpVerificationModal({
   visible,
   mobileNumber,
-  generatedOtp,
   adminWhatsAppNumber = '919577622000',
   onVerifySuccess,
   onClose,
@@ -37,8 +36,10 @@ export function OtpVerificationModal({
   const [timer, setTimer] = useState(30);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isBotSending, setIsBotSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [botStatusText, setBotStatusText] = useState<string | null>(null);
   const [isBotConnected, setIsBotConnected] = useState<boolean | null>(null);
+  const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: any = null;
@@ -49,30 +50,36 @@ export function OtpVerificationModal({
   }, [visible, timer]);
 
   useEffect(() => {
-    if (visible && mobileNumber && generatedOtp) {
+    if (visible && mobileNumber) {
+      setEnteredOtp('');
+      setErrorText(null);
+      setTimer(30);
       triggerAutomatedBotOtp();
     }
-  }, [visible, mobileNumber, generatedOtp]);
+  }, [visible, mobileNumber]);
 
   const triggerAutomatedBotOtp = async () => {
     setIsBotSending(true);
     setBotStatusText(null);
     setIsBotConnected(null);
+    setServerDevOtp(null);
     try {
-      const res = await apiClient.post('/auth/send-otp', {
+      const res = await apiClient.post('/auth/send-register-otp', {
         mobile: mobileNumber,
-        otp: generatedOtp,
       });
-      if (res.data?.success) {
+      if (res.data?.devOtp) {
+        setServerDevOtp(String(res.data.devOtp));
+      }
+      if (res.data?.sentViaWhatsApp) {
         setIsBotConnected(true);
-        setBotStatusText(`🟢 4-digit OTP sent to your WhatsApp (+91 ${mobileNumber})!`);
+        setBotStatusText(`4-digit OTP sent to your WhatsApp (+91 ${mobileNumber}).`);
       } else {
         setIsBotConnected(false);
-        setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
+        setBotStatusText(res.data?.message || 'Verification code generated on server.');
       }
-    } catch {
+    } catch (err: any) {
       setIsBotConnected(false);
-      setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
+      setBotStatusText(err?.response?.data?.message || 'Could not send WhatsApp OTP. Please retry.');
     } finally {
       setIsBotSending(false);
     }
@@ -80,7 +87,7 @@ export function OtpVerificationModal({
 
   const handleOpenWhatsAppDeepLink = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp}\nMobile Number: ${mobileNumber}`;
+    const msg = `FarmsKing Registration Assistance Request\nMobile Number: ${mobileNumber}`;
     const cleanAdminNum = adminWhatsAppNumber.replace(/\D/g, '');
     const url = `https://wa.me/${cleanAdminNum}?text=${encodeURIComponent(msg)}`;
     Linking.openURL(url).catch(() => {
@@ -88,14 +95,25 @@ export function OtpVerificationModal({
     });
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setErrorText(null);
     const clean = enteredOtp.trim();
-    if (clean === generatedOtp) {
+    if (!clean || clean.length < 4) {
+      setErrorText('Please enter the 4-digit OTP code.');
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      await apiClient.post('/auth/verify-register-otp', {
+        mobile: mobileNumber,
+        otp: clean,
+      });
       onVerifySuccess();
-    } else {
-      setErrorText('Invalid OTP! Please enter the correct code.');
+    } catch (err: any) {
+      setErrorText(err?.response?.data?.message || 'Invalid or expired OTP. Please try again.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -132,29 +150,29 @@ export function OtpVerificationModal({
             </Text>
           )}
 
-          {/* If Bot is Offline, show Fallback Quick-Fill Card */}
-          {isBotConnected === false && (
+          {/* Show quick-fill box ONLY when local development backend returned devOtp */}
+          {serverDevOtp ? (
             <View style={styles.fallbackBox}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <Ionicons name="alert-circle" size={16} color="#d97706" />
-                <Text style={styles.fallbackTitle}>Bot Service Offline Notice</Text>
+                <Ionicons name="code-working" size={16} color="#d97706" />
+                <Text style={styles.fallbackTitle}>Local Development Mode</Text>
               </View>
               <Text style={styles.fallbackSub}>
-                Your verification OTP is <Text style={{ fontFamily: FONT.extraBold, color: '#16a34a', fontSize: 14 }}>{generatedOtp}</Text>. Tap Quick-Fill to auto-enter the code:
+                Server test OTP: <Text style={{ fontFamily: FONT.extraBold, color: '#16a34a', fontSize: 14 }}>{serverDevOtp}</Text>
               </Text>
               <TouchableOpacity
                 style={styles.quickFillBtn}
                 onPress={() => {
-                  setEnteredOtp(generatedOtp);
+                  setEnteredOtp(serverDevOtp);
                   setErrorText(null);
                 }}
                 activeOpacity={0.8}
               >
                 <Ionicons name="flash" size={15} color="#ffffff" />
-                <Text style={styles.quickFillText}>⚡ Quick-Fill Code ({generatedOtp})</Text>
+                <Text style={styles.quickFillText}>Quick-Fill Code ({serverDevOtp})</Text>
               </TouchableOpacity>
             </View>
-          )}
+          ) : null}
 
           {/* OTP Input */}
           <View style={styles.inputContainer}>
@@ -182,12 +200,16 @@ export function OtpVerificationModal({
 
           {/* Verify Action Button */}
           <TouchableOpacity
-            style={[styles.verifyBtnWrap, !enteredOtp.trim() && { opacity: 0.6 }]}
-            disabled={!enteredOtp.trim()}
+            style={[styles.verifyBtnWrap, (!enteredOtp.trim() || isVerifying) && { opacity: 0.6 }]}
+            disabled={!enteredOtp.trim() || isVerifying}
             onPress={handleVerify}
           >
             <LinearGradient colors={['#16a34a', '#15803d']} style={styles.verifyBtn}>
-              <Text style={styles.verifyBtnText}>Verify OTP & Complete Registration</Text>
+              {isVerifying ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.verifyBtnText}>Verify OTP & Complete Registration</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 

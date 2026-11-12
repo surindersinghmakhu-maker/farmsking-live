@@ -11,7 +11,8 @@ export type Role =
   | 'SELLER'
   | 'OPERATOR'
   | 'LABOUR'
-  | 'TECHNICAL_TRAINER';
+  | 'TECHNICAL_TRAINER'
+  | 'TRADER';
 export type AdvisorType = 'FARM' | 'GARDEN';
 export type AreaUnit = 'ACRE' | 'HECTARE' | 'BIGHA' | 'GUNTA';
 export type SoilType =
@@ -457,7 +458,7 @@ export interface PartyStatement {
 
 /** Shape returned by GET /crops/mine — includes just the owning plot (not the whole farm). */
 export interface MyCropCycle extends CropCycle {
-  plot: { id: string; name: string; farmId: string; area?: number | null; areaUnit?: AreaUnit; irrigationType?: string | null };
+  plot: { id: string; name: string; farmId: string; area?: number | null; areaUnit?: AreaUnit; irrigationType?: string | null; notes?: string | null };
 }
 
 export type SprayType = 'PESTICIDE' | 'FUNGICIDE' | 'HERBICIDE' | 'INSECTICIDE' | 'GROWTH_REGULATOR' | 'OTHER';

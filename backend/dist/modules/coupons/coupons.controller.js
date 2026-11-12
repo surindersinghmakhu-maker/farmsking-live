@@ -125,7 +125,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "getRedemptions", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)(':code/redeem'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('code')),

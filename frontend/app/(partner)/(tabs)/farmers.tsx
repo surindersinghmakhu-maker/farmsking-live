@@ -436,16 +436,20 @@ export default function AdvisorFarmsScreen() {
     setSelectedCropForActivities({
       id: row.cropCycleId,
       cropName: row.cropName,
+      categoryName: row.cropCategory || 'Crop',
+      categoryColor: '#10b981',
+      categoryBg: 'rgba(16, 185, 129, 0.12)',
       fieldName: row.plotName,
-      variety: row.variety,
+      area: row.area != null ? String(row.area) : '1',
       sowingDate: row.sowingDate ? new Date(row.sowingDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-      acreage: Number(row.area) || 1,
-      areaUnit: 'ACRE',
-      stage: 'GROWTH',
+      variety: row.variety,
+      unit: 'Quintal',
+      pricePerUnit: '0',
+      stage: (row.stage as any) || 'GROWTH',
       status: 'ACTIVE',
-      advisorShareStatus: 'ACCEPTED',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      advisorStatus: 'ACCEPTED',
+      farmerName: row.farmerName,
+      farmerPhone: row.farmerMobile || undefined,
     });
     setShowActivitiesModal(true);
   };

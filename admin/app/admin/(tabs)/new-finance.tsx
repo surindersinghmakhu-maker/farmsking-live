@@ -140,12 +140,12 @@ export default function NewFinanceCommandHubScreen() {
       id: 'statutory-tax',
       title: 'Statutory Tax, TDS & GST Compliance',
       badge: 'Compliance',
-      description: 'Section 194N TDS summaries, GST collected on platform fees, and 1-click CA audit exports',
+      description: 'Section 194-O / 194-H / 194-J TDS & GSTR-8 summaries, GST collected on platform fees, and 1-click CA audit exports',
       icon: 'document-text' as const,
       color: '#e11d48',
       countText: 'CA & Tax Reports',
       category: 'COMPLIANCE' as const,
-      action: () => navigateTo('/admin/(tabs)/super-accounts', { section: 'REQUESTS' }),
+      action: () => navigateTo('/admin/(tabs)/super-accounts', { section: 'CA_ACCOUNTS' }),
     },
   ];
 

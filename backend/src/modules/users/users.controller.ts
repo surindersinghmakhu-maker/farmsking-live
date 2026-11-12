@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { OperatorPermission, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -26,6 +27,26 @@ import { UpdateAdminStaffPermissionsDto } from './dto/update-admin-staff-permiss
 import { SetReferrerDto } from './dto/set-referrer.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
+import { AssignStaffRoleDto } from './dto/assign-staff-role.dto';
+import { ConvertVerifiedLeadDto, UpdateVerifiedLeadNotesDto } from './dto/convert-verified-lead.dto';
+
+const ALL_AUTHENTICATED_ROLES: Role[] = [
+  Role.CUSTOMER,
+  Role.FARMER,
+  Role.GARDENER,
+  Role.ADVISOR,
+  Role.AGENT,
+  Role.SELLER,
+  Role.TRADER,
+  Role.SUPERVISOR,
+  Role.LABOUR,
+  Role.OPERATOR,
+  Role.MANAGER,
+  Role.TECHNICAL_TRAINER,
+  Role.ACCOUNTANT,
+  Role.ADMIN,
+  Role.SUPER_ADMIN,
+];
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN, Role.SUPER_ADMIN)
@@ -33,81 +54,57 @@ import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Get('me')
   getMe(@CurrentUser() user: AuthUser) {
     return this.usersService.getMe(user);
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @Post('me/delete-otp')
+  requestDeleteMeOtp(
+    @CurrentUser() user: AuthUser,
+    @Body() body?: { mobile?: string },
+  ) {
+    return this.usersService.requestDeleteMeOtp(user, body?.mobile);
+  }
+
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Delete('me')
-  deleteMe(@CurrentUser() user: AuthUser) {
-    return this.usersService.deleteMe(user);
+  deleteMe(
+    @CurrentUser() user: AuthUser,
+    @Body() body?: { otp?: string; firebaseIdToken?: string },
+    @Query('otp') queryOtp?: string,
+    @Headers('x-delete-otp') headerOtp?: string,
+  ) {
+    return this.usersService.deleteMe(user, {
+      otp: body?.otp || queryOtp || headerOtp,
+      firebaseIdToken: body?.firebaseIdToken,
+    });
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Post('me/delete')
-  deleteMePost(@CurrentUser() user: AuthUser) {
-    return this.usersService.deleteMe(user);
+  deleteMePost(
+    @CurrentUser() user: AuthUser,
+    @Body() body?: { otp?: string; firebaseIdToken?: string },
+    @Query('otp') queryOtp?: string,
+    @Headers('x-delete-otp') headerOtp?: string,
+  ) {
+    return this.usersService.deleteMe(user, {
+      otp: body?.otp || queryOtp || headerOtp,
+      firebaseIdToken: body?.firebaseIdToken,
+    });
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Get('me/invite-link')
   getMyInviteLink(@CurrentUser() user: AuthUser) {
     return this.usersService.getMyInviteLink(user);
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Get('me/referrals')
   getMyReferrals(@CurrentUser() user: AuthUser) {
     return this.usersService.getMyReferrals(user);
@@ -125,49 +122,19 @@ export class UsersController {
     return this.usersService.becomeGardener(user);
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Patch('me/address')
   updateMyAddress(@CurrentUser() user: AuthUser, @Body() dto: UpdateMyAddressDto) {
     return this.usersService.updateMyAddress(user, dto);
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Get('me/profile-status')
   getMyProfileStatus(@CurrentUser() user: AuthUser) {
     return this.usersService.getFarmerProfileStatus(user);
   }
 
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Patch('me/profile')
   updateMyProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateFarmerProfileDto) {
     return this.usersService.updateFarmerProfile(user, dto);
@@ -289,6 +256,12 @@ export class UsersController {
     return this.usersService.createManager(dto);
   }
 
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Post('accountants')
+  createAccountant(@Body() dto: CreateStaffDto) {
+    return this.usersService.createAccountant(dto);
+  }
+
   @Roles(Role.SUPER_ADMIN)
   @Patch(':id/admin-staff-permissions')
   updateAdminStaffPermissions(@Param('id') id: string, @Body() dto: UpdateAdminStaffPermissionsDto) {
@@ -382,6 +355,73 @@ export class UsersController {
     return this.usersService.deleteSupervisor(user, id);
   }
 
+  /** Admin: List Partner self-signup applications */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('partner-applications')
+  listPartnerApplications(@Query('status') status?: string) {
+    return this.usersService.listPartnerApplications(status);
+  }
+
+  /** Admin: Approve a Partner application (mandatory Admin Step-Up 2FA OTP) */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('partner-applications/:id/approve')
+  approvePartnerApplication(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body?: { adminConfirmationOtp?: string },
+    @Query('adminConfirmationOtp') queryOtp?: string,
+    @Headers('x-admin-otp') headerOtp?: string,
+  ) {
+    return this.usersService.approvePartnerApplication(
+      user,
+      id,
+      body?.adminConfirmationOtp || queryOtp || headerOtp,
+    );
+  }
+
+  /** Admin: Reject a Partner application with reason for applicant editing */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('partner-applications/:id/reject')
+  rejectPartnerApplication(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.usersService.rejectPartnerApplication(user, id, reason);
+  }
+
+  /** Admin/Audit: List verified-OTP first-time signup attempts (strictly post-OTP confirmation) */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.MANAGER, Role.ACCOUNTANT)
+  @Get('verified-leads')
+  listVerifiedSignupLeads(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.usersService.listVerifiedSignupLeads(status, search);
+  }
+
+  /** Admin: Update call/follow-up notes or dismiss/restore a verified OTP signup lead */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.MANAGER)
+  @Patch('verified-leads/:id/notes')
+  updateVerifiedSignupLeadNotes(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateVerifiedLeadNotesDto,
+  ) {
+    return this.usersService.updateVerifiedSignupLeadNotes(user, id, dto);
+  }
+
+  /** Admin: Convert an OTP-confirmed first-time signup lead directly into a full active user account */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('verified-leads/:id/convert')
+  convertVerifiedLeadToUser(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: ConvertVerifiedLeadDto,
+  ) {
+    return this.usersService.convertVerifiedLeadToUser(user, id, dto);
+  }
+
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get(':id/detail')
   getDetail(@CurrentUser() user: AuthUser, @Param('id') id: string) {
@@ -412,8 +452,14 @@ export class UsersController {
 
   @Roles(Role.SUPER_ADMIN)
   @Delete(':id')
-  deleteUserByAdmin(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.usersService.deleteUserByAdmin(user, id);
+  deleteUserByAdmin(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body?: { adminConfirmationOtp?: string },
+    @Query('adminConfirmationOtp') queryOtp?: string,
+    @Headers('x-admin-otp') headerOtp?: string,
+  ) {
+    return this.usersService.deleteUserByAdmin(user, id, body?.adminConfirmationOtp || queryOtp || headerOtp);
   }
 
   /** Admin: Assign Staff Role & Staff ID */
@@ -421,25 +467,13 @@ export class UsersController {
   @Post('assign-staff-role')
   assignStaffRole(
     @CurrentUser() user: AuthUser,
-    @Body() dto: { userId: string; role: Role; staffId?: string; advisorType?: 'FARM' | 'GARDEN' },
+    @Body() dto: AssignStaffRoleDto,
   ) {
     return this.usersService.assignStaffRole(user, dto);
   }
 
   /** Any logged-in user: Submit profile completion */
-  @Roles(
-    Role.CUSTOMER,
-    Role.FARMER,
-    Role.GARDENER,
-    Role.ADVISOR,
-    Role.AGENT,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OPERATOR,
-    Role.TECHNICAL_TRAINER,
-    Role.SUPERVISOR,
-    Role.LABOUR,
-  )
+  @Roles(...ALL_AUTHENTICATED_ROLES)
   @Post('submit-profile-completion')
   submitProfileCompletion(@CurrentUser() user: AuthUser, @Body() body: any) {
     return this.usersService.submitProfileCompletion(user, body);

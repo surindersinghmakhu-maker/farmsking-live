@@ -13,6 +13,7 @@ exports.SubscriptionGuard = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../modules/prisma/prisma.service");
+const effective_farmer_util_1 = require("../utils/effective-farmer.util");
 let SubscriptionGuard = class SubscriptionGuard {
     constructor(prisma) {
         this.prisma = prisma;
@@ -23,8 +24,9 @@ let SubscriptionGuard = class SubscriptionGuard {
         if (!user) {
             return false;
         }
+        const effectiveFarmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         const activeSubscription = await this.prisma.advisorSubscription.findFirst({
-            where: { farmerId: user.id, status: client_1.SubscriptionPlanStatus.ACTIVE, deletedAt: null },
+            where: { farmerId: effectiveFarmerId, status: client_1.SubscriptionPlanStatus.ACTIVE, deletedAt: null },
         });
         if (!activeSubscription) {
             throw new common_1.ForbiddenException({

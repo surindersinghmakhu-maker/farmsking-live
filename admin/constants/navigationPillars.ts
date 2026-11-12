@@ -233,6 +233,23 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         params: { tab: 'PARTNERS' },
       },
       {
+        id: 'ca-accounts',
+        title: 'CA Accounts, GST & TDS',
+        shortTitle: 'CA & Tax',
+        description: 'GSTR-8 TCS 0.5%, Income Tax TDS 194-O/194-H/194-J & A4 reports',
+        icon: 'document-text',
+        path: '/admin/(tabs)/super-accounts',
+        params: { section: 'CA_ACCOUNTS' },
+      },
+      {
+        id: 'advocate-legal',
+        title: 'Advocate & Legal Desk',
+        shortTitle: 'Advocate Legal',
+        description: 'MCA/ROC filings, Payment Gateway readiness & statutory notices',
+        icon: 'shield-checkmark',
+        path: '/admin/(tabs)/legal-compliance',
+      },
+      {
         id: 'coupons',
         title: 'Coupons & VIP Passes',
         shortTitle: 'Coupons',
@@ -382,6 +399,31 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
 ];
 
 /**
+ * Returns domain pillars scoped by Admin role (Accountants only inspect Executive Audit, Finance/CA & Seller Payouts/KYC).
+ */
+export function getPillarsForRole(role?: string | null): NavigationPillar[] {
+  if (role !== 'ACCOUNTANT') return ADMIN_PILLARS;
+  return ADMIN_PILLARS.map((pillar) => {
+    if (pillar.id === 'FINANCE') return pillar;
+    if (pillar.id === 'EXECUTIVE') {
+      return {
+        ...pillar,
+        subTabs: pillar.subTabs.filter((t) => ['overview', 'audit-log', 'admin-profile'].includes(t.id)),
+      };
+    }
+    if (pillar.id === 'COMMERCE') {
+      return {
+        ...pillar,
+        title: 'Seller Audit',
+        shortTitle: 'Sellers',
+        subTabs: pillar.subTabs.filter((t) => ['seller-payouts', 'seller-directory', 'orders'].includes(t.id)),
+      };
+    }
+    return null;
+  }).filter(Boolean) as NavigationPillar[];
+}
+
+/**
  * Normalizes legacy pillar IDs into the modern master hub IDs
  */
 export function normalizePillarId(pillarId?: string): string {
@@ -508,6 +550,7 @@ export function detectPillarFromRoute(
   // 2. Finance & Treasury routes (strictly money, wallets, payouts, and coupons)
   if (
     pathname.includes('super-accounts') ||
+    pathname.includes('legal-compliance') ||
     pathname.includes('super-coupons') ||
     pathname.endsWith('/coupons') ||
     pathname.includes('memberships') ||

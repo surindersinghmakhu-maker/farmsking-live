@@ -283,14 +283,25 @@ export class TrainersService {
       throw new NotFoundException('Trainer user account not found.');
     }
 
-    // Grant TECHNICAL_TRAINER role to user if not already present
+    // Technical Trainer is strictly a dedicated single-role Admin Panel staff account
+    const currentRoles = trainer.roles || [];
+    const deactivated = trainer.deactivatedRoles || [];
+    const activeNonTrainer = [trainer.role, ...currentRoles]
+      .filter((r) => r && !deactivated.includes(r))
+      .filter((r) => r !== Role.TECHNICAL_TRAINER);
+    if (activeNonTrainer.length > 0 && trainer.role !== Role.TECHNICAL_TRAINER) {
+      throw new BadRequestException(
+        `Technical Trainer is a dedicated single-role Admin Staff role. Account already holds (${activeNonTrainer.join(', ')}) and must use a dedicated mobile number.`,
+      );
+    }
+
     if (trainer.role !== Role.TECHNICAL_TRAINER) {
-      const currentRoles = trainer.roles || [];
       await this.prisma.user.update({
         where: { id: trainerId },
         data: {
           role: Role.TECHNICAL_TRAINER,
-          roles: Array.from(new Set([...currentRoles, Role.TECHNICAL_TRAINER])),
+          roles: [Role.TECHNICAL_TRAINER],
+          deactivatedRoles: [],
         },
       });
     }

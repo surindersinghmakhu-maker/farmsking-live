@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Party, LabourWorker } from '@/src/types/api';
+import { apiClient } from '@/src/api/client';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -83,29 +84,56 @@ export function PartyPicker({
   const [isVerified, setIsVerified] = useState(false);
   const [kingId, setKingId] = useState<string | null>(null);
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
-  const handleSendOtp = () => {
-    const cleaned = newMobile.trim().replace(/\D/g, '');
+  const handleSendOtp = async () => {
+    const cleaned = newMobile.trim().replace(/\D/g, '').slice(-10);
     if (cleaned.length < 10) {
-      setOtpNotice('⚠️ Please enter a 10-digit mobile number.');
+      setOtpNotice('Please enter a 10-digit mobile number.');
       return;
     }
     tap();
-    setShowOtpInput(true);
-    setOtpNotice(`📲 OTP sent to ${cleaned}. (Enter 1234 to confirm)`);
+    setIsSendingOtp(true);
+    try {
+      const res = await apiClient.post('/auth/party-otp/send', { mobile: cleaned });
+      setShowOtpInput(true);
+      const devHint = res.data?.devOtp ? ` (Local dev code: ${res.data.devOtp})` : '';
+      setOtpNotice((res.data?.message || `OTP sent to ${cleaned}.`) + devHint);
+    } catch (err: any) {
+      setOtpNotice(err?.response?.data?.message || 'Failed to send verification OTP.');
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
-  const handleConfirmOtp = () => {
-    if (!otpCode.trim()) {
-      setOtpNotice('⚠️ Please enter the OTP code.');
+  const handleConfirmOtp = async () => {
+    const cleaned = newMobile.trim().replace(/\D/g, '').slice(-10);
+    const code = otpCode.trim();
+    if (code.length < 4) {
+      setOtpNotice('Please enter the 4-digit OTP code.');
       return;
     }
     tap();
-    const generatedKingId = `FK-${Math.floor(100000 + Math.random() * 900000)}`;
-    setIsVerified(true);
-    setKingId(generatedKingId);
-    setShowOtpInput(false);
-    setOtpNotice(null);
+    setIsVerifyingOtp(true);
+    try {
+      const res = await apiClient.post('/auth/party-otp/verify', {
+        mobile: cleaned,
+        otp: code,
+      });
+      setIsVerified(true);
+      setKingId(res.data?.kingId || null);
+      setShowOtpInput(false);
+      setOtpNotice(
+        res.data?.kingId
+          ? `Mobile verified! Linked FarmsKing King ID: ${res.data.kingId}`
+          : 'Mobile number verified successfully!',
+      );
+    } catch (err: any) {
+      setOtpNotice(err?.response?.data?.message || 'Invalid or expired OTP code.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
   };
 
   // Sync text when selectedParty changes
@@ -416,7 +444,7 @@ export function PartyPicker({
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'center' }}>
                 <TextInput
                   style={[styles.input, { flex: 1, height: 38 }]}
-                  placeholder="Enter 4-digit OTP (1234)"
+                  placeholder="Enter 4-digit OTP"
                   placeholderTextColor="#94a3b8"
                   keyboardType="numeric"
                   maxLength={4}
@@ -425,9 +453,12 @@ export function PartyPicker({
                 />
                 <TouchableOpacity
                   style={{ backgroundColor: '#16a34a', paddingHorizontal: 12, height: 38, justifyContent: 'center', borderRadius: RADIUS.md }}
+                  disabled={isVerifyingOtp}
                   onPress={handleConfirmOtp}
                 >
-                  <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>Confirm OTP</Text>
+                  <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>
+                    {isVerifyingOtp ? 'Checking...' : 'Confirm OTP'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : null}

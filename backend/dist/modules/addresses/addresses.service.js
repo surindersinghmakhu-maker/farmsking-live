@@ -105,7 +105,17 @@ let AddressesService = class AddressesService {
         }
         return this.prisma.customerAddress.update({
             where: { id },
-            data: dto,
+            data: {
+                ...(dto.tag !== undefined ? { tag: dto.tag } : {}),
+                ...(dto.name !== undefined ? { name: dto.name } : {}),
+                ...(dto.line !== undefined ? { line: dto.line } : {}),
+                ...(dto.mobile !== undefined ? { mobile: dto.mobile } : {}),
+                ...(dto.postOffice !== undefined ? { postOffice: dto.postOffice } : {}),
+                ...(dto.district !== undefined ? { district: dto.district } : {}),
+                ...(dto.state !== undefined ? { state: dto.state } : {}),
+                ...(dto.pincode !== undefined ? { pincode: dto.pincode } : {}),
+                ...(dto.isDefault !== undefined ? { isDefault: dto.isDefault } : {}),
+            },
         });
     }
 };

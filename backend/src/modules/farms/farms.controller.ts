@@ -11,14 +11,9 @@ import { UpdateFarmDto } from './dto/update-farm.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(
-  Role.CUSTOMER,
   Role.FARMER,
-  Role.GARDENER,
-  Role.ADVISOR,
-  Role.AGENT,
   Role.ADMIN,
   Role.SUPER_ADMIN,
-  Role.OPERATOR,
   Role.SUPERVISOR,
 )
 @Controller('farms')

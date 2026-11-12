@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CompleteOtpRegistrationDto = exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
+exports.VerifyMobileOtpDto = exports.SendMobileOtpDto = exports.CompleteOtpRegistrationDto = exports.SendMobileLinkOtpDto = exports.SendEmailOtpDto = exports.SendWhatsAppOtpDto = exports.VerifyLoginOtpDto = exports.SendLoginOtpDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class SendLoginOtpDto {
@@ -55,12 +55,14 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: '10-digit mobile number' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+?\d{10,15}$/, { message: 'Valid mobile number is required.' }),
     __metadata("design:type", String)
 ], SendWhatsAppOtpDto.prototype, "mobile", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'OTP code' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' }),
     __metadata("design:type", String)
 ], SendWhatsAppOtpDto.prototype, "otp", void 0);
 class SendEmailOtpDto {
@@ -69,13 +71,14 @@ exports.SendEmailOtpDto = SendEmailOtpDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Email address' }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEmail)({}, { message: 'Valid email address is required.' }),
     __metadata("design:type", String)
 ], SendEmailOtpDto.prototype, "email", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'OTP code' }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' }),
     __metadata("design:type", String)
 ], SendEmailOtpDto.prototype, "otp", void 0);
 class SendMobileLinkOtpDto {
@@ -114,4 +117,31 @@ __decorate([
     (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "portal", void 0);
+class SendMobileOtpDto {
+}
+exports.SendMobileOtpDto = SendMobileOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit Indian mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+?\d{10,15}$/, { message: 'Valid 10-digit mobile number is required.' }),
+    __metadata("design:type", String)
+], SendMobileOtpDto.prototype, "mobile", void 0);
+class VerifyMobileOtpDto {
+}
+exports.VerifyMobileOtpDto = VerifyMobileOtpDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '10-digit Indian mobile number' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\+?\d{10,15}$/, { message: 'Valid 10-digit mobile number is required.' }),
+    __metadata("design:type", String)
+], VerifyMobileOtpDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: '4 or 6 digit OTP code' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' }),
+    __metadata("design:type", String)
+], VerifyMobileOtpDto.prototype, "otp", void 0);
 //# sourceMappingURL=otp.dto.js.map

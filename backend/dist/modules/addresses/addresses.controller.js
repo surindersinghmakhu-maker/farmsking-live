@@ -19,6 +19,7 @@ const roles_guard_1 = require("../../common/guards/roles.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const addresses_service_1 = require("./addresses.service");
 const create_address_dto_1 = require("./dto/create-address.dto");
+const update_address_dto_1 = require("./dto/update-address.dto");
 let AddressesController = class AddressesController {
     constructor(addressesService) {
         this.addressesService = addressesService;
@@ -61,7 +62,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:paramtypes", [Object, String, update_address_dto_1.UpdateAddressDto]),
     __metadata("design:returntype", void 0)
 ], AddressesController.prototype, "update", null);
 __decorate([

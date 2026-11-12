@@ -180,7 +180,7 @@ export const AdminDashboardView: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionBtnPrimary}
                 activeOpacity={0.85}
-                onPress={() => router.push('/(tabs)/super-crop-edit' as never)}
+                onPress={() => router.push('/admin/(tabs)/super-crop-edit' as never)}
               >
                 <Ionicons name="pencil" size={15} color="#020905" />
                 <Text style={styles.actionBtnPrimaryText}>Admin Crop Editor</Text>
@@ -193,7 +193,7 @@ export const AdminDashboardView: React.FC = () => {
                   isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderColor: 'rgba(34, 197, 94, 0.4)' },
                 ]}
                 activeOpacity={0.85}
-                onPress={() => router.push('/(tabs)/farm' as never)}
+                onPress={() => router.push('/admin/(tabs)/farm' as never)}
               >
                 <Ionicons name="leaf-outline" size={15} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald} />
                 <Text style={[styles.actionBtnSecondaryText, isLight && { color: '#16a34a' }, isMedium && { color: '#22c55e' }]}>View All Crops</Text>
@@ -266,7 +266,7 @@ export const AdminDashboardView: React.FC = () => {
           >
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Orders</Text>
-              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/admin-orders' as never)}>
+              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-orders' as never)}>
                 <Text style={[styles.viewAllText, isLight && { color: '#16a34a' }]}>View All</Text>
               </TouchableOpacity>
             </View>
@@ -298,10 +298,10 @@ export const AdminDashboardView: React.FC = () => {
             <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 12 }]}>Platform Hub</Text>
             <View style={styles.toolsGrid}>
               {[
-                { label: 'Users', icon: 'people-outline', color: isLight ? '#16a34a' : THEME_4D.neonEmerald, path: '/(tabs)/super-users' },
-                { label: 'Products', icon: 'cube-outline', color: isLight ? '#0284c7' : THEME_4D.cyberCyan, path: '/(tabs)/admin-products' },
-                { label: 'Orders', icon: 'receipt-outline', color: isLight ? '#d97706' : THEME_4D.cyberGold, path: '/(tabs)/admin-orders' },
-                { label: 'Reports', icon: 'bar-chart-outline', color: '#8b5cf6', path: '/(tabs)/super-audit-log' },
+                { label: 'Users', icon: 'people-outline', color: isLight ? '#16a34a' : THEME_4D.neonEmerald, path: '/admin/(tabs)/super-users' },
+                { label: 'Products', icon: 'cube-outline', color: isLight ? '#0284c7' : THEME_4D.cyberCyan, path: '/admin/(tabs)/admin-products' },
+                { label: 'Orders', icon: 'receipt-outline', color: isLight ? '#d97706' : THEME_4D.cyberGold, path: '/admin/(tabs)/admin-orders' },
+                { label: 'Reports', icon: 'bar-chart-outline', color: '#8b5cf6', path: '/admin/(tabs)/super-audit-log' },
               ].map((t) => (
                 <TouchableOpacity
                   key={t.label}

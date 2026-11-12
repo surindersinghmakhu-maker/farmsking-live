@@ -7,6 +7,8 @@ export interface UserSession {
 }
 export declare class UserSessionService {
     private readonly userSessions;
+    private readonly revokedSessionIds;
+    private readonly revokedBeforeEpochSec;
     createSession(userId: string, deviceInfo?: string): {
         sessionId: string;
         totalActiveSessions: number;
@@ -14,11 +16,12 @@ export declare class UserSessionService {
         warningMessage?: string;
         evictedOldest: boolean;
     };
-    isValidSession(userId: string, sessionId?: string): boolean;
+    isValidSession(userId: string, sessionId?: string, tokenIatSec?: number): boolean;
     touchSession(userId: string, sessionId?: string): void;
     logoutOtherSessions(userId: string, currentSessionId: string): {
         loggedOutCount: number;
     };
     logoutSession(userId: string, sessionId: string): void;
+    clearAllSessions(userId: string): void;
     getActiveSessions(userId: string): UserSession[];
 }

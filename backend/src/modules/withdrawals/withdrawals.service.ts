@@ -6,6 +6,7 @@ import { AppSettingsService } from '../app-settings/app-settings.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { ApproveWithdrawalDto } from './dto/approve-withdrawal.dto';
+import { hasActiveRole } from '../../common/utils/auth-user.util';
 import {
   ADVISOR_PROFILE_FIELDS,
   BUSINESS_PARTNER_PROFILE_FIELDS,
@@ -38,8 +39,8 @@ export class WithdrawalsService {
 
   /** Blocks withdrawal until the caller's payout profile is complete. */
   private async assertPayoutProfileComplete(user: AuthUser) {
-    const isAdvisor = user.role === Role.ADVISOR;
-    const isPartner = user.role === Role.AGENT;
+    const isAdvisor = hasActiveRole(user, Role.ADVISOR);
+    const isPartner = hasActiveRole(user, Role.AGENT);
 
     if (isAdvisor || isPartner) {
       const fields = isAdvisor ? ADVISOR_PROFILE_FIELDS : BUSINESS_PARTNER_PROFILE_FIELDS;
@@ -169,7 +170,7 @@ export class WithdrawalsService {
     return request;
   }
 
-  /** Admin approves — may edit the payout amount — which debits the partner's wallet by that amount. */
+  /** Admin approves — may edit the payout amount — which debits the partner's wallet atomically. */
   async approve(admin: AuthUser, id: string, dto: ApproveWithdrawalDto) {
     const request = await this.findOneOrThrow(id);
     if (request.status !== WithdrawalStatus.PENDING) {
@@ -177,35 +178,55 @@ export class WithdrawalsService {
     }
 
     const approvedAmount = dto.approvedAmount ?? Number(request.requestedAmount);
-    const balance = await this.walletService.getBalance(request.businessPartnerId);
-    if (approvedAmount > balance) {
-      throw new BadRequestException(`Approved amount exceeds the partner's wallet balance of ₹${balance.toFixed(2)}.`);
-    }
-
-    // Recalculate charges on approved amount
     const { platformFee, gstAmount, netPayable } = await this.calcWithdrawalCharges(approvedAmount);
 
-    const updated = await this.prisma.withdrawalRequest.update({
-      where: { id },
-      data: {
-        status: WithdrawalStatus.APPROVED,
-        approvedAmount,
-        platformFeeAmount: platformFee,
-        gstAmount: gstAmount,
-        netPayableAmount: netPayable,
-        processedAt: new Date(),
-        processedById: admin.id,
-        notes: dto.notes,
-      },
-    });
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT "id" FROM "users" WHERE "id" = ${request.businessPartnerId} FOR UPDATE`;
 
-    // Debit full approved amount from wallet (net payout happens externally via UPI)
-    await this.walletService.debit(
-      request.businessPartnerId,
-      approvedAmount,
-      `Withdrawal payout approved (Platform fee: ₹${platformFee} + GST: ₹${gstAmount} | Net: ₹${netPayable})`,
-      { withdrawalRequestId: id },
-    );
+      const [credits, debits] = await Promise.all([
+        tx.walletTransaction.aggregate({
+          where: { userId: request.businessPartnerId, type: 'CREDIT' },
+          _sum: { amount: true },
+        }),
+        tx.walletTransaction.aggregate({
+          where: { userId: request.businessPartnerId, type: 'DEBIT' },
+          _sum: { amount: true },
+        }),
+      ]);
+      const balance = Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
+      if (approvedAmount > balance) {
+        throw new BadRequestException(`Approved amount exceeds the partner's wallet balance of ₹${balance.toFixed(2)}.`);
+      }
+
+      const claimed = await tx.withdrawalRequest.updateMany({
+        where: { id, status: WithdrawalStatus.PENDING },
+        data: {
+          status: WithdrawalStatus.APPROVED,
+          approvedAmount,
+          platformFeeAmount: platformFee,
+          gstAmount: gstAmount,
+          netPayableAmount: netPayable,
+          processedAt: new Date(),
+          processedById: admin.id,
+          notes: dto.notes,
+        },
+      });
+      if (claimed.count === 0) {
+        throw new ConflictException('This withdrawal request has already been processed.');
+      }
+
+      await tx.walletTransaction.create({
+        data: {
+          userId: request.businessPartnerId,
+          type: 'DEBIT',
+          amount: approvedAmount,
+          reason: `Withdrawal payout approved (Platform fee: ₹${platformFee} + GST: ₹${gstAmount} | Net: ₹${netPayable})`,
+          withdrawalRequestId: id,
+        },
+      });
+
+      return tx.withdrawalRequest.findUniqueOrThrow({ where: { id } });
+    });
 
     return { ...updated, platformFeeAmount: platformFee, gstAmount, netPayableAmount: netPayable };
   }

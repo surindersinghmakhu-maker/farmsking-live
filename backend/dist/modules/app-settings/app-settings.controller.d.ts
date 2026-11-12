@@ -118,13 +118,14 @@ export declare class AppSettingsController {
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     requestAdminActionOtp(user: AuthUser): Promise<{
         success: boolean;
+        deliveredVia: string[];
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
     }>;
-    updateIntegrations(user: AuthUser, payload: any): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
+    updateIntegrations(user: AuthUser, payload: any, headerOtp?: string): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     getServiceConfig(): Promise<any>;
-    updateServiceConfig(user: AuthUser, body: any): Promise<{
+    updateServiceConfig(user: AuthUser, body: any, headerOtp?: string): Promise<{
         activeProviders: any;
         fieldValues: any;
         success: boolean;

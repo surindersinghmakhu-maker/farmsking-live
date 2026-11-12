@@ -224,23 +224,23 @@ export const AdvisorDashboardView: React.FC = () => {
             </View>
 
             <View style={styles.rosterMetricsGroup}>
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.total === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.total}</Text>
                 <Text style={styles.rosterStatLbl}>Total</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.active === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.active}</Text>
                 <Text style={styles.rosterStatLbl}>Active</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.inactive === 0 ? '#60a5fa' : '#fca5a5' }]}>{stats.inactive}</Text>
                 <Text style={styles.rosterStatLbl}>Inactive</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.rosterViewAllBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
+            <TouchableOpacity style={styles.rosterViewAllBtn} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
               <Ionicons name="chevron-forward" size={13} color="#ffffff" />
             </TouchableOpacity>
           </LinearGradient>
@@ -500,7 +500,7 @@ export const AdvisorDashboardView: React.FC = () => {
                                     }}
                                     activeOpacity={0.85}
                                     onPress={() => router.push({
-                                      pathname: '/(tabs)/satellite-map',
+                                      pathname: '/admin/(tabs)/satellite-map',
                                       params: {
                                         cropId: crop.id,
                                         cropName: crop.cropName,
@@ -820,7 +820,7 @@ export const AdvisorDashboardView: React.FC = () => {
                           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
                             <TouchableOpacity
                               style={[styles.acceptCropBtn, { backgroundColor: theme.primary, paddingHorizontal: 14, height: 34 }]}
-                              onPress={() => router.push('/(tabs)/schedule' as never)}
+                              onPress={() => router.push('/admin/(tabs)/schedule' as never)}
                             >
                               <Ionicons name="calendar-outline" size={15} color="#ffffff" />
                               <Text style={styles.acceptCropBtnText}>Assign / Update Schedule 📅</Text>
@@ -1330,7 +1330,7 @@ export const AdvisorDashboardView: React.FC = () => {
                       activeOpacity={0.85}
                       onPress={() => {
                         setSelectedReviewCrop(null);
-                        router.push('/(tabs)/satellite-map' as any);
+                        router.push('/admin/(tabs)/satellite-map' as any);
                       }}
                     >
                       <Ionicons name="planet-outline" size={16} color="#ffffff" />

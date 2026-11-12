@@ -11,7 +11,7 @@ import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings
 import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from '@/components/AdminMoreModals';
-import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+import { getPillarsForRole, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const getCleanMobile = (mobile?: string | null) => {
@@ -57,9 +57,10 @@ export default function AdminMoreScreen() {
   };
 
   const filteredPillars = useMemo(() => {
-    if (!searchQuery.trim()) return ADMIN_PILLARS;
+    const rolePillars = getPillarsForRole(role);
+    if (!searchQuery.trim()) return rolePillars;
     const q = searchQuery.toLowerCase();
-    return ADMIN_PILLARS.map((pillar) => {
+    return rolePillars.map((pillar) => {
       const matchingTabs = pillar.subTabs.filter(
         (tab) =>
           tab.title.toLowerCase().includes(q) ||
@@ -73,7 +74,7 @@ export default function AdminMoreScreen() {
       }
       return null;
     }).filter(Boolean) as NavigationPillar[];
-  }, [searchQuery]);
+  }, [searchQuery, role]);
 
   return (
     <>

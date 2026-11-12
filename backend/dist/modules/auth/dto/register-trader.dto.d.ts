@@ -7,4 +7,9 @@ export declare class RegisterTraderDto {
     district?: string;
     state?: string;
     firebaseIdToken?: string;
+    gstin?: string;
+    panNumber?: string;
+    mandiLicenseNo?: string;
+    aadhaarLast4?: string;
+    termsAccepted?: boolean;
 }

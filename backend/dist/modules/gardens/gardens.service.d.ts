@@ -3,6 +3,7 @@ import { GardenerPlansService } from '../gardener-plans/gardener-plans.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateGardenDto } from './dto/create-garden.dto';
 import { CreatePlantDto } from './dto/create-plant.dto';
+import { CreateGardenExpenseDto } from './dto/create-garden-expense.dto';
 export declare class GardensService {
     private readonly prisma;
     private readonly gardenerPlansService;
@@ -86,7 +87,7 @@ export declare class GardensService {
         plantedDate: Date | null;
         healthNotes: string | null;
     }[]>;
-    addExpense(user: AuthUser, dto: any): import(".prisma/client").Prisma.Prisma__GardenExpenseClient<{
+    addExpense(user: AuthUser, dto: CreateGardenExpenseDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -98,7 +99,7 @@ export declare class GardensService {
         gardenId: string;
         plantId: string | null;
         categoryName: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
+    }>;
     listExpenses(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         garden: {
             id: string;

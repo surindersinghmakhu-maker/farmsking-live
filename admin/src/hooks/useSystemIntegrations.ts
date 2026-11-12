@@ -4,6 +4,7 @@ import {
   updateSystemIntegrations,
   SystemIntegrationsConfig,
 } from '@/src/api/appSettings.api';
+import { executeWithAdminStepUpOtp } from '@/components/AdminStepUpProvider';
 
 export const SYSTEM_INTEGRATIONS_QUERY_KEY = ['system-integrations'];
 
@@ -18,7 +19,21 @@ export function useSystemIntegrations() {
 export function useUpdateSystemIntegrations() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: Partial<SystemIntegrationsConfig>) => updateSystemIntegrations(payload),
+    mutationFn: async (payload: Partial<SystemIntegrationsConfig> & { adminConfirmationOtp?: string }) => {
+      if (payload.adminConfirmationOtp) {
+        return updateSystemIntegrations(payload);
+      }
+      return executeWithAdminStepUpOtp({
+        title: 'Authorize System Configuration Update',
+        description:
+          'Enter the 6-digit Admin Step-Up 2FA confirmation code to save platform integrations and master settings.',
+        execute: (adminConfirmationOtp) =>
+          updateSystemIntegrations({
+            ...payload,
+            adminConfirmationOtp,
+          }),
+      });
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(SYSTEM_INTEGRATIONS_QUERY_KEY, data);
       queryClient.invalidateQueries({ queryKey: ['app-settings'] });

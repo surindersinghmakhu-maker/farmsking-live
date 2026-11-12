@@ -14,6 +14,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
 const swagger_1 = require("@nestjs/swagger");
 const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
@@ -24,6 +26,7 @@ const google_login_dto_1 = require("./dto/google-login.dto");
 const firebase_login_dto_1 = require("./dto/firebase-login.dto");
 const link_google_dto_1 = require("./dto/link-google.dto");
 const otp_dto_1 = require("./dto/otp.dto");
+const partner_apply_dto_1 = require("./dto/partner-apply.dto");
 const forgot_password_start_dto_1 = require("./dto/forgot-password-start.dto");
 const forgot_password_verify_dto_1 = require("./dto/forgot-password-verify.dto");
 const forgot_password_reset_dto_1 = require("./dto/forgot-password-reset.dto");
@@ -36,11 +39,52 @@ let AuthController = class AuthController {
     sendWhatsAppOtp(body) {
         return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
     }
+    sendRegisterOtp(body) {
+        return this.authService.sendRegisterOtp(body.mobile);
+    }
+    extractClientMeta(req) {
+        if (!req)
+            return {};
+        const forwarded = req.headers?.['x-forwarded-for'];
+        const rawIp = Array.isArray(forwarded)
+            ? forwarded[0]
+            : typeof forwarded === 'string'
+                ? forwarded.split(',')[0]
+                : req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress;
+        const ipAddress = rawIp ? String(rawIp).trim().slice(0, 64) : undefined;
+        const rawUa = req.headers?.['user-agent'];
+        const userAgent = rawUa ? String(rawUa).trim().slice(0, 255) : undefined;
+        return { ipAddress, userAgent };
+    }
+    verifyRegisterOtp(body, req) {
+        return this.authService.verifyRegisterOtp(body.mobile, body.otp, this.extractClientMeta(req));
+    }
+    sendPartyOtp(user, body) {
+        return this.authService.sendPartyOtp(user.id, body.mobile);
+    }
+    verifyPartyOtp(user, body) {
+        return this.authService.verifyPartyOtp(user.id, body.mobile, body.otp);
+    }
+    sendPartnerSignupOtp(body) {
+        return this.authService.sendPartnerSignupOtp(body.mobile);
+    }
+    verifyPartnerSignupOtp(body, req) {
+        return this.authService.verifyPartnerSignupOtp(body.mobile, body.otp, this.extractClientMeta(req));
+    }
+    applyForPartnerRole(dto) {
+        return this.authService.applyForPartnerRole(dto);
+    }
+    uploadPartnerKycDocument(partnerUploadToken, file) {
+        if (!file) {
+            throw new common_1.BadRequestException('Please select an image file to upload.');
+        }
+        return this.authService.uploadPartnerKycDocument(partnerUploadToken, file);
+    }
     sendLoginOtp(body) {
         return this.authService.sendLoginOtp(body.mobile, body.portal);
     }
-    verifyLoginOtp(body) {
-        return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal);
+    verifyLoginOtp(body, req) {
+        return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal, this.extractClientMeta(req));
     }
     completeOtpRegistration(body) {
         return this.authService.completeOtpRegistration(body);
@@ -51,8 +95,8 @@ let AuthController = class AuthController {
     googleLogin(dto) {
         return this.authService.googleLogin(dto);
     }
-    firebaseLogin(body) {
-        return this.authService.firebaseLogin(body.idToken, body.portal);
+    firebaseLogin(body, req) {
+        return this.authService.firebaseLogin(body.idToken, body.portal, this.extractClientMeta(req));
     }
     linkGoogleAccount(user, dto) {
         return this.authService.linkGoogleAccount(user, dto);
@@ -81,12 +125,14 @@ let AuthController = class AuthController {
     login(dto) {
         return this.authService.login(dto);
     }
+    logout(user) {
+        return this.authService.logout(user.id, user.sessionId);
+    }
     logoutOtherSessions(user) {
         return this.authService.logoutOtherSessions(user.id, user.sessionId);
     }
     verifyPassword(user, body) {
-        const identifier = user?.id || body?.mobile || '';
-        return this.authService.verifyPassword(identifier, body.password ?? '');
+        return this.authService.verifyPassword(user.id, body?.password ?? '');
     }
     forgotPasswordStart(dto) {
         return this.authService.forgotPasswordStart(dto);
@@ -103,13 +149,96 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60_000 } }),
     (0, common_1.Post)('send-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [otp_dto_1.SendWhatsAppOtpDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendWhatsAppOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('send-register-otp'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [otp_dto_1.SendMobileOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendRegisterOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('verify-register-otp'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [otp_dto_1.VerifyMobileOtpDto, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyRegisterOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('party-otp/send'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, otp_dto_1.SendMobileOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendPartyOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('party-otp/verify'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, otp_dto_1.VerifyMobileOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyPartyOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('partner-otp/send'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [otp_dto_1.SendMobileOtpDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "sendPartnerSignupOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('partner-otp/verify'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [otp_dto_1.VerifyMobileOtpDto, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyPartnerSignupOtp", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
+    (0, common_1.Post)('partner-apply'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [partner_apply_dto_1.PartnerApplyDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "applyForPartnerRole", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 25, ttl: 60_000 } }),
+    (0, common_1.Post)('partner-upload'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
+        storage: (0, multer_1.memoryStorage)(),
+        limits: { fileSize: 10 * 1024 * 1024 },
+    })),
+    __param(0, (0, common_1.Headers)('x-partner-upload-token')),
+    __param(1, (0, common_1.UploadedFile)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "uploadPartnerKycDocument", null);
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
@@ -124,8 +253,9 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('verify-login-otp'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [otp_dto_1.VerifyLoginOtpDto]),
+    __metadata("design:paramtypes", [otp_dto_1.VerifyLoginOtpDto, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyLoginOtp", null);
 __decorate([
@@ -138,7 +268,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "completeOtpRegistration", null);
 __decorate([
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60_000 } }),
     (0, common_1.Post)('send-email-otp'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -159,8 +290,9 @@ __decorate([
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('firebase-login'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [firebase_login_dto_1.FirebaseLoginDto]),
+    __metadata("design:paramtypes", [firebase_login_dto_1.FirebaseLoginDto, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "firebaseLogin", null);
 __decorate([
@@ -259,6 +391,15 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('logout'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('logout-other-sessions'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -266,6 +407,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logoutOtherSessions", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('verify-password'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

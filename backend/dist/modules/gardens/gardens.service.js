@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const gardener_plans_service_1 = require("../gardener-plans/gardener-plans.service");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
 let GardensService = class GardensService {
     constructor(prisma, gardenerPlansService) {
         this.prisma = prisma;
@@ -23,29 +24,31 @@ let GardensService = class GardensService {
         return this.prisma.garden.create({ data: { ...dto, gardenerId: user.id } });
     }
     findAll(user) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
         return this.prisma.garden.findMany({
-            where: { ...(user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN ? {} : { gardenerId: user.id }) },
+            where: { ...(isAdmin ? {} : { gardenerId: user.id }) },
             include: { plants: true },
             orderBy: { createdAt: 'desc' },
         });
     }
     async findOneOrThrow(user, id) {
         const garden = await this.prisma.garden.findFirst({ where: { id }, include: { plants: true } });
-        if (!garden || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && garden.gardenerId !== user.id)) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!garden || (!isAdmin && garden.gardenerId !== user.id)) {
             throw new common_1.NotFoundException('Garden not found.');
         }
         return garden;
     }
     async addPlant(user, gardenId, dto) {
         const garden = await this.findOneOrThrow(user, gardenId);
-        if (user.role === client_1.Role.GARDENER) {
-            const { plan } = await this.gardenerPlansService.getEffectivePlan(user.id);
+        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.GARDENER) && !(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) && !(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN)) {
+            const { plan } = await this.gardenerPlansService.getEffectivePlan(garden.gardenerId);
             if (plan === client_1.GardenerSubscriptionPlan.FREE) {
                 const totalPlants = await this.prisma.plant.count({
-                    where: { deletedAt: null, garden: { gardenerId: user.id } },
+                    where: { deletedAt: null, garden: { gardenerId: garden.gardenerId } },
                 });
                 if (totalPlants >= gardener_plans_service_1.FREE_PLAN_MAX_PLANTS) {
-                    throw new common_1.ForbiddenException(`Free plan mein sirf ${gardener_plans_service_1.FREE_PLAN_MAX_PLANTS} plants add ho sakte hain. Adhik plants ke liye PREMIUM plan len.`);
+                    throw new common_1.ForbiddenException(`Free plan allows up to ${gardener_plans_service_1.FREE_PLAN_MAX_PLANTS} plants. Upgrade to the Premium plan to add more plants.`);
                 }
             }
         }
@@ -61,7 +64,11 @@ let GardensService = class GardensService {
     listPlants(user, gardenId) {
         return this.findOneOrThrow(user, gardenId).then(() => this.prisma.plant.findMany({ where: { gardenId, deletedAt: null }, orderBy: { createdAt: 'desc' } }));
     }
-    addExpense(user, dto) {
+    async addExpense(user, dto) {
+        if (!dto.gardenId) {
+            throw new common_1.BadRequestException('Garden ID is required.');
+        }
+        await this.findOneOrThrow(user, dto.gardenId);
         return this.prisma.gardenExpense.create({
             data: {
                 gardenId: dto.gardenId,
@@ -86,7 +93,8 @@ let GardensService = class GardensService {
     }
     async deleteExpense(user, id) {
         const expense = await this.prisma.gardenExpense.findUnique({ where: { id } });
-        if (!expense || expense.recordedById !== user.id) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!expense || (!isAdmin && expense.recordedById !== user.id)) {
             throw new common_1.NotFoundException('Expense not found.');
         }
         return this.prisma.gardenExpense.delete({ where: { id } });

@@ -35,6 +35,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { apiClient } from '@/src/api/client';
+import { executeWithAdminStepUpOtp, isStepUpCancelledError } from '@/components/AdminStepUpProvider';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -742,13 +743,25 @@ export function ServiceProvidersHub() {
         activeProvider: providerId,
         config: fieldValues[service.id] ?? {},
       };
-      await apiClient.post('/app-settings/service-config', payload);
+      await executeWithAdminStepUpOtp({
+        title: `Authorize ${service.title} Provider Change`,
+        description:
+          'Updating live payment, SMS, WhatsApp, email, AI, or logistics credentials requires Admin Step-Up 2FA verification.',
+        execute: (adminConfirmationOtp) =>
+          apiClient.post('/app-settings/service-config', {
+            ...payload,
+            adminConfirmationOtp,
+          }),
+      });
       setSavedOk((prev) => ({ ...prev, [service.id]: true }));
       setTimeout(() => setSavedOk((prev) => ({ ...prev, [service.id]: false })), 3000);
     } catch (err: any) {
+      if (isStepUpCancelledError(err)) {
+        return;
+      }
       setErrors((prev) => ({
         ...prev,
-        [service.id]: err?.response?.data?.message || 'Save failed. Check connection.',
+        [service.id]: err?.response?.data?.message || err?.message || 'Save failed. Check connection.',
       }));
     } finally {
       setSaving((prev) => ({ ...prev, [service.id]: false }));

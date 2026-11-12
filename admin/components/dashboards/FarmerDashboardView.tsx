@@ -67,7 +67,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'crown', color: '#d97706' };
+  const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'ribbon', color: '#d97706' };
 
   const isTrialActive =
     plan === 'SUPER' &&

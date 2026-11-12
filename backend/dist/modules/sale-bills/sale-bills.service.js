@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const chat_gateway_1 = require("../chat/chat.gateway");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const supervisor_permission_util_1 = require("../../common/utils/supervisor-permission.util");
 let SaleBillsService = class SaleBillsService {
     constructor(prisma, chatGateway) {
         this.prisma = prisma;
@@ -54,6 +55,7 @@ let SaleBillsService = class SaleBillsService {
         return candidate;
     }
     async create(user, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'entry');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         if (dto.billNo) {
             const existing = await this.prisma.saleBill.findFirst({
@@ -100,6 +102,7 @@ let SaleBillsService = class SaleBillsService {
         return bill;
     }
     async update(user, id, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'entry');
         const existing = await this.findOneOrThrow(user, id);
         const nowIso = new Date().toISOString();
         const timestampedItems = Array.isArray(dto.items)
@@ -137,6 +140,7 @@ let SaleBillsService = class SaleBillsService {
         return updated;
     }
     async findOneOrThrow(user, id) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         let bill = null;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -165,6 +169,7 @@ let SaleBillsService = class SaleBillsService {
         return bill;
     }
     async listMine(user) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.prisma.saleBill.findMany({
             where: { farmerId },
@@ -172,11 +177,13 @@ let SaleBillsService = class SaleBillsService {
         });
     }
     async countMine(user) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         const count = await this.prisma.saleBill.count({ where: { farmerId } });
         return { count };
     }
     async remove(user, id) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'sales', 'entry');
         const bill = await this.findOneOrThrow(user, id);
         await this.prisma.partyLedgerEntry.deleteMany({
             where: { saleBillId: bill.id },

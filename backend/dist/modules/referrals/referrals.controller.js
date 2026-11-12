@@ -14,12 +14,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReferralsController = exports.LinkReferralDto = void 0;
 const common_1 = require("@nestjs/common");
+const class_validator_1 = require("class-validator");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const referrals_service_1 = require("./referrals.service");
 class LinkReferralDto {
 }
 exports.LinkReferralDto = LinkReferralDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(3),
+    __metadata("design:type", String)
+], LinkReferralDto.prototype, "referrerKingId", void 0);
 let ReferralsController = class ReferralsController {
     constructor(referralsService) {
         this.referralsService = referralsService;

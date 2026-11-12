@@ -62,7 +62,10 @@ export class AdminChatService {
     }
 
     if (this.chatGateway?.server) {
-      this.chatGateway.server.emit('admin_chat_message', chatMsg);
+      this.chatGateway.server
+        .to(`user:${farmerId}`)
+        .to('role:ADMIN_DESK')
+        .emit('admin_chat_message', chatMsg);
     }
 
     return {
@@ -231,12 +234,10 @@ export class AdminChatService {
       { farmerId, type: 'PROBLEM_SOLVED' },
     );
 
-    // 5. Broadcast via Socket
+    // 5. Broadcast scoped to farmer & Admin Desk
     if (this.chatGateway?.server) {
-      this.chatGateway.server.to(`user:${farmerId}`).emit('admin_chat_message', chatMsg);
-      this.chatGateway.server.emit('admin_chat_message', chatMsg);
-      this.chatGateway.server.to(`user:${farmerId}`).emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
-      this.chatGateway.server.emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
+      this.chatGateway.server.to(`user:${farmerId}`).to('role:ADMIN_DESK').emit('admin_chat_message', chatMsg);
+      this.chatGateway.server.to(`user:${farmerId}`).to('role:ADMIN_DESK').emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
     }
 
     return {

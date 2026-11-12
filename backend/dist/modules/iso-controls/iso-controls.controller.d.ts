@@ -39,9 +39,9 @@ export declare class IsoControlsController {
     getAuditLogs(): Promise<{
         id: string;
         createdAt: Date;
+        action: string;
         moduleKey: string | null;
         actorId: string;
-        action: string;
         actorName: string | null;
         details: import("@prisma/client/runtime/library").JsonValue | null;
     }[]>;

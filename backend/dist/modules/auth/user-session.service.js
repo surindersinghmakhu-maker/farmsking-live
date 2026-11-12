@@ -45,6 +45,8 @@ const crypto = __importStar(require("crypto"));
 let UserSessionService = class UserSessionService {
     constructor() {
         this.userSessions = new Map();
+        this.revokedSessionIds = new Set();
+        this.revokedBeforeEpochSec = new Map();
     }
     createSession(userId, deviceInfo) {
         let sessions = this.userSessions.get(userId) || [];
@@ -59,7 +61,10 @@ let UserSessionService = class UserSessionService {
         sessions.push(newSession);
         let evictedOldest = false;
         while (sessions.length > 2) {
-            sessions.shift();
+            const evicted = sessions.shift();
+            if (evicted?.sessionId) {
+                this.revokedSessionIds.add(evicted.sessionId);
+            }
             evictedOldest = true;
         }
         this.userSessions.set(userId, sessions);
@@ -80,28 +85,29 @@ let UserSessionService = class UserSessionService {
             evictedOldest,
         };
     }
-    isValidSession(userId, sessionId) {
+    isValidSession(userId, sessionId, tokenIatSec) {
+        const revokedBefore = this.revokedBeforeEpochSec.get(userId);
+        if (revokedBefore && tokenIatSec && tokenIatSec < revokedBefore) {
+            return false;
+        }
         if (!sessionId)
             return true;
-        let sessions = this.userSessions.get(userId);
-        if (!sessions) {
-            sessions = [];
-            this.userSessions.set(userId, sessions);
+        if (this.revokedSessionIds.has(sessionId)) {
+            return false;
         }
-        const exists = sessions.some((s) => s.sessionId === sessionId);
-        if (exists) {
+        if (!this.userSessions.has(userId)) {
+            this.userSessions.set(userId, [
+                {
+                    sessionId,
+                    userId,
+                    createdAt: Date.now(),
+                    lastActiveAt: Date.now(),
+                },
+            ]);
             return true;
         }
-        if (sessions.length < 2) {
-            sessions.push({
-                sessionId,
-                userId,
-                createdAt: Date.now(),
-                lastActiveAt: Date.now(),
-            });
-            return true;
-        }
-        return false;
+        const sessions = this.userSessions.get(userId);
+        return sessions.some((s) => s.sessionId === sessionId);
     }
     touchSession(userId, sessionId) {
         if (!sessionId)
@@ -116,15 +122,31 @@ let UserSessionService = class UserSessionService {
     }
     logoutOtherSessions(userId, currentSessionId) {
         const sessions = this.userSessions.get(userId) || [];
+        for (const s of sessions) {
+            if (s.sessionId !== currentSessionId) {
+                this.revokedSessionIds.add(s.sessionId);
+            }
+        }
         const remaining = sessions.filter((s) => s.sessionId === currentSessionId);
         const count = sessions.length - remaining.length;
         this.userSessions.set(userId, remaining);
         return { loggedOutCount: count };
     }
     logoutSession(userId, sessionId) {
+        if (sessionId) {
+            this.revokedSessionIds.add(sessionId);
+        }
         const sessions = this.userSessions.get(userId) || [];
         const remaining = sessions.filter((s) => s.sessionId !== sessionId);
         this.userSessions.set(userId, remaining);
+    }
+    clearAllSessions(userId) {
+        const sessions = this.userSessions.get(userId) || [];
+        for (const s of sessions) {
+            this.revokedSessionIds.add(s.sessionId);
+        }
+        this.userSessions.set(userId, []);
+        this.revokedBeforeEpochSec.set(userId, Math.floor(Date.now() / 1000) + 1);
     }
     getActiveSessions(userId) {
         return this.userSessions.get(userId) || [];

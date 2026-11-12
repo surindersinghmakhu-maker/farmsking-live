@@ -7,6 +7,9 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ChatService } from '../chat/chat.service';
 import { ChatGateway, userRoom } from '../chat/chat.gateway';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { hasActiveRole } from '../../common/utils/auth-user.util';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
+import { assertSupervisorPermission } from '../../common/utils/supervisor-permission.util';
 import { CreateActivityScheduleDto } from './dto/create-activity-schedule.dto';
 import { UpdateActivityScheduleDto } from './dto/update-activity-schedule.dto';
 import { BulkCreateActivityScheduleDto } from './dto/bulk-create-activity-schedule.dto';
@@ -93,11 +96,16 @@ export class CropActivitySchedulesService {
   }
 
   async findAllForCropCycle(user: AuthUser, cropCycleId: string) {
-    // Ownership check: farmer must own the crop cycle, or the requester is its assigned advisor / an admin.
-    if (user.role === Role.FARMER) {
-      await this.cropsService.findOneOrThrow(user, cropCycleId);
-    } else if (user.role === Role.ADVISOR) {
-      await this.assertAdvisorAssignedToCropCycle(user.id, cropCycleId);
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
+    if (!isAdmin) {
+      if (hasActiveRole(user, Role.FARMER) || hasActiveRole(user, Role.SUPERVISOR)) {
+        await assertSupervisorPermission(this.prisma, user, 'spray', 'view');
+        await this.cropsService.findOneOrThrow(user, cropCycleId);
+      } else if (hasActiveRole(user, Role.ADVISOR)) {
+        await this.assertAdvisorAssignedToCropCycle(user.id, cropCycleId);
+      } else {
+        throw new ForbiddenException('You do not have permission to view this crop schedule.');
+      }
     }
 
     return this.prisma.cropActivitySchedule.findMany({
@@ -106,17 +114,19 @@ export class CropActivitySchedulesService {
     });
   }
 
-  findTodayForFarmer(user: AuthUser) {
+  async findTodayForFarmer(user: AuthUser) {
+    await assertSupervisorPermission(this.prisma, user, 'spray', 'view');
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
+    const ownerId = getEffectiveFarmerId(user);
 
     return this.prisma.cropActivitySchedule.findMany({
       where: {
         deletedAt: null,
         scheduledDate: { gte: startOfDay, lte: endOfDay },
-        cropCycle: { plot: { farm: { ownerId: user.id } } },
+        cropCycle: { plot: { farm: { ownerId } } },
       },
       include: { cropCycle: { select: { id: true, cropName: true } } },
       orderBy: { scheduledDate: 'asc' },
@@ -265,8 +275,10 @@ export class CropActivitySchedulesService {
   }
 
   async complete(user: AuthUser, id: string, dto: CompleteActivityDto) {
+    await assertSupervisorPermission(this.prisma, user, 'spray', 'entry');
     const activity = await this.findOneOrThrow(id);
-    if (activity.cropCycle.plot.farm.ownerId !== user.id) {
+    const ownerId = getEffectiveFarmerId(user);
+    if (activity.cropCycle.plot.farm.ownerId !== ownerId) {
       throw new NotFoundException('Scheduled activity not found.');
     }
     this.assertCropCycleNotLocked(activity.cropCycle);

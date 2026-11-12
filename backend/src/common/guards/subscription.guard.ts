@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@
 import { SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../../modules/prisma/prisma.service';
 import { AuthUser } from '../types/auth-user.type';
+import { getEffectiveFarmerId } from '../utils/effective-farmer.util';
 
 /** Gates a route to farmers with an ACTIVE AdvisorSubscription — the app's first real paid-feature check. */
 @Injectable()
@@ -15,8 +16,9 @@ export class SubscriptionGuard implements CanActivate {
       return false;
     }
 
+    const effectiveFarmerId = getEffectiveFarmerId(user);
     const activeSubscription = await this.prisma.advisorSubscription.findFirst({
-      where: { farmerId: user.id, status: SubscriptionPlanStatus.ACTIVE, deletedAt: null },
+      where: { farmerId: effectiveFarmerId, status: SubscriptionPlanStatus.ACTIVE, deletedAt: null },
     });
 
     if (!activeSubscription) {

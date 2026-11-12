@@ -51,18 +51,16 @@ export function AdminActionOtpModal({
 
   const handleRequestOtp = async () => {
     setRequestingOtp(true);
+    setDevOtp(null);
+    setError(null);
     try {
       const res = await apiClient.post('/app-settings/request-admin-action-otp');
       if (res.data?.devOtp) {
-        setDevOtp(res.data.devOtp);
-      } else if (isLocalhost) {
-        setDevOtp('123456');
+        setDevOtp(String(res.data.devOtp));
       }
     } catch (e: any) {
-      console.warn('[AdminActionOtp] Request OTP notice:', e?.message);
-      if (isLocalhost) {
-        setDevOtp('123456');
-      }
+      console.warn('[AdminActionOtp] Request OTP error:', e?.message);
+      setError(e?.response?.data?.message || 'Could not request authorization code. Please retry.');
     } finally {
       setRequestingOtp(false);
     }
@@ -86,7 +84,9 @@ export function AdminActionOtpModal({
   };
 
   const autoFillCode = () => {
-    setOtp(devOtp || '123456');
+    if (devOtp) {
+      setOtp(devOtp);
+    }
   };
 
   return (
@@ -107,19 +107,19 @@ export function AdminActionOtpModal({
             </TouchableOpacity>
           </View>
 
-          {isLocalhost && (
+          {isLocalhost && devOtp ? (
             <View style={styles.devPill}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.devPillTitle}>💻 Localhost Testing Mode</Text>
+                <Text style={styles.devPillTitle}>Local Development Code</Text>
                 <Text style={styles.devPillSub}>
-                  Test Code: <Text style={{ fontWeight: 'bold', color: '#10b981' }}>{devOtp || '123456'}</Text>
+                  Server OTP: <Text style={{ fontWeight: 'bold', color: '#10b981' }}>{devOtp}</Text>
                 </Text>
               </View>
               <TouchableOpacity style={styles.fillBtn} onPress={autoFillCode}>
                 <Text style={styles.fillBtnText}>Auto-Fill Code</Text>
               </TouchableOpacity>
             </View>
-          )}
+          ) : null}
 
           <Text style={styles.label}>Enter 6-Digit Authorization Code</Text>
           <View style={styles.inputWrap}>

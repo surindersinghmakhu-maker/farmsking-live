@@ -712,19 +712,16 @@ let PartiesService = class PartiesService {
         return {
             found: true,
             farmer: {
-                id: farmer.id,
                 name: farmer.name,
                 farmName: farmer.farmName || farmer.name,
-                mobile: farmer.mobile,
+                mobile: farmer.mobile ? `XXXXXX${farmer.mobile.slice(-4)}` : null,
                 kingId: farmer.kingId,
-                village: farmer.village,
                 district: farmer.district,
                 state: farmer.state,
             },
             buyerParty: {
                 name: party?.name || unifiedParty?.name,
-                mobile: cleanBuyerMobile,
-                address: party?.address || unifiedParty?.address,
+                mobile: `XXXXXX${cleanBuyerMobile.slice(-4)}`,
                 kingId: unifiedParty?.kingId || null,
                 shopNumber: unifiedParty?.shopNumber || null,
                 mandiName: unifiedParty?.mandiName || null,

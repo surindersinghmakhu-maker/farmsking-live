@@ -169,7 +169,7 @@ export const AdminDashboardView: React.FC = () => {
             <TouchableOpacity
               style={[styles.toolBtn, { backgroundColor: '#16a34a', flex: 1, paddingVertical: 10 }]}
               activeOpacity={0.85}
-              onPress={() => router.push('/(tabs)/super-crop-edit' as never)}
+              onPress={() => router.push('/(user)/(tabs)/super-crop-edit' as never)}
             >
               <Ionicons name="pencil" size={16} color="#ffffff" />
               <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>✏️ Admin Crop Editor</Text>
@@ -178,7 +178,7 @@ export const AdminDashboardView: React.FC = () => {
             <TouchableOpacity
               style={[styles.toolBtn, { backgroundColor: '#072414', borderColor: 'rgba(0, 255, 135, 0.35)', borderWidth: 1.2, flex: 1, paddingVertical: 10 }]}
               activeOpacity={0.85}
-              onPress={() => router.push('/(tabs)/farm' as never)}
+              onPress={() => router.push('/(user)/(tabs)/farm' as never)}
             >
               <Ionicons name="leaf-outline" size={16} color="#00ff87" />
               <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#00ff87' }}>🌾 View All Crops</Text>

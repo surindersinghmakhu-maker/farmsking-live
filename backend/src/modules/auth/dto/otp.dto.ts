@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendLoginOtpDto {
@@ -34,23 +34,26 @@ export class SendWhatsAppOtpDto {
   @ApiProperty({ description: '10-digit mobile number' })
   @IsNotEmpty()
   @IsString()
+  @Matches(/^\+?\d{10,15}$/, { message: 'Valid mobile number is required.' })
   mobile: string;
 
   @ApiProperty({ description: 'OTP code' })
   @IsNotEmpty()
   @IsString()
+  @Matches(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' })
   otp: string;
 }
 
 export class SendEmailOtpDto {
   @ApiProperty({ description: 'Email address' })
   @IsNotEmpty()
-  @IsString()
+  @IsEmail({}, { message: 'Valid email address is required.' })
   email: string;
 
   @ApiProperty({ description: 'OTP code' })
   @IsNotEmpty()
   @IsString()
+  @Matches(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' })
   otp: string;
 }
 
@@ -81,4 +84,26 @@ export class CompleteOtpRegistrationDto {
   @IsOptional()
   @IsIn(['CLIENT', 'PARTNER'])
   portal?: 'CLIENT' | 'PARTNER';
+}
+
+export class SendMobileOtpDto {
+  @ApiProperty({ description: '10-digit Indian mobile number' })
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\+?\d{10,15}$/, { message: 'Valid 10-digit mobile number is required.' })
+  mobile: string;
+}
+
+export class VerifyMobileOtpDto {
+  @ApiProperty({ description: '10-digit Indian mobile number' })
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\+?\d{10,15}$/, { message: 'Valid 10-digit mobile number is required.' })
+  mobile: string;
+
+  @ApiProperty({ description: '4 or 6 digit OTP code' })
+  @IsNotEmpty()
+  @IsString()
+  @Matches(/^\d{4,6}$/, { message: 'OTP must be 4 to 6 digits.' })
+  otp: string;
 }

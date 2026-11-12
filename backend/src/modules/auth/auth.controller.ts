@@ -1,4 +1,20 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+  Req,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -15,7 +31,10 @@ import {
   SendEmailOtpDto,
   SendMobileLinkOtpDto,
   CompleteOtpRegistrationDto,
+  SendMobileOtpDto,
+  VerifyMobileOtpDto,
 } from './dto/otp.dto';
+import { PartnerApplyDto } from './dto/partner-apply.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
@@ -28,10 +47,94 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('send-otp')
   sendWhatsAppOtp(@Body() body: SendWhatsAppOtpDto) {
     return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('send-register-otp')
+  sendRegisterOtp(@Body() body: SendMobileOtpDto) {
+    return this.authService.sendRegisterOtp(body.mobile);
+  }
+
+  private extractClientMeta(req?: any): { ipAddress?: string; userAgent?: string } {
+    if (!req) return {};
+    const forwarded = req.headers?.['x-forwarded-for'];
+    const rawIp = Array.isArray(forwarded)
+      ? forwarded[0]
+      : typeof forwarded === 'string'
+        ? forwarded.split(',')[0]
+        : req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress;
+    const ipAddress = rawIp ? String(rawIp).trim().slice(0, 64) : undefined;
+    const rawUa = req.headers?.['user-agent'];
+    const userAgent = rawUa ? String(rawUa).trim().slice(0, 255) : undefined;
+    return { ipAddress, userAgent };
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-register-otp')
+  verifyRegisterOtp(@Body() body: VerifyMobileOtpDto, @Req() req: any) {
+    return this.authService.verifyRegisterOtp(body.mobile, body.otp, this.extractClientMeta(req));
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('party-otp/send')
+  sendPartyOtp(@CurrentUser() user: AuthUser, @Body() body: SendMobileOtpDto) {
+    return this.authService.sendPartyOtp(user.id, body.mobile);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('party-otp/verify')
+  verifyPartyOtp(@CurrentUser() user: AuthUser, @Body() body: VerifyMobileOtpDto) {
+    return this.authService.verifyPartyOtp(user.id, body.mobile, body.otp);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('partner-otp/send')
+  sendPartnerSignupOtp(@Body() body: SendMobileOtpDto) {
+    return this.authService.sendPartnerSignupOtp(body.mobile);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('partner-otp/verify')
+  verifyPartnerSignupOtp(@Body() body: VerifyMobileOtpDto, @Req() req: any) {
+    return this.authService.verifyPartnerSignupOtp(body.mobile, body.otp, this.extractClientMeta(req));
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.CREATED)
+  @Post('partner-apply')
+  applyForPartnerRole(@Body() dto: PartnerApplyDto) {
+    return this.authService.applyForPartnerRole(dto);
+  }
+
+  @Throttle({ default: { limit: 25, ttl: 60_000 } })
+  @Post('partner-upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  uploadPartnerKycDocument(
+    @Headers('x-partner-upload-token') partnerUploadToken: string,
+    @UploadedFile() file: any,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Please select an image file to upload.');
+    }
+    return this.authService.uploadPartnerKycDocument(partnerUploadToken, file);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -44,8 +147,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('verify-login-otp')
-  verifyLoginOtp(@Body() body: VerifyLoginOtpDto) {
-    return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal);
+  verifyLoginOtp(@Body() body: VerifyLoginOtpDto, @Req() req: any) {
+    return this.authService.verifyLoginOtp(body.mobile, body.otp, body.portal, this.extractClientMeta(req));
   }
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
@@ -55,7 +158,8 @@ export class AuthController {
     return this.authService.completeOtpRegistration(body);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('send-email-otp')
   sendEmailOtp(@Body() body: SendEmailOtpDto) {
     return this.authService.sendEmailOtp(body.email, body.otp);
@@ -71,8 +175,8 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('firebase-login')
-  firebaseLogin(@Body() body: FirebaseLoginDto) {
-    return this.authService.firebaseLogin(body.idToken, body.portal);
+  firebaseLogin(@Body() body: FirebaseLoginDto, @Req() req: any) {
+    return this.authService.firebaseLogin(body.idToken, body.portal, this.extractClientMeta(req));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -184,19 +288,27 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  logout(@CurrentUser() user: AuthUser & { sessionId?: string }) {
+    return this.authService.logout(user.id, user.sessionId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('logout-other-sessions')
   logoutOtherSessions(@CurrentUser() user: AuthUser & { sessionId?: string }) {
     return this.authService.logoutOtherSessions(user.id, user.sessionId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('verify-password')
   verifyPassword(
-    @CurrentUser() user: AuthUser | null,
-    @Body() body: { password?: string; mobile?: string },
+    @CurrentUser() user: AuthUser,
+    @Body() body: { password?: string },
   ) {
-    const identifier = user?.id || body?.mobile || '';
-    return this.authService.verifyPassword(identifier, body.password ?? '');
+    return this.authService.verifyPassword(user.id, body?.password ?? '');
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

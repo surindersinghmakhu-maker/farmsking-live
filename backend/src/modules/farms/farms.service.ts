@@ -5,6 +5,7 @@ import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateFarmDto } from './dto/create-farm.dto';
 import { UpdateFarmDto } from './dto/update-farm.dto';
 import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
+import { hasActiveRole } from '../../common/utils/auth-user.util';
 
 @Injectable()
 export class FarmsService {
@@ -21,10 +22,11 @@ export class FarmsService {
     if (!user?.id) return [];
     try {
       const ownerId = getEffectiveFarmerId(user);
+      const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
       return await this.prisma.farm.findMany({
         where: {
           deletedAt: null,
-          ...(user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN ? {} : { ownerId }),
+          ...(isAdmin ? {} : { ownerId }),
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -40,7 +42,8 @@ export class FarmsService {
     });
 
     const ownerId = getEffectiveFarmerId(user);
-    if (!farm || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && farm.ownerId !== ownerId)) {
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
+    if (!farm || (!isAdmin && farm.ownerId !== ownerId)) {
       throw new NotFoundException('Farm not found.');
     }
 

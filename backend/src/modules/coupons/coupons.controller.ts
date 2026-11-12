@@ -63,7 +63,7 @@ export class CouponsController {
     return this.couponsService.getRedemptions(user, id);
   }
 
-  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':code/redeem')
   redeem(@CurrentUser() user: AuthUser, @Param('code') code: string, @Body() dto: RedeemCouponDto) {
     return this.couponsService.redeem(user, code, dto);

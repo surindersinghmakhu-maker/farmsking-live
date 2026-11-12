@@ -163,8 +163,10 @@ export class CallRequestsService {
         },
       });
       if (this.chatGateway?.server) {
-        this.chatGateway.server.to(userRoom(request.farmerId)).emit('admin_chat_message', adminMsg);
-        this.chatGateway.server.emit('admin_chat_message', adminMsg);
+        this.chatGateway.server
+          .to(userRoom(request.farmerId))
+          .to('role:ADMIN_DESK')
+          .emit('admin_chat_message', adminMsg);
       }
     } catch {}
 

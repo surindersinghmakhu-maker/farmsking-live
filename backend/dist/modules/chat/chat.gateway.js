@@ -13,20 +13,35 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 var ChatGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChatGateway = exports.userRoom = void 0;
+exports.ChatGateway = exports.ADMIN_DESK_ROOM = exports.userRoom = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const websockets_1 = require("@nestjs/websockets");
 const socket_io_1 = require("socket.io");
 const prisma_service_1 = require("../prisma/prisma.service");
 const chat_service_1 = require("./chat.service");
+const role_policy_util_1 = require("../../common/utils/role-policy.util");
+const user_session_service_1 = require("../auth/user-session.service");
 const userRoom = (userId) => `user:${userId}`;
 exports.userRoom = userRoom;
+exports.ADMIN_DESK_ROOM = 'role:ADMIN_DESK';
+const WS_ALLOWED_ORIGINS = [
+    'https://farmsking.in',
+    'https://www.farmsking.in',
+    'https://admin.farmsking.in',
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:3000',
+    /^http:\/\/localhost:\d+$/,
+    /^http:\/\/127\.0\.0\.1:\d+$/,
+    /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+];
 let ChatGateway = ChatGateway_1 = class ChatGateway {
-    constructor(jwtService, prisma, chatService) {
+    constructor(jwtService, prisma, chatService, userSessionService) {
         this.jwtService = jwtService;
         this.prisma = prisma;
         this.chatService = chatService;
+        this.userSessionService = userSessionService;
         this.logger = new common_1.Logger(ChatGateway_1.name);
         this.onlineSocketCounts = new Map();
     }
@@ -65,14 +80,42 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
             const payload = this.jwtService.verify(token);
             const user = await this.prisma.user.findFirst({
                 where: { id: payload.sub, deletedAt: null },
-                select: { id: true, mobile: true, role: true, roles: true, deactivatedRoles: true, name: true },
+                select: {
+                    id: true,
+                    mobile: true,
+                    role: true,
+                    roles: true,
+                    deactivatedRoles: true,
+                    name: true,
+                    isPermanentlyBlocked: true,
+                    lockoutUntil: true,
+                },
             });
             if (!user) {
                 client.disconnect();
                 return;
             }
-            client.data.user = user;
+            if (user.isPermanentlyBlocked || (user.lockoutUntil && new Date(user.lockoutUntil) > new Date())) {
+                client.disconnect();
+                return;
+            }
+            if (!this.userSessionService.isValidSession(user.id, payload.sid, payload.iat)) {
+                client.disconnect();
+                return;
+            }
+            client.data.user = {
+                id: user.id,
+                mobile: user.mobile,
+                role: user.role,
+                roles: user.roles,
+                deactivatedRoles: user.deactivatedRoles,
+                name: user.name,
+            };
             client.join((0, exports.userRoom)(user.id));
+            const activeRoles = (0, role_policy_util_1.getActiveRolesList)(user);
+            if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r))) {
+                client.join(exports.ADMIN_DESK_ROOM);
+            }
             this.setOnline(user.id);
         }
         catch {
@@ -114,10 +157,11 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleSendMessage", null);
 exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
-    (0, websockets_1.WebSocketGateway)({ namespace: '/chat', cors: { origin: true, credentials: true } }),
+    (0, websockets_1.WebSocketGateway)({ namespace: '/chat', cors: { origin: WS_ALLOWED_ORIGINS, credentials: true } }),
     __param(2, (0, common_1.Inject)((0, common_1.forwardRef)(() => chat_service_1.ChatService))),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         prisma_service_1.PrismaService,
-        chat_service_1.ChatService])
+        chat_service_1.ChatService,
+        user_session_service_1.UserSessionService])
 ], ChatGateway);
 //# sourceMappingURL=chat.gateway.js.map

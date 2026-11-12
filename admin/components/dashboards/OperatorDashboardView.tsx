@@ -94,7 +94,7 @@ export const OperatorDashboardView: React.FC = () => {
         <TouchableOpacity
           style={[styles.queueBtn, premiumShadow(theme.primary, 'md')]}
           activeOpacity={0.85}
-          onPress={() => router.push('/(tabs)/operator-orders' as never)}
+          onPress={() => router.push('/admin/(tabs)/operator-orders' as never)}
         >
           <Ionicons name="cube" size={20} color="#ffffff" />
           <Text style={styles.queueBtnText}>Open Fulfillment Queue</Text>

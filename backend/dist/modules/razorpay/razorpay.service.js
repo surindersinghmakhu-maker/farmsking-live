@@ -202,7 +202,9 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             .createHmac('sha256', creds.keySecret)
             .update(body)
             .digest('hex');
-        if (expectedSignature !== dto.razorpaySignature) {
+        const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+        const actualBuf = Buffer.from(dto.razorpaySignature || '', 'utf8');
+        if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
             throw new common_1.BadRequestException('Invalid Razorpay payment signature');
         }
         return {
@@ -223,11 +225,14 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
     }
     async handleWebhook(rawBody, signatureHeader) {
         const creds = await this.getCredentials();
-        if (signatureHeader && creds.webhookSecret) {
-            const isValid = this.verifyWebhookSignature(rawBody, signatureHeader, creds.webhookSecret);
-            if (!isValid) {
-                this.logger.warn('Razorpay webhook signature verification failed');
-            }
+        const webhookSecret = creds.webhookSecret?.trim();
+        if (!webhookSecret || webhookSecret === 'rzp_webhook_secret' || !signatureHeader) {
+            throw new common_1.UnauthorizedException('Razorpay webhook signature or secret verification failed.');
+        }
+        const isValid = this.verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
+        if (!isValid) {
+            this.logger.warn('Razorpay webhook signature verification failed');
+            throw new common_1.UnauthorizedException('Invalid Razorpay webhook signature.');
         }
         let payload;
         try {
@@ -275,8 +280,11 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
             this.logger.warn(`FarmerPlanPaymentRequest ${requestId} not found for Razorpay fulfillment`);
             return;
         }
-        await this.prisma.farmerPlanPaymentRequest.update({
-            where: { id: requestId },
+        if (request.status === client_1.PlanPaymentStatus.CONFIRMED) {
+            return;
+        }
+        const claimed = await this.prisma.farmerPlanPaymentRequest.updateMany({
+            where: { id: requestId, status: { not: client_1.PlanPaymentStatus.CONFIRMED } },
             data: {
                 status: client_1.PlanPaymentStatus.CONFIRMED,
                 utr: paymentData?.id ? `RZP-${paymentData.id}` : (isRecurring ? 'RZP-AUTOPAY' : 'RZP-PAID'),
@@ -284,6 +292,9 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
                 confirmedAt: new Date(),
             },
         });
+        if (claimed.count === 0) {
+            return;
+        }
         const prefix = request.targetPlan === client_1.FarmerSubscriptionPlan.PRO ? 'FB' : request.targetPlan === client_1.FarmerSubscriptionPlan.SMART ? 'FP' : 'FS';
         const code = `${prefix}${Math.floor(100000 + Math.random() * 900000)}`;
         const isAdvisorPlan = request.targetPlan === client_1.FarmerSubscriptionPlan.SMART ||

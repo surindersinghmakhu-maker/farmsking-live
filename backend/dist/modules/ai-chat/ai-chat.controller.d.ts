@@ -1,4 +1,4 @@
-import { AiChatService, AiChatRequestDto } from './ai-chat.service';
+import { AiChatService, AiChatRequestDto, DiagnoseLeafDto } from './ai-chat.service';
 export declare class AiChatController {
     private readonly aiChatService;
     constructor(aiChatService: AiChatService);
@@ -6,7 +6,5 @@ export declare class AiChatController {
         answer: string;
         isFarming: boolean;
     }>;
-    diagnoseLeaf(body: {
-        imageBase64: string;
-    }): Promise<import("./ai-chat.service").LeafDiagnosisResult>;
+    diagnoseLeaf(body: DiagnoseLeafDto): Promise<import("./ai-chat.service").LeafDiagnosisResult>;
 }

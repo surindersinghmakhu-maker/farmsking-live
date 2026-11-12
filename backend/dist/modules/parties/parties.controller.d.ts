@@ -34,10 +34,10 @@ export declare class PartiesController {
         ownerId: string;
         address: string | null;
     } | {
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -161,10 +161,10 @@ export declare class PartiesController {
         entries: any[];
     }>;
     createUnifiedParty(user: AuthUser, dto: CreateUnifiedPartyDto): Promise<{
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -180,10 +180,10 @@ export declare class PartiesController {
         ownerFarmerId: string | null;
     }>;
     listUnifiedParties(user: AuthUser, role?: PartyRole): Promise<{
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -254,10 +254,10 @@ export declare class PartiesController {
     }>;
     getArhtiyaLedgerHisab(user: AuthUser, id: string): Promise<{
         party: {
+            roles: import(".prisma/client").$Enums.PartyRole[];
             id: string;
             kingId: string;
             mobile: string | null;
-            roles: import(".prisma/client").$Enums.PartyRole[];
             name: string;
             village: string | null;
             district: string | null;

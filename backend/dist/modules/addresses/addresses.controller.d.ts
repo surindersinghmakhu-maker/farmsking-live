@@ -1,6 +1,7 @@
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 export declare class AddressesController {
     private readonly addressesService;
     constructor(addressesService: AddressesService);
@@ -32,7 +33,7 @@ export declare class AddressesController {
         line: string;
         isDefault: boolean;
     }[]>;
-    update(user: AuthUser, id: string, dto: Partial<CreateAddressDto>): Promise<{
+    update(user: AuthUser, id: string, dto: UpdateAddressDto): Promise<{
         id: string;
         mobile: string | null;
         name: string | null;

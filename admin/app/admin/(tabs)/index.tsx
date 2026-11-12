@@ -15,6 +15,7 @@ import { PartnerDashboardView } from '@/components/dashboards/PartnerDashboardVi
 import { AdminDashboardView } from '@/components/dashboards/AdminDashboardView';
 import { SuperAdminDashboardView } from '@/components/dashboards/SuperAdminDashboardView';
 import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboardView';
+import { TechnicalTrainerDashboardView } from '@/components/dashboards/TechnicalTrainerDashboardView';
 import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView';
 import { AdminExecutiveOverview } from '@/components/dashboards/AdminExecutiveOverview';
 import { AdminChatModal } from '@/src/components/AdminChatModal';
@@ -103,9 +104,12 @@ export default function HomeScreen() {
         return <PartnerDashboardView />;
       case 'ADMIN':
       case 'SUPER_ADMIN':
+      case 'MANAGER':
         return <AdminExecutiveOverview />;
       case 'OPERATOR':
         return <OperatorDashboardView />;
+      case 'TECHNICAL_TRAINER':
+        return <TechnicalTrainerDashboardView />;
       case 'LABOUR':
         return <LabourDashboardView />;
       default:

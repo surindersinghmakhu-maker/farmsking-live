@@ -93,7 +93,7 @@ export default function RefundPolicyScreen() {
               Transparent, Farmer-First Guidelines for Certified Seeds, Bio-Nutrients, and Equipment Purchases
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              FARMSKING TECHNOLOGIES PRIVATE LIMITED • Customer Trust Desk • 100% Genuine Agri Guarantee
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab - 143422
             </Text>
           </View>
 
@@ -223,15 +223,29 @@ export default function RefundPolicyScreen() {
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
-                  <Text style={{ fontFamily: FONT.bold }}>UPI & Bank Transfers: </Text>
-                  2 to 4 business days credited directly to your original bank account or UPI ID.
+                  <Text style={{ fontFamily: FONT.bold }}>Credit Card, Debit Card, NetBanking &amp; Gateway Refunds (Cashfree / Razorpay / PhonePe): </Text>
+                  5 to 7 working days credited directly back to your original payment card, bank account, or netbanking source depending on your issuing bank settlement cycle.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>UPI Transfers: </Text>
+                  2 to 4 business days credited directly to your original UPI ID or linked bank account.
                 </Text>
               </View>
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
                   <Text style={{ fontFamily: FONT.bold }}>Cash on Delivery (COD) Orders: </Text>
-                  Refunded via direct NEFT / IMPS or UPI transfer upon providing your beneficiary details.
+                  Refunded within 3 to 5 working days via direct NEFT / IMPS or UPI transfer upon verified beneficiary bank details.
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Digital Plans, Subscriptions &amp; Expert Consultations: </Text>
+                  Activated subscription plans and completed agronomy consultations are non-refundable once accessed; duplicate debits or failed activations are automatically refunded to the original payment mode within 5 to 7 working days.
                 </Text>
               </View>
             </View>
@@ -252,13 +266,13 @@ export default function RefundPolicyScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                📞 Farmer Helpline: 95776-22000 (10:00 AM – 5:00 PM IST)
+                📞 Farmer Helpline: +91 95776-22000 (Mon–Sat, 10:00 AM – 6:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                ✉️ Support Email: farmskingindia@gmail.com / orders@farmsking.in
+                ✉️ Support Email: support@farmsking.in / grievance@farmsking.in
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                📍 Fulfillment Center: Makhu, District Ferozepur, Punjab - 142044
+                📍 Regd. Office: VPO Goindwal Sahib, Tarn Taran - 143422 • Operational HQ: Main Market, Makhu, Ferozepur, Punjab - 142044
               </Text>
             </View>
           </View>

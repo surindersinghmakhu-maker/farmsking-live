@@ -14,7 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CashfreeController = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
+const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const cashfree_service_1 = require("./cashfree.service");
 const cashfree_dto_1 = require("./dto/cashfree.dto");
@@ -49,16 +52,22 @@ let CashfreeController = class CashfreeController {
             customerName: dto.customerName || user.name,
         });
     }
-    verifyPayment(orderId) {
-        return this.cashfreeService.verifyPayment(orderId);
+    verifyPayment(user, orderId) {
+        return this.cashfreeService.verifyPayment(orderId, user);
     }
-    handleWebhook(body) {
-        return this.cashfreeService.handleWebhook(body);
+    handleWebhook(req, body, signature, timestamp) {
+        const rawBody = req.rawBody
+            ? Buffer.isBuffer(req.rawBody)
+                ? req.rawBody.toString('utf8')
+                : String(req.rawBody)
+            : undefined;
+        return this.cashfreeService.handleWebhook(body, signature, timestamp, rawBody);
     }
 };
 exports.CashfreeController = CashfreeController;
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('vendors'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -66,7 +75,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CashfreeController.prototype, "createVendor", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('orders/split'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -92,17 +102,22 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CashfreeController.prototype, "createSubscription", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('orders/:orderId/verify'),
-    __param(0, (0, common_1.Param)('orderId')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('orderId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], CashfreeController.prototype, "verifyPayment", null);
 __decorate([
     (0, common_1.Post)('webhook'),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('x-webhook-signature')),
+    __param(3, (0, common_1.Headers)('x-webhook-timestamp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], CashfreeController.prototype, "handleWebhook", null);
 exports.CashfreeController = CashfreeController = __decorate([

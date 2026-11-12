@@ -4,7 +4,26 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 import { PrismaService } from '../../modules/prisma/prisma.service';
 
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
-const REDACT_KEYS = new Set(['password', 'passwordHash', 'securityAnswer', 'securityAnswerHash', 'newPassword']);
+const REDACT_KEYS = new Set([
+  'password',
+  'passwordHash',
+  'securityAnswer',
+  'securityAnswerHash',
+  'newPassword',
+  'panNumber',
+  'pan',
+  'aadhaarLast4',
+  'aadhaar',
+  'bankAccountNumber',
+  'bankAccountNo',
+  'bankIfsc',
+  'upiId',
+  'chequeDocUrl',
+  'aadhaarFrontUrl',
+  'aadhaarBackUrl',
+  'aadhaarDocUrl',
+  'panDocUrl',
+]);
 const UUID_LIKE = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 
 function redact(body: unknown): unknown {

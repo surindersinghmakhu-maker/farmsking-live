@@ -9,8 +9,14 @@ model SellerStore {
   sellerType                 SellerType          @default(FARMER)
   legalName                  String?
   gstin                      String?             @unique
+  isCompositionDealer        Boolean             @default(false)
+  gstEnrolmentId             String?
   panNumber                  String?
+  aadhaarLast4               String?
+  upiId                      String?
   kycStatus                  SellerKycStatus     @default(PENDING)
+  kycVerifiedAt              DateTime?
+  kycVerifiedById            String?
   rejectionReason            String?
   bankAccountNo              String?
   bankIfsc                   String?
@@ -29,6 +35,17 @@ model SellerStore {
   isFssaiApproved            Boolean             @default(false)
   agriLicenseNo              String?
   agriLicenseExpiryDate      DateTime?
+  seedLicenseNo              String?
+  seedLicenseExpiry          DateTime?
+  seedLicenseDocUrl          String?
+  pesticideLicenseNo         String?
+  pesticideLicenseExpiry     DateTime?
+  pesticideLicenseDocUrl     String?
+  fertilizerLicenseNo        String?
+  fertilizerLicenseExpiry    DateTime?
+  fertilizerLicenseDocUrl    String?
+  sellerAgreementAcceptedAt  DateTime?
+  sellerAgreementVersion     String?
   additionalDoc1Title        String?
   additionalDoc1Url          String?
   additionalDoc2Title        String?
@@ -40,6 +57,7 @@ model SellerStore {
   aadhaarBackUrl             String?
   tradeLicenseUrl            String?
   commissionRate             Decimal             @default(8.00) @db.Decimal(5, 2)
+  categoryCommissions        Json?               @default("{}")
   rtoBearer                  RtoBearer           @default(VENDOR)
   rtoSharedVendorRatio       Decimal             @default(50.00) @db.Decimal(5, 2)
   catalogApprovalMode        CatalogApprovalMode @default(MANUAL)
@@ -125,7 +143,9 @@ model SellerPayout {
   payoutRefNo           String             @unique
   totalGrossAmount      Decimal            @db.Decimal(12, 2)
   totalCommissionAmount Decimal            @db.Decimal(12, 2)
+  commissionGstAmount   Decimal            @default(0.00) @db.Decimal(12, 2)
   totalTcsAmount        Decimal            @db.Decimal(12, 2)
+  tds194OAmount         Decimal            @default(0.00) @db.Decimal(12, 2)
   netPayoutAmount       Decimal            @db.Decimal(12, 2)
   status                SellerPayoutStatus @default(PENDING)
   cashfreeTransferId    String?
@@ -228,6 +248,9 @@ model OrderInvoice {
   sgstAmount          Decimal        @default(0) @db.Decimal(12, 2)
   igstAmount          Decimal        @default(0) @db.Decimal(12, 2)
   tcsAmount           Decimal        @default(0) @db.Decimal(12, 2)
+  tdsAmount           Decimal        @default(0) @db.Decimal(12, 2)
+  sacCode             String?
+  placeOfSupply       String?
   commissionAmount    Decimal        @default(0) @db.Decimal(12, 2)
   commissionGstAmount Decimal        @default(0) @db.Decimal(12, 2)
   pdfUrl              String?
@@ -253,4 +276,116 @@ model PartnerReferral {
 
   @@index([partnerId])
   @@map("partner_referrals")
+}
+
+/// Income Tax TDS (Sec 194-O / 194-H / 194-J / 206AA) deduction register for CA, Accountant & 26Q Filing
+model TdsLedger {
+  id             String    @id @default(uuid())
+  deducteeId     String
+  deducteeName   String
+  deducteeRole   String
+  panNumber      String?
+  panAvailable   Boolean   @default(false)
+  financialYear  String
+  quarter        String    // Q1 | Q2 | Q3 | Q4
+  section        String    // 194O | 194H | 194J | 206AA
+  sourceType     String    // SELLER_PAYOUT | AGENT_COMMISSION | ADVISOR_FEE | TRAINER_FEE | WITHDRAWAL
+  sourceId       String
+  grossAmount    Decimal   @db.Decimal(12, 2)
+  tdsRate        Decimal   @db.Decimal(5, 2)
+  tdsAmount      Decimal   @db.Decimal(12, 2)
+  netAmount      Decimal   @db.Decimal(12, 2)
+  challanStatus  String    @default("PENDING") // PENDING | DEPOSITED | FILED_26Q
+  bsrCode        String?
+  challanNo      String?
+  depositedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([sourceType, sourceId])
+  @@index([deducteeId])
+  @@index([financialYear, quarter])
+  @@index([section])
+  @@map("tds_ledgers")
+}
+
+/// Statutory Government & Legal Compliance Register for Advocate / CS / CA oversight
+model StatutoryComplianceRecord {
+  id          String    @id @default(uuid())
+  category    String    // MCA_ROC | GST | INCOME_TAX_TDS | AGRI_LICENSE | PAYMENT_GATEWAY | LEGAL_NOTICE | AGREEMENT
+  title       String
+  authority   String?   // e.g. ROC Chandigarh, CBIC GSTN, Income Tax TRACES, Dept of Agriculture Punjab, RBI PG
+  referenceNo String?
+  dueDate     DateTime?
+  filedDate   DateTime?
+  status      String    @default("PENDING") // PENDING | IN_PROGRESS | COMPLIANT | OVERDUE
+  assignedTo  String?   @default("ADVOCATE") // ADVOCATE | CA | ACCOUNTANT | DIRECTOR
+  documentUrl String?
+  notes       String?
+  updatedById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([dueDate])
+  @@map("statutory_compliance_records")
+}
+
+model MediaStore {
+  id           String    @id
+  uploadedById String?
+  cropId       String?
+  fileUrl      String
+  thumbnailUrl String?
+  mediaType    String    @default("IMAGE")
+  mimeType     String
+  originalName String
+  sizeBytes    Int       @default(0)
+  provider     String    @default("CLOUDFLARE_R2")
+  bucketName   String?
+  storagePath  String?
+  isArchived   Boolean   @default(false)
+  archivedAt   DateTime? @db.Timestamptz(6)
+  expiresAt    DateTime? @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("media_store")
+}
+
+model CropRemark {
+  cropId       String   @id
+  uploadedById String?
+  remarksText  String   @default("")
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("crop_remarks")
+}
+
+model CropRemarkHistory {
+  id           String   @id
+  cropId       String
+  uploadedById String?
+  remarksText  String   @default("")
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  expiresAt    DateTime @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @db.Timestamptz(6)
+
+  @@index([cropId])
+  @@map("crop_remarks_history")
+}
+
+model SupervisorRequest {
+  id           String    @id
+  farmerId     String
+  supervisorId String
+  status       String    @default("PENDING")
+  featuresConfig Json    @default("{}")
+  note         String?
+  respondedAt  DateTime? @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("supervisor_requests")
 }

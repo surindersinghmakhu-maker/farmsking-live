@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsInt, IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
 
 export class CreateProductDto {
   @IsString()
@@ -35,10 +35,12 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   sellingPrice?: number;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   mrp?: number;
 
   @IsOptional()
@@ -134,6 +136,8 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   commissionOverridePercentage?: number;
 
   @IsOptional()
@@ -146,6 +150,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsInt()
+  @Min(0)
   returnWindowDays?: number;
 
   @IsOptional()
@@ -153,6 +158,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsInt()
+  @Min(0)
   replacementWindowDays?: number;
 
   @IsOptional()
@@ -161,10 +167,13 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsInt()
+  @Min(1)
   bulkDiscountMinQty?: number;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   bulkDiscountPercentage?: number;
 }
 

@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -15,6 +48,9 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
+const tax_compliance_util_1 = require("../../common/utils/tax-compliance.util");
+const crypto = __importStar(require("crypto"));
 let CashfreeService = CashfreeService_1 = class CashfreeService {
     constructor(configService, prisma) {
         this.configService = configService;
@@ -86,13 +122,15 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
     async createSplitOrder(dto) {
         const endpoint = `${this.baseUrl}/orders`;
         const rawSplits = dto.splits.map((split) => {
-            const commissionPercent = Number(split.commissionRate ?? 8.0);
-            const tcsPercent = split.isGstRegistered ? 1.0 : 0.0;
-            const totalDeductionPercent = Math.min(95, commissionPercent + tcsPercent);
-            const vendorAmount = Number((split.itemSubtotal * (1 - totalDeductionPercent / 100)).toFixed(2));
+            const calc = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                grossAmount: split.itemSubtotal,
+                gstPercentage: Number(split.gstPercentage || 0),
+                commissionPercent: Number(split.commissionRate ?? 8.0),
+                isSellerGstRegistered: Boolean(split.isGstRegistered),
+            });
             return {
                 vendor_id: split.cashfreeVendorId,
-                amount: vendorAmount,
+                amount: calc.netSellerPayout,
             };
         });
         const totalVendorSplits = rawSplits.reduce((s, x) => s + x.amount, 0);
@@ -115,8 +153,8 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             },
             order_splits: orderSplits.length > 0 ? orderSplits : undefined,
             order_meta: {
-                return_url: `https://farmsking.in/order-status?order_id={order_id}`,
-                notify_url: `https://api.farmsking.in/cashfree/webhook`,
+                return_url: `${(process.env.APP_URL || 'https://farmsking.in').replace(/\/$/, '')}/order-status?order_id={order_id}`,
+                notify_url: `${(process.env.BACKEND_URL || process.env.APP_URL || 'https://farmsking.in').replace(/\/$/, '')}/api/v1/cashfree/webhook`,
             },
         };
         try {
@@ -241,7 +279,44 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             };
         }
     }
-    async verifyPayment(orderId) {
+    async verifyPayment(orderId, caller) {
+        const isAdmin = caller ? (0, auth_user_util_1.hasActiveRole)(caller, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(caller, client_1.Role.SUPER_ADMIN) : false;
+        if (caller && !isAdmin) {
+            if (orderId.startsWith('WALLET-')) {
+                const walletMatch = /^WALLET-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-/i.exec(orderId);
+                const ownerId = walletMatch?.[1];
+                if (!ownerId || ownerId !== caller.id) {
+                    throw new common_1.ForbiddenException('You can only verify your own wallet top-up order.');
+                }
+            }
+            else if (orderId.startsWith('PLAN-')) {
+                const req = await this.prisma.farmerPlanPaymentRequest.findUnique({
+                    where: { id: orderId.replace('PLAN-', '') },
+                    select: { farmerId: true },
+                });
+                if (req && req.farmerId !== caller.id) {
+                    throw new common_1.ForbiddenException('You can only verify your own plan payment order.');
+                }
+            }
+            else if (orderId.startsWith('GCARD-')) {
+                const req = await this.prisma.gardenerPlanPaymentRequest.findUnique({
+                    where: { id: orderId.replace('GCARD-', '') },
+                    select: { gardenerId: true },
+                });
+                if (req && req.gardenerId !== caller.id) {
+                    throw new common_1.ForbiddenException('You can only verify your own garden card payment order.');
+                }
+            }
+            else if (!orderId.startsWith('DOC-')) {
+                const order = await this.prisma.customerOrder.findUnique({
+                    where: { orderNumber: orderId },
+                    select: { customerId: true },
+                });
+                if (order && order.customerId !== caller.id) {
+                    throw new common_1.ForbiddenException('You can only verify your own order payment.');
+                }
+            }
+        }
         const endpoint = `${this.baseUrl}/orders/${orderId}`;
         try {
             const response = await fetch(endpoint, {
@@ -253,11 +328,28 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
                 throw new common_1.BadRequestException(resData?.message || 'Failed to verify Cashfree order');
             }
             if (resData.order_status === 'PAID') {
-                await this.handlePaymentSuccess(orderId, resData);
+                if (orderId.startsWith('PLAN-')) {
+                    await this.handlePlanPaymentSuccess(orderId);
+                }
+                else if (orderId.startsWith('GCARD-')) {
+                    await this.handleGardenerPlanPaymentSuccess(orderId);
+                }
+                else if (orderId.startsWith('WALLET-')) {
+                    await this.handleWalletTopupSuccess(orderId, resData);
+                }
+                else if (orderId.startsWith('DOC-')) {
+                    await this.handleDoctorConsultationSuccess(orderId);
+                }
+                else {
+                    await this.handlePaymentSuccess(orderId, resData);
+                }
             }
             return resData;
         }
         catch (error) {
+            if (error instanceof common_1.ForbiddenException || error instanceof common_1.BadRequestException) {
+                throw error;
+            }
             this.logger.error(`Error verifying Cashfree order ${orderId}:`, error);
             throw new common_1.InternalServerErrorException('Error verifying payment status');
         }
@@ -269,6 +361,11 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
                 items: {
                     include: {
                         sellerStore: true,
+                        product: {
+                            select: {
+                                gstPercentage: true,
+                            },
+                        },
                     },
                 },
             },
@@ -298,52 +395,85 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
         for (const [sellerStoreId, data] of sellerMap.entries()) {
             const store = await this.prisma.sellerStore.findUnique({ where: { id: sellerStoreId } });
             const commissionRate = Number(store?.commissionRate ?? 8.0);
-            const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
-            const commissionAmount = Number(((data.subtotal * commissionRate) / 100).toFixed(2));
-            const tcsAmount = isGstRegistered ? Number(((data.subtotal * 1.0) / 100).toFixed(2)) : 0;
-            const netPayoutAmount = Number((data.subtotal - commissionAmount - tcsAmount).toFixed(2));
-            const payoutStatus = store?.cashfreeVendorId ? client_1.SellerPayoutStatus.SETTLED : client_1.SellerPayoutStatus.PENDING;
+            const isGstRegistered = (0, tax_compliance_util_1.isValidGstin)(store?.gstin);
+            let totalCommission = 0;
+            let totalCommissionGst = 0;
+            let totalTcs = 0;
+            let netPayoutAmount = 0;
+            for (const item of data.items) {
+                const itemSubtotal = Number(item.subtotal || Number(item.price) * item.quantity);
+                const gstPct = Number(item.product?.gstPercentage || 0);
+                const calc = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                    grossAmount: itemSubtotal,
+                    gstPercentage: gstPct,
+                    commissionPercent: commissionRate,
+                    isSellerGstRegistered: isGstRegistered,
+                });
+                totalCommission += calc.commissionAmount;
+                totalCommissionGst += calc.commissionGstAmount;
+                totalTcs += calc.tcsAmount;
+                netPayoutAmount += calc.netSellerPayout;
+            }
+            const payoutStatus = client_1.SellerPayoutStatus.PENDING;
             const payoutRefNo = `PAY-${order.orderNumber}-${sellerStoreId.substring(0, 6)}`;
             const payoutRecord = await this.prisma.sellerPayout.upsert({
                 where: { payoutRefNo },
                 create: {
                     sellerStoreId,
                     payoutRefNo,
-                    totalGrossAmount: data.subtotal,
-                    totalCommissionAmount: commissionAmount,
-                    totalTcsAmount: tcsAmount,
-                    netPayoutAmount: netPayoutAmount,
+                    totalGrossAmount: Number(data.subtotal.toFixed(2)),
+                    totalCommissionAmount: Number(totalCommission.toFixed(2)),
+                    commissionGstAmount: Number(totalCommissionGst.toFixed(2)),
+                    totalTcsAmount: Number(totalTcs.toFixed(2)),
+                    netPayoutAmount: Number(netPayoutAmount.toFixed(2)),
                     status: payoutStatus,
-                    paidAt: payoutStatus === client_1.SellerPayoutStatus.SETTLED ? new Date() : null,
+                    paidAt: null,
                 },
                 update: {
                     status: payoutStatus,
-                    paidAt: payoutStatus === client_1.SellerPayoutStatus.SETTLED ? new Date() : undefined,
                 },
             });
             for (const item of data.items) {
                 const itemSubtotal = Number(item.subtotal || Number(item.price) * item.quantity);
-                const itemCommission = Number(((itemSubtotal * commissionRate) / 100).toFixed(2));
-                const itemTcs = isGstRegistered ? Number(((itemSubtotal * 1.0) / 100).toFixed(2)) : 0;
-                const itemNetPayout = Number((itemSubtotal - itemCommission - itemTcs).toFixed(2));
+                const gstPct = Number(item.product?.gstPercentage || 0);
+                const calc = (0, tax_compliance_util_1.computeMarketplaceSettlement)({
+                    grossAmount: itemSubtotal,
+                    gstPercentage: gstPct,
+                    commissionPercent: commissionRate,
+                    isSellerGstRegistered: isGstRegistered,
+                });
                 await this.prisma.customerOrderItem.update({
                     where: { id: item.id },
                     data: {
                         subtotal: itemSubtotal,
-                        commissionAmount: itemCommission,
-                        tcsAmount: itemTcs,
-                        sellerPayoutAmount: itemNetPayout,
+                        commissionAmount: calc.commissionAmount,
+                        tcsAmount: calc.tcsAmount,
+                        sellerPayoutAmount: calc.netSellerPayout,
                         sellerPayoutId: payoutRecord.id,
                     },
                 });
             }
         }
     }
-    async handleWebhook(body) {
+    async handleWebhook(body, signature, timestamp, rawBody) {
+        if (!this.secretKey || this.secretKey === 'TEST_SECRET_KEY') {
+            throw new common_1.UnauthorizedException('Cashfree webhook secret is not configured.');
+        }
+        if (!signature || !timestamp || !rawBody) {
+            throw new common_1.UnauthorizedException('Missing Cashfree webhook signature headers.');
+        }
+        const signedPayload = `${timestamp}${rawBody}`;
+        const expected = crypto.createHmac('sha256', this.secretKey).update(signedPayload).digest('base64');
+        const expectedBuf = Buffer.from(expected, 'utf8');
+        const signatureBuf = Buffer.from(signature, 'utf8');
+        if (expectedBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(expectedBuf, signatureBuf)) {
+            throw new common_1.UnauthorizedException('Invalid Cashfree webhook signature.');
+        }
         this.logger.log(`Cashfree Webhook received: ${JSON.stringify(body)}`);
         const orderId = body?.data?.order?.order_id;
-        if (!orderId)
+        if (!orderId || typeof orderId !== 'string' || !/^[A-Za-z0-9_-]{3,80}$/.test(orderId)) {
             return { status: 'IGNORED' };
+        }
         try {
             const endpoint = `${this.baseUrl}/orders/${orderId}`;
             const response = await fetch(endpoint, {
@@ -373,29 +503,44 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             return { status: 'SUCCESS' };
         }
         catch (e) {
+            if (e instanceof common_1.UnauthorizedException)
+                throw e;
             this.logger.error(`Cashfree Webhook verification failed for ${orderId}: ${e.message}`);
             return { status: 'ERROR' };
         }
     }
     async handleWalletTopupSuccess(orderId, cashfreeData) {
+        const uuidMatch = /^WALLET-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-(\d+))?/i.exec(orderId);
         const parts = orderId.split('-');
-        if (parts.length >= 3) {
-            const userId = parts[1];
-            const amount = Number(cashfreeData?.order_amount || parts[2]);
-            if (userId && amount > 0) {
-                const user = await this.prisma.user.findUnique({ where: { id: userId } });
-                if (user) {
-                    await this.prisma.walletTransaction.create({
-                        data: {
-                            userId,
-                            amount,
-                            type: 'CREDIT',
-                            reason: `Cashfree Online Wallet Recharge ₹${amount} (Order: ${orderId})`,
-                        },
-                    });
-                }
-            }
+        const userId = uuidMatch?.[1] || (parts.length >= 3 ? parts.slice(1, -1).join('-') : '');
+        const amount = Number(cashfreeData?.order_amount || (uuidMatch?.[2] ?? parts[parts.length - 1]));
+        if (!userId || !Number.isFinite(amount) || amount <= 0) {
+            return;
         }
+        const orderMarker = `(Order: ${orderId})`;
+        await this.prisma.$transaction(async (tx) => {
+            const existingCredit = await tx.walletTransaction.findFirst({
+                where: {
+                    userId,
+                    reason: { contains: orderMarker },
+                },
+                select: { id: true },
+            });
+            if (existingCredit) {
+                return;
+            }
+            const user = await tx.user.findUnique({ where: { id: userId }, select: { id: true } });
+            if (!user)
+                return;
+            await tx.walletTransaction.create({
+                data: {
+                    userId,
+                    amount,
+                    type: 'CREDIT',
+                    reason: `Cashfree Online Wallet Recharge ₹${amount} ${orderMarker}`,
+                },
+            });
+        });
     }
     async handleDoctorConsultationSuccess(orderId) {
         this.logger.log(`Doctor consultation payment confirmed for order: ${orderId}`);
@@ -438,7 +583,7 @@ let CashfreeService = CashfreeService_1 = class CashfreeService {
             });
             const gardener = await tx.user.findUnique({ where: { id: request.gardenerId } });
             const address = gardener ? [gardener.village, gardener.district, gardener.state, gardener.pincode].filter(Boolean).join(', ') : 'Registered Address';
-            if (gardener?.role === 'GARDENER') {
+            if (gardener && (0, auth_user_util_1.hasActiveRole)(gardener, client_1.Role.GARDENER)) {
                 const giftOrderNumber = `GIFT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
                 await tx.customerOrder.create({
                     data: {

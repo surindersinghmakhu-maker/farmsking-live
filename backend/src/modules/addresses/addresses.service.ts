@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 
 @Injectable()
 export class AddressesService {
@@ -92,7 +93,7 @@ export class AddressesService {
     return { success: true };
   }
 
-  async update(user: AuthUser, id: string, dto: Partial<CreateAddressDto>) {
+  async update(user: AuthUser, id: string, dto: UpdateAddressDto) {
     const address = await this.prisma.customerAddress.findUnique({ where: { id } });
     if (!address) {
       throw new NotFoundException('Address not found.');
@@ -110,7 +111,17 @@ export class AddressesService {
 
     return this.prisma.customerAddress.update({
       where: { id },
-      data: dto,
+      data: {
+        ...(dto.tag !== undefined ? { tag: dto.tag } : {}),
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.line !== undefined ? { line: dto.line } : {}),
+        ...(dto.mobile !== undefined ? { mobile: dto.mobile } : {}),
+        ...(dto.postOffice !== undefined ? { postOffice: dto.postOffice } : {}),
+        ...(dto.district !== undefined ? { district: dto.district } : {}),
+        ...(dto.state !== undefined ? { state: dto.state } : {}),
+        ...(dto.pincode !== undefined ? { pincode: dto.pincode } : {}),
+        ...(dto.isDefault !== undefined ? { isDefault: dto.isDefault } : {}),
+      },
     });
   }
 }

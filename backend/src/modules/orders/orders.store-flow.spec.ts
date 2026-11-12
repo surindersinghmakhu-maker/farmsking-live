@@ -28,7 +28,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
       expect(res.netSellerPayout).toBe(941);
     });
 
-    it('charges 1% TCS on net taxable value (excluding GST) for GSTIN sellers', () => {
+    it('charges 0.5% TCS on net taxable value (excluding GST) for GSTIN sellers', () => {
       const res = billing.calculateGstAndTcs({
         grossPrice: 1180,
         isPriceInclusiveOfGst: true,
@@ -40,7 +40,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
       expect(res.isSellerGstRegistered).toBe(true);
       expect(res.netTaxableAmount).toBe(1000);
       expect(res.productGstAmount).toBe(180);
-      expect(res.tcsAmount).toBe(10);
+      expect(res.tcsAmount).toBe(5);
       expect(res.commissionAmount).toBe(50);
     });
 
@@ -131,9 +131,9 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
         { createShipmentOrder: jest.fn() } as any,
         {} as any,
         { createInvoicesForOrder: jest.fn().mockResolvedValue([]), renderInvoiceHtml: jest.fn().mockReturnValue('<html></html>') } as any,
-        { sendOrderPlacedConfirmationEmail: jest.fn().mockResolvedValue(null), sendAdminOrderAlertEmail: jest.fn().mockResolvedValue(null) } as any,
+        { sendOrderPlacedConfirmationEmail: jest.fn().mockResolvedValue(null), sendOrderLifecycleEmail: jest.fn().mockResolvedValue(null), sendAdminOrderAlertEmail: jest.fn().mockResolvedValue(null) } as any,
         { sendDirectTextMessage: jest.fn().mockResolvedValue(null) } as any,
-        { sendOrderPlacedSms: jest.fn().mockResolvedValue(null) } as any,
+        { sendOrderPlacedSms: jest.fn().mockResolvedValue(null), sendTextMessage: jest.fn().mockResolvedValue(null) } as any,
       );
     }
 
@@ -164,6 +164,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
               subOrders: [],
             };
           }),
+          findUnique: jest.fn().mockResolvedValue(null),
         },
         product: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
         sellerStore: {
@@ -179,6 +180,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
             return args.data;
           }),
         },
+        $executeRaw: jest.fn().mockResolvedValue(1),
       };
 
       const prismaMock: any = {
@@ -203,6 +205,9 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
         user: {
           findUnique: jest.fn().mockResolvedValue({ id: 'cust-1', name: 'Harpreet', mobile: '9876543210', email: null }),
         },
+        customerOrder: {
+          findUnique: jest.fn().mockResolvedValue(null),
+        },
         $queryRaw: jest.fn().mockResolvedValue([{ id: 'store-farmer', categoryCommissions: { seeds: 4 } }]),
         $transaction: jest.fn().mockImplementation(async (fn) => fn(txMock)),
       };
@@ -223,10 +228,10 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
       expect(createdOrderArgs.items.create[0].subtotal).toBe(450);
       expect(createdOrderArgs.items.create[0].tcsAmount).toBe(0); // Farmer has no GSTIN -> 0 TCS
 
-      // Category commission for seeds = 4% on ₹450 = ₹18; net = ₹432
+      // Category commission for seeds = 4% on ₹450 = ₹18; 18% GST on commission = ₹3.24; net = ₹428.76
       expect(createdSubOrderArgs.subtotal).toBe(450);
       expect(createdSubOrderArgs.commissionAmount).toBe(18);
-      expect(createdSubOrderArgs.vendorNetPayout).toBe(432);
+      expect(createdSubOrderArgs.vendorNetPayout).toBe(428.76);
 
       // Wallet covers full ₹450 + 2% fee (₹9) + 18% GST on fee (₹1.62) = ₹460.62
       expect(walletCreates).toHaveLength(1);
@@ -240,6 +245,7 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
       const txMock: any = {
         customerOrder: { update: jest.fn().mockResolvedValue({ id: 'ord-1', status: OrderStatus.CANCELLED }) },
         subOrder: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+        couponRedemption: { findFirst: jest.fn().mockResolvedValue(null) },
         product: { update: jest.fn().mockResolvedValue({}) },
         walletTransaction: {
           findFirst: jest.fn()
@@ -262,6 +268,10 @@ describe('Store System End-to-End Guards, Financial & Tax Audit', () => {
             items: [{ productId: 'prod-1', quantity: 5 }],
             subOrders: [],
           }),
+          findUnique: jest.fn().mockResolvedValue(null),
+        },
+        user: {
+          findUnique: jest.fn().mockResolvedValue({ id: 'cust-1', name: 'Harpreet', mobile: '9876543210', email: null }),
         },
         $transaction: jest.fn().mockImplementation(async (fn) => fn(txMock)),
       };

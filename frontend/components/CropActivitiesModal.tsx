@@ -57,12 +57,13 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
   const { cropActivitiesMap, addCropActivity, cropGpsDataMap } = useCrops();
 
   // Role check: Is current user viewing as an Advisor / Supervisor?
+  const userRoleStr = user?.role as string | undefined;
   const isAdvisor = Boolean(
     isAdvisorView ||
-    user?.role === 'ADVISOR' ||
-    user?.role === 'FARM_ADVISOR' ||
-    user?.role === 'GARDEN_ADVISOR' ||
-    user?.role === 'SUPERVISOR' ||
+    userRoleStr === 'ADVISOR' ||
+    userRoleStr === 'FARM_ADVISOR' ||
+    userRoleStr === 'GARDEN_ADVISOR' ||
+    userRoleStr === 'SUPERVISOR' ||
     (user as any)?.advisorType
   );
 

@@ -117,4 +117,29 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateAdvisorProfileDto.prototype, "bankAccountHolderName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(/^\d{4}$/, { message: 'Aadhaar last 4 digits must be numeric.' }),
+    __metadata("design:type", String)
+], UpdateAdvisorProfileDto.prototype, "aadhaarLast4", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateAdvisorProfileDto.prototype, "aadhaarDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateAdvisorProfileDto.prototype, "panDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, { message: 'Enter a valid 15-character GSTIN.' }),
+    __metadata("design:type", String)
+], UpdateAdvisorProfileDto.prototype, "gstin", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateAdvisorProfileDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=update-advisor-profile.dto.js.map

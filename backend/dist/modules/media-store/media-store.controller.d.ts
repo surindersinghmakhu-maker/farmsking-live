@@ -11,8 +11,8 @@ export declare class MediaStoreController {
         mediaType?: string;
         filename?: string;
     }): Promise<import("./media-store.service").MediaStoreRecord>;
-    getCropMedia(cropId: string, scope?: 'active' | 'all'): Promise<import("./media-store.service").MediaStoreRecord[]>;
-    getCropRemark(cropId: string): Promise<{
+    getCropMedia(user: AuthUser, cropId: string, scope?: 'active' | 'all'): Promise<import("./media-store.service").MediaStoreRecord[]>;
+    getCropRemark(user: AuthUser, cropId: string): Promise<{
         cropId: string;
         remarksText: string;
         createdAt: Date | null;
@@ -40,8 +40,8 @@ export declare class MediaStoreController {
             isActiveDisplay: boolean;
         }>;
     }>;
-    listAll(cropId?: string, mediaType?: string, provider?: string, limit?: string): Promise<import("./media-store.service").MediaStoreRecord[]>;
-    archiveCropMedia(cropId: string, retentionDays?: number): Promise<{
+    listAll(user: AuthUser, cropId?: string, mediaType?: string, provider?: string, limit?: string): Promise<import("./media-store.service").MediaStoreRecord[]>;
+    archiveCropMedia(user: AuthUser, cropId: string, retentionDays?: number): Promise<{
         updatedCount: number;
     }>;
     deleteMedia(user: AuthUser, id: string): Promise<{

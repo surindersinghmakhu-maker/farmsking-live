@@ -44,7 +44,7 @@ __decorate([
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Farmer account not found with the provided mobile number or King ID.',
     }),
-    (0, throttler_1.Throttle)({ default: { limit: 60, ttl: 60_000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 15, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('lookup-statement'),
     __param(0, (0, common_1.Body)()),

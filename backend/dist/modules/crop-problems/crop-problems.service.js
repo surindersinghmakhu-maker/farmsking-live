@@ -189,12 +189,16 @@ let CropProblemsService = class CropProblemsService {
                     isReadByAdmin: true,
                 },
             });
-            this.chatGateway.server.to((0, chat_gateway_1.userRoom)(problem.reportedById)).emit('admin_chat_message', adminMsg);
-            this.chatGateway.server.emit('admin_chat_message', adminMsg);
+            this.chatGateway.server
+                .to((0, chat_gateway_1.userRoom)(problem.reportedById))
+                .to('role:ADMIN_DESK')
+                .emit('admin_chat_message', adminMsg);
         }
         catch { }
-        this.chatGateway.server.to((0, chat_gateway_1.userRoom)(problem.reportedById)).emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
-        this.chatGateway.server.emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
+        this.chatGateway.server
+            .to((0, chat_gateway_1.userRoom)(problem.reportedById))
+            .to('role:ADMIN_DESK')
+            .emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
         return updated;
     }
     async rate(user, id, dto) {

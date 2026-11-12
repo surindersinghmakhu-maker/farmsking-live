@@ -5,6 +5,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 
 /** Saved delivery addresses — every role can have some (a Customer shopping, a Farmer receiving supplies, etc). */
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,7 +24,11 @@ export class AddressesController {
   }
 
   @Patch(':id')
-  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: Partial<CreateAddressDto>) {
+  update(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateAddressDto,
+  ) {
     return this.addressesService.update(user, id, dto);
   }
 

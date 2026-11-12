@@ -15,6 +15,7 @@ const core_1 = require("@nestjs/core");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../modules/prisma/prisma.service");
 const operator_permission_decorator_1 = require("../decorators/operator-permission.decorator");
+const auth_user_util_1 = require("../utils/auth-user.util");
 let OperatorPermissionGuard = class OperatorPermissionGuard {
     constructor(reflector, prisma) {
         this.reflector = reflector;
@@ -29,7 +30,11 @@ let OperatorPermissionGuard = class OperatorPermissionGuard {
             return true;
         const request = context.switchToHttp().getRequest();
         const user = request.user;
-        if (!user || user.role !== client_1.Role.OPERATOR)
+        if (!user)
+            return true;
+        if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN))
+            return true;
+        if (!(0, auth_user_util_1.hasActiveRole)(user, client_1.Role.OPERATOR))
             return true;
         const record = await this.prisma.user.findUnique({ where: { id: user.id }, select: { operatorPermissions: true } });
         if (!record?.operatorPermissions.includes(required)) {

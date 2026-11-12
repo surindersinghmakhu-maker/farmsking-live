@@ -16,7 +16,6 @@ exports.LabourController = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
-const optional_jwt_auth_guard_1 = require("../../common/guards/optional-jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
@@ -47,23 +46,28 @@ let LabourController = class LabourController {
     deleteWorker(user, id) {
         return this.labourService.deleteWorker(user, id);
     }
-    createWorkEntry(user, dto) {
+    async createWorkEntry(user, dto) {
+        await this.labourService.assertSupervisorLabourAccess(user, 'entry');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.labourService.createWorkEntry(farmerId, user.id, dto);
     }
-    getWorkEntries(user, workerId) {
+    async getWorkEntries(user, workerId) {
+        await this.labourService.assertSupervisorLabourAccess(user, 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.labourService.getWorkEntries(farmerId, workerId);
     }
-    createPayment(user, dto) {
+    async createPayment(user, dto) {
+        await this.labourService.assertSupervisorLabourAccess(user, 'entry');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.labourService.createPayment(farmerId, user.id, dto);
     }
-    getPayments(user, workerId) {
+    async getPayments(user, workerId) {
+        await this.labourService.assertSupervisorLabourAccess(user, 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.labourService.getPayments(farmerId, workerId);
     }
-    getWorkerStatement(user, workerId) {
+    async getWorkerStatement(user, workerId) {
+        await this.labourService.assertSupervisorLabourAccess(user, 'view');
         const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.labourService.getWorkerStatement(farmerId, workerId);
     }
@@ -80,7 +84,7 @@ __decorate([
 ], LabourController.prototype, "getLabourDashboard", null);
 __decorate([
     (0, common_1.Get)('search-mobile'),
-    (0, common_1.UseGuards)(optional_jwt_auth_guard_1.OptionalJwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Query)('mobile')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -89,7 +93,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('workers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -99,7 +103,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('workers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -108,7 +112,7 @@ __decorate([
 __decorate([
     (0, common_1.Put)('workers/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -119,7 +123,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)('workers/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -134,7 +138,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, create_work_entry_dto_1.CreateWorkEntryDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], LabourController.prototype, "createWorkEntry", null);
 __decorate([
     (0, common_1.Get)('work-entries'),
@@ -144,7 +148,7 @@ __decorate([
     __param(1, (0, common_1.Query)('workerId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], LabourController.prototype, "getWorkEntries", null);
 __decorate([
     (0, common_1.Post)('payments'),
@@ -154,7 +158,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, create_labour_payment_dto_1.CreateLabourPaymentDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], LabourController.prototype, "createPayment", null);
 __decorate([
     (0, common_1.Get)('payments'),
@@ -164,7 +168,7 @@ __decorate([
     __param(1, (0, common_1.Query)('workerId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], LabourController.prototype, "getPayments", null);
 __decorate([
     (0, common_1.Get)('statement/:workerId'),
@@ -174,7 +178,7 @@ __decorate([
     __param(1, (0, common_1.Param)('workerId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], LabourController.prototype, "getWorkerStatement", null);
 exports.LabourController = LabourController = __decorate([
     (0, common_1.Controller)('labour'),

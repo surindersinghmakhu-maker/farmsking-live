@@ -68,6 +68,16 @@ export default function SellerDashboardScreen() {
   const [fssaiNo, setFssaiNo] = useState('');
   const [fssaiExpiryDate, setFssaiExpiryDate] = useState('');
   const [agriLicenseNo, setAgriLicenseNo] = useState('');
+  const [agriLicenseExpiryDate, setAgriLicenseExpiryDate] = useState('');
+  const [seedLicenseNo, setSeedLicenseNo] = useState('');
+  const [seedLicenseExpiry, setSeedLicenseExpiry] = useState('');
+  const [pesticideLicenseNo, setPesticideLicenseNo] = useState('');
+  const [pesticideLicenseExpiry, setPesticideLicenseExpiry] = useState('');
+  const [fertilizerLicenseNo, setFertilizerLicenseNo] = useState('');
+  const [fertilizerLicenseExpiry, setFertilizerLicenseExpiry] = useState('');
+  const [aadhaarLast4, setAadhaarLast4] = useState('');
+  const [isCompositionDealer, setIsCompositionDealer] = useState(false);
+  const [gstEnrolmentId, setGstEnrolmentId] = useState('');
   const [gstStateDetected, setGstStateDetected] = useState<string | null>(null);
 
   // Step 3: Bank Account & Live IFSC Auto-Lookup
@@ -101,6 +111,9 @@ export default function SellerDashboardScreen() {
   const [aadhaarBackDoc, setAadhaarBackDoc] = useState<string | null>(null);
   const [fssaiCertDoc, setFssaiCertDoc] = useState<string | null>(null);
   const [tradeLicenseDoc, setTradeLicenseDoc] = useState<string | null>(null);
+  const [seedLicenseDoc, setSeedLicenseDoc] = useState<string | null>(null);
+  const [pesticideLicenseDoc, setPesticideLicenseDoc] = useState<string | null>(null);
+  const [fertilizerLicenseDoc, setFertilizerLicenseDoc] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Validation Error State
@@ -349,7 +362,22 @@ export default function SellerDashboardScreen() {
     if (data.panNumber) setPanNumber(data.panNumber);
     if (data.wantsToSellFood !== undefined) setWantsToSellFood(data.wantsToSellFood);
     if (data.fssaiNo) setFssaiNo(data.fssaiNo);
+    if (data.fssaiExpiryDate) setFssaiExpiryDate(String(data.fssaiExpiryDate).slice(0, 10));
+    if (data.fssaiCertificateUrl) setFssaiCertDoc(data.fssaiCertificateUrl);
     if (data.agriLicenseNo) setAgriLicenseNo(data.agriLicenseNo);
+    if (data.agriLicenseExpiryDate) setAgriLicenseExpiryDate(String(data.agriLicenseExpiryDate).slice(0, 10));
+    if (data.seedLicenseNo) setSeedLicenseNo(data.seedLicenseNo);
+    if (data.seedLicenseExpiry) setSeedLicenseExpiry(String(data.seedLicenseExpiry).slice(0, 10));
+    if (data.seedLicenseDocUrl) setSeedLicenseDoc(data.seedLicenseDocUrl);
+    if (data.pesticideLicenseNo) setPesticideLicenseNo(data.pesticideLicenseNo);
+    if (data.pesticideLicenseExpiry) setPesticideLicenseExpiry(String(data.pesticideLicenseExpiry).slice(0, 10));
+    if (data.pesticideLicenseDocUrl) setPesticideLicenseDoc(data.pesticideLicenseDocUrl);
+    if (data.fertilizerLicenseNo) setFertilizerLicenseNo(data.fertilizerLicenseNo);
+    if (data.fertilizerLicenseExpiry) setFertilizerLicenseExpiry(String(data.fertilizerLicenseExpiry).slice(0, 10));
+    if (data.fertilizerLicenseDocUrl) setFertilizerLicenseDoc(data.fertilizerLicenseDocUrl);
+    if (data.aadhaarLast4) setAadhaarLast4(data.aadhaarLast4);
+    if (data.isCompositionDealer !== undefined) setIsCompositionDealer(Boolean(data.isCompositionDealer));
+    if (data.gstEnrolmentId) setGstEnrolmentId(data.gstEnrolmentId);
     if (data.bankAccountNo) setBankAccountNo(data.bankAccountNo);
     if (data.bankIfsc) setBankIfsc(data.bankIfsc);
     if (data.bankBeneficiaryName) setBankHolderName(data.bankBeneficiaryName);
@@ -611,27 +639,47 @@ export default function SellerDashboardScreen() {
       return false;
     }
 
-    // 3. FSSAI Validation if provided
+    // 2b. Aadhaar Last 4 Digits (Mandatory for Individual Farmer / Proprietorship KYC)
+    if ((isFarmerProducer || entityType === 'PROPRIETORSHIP') && !/^\d{4}$/.test(aadhaarLast4.trim())) {
+      showAlert('Aadhaar Last 4 Required ⚠️', 'Please enter the last 4 digits of Owner Aadhaar Card for individual KYC.');
+      return false;
+    }
+
+    // 3. FSSAI Validation if provided or food enabled
     if (wantsToSellFood || fssaiNo.trim()) {
-      if (fssaiNo.trim() && !/^\d{14}$/.test(fssaiNo.trim())) {
-        showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
+      if (!fssaiNo.trim() || !/^\d{14}$/.test(fssaiNo.trim())) {
+        showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code when selling food items.');
         return false;
       }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fssaiExpiryDate.trim()) || new Date(fssaiExpiryDate) <= new Date()) {
+        showAlert('FSSAI Validity Date Required ⚠️', 'Please enter an active FSSAI Expiry Date (YYYY-MM-DD in the future).');
+        return false;
+      }
+    }
+
+    // 4. Pesticide / Seed Dealer License Notice
+    if (entityType === 'PESTICIDE_DEALER' && !agriLicenseNo.trim() && !pesticideLicenseNo.trim() && !seedLicenseNo.trim()) {
+      showAlert('Agri Input License Required ⚠️', 'Pesticide / Seed Dealers must provide Seed, Insecticide, or Agri Input License No.');
+      return false;
     }
     return true;
   };
 
   const validateStep3 = () => {
-    if (!bankIfsc.trim() || bankIfsc.trim().length !== 11) {
+    if (!bankHolderName.trim()) {
+      showAlert('Account Holder Required ⚠️', 'Please enter the Account Holder Name matching Bank Passbook / Cheque.');
+      return false;
+    }
+    if (!bankIfsc.trim() || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankIfsc.trim().toUpperCase())) {
       showAlert('IFSC Code Required ⚠️', 'Please enter a valid 11-character Bank IFSC code (e.g. SBIN0001234).');
       return false;
     }
-    if (!bankAccountNo.trim()) {
-      showAlert('Account Number Required ⚠️', 'Please enter your Bank Account Number.');
+    if (!bankAccountNo.trim() || bankAccountNo.trim().length < 8) {
+      showAlert('Account Number Required ⚠️', 'Please enter a valid Bank Account Number.');
       return false;
     }
-    if (confirmAccountNo.trim() && confirmAccountNo.trim() !== bankAccountNo.trim()) {
-      showAlert('Account Number Mismatch ⚠️', 'Re-entered Bank Account Number does not match.');
+    if (!confirmAccountNo.trim() || confirmAccountNo.trim() !== bankAccountNo.trim()) {
+      showAlert('Account Number Mismatch ⚠️', 'Please re-enter and match your Bank Account Number carefully.');
       return false;
     }
     return true;
@@ -690,14 +738,20 @@ export default function SellerDashboardScreen() {
       return false;
     }
 
-    // 4. Aadhaar Front Photo mandatory for Farmers
-    if (isFarmerProducer && !aadhaarFrontDoc) {
-      showAlert('Aadhaar Card Required ⚠️', 'Farmer Producers must upload Aadhaar Card Front Photo for identity verification.');
+    // 4. Aadhaar Front & Back mandatory for Farmers & Proprietors
+    if ((isFarmerProducer || entityType === 'PROPRIETORSHIP') && (!aadhaarFrontDoc || !aadhaarBackDoc)) {
+      showAlert('Aadhaar Front & Back Required ⚠️', 'Farmers and Sole Proprietors must upload both Aadhaar Card Front & Back Photos for identity verification.');
+      return false;
+    }
+
+    // 5. FSSAI Certificate mandatory if selling food
+    if ((wantsToSellFood || fssaiNo.trim()) && !fssaiCertDoc) {
+      showAlert('FSSAI Certificate Upload Required ⚠️', 'Please upload a photo/scan of your valid FSSAI License Certificate.');
       return false;
     }
 
     if (!termsAccepted) {
-      showAlert('Agreement Acceptance Required ⚠️', 'Please read and accept the 10% Platform Commission & Section 79 Intermediary Indemnity Agreement.');
+      showAlert('Agreement Acceptance Required ⚠️', 'Please read and accept the FarmsKing Platform Commission, GST TCS / Income Tax 194-O TDS & Section 79 Intermediary Agreement.');
       return false;
     }
 
@@ -743,12 +797,26 @@ export default function SellerDashboardScreen() {
         slug: autoSlug,
         legalName: legalName.trim() || storeName.trim(),
         gstin: gstin.trim() || undefined,
+        isCompositionDealer,
+        gstEnrolmentId: gstEnrolmentId.trim() || undefined,
         panNumber: panNumber.trim() || undefined,
+        aadhaarLast4: aadhaarLast4.trim() || undefined,
         wantsToSellFood,
         fssaiNo: fssaiNo.trim() || undefined,
         fssaiCertificateUrl: fssaiCertDoc || undefined,
         fssaiExpiryDate: fssaiExpiryDate || undefined,
         agriLicenseNo: agriLicenseNo.trim() || undefined,
+        agriLicenseExpiryDate: agriLicenseExpiryDate || undefined,
+        seedLicenseNo: seedLicenseNo.trim() || undefined,
+        seedLicenseExpiry: seedLicenseExpiry || undefined,
+        seedLicenseDocUrl: seedLicenseDoc || undefined,
+        pesticideLicenseNo: pesticideLicenseNo.trim() || undefined,
+        pesticideLicenseExpiry: pesticideLicenseExpiry || undefined,
+        pesticideLicenseDocUrl: pesticideLicenseDoc || undefined,
+        fertilizerLicenseNo: fertilizerLicenseNo.trim() || undefined,
+        fertilizerLicenseExpiry: fertilizerLicenseExpiry || undefined,
+        fertilizerLicenseDocUrl: fertilizerLicenseDoc || undefined,
+        termsAccepted: true,
         bankAccountNo: bankAccountNo.trim() || undefined,
         bankIfsc: bankIfsc.trim() || undefined,
         bankBeneficiaryName: bankHolderName.trim() || storeName.trim(),
@@ -981,7 +1049,7 @@ export default function SellerDashboardScreen() {
         <Ionicons name="shield-checkmark" size={11} color="#34D399" />
         <Text style={{ color: '#6EE7B7', fontSize: 10, fontWeight: '800' }}>FarmsKing Nodal Settlement</Text>
         <Text style={{ color: '#374151', fontSize: 10 }}>•</Text>
-        <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Platform Fee: {stats.commissionRate}%  •  1% GST TCS auto-filed (GSTR-8)</Text>
+        <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Platform Fee: {stats.commissionRate}% (+18% GST)  •  0.5% Sec 52 TCS &amp; Sec 194-O TDS</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -1004,18 +1072,22 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.stepTitle}>1. Business Identity & Brand</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>Select Entity Type *</Text>
+                <Text style={styles.inputLabel}>Select Entity / Business Type *</Text>
                 <View style={styles.entityRow}>
                   {[
                     { id: 'PROPRIETORSHIP', label: 'Proprietorship' },
                     { id: 'PARTNERSHIP', label: 'Partnership' },
                     { id: 'PVT_LTD', label: 'Pvt Ltd / LLP' },
+                    { id: 'PESTICIDE_DEALER', label: 'Seed / Pesticide Dealer' },
                     { id: 'INDIVIDUAL_FARMER', label: 'Farmer Producer' },
                   ].map((ent) => (
                     <TouchableOpacity
                       key={ent.id}
                       style={[styles.entityChip, entityType === ent.id && styles.activeEntityChip]}
-                      onPress={() => setEntityType(ent.id as any)}
+                      onPress={() => {
+                        setEntityType(ent.id as any);
+                        setSellerType(ent.id === 'INDIVIDUAL_FARMER' ? 'FARMER' : 'COMMERCIAL');
+                      }}
                     >
                       <Text style={[styles.entityText, entityType === ent.id && styles.activeEntityText]}>
                         {ent.label}
@@ -1105,7 +1177,7 @@ export default function SellerDashboardScreen() {
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={styles.inputLabel}>PAN Number *</Text>
-                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>10 Chars</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>10 Chars (Sec 194-O)</Text>
                     </View>
                     <TextInput
                       style={[styles.input, { letterSpacing: 2, fontWeight: '800', fontSize: 13 }, errors.panNumber && styles.inputError]}
@@ -1120,10 +1192,50 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
+                {/* Masked Aadhaar + GST Enrolment / Composition Dealer Row */}
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>
+                      Owner Aadhaar Last 4 {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' || entityType === 'PROPRIETORSHIP' ? '*' : '(Optional)'}
+                    </Text>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 2, fontWeight: '700' }]}
+                      placeholder="Last 4 digits (e.g. 4321)"
+                      placeholderTextColor="#6B7280"
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      value={aadhaarLast4}
+                      onChangeText={(v) => setAadhaarLast4(v.replace(/\D/g, '').slice(0, 4))}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1.2 }}>
+                    <Text style={styles.inputLabel}>GST Enrolment ID (Optional Exempt)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="GST Unregistered Enrolment ID"
+                      placeholderTextColor="#6B7280"
+                      value={gstEnrolmentId}
+                      onChangeText={(v) => setGstEnrolmentId(v.trim().toUpperCase())}
+                    />
+                  </View>
+                </View>
+
+                {/* Food Seller Toggle & FSSAI Compliance */}
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, backgroundColor: '#111827', borderRadius: RADIUS.md, borderWidth: 1, borderColor: wantsToSellFood ? '#10B981' : '#374151', marginVertical: 6 }}
+                  onPress={() => setWantsToSellFood(!wantsToSellFood)}
+                >
+                  <MaterialCommunityIcons name={wantsToSellFood ? 'checkbox-marked' : 'checkbox-blank-outline'} size={22} color={wantsToSellFood ? '#10B981' : '#9CA3AF'} />
+                  <Text style={{ color: '#E5E7EB', fontSize: 12, fontWeight: '600', flex: 1 }}>
+                    I plan to sell Food / Edible Grocery Products (Requires active 14-digit FSSAI License)
+                  </Text>
+                </TouchableOpacity>
+
                 <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={styles.inputLabel}>FSSAI License No.</Text>
+                      <Text style={styles.inputLabel}>FSSAI License No.{wantsToSellFood ? ' *' : ''}</Text>
                       <Text style={{ color: '#F59E0B', fontSize: 10, fontWeight: '800' }}>14 Digits</Text>
                     </View>
                     <TextInput
@@ -1138,13 +1250,92 @@ export default function SellerDashboardScreen() {
                   </View>
 
                   <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>FSSAI Expiry Date{wantsToSellFood ? ' *' : ''}</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#6B7280"
+                      value={fssaiExpiryDate}
+                      onChangeText={setFssaiExpiryDate}
+                    />
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>Agri Inputs License No.</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Seeds / Pesticide License"
+                      placeholder="General Agri Dealer License"
                       placeholderTextColor="#6B7280"
                       value={agriLicenseNo}
                       onChangeText={setAgriLicenseNo}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Agri License Expiry</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor="#6B7280"
+                      value={agriLicenseExpiryDate}
+                      onChangeText={setAgriLicenseExpiryDate}
+                    />
+                  </View>
+                </View>
+
+                {/* Statutory Agri Licenses (Seeds Act, Insecticides Act, FCO) */}
+                <View style={{ flexDirection: 'row', gap: 10, marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Seed License No.</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Seeds Act License"
+                      placeholderTextColor="#6B7280"
+                      value={seedLicenseNo}
+                      onChangeText={setSeedLicenseNo}
+                    />
+                    <TextInput
+                      style={[styles.input, { marginTop: 4 }]}
+                      placeholder="Exp YYYY-MM-DD"
+                      placeholderTextColor="#6B7280"
+                      value={seedLicenseExpiry}
+                      onChangeText={setSeedLicenseExpiry}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Pesticide License No.</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Insecticides Act"
+                      placeholderTextColor="#6B7280"
+                      value={pesticideLicenseNo}
+                      onChangeText={setPesticideLicenseNo}
+                    />
+                    <TextInput
+                      style={[styles.input, { marginTop: 4 }]}
+                      placeholder="Exp YYYY-MM-DD"
+                      placeholderTextColor="#6B7280"
+                      value={pesticideLicenseExpiry}
+                      onChangeText={setPesticideLicenseExpiry}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Fertilizer / FCO No.</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="FCO Reg No."
+                      placeholderTextColor="#6B7280"
+                      value={fertilizerLicenseNo}
+                      onChangeText={setFertilizerLicenseNo}
+                    />
+                    <TextInput
+                      style={[styles.input, { marginTop: 4 }]}
+                      placeholder="Exp YYYY-MM-DD"
+                      placeholderTextColor="#6B7280"
+                      value={fertilizerLicenseExpiry}
+                      onChangeText={setFertilizerLicenseExpiry}
                     />
                   </View>
                 </View>
@@ -1432,12 +1623,60 @@ export default function SellerDashboardScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.inputLabel}>
-                  Upload Aadhaar Card Front Photo {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' ? '* Mandatory for Farmer Identity' : '(Optional)'}
+                  Upload Aadhaar Card Front Photo {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' || entityType === 'PROPRIETORSHIP' ? '* Mandatory for Identity' : '(Optional)'}
                 </Text>
                 <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setAadhaarFrontDoc)}>
                   <Ionicons name={aadhaarFrontDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
-                  <Text style={styles.uploadText}>{aadhaarFrontDoc ? 'Aadhaar Front Photo Attached' : 'Select Photo from Gallery'}</Text>
+                  <Text style={styles.uploadText}>{aadhaarFrontDoc ? 'Aadhaar Front Photo Attached' : 'Select Aadhaar Front from Gallery'}</Text>
                 </TouchableOpacity>
+
+                <Text style={styles.inputLabel}>
+                  Upload Aadhaar Card Back Photo {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' || entityType === 'PROPRIETORSHIP' ? '* Mandatory for Address Proof' : '(Optional)'}
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setAadhaarBackDoc)}>
+                  <Ionicons name={aadhaarBackDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{aadhaarBackDoc ? 'Aadhaar Back Photo Attached' : 'Select Aadhaar Back from Gallery'}</Text>
+                </TouchableOpacity>
+
+                {(wantsToSellFood || fssaiNo.trim()) ? (
+                  <>
+                    <Text style={styles.inputLabel}>Upload FSSAI License Certificate * Mandatory for Food</Text>
+                    <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setFssaiCertDoc)}>
+                      <Ionicons name={fssaiCertDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                      <Text style={styles.uploadText}>{fssaiCertDoc ? 'FSSAI Certificate Attached' : 'Select FSSAI Certificate from Gallery'}</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
+
+                {(seedLicenseNo.trim() || entityType === 'PESTICIDE_DEALER') ? (
+                  <>
+                    <Text style={styles.inputLabel}>Upload Seed License Document</Text>
+                    <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setSeedLicenseDoc)}>
+                      <Ionicons name={seedLicenseDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                      <Text style={styles.uploadText}>{seedLicenseDoc ? 'Seed License Attached' : 'Select Seed License Photo'}</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
+
+                {(pesticideLicenseNo.trim() || entityType === 'PESTICIDE_DEALER') ? (
+                  <>
+                    <Text style={styles.inputLabel}>Upload Pesticide / Insecticide License Document</Text>
+                    <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setPesticideLicenseDoc)}>
+                      <Ionicons name={pesticideLicenseDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                      <Text style={styles.uploadText}>{pesticideLicenseDoc ? 'Pesticide License Attached' : 'Select Pesticide License Photo'}</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
+
+                {fertilizerLicenseNo.trim() ? (
+                  <>
+                    <Text style={styles.inputLabel}>Upload Fertilizer FCO Certificate</Text>
+                    <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setFertilizerLicenseDoc)}>
+                      <Ionicons name={fertilizerLicenseDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                      <Text style={styles.uploadText}>{fertilizerLicenseDoc ? 'Fertilizer License Attached' : 'Select FCO License Photo'}</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : null}
 
                 {/* Interactive Agreement Trigger Button */}
                 <TouchableOpacity
@@ -1455,7 +1694,7 @@ export default function SellerDashboardScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="document-text" size={20} color="#10b981" />
                     <Text style={{ color: '#FFF', fontSize: 12, fontFamily: FONT.bold }}>
-                      📄 Read Full 10% Commission & Section 79 Indemnity Bond
+                      📄 Read Seller Commission ({stats.commissionRate}%), Sec 52 TCS &amp; Sec 79 Indemnity Bond
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
@@ -1473,7 +1712,7 @@ export default function SellerDashboardScreen() {
                     color={termsAccepted ? '#10B981' : '#6B7280'}
                   />
                   <Text style={styles.agreementText}>
-                    I accept FarmsKing Code of Conduct, 10% Platform Commission Terms & Section 79 IT Act Intermediary Safe Harbor & Statutory Indemnity Bond.
+                    I accept FarmsKing Code of Conduct, Platform Commission ({stats.commissionRate}% + 18% GST), Statutory 0.5% Sec 52 GST TCS &amp; Sec 194-O TDS, and Section 79 IT Act Indemnity Bond.
                   </Text>
                 </TouchableOpacity>
 
@@ -1523,10 +1762,10 @@ export default function SellerDashboardScreen() {
                     </Text>
 
                     <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>
-                      2. 10% Platform Commission & Daily Automatic Cashfree Payouts
+                      2. Platform Commission ({stats.commissionRate}% + 18% GST), Sec 52 TCS &amp; Sec 194-O TDS
                     </Text>
                     <Text style={{ color: '#9CA3AF', fontSize: 10.5, lineHeight: 16, marginBottom: 8 }}>
-                      FarmsKing charges a standard 10% platform commission on settled customer orders. Net seller earnings (90%) are credited automatically to the seller's registered nodal bank account via Cashfree Payout API after order delivery confirmation.
+                      FARMSKING TECHNOLOGIES PRIVATE LIMITED charges the agreed marketplace commission ({stats.commissionRate}% default or category slab) plus 18% GST (SAC 998599), collects 0.5% GST TCS under Section 52 CGST Act for GST-registered sellers (GSTR-8), and deducts applicable Income Tax TDS under Section 194-O (0.1% with valid PAN, or 5% under Sec 206AA without PAN). Net settled funds are remitted after delivery confirmation.
                     </Text>
 
                     <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>

@@ -1,3 +1,4 @@
+import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
@@ -5,18 +6,23 @@ import { FeatureFlagsMap } from '../../common/constants/feature-flags.constant';
 import { SystemIntegrationsConfig } from './constants/system-integrations.constant';
 export declare class AppSettingsService {
     private readonly prisma;
+    private readonly moduleRef?;
     private cache;
+    private rawCache;
     private readonly CACHE_TTL_MS;
     private readonly adminActionOtpStore;
+    private sanitizePublicFlags;
     requestAdminActionOtp(admin: AuthUser): Promise<{
         success: boolean;
+        deliveredVia: string[];
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
     }>;
     verifyAdminActionOtp(adminId: string, otp?: string): boolean;
-    constructor(prisma: PrismaService);
+    constructor(prisma: PrismaService, moduleRef?: ModuleRef | undefined);
     clearCache(): void;
+    private getRawAppSettings;
     getSeo(): Promise<{
         seoTitle: any;
         metaDescription: any;
@@ -226,8 +232,10 @@ export declare class AppSettingsService {
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
     }>;
     getIntegrations(): Promise<SystemIntegrationsConfig>;
-    updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig> & {
+    updateIntegrations(admin: AuthUser, rawPayload: Partial<SystemIntegrationsConfig> & {
         adminConfirmationOtp?: string;
+    }, options?: {
+        skipStepUp?: boolean;
     }): Promise<SystemIntegrationsConfig>;
     getServiceConfig(): Promise<any>;
     updateServiceConfig(admin: AuthUser, body: {

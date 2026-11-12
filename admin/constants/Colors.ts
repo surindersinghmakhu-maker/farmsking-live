@@ -13,6 +13,7 @@ export type UserRole =
   | 'MANAGER'
   | 'SUPERVISOR'
   | 'TECHNICAL_TRAINER'
+  | 'ACCOUNTANT'
   | 'SELLER';
 
 /**
@@ -209,6 +210,17 @@ export const RoleThemes: Record<UserRole, {
     primary: '#10b981',
     primaryLight: 'rgba(16, 185, 129, 0.15)',
     accent: '#38bdf8',
+  },
+  ACCOUNTANT: {
+    ...SURFACE,
+    name: 'Accountant & CA Desk',
+    badge: 'GST GSTR-8, Income Tax TDS & Statutory Compliance',
+    headerBg: '#065f46',
+    gradient: ['#065f46', '#047857'],
+    heroGradient: ['#ffffff', '#ecfdf5'],
+    primary: '#059669',
+    primaryLight: '#d1fae5',
+    accent: '#10b981',
   },
 };
 

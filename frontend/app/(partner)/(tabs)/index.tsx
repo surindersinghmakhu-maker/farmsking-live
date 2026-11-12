@@ -63,7 +63,7 @@ export default function HomeScreen() {
   };
 
   if (currentRole === 'CUSTOMER') {
-    return <Redirect href={'/(partner)/(tabs)/shop' as any} />;
+    return <Redirect href={'/(user)/(tabs)/shop' as any} />;
   }
 
   const renderDashboardView = () => {

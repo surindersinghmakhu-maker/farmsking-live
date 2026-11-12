@@ -24,7 +24,7 @@ export default function AdvisorCheckoutScreen() {
   };
 
   const handleDone = () => {
-    router.replace('/(tabs)/garden' as never);
+    router.replace('/(user)/(tabs)/garden' as never);
   };
 
   if (status === 'SUCCESS') {

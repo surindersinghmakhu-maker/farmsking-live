@@ -41,7 +41,7 @@ export class PublicPartiesController {
     status: HttpStatus.NOT_FOUND,
     description: 'Farmer account not found with the provided mobile number or King ID.',
   })
-  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('lookup-statement')
   lookupStatement(@Body() dto: LookupBuyerStatementDto) {

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { apiClient } from '@/src/api/client';
 import { useParties, useCreateParty, useUpdateParty, usePartyStatement } from '@/src/hooks/useParties';
 
 import { useLabourWorkers, useCreateLabourWorker, useUpdateLabourWorker, useLabourWorkerStatement } from '@/src/hooks/useLabour';
@@ -91,6 +92,61 @@ export function AllPartiesSection() {
   const [isVerified, setIsVerified] = useState(false);
   const [otpNotice, setOtpNotice] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isSendingPartyOtp, setIsSendingPartyOtp] = useState(false);
+  const [isVerifyingPartyOtp, setIsVerifyingPartyOtp] = useState(false);
+
+  const sendPartyOtpRequest = async (
+    rawMobile: string,
+    setShowOtp: (v: boolean) => void,
+    setNotice: (msg: string | null) => void,
+  ) => {
+    const clean = (rawMobile || '').replace(/\D/g, '').slice(-10);
+    if (clean.length !== 10) {
+      setNotice('Please enter a valid 10-digit mobile number first.');
+      return;
+    }
+    setIsSendingPartyOtp(true);
+    try {
+      const res = await apiClient.post('/auth/party-otp/send', { mobile: clean });
+      setShowOtp(true);
+      const devHint = res.data?.devOtp ? ` (Local dev code: ${res.data.devOtp})` : '';
+      setNotice((res.data?.message || `OTP sent to ${clean}.`) + devHint);
+    } catch (err: any) {
+      setNotice(err?.response?.data?.message || 'Failed to send verification OTP.');
+    } finally {
+      setIsSendingPartyOtp(false);
+    }
+  };
+
+  const verifyPartyOtpRequest = async (
+    rawMobile: string,
+    rawOtp: string,
+    setVerified: (v: boolean) => void,
+    setShowOtp: (v: boolean) => void,
+    setNotice: (msg: string | null) => void,
+  ) => {
+    const clean = (rawMobile || '').replace(/\D/g, '').slice(-10);
+    const code = (rawOtp || '').trim();
+    if (code.length < 4) {
+      setNotice('Please enter the 4-digit OTP received on the mobile number.');
+      return;
+    }
+    setIsVerifyingPartyOtp(true);
+    try {
+      const res = await apiClient.post('/auth/party-otp/verify', { mobile: clean, otp: code });
+      setVerified(true);
+      setShowOtp(false);
+      setNotice(
+        res.data?.kingId
+          ? `Mobile verified (FarmsKing King ID: ${res.data.kingId}).`
+          : 'Mobile number verified successfully!',
+      );
+    } catch (err: any) {
+      setNotice(err?.response?.data?.message || 'Invalid or expired OTP code.');
+    } finally {
+      setIsVerifyingPartyOtp(false);
+    }
+  };
 
   // Statement View Modal State
   const [selectedStatementItem, setSelectedStatementItem] = useState<UnifiedPartyItem | null>(null);
@@ -458,18 +514,14 @@ export function AllPartiesSection() {
                 ) : (
                   <TouchableOpacity
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
-                    onPress={() => {
-                      if (!editMobile || editMobile.length < 10) {
-                        setEditOtpNotice('Please enter 10-digit mobile number first.');
-                        return;
-                      }
-                      setEditShowOtpInput(true);
-                      setEditOtpNotice('OTP sent to ' + editMobile + '. Enter 1234 to verify.');
-                    }}
+                    disabled={isSendingPartyOtp}
+                    onPress={() => sendPartyOtpRequest(editMobile, setEditShowOtpInput, setEditOtpNotice)}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="shield-checkmark-outline" size={13} color="#0284c7" />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>Verify / Send OTP</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>
+                      {isSendingPartyOtp ? 'Sending...' : 'Verify / Send OTP'}
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -494,7 +546,7 @@ export function AllPartiesSection() {
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, marginBottom: 8, alignItems: 'center' }}>
                   <TextInput
                     style={[styles.pillInput, { flex: 1, height: 38 }]}
-                    placeholder="Enter OTP (1234)"
+                    placeholder="Enter 4-digit OTP"
                     placeholderTextColor="#94a3b8"
                     keyboardType="numeric"
                     maxLength={4}
@@ -503,17 +555,12 @@ export function AllPartiesSection() {
                   />
                   <TouchableOpacity
                     style={{ backgroundColor: '#16a34a', paddingHorizontal: 14, height: 38, justifyContent: 'center', borderRadius: RADIUS.pill }}
-                    onPress={() => {
-                      if (editOtpCode === '1234' || editOtpCode.length === 4) {
-                        setEditIsVerified(true);
-                        setEditShowOtpInput(false);
-                        setEditOtpNotice('Mobile number verified successfully!');
-                      } else {
-                        setEditOtpNotice('Invalid OTP. Enter 1234 to test.');
-                      }
-                    }}
+                    disabled={isVerifyingPartyOtp}
+                    onPress={() => verifyPartyOtpRequest(editMobile, editOtpCode, setEditIsVerified, setEditShowOtpInput, setEditOtpNotice)}
                   >
-                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 11.5 }}>Verify</Text>
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 11.5 }}>
+                      {isVerifyingPartyOtp ? 'Checking...' : 'Verify'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ) : null}
@@ -623,18 +670,14 @@ export function AllPartiesSection() {
                 ) : (
                   <TouchableOpacity
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
-                    onPress={() => {
-                      if (!newMobile || newMobile.length < 10) {
-                        setOtpNotice('Please enter 10-digit mobile number first.');
-                        return;
-                      }
-                      setShowOtpInput(true);
-                      setOtpNotice('OTP sent to ' + newMobile + '. Enter 1234 to verify.');
-                    }}
+                    disabled={isSendingPartyOtp}
+                    onPress={() => sendPartyOtpRequest(newMobile, setShowOtpInput, setOtpNotice)}
                     activeOpacity={0.8}
                   >
                     <Ionicons name="shield-checkmark-outline" size={13} color="#0284c7" />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>Verify / Send OTP</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7' }}>
+                      {isSendingPartyOtp ? 'Sending...' : 'Verify / Send OTP'}
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -659,7 +702,7 @@ export function AllPartiesSection() {
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 4, marginBottom: 8, alignItems: 'center' }}>
                   <TextInput
                     style={[styles.pillInput, { flex: 1, height: 38 }]}
-                    placeholder="Enter OTP (1234)"
+                    placeholder="Enter 4-digit OTP"
                     placeholderTextColor="#94a3b8"
                     keyboardType="numeric"
                     maxLength={4}
@@ -668,17 +711,12 @@ export function AllPartiesSection() {
                   />
                   <TouchableOpacity
                     style={{ backgroundColor: '#16a34a', paddingHorizontal: 14, height: 38, justifyContent: 'center', borderRadius: RADIUS.pill }}
-                    onPress={() => {
-                      if (otpCode === '1234' || otpCode.length === 4) {
-                        setIsVerified(true);
-                        setShowOtpInput(false);
-                        setOtpNotice('Mobile number verified successfully!');
-                      } else {
-                        setOtpNotice('Invalid OTP. Enter 1234 to test.');
-                      }
-                    }}
+                    disabled={isVerifyingPartyOtp}
+                    onPress={() => verifyPartyOtpRequest(newMobile, otpCode, setIsVerified, setShowOtpInput, setOtpNotice)}
                   >
-                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 11.5 }}>Verify</Text>
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 11.5 }}>
+                      {isVerifyingPartyOtp ? 'Checking...' : 'Verify'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ) : null}

@@ -109,7 +109,6 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
 
   const onFetchPincode = async (codeToFetch?: string) => {
     setPincodeError(null);
@@ -174,9 +173,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Generate 4-digit WhatsApp OTP & open modal
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(code);
+    // Open server-backed WhatsApp / SMS OTP modal
     setShowOtpModal(true);
   };
 
@@ -561,7 +558,6 @@ export default function RegisterScreen() {
       <OtpVerificationModal
         visible={showOtpModal}
         mobileNumber={values.mobile}
-        generatedOtp={generatedOtp}
         onVerifySuccess={handleCompleteRegistration}
         onClose={() => setShowOtpModal(false)}
       />

@@ -120,4 +120,9 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "firebaseIdToken", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], RegisterDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=register.dto.js.map

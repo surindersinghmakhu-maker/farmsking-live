@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -24,38 +23,38 @@ export class LabourController {
     return this.labourService.getLabourDashboard(user.id);
   }
 
-  /** Search worker/user by 10-digit mobile number (Optional JWT so unauthenticated registration flow can also lookup King ID) */
+  /** Search worker/user by 10-digit mobile number (Authenticated users only; returns masked public summary) */
   @Get('search-mobile')
-  @UseGuards(OptionalJwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   searchByMobile(@Query('mobile') mobile: string) {
     return this.labourService.searchByMobile(mobile);
   }
 
-  /** Worker Management Endpoints (Available to all authenticated users) */
+  /** Worker Management Endpoints */
   @Post('workers')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   createWorker(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourWorkerDto) {
     return this.labourService.createWorker(user, dto);
   }
 
   @Get('workers')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   getWorkers(@CurrentUser() user: AuthUser) {
     return this.labourService.getWorkersForFarmer(user);
   }
 
   @Put('workers/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
+  @Roles(Role.LABOUR, Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   updateWorker(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateLabourWorkerDto) {
     return this.labourService.updateWorker(user, id, dto);
   }
 
   @Delete('workers/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LABOUR, Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT, Role.OPERATOR)
+  @Roles(Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   deleteWorker(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.labourService.deleteWorker(user, id);
   }
@@ -63,7 +62,8 @@ export class LabourController {
   @Post('work-entries')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
-  createWorkEntry(@CurrentUser() user: AuthUser, @Body() dto: CreateWorkEntryDto) {
+  async createWorkEntry(@CurrentUser() user: AuthUser, @Body() dto: CreateWorkEntryDto) {
+    await this.labourService.assertSupervisorLabourAccess(user, 'entry');
     const farmerId = getEffectiveFarmerId(user);
     return this.labourService.createWorkEntry(farmerId, user.id, dto);
   }
@@ -71,7 +71,8 @@ export class LabourController {
   @Get('work-entries')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
-  getWorkEntries(@CurrentUser() user: AuthUser, @Query('workerId') workerId?: string) {
+  async getWorkEntries(@CurrentUser() user: AuthUser, @Query('workerId') workerId?: string) {
+    await this.labourService.assertSupervisorLabourAccess(user, 'view');
     const farmerId = getEffectiveFarmerId(user);
     return this.labourService.getWorkEntries(farmerId, workerId);
   }
@@ -79,7 +80,8 @@ export class LabourController {
   @Post('payments')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
-  createPayment(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourPaymentDto) {
+  async createPayment(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourPaymentDto) {
+    await this.labourService.assertSupervisorLabourAccess(user, 'entry');
     const farmerId = getEffectiveFarmerId(user);
     return this.labourService.createPayment(farmerId, user.id, dto);
   }
@@ -87,7 +89,8 @@ export class LabourController {
   @Get('payments')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
-  getPayments(@CurrentUser() user: AuthUser, @Query('workerId') workerId?: string) {
+  async getPayments(@CurrentUser() user: AuthUser, @Query('workerId') workerId?: string) {
+    await this.labourService.assertSupervisorLabourAccess(user, 'view');
     const farmerId = getEffectiveFarmerId(user);
     return this.labourService.getPayments(farmerId, workerId);
   }
@@ -95,7 +98,8 @@ export class LabourController {
   @Get('statement/:workerId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
-  getWorkerStatement(@CurrentUser() user: AuthUser, @Param('workerId') workerId: string) {
+  async getWorkerStatement(@CurrentUser() user: AuthUser, @Param('workerId') workerId: string) {
+    await this.labourService.assertSupervisorLabourAccess(user, 'view');
     const farmerId = getEffectiveFarmerId(user);
     return this.labourService.getWorkerStatement(farmerId, workerId);
   }

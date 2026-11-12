@@ -32,6 +32,8 @@ import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { PartnerSignupModal } from '@/src/components/PartnerSignupModal';
+import type { PartnerApplicationDto, PartnerUserSummary } from '@/src/api/auth.api';
 
 if (Platform.OS !== 'web') {
   WebBrowser.maybeCompleteAuthSession();
@@ -188,22 +190,29 @@ export default function LoginScreen() {
       return;
     }
     const targetUser = loggedInUser || user;
-    const allRoles: string[] = [
-      targetUser?.role,
-      ...(Array.isArray(targetUser?.roles) ? targetUser.roles : []),
-    ].filter(Boolean);
-    const partnerDashboardRoles = [
-      'AGENT',
-      'ADVISOR',
-      'FARM_ADVISOR',
-      'GARDEN_ADVISOR',
-      'TECHNICAL_TRAINER',
-    ];
-    if (allRoles.some((r) => partnerDashboardRoles.includes(r))) {
+    const deactivatedSet = new Set<string>(
+      Array.isArray((targetUser as any)?.deactivatedRoles) ? (targetUser as any).deactivatedRoles : [],
+    );
+    const activeRoles: string[] = Array.from(
+      new Set(
+        [
+          targetUser?.role,
+          ...(Array.isArray(targetUser?.roles) ? targetUser.roles : []),
+        ].filter((r): r is string => Boolean(r) && !deactivatedSet.has(r)),
+      ),
+    );
+
+    if (portalMode === 'CLIENT') {
+      router.replace('/(user)/(tabs)');
+      return;
+    }
+
+    const partnerTabRoles = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'];
+    if (activeRoles.some((r) => partnerTabRoles.includes(r))) {
       router.replace('/(partner)/(tabs)');
       return;
     }
-    if (allRoles.includes('SELLER')) {
+    if (activeRoles.includes('SELLER')) {
       router.replace('/seller-dashboard' as any);
       return;
     }
@@ -229,8 +238,63 @@ export default function LoginScreen() {
   const [isNewUserModal, setIsNewUserModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
   const [newUserName, setNewUserName] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isCompletingReg, setIsCompletingReg] = useState(false);
+
+  // Partner Self-Signup / Status / Rejection-Edit Modal State
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+  const [partnerModalMobile, setPartnerModalMobile] = useState('');
+  const [partnerUploadToken, setPartnerUploadToken] = useState<string | null>(null);
+  const [partnerExistingUser, setPartnerExistingUser] = useState<PartnerUserSummary | null>(null);
+  const [partnerExistingApp, setPartnerExistingApp] = useState<PartnerApplicationDto | null>(null);
+  const [partnerActionPrompt, setPartnerActionPrompt] = useState<{
+    code: 'PARTNER_APPLICATION_PENDING' | 'PARTNER_APPLICATION_REJECTED' | 'PARTNER_ROLE_NOT_GRANTED';
+    rejectionReason?: string;
+    mobile?: string;
+    existingKingId?: string | null;
+    partnerUploadToken?: string | null;
+    existingUserSummary?: PartnerUserSummary | null;
+    existingApplication?: PartnerApplicationDto | null;
+  } | null>(null);
+
+  const openPartnerSignupModal = (opts?: {
+    mobile?: string;
+    partnerUploadToken?: string | null;
+    existingUserSummary?: PartnerUserSummary | null;
+    existingApplication?: PartnerApplicationDto | null;
+  }) => {
+    setPartnerModalMobile(opts?.mobile ?? (mobile.trim() || partnerIdentifier.trim()));
+    setPartnerUploadToken(opts?.partnerUploadToken ?? null);
+    setPartnerExistingUser(opts?.existingUserSummary ?? null);
+    setPartnerExistingApp(opts?.existingApplication ?? null);
+    setPartnerModalOpen(true);
+  };
+
+  const applyStructuredPartnerError = (err: any, fallbackMobile?: string): boolean => {
+    const data = err?.response?.data;
+    const code = data?.code;
+    if (
+      portalMode === 'PARTNER' &&
+      (code === 'PARTNER_APPLICATION_PENDING' ||
+        code === 'PARTNER_APPLICATION_REJECTED' ||
+        code === 'PARTNER_ROLE_NOT_GRANTED')
+    ) {
+      setPartnerActionPrompt({
+        code,
+        rejectionReason: data?.rejectionReason,
+        mobile: data?.mobile || fallbackMobile,
+        existingKingId: data?.existingKingId,
+        partnerUploadToken: data?.partnerUploadToken ?? null,
+        existingUserSummary: data?.existingUserSummary ?? null,
+        existingApplication: data?.existingApplication ?? null,
+      });
+      setError(data?.message || 'Partner account requires verification or approval.');
+      return true;
+    }
+    setPartnerActionPrompt(null);
+    return false;
+  };
 
   // Guarantee pitch dark body background on Web to eliminate any bottom blank/white gap
   useEffect(() => {
@@ -412,6 +476,7 @@ export default function LoginScreen() {
   // Step 1: Request Mobile OTP
   const handleSendOtp = async () => {
     setError(null);
+    setPartnerActionPrompt(null);
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     if (!cleanNum || cleanNum.length < 10) {
       setError('Please enter a valid 10-digit mobile number.');
@@ -425,7 +490,8 @@ export default function LoginScreen() {
       try {
         const otpRes = await sendLoginOtp(cleanNum, activePortal);
         if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
-          setError('No Agent account is registered with these details. Please switch to the User Login section for Farmer, Gardener, or Buyer accounts.');
+          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+          setError('No Partner account is active on this number yet. Apply as Agent, Advisor, or Seller below.');
           return;
         }
         setOtpSent(true);
@@ -434,8 +500,10 @@ export default function LoginScreen() {
         setResendTimer(60);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       } catch (err: any) {
-        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
-        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+        if (!applyStructuredPartnerError(err, cleanNum)) {
+          const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
+          setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+        }
       } finally {
         setOtpSending(false);
       }
@@ -627,6 +695,9 @@ export default function LoginScreen() {
     } catch (err: any) {
       console.warn('[handleOtpLogin error]:', err);
       autoSubmittedCodeRef.current = null;
+      if (applyStructuredPartnerError(err, cleanNum)) {
+        return;
+      }
       let msg = 'Verification failed. Please check the 6-digit code.';
       if (err?.code === 'auth/invalid-verification-code') {
         msg = 'Incorrect SMS OTP code. Please enter the valid 6-digit code received on your phone.';
@@ -658,6 +729,10 @@ export default function LoginScreen() {
       setModalError('Please enter your full name to proceed.');
       return;
     }
+    if (!termsAccepted) {
+      setModalError('Please accept the Terms of Service, Privacy & Refund Policies to continue.');
+      return;
+    }
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsCompletingReg(true);
     try {
@@ -666,6 +741,7 @@ export default function LoginScreen() {
         name: trimmedName,
         role: selectedRole,
         portal: portalMode,
+        termsAccepted: true,
       });
       setIsNewUserModal(false);
       handleSuccessNavigation(false, loggedInUser);
@@ -678,6 +754,7 @@ export default function LoginScreen() {
 
   const handlePartnerPasswordLogin = async () => {
     setError(null);
+    setPartnerActionPrompt(null);
     const idClean = partnerIdentifier.trim();
     const passClean = partnerPassword.trim();
     if (!idClean) {
@@ -694,11 +771,13 @@ export default function LoginScreen() {
       const loggedInUser = await login({ mobile: idClean, password: passClean, portal: 'PARTNER' });
       handleSuccessNavigation(false, loggedInUser);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ??
-        err?.message ??
-        'Agent sign in failed. Check your King ID / Mobile and Password.';
-      setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      if (!applyStructuredPartnerError(err, idClean)) {
+        const msg =
+          err?.response?.data?.message ??
+          err?.message ??
+          'Agent sign in failed. Check your King ID / Mobile and Password.';
+        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -708,6 +787,7 @@ export default function LoginScreen() {
     if (nextPortal === portalMode) return;
     setPortalMode(nextPortal);
     setError(null);
+    setPartnerActionPrompt(null);
     setOtpSent(false);
     setOtpDigits(['', '', '', '', '', '']);
     setDevOtp(null);
@@ -1022,7 +1102,7 @@ export default function LoginScreen() {
                     portalMode === 'PARTNER' && { color: '#fcd34d' },
                   ]}
                 >
-                  Doctor, Agent, Trainer &amp; Seller
+                  Doctor, Agent &amp; Seller
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1090,6 +1170,37 @@ export default function LoginScreen() {
                 <Ionicons name="alert-circle" size={16} color="#ef4444" style={{ marginTop: 1 }} />
                 <View style={{ flex: 1, gap: 6 }}>
                   <Text style={styles.errorText}>{error}</Text>
+                  {partnerActionPrompt?.code === 'PARTNER_APPLICATION_REJECTED' &&
+                  partnerActionPrompt.rejectionReason ? (
+                    <Text style={{ fontSize: 11.5, color: '#fca5a5', fontFamily: FONT.semiBold }}>
+                      Reason: {partnerActionPrompt.rejectionReason}
+                    </Text>
+                  ) : null}
+                  {portalMode === 'PARTNER' && partnerActionPrompt ? (
+                    <TouchableOpacity
+                      onPress={() =>
+                        openPartnerSignupModal({
+                          mobile: partnerActionPrompt.mobile,
+                          partnerUploadToken: partnerActionPrompt.partnerUploadToken ?? null,
+                          existingUserSummary: partnerActionPrompt.existingUserSummary ?? null,
+                          existingApplication: partnerActionPrompt.existingApplication ?? null,
+                        })
+                      }
+                      activeOpacity={0.85}
+                      style={[
+                        styles.portalSwitchHintBtn,
+                        { borderColor: 'rgba(245, 158, 11, 0.55)', backgroundColor: 'rgba(245, 158, 11, 0.16)' },
+                      ]}
+                    >
+                      <Text style={[styles.portalSwitchHintText, { color: '#fbbf24' }]}>
+                        {partnerActionPrompt.code === 'PARTNER_APPLICATION_REJECTED'
+                          ? 'Edit & Resubmit Rejected Profile →'
+                          : partnerActionPrompt.code === 'PARTNER_APPLICATION_PENDING'
+                          ? 'Check / Update Application →'
+                          : 'Apply / Sign Up as Partner →'}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
                   {((portalMode === 'CLIENT' && (error.includes('Agent Login') || error.includes('Partner Login'))) ||
                     (portalMode === 'PARTNER' && (error.includes('User Login') || error.includes('Client Login') || error.includes('Farmer')))) && (
                     <TouchableOpacity
@@ -1464,6 +1575,28 @@ export default function LoginScreen() {
               </>
             )}
 
+            {/* Partner Self-Signup & Rejected Application Editor CTA */}
+            {portalMode === 'PARTNER' && (
+              <View style={styles.partnerApplyBox}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.partnerApplyTitle}>
+                    Need a Partner role or Rejected Profile update?
+                  </Text>
+                  <Text style={styles.partnerApplySub}>
+                    Apply as Agent, Advisor, or Seller. Existing Farmer/Buyer accounts keep their exact same King ID after Admin approval.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.partnerApplyBtn}
+                  onPress={() => openPartnerSignupModal()}
+                  activeOpacity={0.88}
+                >
+                  <Ionicons name="person-add-outline" size={14} color="#0f172a" />
+                  <Text style={styles.partnerApplyBtnText}>Sign Up / Check Status</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Alternative Divider */}
             <View style={styles.dividerBox}>
               <View style={styles.dividerLine} />
@@ -1590,12 +1723,63 @@ export default function LoginScreen() {
               })}
             </View>
 
+            {/* Mandatory Legal & DPDPA 2023 Consent */}
+            <TouchableOpacity
+              onPress={() => {
+                setTermsAccepted((v) => !v);
+                if (modalError) setModalError(null);
+              }}
+              activeOpacity={0.85}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: 10,
+                borderRadius: 10,
+                backgroundColor: termsAccepted ? 'rgba(16, 185, 129, 0.08)' : 'rgba(15, 23, 42, 0.65)',
+                borderWidth: 1,
+                borderColor: termsAccepted ? 'rgba(16, 185, 129, 0.45)' : '#1e293b',
+                marginBottom: 14,
+              }}
+            >
+              <Ionicons
+                name={termsAccepted ? 'checkbox' : 'square-outline'}
+                size={19}
+                color={termsAccepted ? '#10b981' : '#64748b'}
+                style={{ marginTop: 1 }}
+              />
+              <Text style={{ flex: 1, fontSize: 11.5, lineHeight: 16, color: '#cbd5e1' }}>
+                I agree to{' '}
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
+                  onPress={() => router.push('/terms' as any)}
+                >
+                  Terms of Service
+                </Text>
+                ,{' '}
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
+                  onPress={() => router.push('/privacy-policy' as any)}
+                >
+                  Privacy Policy
+                </Text>
+                {' '}&amp;{' '}
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
+                  onPress={() => router.push('/refund-policy' as any)}
+                >
+                  Refund Policy
+                </Text>
+                {' '}of FARMSKING TECHNOLOGIES PRIVATE LIMITED.
+              </Text>
+            </TouchableOpacity>
+
             {/* Confirm & Launch Dashboard */}
             <TouchableOpacity
               onPress={handleCompleteRegistration}
-              disabled={isCompletingReg || !newUserName.trim()}
+              disabled={isCompletingReg || !newUserName.trim() || !termsAccepted}
               activeOpacity={0.88}
-              style={[styles.primaryActionBtn, (isCompletingReg || !newUserName.trim()) && { opacity: 0.6 }]}
+              style={[styles.primaryActionBtn, (isCompletingReg || !newUserName.trim() || !termsAccepted) && { opacity: 0.6 }]}
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}
@@ -1616,6 +1800,15 @@ export default function LoginScreen() {
           </View>
         </View>
       </Modal>
+
+      <PartnerSignupModal
+        visible={partnerModalOpen}
+        onClose={() => setPartnerModalOpen(false)}
+        initialMobile={partnerModalMobile}
+        initialPartnerUploadToken={partnerUploadToken}
+        initialExistingUserSummary={partnerExistingUser}
+        initialExistingApplication={partnerExistingApp}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -2269,5 +2462,41 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     lineHeight: 15,
+  },
+  partnerApplyBox: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.30)',
+    gap: 10,
+  },
+  partnerApplyTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#fbbf24',
+  },
+  partnerApplySub: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#cbd5e1',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  partnerApplyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fbbf24',
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 9,
+  },
+  partnerApplyBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
   },
 });

@@ -64,7 +64,7 @@ export function SupervisorManagementModal({
     'MANAGE_HARVEST_SALES',
   ]);
   const [otpStep, setOtpStep] = useState<'FORM' | 'VERIFY_OTP'>('FORM');
-  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
@@ -119,34 +119,36 @@ export function SupervisorManagementModal({
 
     setIsSendingOtp(true);
     setOtpError(null);
+    setServerDevOtp(null);
     try {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(code);
-      await apiClient.post('/auth/send-otp', { mobile: cleanMobile, otp: code });
+      const res = await apiClient.post('/auth/party-otp/send', { mobile: cleanMobile });
+      if (res.data?.devOtp) {
+        setServerDevOtp(String(res.data.devOtp));
+      }
       setOtpStep('VERIFY_OTP');
       setOtpInput('');
     } catch (err: any) {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(code);
-      setOtpStep('VERIFY_OTP');
+      setOtpError(err?.response?.data?.message || 'Failed to send verification OTP. Please check the mobile number.');
     } finally {
       setIsSendingOtp(false);
     }
   };
 
   const handleVerifyOtpAndCreate = async () => {
-    if (!otpInput.trim()) {
+    const cleanOtp = otpInput.trim();
+    if (!cleanOtp || cleanOtp.length < 4) {
       setOtpError('Please enter the 4-digit OTP received on Supervisor mobile.');
-      return;
-    }
-    if (otpInput.trim() !== generatedOtp) {
-      setOtpError('Incorrect OTP! Please enter the 4-digit code sent to supervisor mobile.');
       return;
     }
 
     setIsSubmitting(true);
     setOtpError(null);
     try {
+      await apiClient.post('/auth/party-otp/verify', {
+        mobile: mobile.trim().replace(/\D/g, ''),
+        otp: cleanOtp,
+      });
+
       const res = await apiClient.post<{ supervisor: SupervisorUser; tempPassword: string }>('/users/my-supervisors', {
         name: name.trim(),
         mobile: mobile.trim(),
@@ -325,6 +327,11 @@ export function SupervisorManagementModal({
                     </View>
 
                     <View style={{ gap: 8, marginVertical: 6 }}>
+                      {serverDevOtp ? (
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#059669', textAlign: 'center' }}>
+                          Localhost Server OTP: {serverDevOtp}
+                        </Text>
+                      ) : null}
                       <Text style={styles.inputLabel}>Enter 4-Digit OTP Code *</Text>
                       <TextInput
                         style={[styles.input, { textAlign: 'center', fontSize: 22, letterSpacing: 8, fontFamily: FONT.extraBold, borderColor: '#4f46e5', backgroundColor: '#eef2ff' }]}

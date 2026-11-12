@@ -47,20 +47,13 @@ const queryClient = new QueryClient({
 });
 
 const STAFF_ROLES = [
-  'ADMIN',
-  'SUPERADMIN',
   'ADVISOR',
   'FARM_ADVISOR',
   'GARDEN_ADVISOR',
-  'TECHNICAL_TRAINER',
-  'DISTRICT_MANAGER',
-  'STATE_MANAGER',
-  'ACCOUNTS_MANAGER',
-  'OPERATIONS_MANAGER',
 ];
 
 function RootNavigation() {
-  const { user, isLoading } = useAuth();
+  const { user, loginPortal, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const segmentsPath = segments.join('/');
@@ -77,7 +70,6 @@ function RootNavigation() {
       'shop',
       'dose',
       'you',
-      'seller-dashboard',
       'topic',
       'compliance',
       'crop-intelligence',
@@ -101,7 +93,8 @@ function RootNavigation() {
     if (!user && !inAuthGroup && !isPublicRoute && !isSubdomainAdmin) {
       router.replace('/(auth)/login');
     } else if (user) {
-      const userRoles = [user.role, ...(user.roles || [])];
+      const deactivated = new Set(Array.isArray((user as any).deactivatedRoles) ? (user as any).deactivatedRoles : []);
+      const userRoles = Array.from(new Set([user.role, ...(user.roles || [])])).filter((r) => !deactivated.has(r));
       const isStaff = STAFF_ROLES.includes(user.role);
       const profileSubmitted = !!(user as any).staffProfileSubmitted || (user as any).profileStatus === 'UNDER_REVIEW' || (user as any).profileStatus === 'APPROVED';
 
@@ -111,29 +104,37 @@ function RootNavigation() {
         return;
       }
 
-      if (isAtRootOrIndex) {
-        if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
-          router.replace('/(partner)/(tabs)');
-        } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-          router.replace('/admin');
-        } else {
-          router.replace('/(user)/(tabs)');
+      const partnerTabRoles = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'];
+      const hasPartnerTabsAccess = userRoles.some((r) => partnerTabRoles.includes(r));
+      const hasAnyPartnerPortalAccess = hasPartnerTabsAccess || userRoles.includes('SELLER');
+      const hasExplicitClientRole = userRoles.some((r) => ['FARMER', 'GARDENER', 'TRADER', 'SUPERVISOR', 'LABOUR'].includes(r));
+
+      const resolveHomeRoute = (): string => {
+        if (userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN')) return '/admin';
+        if (loginPortal === 'CLIENT' && hasExplicitClientRole) return '/(user)/(tabs)';
+        if (loginPortal === 'PARTNER' && hasAnyPartnerPortalAccess) {
+          return hasPartnerTabsAccess ? '/(partner)/(tabs)' : '/seller-dashboard';
         }
+        if (hasExplicitClientRole && !partnerTabRoles.includes(user.role)) {
+          return '/(user)/(tabs)';
+        }
+        if (hasPartnerTabsAccess) return '/(partner)/(tabs)';
+        if (userRoles.includes('SELLER')) return '/seller-dashboard';
+        return '/(user)/(tabs)';
+      };
+
+      if (isAtRootOrIndex) {
+        router.replace(resolveHomeRoute() as any);
         return;
       }
 
       if (currentGroup === '(partner)') {
-        const hasPartnerAccess = userRoles.some(r => ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
-        if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
+        if (!hasAnyPartnerPortalAccess) router.replace('/(user)/(tabs)');
       } else if (inAuthGroup) {
-        if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
-          router.replace('/(partner)/(tabs)');
-        } else {
-          router.replace('/(user)/(tabs)');
-        }
+        router.replace(resolveHomeRoute() as any);
       }
     }
-  }, [user, isLoading, segmentsPath]);
+  }, [user, loginPortal, isLoading, segmentsPath]);
 
   useEffect(() => {
     if (isLoading) return;

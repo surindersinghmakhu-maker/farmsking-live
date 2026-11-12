@@ -4,6 +4,7 @@ import { OperatorPermission, Role } from '@prisma/client';
 import { PrismaService } from '../../modules/prisma/prisma.service';
 import { OPERATOR_PERMISSION_KEY } from '../decorators/operator-permission.decorator';
 import { AuthUser } from '../types/auth-user.type';
+import { hasActiveRole } from '../utils/auth-user.util';
 
 /**
  * Gates an endpoint that's open to OPERATOR alongside ADMIN/SUPER_ADMIN (via @Roles), but only lets an
@@ -26,7 +27,9 @@ export class OperatorPermissionGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user: AuthUser | undefined = request.user;
-    if (!user || user.role !== Role.OPERATOR) return true;
+    if (!user) return true;
+    if (hasActiveRole(user, Role.SUPER_ADMIN) || hasActiveRole(user, Role.ADMIN)) return true;
+    if (!hasActiveRole(user, Role.OPERATOR)) return true;
 
     const record = await this.prisma.user.findUnique({ where: { id: user.id }, select: { operatorPermissions: true } });
     if (!record?.operatorPermissions.includes(required)) {

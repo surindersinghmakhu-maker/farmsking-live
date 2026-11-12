@@ -22,9 +22,15 @@ let ReferralsService = class ReferralsService {
     async linkReferralOnSignUp(referredUserId, referrerKingId) {
         if (!referrerKingId)
             return null;
+        const cleanInput = referrerKingId.trim();
+        const rawDigits = cleanInput.replace(/\D/g, '');
+        const cleanMobile = rawDigits.slice(-10);
         const referrer = await this.prisma.user.findFirst({
             where: {
-                kingId: referrerKingId.trim(),
+                OR: [
+                    { kingId: { equals: cleanInput, mode: 'insensitive' } },
+                    ...(cleanMobile.length === 10 ? [{ mobile: cleanMobile }, { mobile: `+91${cleanMobile}` }] : []),
+                ],
                 deletedAt: null,
             },
         });
@@ -43,6 +49,10 @@ let ReferralsService = class ReferralsService {
                 level: 1,
                 trustScoreBonus: 10,
             },
+        });
+        await this.prisma.user.updateMany({
+            where: { id: referredUserId, referredById: null },
+            data: { referredById: referrer.id },
         });
         const grandparentRef = await this.prisma.userReferral.findUnique({
             where: { referredUserId: referrer.id },
@@ -157,7 +167,7 @@ let ReferralsService = class ReferralsService {
             select: { kingId: true },
         });
         const inviteKingId = currentUser?.kingId || user.id;
-        const inviteUrl = `https://farmsking.com/invite?ref=${inviteKingId}`;
+        const inviteUrl = `https://farmsking.in/register?ref=${inviteKingId}`;
         return {
             kingId: inviteKingId,
             inviteUrl,

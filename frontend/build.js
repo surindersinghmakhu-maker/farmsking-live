@@ -605,6 +605,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
       'terms',
       'privacy-policy',
       'refund-policy',
+      'shipping-policy',
       'order-tracking',
       'crop-intelligence',
       'ai-doctor',

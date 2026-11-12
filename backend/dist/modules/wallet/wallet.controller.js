@@ -81,7 +81,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(operator_permission_guard_1.OperatorPermissionGuard),
     (0, operator_permission_decorator_1.RequireOperatorPermission)(client_1.OperatorPermission.VIEW_WALLETS),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/all-users'),
     __param(0, (0, common_1.Query)('search')),
     __param(1, (0, common_1.Query)('role')),
@@ -94,7 +94,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(operator_permission_guard_1.OperatorPermissionGuard),
     (0, operator_permission_decorator_1.RequireOperatorPermission)(client_1.OperatorPermission.VIEW_WALLETS),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/bonus-report'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -103,7 +103,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(operator_permission_guard_1.OperatorPermissionGuard),
     (0, operator_permission_decorator_1.RequireOperatorPermission)(client_1.OperatorPermission.VIEW_WALLETS),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/automated-report'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -112,7 +112,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(operator_permission_guard_1.OperatorPermissionGuard),
     (0, operator_permission_decorator_1.RequireOperatorPermission)(client_1.OperatorPermission.VIEW_WALLETS),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/:userId'),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),

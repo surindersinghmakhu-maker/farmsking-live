@@ -18,6 +18,8 @@ const plots_service_1 = require("../plots/plots.service");
 const crops_service_1 = require("../crops/crops.service");
 const parties_service_1 = require("../parties/parties.service");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
+const supervisor_permission_util_1 = require("../../common/utils/supervisor-permission.util");
 let ExpensesService = class ExpensesService {
     constructor(prisma, farmsService, plotsService, cropsService, partiesService) {
         this.prisma = prisma;
@@ -114,14 +116,20 @@ let ExpensesService = class ExpensesService {
         return fallback ? fallback.id : categoryId;
     }
     async create(user, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         await this.farmsService.findOneOrThrow(user, dto.farmId);
         const validCategoryId = await this.resolveCategoryId(dto.categoryId);
         let validPartyId = undefined;
         if (dto.partyId) {
             const cleanPartyId = dto.partyId.replace(/^labour_/, '');
-            const partyExists = await this.prisma.party.findFirst({ where: { id: cleanPartyId, deletedAt: null } });
-            if (partyExists)
-                validPartyId = partyExists.id;
+            const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+            const partyExists = await this.prisma.party.findFirst({
+                where: { id: cleanPartyId, ownerId, deletedAt: null },
+            });
+            if (!partyExists) {
+                throw new common_1.BadRequestException('Selected buyer/vendor party does not belong to your farm.');
+            }
+            validPartyId = partyExists.id;
         }
         let validCropCycleId = undefined;
         if (dto.cropCycleId) {
@@ -147,12 +155,14 @@ let ExpensesService = class ExpensesService {
         }
         return expense;
     }
-    findAllForFarm(user, farmId) {
-        return this.farmsService.findOneOrThrow(user, farmId).then(() => this.prisma.expense.findMany({
+    async findAllForFarm(user, farmId) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'view');
+        await this.farmsService.findOneOrThrow(user, farmId);
+        return this.prisma.expense.findMany({
             where: { farmId, deletedAt: null },
             include: { category: true, cropCycle: { select: { id: true, cropName: true } } },
             orderBy: { expenseDate: 'desc' },
-        }));
+        });
     }
     findAllForAdmin() {
         return this.prisma.expense.findMany({
@@ -193,17 +203,20 @@ let ExpensesService = class ExpensesService {
         });
     }
     async findOneOrThrow(user, id) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'view');
         const expense = await this.prisma.expense.findFirst({
             where: { id, deletedAt: null },
             include: { category: true, farm: true, cropCycle: { select: { id: true, cropName: true } } },
         });
         const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
-        if (!expense || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && expense.farm.ownerId !== ownerId)) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!expense || (!isAdmin && expense.farm.ownerId !== ownerId)) {
             throw new common_1.NotFoundException('Expense not found.');
         }
         return expense;
     }
     async update(user, id, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         const existing = await this.findOneOrThrow(user, id);
         let validCategoryId = existing.categoryId;
         if (dto.categoryId) {
@@ -213,8 +226,14 @@ let ExpensesService = class ExpensesService {
         if (dto.partyId !== undefined) {
             if (dto.partyId) {
                 const cleanPartyId = dto.partyId.replace(/^labour_/, '');
-                const partyExists = await this.prisma.party.findFirst({ where: { id: cleanPartyId, deletedAt: null } });
-                validPartyId = partyExists ? partyExists.id : undefined;
+                const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+                const partyExists = await this.prisma.party.findFirst({
+                    where: { id: cleanPartyId, ownerId, deletedAt: null },
+                });
+                if (!partyExists) {
+                    throw new common_1.BadRequestException('Selected buyer/vendor party does not belong to your farm.');
+                }
+                validPartyId = partyExists.id;
             }
             else {
                 validPartyId = undefined;
@@ -245,6 +264,7 @@ let ExpensesService = class ExpensesService {
         });
     }
     async remove(user, id) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'labour', 'entry');
         const expense = await this.findOneOrThrow(user, id);
         await this.prisma.partyLedgerEntry.deleteMany({
             where: { expenseId: expense.id },

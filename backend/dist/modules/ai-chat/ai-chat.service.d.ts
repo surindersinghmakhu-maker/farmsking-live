@@ -10,6 +10,9 @@ export declare class AiChatRequestDto {
     history?: ChatMessageDto[];
     mode?: AiChatMode;
 }
+export declare class DiagnoseLeafDto {
+    imageBase64: string;
+}
 export interface LeafDiagnosisResult {
     cropRecognized: boolean;
     cropName: string;

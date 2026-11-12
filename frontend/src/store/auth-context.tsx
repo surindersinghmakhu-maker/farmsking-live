@@ -9,13 +9,29 @@ import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
 import { User } from '../types/api';
 
+const ADMIN_STAFF_ROLES = [
+  'ADMIN',
+  'SUPER_ADMIN',
+  'MANAGER',
+  'OPERATOR',
+  'ACCOUNTANT',
+  'TECHNICAL_TRAINER',
+];
+
 const PARTNER_PORTAL_ROLES = [
   'AGENT',
   'ADVISOR',
   'FARM_ADVISOR',
   'GARDEN_ADVISOR',
-  'TECHNICAL_TRAINER',
   'SELLER',
+];
+
+const EXPLICIT_CLIENT_ROLES = [
+  'FARMER',
+  'GARDENER',
+  'TRADER',
+  'SUPERVISOR',
+  'LABOUR',
 ];
 
 function normalizeSessionUserRoles<T>(u: T): T {
@@ -28,29 +44,41 @@ function normalizeSessionUserRoles<T>(u: T): T {
   return copy;
 }
 
-function isPartnerPortalAccount(sessionUser: any): boolean {
-  if (!sessionUser) return false;
+function getActiveSessionRoles(sessionUser: any): string[] {
+  if (!sessionUser) return [];
   const deactivated = new Set(Array.isArray(sessionUser.deactivatedRoles) ? sessionUser.deactivatedRoles : []);
   const combinedRoles = [sessionUser.role, ...(Array.isArray(sessionUser.roles) ? sessionUser.roles : [])].filter(Boolean);
-  return combinedRoles.some((r) => !deactivated.has(r) && PARTNER_PORTAL_ROLES.includes(r));
+  return Array.from(new Set(combinedRoles)).filter((r) => !deactivated.has(r));
+}
+
+function isPartnerPortalAccount(sessionUser: any): boolean {
+  return getActiveSessionRoles(sessionUser).some((r) => PARTNER_PORTAL_ROLES.includes(r));
+}
+
+function hasExplicitClientAccess(sessionUser: any): boolean {
+  return getActiveSessionRoles(sessionUser).some((r) => EXPLICIT_CLIENT_ROLES.includes(r));
 }
 
 function assertPortalAccessMatch(sessionUser: any, portal?: LoginPortalMode) {
   if (!portal || !sessionUser) return;
-  if (sessionUser.role === 'ADMIN' || sessionUser.role === 'SUPER_ADMIN') {
-    throw new Error('Admin and Super Admin accounts cannot sign in here. Please use the Admin Panel.');
+  const activeRoles = getActiveSessionRoles(sessionUser);
+  if (activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r))) {
+    throw new Error('Admin and Staff accounts (Super Admin, Admin, Manager, Operator, Accountant, Technical Trainer) cannot sign in here. Please use the Admin Panel.');
   }
   const partnerUser = isPartnerPortalAccount(sessionUser);
+  const explicitClient = hasExplicitClientAccess(sessionUser);
   if (portal === 'PARTNER' && !partnerUser) {
     throw new Error('This account belongs to User Login (Farmer, Gardener, or Buyer). Please switch to the User Login section.');
   }
-  if (portal === 'CLIENT' && partnerUser) {
-    throw new Error('This account is registered as an Agent account (Crop Doctor, Agent, Trainer, or Seller). Please switch to the Agent Login section.');
+  if (portal === 'CLIENT' && partnerUser && !explicitClient) {
+    throw new Error('This account is registered as an Agent account (Crop Doctor, Agent, or Seller). Please switch to the Agent Login section.');
   }
 }
 
 interface AuthContextValue {
   user: User | null;
+  loginPortal: LoginPortalMode | null;
+  setLoginPortal: (portal: LoginPortalMode) => Promise<void>;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<User>;
   sendLoginOtp: (mobile: string, portal?: LoginPortalMode) => Promise<{ success: boolean; message: string; devOtp?: string; isNewUser?: boolean }>;
@@ -72,8 +100,19 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const USER_KEY = 'farmsking_user';
+const PORTAL_KEY = 'farmsking_login_portal';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const getInitialPortal = (): LoginPortalMode | null => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const storedPortal = window.localStorage.getItem(PORTAL_KEY);
+        if (storedPortal === 'CLIENT' || storedPortal === 'PARTNER') return storedPortal;
+      } catch {}
+    }
+    return null;
+  };
+
   // Synchronous initial state on Web to eliminate splash flicker & delay
   const getInitialUser = (): User | null => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -87,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const [user, setUser] = useState<User | null>(getInitialUser);
+  const [loginPortal, setLoginPortalState] = useState<LoginPortalMode | null>(getInitialPortal);
   const [isLoading, setIsLoading] = useState<boolean>(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       try {
@@ -121,10 +161,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [token, storedUser] = await Promise.all([
+        const [token, storedUser, storedPortal] = await Promise.all([
           SecureStore.getItemAsync(TOKEN_KEY),
           SecureStore.getItemAsync(USER_KEY),
+          SecureStore.getItemAsync(PORTAL_KEY),
         ]);
+        if (storedPortal === 'CLIENT' || storedPortal === 'PARTNER') {
+          setLoginPortalState(storedPortal);
+        }
         if (token && storedUser) {
           try {
             setUser(normalizeSessionUserRoles(JSON.parse(storedUser)));
@@ -132,6 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.warn('Corrupt user session in storage, resetting:', e);
             await SecureStore.deleteItemAsync(TOKEN_KEY);
             await SecureStore.deleteItemAsync(USER_KEY);
+            await SecureStore.deleteItemAsync(PORTAL_KEY);
           }
         }
       } catch (err) {
@@ -158,7 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUnauthorizedHandler((msg?: string) => {
       SecureStore.deleteItemAsync(TOKEN_KEY);
       SecureStore.deleteItemAsync(USER_KEY);
+      SecureStore.deleteItemAsync(PORTAL_KEY);
       setUser(null);
+      setLoginPortalState(null);
       disconnectChatSocket();
       queryClient.clear();
 
@@ -173,24 +220,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, [queryClient]);
 
-  const persistSession = async (token: string, sessionUser: User) => {
+  const setLoginPortal = async (portal: LoginPortalMode) => {
+    await SecureStore.setItemAsync(PORTAL_KEY, portal);
+    setLoginPortalState(portal);
+  };
+
+  const persistSession = async (token: string, sessionUser: User, portal?: LoginPortalMode) => {
     // Clear any leftover cache from a previous session BEFORE the new user's screens can fetch,
     // so no other account's cached data (parties, wallet, bills...) can flash on screen.
     queryClient.clear();
     disconnectChatSocket();
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(sessionUser));
+    if (portal) {
+      await SecureStore.setItemAsync(PORTAL_KEY, portal);
+      setLoginPortalState(portal);
+    }
     setUser(sessionUser);
   };
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      loginPortal,
+      setLoginPortal,
       isLoading,
       login: async (payload) => {
         const response = await apiLogin(payload);
         assertPortalAccessMatch(response.user, payload.portal);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
 
         if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {
           const meta = response.sessionMeta;
@@ -239,7 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         assertPortalAccessMatch(response.user, payload.portal);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
         return response.user;
       },
       completeOtpRegistration: async (payload) => {
@@ -251,7 +309,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         assertPortalAccessMatch(response.user, payload.portal);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
         return response.user;
       },
       firebaseLogin: async (idToken, portal) => {
@@ -266,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         assertPortalAccessMatch(response.user, portal);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, portal ?? 'CLIENT');
         return response.user;
       },
       googleLogin: async (payload) => {
@@ -275,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
         }
         assertPortalAccessMatch(response.user, payload.portal);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
         return { isProfileIncomplete: response.isProfileIncomplete, user: response.user };
       },
       linkGoogle: async (payload) => {
@@ -314,11 +372,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       register: async (payload) => {
         const response = await apiRegister(payload);
-        await persistSession(response.accessToken, response.user);
+        await persistSession(response.accessToken, response.user, 'CLIENT');
       },
       logout: async () => {
         await SecureStore.deleteItemAsync(TOKEN_KEY);
         await SecureStore.deleteItemAsync(USER_KEY);
+        await SecureStore.deleteItemAsync(PORTAL_KEY);
         try {
           if (Platform.OS === 'web') {
             localStorage.removeItem('farmsking_user_language');
@@ -327,6 +386,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch {}
         setUser(null);
+        setLoginPortalState(null);
         disconnectChatSocket();
         queryClient.clear();
         router.replace('/');
@@ -339,7 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshUser,
     }),
-    [user, isLoading, queryClient],
+    [user, loginPortal, isLoading, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

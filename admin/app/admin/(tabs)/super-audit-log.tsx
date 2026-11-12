@@ -5,8 +5,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuditLogs } from '@/src/hooks/useAudit';
+import { useVerifiedLeads } from '@/src/hooks/useUsersAdmin';
 import { AuditLogEntry } from '@/src/api/audit.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { VerifiedLeadsPanel } from '@/components/VerifiedLeadsPanel';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -34,10 +36,13 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 
 export default function SuperAuditLogScreen() {
   const { colors, isLight } = useExecutiveTheme();
+  const [viewMode, setViewMode] = useState<'AUDIT' | 'VERIFIED_LEADS'>('AUDIT');
   const [actionFilter, setActionFilter] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(20);
   const { data, isLoading, isFetching, refetch } = useAuditLogs({ action: actionFilter.trim() || undefined, limit: 100 });
+  const { data: waitingLeadsData } = useVerifiedLeads({ status: 'OTP_CONFIRMED' });
+  const waitingLeadCount = waitingLeadsData?.counts?.otpConfirmed ?? 0;
 
   React.useEffect(() => {
     setVisibleCount(20);
@@ -46,52 +51,101 @@ export default function SuperAuditLogScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <LinearGradient colors={isLight ? ['#1e293b', '#0f172a'] : theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Audit Log</Text>
-        <Text style={styles.heroSubtitle}>Every mutating action on the platform, who did it, and when</Text>
+        <View style={styles.heroHeaderRow}>
+          <View style={{ flex: 1, minWidth: 220 }}>
+            <Text style={styles.heroTitle}>Audit Log &amp; Verified Leads</Text>
+            <Text style={styles.heroSubtitle}>
+              {viewMode === 'AUDIT'
+                ? 'Every mutating action on the platform, who did it, and when'
+                : 'First-time unregistered users who confirmed OTP and are ready for follow-up or account creation'}
+            </Text>
+          </View>
 
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="rgba(255,255,255,0.8)" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Filter by action (e.g. users, coupons, wallet)..."
-            placeholderTextColor="rgba(255,255,255,0.6)"
-            value={actionFilter}
-            onChangeText={setActionFilter}
-          />
+          <View style={styles.modeSwitchRow}>
+            <TouchableOpacity
+              style={[styles.modePill, viewMode === 'AUDIT' && styles.modePillActive]}
+              onPress={() => setViewMode('AUDIT')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="shield-outline" size={14} color={viewMode === 'AUDIT' ? '#041b11' : '#cbd5e1'} />
+              <Text style={[styles.modePillText, viewMode === 'AUDIT' && styles.modePillTextActive]}>
+                Platform Audit Log
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.modePill, viewMode === 'VERIFIED_LEADS' && styles.modePillLeadsActive]}
+              onPress={() => setViewMode('VERIFIED_LEADS')}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="checkmark-done-circle"
+                size={14}
+                color={viewMode === 'VERIFIED_LEADS' ? '#041b11' : '#00ff87'}
+              />
+              <Text
+                style={[
+                  styles.modePillText,
+                  viewMode === 'VERIFIED_LEADS' ? styles.modePillTextActive : { color: '#00ff87' },
+                ]}
+              >
+                Verified OTP Leads ({waitingLeadCount})
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {viewMode === 'AUDIT' ? (
+          <View style={styles.searchWrap}>
+            <Ionicons name="search" size={16} color="rgba(255,255,255,0.8)" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Filter by action (e.g. users, coupons, wallet)..."
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              value={actionFilter}
+              onChangeText={setActionFilter}
+            />
+          </View>
+        ) : null}
       </LinearGradient>
 
-      <ScrollView
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        refreshControl={undefined}
-      >
-        <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.8} onPress={() => refetch()}>
-          <Ionicons name="refresh" size={14} color={isLight ? '#16a34a' : theme.primary} />
-          <Text style={[styles.refreshBtnText, isLight && { color: '#16a34a' }]}>{isFetching ? 'Refreshing...' : 'Refresh'}</Text>
-        </TouchableOpacity>
+      {viewMode === 'VERIFIED_LEADS' ? (
+        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          <VerifiedLeadsPanel />
+        </ScrollView>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={undefined}
+        >
+          <TouchableOpacity style={styles.refreshBtn} activeOpacity={0.8} onPress={() => refetch()}>
+            <Ionicons name="refresh" size={14} color={isLight ? '#16a34a' : theme.primary} />
+            <Text style={[styles.refreshBtnText, isLight && { color: '#16a34a' }]}>{isFetching ? 'Refreshing...' : 'Refresh'}</Text>
+          </TouchableOpacity>
 
-        {isLoading ? (
-          <ActivityIndicator color={isLight ? '#16a34a' : theme.primary} style={{ marginTop: 30 }} />
-        ) : !data || data.items.length === 0 ? (
-          <View style={styles.emptyCenter}>
-            <Ionicons name="time-outline" size={40} color="#cbd5e1" />
-            <Text style={styles.emptyText}>No matching activity yet.</Text>
-          </View>
-        ) : (
-          <>
-            {data.items.slice(0, visibleCount).map((entry) => (
-              <LogRow key={entry.id} entry={entry} isExpanded={expandedId === entry.id} onToggle={() => setExpandedId((cur) => (cur === entry.id ? null : entry.id))} />
-            ))}
-            {data.items.length > visibleCount ? (
-              <TouchableOpacity style={styles.showMoreBtn} activeOpacity={0.8} onPress={() => setVisibleCount((c) => c + 20)}>
-                <Text style={[styles.showMoreBtnText, isLight && { color: '#16a34a' }]}>Show More ({data.items.length - visibleCount} more)</Text>
-                <Ionicons name="chevron-down" size={15} color={isLight ? '#16a34a' : theme.primary} />
-              </TouchableOpacity>
-            ) : null}
-          </>
-        )}
-      </ScrollView>
+          {isLoading ? (
+            <ActivityIndicator color={isLight ? '#16a34a' : theme.primary} style={{ marginTop: 30 }} />
+          ) : !data || data.items.length === 0 ? (
+            <View style={styles.emptyCenter}>
+              <Ionicons name="time-outline" size={40} color="#cbd5e1" />
+              <Text style={styles.emptyText}>No matching activity yet.</Text>
+            </View>
+          ) : (
+            <>
+              {data.items.slice(0, visibleCount).map((entry) => (
+                <LogRow key={entry.id} entry={entry} isExpanded={expandedId === entry.id} onToggle={() => setExpandedId((cur) => (cur === entry.id ? null : entry.id))} />
+              ))}
+              {data.items.length > visibleCount ? (
+                <TouchableOpacity style={styles.showMoreBtn} activeOpacity={0.8} onPress={() => setVisibleCount((c) => c + 20)}>
+                  <Text style={[styles.showMoreBtnText, isLight && { color: '#16a34a' }]}>Show More ({data.items.length - visibleCount} more)</Text>
+                  <Ionicons name="chevron-down" size={15} color={isLight ? '#16a34a' : theme.primary} />
+                </TouchableOpacity>
+              ) : null}
+            </>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -136,9 +190,38 @@ function LogRow({ entry, isExpanded, onToggle }: { entry: AuditLogEntry; isExpan
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
-  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 12 },
+  hero: { paddingTop: 10, paddingBottom: 10, paddingHorizontal: 12 },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
   heroTitle: { color: '#fff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
+  modeSwitchRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+  },
+  modePillActive: {
+    backgroundColor: '#e2e8f0',
+    borderColor: '#ffffff',
+  },
+  modePillLeadsActive: {
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
+  },
+  modePillText: { fontSize: 12, fontFamily: FONT.bold, color: '#cbd5e1' },
+  modePillTextActive: { color: '#041b11' },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',

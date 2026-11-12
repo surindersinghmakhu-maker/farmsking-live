@@ -36,9 +36,15 @@ export class ShiprocketController {
 
   /** Shiprocket Real-time Tracking Webhook */
   @Post('webhook')
-  handleWebhook(@Body() body: any, @Headers('x-api-key') apiKey?: string) {
-    const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET;
-    if (expectedSecret && apiKey !== expectedSecret) {
+  async handleWebhook(@Body() body: any, @Headers('x-api-key') apiKey?: string) {
+    const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET?.trim();
+    if (!expectedSecret || !apiKey) {
+      throw new UnauthorizedException('Invalid or unconfigured Shiprocket webhook signature.');
+    }
+    const { createHash, timingSafeEqual } = await import('crypto');
+    const a = createHash('sha256').update(apiKey.trim()).digest();
+    const b = createHash('sha256').update(expectedSecret).digest();
+    if (!timingSafeEqual(a, b)) {
       throw new UnauthorizedException('Invalid Shiprocket webhook signature.');
     }
     return this.shiprocketService.handleWebhook(body);

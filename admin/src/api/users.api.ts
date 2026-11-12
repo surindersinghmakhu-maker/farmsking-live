@@ -94,6 +94,11 @@ export async function createManager(payload: CreateStaffPayload): Promise<Create
   return data;
 }
 
+export async function createAccountant(payload: CreateStaffPayload): Promise<CreateAdvisorResponse> {
+  const { data } = await apiClient.post<CreateAdvisorResponse>('/users/accountants', payload);
+  return data;
+}
+
 export async function promoteToBusinessPartner(id: string): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/role`, { role: 'AGENT' });
   return data;
@@ -170,18 +175,17 @@ export async function resetUserPassword(id: string, newPassword?: string): Promi
   return data;
 }
 
-/** The checkbox-toggleable roles — staff roles (Admin/Super Admin/Operator) have their own dedicated flows. */
+/** The checkbox-toggleable roles — Admin Panel staff roles (Super Admin, Admin, Manager, Operator, Technical Trainer) are single-role via Staff flows. */
 export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = [
   'CUSTOMER',
   'FARMER',
   'GARDENER',
-  'ADVISOR',
-  'AGENT',
-  'TECHNICAL_TRAINER' as Role,
-  'TRADER' as Role,
-  'SELLER' as Role,
   'SUPERVISOR' as Role,
   'LABOUR' as Role,
+  'AGENT',
+  'SELLER' as Role,
+  'ADVISOR',
+  'TRADER' as Role,
 ];
 
 export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
@@ -326,14 +330,33 @@ export async function searchBusinessPartners(q: string): Promise<BusinessPartner
 }
 
 /** Self-service Account Deletion (Google Play Store Policy Requirement) */
-export async function deleteMyAccount(): Promise<{ success: boolean; message: string }> {
-  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me');
+export async function requestDeleteMeOtp(mobile?: string): Promise<{
+  success: boolean;
+  deliveredVia?: string[];
+  message: string;
+  devOtp?: string;
+}> {
+  const { data } = await apiClient.post('/users/me/delete-otp', { mobile });
   return data;
 }
 
-/** Super Admin: Delete user record from database */
-export async function deleteUserByAdmin(id: string): Promise<{ success: boolean; message: string }> {
-  const { data } = await apiClient.delete<{ success: boolean; message: string }>(`/users/${id}`);
+export async function deleteMyAccount(payload?: {
+  otp?: string;
+  firebaseIdToken?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me', {
+    data: payload,
+    headers: payload?.otp ? { 'x-delete-otp': payload.otp } : undefined,
+  });
+  return data;
+}
+
+/** Super Admin: Delete user record from database (requires mandatory Admin Step-Up 2FA OTP) */
+export async function deleteUserByAdmin(id: string, adminConfirmationOtp?: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string }>(`/users/${id}`, {
+    data: adminConfirmationOtp ? { adminConfirmationOtp } : undefined,
+    headers: adminConfirmationOtp ? { 'x-admin-otp': adminConfirmationOtp } : undefined,
+  });
   return data;
 }
 
@@ -355,6 +378,224 @@ export async function createAssistantDoctor(payload: CreateAssistantDoctorPayloa
 
 export async function getMyAssistantDoctors(): Promise<AdminUser[]> {
   const { data } = await apiClient.get<AdminUser[]>('/users/my-assistant-doctors');
+  return data;
+}
+
+export interface PartnerApplicationItem {
+  id: string;
+  mobile: string;
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  advisorType?: 'FARM' | 'GARDEN' | null;
+  name: string;
+  email?: string | null;
+  pincode?: string | null;
+  postOffice?: string | null;
+  village?: string | null;
+  district?: string | null;
+  state?: string | null;
+  qualification?: string | null;
+  specialization?: string | null;
+  yearsExperience?: number | null;
+  bio?: string | null;
+  panNumber?: string | null;
+  panDocUrl?: string | null;
+  aadhaarLast4?: string | null;
+  aadhaarDocUrl?: string | null;
+  aadhaarBackUrl?: string | null;
+  gstin?: string | null;
+  gstDocUrl?: string | null;
+  bankAccountHolderName?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfsc?: string | null;
+  upiId?: string | null;
+  chequeDocUrl?: string | null;
+  photoUrl?: string | null;
+  storeName?: string | null;
+  legalName?: string | null;
+  sellerType?: 'FARMER' | 'COMMERCIAL' | null;
+  pickupAddress?: string | null;
+  isPhoneVerified: boolean;
+  termsAcceptedAt?: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string | null;
+  resubmissionCount: number;
+  hasPassword: boolean;
+  applicantUserId?: string | null;
+  applicantUser?: {
+    id: string;
+    name: string;
+    kingId: string | null;
+    mobile: string;
+    role: Role;
+    roles: Role[];
+    deactivatedRoles: Role[];
+  } | null;
+  reviewedBy?: {
+    id: string;
+    name: string;
+  } | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function listPartnerApplications(status?: string): Promise<PartnerApplicationItem[]> {
+  const { data } = await apiClient.get<PartnerApplicationItem[]>('/users/partner-applications', {
+    params: status && status !== 'ALL' ? { status } : undefined,
+  });
+  return data;
+}
+
+export async function approvePartnerApplication(
+  id: string,
+  adminConfirmationOtp?: string,
+): Promise<{ success: boolean; application: PartnerApplicationItem; user: AdminUser; message: string }> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    application: PartnerApplicationItem;
+    user: AdminUser;
+    message: string;
+  }>(
+    `/users/partner-applications/${id}/approve`,
+    adminConfirmationOtp ? { adminConfirmationOtp } : {},
+    adminConfirmationOtp ? { headers: { 'x-admin-otp': adminConfirmationOtp } } : undefined,
+  );
+  return data;
+}
+
+export async function rejectPartnerApplication(
+  id: string,
+  reason: string,
+): Promise<{ success: boolean; application: PartnerApplicationItem; message: string }> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    application: PartnerApplicationItem;
+    message: string;
+  }>(`/users/partner-applications/${id}/reject`, { reason });
+  return data;
+}
+
+export type VerifiedLeadStatusType =
+  | 'OTP_CONFIRMED'
+  | 'COMPLETED_SELF'
+  | 'CONVERTED_BY_ADMIN'
+  | 'DISMISSED';
+
+export interface VerifiedSignupLeadItem {
+  id: string;
+  mobile: string;
+  sourceChannel: string;
+  portal?: string | null;
+  otpVerifiedAt: string;
+  lastAttemptAt: string;
+  attemptCount: number;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  referralCode?: string | null;
+  capturedName?: string | null;
+  capturedEmail?: string | null;
+  pincode?: string | null;
+  district?: string | null;
+  state?: string | null;
+  village?: string | null;
+  intendedRole?: string | null;
+  adminNotes?: string | null;
+  status: VerifiedLeadStatusType;
+  convertedUserId?: string | null;
+  convertedUser?: {
+    id: string;
+    kingId?: string | null;
+    name: string;
+    role: string;
+    roles?: string[];
+    mobile: string;
+  } | null;
+  convertedById?: string | null;
+  convertedBy?: {
+    id: string;
+    name: string;
+    kingId?: string | null;
+    role: string;
+  } | null;
+  convertedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VerifiedLeadsResponse {
+  items: VerifiedSignupLeadItem[];
+  counts: {
+    total: number;
+    otpConfirmed: number;
+    completedSelf: number;
+    convertedByAdmin: number;
+    dismissed: number;
+  };
+}
+
+export interface UpdateVerifiedLeadNotesPayload {
+  adminNotes?: string;
+  capturedName?: string;
+  capturedEmail?: string;
+  pincode?: string;
+  district?: string;
+  state?: string;
+  village?: string;
+  intendedRole?: 'CUSTOMER' | 'FARMER' | 'GARDENER' | 'ADVISOR' | 'AGENT' | 'SELLER' | 'TRADER';
+  status?: 'OTP_CONFIRMED' | 'DISMISSED';
+}
+
+export interface ConvertVerifiedLeadPayload {
+  name: string;
+  role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+  pincode?: string;
+  postOffice?: string;
+  village?: string;
+  district?: string;
+  state?: string;
+  email?: string;
+  sprayTankSizeL?: number;
+  soilType?: string;
+  waterType?: string;
+  referralCode?: string;
+  adminNotes?: string;
+}
+
+export async function listVerifiedSignupLeads(params?: {
+  status?: string;
+  search?: string;
+}): Promise<VerifiedLeadsResponse> {
+  const { data } = await apiClient.get<VerifiedLeadsResponse>('/users/verified-leads', {
+    params: {
+      ...(params?.status && params.status !== 'ALL' ? { status: params.status } : {}),
+      ...(params?.search?.trim() ? { search: params.search.trim() } : {}),
+    },
+  });
+  return data;
+}
+
+export async function updateVerifiedLeadNotes(
+  id: string,
+  payload: UpdateVerifiedLeadNotesPayload,
+): Promise<{ success: boolean; lead: VerifiedSignupLeadItem; message: string }> {
+  const { data } = await apiClient.patch<{
+    success: boolean;
+    lead: VerifiedSignupLeadItem;
+    message: string;
+  }>(`/users/verified-leads/${id}/notes`, payload);
+  return data;
+}
+
+export async function convertVerifiedLeadToUser(
+  id: string,
+  payload: ConvertVerifiedLeadPayload,
+): Promise<{ success: boolean; user: AdminUser; lead: VerifiedSignupLeadItem; message: string }> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    user: AdminUser;
+    lead: VerifiedSignupLeadItem;
+    message: string;
+  }>(`/users/verified-leads/${id}/convert`, payload);
   return data;
 }
 

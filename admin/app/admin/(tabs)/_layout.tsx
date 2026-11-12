@@ -24,7 +24,7 @@ import { AdminLiveToastNotification } from '@/components/AdminLiveToastNotificat
 import { AdminHealthRadarModal } from '@/components/AdminHealthRadarModal';
 import { AdminImpersonationBanner, ImpersonationTarget } from '@/components/AdminImpersonationBanner';
 import { AppMenuDrawer } from '@/components/AppMenuDrawer';
-import { ADMIN_PILLARS, detectPillarFromRoute, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+import { ADMIN_PILLARS, detectPillarFromRoute, getPillarsForRole, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 import { Ionicons } from '@expo/vector-icons';
 import { PortalGuard } from '@/src/portals/PortalGuard';
@@ -101,14 +101,16 @@ type TabName =
   | 'crop-disease-scanner'
   | 'super-users' | 'super-coupons' | 'super-accounts' | 'cpanel' | 'super-settings'
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders' | 'trainer-dashboard' | 'garden';
+  | 'operator-orders' | 'trainer-dashboard' | 'garden' | 'legal-compliance' | 'seller-payouts' | 'admin-sellers';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-accounts', 'super-users', 'super-settings'] },
   ADMIN: { tabs: ['index', 'admin-products', 'super-accounts', 'super-users', 'super-settings'] },
   OPERATOR: { tabs: ['index', 'operator-orders', 'admin_more'] },
   TECHNICAL_TRAINER: { tabs: ['index', 'super-users', 'admin_more'] },
+  MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
   MARKET_MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
+  ACCOUNTANT: { tabs: ['index', 'super-accounts', 'seller-payouts', 'admin-sellers', 'admin_more'] },
 };
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
@@ -139,6 +141,9 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   'operator-orders': { key: 'tabFulfillment', title: 'Fulfillment', icon: 'cube-outline', iconFilled: 'cube' },
   'trainer-dashboard': { key: 'tabFarms', title: 'Trainer', icon: 'school-outline', iconFilled: 'school' },
   garden: { key: 'tabFarms', title: 'Garden Care', icon: 'flower-outline', iconFilled: 'flower' },
+  'admin-sellers': { key: 'tabSellers' as any, title: 'Sellers', icon: 'storefront-outline', iconFilled: 'storefront' },
+  'seller-payouts': { key: 'tabPayouts' as any, title: 'Payouts', icon: 'card-outline', iconFilled: 'card' },
+  'legal-compliance': { key: 'tabLegal' as any, title: 'Legal Desk', icon: 'shield-checkmark-outline', iconFilled: 'shield-checkmark' },
 };
 
 const ALL_TABS: TabName[] = [
@@ -150,7 +155,7 @@ const ALL_TABS: TabName[] = [
   'crop-disease-scanner',
   'super-users', 'super-coupons', 'super-accounts', 'cpanel', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
-  'operator-orders', 'trainer-dashboard', 'garden',
+  'operator-orders', 'trainer-dashboard', 'garden', 'legal-compliance', 'seller-payouts', 'admin-sellers',
   'more', 'admin_more',
 ];
 
@@ -292,7 +297,8 @@ export default function TabLayout() {
     }
   };
 
-  const activePillar = ADMIN_PILLARS.find((p) => p.id === selectedPillarId) || ADMIN_PILLARS[0];
+  const rolePillars = getPillarsForRole(role);
+  const activePillar = rolePillars.find((p) => p.id === selectedPillarId) || rolePillars[0] || ADMIN_PILLARS[0];
 
   const activeSubTab = activePillar.subTabs.find((tab) => {
     const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
@@ -453,7 +459,7 @@ export default function TabLayout() {
             </TouchableOpacity>
 
             {/* Center: Domain Pillar Selector Button (Global on mobile for admins) */}
-            {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'OPERATOR' || role === 'TECHNICAL_TRAINER' || (role as string) === 'MARKET_MANAGER') && (
+            {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'OPERATOR' || role === 'TECHNICAL_TRAINER' || role === 'ACCOUNTANT' || (role as string) === 'MARKET_MANAGER') && (
               <TouchableOpacity
                 style={[
                   mobileStyles.pillarSelectorPill,
@@ -548,7 +554,7 @@ export default function TabLayout() {
         )}
 
         {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop & Mobile for Admins) */}
-        {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
+        {(role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'ACCOUNTANT') && (
           <View
             style={[
               desktopStyles.topTabsHeaderBar,
@@ -975,6 +981,12 @@ export default function TabLayout() {
           />
           <Tabs.Screen
             name="admin-offers"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="legal-compliance"
             options={{
               href: null,
             }}

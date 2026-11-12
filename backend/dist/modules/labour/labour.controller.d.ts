@@ -159,20 +159,12 @@ export declare class LabourController {
     }>;
     searchByMobile(mobile: string): Promise<{
         exists: boolean;
-        user: null;
-        profiles: never[];
-    } | {
-        exists: boolean;
         user: {
             id: string;
             kingId: string | null;
-            mobile: string;
             name: string;
-            village: string | null;
-            district: string | null;
-            state: string | null;
             photoUrl: string | null;
-        };
+        } | null;
         profiles: any[];
     }>;
     createWorker(user: AuthUser, dto: CreateLabourWorkerDto): Promise<{

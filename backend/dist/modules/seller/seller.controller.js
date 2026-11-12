@@ -93,7 +93,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SellerController.prototype, "updateKyc", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SELLER, client_1.Role.TRADER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('dashboard/stats'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -101,7 +102,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SellerController.prototype, "getDashboardStats", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SELLER, client_1.Role.TRADER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('orders'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -109,7 +111,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], SellerController.prototype, "getMyOrders", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SELLER, client_1.Role.TRADER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Patch)('orders/:subOrderId/status'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('subOrderId')),
@@ -120,7 +123,7 @@ __decorate([
 ], SellerController.prototype, "updateMySubOrderStatus", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/payouts'),
     __param(0, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -149,7 +152,7 @@ __decorate([
 ], SellerController.prototype, "settlePayoutByAdmin", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/stores'),
     __param(0, (0, common_1.Query)('kycStatus')),
     __metadata("design:type", Function),
@@ -180,7 +183,7 @@ __decorate([
 ], SellerController.prototype, "updateSellerSettings", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.ACCOUNTANT),
     (0, common_1.Get)('admin/gstr8'),
     __param(0, (0, common_1.Query)('sellerStoreId')),
     __param(1, (0, common_1.Query)('month')),

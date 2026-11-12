@@ -1,18 +1,14 @@
 import { Role } from '@prisma/client';
-import { AuthUser } from '../types/auth-user.type';
+import type { AuthUser } from '../types/auth-user.type';
+import { hasActiveRole } from './auth-user.util';
 
 /**
- * Resolves the effective farmer ID for scoping data queries and operations.
- * If the user is a SUPERVISOR and is appointed by an employer farmer,
- * all farm data (sales, crops, plots, labour, expenses, parties) belongs to the employer farmer.
- * Otherwise, falls back to the user's own ID.
+ * Resolves the effective farmer owner ID for operational modules (farms, expenses, parties, labour, records).
+ * If the logged-in user is an active SUPERVISOR linked to an employer farmer, all reads/writes act seamlessly on
+ * the employer farmer's workspace (`employerFarmerId`). Otherwise returns `user.id`.
  */
 export function getEffectiveFarmerId(user: AuthUser): string {
-  if (
-    (user.role === Role.SUPERVISOR ||
-      (Array.isArray(user.roles) && user.roles.includes(Role.SUPERVISOR))) &&
-    user.employerFarmerId
-  ) {
+  if (hasActiveRole(user, Role.SUPERVISOR) && user.employerFarmerId) {
     return user.employerFarmerId;
   }
   return user.id;

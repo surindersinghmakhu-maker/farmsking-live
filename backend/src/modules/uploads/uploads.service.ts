@@ -258,22 +258,54 @@ export class UploadsService {
     }
 
     // 4. Local Hostinger / Local Disk Storage (Default Fallback)
-    const localTargetDir = path.resolve(process.cwd(), 'uploads', folder);
+    const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+    const safeFolder = this.sanitizeUploadFolder(folder);
+    const safeFilename = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const localTargetDir = path.resolve(uploadsRoot, safeFolder);
+    if (!localTargetDir.startsWith(uploadsRoot + path.sep) && localTargetDir !== uploadsRoot) {
+      throw new BadRequestException('Invalid upload target directory.');
+    }
     if (!fs.existsSync(localTargetDir)) fs.mkdirSync(localTargetDir, { recursive: true });
 
-    const localFilePath = path.join(localTargetDir, filename);
+    const localFilePath = path.resolve(localTargetDir, safeFilename);
+    if (!localFilePath.startsWith(localTargetDir + path.sep)) {
+      throw new BadRequestException('Invalid upload file path.');
+    }
     fs.writeFileSync(localFilePath, buffer);
 
     const hostBaseUrl = (process.env.APP_URL || process.env.BACKEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-    const fileUrl = `${hostBaseUrl}/uploads/${folder}/${filename}`;
+    const fileUrl = `${hostBaseUrl}/uploads/${safeFolder}/${safeFilename}`;
     this.logger.log(`[Storage] Saved locally: ${fileUrl}`);
     return { fileUrl, provider: 'LOCAL' };
+  }
+
+  private sanitizeUploadFolder(rawFolder?: string): string {
+    const ALLOWED_FOLDERS = new Set([
+      'crops', 'products', 'profiles', 'avatars', 'chat', 'kyc', 'gardens', 'receipts', 'complaints', 'banners', 'brand', 'categories',
+    ]);
+    const cleaned = String(rawFolder || 'crops').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    return ALLOWED_FOLDERS.has(cleaned) ? cleaned : 'crops';
+  }
+
+  private assertSafeMediaMime(mimetype?: string, filename?: string): string {
+    const baseMime = String(mimetype || '').split(';')[0].trim().toLowerCase();
+    const ext = path.extname(filename || '').toLowerCase();
+    if (baseMime.includes('svg') || baseMime.includes('html') || baseMime.includes('javascript') || ext === '.svg' || ext === '.html' || ext === '.htm' || ext === '.js') {
+      throw new BadRequestException('Executable or SVG file uploads are disabled for security.');
+    }
+    const SAFE_MIME_RE = /^(image\/(jpeg|jpg|png|webp|heic|heif)|video\/(mp4|webm|quicktime|x-matroska|x-m4v|3gpp)|audio\/(webm|mp4|mpeg|mp3|ogg|opus|wav|wave|x-wav|aac|m4a|x-m4a))$/;
+    const SAFE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp', '.mp3', '.m4a', '.wav', '.ogg', '.aac', '.opus'];
+    if (SAFE_MIME_RE.test(baseMime)) return baseMime;
+    if ((baseMime === 'application/octet-stream' || !baseMime) && SAFE_EXTS.includes(ext)) {
+      return ext === '.mp3' ? 'audio/mpeg' : ext === '.m4a' ? 'audio/mp4' : ext === '.wav' ? 'audio/wav' : ext === '.mp4' ? 'video/mp4' : ext === '.png' ? 'image/png' : 'image/jpeg';
+    }
+    throw new BadRequestException('Unsupported media type for upload.');
   }
 
   private inferExtension(filenameOrOriginal: string | undefined, mimetype: string | undefined): string {
     const rawExt = path.extname(filenameOrOriginal || '').toLowerCase();
     const valid = [
-      '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.ico', '.svg',
+      '.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif',
       '.mp4', '.webm', '.mov', '.mkv', '.m4v', '.3gp',
       '.mp3', '.m4a', '.wav', '.ogg', '.aac', '.opus',
     ];
@@ -323,33 +355,11 @@ export class UploadsService {
       throw new BadRequestException('Uploaded file is empty.');
     }
 
-    const ext = this.inferExtension(file.originalname || file.filename, file.mimetype);
+    const safeMime = this.assertSafeMediaMime(file.mimetype, file.originalname || file.filename);
+    const ext = this.inferExtension(file.originalname || file.filename, safeMime);
     const cleanFilename = `${randomUUID()}${ext}`;
     const targetLocalPath = path.resolve(process.cwd(), 'uploads', 'crops', cleanFilename);
-    const resolvedMime =
-      file.mimetype && file.mimetype !== 'application/octet-stream'
-        ? file.mimetype
-        : ext === '.mp3'
-          ? 'audio/mpeg'
-          : ext === '.m4a'
-            ? 'audio/mp4'
-            : ext === '.wav'
-              ? 'audio/wav'
-              : ext === '.ogg' || ext === '.opus'
-                ? 'audio/ogg'
-                : ext === '.aac'
-                  ? 'audio/aac'
-                  : ext === '.webm'
-                    ? 'video/webm'
-                    : ext === '.mov'
-                      ? 'video/quicktime'
-                      : ext === '.mp4' || ext === '.m4v'
-                        ? 'video/mp4'
-                        : ext === '.png'
-                          ? 'image/png'
-                          : ext === '.webp'
-                            ? 'image/webp'
-                            : 'image/jpeg';
+    const resolvedMime = safeMime;
 
     const { fileUrl, provider } = await this.uploadToActiveStorage(
       buffer,
@@ -417,11 +427,11 @@ export class UploadsService {
       throw new BadRequestException('Decoded base64 file content is empty.');
     }
 
+    const safeFolder = this.sanitizeUploadFolder(folder);
+    mimetype = this.assertSafeMediaMime(mimetype, customFilename);
     const ext = this.inferExtension(customFilename, mimetype);
-    const filename = customFilename
-      ? `${path.basename(customFilename, path.extname(customFilename))}${ext}`
-      : `${randomUUID()}${ext}`;
-    const { fileUrl, provider } = await this.uploadToActiveStorage(buffer, filename, mimetype, folder);
+    const filename = `${randomUUID()}${ext}`;
+    const { fileUrl, provider } = await this.uploadToActiveStorage(buffer, filename, mimetype, safeFolder);
 
     const record = await this.prisma.upload.create({
       data: {

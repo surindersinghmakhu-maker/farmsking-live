@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
 let FarmsService = class FarmsService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -29,10 +30,11 @@ let FarmsService = class FarmsService {
             return [];
         try {
             const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+            const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
             return await this.prisma.farm.findMany({
                 where: {
                     deletedAt: null,
-                    ...(user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN ? {} : { ownerId }),
+                    ...(isAdmin ? {} : { ownerId }),
                 },
                 orderBy: { createdAt: 'desc' },
             });
@@ -47,7 +49,8 @@ let FarmsService = class FarmsService {
             where: { id, deletedAt: null },
         });
         const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
-        if (!farm || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && farm.ownerId !== ownerId)) {
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!farm || (!isAdmin && farm.ownerId !== ownerId)) {
             throw new common_1.NotFoundException('Farm not found.');
         }
         return farm;

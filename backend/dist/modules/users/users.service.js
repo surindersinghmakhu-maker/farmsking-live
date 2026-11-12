@@ -41,6 +41,9 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const crypto_1 = require("crypto");
@@ -50,8 +53,12 @@ const argon2 = __importStar(require("argon2"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const wallet_service_1 = require("../wallet/wallet.service");
 const notifications_service_1 = require("../notifications/notifications.service");
+const app_settings_service_1 = require("../app-settings/app-settings.service");
+const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
+const email_service_1 = require("../email/email.service");
 const whatsapp_group_sync_service_1 = require("../whatsapp/whatsapp-group-sync.service");
 const king_id_util_1 = require("../../common/utils/king-id.util");
+const role_policy_util_1 = require("../../common/utils/role-policy.util");
 const invite_coupon_util_1 = require("../../common/utils/invite-coupon.util");
 const common_2 = require("@nestjs/common");
 const auth_1 = require("firebase-admin/auth");
@@ -103,6 +110,8 @@ const SAFE_USER_SELECT = {
     assignedStaffId: true,
     profileStatus: true,
     profileRejectionReason: true,
+    kycVerified: true,
+    termsAcceptedAt: true,
     createdAt: true,
     deletedAt: true,
     sellerStore: {
@@ -143,11 +152,15 @@ function generateTempPassword() {
     return (0, crypto_1.randomBytes)(8).toString('hex').slice(0, 10);
 }
 let UsersService = class UsersService {
-    constructor(prisma, walletService, whatsappGroupSyncService, notificationsService) {
+    constructor(prisma, walletService, whatsappGroupSyncService, notificationsService, appSettingsService, whatsappBotService, emailService) {
         this.prisma = prisma;
         this.walletService = walletService;
         this.whatsappGroupSyncService = whatsappGroupSyncService;
         this.notificationsService = notificationsService;
+        this.appSettingsService = appSettingsService;
+        this.whatsappBotService = whatsappBotService;
+        this.emailService = emailService;
+        this.deleteMeOtpStore = new Map();
     }
     async onModuleInit() {
     }
@@ -316,7 +329,7 @@ let UsersService = class UsersService {
                 state: dto.state,
                 preferredLanguage: dto.preferredLanguage ?? 'en',
                 role,
-                roles: (role === client_1.Role.ADMIN || role === client_1.Role.SUPER_ADMIN) ? [role] : [role, client_1.Role.CUSTOMER],
+                roles: (role === client_1.Role.ADMIN || role === client_1.Role.SUPER_ADMIN || role === client_1.Role.ACCOUNTANT) ? [role] : [role, client_1.Role.CUSTOMER],
             },
             select: SAFE_USER_SELECT,
         });
@@ -324,27 +337,114 @@ let UsersService = class UsersService {
         return { user, tempPassword };
     }
     async getMe(user) {
-        let dbUser = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: SAFE_USER_SELECT });
-        if (dbUser.mobile === '9872066901' && dbUser.role !== client_1.Role.SUPER_ADMIN) {
-            const currentRoles = dbUser.roles ?? [];
-            dbUser = await this.prisma.user.update({
-                where: { id: user.id },
-                data: {
-                    role: client_1.Role.SUPER_ADMIN,
-                    roles: Array.from(new Set([...currentRoles, client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN])),
-                },
-                select: SAFE_USER_SELECT,
-            });
-        }
-        return dbUser;
+        return this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: SAFE_USER_SELECT });
     }
-    async deleteMe(user) {
+    async requestDeleteMeOtp(user, mobile) {
         const dbUser = await this.prisma.user.findUnique({
             where: { id: user.id },
-            select: { id: true, mobile: true, email: true, name: true, kingId: true },
+            select: { id: true, mobile: true, farmMobile: true, email: true, name: true },
         });
         if (!dbUser) {
             throw new common_1.NotFoundException('User account not found.');
+        }
+        const regDigits = (dbUser.mobile || '').replace(/\D/g, '').slice(-10);
+        const farmDigits = (dbUser.farmMobile || '').replace(/\D/g, '').slice(-10);
+        const requestedDigits = mobile ? mobile.replace(/\D/g, '').slice(-10) : regDigits;
+        if (!requestedDigits || (requestedDigits !== regDigits && requestedDigits !== farmDigits)) {
+            throw new common_1.BadRequestException('Please enter the 10-digit mobile number registered with this account.');
+        }
+        const otpCode = (0, crypto_1.randomInt)(100000, 1000000).toString();
+        this.deleteMeOtpStore.set(user.id, {
+            otp: otpCode,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            attempts: 0,
+        });
+        const isDev = process.env.NODE_ENV !== 'production';
+        const channels = [];
+        if (this.whatsappBotService) {
+            try {
+                const waRes = await this.whatsappBotService.sendOtpMessage(requestedDigits, otpCode);
+                if (waRes?.success)
+                    channels.push('WhatsApp');
+            }
+            catch { }
+        }
+        if (dbUser.email && !dbUser.email.includes('placeholder') && this.emailService) {
+            try {
+                const emailSent = await this.emailService.sendEmailOtp(dbUser.email, otpCode);
+                if (emailSent)
+                    channels.push('Email');
+            }
+            catch { }
+        }
+        return {
+            success: true,
+            deliveredVia: channels,
+            message: channels.length > 0
+                ? `6-digit account deletion OTP sent via ${channels.join(' & ')}.`
+                : isDev
+                    ? 'Local development mode: 6-digit account deletion OTP generated.'
+                    : 'Verification code generated for account deletion.',
+            devOtp: isDev ? otpCode : undefined,
+            expiresInSeconds: 600,
+        };
+    }
+    async deleteMe(user, verification) {
+        const dbUser = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, mobile: true, farmMobile: true, email: true, name: true, kingId: true },
+        });
+        if (!dbUser) {
+            throw new common_1.NotFoundException('User account not found.');
+        }
+        const regDigits = (dbUser.mobile || '').replace(/\D/g, '').slice(-10);
+        const farmDigits = (dbUser.farmMobile || '').replace(/\D/g, '').slice(-10);
+        let verified = false;
+        if (verification?.firebaseIdToken) {
+            try {
+                const decoded = await (0, auth_1.getAuth)().verifyIdToken(verification.firebaseIdToken);
+                const tokenDigits = (decoded?.phone_number || '').replace(/\D/g, '').slice(-10);
+                if (!tokenDigits || (tokenDigits !== regDigits && tokenDigits !== farmDigits)) {
+                    throw new common_2.UnauthorizedException('Verified phone number does not match this account.');
+                }
+                verified = true;
+            }
+            catch (err) {
+                if (err instanceof common_2.UnauthorizedException)
+                    throw err;
+                throw new common_2.UnauthorizedException('Invalid or expired Firebase phone verification token.');
+            }
+        }
+        else if (verification?.otp?.trim()) {
+            const provided = verification.otp.trim();
+            const stored = this.deleteMeOtpStore.get(user.id);
+            if (!stored) {
+                throw new common_1.BadRequestException('No active deletion OTP found. Please request a fresh 6-digit verification code.');
+            }
+            if (Date.now() > stored.expiresAt) {
+                this.deleteMeOtpStore.delete(user.id);
+                throw new common_1.BadRequestException('Deletion OTP has expired. Please request a new verification code.');
+            }
+            if (stored.attempts >= 5) {
+                this.deleteMeOtpStore.delete(user.id);
+                throw new common_1.BadRequestException('Too many invalid OTP attempts. Please request a new verification code.');
+            }
+            const expectedBuf = Buffer.from(stored.otp, 'utf8');
+            const providedBuf = Buffer.from(provided, 'utf8');
+            const isMatch = expectedBuf.length === providedBuf.length && (0, crypto_1.timingSafeEqual)(expectedBuf, providedBuf);
+            if (!isMatch) {
+                stored.attempts += 1;
+                if (stored.attempts >= 5) {
+                    this.deleteMeOtpStore.delete(user.id);
+                    throw new common_1.BadRequestException('Too many invalid OTP attempts. Code invalidated; please request a fresh OTP.');
+                }
+                throw new common_1.BadRequestException(`Invalid 6-digit OTP code. ${5 - stored.attempts} attempt(s) remaining.`);
+            }
+            this.deleteMeOtpStore.delete(user.id);
+            verified = true;
+        }
+        if (!verified) {
+            throw new common_1.BadRequestException('Server-side OTP or Firebase phone verification is required before deleting your account.');
         }
         try {
             const currentBalance = await this.walletService.getBalance(user.id);
@@ -382,6 +482,15 @@ let UsersService = class UsersService {
                 pincode: null,
                 postOffice: null,
                 upiId: null,
+                panNumber: null,
+                panDocUrl: null,
+                aadhaarLast4: null,
+                aadhaarDocUrl: null,
+                gstin: null,
+                mandiLicenseNo: null,
+                bankAccountNumber: null,
+                bankIfsc: null,
+                bankAccountHolderName: null,
                 billPrintingAddress: null,
                 farmName: null,
                 farmAddress: null,
@@ -459,12 +568,23 @@ let UsersService = class UsersService {
     async becomeFarmer(user, dto) {
         const existingUser = await this.prisma.user.findUniqueOrThrow({
             where: { id: user.id },
-            select: { mobile: true, roles: true, deactivatedRoles: true },
+            select: { mobile: true, role: true, roles: true, deactivatedRoles: true },
         });
+        const activeRoles = (0, role_policy_util_1.getActiveRolesList)(existingUser);
+        const isSuperAdminMobile = existingUser.mobile === '9872066901';
+        if (!isSuperAdminMobile) {
+            if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r))) {
+                throw new common_1.ConflictException('Admin Panel staff accounts cannot hold Farmer role.');
+            }
+            if (activeRoles.some((r) => role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
+                throw new common_1.ConflictException('Farm Staff accounts (Supervisor and Labour Worker) cannot become Farmers on the same mobile number.');
+            }
+            if (activeRoles.includes(client_1.Role.GARDENER)) {
+                throw new common_1.ConflictException('This account is already registered as a Gardener. An account cannot be both Farmer and Gardener at the same time.');
+            }
+        }
         const currentRoles = existingUser.roles ?? [];
         const currentDeactivated = existingUser.deactivatedRoles ?? [];
-        const isPartnerDeactivated = currentDeactivated.includes(client_1.Role.AGENT);
-        const isSuperAdminMobile = existingUser.mobile === '9872066901';
         const rolesToAdd = isSuperAdminMobile
             ? [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN, client_1.Role.FARMER]
             : [client_1.Role.FARMER];
@@ -526,8 +646,18 @@ let UsersService = class UsersService {
     async becomeGardener(user) {
         const existingUser = await this.prisma.user.findUniqueOrThrow({
             where: { id: user.id },
-            select: { roles: true, deactivatedRoles: true },
+            select: { role: true, roles: true, deactivatedRoles: true },
         });
+        const activeRoles = (0, role_policy_util_1.getActiveRolesList)(existingUser);
+        if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r))) {
+            throw new common_1.ConflictException('Admin Panel staff accounts cannot hold Gardener role.');
+        }
+        if (activeRoles.some((r) => role_policy_util_1.FARM_STAFF_ROLES.includes(r))) {
+            throw new common_1.ConflictException('Farm Staff accounts (Supervisor and Labour Worker) cannot become Gardeners on the same mobile number.');
+        }
+        if (activeRoles.includes(client_1.Role.FARMER)) {
+            throw new common_1.ConflictException('This account is already registered as a Farmer. An account cannot be both Farmer and Gardener at the same time.');
+        }
         const currentRoles = existingUser.roles ?? [];
         const currentDeactivated = existingUser.deactivatedRoles ?? [];
         const rolesToAdd = [client_1.Role.GARDENER];
@@ -556,6 +686,9 @@ let UsersService = class UsersService {
     }
     createManager(dto) {
         return this.createStaff(dto, client_1.Role.MANAGER);
+    }
+    createAccountant(dto) {
+        return this.createStaff(dto, client_1.Role.ACCOUNTANT);
     }
     async updateAdminStaffPermissions(id, permissions) {
         const user = await this.findActiveOrThrow(id);
@@ -610,13 +743,20 @@ let UsersService = class UsersService {
                 });
                 return { supervisor: updated, tempPassword: '(Already Assigned)' };
             }
-            const updatedRoles = Array.from(new Set([...(existing.roles ?? []), client_1.Role.SUPERVISOR]));
+            const activeExisting = (0, role_policy_util_1.getActiveRolesList)(existing);
+            const incompatibleRoles = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+            if (incompatibleRoles.length > 0) {
+                throw new common_1.ConflictException(`This mobile number already holds active role (${incompatibleRoles.join(', ')}). A supervisor must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`);
+            }
+            const updatedRoles = Array.from(new Set([...(existing.roles ?? []), client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER]));
+            const nextDeactivated = (existing.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.SUPERVISOR);
             const updated = await this.prisma.user.update({
                 where: { id: existing.id },
                 data: {
                     employerFarmerId: farmer.id,
                     role: client_1.Role.SUPERVISOR,
                     roles: updatedRoles,
+                    deactivatedRoles: nextDeactivated,
                     supervisorPermissions: dto.permissions ?? [
                         client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
                         client_1.SupervisorPermission.MANAGE_LABOUR_EXPENSES,
@@ -684,13 +824,27 @@ let UsersService = class UsersService {
                     ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
                 ],
             },
-            select: { id: true, name: true, kingId: true, mobile: true, employerFarmerId: true, role: true, roles: true },
+            select: {
+                id: true,
+                name: true,
+                kingId: true,
+                mobile: true,
+                employerFarmerId: true,
+                role: true,
+                roles: true,
+                deactivatedRoles: true,
+            },
         });
         if (!target) {
             throw new common_1.NotFoundException('Candidate not found matching King ID / Mobile number.');
         }
         if (target.id === farmer.id) {
             throw new common_1.BadRequestException('You cannot appoint yourself as your own supervisor.');
+        }
+        const activeTargetRoles = (0, role_policy_util_1.getActiveRolesList)(target);
+        const incompatibleTargetRoles = activeTargetRoles.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+        if (incompatibleTargetRoles.length > 0) {
+            throw new common_1.ConflictException(`This account already holds an active role (${incompatibleTargetRoles.join(', ')}). Supervisors must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`);
         }
         if (target.employerFarmerId && target.employerFarmerId !== farmer.id) {
             const currentEmployer = await this.prisma.user.findUnique({
@@ -773,6 +927,13 @@ let UsersService = class UsersService {
             return { success: true, status: 'REJECTED', message: 'You have declined this supervisor request.' };
         }
         const currentUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+        if (currentUser) {
+            const activeExisting = (0, role_policy_util_1.getActiveRolesList)(currentUser);
+            const incompatible = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+            if (incompatible.length > 0) {
+                throw new common_1.ConflictException(`Your account already holds active role (${incompatible.join(', ')}). Only a dedicated mobile account without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles can accept a Farm Supervisor appointment.`);
+            }
+        }
         if (currentUser?.employerFarmerId && currentUser.employerFarmerId !== request.farmerId) {
             const employer = await this.prisma.user.findUnique({ where: { id: currentUser.employerFarmerId }, select: { name: true, kingId: true } });
             throw new common_1.ConflictException(`You are currently actively assigned to farmer "${employer?.name || 'Another Farmer'}" (${employer?.kingId || ''}). Please resign from that farmer before accepting a new appointment.`);
@@ -1044,8 +1205,13 @@ let UsersService = class UsersService {
         };
     }
     assertCanManageTarget(caller, target) {
-        const targetIsTierRestricted = target.role === client_1.Role.ADMIN || target.role === client_1.Role.SUPER_ADMIN;
-        if (caller.role === client_1.Role.ADMIN && targetIsTierRestricted) {
+        const targetIsTierRestricted = target.role === client_1.Role.ADMIN ||
+            target.role === client_1.Role.SUPER_ADMIN ||
+            (target.roles ?? []).includes(client_1.Role.ADMIN) ||
+            (target.roles ?? []).includes(client_1.Role.SUPER_ADMIN);
+        const callerIsSuperAdmin = caller.role === client_1.Role.SUPER_ADMIN ||
+            ((caller.roles ?? []).includes(client_1.Role.SUPER_ADMIN) && !(caller.deactivatedRoles ?? []).includes(client_1.Role.SUPER_ADMIN));
+        if (!callerIsSuperAdmin && targetIsTierRestricted) {
             throw new common_1.ForbiddenException('Only the Super Admin can manage Admin or Super Admin accounts.');
         }
     }
@@ -1055,9 +1221,14 @@ let UsersService = class UsersService {
         if (user.deletedAt) {
             throw new common_1.ConflictException('Cannot change the role of a deactivated user.');
         }
-        if (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN) {
-            throw new common_1.ConflictException("An admin's role cannot be changed.");
+        if (role_policy_util_1.ADMIN_STAFF_ROLES.some((r) => user.role === r || (user.roles ?? []).includes(r))) {
+            throw new common_1.ConflictException("An Admin Panel staff member's roles are single-role only and cannot be changed here.");
         }
+        if (role_policy_util_1.ADMIN_STAFF_ROLES.includes(role)) {
+            throw new common_1.ConflictException('Admin Panel staff roles cannot be assigned via this endpoint.');
+        }
+        const activeAfterUpdate = Array.from(new Set([...(0, role_policy_util_1.getActiveRolesList)(user), role, client_1.Role.CUSTOMER]));
+        (0, role_policy_util_1.assertRoleCombinationAllowed)(activeAfterUpdate);
         const isNewAdvisor = role === client_1.Role.ADVISOR && !user.roles.includes(client_1.Role.ADVISOR);
         const newDeactivatedRoles = (user.deactivatedRoles ?? []).filter((r) => r !== role);
         const targetRoles = Array.from(new Set([...user.roles, role, client_1.Role.CUSTOMER]));
@@ -1093,17 +1264,17 @@ let UsersService = class UsersService {
         if (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN) {
             throw new common_1.ConflictException("An admin's roles cannot be changed here.");
         }
-        const isStaff = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.MANAGER].some((r) => user.role === r || (user.roles ?? []).includes(r));
+        const isStaff = role_policy_util_1.ADMIN_STAFF_ROLES.some((r) => user.role === r || (user.roles ?? []).includes(r));
         if (isStaff) {
-            const clientRoles = [client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
-            const hasClientRole = activeRoles.some((r) => clientRoles.includes(r));
-            if (hasClientRole) {
-                throw new common_1.ConflictException('Admin staff members cannot hold Client group roles (Farmer, Gardener, Supervisor, Labour).');
-            }
+            throw new common_1.ConflictException('Admin Panel staff accounts (Super Admin, Admin, Manager, Operator, Technical Trainer) are single-role only and cannot be combined or edited here.');
+        }
+        if (activeRoles.some((r) => role_policy_util_1.ADMIN_STAFF_ROLES.includes(r))) {
+            throw new common_1.ConflictException('Admin Panel staff roles cannot be assigned here. Use Staff Management for dedicated single-role staff accounts.');
         }
         if (!activeRoles.includes(client_1.Role.CUSTOMER)) {
             activeRoles = [...activeRoles, client_1.Role.CUSTOMER];
         }
+        (0, role_policy_util_1.assertRoleCombinationAllowed)(activeRoles);
         const currentRoles = user.roles ?? [];
         const currentDeactivated = user.deactivatedRoles ?? [];
         const currentActive = currentRoles.filter((r) => !currentDeactivated.includes(r));
@@ -1116,19 +1287,15 @@ let UsersService = class UsersService {
             ...toDeactivate,
         ];
         let newPrimary = user.role;
-        if (toDeactivate.includes(user.role)) {
-            const stillActive = newRoles.filter((r) => !newDeactivated.includes(r));
-            newPrimary = stillActive[0] ?? client_1.Role.CUSTOMER;
+        if (toDeactivate.includes(user.role) ||
+            !activeRoles.includes(user.role) ||
+            user.role === client_1.Role.CUSTOMER) {
+            newPrimary = (0, role_policy_util_1.pickBestPrimaryRole)(activeRoles);
             if (!newRoles.includes(newPrimary))
                 newRoles.push(newPrimary);
         }
-        else if (user.role === client_1.Role.CUSTOMER) {
-            const activeNonCustomer = newRoles.filter((r) => !newDeactivated.includes(r) && r !== client_1.Role.CUSTOMER);
-            if (activeNonCustomer.length > 0) {
-                newPrimary = activeNonCustomer[activeNonCustomer.length - 1];
-            }
-        }
         const isBrandNewAdvisor = toGrant.includes(client_1.Role.ADVISOR);
+        const deactivatingSupervisor = toDeactivate.includes(client_1.Role.SUPERVISOR);
         const updated = await this.prisma.user.update({
             where: { id },
             data: {
@@ -1136,6 +1303,7 @@ let UsersService = class UsersService {
                 roles: newRoles,
                 deactivatedRoles: newDeactivated,
                 ...(isBrandNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
+                ...(deactivatingSupervisor ? { employerFarmerId: null, supervisorPermissions: [] } : {}),
             },
             select: SAFE_USER_SELECT,
         });
@@ -1311,8 +1479,12 @@ let UsersService = class UsersService {
         if (!user.deletedAt) {
             throw new common_1.ConflictException('User is already active.');
         }
-        const restoredMobile = user.mobile.replace(/_del_\d+$/, '');
+        if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY') {
+            throw new common_1.ConflictException('Permanently deleted user accounts cannot be reactivated.');
+        }
+        const restoredMobile = user.mobile.replace(/^DEL_/, '').replace(/_del_\d+$/, '');
         const restoredEmail = user.email ? user.email.replace(/_del_\d+$/, '') : null;
+        const restoredKingId = user.kingId ? user.kingId.replace(/_del_\d+$/, '') : undefined;
         const existing = await this.prisma.user.findFirst({
             where: { mobile: restoredMobile, deletedAt: null, id: { not: id } },
         });
@@ -1325,6 +1497,7 @@ let UsersService = class UsersService {
                 deletedAt: null,
                 mobile: restoredMobile,
                 email: restoredEmail,
+                ...(restoredKingId ? { kingId: restoredKingId } : {}),
             },
             select: SAFE_USER_SELECT,
         });
@@ -1483,6 +1656,11 @@ let UsersService = class UsersService {
                 ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
                 ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
                 ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
+                ...(dto.aadhaarLast4 !== undefined ? { aadhaarLast4: dto.aadhaarLast4 } : {}),
+                ...(dto.aadhaarDocUrl !== undefined ? { aadhaarDocUrl: dto.aadhaarDocUrl } : {}),
+                ...(dto.panDocUrl !== undefined ? { panDocUrl: dto.panDocUrl } : {}),
+                ...(dto.gstin !== undefined ? { gstin: dto.gstin } : {}),
+                ...(dto.termsAccepted ? { termsAcceptedAt: new Date(), privacyPolicyVersion: '2026.11' } : {}),
             },
             select: {
                 ...SAFE_USER_SELECT,
@@ -1524,6 +1702,11 @@ let UsersService = class UsersService {
                 ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
                 ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
                 ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
+                ...(dto.aadhaarLast4 !== undefined ? { aadhaarLast4: dto.aadhaarLast4 } : {}),
+                ...(dto.aadhaarDocUrl !== undefined ? { aadhaarDocUrl: dto.aadhaarDocUrl } : {}),
+                ...(dto.panDocUrl !== undefined ? { panDocUrl: dto.panDocUrl } : {}),
+                ...(dto.gstin !== undefined ? { gstin: dto.gstin } : {}),
+                ...(dto.termsAccepted ? { termsAcceptedAt: new Date(), privacyPolicyVersion: '2026.11' } : {}),
             },
             select: {
                 ...SAFE_USER_SELECT,
@@ -1546,7 +1729,7 @@ let UsersService = class UsersService {
         }
         return { ...(0, partner_profile_util_1.getPartnerProfileStatus)(partner), profile: partner };
     }
-    async deleteUserByAdmin(caller, id) {
+    async deleteUserByAdmin(caller, id, adminConfirmationOtp) {
         if (caller.role !== client_1.Role.SUPER_ADMIN && !caller.roles?.includes(client_1.Role.SUPER_ADMIN)) {
             throw new common_1.ForbiddenException('Only Super Admin can delete user records.');
         }
@@ -1562,6 +1745,9 @@ let UsersService = class UsersService {
         }
         if (!user.deletedAt) {
             throw new common_1.BadRequestException('User must be soft-deleted (deactivated) before this operation. Please deactivate the user first.');
+        }
+        if (this.appSettingsService) {
+            this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
         }
         const ts = Date.now();
         const delMobile = user.mobile ? `DEL_${user.mobile}_${ts}` : `DEL_UNKNOWN_${id}_${ts}`;
@@ -1579,6 +1765,15 @@ let UsersService = class UsersService {
                 pincode: null,
                 postOffice: null,
                 upiId: null,
+                panNumber: null,
+                panDocUrl: null,
+                aadhaarLast4: null,
+                aadhaarDocUrl: null,
+                gstin: null,
+                mandiLicenseNo: null,
+                bankAccountNumber: null,
+                bankIfsc: null,
+                bankAccountHolderName: null,
                 billPrintingAddress: null,
                 farmName: null,
                 farmAddress: null,
@@ -1604,11 +1799,32 @@ let UsersService = class UsersService {
     async assignStaffRole(caller, dto) {
         const user = await this.findActiveOrThrow(dto.userId);
         this.assertCanManageTarget(caller, user);
+        const callerIsSuperAdmin = caller.role === client_1.Role.SUPER_ADMIN ||
+            ((caller.roles ?? []).includes(client_1.Role.SUPER_ADMIN) && !(caller.deactivatedRoles ?? []).includes(client_1.Role.SUPER_ADMIN));
+        if (!callerIsSuperAdmin && (dto.role === client_1.Role.SUPER_ADMIN || dto.role === client_1.Role.ADMIN)) {
+            throw new common_1.ForbiddenException('Only the Super Admin can assign Admin or Super Admin roles.');
+        }
+        const activeExisting = (0, role_policy_util_1.getActiveRolesList)(user);
+        let nextRoles;
+        const nextDeactivated = (user.deactivatedRoles ?? []).filter((r) => r !== dto.role);
+        if (role_policy_util_1.ADMIN_STAFF_ROLES.includes(dto.role)) {
+            const conflicting = activeExisting.filter((r) => r !== dto.role && r !== client_1.Role.CUSTOMER);
+            if (conflicting.length > 0) {
+                throw new common_1.ConflictException(`Admin Panel Staff accounts (${dto.role}) must be single-role only and cannot be assigned to an account with active roles (${conflicting.join(', ')}). Create a dedicated staff account instead.`);
+            }
+            nextRoles = [dto.role];
+        }
+        else {
+            const candidateActive = Array.from(new Set([...activeExisting, dto.role, client_1.Role.CUSTOMER]));
+            (0, role_policy_util_1.assertRoleCombinationAllowed)(candidateActive);
+            nextRoles = Array.from(new Set([...(user.roles || []), dto.role]));
+        }
         const updated = await this.prisma.user.update({
             where: { id: dto.userId },
             data: {
                 role: dto.role,
-                roles: Array.from(new Set([...(user.roles || []), dto.role])),
+                roles: nextRoles,
+                deactivatedRoles: nextDeactivated,
                 assignedStaffId: dto.staffId || `STAFF-${Date.now().toString(36).toUpperCase()}`,
                 advisorType: dto.advisorType || user.advisorType,
                 profileStatus: 'PENDING_COMPLETION',
@@ -1643,9 +1859,13 @@ let UsersService = class UsersService {
                 photoUrl: data.photoUrl ?? user.photoUrl,
                 upiId: data.upiId ?? user.upiId,
                 bankAccountNumber: data.bankAccountNumber ?? user.bankAccountNumber,
-                bankIfsc: data.bankIfsc ?? user.bankIfsc,
+                bankIfsc: data.bankIfsc ? data.bankIfsc.trim().toUpperCase() : user.bankIfsc,
                 bankAccountHolderName: data.bankAccountHolderName ?? user.bankAccountHolderName,
-                panNumber: data.panNumber ?? user.panNumber,
+                panNumber: data.panNumber ? data.panNumber.trim().toUpperCase() : user.panNumber,
+                aadhaarLast4: data.aadhaarLast4 ?? user.aadhaarLast4,
+                aadhaarDocUrl: data.aadhaarDocUrl ?? user.aadhaarDocUrl,
+                panDocUrl: data.panDocUrl ?? user.panDocUrl,
+                ...(data.termsAccepted ? { termsAcceptedAt: new Date(), privacyPolicyVersion: '2026.11' } : {}),
                 alternativeMobile: data.alternativeMobile ?? user.alternativeMobile,
                 billPrintingAddress: data.billPrintingAddress ?? user.billPrintingAddress,
                 profileStatus: 'UNDER_REVIEW',
@@ -1724,13 +1944,704 @@ let UsersService = class UsersService {
         });
         return updated;
     }
+    async listPartnerApplications(status) {
+        const cleanStatus = status?.toUpperCase();
+        const where = cleanStatus && ['PENDING', 'APPROVED', 'REJECTED'].includes(cleanStatus)
+            ? { status: cleanStatus }
+            : {};
+        const rows = await this.prisma.partnerApplication.findMany({
+            where,
+            include: {
+                applicantUser: {
+                    select: {
+                        id: true,
+                        name: true,
+                        kingId: true,
+                        mobile: true,
+                        role: true,
+                        roles: true,
+                        deactivatedRoles: true,
+                    },
+                },
+                reviewedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+            orderBy: [{ createdAt: 'desc' }],
+        });
+        return rows.map(({ passwordHash, ...rest }) => ({
+            ...rest,
+            hasPassword: Boolean(passwordHash),
+        }));
+    }
+    async approvePartnerApplication(caller, applicationId, adminConfirmationOtp) {
+        if (this.appSettingsService) {
+            this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+        }
+        const existingApp = await this.prisma.partnerApplication.findUnique({
+            where: { id: applicationId },
+        });
+        if (!existingApp) {
+            throw new common_1.NotFoundException('Partner application not found.');
+        }
+        if (existingApp.status === client_1.PartnerApplicationStatus.APPROVED) {
+            throw new common_1.ConflictException('This Partner application has already been approved.');
+        }
+        const cleanMobile = existingApp.mobile.replace(/\D/g, '').slice(-10);
+        const txResult = await this.prisma.$transaction(async (tx) => {
+            let existingUser = existingApp.applicantUserId
+                ? await tx.user.findFirst({
+                    where: { id: existingApp.applicantUserId, deletedAt: null },
+                })
+                : null;
+            if (!existingUser) {
+                existingUser = await tx.user.findFirst({
+                    where: {
+                        OR: [
+                            { mobile: cleanMobile },
+                            { mobile: `+91${cleanMobile}` },
+                            { mobile: { endsWith: cleanMobile } },
+                        ],
+                        deletedAt: null,
+                    },
+                });
+            }
+            if (existingUser) {
+                const activeRoles = (0, role_policy_util_1.getActiveRolesList)(existingUser);
+                (0, role_policy_util_1.assertRoleCombinationAllowed)([...activeRoles, existingApp.requestedRole]);
+            }
+            let safeEmailToAssign;
+            if (existingApp.email) {
+                const emailOwner = await tx.user.findFirst({
+                    where: {
+                        email: existingApp.email.trim().toLowerCase(),
+                        ...(existingUser ? { id: { not: existingUser.id } } : {}),
+                        deletedAt: null,
+                    },
+                    select: { id: true },
+                });
+                if (!emailOwner) {
+                    safeEmailToAssign = existingApp.email.trim().toLowerCase();
+                }
+            }
+            const commonKycData = {
+                ...(safeEmailToAssign ? { email: safeEmailToAssign } : {}),
+                ...(existingApp.pincode ? { pincode: existingApp.pincode } : {}),
+                ...(existingApp.postOffice ? { postOffice: existingApp.postOffice } : {}),
+                ...(existingApp.village ? { village: existingApp.village } : {}),
+                ...(existingApp.district ? { district: existingApp.district } : {}),
+                ...(existingApp.state ? { state: existingApp.state } : {}),
+                ...(existingApp.qualification ? { qualification: existingApp.qualification } : {}),
+                ...(existingApp.specialization ? { specialization: existingApp.specialization } : {}),
+                ...(typeof existingApp.yearsExperience === 'number' ? { yearsExperience: existingApp.yearsExperience } : {}),
+                ...(existingApp.bio ? { bio: existingApp.bio } : {}),
+                ...(existingApp.requestedRole === client_1.Role.ADVISOR && existingApp.advisorType
+                    ? { advisorType: existingApp.advisorType }
+                    : {}),
+                ...(existingApp.panNumber ? { panNumber: existingApp.panNumber } : {}),
+                ...(existingApp.panDocUrl ? { panDocUrl: existingApp.panDocUrl } : {}),
+                ...(existingApp.aadhaarLast4 ? { aadhaarLast4: existingApp.aadhaarLast4 } : {}),
+                ...(existingApp.aadhaarDocUrl ? { aadhaarDocUrl: existingApp.aadhaarDocUrl } : {}),
+                ...(existingApp.aadhaarBackUrl ? { aadhaarBackUrl: existingApp.aadhaarBackUrl } : {}),
+                ...(existingApp.gstin ? { gstin: existingApp.gstin } : {}),
+                ...(existingApp.gstDocUrl ? { gstDocUrl: existingApp.gstDocUrl } : {}),
+                ...(existingApp.bankAccountHolderName ? { bankAccountHolderName: existingApp.bankAccountHolderName } : {}),
+                ...(existingApp.bankAccountNumber ? { bankAccountNumber: existingApp.bankAccountNumber } : {}),
+                ...(existingApp.bankIfsc ? { bankIfsc: existingApp.bankIfsc } : {}),
+                ...(existingApp.upiId ? { upiId: existingApp.upiId } : {}),
+                ...(existingApp.chequeDocUrl ? { chequeDocUrl: existingApp.chequeDocUrl } : {}),
+                ...(existingApp.photoUrl ? { photoUrl: existingApp.photoUrl } : {}),
+                ...(existingApp.passwordHash ? { passwordHash: existingApp.passwordHash } : {}),
+                kycVerified: true,
+                kycVerifiedAt: new Date(),
+                termsAcceptedAt: existingApp.termsAcceptedAt ?? new Date(),
+                privacyPolicyVersion: '2026.11',
+                isApproved: true,
+                profileStatus: 'APPROVED',
+                profileRejectionReason: null,
+                isPhoneVerified: true,
+            };
+            let targetUser;
+            if (existingUser) {
+                const nextRoles = Array.from(new Set([existingUser.role, ...(existingUser.roles ?? []), client_1.Role.CUSTOMER, existingApp.requestedRole]));
+                const nextDeactivated = (existingUser.deactivatedRoles ?? []).filter((r) => r !== existingApp.requestedRole);
+                const nextPrimaryRole = existingUser.role === client_1.Role.CUSTOMER ? existingApp.requestedRole : (0, role_policy_util_1.pickBestPrimaryRole)(nextRoles);
+                const preservedKingId = existingUser.kingId || (await (0, king_id_util_1.generateUniqueKingId)(tx));
+                targetUser = await tx.user.update({
+                    where: { id: existingUser.id },
+                    data: {
+                        kingId: preservedKingId,
+                        role: nextPrimaryRole,
+                        roles: nextRoles,
+                        deactivatedRoles: nextDeactivated,
+                        ...commonKycData,
+                    },
+                    select: SAFE_USER_SELECT,
+                });
+            }
+            else {
+                const newKingId = await (0, king_id_util_1.generateUniqueKingId)(tx);
+                const fallbackHash = existingApp.passwordHash || (await argon2.hash(generateTempPassword()));
+                targetUser = await tx.user.create({
+                    data: {
+                        kingId: newKingId,
+                        mobile: cleanMobile,
+                        name: existingApp.name,
+                        role: existingApp.requestedRole,
+                        roles: [client_1.Role.CUSTOMER, existingApp.requestedRole],
+                        ...commonKycData,
+                        passwordHash: fallbackHash,
+                    },
+                    select: SAFE_USER_SELECT,
+                });
+            }
+            if (existingApp.requestedRole === client_1.Role.SELLER) {
+                const existingStore = await tx.sellerStore.findUnique({
+                    where: { sellerId: targetUser.id },
+                });
+                if (!existingStore) {
+                    const rawBase = (existingApp.storeName || existingApp.name || 'seller-store')
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-+|-+$/g, '')
+                        .slice(0, 32) || 'farmsking-store';
+                    const slug = `${rawBase}-${(0, crypto_1.randomBytes)(3).toString('hex')}`;
+                    await tx.sellerStore.create({
+                        data: {
+                            sellerId: targetUser.id,
+                            storeName: existingApp.storeName || `${existingApp.name} Store`,
+                            slug,
+                            sellerType: existingApp.sellerType || client_1.SellerType.FARMER,
+                            legalName: existingApp.legalName || existingApp.name,
+                            gstin: existingApp.gstin || null,
+                            panNumber: existingApp.panNumber || null,
+                            aadhaarLast4: existingApp.aadhaarLast4 || null,
+                            upiId: existingApp.upiId || null,
+                            kycStatus: client_1.SellerKycStatus.VERIFIED,
+                            kycVerifiedAt: new Date(),
+                            kycVerifiedById: caller.id,
+                            bankAccountNo: existingApp.bankAccountNumber || null,
+                            bankIfsc: existingApp.bankIfsc || null,
+                            bankBeneficiaryName: existingApp.bankAccountHolderName || null,
+                            pickupAddress: existingApp.pickupAddress || null,
+                            pickupCity: existingApp.district || null,
+                            pickupState: existingApp.state || null,
+                            pickupPincode: existingApp.pincode || null,
+                            panDocUrl: existingApp.panDocUrl || null,
+                            chequeDocUrl: existingApp.chequeDocUrl || null,
+                            aadhaarFrontUrl: existingApp.aadhaarDocUrl || null,
+                            aadhaarBackUrl: existingApp.aadhaarBackUrl || null,
+                            gstDocUrl: existingApp.gstDocUrl || null,
+                            sellerAgreementAcceptedAt: existingApp.termsAcceptedAt ?? new Date(),
+                            sellerAgreementVersion: '2026.11',
+                        },
+                    });
+                }
+                else {
+                    await tx.sellerStore.update({
+                        where: { id: existingStore.id },
+                        data: {
+                            ...(existingApp.panNumber ? { panNumber: existingApp.panNumber } : {}),
+                            ...(existingApp.panDocUrl ? { panDocUrl: existingApp.panDocUrl } : {}),
+                            ...(existingApp.aadhaarLast4 ? { aadhaarLast4: existingApp.aadhaarLast4 } : {}),
+                            ...(existingApp.aadhaarDocUrl ? { aadhaarFrontUrl: existingApp.aadhaarDocUrl } : {}),
+                            ...(existingApp.aadhaarBackUrl ? { aadhaarBackUrl: existingApp.aadhaarBackUrl } : {}),
+                            ...(existingApp.gstin ? { gstin: existingApp.gstin } : {}),
+                            ...(existingApp.gstDocUrl ? { gstDocUrl: existingApp.gstDocUrl } : {}),
+                            ...(existingApp.bankAccountNumber ? { bankAccountNo: existingApp.bankAccountNumber } : {}),
+                            ...(existingApp.bankIfsc ? { bankIfsc: existingApp.bankIfsc } : {}),
+                            ...(existingApp.bankAccountHolderName ? { bankBeneficiaryName: existingApp.bankAccountHolderName } : {}),
+                            ...(existingApp.chequeDocUrl ? { chequeDocUrl: existingApp.chequeDocUrl } : {}),
+                            kycStatus: client_1.SellerKycStatus.VERIFIED,
+                            kycVerifiedAt: new Date(),
+                            kycVerifiedById: caller.id,
+                        },
+                    });
+                }
+            }
+            const updatedApplication = await tx.partnerApplication.update({
+                where: { id: existingApp.id },
+                data: {
+                    status: client_1.PartnerApplicationStatus.APPROVED,
+                    applicantUserId: targetUser.id,
+                    reviewedById: caller.id,
+                    reviewedAt: new Date(),
+                    rejectionReason: null,
+                },
+            });
+            await tx.isoAuditLog.create({
+                data: {
+                    action: 'PARTNER_APPLICATION_APPROVED',
+                    actorId: caller.id,
+                    actorName: caller.name,
+                    details: {
+                        applicationId: existingApp.id,
+                        targetUserId: targetUser.id,
+                        kingId: targetUser.kingId,
+                        requestedRole: existingApp.requestedRole,
+                        preservedExistingAccount: Boolean(existingUser),
+                    },
+                },
+            });
+            return { targetUser, updatedApplication, isBrandNewUser: !existingUser };
+        });
+        try {
+            await (0, invite_coupon_util_1.provisionInviteCoupon)(this.prisma, txResult.targetUser.id);
+            if (existingApp.requestedRole === client_1.Role.AGENT) {
+                await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, txResult.targetUser.id, caller.id);
+            }
+            if (txResult.isBrandNewUser) {
+                await this.walletService.ensureWelcomeBonus(txResult.targetUser.id);
+            }
+            await this.prisma.verifiedSignupLead
+                ?.updateMany?.({
+                where: { mobile: cleanMobile },
+                data: {
+                    status: client_1.VerifiedLeadStatus.COMPLETED_SELF,
+                    convertedUserId: txResult.targetUser.id,
+                    convertedAt: new Date(),
+                    intendedRole: existingApp.requestedRole,
+                    capturedName: txResult.targetUser.name,
+                },
+            })
+                .catch(() => { });
+        }
+        catch (e) {
+            console.warn('[ApprovePartnerApplication] Coupon/wallet provision notice:', e?.message);
+        }
+        try {
+            await this.notificationsService.create(txResult.targetUser.id, client_1.NotificationType.SYSTEM, `Partner Application Approved (${existingApp.requestedRole})`, `Congratulations ${txResult.targetUser.name}! Your ${existingApp.requestedRole} role is now active on King ID ${txResult.targetUser.kingId}. Sign in via the Partner Login tab.`);
+        }
+        catch { }
+        this.whatsappBotService
+            ?.sendDirectTextMessage(cleanMobile, `🎉 FarmsKing Partner Approved!\n\nHello ${txResult.targetUser.name}, your application for *${existingApp.requestedRole}* is *APPROVED*!\n🔑 King ID: ${txResult.targetUser.kingId}\n\nYou can now sign in via the Partner Login portal on FarmsKing.`)
+            .catch(() => { });
+        const { passwordHash: _ph, ...safeApp } = txResult.updatedApplication;
+        return {
+            success: true,
+            application: safeApp,
+            user: txResult.targetUser,
+            message: `${txResult.targetUser.name} approved as ${existingApp.requestedRole} (King ID: ${txResult.targetUser.kingId}).`,
+        };
+    }
+    async rejectPartnerApplication(caller, applicationId, reason) {
+        const cleanReason = reason?.trim();
+        if (!cleanReason || cleanReason.length < 5) {
+            throw new common_1.BadRequestException('Please provide a clear rejection reason (at least 5 characters) so the applicant knows what to fix.');
+        }
+        const existingApp = await this.prisma.partnerApplication.findUnique({
+            where: { id: applicationId },
+        });
+        if (!existingApp) {
+            throw new common_1.NotFoundException('Partner application not found.');
+        }
+        if (existingApp.status === client_1.PartnerApplicationStatus.APPROVED) {
+            throw new common_1.ConflictException('Approved applications cannot be rejected.');
+        }
+        const updatedApp = await this.prisma.partnerApplication.update({
+            where: { id: applicationId },
+            data: {
+                status: client_1.PartnerApplicationStatus.REJECTED,
+                rejectionReason: cleanReason,
+                reviewedById: caller.id,
+                reviewedAt: new Date(),
+            },
+        });
+        await this.prisma.isoAuditLog.create({
+            data: {
+                action: 'PARTNER_APPLICATION_REJECTED',
+                actorId: caller.id,
+                actorName: caller.name,
+                details: {
+                    applicationId,
+                    mobile: existingApp.mobile,
+                    requestedRole: existingApp.requestedRole,
+                    reason: cleanReason,
+                },
+            },
+        });
+        if (existingApp.applicantUserId) {
+            this.notificationsService
+                .create(existingApp.applicantUserId, client_1.NotificationType.SYSTEM, 'Partner Application Requires Updates', `Your ${existingApp.requestedRole} application was not approved: "${cleanReason}". Open Partner Login to edit and resubmit.`)
+                .catch(() => { });
+        }
+        this.whatsappBotService
+            ?.sendDirectTextMessage(existingApp.mobile, `⚠️ FarmsKing Partner Application Update\n\nHello ${existingApp.name}, your application for *${existingApp.requestedRole}* needs corrections before approval:\nReason: ${cleanReason}\n\nOpen Partner Login -> "Edit & Resubmit Application" to update your details.`)
+            .catch(() => { });
+        const { passwordHash: _ph, ...safeApp } = updatedApp;
+        return {
+            success: true,
+            application: safeApp,
+            message: 'Partner application marked rejected with reason. Applicant can edit and resubmit.',
+        };
+    }
+    async resolveReferrerByCode(rawCode) {
+        const cleanCode = rawCode?.trim();
+        if (!cleanCode)
+            return null;
+        const rawDigits = cleanCode.replace(/\D/g, '');
+        const cleanReferrerMobile = rawDigits.slice(-10);
+        let referrer = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { kingId: cleanCode },
+                    ...(rawDigits
+                        ? [
+                            { kingId: rawDigits },
+                            { kingId: rawDigits.padStart(8, '0') },
+                            { kingId: { endsWith: rawDigits } },
+                        ]
+                        : []),
+                ],
+                deletedAt: null,
+            },
+            select: { id: true },
+        });
+        if (!referrer && cleanReferrerMobile.length === 10) {
+            referrer = await this.prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { mobile: cleanReferrerMobile },
+                        { mobile: `+91${cleanReferrerMobile}` },
+                        { mobile: { endsWith: cleanReferrerMobile } },
+                    ],
+                    deletedAt: null,
+                },
+                select: { id: true },
+            });
+        }
+        if (!referrer) {
+            const coupon = await this.prisma.coupon?.findFirst?.({
+                where: { code: cleanCode.toUpperCase() },
+                select: { createdById: true, businessPartnerId: true },
+            });
+            const couponOwnerId = coupon?.createdById || coupon?.businessPartnerId;
+            if (couponOwnerId) {
+                referrer = { id: couponOwnerId };
+            }
+        }
+        return referrer;
+    }
+    async listVerifiedSignupLeads(status, search) {
+        const validStatuses = new Set(Object.values(client_1.VerifiedLeadStatus));
+        const normalizedStatus = status?.trim().toUpperCase();
+        const where = {};
+        if (normalizedStatus && normalizedStatus !== 'ALL' && validStatuses.has(normalizedStatus)) {
+            where.status = normalizedStatus;
+        }
+        const q = search?.trim();
+        if (q) {
+            where.OR = [
+                { mobile: { contains: q } },
+                { capturedName: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { capturedEmail: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { pincode: { contains: q } },
+                { district: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { state: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { village: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { referralCode: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                { adminNotes: { contains: q, mode: client_1.Prisma.QueryMode.insensitive } },
+                {
+                    convertedUser: {
+                        kingId: { contains: q, mode: client_1.Prisma.QueryMode.insensitive },
+                    },
+                },
+            ];
+        }
+        const [items, groupedCounts] = await Promise.all([
+            this.prisma.verifiedSignupLead.findMany({
+                where,
+                orderBy: { lastAttemptAt: 'desc' },
+                take: 250,
+                include: {
+                    convertedUser: {
+                        select: {
+                            id: true,
+                            kingId: true,
+                            name: true,
+                            role: true,
+                            roles: true,
+                            mobile: true,
+                        },
+                    },
+                    convertedBy: {
+                        select: {
+                            id: true,
+                            name: true,
+                            kingId: true,
+                            role: true,
+                        },
+                    },
+                },
+            }),
+            this.prisma.verifiedSignupLead.groupBy({
+                by: ['status'],
+                _count: { _all: true },
+            }),
+        ]);
+        const countMap = new Map();
+        let total = 0;
+        for (const row of groupedCounts) {
+            const c = Number(row._count?._all || 0);
+            countMap.set(row.status, c);
+            total += c;
+        }
+        return {
+            items,
+            counts: {
+                total,
+                otpConfirmed: countMap.get(client_1.VerifiedLeadStatus.OTP_CONFIRMED) || 0,
+                completedSelf: countMap.get(client_1.VerifiedLeadStatus.COMPLETED_SELF) || 0,
+                convertedByAdmin: countMap.get(client_1.VerifiedLeadStatus.CONVERTED_BY_ADMIN) || 0,
+                dismissed: countMap.get(client_1.VerifiedLeadStatus.DISMISSED) || 0,
+            },
+        };
+    }
+    async updateVerifiedSignupLeadNotes(caller, leadId, dto) {
+        const existing = await this.prisma.verifiedSignupLead.findUnique({
+            where: { id: leadId },
+        });
+        if (!existing) {
+            throw new common_1.NotFoundException('Verified signup lead not found.');
+        }
+        let nextStatus;
+        if (dto.status === client_1.VerifiedLeadStatus.DISMISSED || dto.status === client_1.VerifiedLeadStatus.OTP_CONFIRMED) {
+            if (existing.convertedUserId) {
+                throw new common_1.BadRequestException('Cannot change status after an account has already been created for this lead.');
+            }
+            nextStatus = dto.status;
+        }
+        const updated = await this.prisma.verifiedSignupLead.update({
+            where: { id: leadId },
+            data: {
+                ...(dto.adminNotes !== undefined ? { adminNotes: dto.adminNotes.trim() || null } : {}),
+                ...(dto.capturedName !== undefined ? { capturedName: dto.capturedName.trim() || null } : {}),
+                ...(dto.capturedEmail !== undefined
+                    ? { capturedEmail: dto.capturedEmail.trim() ? dto.capturedEmail.trim().toLowerCase() : null }
+                    : {}),
+                ...(dto.pincode !== undefined ? { pincode: dto.pincode.trim() || null } : {}),
+                ...(dto.district !== undefined ? { district: dto.district.trim() || null } : {}),
+                ...(dto.state !== undefined ? { state: dto.state.trim() || null } : {}),
+                ...(dto.village !== undefined ? { village: dto.village.trim() || null } : {}),
+                ...(dto.intendedRole !== undefined ? { intendedRole: dto.intendedRole } : {}),
+                ...(nextStatus ? { status: nextStatus } : {}),
+            },
+            include: {
+                convertedUser: {
+                    select: { id: true, kingId: true, name: true, role: true, roles: true, mobile: true },
+                },
+                convertedBy: {
+                    select: { id: true, name: true, kingId: true, role: true },
+                },
+            },
+        });
+        await this.prisma.isoAuditLog
+            ?.create({
+            data: {
+                action: nextStatus === client_1.VerifiedLeadStatus.DISMISSED
+                    ? 'VERIFIED_LEAD_DISMISSED'
+                    : 'VERIFIED_LEAD_NOTES_UPDATED',
+                actorId: caller.id,
+                actorName: caller.name,
+                details: {
+                    leadId: updated.id,
+                    mobile: updated.mobile,
+                    status: updated.status,
+                },
+            },
+        })
+            .catch(() => { });
+        return {
+            success: true,
+            lead: updated,
+            message: nextStatus === client_1.VerifiedLeadStatus.DISMISSED
+                ? 'Lead moved to Dismissed.'
+                : nextStatus === client_1.VerifiedLeadStatus.OTP_CONFIRMED
+                    ? 'Lead restored to Waiting Follow-Up.'
+                    : 'Follow-up details and notes saved.',
+        };
+    }
+    async convertVerifiedLeadToUser(caller, leadId, dto) {
+        const lead = await this.prisma.verifiedSignupLead.findUnique({
+            where: { id: leadId },
+        });
+        if (!lead) {
+            throw new common_1.NotFoundException('Verified signup lead not found.');
+        }
+        const cleanMobile = lead.mobile.replace(/\D/g, '').slice(-10);
+        const existingActiveUser = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { mobile: lead.mobile },
+                    { mobile: cleanMobile },
+                    { mobile: `+91${cleanMobile}` },
+                    { mobile: { endsWith: cleanMobile } },
+                ],
+                deletedAt: null,
+            },
+            select: { id: true, kingId: true, name: true, role: true },
+        });
+        if (existingActiveUser) {
+            if (lead.status === client_1.VerifiedLeadStatus.OTP_CONFIRMED) {
+                await this.prisma.verifiedSignupLead.update({
+                    where: { id: lead.id },
+                    data: {
+                        status: client_1.VerifiedLeadStatus.COMPLETED_SELF,
+                        convertedUserId: existingActiveUser.id,
+                        convertedAt: new Date(),
+                        intendedRole: existingActiveUser.role,
+                    },
+                });
+            }
+            throw new common_1.ConflictException(`This mobile number already has an active account (King ID: ${existingActiveUser.kingId || existingActiveUser.id}).`);
+        }
+        const cleanEmail = dto.email?.trim() ? dto.email.trim().toLowerCase() : null;
+        if (cleanEmail) {
+            const emailOwner = await this.prisma.user.findFirst({
+                where: { email: cleanEmail, deletedAt: null },
+                select: { id: true },
+            });
+            if (emailOwner) {
+                throw new common_1.ConflictException('This email address is already registered with another FarmsKing account.');
+            }
+        }
+        const chosenRole = dto.role === 'FARMER'
+            ? client_1.Role.FARMER
+            : dto.role === 'GARDENER'
+                ? client_1.Role.GARDENER
+                : client_1.Role.CUSTOMER;
+        const assignedRoles = chosenRole === client_1.Role.CUSTOMER ? [client_1.Role.CUSTOMER] : [client_1.Role.CUSTOMER, chosenRole];
+        const referrer = await this.resolveReferrerByCode(dto.referralCode || lead.referralCode);
+        const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
+        const passwordHash = await argon2.hash((0, crypto_1.randomBytes)(24).toString('hex'));
+        const txResult = await this.prisma.$transaction(async (tx) => {
+            const createdUser = await tx.user.create({
+                data: {
+                    kingId,
+                    mobile: cleanMobile,
+                    name: dto.name.trim(),
+                    email: cleanEmail,
+                    passwordHash,
+                    role: chosenRole,
+                    roles: assignedRoles,
+                    isPhoneVerified: true,
+                    pincode: dto.pincode?.trim() || lead.pincode || null,
+                    postOffice: dto.postOffice?.trim() || null,
+                    village: dto.village?.trim() || lead.village || null,
+                    district: dto.district?.trim() || lead.district || null,
+                    state: dto.state?.trim() || lead.state || null,
+                    sprayTankSizeL: chosenRole === client_1.Role.FARMER ? (dto.sprayTankSizeL ?? null) : null,
+                    soilType: chosenRole === client_1.Role.FARMER ? (dto.soilType ?? null) : null,
+                    waterType: chosenRole === client_1.Role.FARMER ? (dto.waterType ?? null) : null,
+                    referredById: referrer?.id || null,
+                    termsAcceptedAt: new Date(),
+                    privacyPolicyVersion: '2026.11',
+                },
+                select: SAFE_USER_SELECT,
+            });
+            if (chosenRole === client_1.Role.FARMER) {
+                await tx.farmerPlan.upsert({
+                    where: { farmerId: createdUser.id },
+                    create: { farmerId: createdUser.id },
+                    update: {},
+                });
+            }
+            else if (chosenRole === client_1.Role.GARDENER) {
+                await tx.gardenerPlan.upsert({
+                    where: { gardenerId: createdUser.id },
+                    create: { gardenerId: createdUser.id },
+                    update: {},
+                });
+            }
+            const updatedLead = await tx.verifiedSignupLead.update({
+                where: { id: lead.id },
+                data: {
+                    status: client_1.VerifiedLeadStatus.CONVERTED_BY_ADMIN,
+                    convertedUserId: createdUser.id,
+                    convertedById: caller.id,
+                    convertedAt: new Date(),
+                    intendedRole: chosenRole,
+                    capturedName: createdUser.name,
+                    capturedEmail: createdUser.email,
+                    pincode: createdUser.pincode,
+                    district: createdUser.district,
+                    state: createdUser.state,
+                    village: createdUser.village,
+                    ...(dto.adminNotes?.trim() ? { adminNotes: dto.adminNotes.trim() } : {}),
+                },
+                include: {
+                    convertedUser: {
+                        select: { id: true, kingId: true, name: true, role: true, roles: true, mobile: true },
+                    },
+                    convertedBy: {
+                        select: { id: true, name: true, kingId: true, role: true },
+                    },
+                },
+            });
+            await tx.isoAuditLog.create({
+                data: {
+                    action: 'VERIFIED_LEAD_CONVERTED_BY_ADMIN',
+                    actorId: caller.id,
+                    actorName: caller.name,
+                    details: {
+                        leadId: lead.id,
+                        convertedUserId: createdUser.id,
+                        kingId: createdUser.kingId,
+                        mobile: cleanMobile,
+                        role: chosenRole,
+                    },
+                },
+            });
+            return { createdUser, updatedLead };
+        });
+        try {
+            await (0, invite_coupon_util_1.provisionInviteCoupon)(this.prisma, txResult.createdUser.id);
+            if (referrer) {
+                await (0, referral_coupon_util_1.provisionReferralWelcomeCoupon)(this.prisma, txResult.createdUser.id, referrer.id);
+            }
+        }
+        catch (e) {
+            console.warn('[ConvertVerifiedLead] Coupon provision notice:', e?.message);
+        }
+        try {
+            await this.walletService.ensureWelcomeBonus(txResult.createdUser.id);
+        }
+        catch (e) {
+            console.warn('[ConvertVerifiedLead] Wallet bonus notice:', e?.message);
+        }
+        try {
+            await this.notificationsService.create(txResult.createdUser.id, client_1.NotificationType.SYSTEM, 'Welcome to FarmsKing!', `Hello ${txResult.createdUser.name}! Your FarmsKing ${chosenRole} account is now active. King ID: ${txResult.createdUser.kingId}.`);
+        }
+        catch { }
+        this.whatsappBotService
+            ?.sendDirectTextMessage(cleanMobile, `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${txResult.createdUser.name}*,\nYour FarmsKing *${chosenRole}* account has been activated!\n\n🔑 *King ID:* ${txResult.createdUser.kingId}\n📱 *Registered Mobile:* ${cleanMobile}\n\nYou can sign in directly using Mobile OTP on https://farmsking.in.\n\n- FARMSKING TECHNOLOGIES PRIVATE LIMITED`)
+            .catch(() => { });
+        this.whatsappGroupSyncService
+            .autoAddNewUser(txResult.createdUser.id, cleanMobile, txResult.createdUser.name)
+            .catch(() => { });
+        return {
+            success: true,
+            user: txResult.createdUser,
+            lead: txResult.updatedLead,
+            message: `${txResult.createdUser.name} account created with King ID ${txResult.createdUser.kingId}.`,
+        };
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
+    __param(4, (0, common_1.Optional)()),
+    __param(5, (0, common_1.Optional)()),
+    __param(6, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         wallet_service_1.WalletService,
         whatsapp_group_sync_service_1.WhatsAppGroupSyncService,
-        notifications_service_1.NotificationsService])
+        notifications_service_1.NotificationsService,
+        app_settings_service_1.AppSettingsService,
+        whatsapp_service_1.WhatsappBotService,
+        email_service_1.EmailService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

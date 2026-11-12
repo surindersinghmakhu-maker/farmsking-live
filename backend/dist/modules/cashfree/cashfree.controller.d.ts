@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { CashfreeService } from './cashfree.service';
 import { CreateCashfreeVendorDto, CreateSplitOrderDto } from './dto/cashfree.dto';
@@ -34,8 +35,8 @@ export declare class CashfreeController {
         paymentSessionId: any;
         subscriptionLink: any;
     }>;
-    verifyPayment(orderId: string): Promise<any>;
-    handleWebhook(body: any): Promise<{
+    verifyPayment(user: AuthUser, orderId: string): Promise<any>;
+    handleWebhook(req: Request, body: any, signature?: string, timestamp?: string): Promise<{
         status: string;
     }>;
 }

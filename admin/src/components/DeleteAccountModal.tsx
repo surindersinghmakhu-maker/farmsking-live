@@ -97,13 +97,14 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
     setIsVerifying(true);
     setErrorMsg(null);
     try {
-      // 1. Verify OTP with Firebase
-      await confirmationResult.confirm(otpInput.trim());
-      
+      // 1. Verify OTP with Firebase and pass cryptographic ID token to server
+      const cred = await confirmationResult.confirm(otpInput.trim());
+      const firebaseIdToken = await cred.user.getIdToken();
+
       // 2. Delete Account on Backend
       setIsDeletingAccount(true);
-      await deleteMyAccount();
-      
+      await deleteMyAccount({ firebaseIdToken });
+
       // 3. Logout
       await logout();
     } catch (err: any) {

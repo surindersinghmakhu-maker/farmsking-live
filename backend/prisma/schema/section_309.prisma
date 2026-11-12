@@ -107,6 +107,92 @@ model ExpertApplication {
   @@map("expert_applications")
 }
 
+model PartnerApplication {
+  id                    String                   @id @default(uuid())
+  mobile                String
+  requestedRole         Role
+  advisorType           AdvisorType?
+  name                  String
+  email                 String?
+  passwordHash          String?
+  pincode               String?
+  postOffice            String?
+  village               String?
+  district              String?
+  state                 String?
+  qualification         String?
+  specialization        String?
+  yearsExperience       Int?
+  bio                   String?
+  panNumber             String?
+  panDocUrl             String?
+  aadhaarLast4          String?
+  aadhaarDocUrl         String?
+  aadhaarBackUrl        String?
+  gstin                 String?
+  gstDocUrl             String?
+  bankAccountHolderName String?
+  bankAccountNumber     String?
+  bankIfsc              String?
+  upiId                 String?
+  chequeDocUrl          String?
+  photoUrl              String?
+  storeName             String?
+  legalName             String?
+  sellerType            SellerType?
+  pickupAddress         String?
+  isPhoneVerified       Boolean                  @default(false)
+  termsAcceptedAt       DateTime?
+  status                PartnerApplicationStatus @default(PENDING)
+  rejectionReason       String?
+  resubmissionCount     Int                      @default(0)
+  applicantUserId       String?
+  applicantUser         User?                    @relation("PartnerApplicantUser", fields: [applicantUserId], references: [id], onDelete: SetNull)
+  reviewedById          String?
+  reviewedBy            User?                    @relation("PartnerReviewerUser", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt            DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  @@index([mobile])
+  @@index([status])
+  @@index([applicantUserId])
+  @@map("partner_applications")
+}
+
+model VerifiedSignupLead {
+  id              String             @id @default(uuid())
+  mobile          String             @unique
+  sourceChannel   String
+  portal          String?
+  otpVerifiedAt   DateTime           @default(now())
+  lastAttemptAt   DateTime           @default(now())
+  attemptCount    Int                @default(1)
+  ipAddress       String?
+  userAgent       String?
+  referralCode    String?
+  capturedName    String?
+  capturedEmail   String?
+  pincode         String?
+  district        String?
+  state           String?
+  village         String?
+  intendedRole    Role?
+  adminNotes      String?
+  status          VerifiedLeadStatus @default(OTP_CONFIRMED)
+  convertedUserId String?
+  convertedUser   User?              @relation("LeadConvertedUser", fields: [convertedUserId], references: [id], onDelete: SetNull)
+  convertedById   String?
+  convertedBy     User?              @relation("LeadConvertedByAdmin", fields: [convertedById], references: [id], onDelete: SetNull)
+  convertedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status])
+  @@index([otpVerifiedAt])
+  @@map("verified_signup_leads")
+}
+
 model GardenExpense {
   id              String   @id @default(uuid())
   gardenId        String

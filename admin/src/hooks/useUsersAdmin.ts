@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/users.api';
 import { OperatorPermission, Role } from '../types/api';
+import { executeWithAdminStepUpOtp } from '@/components/AdminStepUpProvider';
 
 export function useUsersList(params: api.ListUsersParams) {
   return useQuery({
@@ -124,7 +125,13 @@ export function useResetUserPassword() {
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.deleteUserByAdmin(id),
+    mutationFn: (id: string) =>
+      executeWithAdminStepUpOtp({
+        title: 'Authorize Permanent User Deletion',
+        description:
+          'Permanently anonymizing a user account requires a 6-digit Super Admin Step-Up 2FA code.',
+        execute: (otp) => api.deleteUserByAdmin(id, otp),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
     },
@@ -150,6 +157,14 @@ export function useCreateManager() {
   });
 }
 
+export function useCreateAccountant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.createAccountant,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] }),
+  });
+}
+
 export function useResignSupervisor() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -166,6 +181,70 @@ export function useAssignSupervisorEmployer() {
     mutationFn: ({ id, employerFarmerId }: { id: string; employerFarmerId: string | null }) =>
       api.assignSupervisorEmployer(id, employerFarmerId),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}
+
+export function usePartnerApplications(status?: string) {
+  return useQuery({
+    queryKey: ['users', 'partner-applications', status ?? 'ALL'],
+    queryFn: () => api.listPartnerApplications(status),
+  });
+}
+
+export function useApprovePartnerApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      executeWithAdminStepUpOtp({
+        title: 'Authorize Partner KYC Approval',
+        description:
+          'Approving a Partner application activates live dashboard access and links KYC & King ID records. Enter your 6-digit Admin Step-Up 2FA code.',
+        execute: (otp) => api.approvePartnerApplication(id, otp),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'partner-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}
+
+export function useRejectPartnerApplication() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => api.rejectPartnerApplication(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'partner-applications'] });
+    },
+  });
+}
+
+export function useVerifiedLeads(params?: { status?: string; search?: string }) {
+  return useQuery({
+    queryKey: ['users', 'verified-leads', params?.status ?? 'ALL', params?.search ?? ''],
+    queryFn: () => api.listVerifiedSignupLeads(params),
+  });
+}
+
+export function useUpdateVerifiedLeadNotes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: api.UpdateVerifiedLeadNotesPayload }) =>
+      api.updateVerifiedLeadNotes(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'verified-leads'] });
+    },
+  });
+}
+
+export function useConvertVerifiedLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: api.ConvertVerifiedLeadPayload }) =>
+      api.convertVerifiedLeadToUser(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'verified-leads'] });
       queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
     },
   });

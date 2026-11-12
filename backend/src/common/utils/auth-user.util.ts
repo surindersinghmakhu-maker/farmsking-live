@@ -1,8 +1,8 @@
 import { Role } from '@prisma/client';
 
-/** Maps legacy cached 'AGENT' role strings from older clients seamlessly to Role.AGENT. */
+/** Maps legacy cached 'BUSINESS_PARTNER' role strings from older clients seamlessly to Role.AGENT. */
 export function normalizeRoleAlias<T>(val: T): T {
-  if (val === 'AGENT') return Role.AGENT as unknown as T;
+  if ((val as unknown as string) === 'BUSINESS_PARTNER') return Role.AGENT as unknown as T;
   return val;
 }
 
@@ -13,7 +13,10 @@ export function normalizeRoleAlias<T>(val: T): T {
  * fully usable Farmer, so callers that need "is this the farmer themselves" must check both. Accepts
  * any user-shaped object with these three fields — AuthUser (JWT) or a full Prisma User row both work.
  */
-export function hasActiveRole(user: { role: Role; roles: Role[]; deactivatedRoles: Role[] }, role: Role): boolean {
+export function hasActiveRole(user: { role?: Role; roles?: Role[]; deactivatedRoles?: Role[] } | null | undefined, role: Role): boolean {
+  if (!user) return false;
+  const deactivated = user.deactivatedRoles ?? [];
+  if (deactivated.includes(role)) return false;
   if (user.role === role) return true;
-  return (user.roles ?? []).includes(role) && !(user.deactivatedRoles ?? []).includes(role);
+  return (user.roles ?? []).includes(role);
 }

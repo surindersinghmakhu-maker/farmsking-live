@@ -45,18 +45,71 @@ var MediaStoreService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaStoreService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const crypto_1 = require("crypto");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const prisma_service_1 = require("../prisma/prisma.service");
 const uploads_service_1 = require("../uploads/uploads.service");
+const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const role_policy_util_1 = require("../../common/utils/role-policy.util");
 let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
     constructor(prisma, uploadsService) {
         this.prisma = prisma;
         this.uploadsService = uploadsService;
         this.logger = new common_1.Logger(MediaStoreService_1.name);
     }
+    isStaffAdmin(user) {
+        const active = (0, role_policy_util_1.getActiveRolesList)(user);
+        return active.some((r) => r === client_1.Role.ADMIN || r === client_1.Role.SUPER_ADMIN || r === client_1.Role.OPERATOR);
+    }
+    async assertCropAccess(user, cropId) {
+        if (!user?.id) {
+            throw new common_1.ForbiddenException('Authentication required.');
+        }
+        if (this.isStaffAdmin(user))
+            return;
+        if (!cropId || cropId === 'general')
+            return;
+        const crop = await this.prisma.cropCycle.findFirst({
+            where: {
+                OR: [{ id: cropId }, { cropId }],
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+                plot: {
+                    select: {
+                        farm: { select: { ownerId: true } },
+                    },
+                },
+            },
+        });
+        if (!crop)
+            return;
+        const ownerId = crop.plot?.farm?.ownerId;
+        const effectiveFarmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (ownerId && (ownerId === user.id || ownerId === effectiveFarmerId)) {
+            return;
+        }
+        const activeRoles = (0, role_policy_util_1.getActiveRolesList)(user);
+        if (ownerId && activeRoles.some((r) => r === client_1.Role.ADVISOR || r === 'GARDEN_ADVISOR')) {
+            const assignment = await this.prisma.advisorAssignment.findFirst({
+                where: {
+                    farmerId: ownerId,
+                    advisorId: user.id,
+                    status: client_1.AdvisorAssignmentStatus.ACTIVE,
+                    deletedAt: null,
+                },
+                select: { id: true },
+            });
+            if (assignment)
+                return;
+        }
+        throw new common_1.ForbiddenException('You do not have permission to access media for this crop.');
+    }
     async uploadFile(user, file, cropId, mediaType) {
+        await this.assertCropAccess(user, cropId);
         const isAudio = file.mimetype?.startsWith('audio/') || false;
         const isVideo = file.mimetype?.startsWith('video/') || false;
         const finalMediaType = mediaType || (isAudio ? 'AUDIO' : isVideo ? 'VIDEO' : 'IMAGE');
@@ -72,6 +125,7 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         return rows[0];
     }
     async uploadBase64(user, dataUri, cropId, mediaType, customFilename) {
+        await this.assertCropAccess(user, cropId);
         const isVideo = (dataUri.includes('video/') || (customFilename && (customFilename.endsWith('.mp4') || customFilename.endsWith('.webm')))) ? true : false;
         const finalMediaType = mediaType || (isVideo ? 'VIDEO' : 'IMAGE');
         const uploaded = await this.uploadsService.createFromBase64(user, dataUri, customFilename, 'crops');
@@ -85,7 +139,8 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         const rows = await this.prisma.$queryRawUnsafe(`SELECT * FROM "media_store" WHERE "id" = $1 LIMIT 1`, id);
         return rows[0];
     }
-    async getMediaForCrop(cropId, scope = 'all') {
+    async getMediaForCrop(user, cropId, scope = 'all') {
+        await this.assertCropAccess(user, cropId);
         const filterActive = scope === 'active'
             ? ` AND COALESCE("expiresAt", "createdAt" + INTERVAL '7 days') > CURRENT_TIMESTAMP`
             : '';
@@ -118,7 +173,8 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
     `);
         await this.prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "crop_remarks_history_cropId_idx" ON "crop_remarks_history"("cropId");`);
     }
-    async getCropRemark(cropId) {
+    async getCropRemark(user, cropId) {
+        await this.assertCropAccess(user, cropId);
         await this.ensureCropRemarksTable();
         const rows = await this.prisma.$queryRawUnsafe(`
       SELECT "id", "remarksText", "createdAt", "expiresAt"
@@ -148,11 +204,12 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         };
     }
     async saveCropRemark(user, cropId, rawRemarksText) {
+        await this.assertCropAccess(user, cropId);
         await this.ensureCropRemarksTable();
         const trimmed = String(rawRemarksText || '').trim().slice(0, 150);
         if (!trimmed) {
             await this.prisma.$executeRawUnsafe(`DELETE FROM "crop_remarks_history" WHERE "cropId" = $1 AND "expiresAt" > CURRENT_TIMESTAMP`, cropId);
-            return this.getCropRemark(cropId);
+            return this.getCropRemark(user, cropId);
         }
         const id = (0, crypto_1.randomUUID)();
         await this.prisma.$executeRawUnsafe(`
@@ -167,11 +224,18 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         "remarksText" = EXCLUDED."remarksText",
         "updatedAt" = CURRENT_TIMESTAMP
       `, cropId, user.id, trimmed);
-        return this.getCropRemark(cropId);
+        return this.getCropRemark(user, cropId);
     }
-    async listAll(cropId, mediaType, provider, limit = 50) {
+    async listAll(user, cropId, mediaType, provider, limit = 50) {
+        if (cropId) {
+            await this.assertCropAccess(user, cropId);
+        }
         let query = `SELECT * FROM "media_store" WHERE 1=1`;
         const params = [];
+        if (!this.isStaffAdmin(user) && !cropId) {
+            params.push(user.id);
+            query += ` AND "uploadedById" = $${params.length}`;
+        }
         if (cropId) {
             params.push(cropId);
             query += ` AND "cropId" = $${params.length}`;
@@ -184,12 +248,14 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
             params.push(provider.toUpperCase());
             query += ` AND "provider" = $${params.length}`;
         }
-        params.push(limit);
+        const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200);
+        params.push(safeLimit);
         query += ` ORDER BY "createdAt" DESC LIMIT $${params.length}`;
         const rows = await this.prisma.$queryRawUnsafe(query, ...params);
         return rows;
     }
-    async archiveCropMedia(cropId, retentionDays = 30) {
+    async archiveCropMedia(user, cropId, retentionDays = 30) {
+        await this.assertCropAccess(user, cropId);
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + retentionDays);
         const result = await this.prisma.$executeRawUnsafe(`
@@ -208,11 +274,13 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         if (!existing) {
             throw new common_1.NotFoundException('Media record not found.');
         }
-        const privilegedRoles = ['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'ADVISOR', 'SUPERVISOR'];
-        if (existing.uploadedById &&
-            existing.uploadedById !== user.id &&
-            !privilegedRoles.includes(String(user.role || '').toUpperCase())) {
-            throw new common_1.ForbiddenException('You do not have permission to delete this media item.');
+        if (!this.isStaffAdmin(user) && existing.uploadedById !== user.id) {
+            if (existing.cropId) {
+                await this.assertCropAccess(user, existing.cropId);
+            }
+            else {
+                throw new common_1.ForbiddenException('You do not have permission to delete this media item.');
+            }
         }
         await this.prisma.$executeRawUnsafe(`DELETE FROM "media_store" WHERE "id" = $1`, id);
         if (existing.provider === 'LOCAL' && existing.storagePath) {

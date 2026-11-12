@@ -9,6 +9,15 @@ import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
 import { User } from '../types/api';
 
+const ADMIN_PORTAL_ROLES = ['ADMIN', 'SUPER_ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'];
+
+function hasActiveAdminStaffRole(u: User | null | undefined): boolean {
+  if (!u) return false;
+  const deactivated = Array.isArray((u as any).deactivatedRoles) ? (u as any).deactivatedRoles : [];
+  const activeRoles = [u.role, ...(u.roles || [])].filter((r) => r && !deactivated.includes(r));
+  return activeRoles.some((r) => ADMIN_PORTAL_ROLES.includes(r as string));
+}
+
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
@@ -102,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
         Alert.alert(
-          '⚠️ Active Session Terminated (ਸੈਸ਼ਨ ਸਮਾਪਤ)',
-          'Your account was logged in on another device. As per maximum 2 device policy, the oldest session was automatically logged out.\n\n(ਤੁਹਾਡਾ ਖਾਤਾ ਕਿਸੇ ਹੋਰ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੋਇਆ ਹੈ। 2 ਡਿਵਾਈਸ ਨਿਯਮ ਅਨੁਸਾਰ ਪੁਰਾਣਾ ਲੌਗਇਨ ਆਪਣੇ ਆਪ ਸਮਾਪਤ ਹੋ ਗਿਆ ਹੈ।)',
+          'Session Terminated',
+          'Your account was signed in on another device. Under the 2-device limit, your oldest session was signed out automatically.',
           [{ text: 'OK' }]
         );
       }
@@ -127,8 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login: async (payload) => {
         const response = await apiLogin(payload);
-        if (!['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MARKET_MANAGER'].includes(response.user.role)) {
-          throw new Error('Only authorized staff accounts can access this panel.');
+        if (!hasActiveAdminStaffRole(response.user)) {
+          throw new Error('Only authorized Admin Panel staff accounts can access this panel.');
         }
         await persistSession(response.accessToken, response.user);
 
@@ -136,25 +145,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const meta = response.sessionMeta;
           if (meta?.evictedOldest) {
             Alert.alert(
-              '⚠️ Notice: Old Session Auto Logged Out (ਪੁਰਾਣਾ ਲੌਗਇਨ ਬੰਦ)',
-              'You logged in on a 3rd device. Limit is 2 devices. The oldest active session was automatically logged out.\n\n(2 ਤੋਂ ਵੱਧ ਲੌਗਇਨ ਹੋਣ ਕਰਕੇ ਸਭ ਤੋਂ ਪਹਿਲਾਂ ਵਾਲਾ ਡਿਵਾਈਸ ਆਟੋਮੈਟਿਕ ਲੌਗ ਆਉਟ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ।)',
-              [{ text: 'OK (ਠੀਕ ਹੈ)' }]
+              'Old Session Signed Out',
+              'You signed in on a 3rd device. The limit is 2 active devices, so your oldest session was signed out automatically.',
+              [{ text: 'OK' }]
             );
           } else if (meta?.hasMultipleLogins) {
             Alert.alert(
-              '⚠️ Multiple Devices Logged In (ਬਹੁ-ਡਿਵਾਈਸ ਲੌਗਇਨ alert)',
-              `Your account is currently logged in on ${meta.totalActiveSessions} devices.\n\nWould you like to auto log out all other devices right now?\n(ਤੁਹਾਡੀ ID 1 ਤੋਂ ਵੱਧ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੈ। ਕੀ ਤੁਸੀਂ ਬਾਕੀ ਸਾਰੇ ਪੁਰਾਣੇ ਲੌਗਇਨ ਲੌਗ ਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`,
+              'Multiple Active Devices',
+              `Your account is currently signed in on ${meta.totalActiveSessions} devices. Would you like to sign out all other devices right now?`,
               [
-                { text: 'Keep Both (ਰਹਿਣ ਦਿਓ)', style: 'cancel' },
+                { text: 'Keep Both', style: 'cancel' },
                 {
-                  text: 'Logout Other Devices (ਬਾਕੀ ਲੌਗਆਉਟ ਕਰੋ)',
+                  text: 'Sign Out Other Devices',
                   style: 'destructive',
                   onPress: async () => {
                     try {
                       const res = await logoutOtherSessions();
-                      Alert.alert('✅ Success', res.message || 'All other active devices logged out successfully.');
+                      Alert.alert('Success', res.message || 'All other active devices have been signed out.');
                     } catch (err: any) {
-                      Alert.alert('Error', err.response?.data?.message || 'Could not logout other devices.');
+                      Alert.alert('Error', err.response?.data?.message || 'Could not sign out other devices.');
                     }
                   },
                 },
@@ -168,22 +177,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       otpLogin: async (payload) => {
         const response = await verifyLoginOtpApi(payload);
-        if (!['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MARKET_MANAGER'].includes(response.user.role)) {
-          throw new Error('Only authorized staff accounts can access this panel.');
+        if (!hasActiveAdminStaffRole(response.user)) {
+          throw new Error('Only authorized Admin Panel staff accounts can access this panel.');
         }
         await persistSession(response.accessToken, response.user);
       },
       firebaseLogin: async (idToken) => {
         const response = await firebaseLoginApi(idToken);
-        if (!['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MARKET_MANAGER'].includes(response.user.role)) {
-          throw new Error('Only authorized staff accounts can access this panel.');
+        if (!hasActiveAdminStaffRole(response.user)) {
+          throw new Error('Only authorized Admin Panel staff accounts can access this panel.');
         }
         await persistSession(response.accessToken, response.user);
       },
       googleLogin: async (payload) => {
         const response = await googleLoginApi(payload);
-        if (!['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MARKET_MANAGER'].includes(response.user.role)) {
-          throw new Error('Only authorized staff accounts can access this panel.');
+        if (!hasActiveAdminStaffRole(response.user)) {
+          throw new Error('Only authorized Admin Panel staff accounts can access this panel.');
         }
         await persistSession(response.accessToken, response.user);
         return { isProfileIncomplete: response.isProfileIncomplete };

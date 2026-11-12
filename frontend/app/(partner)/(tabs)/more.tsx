@@ -20,6 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { apiClient } from '@/src/api/client';
 import { deleteMyAccount } from '@/src/api/users.api';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { DeleteAccountModal } from '@/src/components/DeleteAccountModal';
@@ -200,6 +201,8 @@ export default function MoreScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
+          <SwitchDashboardSection />
+
           {/* 🌾 FARMER / REGULAR USER MORE MENU */}
           
 
@@ -224,26 +227,28 @@ export default function MoreScreen() {
                     </TouchableOpacity>
                   ))}
 
-                  {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setShowSupervisorModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.rowLabel}>Supervisor Management</Text>
-                        <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
-                          <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
-                        </View>
+                  {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature — Farmers only) */}
+                  {(role === 'FARMER' || user?.role === 'FARMER' || (Array.isArray(user?.roles) && user.roles.includes('FARMER'))) ? (
+                    <TouchableOpacity
+                      style={styles.row}
+                      activeOpacity={0.7}
+                      onPress={() => setShowSupervisorModal(true)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                        <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
                       </View>
-                      <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={styles.rowLabel}>Supervisor Management</Text>
+                          <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  ) : null}
 
                   {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
@@ -356,8 +361,55 @@ export default function MoreScreen() {
                   <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
-                  <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
+                  <Text style={styles.rowLabel}>Privacy Policy</Text>
+                  <Text style={styles.rowSubLabel}>Data Protection, KYC &amp; DPDPA 2023</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* Terms of Service Row */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/terms')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#ede9fe' }]}>
+                  <Ionicons name="document-text-outline" size={18} color="#7c3aed" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>Terms &amp; TDS Compliance</Text>
+                  <Text style={styles.rowSubLabel}>Sec 194-O / 194-H / 194-J &amp; Sec 79 IT Act</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* Refund & Shipping Rows */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/refund-policy')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name="refresh-circle-outline" size={18} color="#d97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>Refund &amp; Cancellation Policy</Text>
+                  <Text style={styles.rowSubLabel}>5-7 Working Days Gateway Refunds</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/shipping-policy')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+                  <Ionicons name="cube-outline" size={18} color="#0284c7" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>Shipping &amp; Delivery Policy</Text>
+                  <Text style={styles.rowSubLabel}>Dispatch &amp; Cold-Chain Transit SLAs</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
@@ -450,12 +502,12 @@ export default function MoreScreen() {
                 In strict compliance with Google Play Developer Policy, you have full control over your personal data:{"\n"}
                 • In-App Instant Deletion: You can initiate complete account and personal data deletion directly using the "Delete Account & Purge Data" button at the bottom of this Privacy Policy.{"\n"}
                 • 3-Step Verification: For security, deletion requires King ID, Postal PIN Code & Security Captcha verification.{"\n"}
-                • Data Removal: Upon confirmation, your active profile, wallet records, and farm data are soft-deleted immediately and permanently purged from server nodes. You can also request deletion by emailing support@farmsking.com.
+                • Data Removal: Upon confirmation, your active profile, wallet records, and farm data are soft-deleted immediately and permanently purged from server nodes. You can also request deletion by emailing support@farmsking.in.
               </Text>
 
               <Text style={pModalStyles.pHead}>5. Third-Party Integrations</Text>
               <Text style={pModalStyles.pBody}>
-                Data is shared strictly with authorized partners solely for service delivery: PhonePe Payment Gateway (for UPI transactions) and WhatsApp OTP SMS services for secure login verification.
+                Data is shared strictly with authorized partners solely for service delivery: Cashfree, Razorpay, PhonePe & NPCI UPI Payment Gateways (for UPI transactions) and WhatsApp OTP SMS services for secure login verification.
               </Text>
 
               {/* 🗑️ Permanent Delete Account Card at the very bottom of Privacy Policy */}
@@ -554,14 +606,14 @@ function ContactModal({ mode, onClose }: { mode: 'SUPPORT' | 'CONTACT' | null; o
               <TouchableOpacity
                 style={contactStyles.row}
                 activeOpacity={0.7}
-                onPress={() => Linking.openURL(`mailto:${contact.email || 'support@farmsking.com'}`)}
+                onPress={() => Linking.openURL(`mailto:${contact.email || 'support@farmsking.in'}`)}
               >
                 <View style={[contactStyles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
                   <Ionicons name="mail" size={16} color="#2563eb" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>Email Address</Text>
-                  <Text style={contactStyles.rowText}>{contact.email || 'support@farmsking.com'}</Text>
+                  <Text style={contactStyles.rowText}>{contact.email || 'support@farmsking.in'}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
               </TouchableOpacity>
@@ -1042,7 +1094,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       setFormUpiPayeeName(appSettings?.upiPayeeName || 'Surinder Singh');
       setFormAdminName((appSettings as any)?.adminName || contact?.name || 'Surinder Singh (Super Admin)');
       setFormAdminMobile((appSettings as any)?.adminMobile || contact?.mobile || user?.mobile || '9577622000');
-      setFormAdminEmail((appSettings as any)?.adminEmail || contact?.email || 'support@farmsking.com');
+      setFormAdminEmail((appSettings as any)?.adminEmail || contact?.email || 'support@farmsking.in');
       setSaveSuccess(false);
       // Default to editing mode for Admins so fields are immediately editable
       setIsEditing(isAdmin);
@@ -1269,7 +1321,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                       style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminEmail}
                       onChangeText={setFormAdminEmail}
-                      placeholder="e.g. support@farmsking.com"
+                      placeholder="e.g. support@farmsking.in"
                       keyboardType="email-address"
                     />
                   </View>

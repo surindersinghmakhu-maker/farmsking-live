@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsEnum, IsObject, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsEnum, IsObject, Matches, Min, Max } from 'class-validator';
 import { SellerKycStatus, SellerType, RtoBearer, CatalogApprovalMode } from '@prisma/client';
+import { GSTIN_REGEX, PAN_REGEX, IFSC_REGEX, FSSAI_REGEX, AADHAAR_LAST4_REGEX } from '../../../common/utils/tax-compliance.util';
 
 export class CreateSellerStoreDto {
   @IsNotEmpty()
@@ -19,19 +20,35 @@ export class CreateSellerStoreDto {
   legalName?: string;
 
   @IsOptional()
-  @IsString()
+  @Matches(GSTIN_REGEX, { message: 'GSTIN must be a valid 15-character GSTIN.' })
   gstin?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isCompositionDealer?: boolean;
+
+  @IsOptional()
   @IsString()
+  gstEnrolmentId?: string;
+
+  @IsOptional()
+  @Matches(PAN_REGEX, { message: 'PAN must be a valid 10-character PAN (e.g. ABCDE1234F).' })
   panNumber?: string;
+
+  @IsOptional()
+  @Matches(AADHAAR_LAST4_REGEX, { message: 'Aadhaar last 4 digits must be numeric.' })
+  aadhaarLast4?: string;
+
+  @IsOptional()
+  @IsString()
+  upiId?: string;
 
   @IsOptional()
   @IsString()
   bankAccountNo?: string;
 
   @IsOptional()
-  @IsString()
+  @Matches(IFSC_REGEX, { message: 'Bank IFSC must be a valid 11-character IFSC code.' })
   bankIfsc?: string;
 
   @IsOptional()
@@ -59,7 +76,7 @@ export class CreateSellerStoreDto {
   wantsToSellFood?: boolean;
 
   @IsOptional()
-  @IsString()
+  @Matches(FSSAI_REGEX, { message: 'FSSAI License must be 14 digits.' })
   fssaiNo?: string;
 
   @IsOptional()
@@ -77,6 +94,46 @@ export class CreateSellerStoreDto {
   @IsOptional()
   @IsString()
   agriLicenseExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 
   @IsOptional()
   @IsString()
@@ -145,19 +202,35 @@ export class UpdateSellerKycDto {
   legalName?: string;
 
   @IsOptional()
-  @IsString()
+  @Matches(GSTIN_REGEX, { message: 'GSTIN must be a valid 15-character GSTIN.' })
   gstin?: string;
 
   @IsOptional()
+  @IsBoolean()
+  isCompositionDealer?: boolean;
+
+  @IsOptional()
   @IsString()
+  gstEnrolmentId?: string;
+
+  @IsOptional()
+  @Matches(PAN_REGEX, { message: 'PAN must be a valid 10-character PAN (e.g. ABCDE1234F).' })
   panNumber?: string;
+
+  @IsOptional()
+  @Matches(AADHAAR_LAST4_REGEX, { message: 'Aadhaar last 4 digits must be numeric.' })
+  aadhaarLast4?: string;
+
+  @IsOptional()
+  @IsString()
+  upiId?: string;
 
   @IsOptional()
   @IsString()
   bankAccountNo?: string;
 
   @IsOptional()
-  @IsString()
+  @Matches(IFSC_REGEX, { message: 'Bank IFSC must be a valid 11-character IFSC code.' })
   bankIfsc?: string;
 
   @IsOptional()
@@ -185,7 +258,7 @@ export class UpdateSellerKycDto {
   wantsToSellFood?: boolean;
 
   @IsOptional()
-  @IsString()
+  @Matches(FSSAI_REGEX, { message: 'FSSAI License must be 14 digits.' })
   fssaiNo?: string;
 
   @IsOptional()
@@ -203,6 +276,46 @@ export class UpdateSellerKycDto {
   @IsOptional()
   @IsString()
   agriLicenseExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  seedLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  pesticideLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseExpiry?: string;
+
+  @IsOptional()
+  @IsString()
+  fertilizerLicenseDocUrl?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 
   @IsOptional()
   @IsString()

@@ -14,7 +14,26 @@ const common_1 = require("@nestjs/common");
 const rxjs_1 = require("rxjs");
 const prisma_service_1 = require("../../modules/prisma/prisma.service");
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
-const REDACT_KEYS = new Set(['password', 'passwordHash', 'securityAnswer', 'securityAnswerHash', 'newPassword']);
+const REDACT_KEYS = new Set([
+    'password',
+    'passwordHash',
+    'securityAnswer',
+    'securityAnswerHash',
+    'newPassword',
+    'panNumber',
+    'pan',
+    'aadhaarLast4',
+    'aadhaar',
+    'bankAccountNumber',
+    'bankAccountNo',
+    'bankIfsc',
+    'upiId',
+    'chequeDocUrl',
+    'aadhaarFrontUrl',
+    'aadhaarBackUrl',
+    'aadhaarDocUrl',
+    'panDocUrl',
+]);
 const UUID_LIKE = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 function redact(body) {
     if (!body || typeof body !== 'object')

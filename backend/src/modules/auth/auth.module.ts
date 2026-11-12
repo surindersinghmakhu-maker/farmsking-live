@@ -10,6 +10,7 @@ import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 
 import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { WalletModule } from '../wallet/wallet.module';
+import { UploadsModule } from '../uploads/uploads.module';
 
 import { UserSessionService } from './user-session.service';
 
@@ -19,6 +20,7 @@ import { UserSessionService } from './user-session.service';
     WhatsappBotModule,
     AppSettingsModule,
     WalletModule,
+    UploadsModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

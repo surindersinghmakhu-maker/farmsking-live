@@ -71,7 +71,7 @@ export default function AdminSellersScreen() {
       console.log('Error fetching seller stores for admin:', err?.response?.data || err.message);
       const status = err?.response?.status;
       if (status === 401 || status === 403) {
-        setFetchError('⚠️ Admin Access Required. Please log in with an Admin account (Mobile: 9872066901) to view and approve seller applications.');
+        setFetchError('Admin access required. Please log in with an Admin account to view and approve seller applications.');
       } else {
         setFetchError(err?.response?.data?.message || err?.message || 'Failed to connect to backend server.');
       }
@@ -371,79 +371,71 @@ export default function AdminSellersScreen() {
                       </View>
                     </View>
 
-                    {/* Uploaded Documents Panel */}
+                    {/* Uploaded Documents Panel & Statutory License Matrix */}
                     {!isRejected && !isBlocked && (
                       <View style={styles.docPanel}>
-                        <Text style={styles.docPanelTitle}>Verified Verification Uploads</Text>
-                        <View style={styles.docRow}>
-                          {/* GST Doc */}
-                          <TouchableOpacity
-                            style={styles.docThumbBox}
-                            activeOpacity={0.8}
-                            onPress={() => {
-                              if (store.gstDocUrl) {
-                                setPreviewDocTitle(`GST Certificate - ${store.storeName}`);
-                                setPreviewDocUrl(store.gstDocUrl);
-                              } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a GST Certificate photo.');
-                              }
-                            }}
-                          >
-                            {store.gstDocUrl ? (
-                              <Image source={{ uri: store.gstDocUrl }} style={styles.docImage} />
-                            ) : (
-                              <View style={styles.docPlaceholder}>
-                                <Ionicons name="document-text-outline" size={20} color="#4B5563" />
-                              </View>
-                            )}
-                            <Text style={styles.docThumbLabel}>GST Cert</Text>
-                          </TouchableOpacity>
-
-                          {/* PAN Card Doc */}
-                          <TouchableOpacity
-                            style={styles.docThumbBox}
-                            activeOpacity={0.8}
-                            onPress={() => {
-                              if (store.panDocUrl) {
-                                setPreviewDocTitle(`PAN Card - ${store.storeName}`);
-                                setPreviewDocUrl(store.panDocUrl);
-                              } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a PAN Card photo.');
-                              }
-                            }}
-                          >
-                            {store.panDocUrl ? (
-                              <Image source={{ uri: store.panDocUrl }} style={styles.docImage} />
-                            ) : (
-                              <View style={styles.docPlaceholder}>
-                                <Ionicons name="card-outline" size={20} color="#4B5563" />
-                              </View>
-                            )}
-                            <Text style={styles.docThumbLabel}>PAN Card</Text>
-                          </TouchableOpacity>
-
-                          {/* Cancelled Cheque / Bank Passbook Doc */}
-                          <TouchableOpacity
-                            style={styles.docThumbBox}
-                            activeOpacity={0.8}
-                            onPress={() => {
-                              if (store.chequeDocUrl) {
-                                setPreviewDocTitle(`Bank Passbook / Cheque - ${store.storeName}`);
-                                setPreviewDocUrl(store.chequeDocUrl);
-                              } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a Cancelled Cheque / Passbook photo.');
-                              }
-                            }}
-                          >
-                            {store.chequeDocUrl ? (
-                              <Image source={{ uri: store.chequeDocUrl }} style={styles.docImage} />
-                            ) : (
-                              <View style={styles.docPlaceholder}>
-                                <Ionicons name="cash-outline" size={20} color="#4B5563" />
-                              </View>
-                            )}
-                            <Text style={styles.docThumbLabel}>Bank Cheque</Text>
-                          </TouchableOpacity>
+                        <Text style={styles.docPanelTitle}>Statutory KYC &amp; Verification Proofs</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                          <Text style={{ fontSize: 11, color: store.panNumber ? '#34D399' : '#F87171', fontWeight: '700' }}>
+                            PAN: {store.panNumber || 'Missing'}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: '#64748B' }}>•</Text>
+                          <Text style={{ fontSize: 11, color: store.gstin ? '#34D399' : '#94A3B8', fontWeight: '700' }}>
+                            GSTIN: {store.gstin || (store.isCompositionDealer ? 'Composition' : store.gstEnrolmentId ? `Enrol: ${store.gstEnrolmentId}` : 'N/A')}
+                          </Text>
+                          {store.aadhaarLast4 ? (
+                            <>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>•</Text>
+                              <Text style={{ fontSize: 11, color: '#38BDF8', fontWeight: '700' }}>Aadhaar: XXXX-{store.aadhaarLast4}</Text>
+                            </>
+                          ) : null}
+                          {store.fssaiNo ? (
+                            <>
+                              <Text style={{ fontSize: 11, color: '#64748B' }}>•</Text>
+                              <Text style={{ fontSize: 11, color: '#FBBF24', fontWeight: '700' }}>
+                                FSSAI: {store.fssaiNo}{store.fssaiExpiryDate ? ` (Exp ${String(store.fssaiExpiryDate).slice(0, 10)})` : ''}
+                              </Text>
+                            </>
+                          ) : null}
+                        </View>
+                        <View style={[styles.docRow, { flexWrap: 'wrap' }]}>
+                          {[
+                            { label: 'Owner Photo', url: store.sellerPhotoUrl, icon: 'person-circle-outline' as const },
+                            { label: 'Store Logo', url: store.logoDocUrl, icon: 'storefront-outline' as const },
+                            { label: 'GST Cert', url: store.gstDocUrl, icon: 'document-text-outline' as const },
+                            { label: 'PAN Card', url: store.panDocUrl, icon: 'card-outline' as const },
+                            { label: 'Bank Cheque', url: store.chequeDocUrl, icon: 'cash-outline' as const },
+                            { label: 'Aadhaar Front', url: store.aadhaarFrontUrl, icon: 'id-card-outline' as const },
+                            { label: 'Aadhaar Back', url: store.aadhaarBackUrl, icon: 'id-card-outline' as const },
+                            { label: 'FSSAI Cert', url: store.fssaiCertificateUrl, icon: 'nutrition-outline' as const },
+                            { label: 'Seed Lic', url: store.seedLicenseDocUrl, icon: 'leaf-outline' as const },
+                            { label: 'Pesticide Lic', url: store.pesticideLicenseDocUrl, icon: 'flask-outline' as const },
+                            { label: 'Fertilizer Lic', url: store.fertilizerLicenseDocUrl, icon: 'shield-outline' as const },
+                            { label: 'Trade Lic', url: store.tradeLicenseUrl, icon: 'briefcase-outline' as const },
+                          ].map((doc) => (
+                            <TouchableOpacity
+                              key={doc.label}
+                              style={[styles.docThumbBox, { minWidth: 88, flexGrow: 0, flexBasis: '23%' }]}
+                              activeOpacity={0.8}
+                              onPress={() => {
+                                if (doc.url) {
+                                  setPreviewDocTitle(`${doc.label} - ${store.storeName}`);
+                                  setPreviewDocUrl(doc.url);
+                                } else {
+                                  showAlert('No Document ⚠️', `Seller has not uploaded ${doc.label}.`);
+                                }
+                              }}
+                            >
+                              {doc.url ? (
+                                <Image source={{ uri: doc.url }} style={styles.docImage} />
+                              ) : (
+                                <View style={styles.docPlaceholder}>
+                                  <Ionicons name={doc.icon} size={18} color="#4B5563" />
+                                </View>
+                              )}
+                              <Text style={styles.docThumbLabel}>{doc.label}</Text>
+                            </TouchableOpacity>
+                          ))}
                         </View>
                       </View>
                     )}

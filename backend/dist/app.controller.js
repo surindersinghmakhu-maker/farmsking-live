@@ -51,6 +51,9 @@ const app_service_1 = require("./app.service");
 const prisma_service_1 = require("./modules/prisma/prisma.service");
 const client_1 = require("@prisma/client");
 const argon2 = __importStar(require("argon2"));
+const jwt_auth_guard_1 = require("./common/guards/jwt-auth.guard");
+const roles_guard_1 = require("./common/guards/roles.guard");
+const roles_decorator_1 = require("./common/decorators/roles.decorator");
 const privacy_policy_generator_1 = require("./common/utils/privacy-policy-generator");
 let AppController = class AppController {
     constructor(appService, prisma) {
@@ -323,16 +326,20 @@ let AppController = class AppController {
         }
         const cleanMobile = body.mobile.trim();
         const user = await this.prisma.user.findFirst({
-            where: { mobile: cleanMobile },
+            where: { mobile: cleanMobile, deletedAt: null },
         });
         if (!user) {
-            throw new common_1.BadRequestException('No registered FarmsKing account found for this mobile number.');
+            throw new common_1.BadRequestException('No active FarmsKing account found for this mobile number.');
         }
-        if (body.password && user.passwordHash) {
-            const isValid = await argon2.verify(user.passwordHash, body.password);
-            if (!isValid && body.password !== user.kingId) {
-                throw new common_1.BadRequestException('Invalid password or King ID.');
-            }
+        if (!body.password || !body.password.trim()) {
+            throw new common_1.BadRequestException('Account password is required to verify deletion here. OTP-only Farmer, Worker, and Customer accounts can confirm deletion after logging in under More -> Delete Account.');
+        }
+        if (!user.passwordHash) {
+            throw new common_1.BadRequestException('This account uses Mobile OTP login. Please sign in via OTP inside the FarmsKing app under More -> Delete Account.');
+        }
+        const isValid = await argon2.verify(user.passwordHash, body.password);
+        if (!isValid) {
+            throw new common_1.BadRequestException('Invalid password. Could not verify account deletion request.');
         }
         await this.prisma.user.update({
             where: { id: user.id },
@@ -341,6 +348,7 @@ let AppController = class AppController {
                 name: 'Deleted User',
                 email: null,
                 upiId: null,
+                passwordHash: '',
             },
         });
         return {
@@ -372,6 +380,8 @@ __decorate([
     __metadata("design:returntype", String)
 ], AppController.prototype, "getDosePage", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('sync-users'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

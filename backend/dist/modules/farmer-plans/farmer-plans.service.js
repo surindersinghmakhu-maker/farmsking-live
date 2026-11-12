@@ -18,6 +18,7 @@ const advisor_assignment_service_1 = require("../advisor-assignment/advisor-assi
 const wallet_service_1 = require("../wallet/wallet.service");
 const notifications_service_1 = require("../notifications/notifications.service");
 const auth_user_util_1 = require("../../common/utils/auth-user.util");
+const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
 exports.FREE_PLAN_MAX_CROPS = 3;
 exports.FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -478,9 +479,24 @@ let FarmerPlansService = class FarmerPlansService {
         };
     }
     async getPlanHistory(user, farmerId) {
-        const targetFarmerId = farmerId ?? ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.FARMER) ? user.id : undefined);
+        const effectiveSelf = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPERVISOR) ? (0, effective_farmer_util_1.getEffectiveFarmerId)(user) : user.id;
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        const targetFarmerId = farmerId ?? ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.FARMER) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPERVISOR) ? effectiveSelf : undefined);
         if (!targetFarmerId)
             throw new common_1.BadRequestException('Farmer ID is required.');
+        if (!isAdmin && targetFarmerId !== effectiveSelf) {
+            let allowed = false;
+            if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADVISOR)) {
+                const assignment = await this.prisma.advisorAssignment.findFirst({
+                    where: { advisorId: user.id, farmerId: targetFarmerId, deletedAt: null },
+                    select: { id: true },
+                });
+                allowed = Boolean(assignment);
+            }
+            if (!allowed) {
+                throw new common_1.ForbiddenException('You can only view your own farmer plan history.');
+            }
+        }
         await this.getEffectivePlan(targetFarmerId);
         const [currentPlan, history] = await Promise.all([
             this.prisma.farmerPlan.findUnique({ where: { farmerId: targetFarmerId } }),
@@ -1004,48 +1020,64 @@ let FarmerPlansService = class FarmerPlansService {
             debitAmount = Math.max(0, Math.round(platformFee * 100) / 100);
         }
         const totalDebit = debitAmount * quantity;
-        if (totalDebit > 0) {
-            const balance = await this.walletService.getBalance(user.id);
-            if (balance < totalDebit) {
-                throw new common_1.BadRequestException(`Insufficient Wallet Balance — Generating ${quantity} coupon(s) costs ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}), but your wallet balance is ₹${balance.toLocaleString('en-IN')}. Please top up your wallet.`);
+        const createdByRole = isPartnerOnly ? client_1.Role.AGENT : isAdvisor ? client_1.Role.ADVISOR : user.role;
+        const created = await this.prisma.$transaction(async (tx) => {
+            if (totalDebit > 0) {
+                await tx.$executeRaw `SELECT "id" FROM "users" WHERE "id" = ${user.id} FOR UPDATE`;
+                const [credits, debits] = await Promise.all([
+                    tx.walletTransaction.aggregate({ where: { userId: user.id, type: 'CREDIT' }, _sum: { amount: true } }),
+                    tx.walletTransaction.aggregate({ where: { userId: user.id, type: 'DEBIT' }, _sum: { amount: true } }),
+                ]);
+                const balance = Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
+                if (balance < totalDebit) {
+                    throw new common_1.BadRequestException(`Insufficient Wallet Balance — Generating ${quantity} coupon(s) costs ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}), but your wallet balance is ₹${balance.toLocaleString('en-IN')}. Please top up your wallet.`);
+                }
             }
-        }
-        const created = [];
-        for (let i = 0; i < quantity; i += 1) {
-            let code = generateCode(dto.plan);
-            while (await this.prisma.farmerPlanCoupon.findUnique({ where: { code } })) {
-                code = generateCode(dto.plan);
+            const items = [];
+            for (let i = 0; i < quantity; i += 1) {
+                let code = generateCode(dto.plan);
+                while (await tx.farmerPlanCoupon.findUnique({ where: { code } })) {
+                    code = generateCode(dto.plan);
+                }
+                const coupon = await tx.farmerPlanCoupon.create({
+                    data: {
+                        code,
+                        category,
+                        plan: dto.plan,
+                        daysGranted: dto.daysGranted,
+                        assignedFarmerId: dto.assignedFarmerId,
+                        assignedAdvisorId: targetAdvisorId ?? (isAdvisor ? user.id : undefined),
+                        assignedBusinessPartnerId: isPartnerOnly ? user.id : dto.assignedBusinessPartnerId,
+                        doctorKingId: user.kingId ?? dbUser?.kingId ?? null,
+                        advisorKingId: targetAdvisorKingId ?? null,
+                        createdById: user.id,
+                        createdByRole,
+                        generationCostAmount: debitAmount > 0 ? debitAmount : null,
+                        doctorFeeAmount: doctorFeeAmount != null ? doctorFeeAmount : null,
+                        adminPlatformFeePercent: adminPlatformFeePercent != null ? adminPlatformFeePercent : null,
+                        adminPlatformFeeAmount: adminPlatformFeeAmount != null ? adminPlatformFeeAmount : null,
+                        includeMembership,
+                        includedMembershipPlan,
+                        includedMembershipDays,
+                    },
+                });
+                if (debitAmount > 0) {
+                    const debitReason = isDoctorCoupon
+                        ? `Generated Doctor Consultation coupon ${coupon.code} (Fee ₹${doctorFeeAmount}, Admin Fee ₹${adminPlatformFeeAmount}${includeMembership ? `, Membership ₹${debitAmount - (adminPlatformFeeAmount ?? 0)}` : ''})`
+                        : `Generated ${dto.plan} plan coupon ${coupon.code}`;
+                    await tx.walletTransaction.create({
+                        data: {
+                            userId: user.id,
+                            type: 'DEBIT',
+                            amount: debitAmount,
+                            reason: debitReason,
+                        },
+                    });
+                }
+                items.push(coupon);
             }
-            const coupon = await this.prisma.farmerPlanCoupon.create({
-                data: {
-                    code,
-                    category,
-                    plan: dto.plan,
-                    daysGranted: dto.daysGranted,
-                    assignedFarmerId: dto.assignedFarmerId,
-                    assignedAdvisorId: targetAdvisorId ?? (isAdvisor ? user.id : undefined),
-                    assignedBusinessPartnerId: isPartnerOnly ? user.id : dto.assignedBusinessPartnerId,
-                    doctorKingId: user.kingId ?? dbUser?.kingId ?? null,
-                    advisorKingId: targetAdvisorKingId ?? null,
-                    createdById: user.id,
-                    createdByRole: user.role,
-                    generationCostAmount: debitAmount > 0 ? debitAmount : null,
-                    doctorFeeAmount: doctorFeeAmount != null ? doctorFeeAmount : null,
-                    adminPlatformFeePercent: adminPlatformFeePercent != null ? adminPlatformFeePercent : null,
-                    adminPlatformFeeAmount: adminPlatformFeeAmount != null ? adminPlatformFeeAmount : null,
-                    includeMembership,
-                    includedMembershipPlan,
-                    includedMembershipDays,
-                },
-            });
-            if (debitAmount > 0) {
-                const debitReason = isDoctorCoupon
-                    ? `Generated Doctor Consultation coupon ${coupon.code} (Fee ₹${doctorFeeAmount}, Admin Fee ₹${adminPlatformFeeAmount}${includeMembership ? `, Membership ₹${debitAmount - (adminPlatformFeeAmount ?? 0)}` : ''})`
-                    : `Generated ${dto.plan} plan coupon ${coupon.code}`;
-                await this.walletService.debit(user.id, debitAmount, debitReason);
-            }
-            created.push(coupon);
-        }
+            return items;
+        });
         return quantity === 1 ? created[0] : created;
     }
     async deactivateCoupon(id) {

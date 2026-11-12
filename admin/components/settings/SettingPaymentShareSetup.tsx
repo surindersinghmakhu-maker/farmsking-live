@@ -570,7 +570,7 @@ export default function SettingPaymentShareSetup() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.cardTitle, { color: textColor }]}>Wallet TDS, Taxes & Platform Fees</Text>
-                <Text style={[styles.cardSub, { color: subTextColor }]}>Statutory Section 194N TDS & payment processing GST</Text>
+                <Text style={[styles.cardSub, { color: subTextColor }]}>Statutory Section 194-O / 194-H / 194-J TDS & Processing GST & payment processing GST</Text>
               </View>
             </View>
 

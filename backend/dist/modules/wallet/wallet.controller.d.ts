@@ -88,11 +88,11 @@ export declare class WalletController {
             welcomeEarnings: number;
             referralEarnings: number;
             commissionEarnings: number;
+            roles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
             name: string;
             upiId: string | null;
             bankAccountNumber: string | null;

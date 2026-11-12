@@ -33,15 +33,6 @@ let GardensController = class GardensController {
     findAll(user) {
         return this.gardensService.findAll(user);
     }
-    findOne(user, id) {
-        return this.gardensService.findOneOrThrow(user, id);
-    }
-    addPlant(user, id, dto) {
-        return this.gardensService.addPlant(user, id, dto);
-    }
-    listPlants(user, id) {
-        return this.gardensService.listPlants(user, id);
-    }
     addExpense(user, dto) {
         return this.gardensService.addExpense(user, dto);
     }
@@ -50,6 +41,15 @@ let GardensController = class GardensController {
     }
     deleteExpense(user, id) {
         return this.gardensService.deleteExpense(user, id);
+    }
+    findOne(user, id) {
+        return this.gardensService.findOneOrThrow(user, id);
+    }
+    addPlant(user, id, dto) {
+        return this.gardensService.addPlant(user, id, dto);
+    }
+    listPlants(user, id) {
+        return this.gardensService.listPlants(user, id);
     }
 };
 exports.GardensController = GardensController;
@@ -68,6 +68,29 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], GardensController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Post)('expenses'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_garden_expense_dto_1.CreateGardenExpenseDto]),
+    __metadata("design:returntype", void 0)
+], GardensController.prototype, "addExpense", null);
+__decorate([
+    (0, common_1.Get)('expenses'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], GardensController.prototype, "listExpenses", null);
+__decorate([
+    (0, common_1.Delete)('expenses/:id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], GardensController.prototype, "deleteExpense", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -93,29 +116,6 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], GardensController.prototype, "listPlants", null);
-__decorate([
-    (0, common_1.Post)('expenses'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, create_garden_expense_dto_1.CreateGardenExpenseDto]),
-    __metadata("design:returntype", void 0)
-], GardensController.prototype, "addExpense", null);
-__decorate([
-    (0, common_1.Get)('expenses'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], GardensController.prototype, "listExpenses", null);
-__decorate([
-    (0, common_1.Delete)('expenses/:id'),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
-], GardensController.prototype, "deleteExpense", null);
 exports.GardensController = GardensController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.GARDENER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),

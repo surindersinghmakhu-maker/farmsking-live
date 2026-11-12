@@ -4032,7 +4032,14 @@ export default function PublicLandingPage() {
                 {...(Platform.OS === 'web' ? { href: '/refund-policy' } : {})}
                 onPress={() => router.push('/refund-policy' as any)}
               >
-                <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Refund & Return Policy</Text>
+                <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Refund &amp; Return Policy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/shipping-policy' } : {})}
+                onPress={() => router.push('/shipping-policy' as any)}
+              >
+                <Text style={[S.footerLink, isDay && S.footerLinkDay]}>Shipping &amp; Delivery Policy</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 accessibilityRole="link"
@@ -4080,7 +4087,7 @@ export default function PublicLandingPage() {
               >
                 <Text style={[S.footerContactEmail, isDay && S.footerContactEmailDay]}>{supportContact.supportEmail}</Text>
               </TouchableOpacity>
-              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran • Corp: Makhu, Punjab - 143422</Text>
+              <Text style={[S.footerContactAddr, isDay && S.footerContactAddrDay]}>Regd: Goindwal Sahib, Tarn Taran - 143422 • Corp HQ: Makhu, Ferozepur - 142044</Text>
             </View>
           </View>
 

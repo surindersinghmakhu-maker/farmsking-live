@@ -6,4 +6,9 @@ export declare class UpdatePartnerProfileDto {
     bankAccountNumber?: string;
     bankIfsc?: string;
     bankAccountHolderName?: string;
+    aadhaarLast4?: string;
+    aadhaarDocUrl?: string;
+    panDocUrl?: string;
+    gstin?: string;
+    termsAccepted?: boolean;
 }

@@ -293,7 +293,7 @@ export const SuperAdminDashboardView: React.FC = () => {
           <Text style={styles.ecoHubSubtitle}>Manage platform systems per flowchart hierarchy</Text>
 
           <View style={styles.ecoGrid}>
-            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-users' as any)}>
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(user)/(tabs)/super-users' as any)}>
               <View style={[styles.ecoIconBox, { backgroundColor: '#eff6ff' }]}>
                 <Ionicons name="people" size={24} color="#2563eb" />
               </View>
@@ -301,7 +301,7 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.ecoCardDesc}>Manage all 5 Admin Roles & Users</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/admin-products' as any)}>
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(user)/(tabs)/admin-products' as any)}>
               <View style={[styles.ecoIconBox, { backgroundColor: '#fef2f2' }]}>
                 <Ionicons name="storefront" size={24} color="#dc2626" />
               </View>
@@ -309,7 +309,7 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.ecoCardDesc}>Products, Stores & Sellers</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-accounts' as any)}>
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/(user)/(tabs)/super-accounts' as any)}>
               <View style={[styles.ecoIconBox, { backgroundColor: '#f0fdf4' }]}>
                 <Ionicons name="wallet" size={24} color="#16a34a" />
               </View>

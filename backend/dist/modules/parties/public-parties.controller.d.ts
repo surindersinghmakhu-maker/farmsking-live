@@ -12,7 +12,6 @@ export declare class PublicPartiesController {
             kingId: string | null;
             village: string | null;
             district: string | null;
-            id?: undefined;
             state?: undefined;
         };
         buyerMobile: string;
@@ -23,19 +22,17 @@ export declare class PublicPartiesController {
     } | {
         found: boolean;
         farmer: {
-            id: string;
             name: string;
             farmName: string;
-            mobile: string;
+            mobile: string | null;
             kingId: string | null;
-            village: string | null;
             district: string | null;
             state: string | null;
+            village?: undefined;
         };
         buyerParty: {
             name: string | undefined;
             mobile: string;
-            address: string | null | undefined;
             kingId: string | null;
             shopNumber: string | null;
             mandiName: string | null;

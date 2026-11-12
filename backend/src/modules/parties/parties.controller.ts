@@ -17,7 +17,7 @@ import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
 @ApiTags('Parties & Khata')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN, Role.TRADER, Role.SUPERVISOR)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.TRADER, Role.SUPERVISOR)
 @Controller('parties')
 export class PartiesController {
   constructor(private readonly partiesService: PartiesService) {}

@@ -33,9 +33,15 @@ let ShiprocketController = class ShiprocketController {
     assignAwb(dto) {
         return this.shiprocketService.assignAwb(dto);
     }
-    handleWebhook(body, apiKey) {
-        const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET;
-        if (expectedSecret && apiKey !== expectedSecret) {
+    async handleWebhook(body, apiKey) {
+        const expectedSecret = process.env.SHIPROCKET_WEBHOOK_SECRET?.trim();
+        if (!expectedSecret || !apiKey) {
+            throw new common_1.UnauthorizedException('Invalid or unconfigured Shiprocket webhook signature.');
+        }
+        const { createHash, timingSafeEqual } = await import('crypto');
+        const a = createHash('sha256').update(apiKey.trim()).digest();
+        const b = createHash('sha256').update(expectedSecret).digest();
+        if (!timingSafeEqual(a, b)) {
             throw new common_1.UnauthorizedException('Invalid Shiprocket webhook signature.');
         }
         return this.shiprocketService.handleWebhook(body);
@@ -75,7 +81,7 @@ __decorate([
     __param(1, (0, common_1.Headers)('x-api-key')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ShiprocketController.prototype, "handleWebhook", null);
 exports.ShiprocketController = ShiprocketController = __decorate([
     (0, common_1.Controller)('shiprocket'),

@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCashfreeVendorDto, CreateSplitOrderDto } from './dto/cashfree.dto';
+import type { AuthUser } from '../../common/types/auth-user.type';
 export declare class CashfreeService {
     private readonly configService;
     private readonly prisma;
@@ -41,9 +42,9 @@ export declare class CashfreeService {
         paymentSessionId: any;
         subscriptionLink: any;
     }>;
-    verifyPayment(orderId: string): Promise<any>;
+    verifyPayment(orderId: string, caller?: AuthUser): Promise<any>;
     handlePaymentSuccess(orderId: string, cashfreeData: any): Promise<void>;
-    handleWebhook(body: any): Promise<{
+    handleWebhook(body: any, signature?: string, timestamp?: string, rawBody?: string): Promise<{
         status: string;
     }>;
     handleWalletTopupSuccess(orderId: string, cashfreeData: any): Promise<void>;

@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { AdvisorAssignmentStatus, AdvisorType, FarmerSubscriptionPlan, NotificationType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -123,6 +123,10 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       include: { subscription: { include: { plan: true } } },
       orderBy: { startDate: 'desc' },
     });
+
+    if (!assignment && !hasActiveRole(user, Role.ADMIN) && !hasActiveRole(user, Role.SUPER_ADMIN)) {
+      throw new ForbiddenException('You are not assigned to view this farmer profile.');
+    }
 
     const isExpired = assignment ? this.isAssignmentExpired(assignment) : false;
 

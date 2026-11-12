@@ -21,4 +21,5 @@ export declare class RegisterDto {
     farmAddress?: string;
     farmMobile?: string;
     firebaseIdToken?: string;
+    termsAccepted?: boolean;
 }

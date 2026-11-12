@@ -13,6 +13,8 @@ export interface UserSession {
 export class UserSessionService {
   // Map of userId -> array of active UserSession objects (sorted oldest -> newest)
   private readonly userSessions = new Map<string, UserSession[]>();
+  private readonly revokedSessionIds = new Set<string>();
+  private readonly revokedBeforeEpochSec = new Map<string, number>();
 
   /**
    * Creates/registers a new session.
@@ -43,7 +45,10 @@ export class UserSessionService {
     let evictedOldest = false;
     // Auto-logout oldest logins if count exceeds 2
     while (sessions.length > 2) {
-      sessions.shift(); // remove oldest session
+      const evicted = sessions.shift(); // remove oldest session
+      if (evicted?.sessionId) {
+        this.revokedSessionIds.add(evicted.sessionId);
+      }
       evictedOldest = true;
     }
 
@@ -71,32 +76,31 @@ export class UserSessionService {
   /**
    * Validates whether a specific sessionId is still active for the user.
    */
-  isValidSession(userId: string, sessionId?: string): boolean {
+  isValidSession(userId: string, sessionId?: string, tokenIatSec?: number): boolean {
+    const revokedBefore = this.revokedBeforeEpochSec.get(userId);
+    if (revokedBefore && tokenIatSec && tokenIatSec < revokedBefore) {
+      return false;
+    }
     if (!sessionId) return true; // backward compatibility for tokens without sid
-    let sessions = this.userSessions.get(userId);
-    if (!sessions) {
-      sessions = [];
-      this.userSessions.set(userId, sessions);
+    if (this.revokedSessionIds.has(sessionId)) {
+      return false;
     }
 
-    const exists = sessions.some((s) => s.sessionId === sessionId);
-    if (exists) {
+    if (!this.userSessions.has(userId)) {
+      // First request after fresh process restart: hydrate this active session cleanly unless revoked
+      this.userSessions.set(userId, [
+        {
+          sessionId,
+          userId,
+          createdAt: Date.now(),
+          lastActiveAt: Date.now(),
+        },
+      ]);
       return true;
     }
 
-    // If session isn't in memory (e.g. backend server restarted) and active count is under max limit (2),
-    // register this session automatically so valid devices/tabs don't get unexpectedly logged out!
-    if (sessions.length < 2) {
-      sessions.push({
-        sessionId,
-        userId,
-        createdAt: Date.now(),
-        lastActiveAt: Date.now(),
-      });
-      return true;
-    }
-
-    return false;
+    const sessions = this.userSessions.get(userId)!;
+    return sessions.some((s) => s.sessionId === sessionId);
   }
 
   /**
@@ -118,6 +122,11 @@ export class UserSessionService {
    */
   logoutOtherSessions(userId: string, currentSessionId: string): { loggedOutCount: number } {
     const sessions = this.userSessions.get(userId) || [];
+    for (const s of sessions) {
+      if (s.sessionId !== currentSessionId) {
+        this.revokedSessionIds.add(s.sessionId);
+      }
+    }
     const remaining = sessions.filter((s) => s.sessionId === currentSessionId);
     const count = sessions.length - remaining.length;
     this.userSessions.set(userId, remaining);
@@ -128,9 +137,24 @@ export class UserSessionService {
    * Removes a specific session for userId on explicit logout.
    */
   logoutSession(userId: string, sessionId: string): void {
+    if (sessionId) {
+      this.revokedSessionIds.add(sessionId);
+    }
     const sessions = this.userSessions.get(userId) || [];
     const remaining = sessions.filter((s) => s.sessionId !== sessionId);
     this.userSessions.set(userId, remaining);
+  }
+
+  /**
+   * Invalidates all active sessions and tokens issued before now (used after password reset or lock).
+   */
+  clearAllSessions(userId: string): void {
+    const sessions = this.userSessions.get(userId) || [];
+    for (const s of sessions) {
+      this.revokedSessionIds.add(s.sessionId);
+    }
+    this.userSessions.set(userId, []);
+    this.revokedBeforeEpochSec.set(userId, Math.floor(Date.now() / 1000) + 1);
   }
 
   /**

@@ -18,27 +18,29 @@ export declare class UploadsService {
         fileUrl: string;
         provider: string;
     }>;
+    private sanitizeUploadFolder;
+    private assertSafeMediaMime;
     private inferExtension;
     create(user: AuthUser, file: UploadedFileObject): Promise<{
         provider: string;
         storageKey: string;
         id: string;
         createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
     createFromBase64(user: AuthUser, dataUri: string, customFilename?: string, folder?: string): Promise<{
         provider: string;
         storageKey: string;
         id: string;
         createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
 }

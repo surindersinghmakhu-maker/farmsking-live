@@ -93,7 +93,7 @@ export default function TermsOfServiceScreen() {
               Official Legal Agreement for Cultivators, Agronomists, Store Vendors, and Platform Members
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              Last Updated: October 2026 • FARMSKING TECHNOLOGIES PRIVATE LIMITED • Registered in Punjab, India
+              Last Updated: November 2026 • FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294
             </Text>
           </View>
 
@@ -181,13 +181,22 @@ export default function TermsOfServiceScreen() {
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
-                  Vendors are vetted for verified business registrations, GST compliance, and trade licenses.
+                  <Text style={{ fontFamily: FONT.bold }}>Section 79 IT Act Intermediary Marketplace Disclaimer: </Text>
+                  Verified third-party Vendors/Farmers act as Merchant of Record for their products, carry sole responsibility for statutory FSSAI / Seed / Insecticide / Fertilizer licenses, and issue GST Tax Invoices or Farm Bills of Supply.
                 </Text>
               </View>
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
-                  Original branded inputs are sealed by manufacturers and accompanied by GST tax invoices.
+                  <Text style={{ fontFamily: FONT.bold }}>Payments, GST TCS & Income Tax TDS Disclosure: </Text>
+                  Payments are processed via RBI-authorized gateways (Cashfree, Razorpay, PhonePe, UPI). For registered vendors, Partners, Agents, and Advisors, FarmsKing collects 0.5% CGST Section 52 TCS (where GSTIN applies) and deducts statutory Income Tax TDS (Section 194-O @ 0.1%, Section 194H @ 2%, Section 194J @ 10%; higher 5%/20% Sec 206AA rate if valid PAN is missing).
+                </Text>
+              </View>
+              <View style={styles.bulletItem}>
+                <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>•</Text>
+                <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
+                  <Text style={{ fontFamily: FONT.bold }}>Authentic Branded Inputs: </Text>
+                  All vendors undergo upfront PAN, Bank/IFSC, Aadhaar, and license KYC prior to activation. Original inputs are manufacturer-sealed and shipped with digital invoices.
                 </Text>
               </View>
             </View>
@@ -223,19 +232,19 @@ export default function TermsOfServiceScreen() {
             </Text>
             <View style={[styles.officerBox, isDay ? styles.officerBoxDay : styles.officerBoxNight]}>
               <Text style={[styles.officerName, isDay ? styles.officerNameDay : styles.officerNameNight]}>
-                Executive Grievance &amp; Compliance Desk
+                Grievance Officer: Surinder Singh (Designated Nodal &amp; Compliance Officer)
               </Text>
               <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
-                FARMSKING TECHNOLOGIES PRIVATE LIMITED • Statutory Legal &amp; Agronomy Cell
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Email: farmskingindia@gmail.com / grievance@farmsking.in
+                Email: grievance@farmsking.in / support@farmsking.in
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Helpline: 95776-22000 (Farmer Support Desk • 10:00 AM – 5:00 PM IST)
+                Helpline: +91 95776-22000 (Farmer Support Desk • Mon–Sat 10:00 AM – 6:00 PM IST)
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
-                Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 • Corporate Office: Makhu, Ferozepur • Jurisdiction: Courts of Punjab, India
+                Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422 • Corporate HQ: Main Market, Makhu, District Ferozepur, Punjab - 142044 • Jurisdiction: Courts of Punjab, India
               </Text>
             </View>
           </View>

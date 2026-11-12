@@ -52,14 +52,20 @@ let AppSettingsController = class AppSettingsController {
     requestAdminActionOtp(user) {
         return this.appSettingsService.requestAdminActionOtp(user);
     }
-    updateIntegrations(user, payload) {
-        return this.appSettingsService.updateIntegrations(user, payload);
+    updateIntegrations(user, payload, headerOtp) {
+        return this.appSettingsService.updateIntegrations(user, {
+            ...payload,
+            adminConfirmationOtp: payload?.adminConfirmationOtp || headerOtp,
+        });
     }
     getServiceConfig() {
         return this.appSettingsService.getServiceConfig();
     }
-    updateServiceConfig(user, body) {
-        return this.appSettingsService.updateServiceConfig(user, body);
+    updateServiceConfig(user, body, headerOtp) {
+        return this.appSettingsService.updateServiceConfig(user, {
+            ...body,
+            adminConfirmationOtp: body?.adminConfirmationOtp || headerOtp,
+        });
     }
     getPublicMasterData() {
         return this.appSettingsService.getPublicMasterData();
@@ -129,6 +135,8 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "updateSeo", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
     (0, common_1.Get)('integrations'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -149,8 +157,9 @@ __decorate([
     (0, common_1.Patch)('integrations'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('x-admin-otp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, String]),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "updateIntegrations", null);
 __decorate([
@@ -167,8 +176,9 @@ __decorate([
     (0, common_1.Post)('service-config'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('x-admin-otp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, String]),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "updateServiceConfig", null);
 __decorate([

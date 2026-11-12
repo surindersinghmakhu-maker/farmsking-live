@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
@@ -40,6 +41,25 @@ const update_admin_staff_permissions_dto_1 = require("./dto/update-admin-staff-p
 const set_referrer_dto_1 = require("./dto/set-referrer.dto");
 const admin_update_user_dto_1 = require("./dto/admin-update-user.dto");
 const reset_user_password_dto_1 = require("./dto/reset-user-password.dto");
+const assign_staff_role_dto_1 = require("./dto/assign-staff-role.dto");
+const convert_verified_lead_dto_1 = require("./dto/convert-verified-lead.dto");
+const ALL_AUTHENTICATED_ROLES = [
+    client_1.Role.CUSTOMER,
+    client_1.Role.FARMER,
+    client_1.Role.GARDENER,
+    client_1.Role.ADVISOR,
+    client_1.Role.AGENT,
+    client_1.Role.SELLER,
+    client_1.Role.TRADER,
+    client_1.Role.SUPERVISOR,
+    client_1.Role.LABOUR,
+    client_1.Role.OPERATOR,
+    client_1.Role.MANAGER,
+    client_1.Role.TECHNICAL_TRAINER,
+    client_1.Role.ACCOUNTANT,
+    client_1.Role.ADMIN,
+    client_1.Role.SUPER_ADMIN,
+];
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -47,11 +67,20 @@ let UsersController = class UsersController {
     getMe(user) {
         return this.usersService.getMe(user);
     }
-    deleteMe(user) {
-        return this.usersService.deleteMe(user);
+    requestDeleteMeOtp(user, body) {
+        return this.usersService.requestDeleteMeOtp(user, body?.mobile);
     }
-    deleteMePost(user) {
-        return this.usersService.deleteMe(user);
+    deleteMe(user, body, queryOtp, headerOtp) {
+        return this.usersService.deleteMe(user, {
+            otp: body?.otp || queryOtp || headerOtp,
+            firebaseIdToken: body?.firebaseIdToken,
+        });
+    }
+    deleteMePost(user, body, queryOtp, headerOtp) {
+        return this.usersService.deleteMe(user, {
+            otp: body?.otp || queryOtp || headerOtp,
+            firebaseIdToken: body?.firebaseIdToken,
+        });
     }
     getMyInviteLink(user) {
         return this.usersService.getMyInviteLink(user);
@@ -128,6 +157,9 @@ let UsersController = class UsersController {
     createManager(dto) {
         return this.usersService.createManager(dto);
     }
+    createAccountant(dto) {
+        return this.usersService.createAccountant(dto);
+    }
     updateAdminStaffPermissions(id, dto) {
         return this.usersService.updateAdminStaffPermissions(id, dto.permissions);
     }
@@ -164,6 +196,24 @@ let UsersController = class UsersController {
     deleteSupervisor(user, id) {
         return this.usersService.deleteSupervisor(user, id);
     }
+    listPartnerApplications(status) {
+        return this.usersService.listPartnerApplications(status);
+    }
+    approvePartnerApplication(user, id, body, queryOtp, headerOtp) {
+        return this.usersService.approvePartnerApplication(user, id, body?.adminConfirmationOtp || queryOtp || headerOtp);
+    }
+    rejectPartnerApplication(user, id, reason) {
+        return this.usersService.rejectPartnerApplication(user, id, reason);
+    }
+    listVerifiedSignupLeads(status, search) {
+        return this.usersService.listVerifiedSignupLeads(status, search);
+    }
+    updateVerifiedSignupLeadNotes(user, id, dto) {
+        return this.usersService.updateVerifiedSignupLeadNotes(user, id, dto);
+    }
+    convertVerifiedLeadToUser(user, id, dto) {
+        return this.usersService.convertVerifiedLeadToUser(user, id, dto);
+    }
     getDetail(user, id) {
         return this.usersService.getDetail(user, id);
     }
@@ -179,8 +229,8 @@ let UsersController = class UsersController {
     reactivate(user, id) {
         return this.usersService.reactivate(user, id);
     }
-    deleteUserByAdmin(user, id) {
-        return this.usersService.deleteUserByAdmin(user, id);
+    deleteUserByAdmin(user, id, body, queryOtp, headerOtp) {
+        return this.usersService.deleteUserByAdmin(user, id, body?.adminConfirmationOtp || queryOtp || headerOtp);
     }
     assignStaffRole(user, dto) {
         return this.usersService.assignStaffRole(user, dto);
@@ -200,7 +250,7 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Get)('me'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -208,23 +258,39 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getMe", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: 60_000 } }),
+    (0, common_1.Post)('me/delete-otp'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "requestDeleteMeOtp", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Delete)('me'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Query)('otp')),
+    __param(3, (0, common_1.Headers)('x-delete-otp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteMe", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Post)('me/delete'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Query)('otp')),
+    __param(3, (0, common_1.Headers)('x-delete-otp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteMePost", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Get)('me/invite-link'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -232,7 +298,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getMyInviteLink", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Get)('me/referrals'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -257,7 +323,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "becomeGardener", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Patch)('me/address'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -266,7 +332,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateMyAddress", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Get)('me/profile-status'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -274,7 +340,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "getMyProfileStatus", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Patch)('me/profile'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -438,6 +504,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createManager", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN),
+    (0, common_1.Post)('accountants'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_staff_dto_1.CreateStaffDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "createAccountant", null);
+__decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Patch)(':id/admin-staff-permissions'),
     __param(0, (0, common_1.Param)('id')),
@@ -548,6 +622,65 @@ __decorate([
 ], UsersController.prototype, "deleteSupervisor", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('partner-applications'),
+    __param(0, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "listPartnerApplications", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('partner-applications/:id/approve'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __param(3, (0, common_1.Query)('adminConfirmationOtp')),
+    __param(4, (0, common_1.Headers)('x-admin-otp')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object, String, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "approvePartnerApplication", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('partner-applications/:id/reject'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('reason')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "rejectPartnerApplication", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.ACCOUNTANT),
+    (0, common_1.Get)('verified-leads'),
+    __param(0, (0, common_1.Query)('status')),
+    __param(1, (0, common_1.Query)('search')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "listVerifiedSignupLeads", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER),
+    (0, common_1.Patch)('verified-leads/:id/notes'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, convert_verified_lead_dto_1.UpdateVerifiedLeadNotesDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateVerifiedSignupLeadNotes", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('verified-leads/:id/convert'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, convert_verified_lead_dto_1.ConvertVerifiedLeadDto]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "convertVerifiedLeadToUser", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)(':id/detail'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -596,8 +729,11 @@ __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __param(3, (0, common_1.Query)('adminConfirmationOtp')),
+    __param(4, (0, common_1.Headers)('x-admin-otp')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, Object, String, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteUserByAdmin", null);
 __decorate([
@@ -606,11 +742,11 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, assign_staff_role_dto_1.AssignStaffRoleDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "assignStaffRole", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.TECHNICAL_TRAINER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR),
+    (0, roles_decorator_1.Roles)(...ALL_AUTHENTICATED_ROLES),
     (0, common_1.Post)('submit-profile-completion'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),

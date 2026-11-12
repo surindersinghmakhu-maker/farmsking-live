@@ -9,16 +9,13 @@ import { SaleBillsService } from './sale-bills.service';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@UsePipes(new ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: true }))
+@UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false, transform: true }))
 @Roles(
   Role.FARMER,
-  Role.CUSTOMER,
-  Role.GARDENER,
-  Role.ADVISOR,
-  Role.AGENT,
+  Role.TRADER,
+  Role.SELLER,
   Role.ADMIN,
   Role.SUPER_ADMIN,
-  Role.OPERATOR,
   Role.SUPERVISOR,
 )
 @Controller('sale-bills')

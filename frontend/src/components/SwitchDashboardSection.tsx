@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { RoleThemes } from '../../constants/Colors';
+import { RoleThemes, UserRole } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 import { useRole } from '../store/role-context';
 import { useAuth } from '../store/auth-context';
@@ -15,35 +16,39 @@ const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   CUSTOMER: 'cart',
   FARMER: 'leaf',
   GARDENER: 'flower',
-  FARM_ADVISOR: 'school',
+  ADVISOR: 'medkit',
+  FARM_ADVISOR: 'medkit',
   GARDEN_ADVISOR: 'flower-outline',
   AGENT: 'briefcase',
+  SELLER: 'storefront',
+  TRADER: 'swap-horizontal',
   ADMIN: 'shield-checkmark',
   SUPER_ADMIN: 'shield-half',
+  MANAGER: 'options',
   OPERATOR: 'print',
+  SUPERVISOR: 'shield',
+  LABOUR: 'body',
+  TECHNICAL_TRAINER: 'school',
 };
+
+const PARTNER_PORTAL_UI_ROLES: UserRole[] = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'];
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
 /**
- * Shows the dashboard-switch list when this account already holds more than one granted role (e.g. a
- * Farmer who was also made a Agent). For a Customer-only account, instead offers self-service
- * "Become a Farmer" / "Become a Gardener" — granting that role immediately activates its dashboard too.
+ * Shows the dashboard-switch dropdown when this account holds more than one active workspace role
+ * (e.g. Farmer + Agent, Farmer + Agent + Seller, Advisor + Agent).
+ * For single-role Farm Staff (Supervisor / Labour), no switcher is shown.
+ * For Customer-only accounts, offers "Become a Farmer" / "Become a Gardener".
  */
 type ExtraRow = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void };
 
 export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] } = {}) {
+  const router = useRouter();
   const { role, setRole, assignedRoles } = useRole();
-  const { user, updateUser } = useAuth();
-
-  const isSuperOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-
-  // Non-admins (Farmers, Gardeners, Advisors, Partners) never have a dashboard switcher
-  if (!isSuperOrAdmin) {
-    return null;
-  }
+  const { user, updateUser, setLoginPortal } = useAuth();
   const becomeFarmer = useBecomeFarmer();
   const becomeGardener = useBecomeGardener();
   const [pending, setPending] = useState<'FARMER' | 'GARDENER' | null>(null);
@@ -51,17 +56,25 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
   const [isGardenerModalOpen, setIsGardenerModalOpen] = useState(false);
 
-  const isCustomerOnly = user?.role === 'CUSTOMER' && assignedRoles.length <= 1;
+  const isFarmStaff = assignedRoles.some((r) => r === 'SUPERVISOR' || r === 'LABOUR');
+  if (isFarmStaff) {
+    return null;
+  }
+
+  const hasSellerRole = assignedRoles.includes('SELLER');
+  const isCustomerOnly = !assignedRoles.some((r) => r !== 'CUSTOMER') && !hasSellerRole;
 
   const handleFarmerSuccess = async (updatedUser: any) => {
     setIsFarmerModalOpen(false);
     await updateUser(updatedUser);
+    await setLoginPortal('CLIENT');
     setRole('FARMER');
   };
 
   const handleGardenerSuccess = async (updatedUser: any) => {
     setIsGardenerModalOpen(false);
     await updateUser(updatedUser);
+    await setLoginPortal('CLIENT');
     setRole('GARDENER');
   };
 
@@ -128,12 +141,31 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
     );
   }
 
-  if (assignedRoles.length <= 1 && !extraRows?.length) return null;
-
-  const roleLabels = assignedRoles.map((r) => (RoleThemes[r] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER).name).join(', ');
-  const rowCount = assignedRoles.length + (extraRows?.length ?? 0);
+  const switchableRoles = assignedRoles.filter((r) => r !== 'CUSTOMER' && r !== 'SELLER');
+  const totalOptionsCount = switchableRoles.length + (hasSellerRole ? 1 : 0) + (extraRows?.length ?? 0);
+  if (totalOptionsCount <= 1) return null;
 
   const activeTheme = RoleThemes[role] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
+
+  const handleSelectDashboard = async (nextRole: UserRole) => {
+    tap();
+    setIsDropdownOpen(false);
+    if (nextRole === 'SELLER') {
+      await setLoginPortal('PARTNER');
+      router.push('/seller-dashboard' as any);
+      return;
+    }
+    const isNextPartner = PARTNER_PORTAL_UI_ROLES.includes(nextRole);
+    await setLoginPortal(isNextPartner ? 'PARTNER' : 'CLIENT');
+    setRole(nextRole);
+    if (isNextPartner) {
+      router.replace('/(partner)/(tabs)' as any);
+    } else if (nextRole === 'ADMIN' || nextRole === 'SUPER_ADMIN') {
+      router.replace('/admin' as any);
+    } else {
+      router.replace('/(user)/(tabs)' as any);
+    }
+  };
 
   return (
     <View style={styles.section}>
@@ -153,7 +185,7 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.rowLabel}>{activeTheme.name}</Text>
-          <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Dashboard</Text>
+          <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Workspace · Tap to switch</Text>
         </View>
         <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
       </TouchableOpacity>
@@ -161,7 +193,7 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
       {/* Dropdown Options List */}
       {isDropdownOpen ? (
         <View style={styles.dropdownMenu}>
-          {assignedRoles.map((r) => {
+          {switchableRoles.map((r) => {
             const theme = RoleThemes[r] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
             const isActive = r === role;
             return (
@@ -171,14 +203,10 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
                   styles.dropdownMenuItem,
                   isActive && { backgroundColor: theme.primaryLight ?? '#f0fdf4' },
                 ]}
-                onPress={() => {
-                  tap();
-                  if (!isActive) setRole(r);
-                  setIsDropdownOpen(false);
-                }}
+                onPress={() => handleSelectDashboard(r)}
               >
                 <View style={[styles.iconBg, { backgroundColor: theme.primaryLight }]}>
-                  <Ionicons name={ROLE_ICONS[r]} size={16} color={theme.primary} />
+                  <Ionicons name={ROLE_ICONS[r] || 'grid'} size={16} color={theme.primary} />
                 </View>
                 <Text style={[styles.rowLabel, isActive && { color: theme.primary, fontFamily: FONT.bold }]}>
                   {theme.name}
@@ -193,6 +221,18 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
               </TouchableOpacity>
             );
           })}
+          {hasSellerRole ? (
+            <TouchableOpacity
+              style={styles.dropdownMenuItem}
+              onPress={() => handleSelectDashboard('SELLER')}
+            >
+              <View style={[styles.iconBg, { backgroundColor: RoleThemes.SELLER.primaryLight }]}>
+                <Ionicons name="storefront" size={16} color={RoleThemes.SELLER.primary} />
+              </View>
+              <Text style={styles.rowLabel}>Seller Store & Orders</Text>
+              <Ionicons name="open-outline" size={16} color={RoleThemes.SELLER.primary} />
+            </TouchableOpacity>
+          ) : null}
           {(extraRows ?? []).map((item) => (
             <TouchableOpacity
               key={item.key}

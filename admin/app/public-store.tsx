@@ -1404,7 +1404,7 @@ export default function ShopScreen() {
       setActiveSubTab('ORDERS');
 
       // Prompt WhatsApp notification to shop
-      const shopPhone = (settings as any)?.phone || '919876543210';
+      const shopPhone = (settings as any)?.phone || '919577622000';
       const waMsg = `Hello FarmsKing! I have confirmed Order #${placedOrderNum} for ₹${finalPayableAmount.toLocaleString('en-IN')}.
 Address: ${deliveryAddress.trim()}
 Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
@@ -2969,6 +2969,16 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           : paymentMethod === 'ONLINE'
                           ? '👇 Tap button below to open Online Payment Gateway.'
                           : '👇 Tap button below to place your Cash on Delivery order.'}
+                      </Text>
+                    </View>
+
+                    {/* Statutory & Payment Gateway Legal Consent */}
+                    <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 8 }}>
+                      <Text style={{ fontSize: 11, lineHeight: 16, color: '#475569' }}>
+                        By placing this order with <Text style={{ fontWeight: '700', color: '#0f172a' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>, you agree to our{' '}
+                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/terms' as any)}>Terms of Service</Text>,{' '}
+                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/refund-policy' as any)}>Refund Policy</Text> (5–7 working days gateway refunds), and{' '}
+                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/shipping-policy' as any)}>Shipping Policy</Text>.
                       </Text>
                     </View>
 
@@ -4780,7 +4790,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   </View>
 
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                    GSTIN: 03ABCDE1234F1Z5 · 100% Certified Genuine Agri Products
+                    CIN: U01100PB2026PTC063294 | FARMSKING TECHNOLOGIES PRIVATE LIMITED · 100% Certified Genuine Agri Products
                   </Text>
                 </View>
 
@@ -5287,7 +5297,7 @@ function FarmsKingProductDetailModal({
   const handleShareWhatsApp = () => {
     tap();
     const msg = `Hi FarmsKing! I want to order/inquire about *${product.name}* (Price: ₹${product.price}/${product.unit}). Please provide more details.`;
-    Linking.openURL(`https://wa.me/919876543210?text=${encodeURIComponent(msg)}`);
+    Linking.openURL(`https://wa.me/919577622000?text=${encodeURIComponent(msg)}`);
   };
 
   return (

@@ -11,6 +11,7 @@ interface JwtPayload {
   sub: string;
   role: string;
   sid?: string;
+  iat?: number;
 }
 
 @Injectable()
@@ -38,7 +39,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         deactivatedRoles: true,
         name: true,
         kingId: true,
+        isSeniorDoctor: true,
         employerFarmerId: true,
+        supervisorPermissions: true,
+        operatorPermissions: true,
+        adminStaffPermissions: true,
+        isPermanentlyBlocked: true,
+        lockoutUntil: true,
       },
     });
 
@@ -46,17 +53,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
+    if (user.isPermanentlyBlocked || (user.lockoutUntil && new Date(user.lockoutUntil) > new Date())) {
+      throw new UnauthorizedException('Your account is currently suspended or locked. Please contact Admin Support.');
+    }
+
+    const isValid = this.userSessionService.isValidSession(user.id, payload.sid, payload.iat);
+    if (!isValid) {
+      throw new UnauthorizedException(
+        'Session Terminated: Please log in again to continue.',
+      );
+    }
+
     if (payload.sid) {
-      const isValid = this.userSessionService.isValidSession(user.id, payload.sid);
-      if (!isValid) {
-        throw new UnauthorizedException(
-          '⚠️ Session Terminated: Your account was logged in on another device. Oldest session logged out automatically.',
-        );
-      }
       this.userSessionService.touchSession(user.id, payload.sid);
       (user as any).sessionId = payload.sid;
     }
 
-    return user;
+    return user as AuthUser;
   }
 }

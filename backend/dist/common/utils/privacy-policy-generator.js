@@ -60,20 +60,29 @@ exports.DYNAMIC_SYSTEM_MODULES = [
     },
     {
         id: 'payments_and_transactions',
-        titleEn: 'Secure Payments & E-Commerce Transactions',
-        titlePa: 'ਸੁਰੱਖਿਅਤ ਪੇਮੈਂਟ ਅਤੇ ਟ੍ਰਾਂਸਫਰ ਸੇਵਾ',
-        purposeEn: 'Facilitates order placement for seeds, fertilizers, and equipment via RBI-authorized payment gateways (Razorpay, PhonePe, UPI). We DO NOT store credit/debit card numbers or bank PINs.',
-        purposePa: 'ਬੀਜ, ਖਾਦ ਅਤੇ ਸਮਾਨ ਦੇ ਆਰਡਰ ਲਈ RBI ਦੁਆਰਾ ਮਾਨਤਾ ਪ੍ਰਾਪਤ ਗੇਟਵੇ ਰਾਹੀਂ ਸੁਰੱਖਿਅਤ ਭੁਗਤਾਨ। ਅਸੀਂ ਬੈਂਕ ਪਿਨ ਜਾਂ ਕਾਰਡ ਨੰਬਰ ਸਟੋਰ ਨਹੀਂ ਕਰਦੇ।',
-        dataCollected: ['Transaction Reference IDs', 'Payment Status', 'Order Purchase History'],
+        titleEn: 'Secure Payments, GST & E-Commerce Settlements',
+        titlePa: 'Secure Payments, GST & E-Commerce Settlements',
+        purposeEn: 'Facilitates marketplace purchases, subscription plans, and agronomy bookings through RBI-authorized payment gateways (Cashfree, Razorpay, PhonePe, UPI) and Shiprocket logistics partners. We do NOT store raw card numbers, CVVs, or UPI PINs.',
+        purposePa: 'Facilitates order checkout and settlements through RBI-authorized payment gateways.',
+        dataCollected: ['Transaction Reference IDs', 'Payment Status', 'GST Invoice Details', 'Order & Shipment History'],
+        isMandatory: false,
+    },
+    {
+        id: 'seller_partner_kyc_tax',
+        titleEn: 'Seller, Advisor & Agent Statutory KYC (Tax & Regulatory Compliance)',
+        titlePa: 'Seller, Advisor & Agent Statutory KYC',
+        purposeEn: 'Collected strictly at seller, merchant, agent, trader, or advisor onboarding to fulfill Indian CGST Section 52 (0.5% TCS / GSTR-8), Income Tax TDS (Sec 194-O, 194-H, 194-J, 206AA), Seeds Act, FCO, Insecticides Act, FSSAI, and RBI nodal settlement KYC norms.',
+        purposePa: 'Required for seller, advisor, and agent payouts and Indian tax compliance.',
+        dataCollected: ['15-Digit GSTIN & Certificate', '10-Digit PAN & Document Proof', 'Masked Aadhaar (Last 4 Digits & KYC Proof)', 'Bank Account Number, IFSC & Cancelled Cheque', 'FSSAI / Seed / Pesticide / Fertilizer Licenses'],
         isMandatory: false,
     },
     {
         id: 'data_deletion_rights',
-        titleEn: 'User Control & Complete Account Deletion',
-        titlePa: 'ਯੂਜ਼ਰ ਅਧਿਕਾਰ ਅਤੇ ਅਕਾਊਂਟ ਡਿਲੀਟ ਕਰਨ ਦੀ ਸੁਵਿਧਾ',
-        purposeEn: 'In compliance with Google Play Store rules, users have the full right to delete their FarmsKing account and purge all personal data at any time via in-app Profile Settings or the Web Deletion Portal.',
-        purposePa: 'ਗੂਗਲ ਪਲੇਅ ਸਟੋਰ ਨਿਯਮਾਂ ਅਨੁਸਾਰ ਯੂਜ਼ਰ ਐਪ ਦੇ ਅੰਦਰੋਂ ਜਾਂ ਵੈੱਬ ਪੋਰਟਲ ਰਾਹੀਂ ਆਪਣਾ ਅਕਾਊਂਟ ਅਤੇ ਸਾਰਾ ਡਾਟਾ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਲੀਟ ਕਰ ਸਕਦੇ ਹਨ।',
-        dataCollected: ['Deletion Requests', 'Purge Timestamps'],
+        titleEn: 'DPDPA 2023 User Control & Account Deletion',
+        titlePa: 'User Control & Complete Account Deletion',
+        purposeEn: 'In compliance with the Digital Personal Data Protection Act (DPDPA) 2023 and Google Play policies, users may request deletion of personal profile data via Profile Settings or the Web Deletion Portal (excluding statutory GST/Income Tax invoices required to be preserved for 8 years under Indian tax law).',
+        purposePa: 'Right to erase personal data under DPDPA 2023.',
+        dataCollected: ['Deletion Requests', 'Audit & Tax Retention Metadata'],
         isMandatory: true,
     }
 ];
@@ -88,16 +97,15 @@ function generateDynamicPrivacyPolicyHtml(baseUrl = 'https://farmsking.in') {
       <div class="module-header">
         <span class="module-num">${idx + 1}</span>
         <div>
-          <h3>${m.titleEn} <span class="pa-sub">(${m.titlePa})</span></h3>
+          <h3>${m.titleEn}</h3>
           <span class="badge ${m.isMandatory ? 'badge-mand' : 'badge-opt'}">
-            ${m.isMandatory ? 'Core Requirement / ਜ਼ਰੂਰੀ' : 'Optional Feature / ਇੱਛੁਕ'}
+            ${m.isMandatory ? 'Core Requirement' : 'Role / Feature Specific'}
           </span>
         </div>
       </div>
-      <p class="desc"><strong>Purpose (ਮਕਸਦ):</strong> ${m.purposeEn}</p>
-      <p class="desc pa-text">${m.purposePa}</p>
+      <p class="desc"><strong>Purpose:</strong> ${m.purposeEn}</p>
       <div class="data-list">
-        <strong>Collected Data Items (ਇਕੱਠਾ ਕੀਤਾ ਜਾਂਦਾ ਡਾਟਾ):</strong>
+        <strong>Collected Data Items:</strong>
         <ul>
           ${m.dataCollected.map(d => `<li>${d}</li>`).join('')}
         </ul>
@@ -206,49 +214,51 @@ function generateDynamicPrivacyPolicyHtml(baseUrl = 'https://farmsking.in') {
   <div class="container">
     <div class="hero-banner">
       <h1>👑 FarmsKing Privacy Policy</h1>
-      <h2>ਫਾਰਮਜ਼ਕਿੰਗ ਪ੍ਰਾਈਵੇਸੀ ਅਤੇ ਡਾਟਾ ਸੁਰੱਖਿਆ ਨੀਤੀ</h2>
-      <div class="update-badge">⚡ Automatically Dynamic • Last Synchronized: ${lastUpdated}</div>
+      <h2>FARMSKING TECHNOLOGIES PRIVATE LIMITED — Official Privacy & Data Governance Policy</h2>
+      <div class="update-badge">⚡ DPDPA 2023 & IT Rules 2021 Compliant • Last Synchronized: ${lastUpdated}</div>
     </div>
 
     <div class="intro-card">
-      <h3>🔒 Commitment to Data Privacy & Google Play Compliance</h3>
-      <p>Welcome to FarmsKing (ਫਾਰਮਜ਼ਕਿੰਗ). We respect your privacy and are fully committed to protecting the personal, location, financial, and agricultural data of our Farmers, Gardeners, Customers, Advisors, Agents, and Operators.</p>
-      <p class="pa-text">ਫਾਰਮਜ਼ਕਿੰਗ ਪਲੇਟਫਾਰਮ 'ਤੇ ਤੁਹਾਡਾ ਸਵਾਗਤ ਹੈ। ਅਸੀਂ ਤੁਹਾਡੇ ਨਿੱਜੀ ਡਾਟਾ, ਲੋਕੇਸ਼ਨ ਅਤੇ ਖੇਤੀਬਾੜੀ ਰਿਕਾਰਡ ਦੀ ਪੂਰੀ ਸੁਰੱਖਿਆ ਕਰਨ ਲਈ ਵਚਨਬੱਧ ਹਾਂ। ਹੇਠਾਂ ਸਾਡੀ ਨੀਤੀ ਦੀ ਪੂਰੀ ਜਾਣਕਾਰੀ ਦਿੱਤੀ ਗਈ ਹੈ।</p>
+      <h3>🔒 Commitment to Data Privacy & Regulatory Compliance</h3>
+      <p>Welcome to FarmsKing, operated by <strong>FARMSKING TECHNOLOGIES PRIVATE LIMITED</strong> (CIN: <code>U01100PB2026PTC063294</code>). We are committed to protecting the personal, location, financial, KYC, and agricultural records of our Farmers, Gardeners, Customers, Advisors, Agents, Traders, Sellers, and Platform Staff in compliance with the Digital Personal Data Protection Act, 2023 (DPDPA) and Information Technology Rules, 2021.</p>
 
       <div class="auto-sync-box">
         <span>🔄</span>
         <div>
-          <strong style="color: #FFF; font-size: 13.5px;">Auto-Dynamic Policy Engine (ਆਟੋ-ਅਪਡੇਟਿੰਗ ਨੀਤੀ ਸਿਸਟਮ)</strong>
-          <p>This privacy policy is connected directly to FarmsKing active feature configuration engine. Whenever a new feature, integration, or permission is introduced in the project, this document automatically updates its disclosures in real-time to guarantee 100% Google Play Store compliance.</p>
+          <strong style="color: #FFF; font-size: 13.5px;">Authorized Service & Gateway Processors</strong>
+          <p>Order checkouts and settlements are processed securely via Cashfree Payments, Razorpay, PhonePe, and NPCI UPI. Consignments are dispatched via Shiprocket courier partners. Sensitive KYC records (PAN, GSTIN, Bank IFSC, Masked Aadhaar) are encrypted at rest and never sold or disclosed to marketing brokers.</p>
         </div>
       </div>
     </div>
 
-    <h2 style="color: #FFF; font-size: 20px; margin-bottom: 16px;">📱 Collected Data & Feature Disclosures (ਇਕੱਠਾ ਕੀਤਾ ਡਾਟਾ)</h2>
+    <h2 style="color: #FFF; font-size: 20px; margin-bottom: 16px;">📱 Collected Data & Statutory Disclosures</h2>
     
     ${modulesHtml}
 
     <div class="deletion-box">
-      <h3>🗑️ Account Deletion & Right to be Forgotten (ਅਕਾਊਂਟ ਡਿਲੀਟ ਕਰਨ ਦਾ ਅਧਿਕਾਰ)</h3>
-      <p>In accordance with Google Play Store User Data policies, any FarmsKing user can request complete deletion of their account and associated personal data at any time.</p>
-      <p class="pa-text">ਤੁਸੀਂ ਕਿਸੇ ਵੀ ਸਮੇਂ ਆਪਣਾ FarmsKing ਅਕਾਊਂਟ ਅਤੇ ਸਾਰਾ ਡਾਟਾ ਪੂਰੀ ਤਰ੍ਹਾਂ ਡਿਲੀਟ ਕਰ ਸਕਦੇ ਹੋ।</p>
+      <h3>🗑️ Account Deletion & Right to Erasure (DPDPA 2023)</h3>
+      <p>Any FarmsKing user can request deletion of personal profile data via Profile Settings or the Web Account Deletion Portal. Statutory GST tax invoices, TCS/TDS ledgers, and audit trails are preserved strictly in compliance with Indian Income Tax Act and CGST Act retention rules.</p>
       <div style="margin-top: 14px;">
-        <a href="${baseUrl}/account-deletion" class="del-btn">👉 Go to Web Account Deletion Portal (ਅਕਾਊਂਟ ਡਿਲੀਟ ਪੋਰਟਲ)</a>
+        <a href="${baseUrl}/account-deletion" class="del-btn">👉 Go to Web Account Deletion Portal</a>
       </div>
     </div>
 
     <div class="intro-card">
-      <h3>📞 Data Controller & Support Contact Information</h3>
-      <p>If you have any questions regarding this Privacy Policy or wish to exercise your data rights, please contact our Data Governance Officer:</p>
+      <h3>📞 Data Protection & Grievance Redressal Officer</h3>
+      <p>Pursuant to IT Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020, contact our designated Grievance Officer for privacy, consent withdrawal, or data grievances:</p>
       <ul style="margin-left: 20px; font-size: 14px; color: #D1D5DB;">
-        <li><strong>Official Email:</strong> support@farmsking.in / privacy@farmsking.in</li>
-        <li><strong>Helpline Number:</strong> +91 9872066901</li>
+        <li><strong>Grievance Officer:</strong> Surinder Singh (Designated Nodal & Compliance Officer)</li>
+        <li><strong>Legal Entity:</strong> FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U01100PB2026PTC063294)</li>
+        <li><strong>Registered Office:</strong> VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India</li>
+        <li><strong>Operational HQ:</strong> Near Grain Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India</li>
+        <li><strong>Official Email:</strong> support@farmsking.in / grievance@farmsking.in</li>
+        <li><strong>Helpline Number:</strong> +91 95776-22000 (Mon–Sat, 10:00 AM – 6:00 PM IST)</li>
         <li><strong>Official Website:</strong> <a href="${baseUrl}" style="color: var(--primary);">${baseUrl}</a></li>
       </ul>
     </div>
 
     <div class="footer">
-      <p>© ${new Date().getFullYear()} FarmsKing Agri Platform. All Rights Reserved. Compliant with Google Play Store Policies.</p>
+      <p>© ${new Date().getFullYear()} FARMSKING TECHNOLOGIES PRIVATE LIMITED. All Rights Reserved.</p>
     </div>
   </div>
 </body>

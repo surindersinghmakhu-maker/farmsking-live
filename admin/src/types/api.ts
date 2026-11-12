@@ -12,6 +12,7 @@ export type Role =
   | 'OPERATOR'
   | 'LABOUR'
   | 'TECHNICAL_TRAINER'
+  | 'ACCOUNTANT'
   | 'TRADER';
 export type AdvisorType = 'FARM' | 'GARDEN';
 export type AreaUnit = 'ACRE' | 'HECTARE' | 'BIGHA' | 'GUNTA';

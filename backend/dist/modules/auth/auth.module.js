@@ -17,6 +17,7 @@ const jwt_strategy_1 = require("./jwt.strategy");
 const whatsapp_module_1 = require("../whatsapp/whatsapp.module");
 const app_settings_module_1 = require("../app-settings/app-settings.module");
 const wallet_module_1 = require("../wallet/wallet.module");
+const uploads_module_1 = require("../uploads/uploads.module");
 const user_session_service_1 = require("./user-session.service");
 let AuthModule = class AuthModule {
 };
@@ -28,6 +29,7 @@ exports.AuthModule = AuthModule = __decorate([
             whatsapp_module_1.WhatsappBotModule,
             app_settings_module_1.AppSettingsModule,
             wallet_module_1.WalletModule,
+            uploads_module_1.UploadsModule,
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 inject: [config_1.ConfigService],

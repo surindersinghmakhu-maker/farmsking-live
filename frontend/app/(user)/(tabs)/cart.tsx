@@ -184,7 +184,7 @@ export default function CartScreen() {
       router.push('/(user)/(tabs)/orders' as any);
 
       // WhatsApp confirmation trigger
-      const shopPhone = (settings as any)?.phone || '919876543210';
+      const shopPhone = (settings as any)?.phone || '919577622000';
       const waMsg = `Hello FarmsKing! I have placed Order #${placedOrderNum} for ₹${finalPayableAmount.toLocaleString('en-IN')}.\nDelivery Address: ${deliveryAddress.trim()}\nPayment: ${paymentMethod}`;
       setTimeout(() => {
         Linking.openURL(`https://wa.me/${shopPhone}?text=${encodeURIComponent(waMsg)}`).catch(() => {});
@@ -588,6 +588,16 @@ export default function CartScreen() {
                   <Text style={styles.errorText}>{checkoutError}</Text>
                 </View>
               ) : null}
+
+              {/* Statutory & Payment Gateway Legal Consent */}
+              <View style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10 }}>
+                <Text style={{ fontSize: 11.5, lineHeight: 16, color: '#475569' }}>
+                  By confirming your order with <Text style={{ fontWeight: '700', color: '#0f172a' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>, you agree to our{' '}
+                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/terms')}>Terms of Service</Text>,{' '}
+                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/refund-policy')}>Refund Policy</Text> (5–7 working days via Cashfree / Razorpay / PhonePe), and{' '}
+                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/shipping-policy')}>Shipping Policy</Text>.
+                </Text>
+              </View>
 
               {/* Confirm Order Button */}
               <TouchableOpacity

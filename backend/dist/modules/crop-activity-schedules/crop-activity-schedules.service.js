@@ -18,6 +18,9 @@ const advisor_assignment_service_1 = require("../advisor-assignment/advisor-assi
 const notifications_service_1 = require("../notifications/notifications.service");
 const chat_service_1 = require("../chat/chat.service");
 const chat_gateway_1 = require("../chat/chat.gateway");
+const auth_user_util_1 = require("../../common/utils/auth-user.util");
+const effective_farmer_util_1 = require("../../common/utils/effective-farmer.util");
+const supervisor_permission_util_1 = require("../../common/utils/supervisor-permission.util");
 let CropActivitySchedulesService = class CropActivitySchedulesService {
     constructor(prisma, cropsService, advisorAssignmentService, notificationsService, chatService, chatGateway) {
         this.prisma = prisma;
@@ -86,27 +89,36 @@ let CropActivitySchedulesService = class CropActivitySchedulesService {
         return created;
     }
     async findAllForCropCycle(user, cropCycleId) {
-        if (user.role === client_1.Role.FARMER) {
-            await this.cropsService.findOneOrThrow(user, cropCycleId);
-        }
-        else if (user.role === client_1.Role.ADVISOR) {
-            await this.assertAdvisorAssignedToCropCycle(user.id, cropCycleId);
+        const isAdmin = (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADMIN) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPER_ADMIN);
+        if (!isAdmin) {
+            if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.FARMER) || (0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPERVISOR)) {
+                await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'spray', 'view');
+                await this.cropsService.findOneOrThrow(user, cropCycleId);
+            }
+            else if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.ADVISOR)) {
+                await this.assertAdvisorAssignedToCropCycle(user.id, cropCycleId);
+            }
+            else {
+                throw new common_1.ForbiddenException('You do not have permission to view this crop schedule.');
+            }
         }
         return this.prisma.cropActivitySchedule.findMany({
             where: { cropCycleId, deletedAt: null },
             orderBy: { scheduledDate: 'asc' },
         });
     }
-    findTodayForFarmer(user) {
+    async findTodayForFarmer(user) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'spray', 'view');
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.prisma.cropActivitySchedule.findMany({
             where: {
                 deletedAt: null,
                 scheduledDate: { gte: startOfDay, lte: endOfDay },
-                cropCycle: { plot: { farm: { ownerId: user.id } } },
+                cropCycle: { plot: { farm: { ownerId } } },
             },
             include: { cropCycle: { select: { id: true, cropName: true } } },
             orderBy: { scheduledDate: 'asc' },
@@ -203,8 +215,10 @@ let CropActivitySchedulesService = class CropActivitySchedulesService {
         return updated;
     }
     async complete(user, id, dto) {
+        await (0, supervisor_permission_util_1.assertSupervisorPermission)(this.prisma, user, 'spray', 'entry');
         const activity = await this.findOneOrThrow(id);
-        if (activity.cropCycle.plot.farm.ownerId !== user.id) {
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (activity.cropCycle.plot.farm.ownerId !== ownerId) {
             throw new common_1.NotFoundException('Scheduled activity not found.');
         }
         this.assertCropCycleNotLocked(activity.cropCycle);

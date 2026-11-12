@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { hasActiveRole } from '../../common/utils/auth-user.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductModerationStatus, CatalogApprovalMode, SellerKycStatus, Role } from '@prisma/client';
@@ -10,7 +11,7 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(creator: AuthUser, dto: CreateProductDto) {
-    const isAdmin = creator?.role === Role.ADMIN || creator?.role === Role.SUPER_ADMIN;
+    const isAdmin = hasActiveRole(creator, Role.ADMIN) || hasActiveRole(creator, Role.SUPER_ADMIN);
     let sellerStore: any = null;
 
     if (isAdmin && dto.sellerStoreId) {
@@ -39,17 +40,46 @@ export class ProductsService {
     const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
 
     if (sellerStore && !isAdmin) {
-      // 1. Category Restriction: Seeds & Pesticides strictly require Agri Inputs License No.
-      if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('seed') || categorySlug === 'seeds' || categorySlug.includes('crop-protection')) {
-        if (!sellerStore.agriLicenseNo || !sellerStore.agriLicenseNo.trim()) {
-          throw new BadRequestException('Agri Inputs License No. (Seeds / Pesticide License) is required to list Seeds & Agrochemical Pesticides. Please update your Agri License in Store Settings.');
+      const now = new Date();
+      // 1. Category Restriction: Seeds, Pesticides & Fertilizers strictly require valid unexpired Agri Inputs License
+      if (categorySlug.includes('seed') || categorySlug === 'seeds') {
+        const seedLic = (sellerStore.seedLicenseNo || sellerStore.agriLicenseNo || '').trim();
+        const seedExp = sellerStore.seedLicenseExpiry || sellerStore.agriLicenseExpiryDate;
+        if (!seedLic) {
+          throw new BadRequestException('A valid Seed Sale License No. is required to list seed products.');
+        }
+        if (seedExp && new Date(seedExp) < now) {
+          throw new BadRequestException('Your Seed / Agri Inputs License has expired. Please upload a renewed license in Store KYC Settings.');
+        }
+      }
+      if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('crop-protection')) {
+        const pestLic = (sellerStore.pesticideLicenseNo || sellerStore.agriLicenseNo || '').trim();
+        const pestExp = sellerStore.pesticideLicenseExpiry || sellerStore.agriLicenseExpiryDate;
+        if (!pestLic) {
+          throw new BadRequestException('An Insecticides Act Pesticide License No. is required to list agrochemicals and crop protection products.');
+        }
+        if (pestExp && new Date(pestExp) < now) {
+          throw new BadRequestException('Your Pesticide / Insecticide License has expired. Please renew it in Store KYC Settings.');
+        }
+      }
+      if (categorySlug.includes('fertilizer') || categorySlug.includes('khad') || categorySlug.includes('nutrient')) {
+        const fertLic = (sellerStore.fertilizerLicenseNo || sellerStore.agriLicenseNo || '').trim();
+        const fertExp = sellerStore.fertilizerLicenseExpiry || sellerStore.agriLicenseExpiryDate;
+        if (!fertLic) {
+          throw new BadRequestException('A valid Fertilizer Control Order (FCO) / Agri Inputs License No. is required to list fertilizer products.');
+        }
+        if (fertExp && new Date(fertExp) < now) {
+          throw new BadRequestException('Your Fertilizer / Agri Inputs License has expired. Please renew it in Store KYC Settings.');
         }
       }
 
-      // 2. Category Restriction: Food products require FSSAI License No.
+      // 2. Category Restriction: Food products require valid unexpired FSSAI License No.
       if (categorySlug.includes('food') || categorySlug === 'food-products' || categorySlug.includes('organic-food')) {
         if (!sellerStore.fssaiNo || !sellerStore.fssaiNo.trim()) {
           throw new BadRequestException('FSSAI License No. is required to list Food Products. Please update your FSSAI License Number in Store Settings.');
+        }
+        if (sellerStore.fssaiExpiryDate && new Date(sellerStore.fssaiExpiryDate) < now) {
+          throw new BadRequestException('Your FSSAI Food Safety License has expired. Please renew it in Store KYC Settings.');
         }
       }
     }
@@ -114,7 +144,7 @@ export class ProductsService {
         isReplaceable: dto.isReplaceable ?? true,
         replacementWindowDays: dto.replacementWindowDays ?? 7,
         returnPolicyNotes: dto.returnPolicyNotes,
-        commissionOverridePercentage: dto.commissionOverridePercentage,
+        commissionOverridePercentage: isAdmin ? dto.commissionOverridePercentage : undefined,
         bulkDiscountMinQty: dto.bulkDiscountMinQty,
         bulkDiscountPercentage: dto.bulkDiscountPercentage,
         moderationStatus,
@@ -125,8 +155,8 @@ export class ProductsService {
 
   /** Customers browsing only ever see active & approved products; sellers can view their own inactive items */
   async listAll(user?: AuthUser, includeInactiveRequested = false, sellerStoreId?: string, slug?: string, categorySlug?: string) {
-    const isAdmin = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN));
-    const isSeller = Boolean(user && (user.role === Role.SELLER || (Array.isArray((user as any).roles) && (user as any).roles.includes(Role.SELLER))));
+    const isAdmin = Boolean(user && (hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN)));
+    const isSeller = Boolean(user && hasActiveRole(user, Role.SELLER));
 
     let where: any = { isActive: true, moderationStatus: ProductModerationStatus.ACTIVE };
 
@@ -186,7 +216,19 @@ export class ProductsService {
   private async findOneOrThrow(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { sellerStore: true },
+      include: {
+        sellerStore: {
+          select: {
+            id: true,
+            sellerId: true,
+            storeName: true,
+            slug: true,
+            sellerType: true,
+            kycStatus: true,
+            isFssaiApproved: true,
+          },
+        },
+      },
     });
     if (!product) {
       throw new NotFoundException('Product not found.');
@@ -196,7 +238,7 @@ export class ProductsService {
 
   async update(user: AuthUser, id: string, dto: UpdateProductDto) {
     const product = await this.findOneOrThrow(id);
-    const isAdmin = user?.role === Role.ADMIN || user?.role === Role.SUPER_ADMIN;
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
     if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
       throw new ForbiddenException('You can only edit products belonging to your own seller store.');
     }
@@ -205,6 +247,9 @@ export class ProductsService {
     delete updateData.moderationStatus;
     delete updateData.sellerStoreId;
     delete updateData.createdById;
+    if (!isAdmin) {
+      delete updateData.commissionOverridePercentage;
+    }
 
     return this.prisma.product.update({ where: { id }, data: updateData });
   }
@@ -212,7 +257,7 @@ export class ProductsService {
   /** Soft-delete */
   async remove(user: AuthUser, id: string) {
     const product = await this.findOneOrThrow(id);
-    const isAdmin = user?.role === Role.ADMIN || user?.role === Role.SUPER_ADMIN;
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
     if (!isAdmin && product.sellerStore?.sellerId !== user.id) {
       throw new ForbiddenException('You can only deactivate products belonging to your own seller store.');
     }

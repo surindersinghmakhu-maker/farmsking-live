@@ -542,14 +542,14 @@ function AboutSettingsSection({
           label="Registered Office Address"
           value={data.registeredAddress}
           onChangeText={(val) => onChange({ ...data, registeredAddress: val })}
-          placeholder="Near Bus Stand, Makhu, Tehsil Zira, District Ferozepur, Punjab 142044"
+          placeholder="VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab 143422"
         />
 
         <InputField
-          label="Headquarters Town & Region"
+          label="Operational Headquarters Town & Region"
           value={data.headquarters}
           onChangeText={(val) => onChange({ ...data, headquarters: val })}
-          placeholder="Makhu Town, District Ferozepur, Punjab, India"
+          placeholder="Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab 142044"
         />
 
         <View style={styles.twoColRow}>
@@ -558,7 +558,7 @@ function AboutSettingsSection({
               label="GSTIN Number"
               value={data.gstin}
               onChangeText={(val) => onChange({ ...data, gstin: val })}
-              placeholder="03AAAAF0000A1Z5"
+              placeholder="GST Registration Pending"
             />
           </View>
           <View style={styles.colHalf}>

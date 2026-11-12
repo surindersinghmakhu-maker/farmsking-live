@@ -25,6 +25,7 @@ import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { ExecutiveVaultProvider } from '@/src/portals/ExecutiveSecurityVault';
 import { SplashView } from '@/components/SplashView';
 import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
+import { AdminStepUpProvider } from '@/components/AdminStepUpProvider';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -188,10 +189,12 @@ export default function RootLayout() {
                 <CropsProvider>
                   <CartProvider>
                     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                      <MobileAppShell>
-                        <RootNavigation />
-                        <StatusBar style="auto" />
-                      </MobileAppShell>
+                      <AdminStepUpProvider>
+                        <MobileAppShell>
+                          <RootNavigation />
+                          <StatusBar style="auto" />
+                        </MobileAppShell>
+                      </AdminStepUpProvider>
                     </ThemeProvider>
                   </CartProvider>
                 </CropsProvider>

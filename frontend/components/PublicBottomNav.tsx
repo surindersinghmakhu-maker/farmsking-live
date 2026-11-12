@@ -641,7 +641,24 @@ export default function PublicBottomNav() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={sheetStyles.menuTitle}>Refund & Return Policy</Text>
-                    <Text style={sheetStyles.menuSubtitle}>100% genuine inputs & refund protocols</Text>
+                    <Text style={sheetStyles.menuSubtitle}>100% genuine inputs & 5-7 day refund protocols</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#64748b" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={sheetStyles.menuRow}
+                  onPress={() => {
+                    setShowMoreModal(false);
+                    router.push('/shipping-policy' as any);
+                  }}
+                >
+                  <View style={[sheetStyles.menuIconBox, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
+                    <Ionicons name="cube-outline" size={17} color="#38bdf8" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={sheetStyles.menuTitle}>Shipping & Delivery Policy</Text>
+                    <Text style={sheetStyles.menuSubtitle}>Dispatch SLA & courier coverage across India</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#64748b" />
                 </TouchableOpacity>

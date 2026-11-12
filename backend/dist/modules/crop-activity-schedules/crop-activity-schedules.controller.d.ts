@@ -39,7 +39,7 @@ export declare class CropActivitySchedulesController {
         completedAt: Date | null;
         completedById: string | null;
     }[]>;
-    findToday(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
+    findToday(user: AuthUser): Promise<({
         cropCycle: {
             id: string;
             cropName: string;

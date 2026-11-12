@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, Matches } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, Matches } from 'class-validator';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
 /** Agent self-service: payout details required before their wallet can be withdrawn from. */
@@ -30,4 +30,24 @@ export class UpdatePartnerProfileDto {
   @IsOptional()
   @IsString()
   bankAccountHolderName?: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}$/, { message: 'Aadhaar last 4 digits must be numeric.' })
+  aadhaarLast4?: string;
+
+  @IsOptional()
+  @IsString()
+  aadhaarDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  panDocUrl?: string;
+
+  @IsOptional()
+  @Matches(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, { message: 'Enter a valid 15-character GSTIN.' })
+  gstin?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

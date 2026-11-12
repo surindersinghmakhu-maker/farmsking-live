@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 export declare class AddressesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
@@ -49,7 +50,7 @@ export declare class AddressesService {
     remove(user: AuthUser, id: string): Promise<{
         success: boolean;
     }>;
-    update(user: AuthUser, id: string, dto: Partial<CreateAddressDto>): Promise<{
+    update(user: AuthUser, id: string, dto: UpdateAddressDto): Promise<{
         id: string;
         mobile: string | null;
         name: string | null;

@@ -15,6 +15,8 @@ const prisma_service_1 = require("../prisma/prisma.service");
 const shiprocket_service_1 = require("../shiprocket/shiprocket.service");
 const notifications_service_1 = require("../notifications/notifications.service");
 const client_1 = require("@prisma/client");
+const role_policy_util_1 = require("../../common/utils/role-policy.util");
+const tax_compliance_util_1 = require("../../common/utils/tax-compliance.util");
 let SellerService = class SellerService {
     constructor(prisma, shiprocketService, notificationsService) {
         this.prisma = prisma;
@@ -22,6 +24,13 @@ let SellerService = class SellerService {
         this.notificationsService = notificationsService;
     }
     async registerStore(user, dto) {
+        const accountRecord = await this.prisma.user.findUnique({ where: { id: user.id } });
+        if (accountRecord) {
+            const activeRoles = (0, role_policy_util_1.getActiveRolesList)(accountRecord);
+            if (activeRoles.some((r) => role_policy_util_1.FARM_STAFF_ROLES.includes(r) || role_policy_util_1.ADMIN_STAFF_ROLES.includes(r))) {
+                throw new common_1.ForbiddenException('Supervisor, Labour Worker, and Admin Panel Staff accounts cannot register a Marketplace Seller store. Please use a dedicated mobile number.');
+            }
+        }
         const existingStore = await this.prisma.sellerStore.findUnique({
             where: { sellerId: user.id },
         });
@@ -34,32 +43,87 @@ let SellerService = class SellerService {
         if (existingSlug) {
             throw new common_1.ConflictException('Store slug is already taken. Please choose another.');
         }
+        const resolvedType = dto.sellerType || client_1.SellerType.FARMER;
+        if (!(0, tax_compliance_util_1.isValidPan)(dto.panNumber)) {
+            throw new common_1.BadRequestException('A valid 10-character PAN Number is mandatory for all Marketplace Sellers under Income Tax Section 194-O / 206AA.');
+        }
+        if (resolvedType === client_1.SellerType.COMMERCIAL && !(0, tax_compliance_util_1.isValidGstin)(dto.gstin)) {
+            throw new common_1.BadRequestException('A valid 15-character GSTIN is mandatory for Commercial Sellers under CGST Section 24.');
+        }
+        if (dto.gstin?.trim() && !(0, tax_compliance_util_1.isValidGstin)(dto.gstin)) {
+            throw new common_1.BadRequestException('Entered GSTIN format is invalid. Please provide a valid 15-character GSTIN.');
+        }
+        if (!dto.bankAccountNo?.trim() || !dto.bankIfsc?.trim() || !tax_compliance_util_1.IFSC_REGEX.test(dto.bankIfsc.trim().toUpperCase())) {
+            throw new common_1.BadRequestException('Valid Bank Account Number and 11-character IFSC Code are mandatory for nodal payouts.');
+        }
+        if (!dto.pickupAddress?.trim() || !dto.pickupPincode?.trim() || !/^\d{6}$/.test(dto.pickupPincode.trim())) {
+            throw new common_1.BadRequestException('Full Pickup Warehouse Address and 6-digit Pincode are mandatory for courier pickup.');
+        }
+        if (!dto.panDocUrl || !dto.chequeDocUrl || !dto.aadhaarFrontUrl) {
+            throw new common_1.BadRequestException('PAN Card copy, Cancelled Cheque/Passbook, and Aadhaar proof are mandatory at registration.');
+        }
+        if (resolvedType === client_1.SellerType.COMMERCIAL && !dto.gstDocUrl) {
+            throw new common_1.BadRequestException('GST Registration Certificate upload is mandatory for Commercial Sellers.');
+        }
         if (dto.wantsToSellFood) {
             if (!dto.fssaiNo || !/^\d{14}$/.test(dto.fssaiNo.trim())) {
                 throw new common_1.BadRequestException('FSSAI License Number must be a valid 14-digit numeric code when listing food products.');
             }
+            if (!dto.fssaiCertificateUrl) {
+                throw new common_1.BadRequestException('FSSAI Certificate document upload is required when listing food products.');
+            }
+            if (dto.fssaiExpiryDate && new Date(dto.fssaiExpiryDate) < new Date()) {
+                throw new common_1.BadRequestException('FSSAI License Expiry Date cannot be in the past.');
+            }
+        }
+        const now = new Date();
+        if (dto.agriLicenseExpiryDate && new Date(dto.agriLicenseExpiryDate) < now) {
+            throw new common_1.BadRequestException('Agri Inputs License Expiry Date cannot be in the past.');
+        }
+        if (dto.seedLicenseExpiry && new Date(dto.seedLicenseExpiry) < now) {
+            throw new common_1.BadRequestException('Seed License Expiry Date cannot be in the past.');
+        }
+        if (dto.pesticideLicenseExpiry && new Date(dto.pesticideLicenseExpiry) < now) {
+            throw new common_1.BadRequestException('Pesticide License Expiry Date cannot be in the past.');
+        }
+        if (dto.fertilizerLicenseExpiry && new Date(dto.fertilizerLicenseExpiry) < now) {
+            throw new common_1.BadRequestException('Fertilizer License Expiry Date cannot be in the past.');
         }
         const store = await this.prisma.sellerStore.create({
             data: {
                 sellerId: user.id,
-                storeName: dto.storeName,
-                slug: dto.slug,
-                sellerType: dto.sellerType || client_1.SellerType.FARMER,
-                legalName: dto.legalName,
-                gstin: dto.gstin,
-                panNumber: dto.panNumber,
-                bankAccountNo: dto.bankAccountNo,
-                bankIfsc: dto.bankIfsc,
-                bankBeneficiaryName: dto.bankBeneficiaryName,
-                pickupAddress: dto.pickupAddress,
-                pickupCity: dto.pickupCity,
-                pickupState: dto.pickupState,
-                pickupPincode: dto.pickupPincode,
+                storeName: dto.storeName.trim(),
+                slug: dto.slug.trim().toLowerCase(),
+                sellerType: resolvedType,
+                legalName: dto.legalName?.trim() || dto.storeName.trim(),
+                gstin: dto.gstin?.trim().toUpperCase() || null,
+                isCompositionDealer: Boolean(dto.isCompositionDealer),
+                gstEnrolmentId: dto.gstEnrolmentId?.trim() || null,
+                panNumber: dto.panNumber?.trim().toUpperCase(),
+                aadhaarLast4: dto.aadhaarLast4?.trim() || null,
+                upiId: dto.upiId?.trim() || null,
+                bankAccountNo: dto.bankAccountNo.trim(),
+                bankIfsc: dto.bankIfsc.trim().toUpperCase(),
+                bankBeneficiaryName: dto.bankBeneficiaryName?.trim() || dto.legalName?.trim() || dto.storeName.trim(),
+                pickupAddress: dto.pickupAddress.trim(),
+                pickupCity: dto.pickupCity?.trim() || null,
+                pickupState: dto.pickupState?.trim() || 'Punjab',
+                pickupPincode: dto.pickupPincode.trim(),
                 wantsToSellFood: dto.wantsToSellFood || false,
                 fssaiNo: dto.fssaiNo ? dto.fssaiNo.trim() : null,
                 fssaiCertificateUrl: dto.fssaiCertificateUrl,
                 fssaiExpiryDate: dto.fssaiExpiryDate ? new Date(dto.fssaiExpiryDate) : null,
-                agriLicenseNo: dto.agriLicenseNo,
+                agriLicenseNo: dto.agriLicenseNo?.trim() || null,
+                agriLicenseExpiryDate: dto.agriLicenseExpiryDate ? new Date(dto.agriLicenseExpiryDate) : null,
+                seedLicenseNo: dto.seedLicenseNo?.trim() || null,
+                seedLicenseExpiry: dto.seedLicenseExpiry ? new Date(dto.seedLicenseExpiry) : null,
+                seedLicenseDocUrl: dto.seedLicenseDocUrl || null,
+                pesticideLicenseNo: dto.pesticideLicenseNo?.trim() || null,
+                pesticideLicenseExpiry: dto.pesticideLicenseExpiry ? new Date(dto.pesticideLicenseExpiry) : null,
+                pesticideLicenseDocUrl: dto.pesticideLicenseDocUrl || null,
+                fertilizerLicenseNo: dto.fertilizerLicenseNo?.trim() || null,
+                fertilizerLicenseExpiry: dto.fertilizerLicenseExpiry ? new Date(dto.fertilizerLicenseExpiry) : null,
+                fertilizerLicenseDocUrl: dto.fertilizerLicenseDocUrl || null,
                 gstDocUrl: dto.gstDocUrl,
                 panDocUrl: dto.panDocUrl,
                 chequeDocUrl: dto.chequeDocUrl,
@@ -70,18 +134,21 @@ let SellerService = class SellerService {
                 additionalDoc1Url: dto.additionalDoc1Url || dto.sellerPhotoUrl,
                 additionalDoc2Title: dto.additionalDoc2Title || (dto.logoDocUrl ? 'Business Logo' : undefined),
                 additionalDoc2Url: dto.additionalDoc2Url || dto.logoDocUrl,
+                sellerAgreementAcceptedAt: dto.termsAccepted === false ? null : new Date(),
+                sellerAgreementVersion: '2026.11',
                 shiprocketPickupNickname: `FK_LOC_${user.id.substring(0, 8)}`,
                 kycStatus: client_1.SellerKycStatus.SUBMITTED,
             },
         });
-        const currentUser = await this.prisma.user.findUnique({ where: { id: user.id } });
-        if (currentUser) {
-            const roles = currentUser.roles || [];
-            if (!roles.includes(client_1.Role.SELLER)) {
+        if (accountRecord) {
+            const roles = accountRecord.roles || [];
+            const nextDeactivated = (accountRecord.deactivatedRoles || []).filter((r) => r !== client_1.Role.SELLER);
+            if (!roles.includes(client_1.Role.SELLER) || nextDeactivated.length !== (accountRecord.deactivatedRoles || []).length) {
                 await this.prisma.user.update({
                     where: { id: user.id },
                     data: {
-                        roles: { push: client_1.Role.SELLER },
+                        roles: roles.includes(client_1.Role.SELLER) ? roles : { push: client_1.Role.SELLER },
+                        deactivatedRoles: nextDeactivated,
                     },
                 });
             }
@@ -120,22 +187,34 @@ let SellerService = class SellerService {
     }
     async updateKyc(user, dto) {
         const store = await this.getMyStore(user);
+        if (store.kycStatus === client_1.SellerKycStatus.BLOCKED) {
+            throw new common_1.ForbiddenException('Your seller store is currently blocked by compliance. Please contact FarmsKing Admin Support.');
+        }
         if (dto.wantsToSellFood) {
             if (!dto.fssaiNo || !/^\d{14}$/.test(dto.fssaiNo.trim())) {
                 throw new common_1.BadRequestException('FSSAI License Number must be a valid 14-digit numeric code when listing food products.');
             }
         }
-        const { sellerPhotoUrl, logoDocUrl, ...schemaFields } = dto;
+        const { sellerPhotoUrl, logoDocUrl, termsAccepted, agriLicenseExpiryDate, seedLicenseExpiry, pesticideLicenseExpiry, fertilizerLicenseExpiry, ...schemaFields } = dto;
+        const nextKycStatus = store.kycStatus === client_1.SellerKycStatus.VERIFIED ? client_1.SellerKycStatus.VERIFIED : client_1.SellerKycStatus.SUBMITTED;
         return this.prisma.sellerStore.update({
             where: { id: store.id },
             data: {
                 ...schemaFields,
+                ...(schemaFields.gstin ? { gstin: schemaFields.gstin.trim().toUpperCase() } : {}),
+                ...(schemaFields.panNumber ? { panNumber: schemaFields.panNumber.trim().toUpperCase() } : {}),
+                ...(schemaFields.bankIfsc ? { bankIfsc: schemaFields.bankIfsc.trim().toUpperCase() } : {}),
                 additionalDoc1Title: schemaFields.additionalDoc1Title || (sellerPhotoUrl ? 'Seller Photo' : undefined),
                 additionalDoc1Url: schemaFields.additionalDoc1Url || sellerPhotoUrl,
                 additionalDoc2Title: schemaFields.additionalDoc2Title || (logoDocUrl ? 'Business Logo' : undefined),
                 additionalDoc2Url: schemaFields.additionalDoc2Url || logoDocUrl,
                 fssaiExpiryDate: dto.fssaiExpiryDate ? new Date(dto.fssaiExpiryDate) : undefined,
-                kycStatus: client_1.SellerKycStatus.SUBMITTED,
+                agriLicenseExpiryDate: agriLicenseExpiryDate ? new Date(agriLicenseExpiryDate) : undefined,
+                seedLicenseExpiry: seedLicenseExpiry ? new Date(seedLicenseExpiry) : undefined,
+                pesticideLicenseExpiry: pesticideLicenseExpiry ? new Date(pesticideLicenseExpiry) : undefined,
+                fertilizerLicenseExpiry: fertilizerLicenseExpiry ? new Date(fertilizerLicenseExpiry) : undefined,
+                ...(termsAccepted ? { sellerAgreementAcceptedAt: new Date(), sellerAgreementVersion: '2026.11' } : {}),
+                kycStatus: nextKycStatus,
                 rejectionReason: null,
             },
         });
@@ -271,9 +350,26 @@ let SellerService = class SellerService {
                 kycStatus: status,
                 commissionRate: commissionRate !== undefined ? commissionRate : store.commissionRate,
                 rejectionReason: status === client_1.SellerKycStatus.REJECTED ? rejectionReason : null,
+                ...(status === client_1.SellerKycStatus.VERIFIED ? { kycVerifiedAt: new Date() } : {}),
             },
         });
         if (status === client_1.SellerKycStatus.VERIFIED) {
+            const owner = await this.prisma.user.findUnique({ where: { id: store.sellerId } });
+            if (owner) {
+                const nextRoles = Array.from(new Set([...(owner.roles || []), client_1.Role.SELLER]));
+                const nextDeactivated = (owner.deactivatedRoles || []).filter((r) => r !== client_1.Role.SELLER);
+                const activeAfter = (0, role_policy_util_1.getActiveRolesList)({ role: owner.role, roles: nextRoles, deactivatedRoles: nextDeactivated });
+                try {
+                    (0, role_policy_util_1.assertRoleCombinationAllowed)(activeAfter);
+                    await this.prisma.user.update({
+                        where: { id: owner.id },
+                        data: { roles: nextRoles, deactivatedRoles: nextDeactivated },
+                    });
+                }
+                catch (err) {
+                    console.warn('Could not activate SELLER role on user due to role-policy conflict:', err);
+                }
+            }
             try {
                 await this.shiprocketService.addPickupLocation(storeId);
             }
@@ -317,9 +413,9 @@ let SellerService = class SellerService {
     async generateGstr8Report(sellerStoreId, month, year) {
         const store = await this.prisma.sellerStore.findUnique({
             where: { id: sellerStoreId },
-            select: { gstin: true },
+            select: { gstin: true, pickupState: true },
         });
-        const isGstRegistered = Boolean(store?.gstin && store.gstin.trim().length >= 15);
+        const isGstRegistered = (0, tax_compliance_util_1.isValidGstin)(store?.gstin);
         try {
             await this.prisma.$executeRaw `
         UPDATE customer_order_items coi
@@ -327,7 +423,13 @@ let SellerService = class SellerService {
             "subtotal" = coi.price * coi.quantity,
             "tcsAmount" = CASE
               WHEN ss."gstin" IS NOT NULL AND length(trim(ss."gstin")) >= 15
-                THEN (coi.price * coi.quantity) * 0.01
+                THEN (
+                  CASE
+                    WHEN COALESCE(p."gstPercentage", 0) > 0
+                      THEN ((coi.price * coi.quantity) / (1 + (p."gstPercentage" / 100.0)))
+                    ELSE (coi.price * coi.quantity)
+                  END
+                ) * 0.005
               ELSE 0
             END
         FROM products p
@@ -352,7 +454,7 @@ let SellerService = class SellerService {
             },
             include: {
                 order: {
-                    select: { orderNumber: true, orderDate: true, paymentStatus: true, status: true },
+                    select: { orderNumber: true, orderDate: true, paymentStatus: true, status: true, deliveryAddress: true },
                 },
                 product: {
                     select: { name: true, hsnCode: true, gstPercentage: true },
@@ -360,16 +462,31 @@ let SellerService = class SellerService {
             },
         });
         let totalGrossSales = 0;
-        let totalTcs = 0;
+        let totalNetTaxableValue = 0;
+        let cgstTcs = 0;
+        let sgstTcs = 0;
+        let igstTcs = 0;
         items.forEach((item) => {
             const subtotal = Number(item.subtotal ?? Number(item.price) * item.quantity);
-            const tcs = isGstRegistered ? Number(item.tcsAmount ?? subtotal * 0.01) : 0;
+            const gstPct = Number(item.product?.gstPercentage ?? 0);
+            const netTaxable = gstPct > 0 ? Number((subtotal / (1 + gstPct / 100)).toFixed(2)) : subtotal;
+            const tcs = isGstRegistered ? Number((netTaxable * tax_compliance_util_1.ECOMMERCE_TCS_RATE).toFixed(2)) : 0;
+            const isInterState = (0, tax_compliance_util_1.detectInterStateSupply)(store?.pickupState, item.order?.deliveryAddress);
             totalGrossSales += subtotal;
-            totalTcs += tcs;
+            totalNetTaxableValue += netTaxable;
+            if (isGstRegistered) {
+                if (isInterState) {
+                    igstTcs += tcs;
+                }
+                else {
+                    const half = Number((tcs / 2).toFixed(2));
+                    cgstTcs += half;
+                    sgstTcs += Number((tcs - half).toFixed(2));
+                }
+            }
         });
-        const netTaxableValue = totalGrossSales;
-        const halfTcs = Number((totalTcs / 2).toFixed(2));
-        const totalTcsFixed = Number(totalTcs.toFixed(2));
+        const netTaxableValue = Number(totalNetTaxableValue.toFixed(2));
+        const totalTcsFixed = Number((cgstTcs + sgstTcs + igstTcs).toFixed(2));
         const report = await this.prisma.gstr8Report.upsert({
             where: {
                 sellerStoreId_month_year: { sellerStoreId, month, year },
@@ -378,19 +495,20 @@ let SellerService = class SellerService {
                 sellerStoreId,
                 month,
                 year,
-                totalGrossSales,
+                totalGrossSales: Number(totalGrossSales.toFixed(2)),
                 totalSalesReturn: 0,
                 netTaxableValue,
-                cgstTcs: halfTcs,
-                sgstTcs: halfTcs,
-                igstTcs: 0,
+                cgstTcs: Number(cgstTcs.toFixed(2)),
+                sgstTcs: Number(sgstTcs.toFixed(2)),
+                igstTcs: Number(igstTcs.toFixed(2)),
                 totalTcs: totalTcsFixed,
             },
             update: {
-                totalGrossSales,
+                totalGrossSales: Number(totalGrossSales.toFixed(2)),
                 netTaxableValue,
-                cgstTcs: halfTcs,
-                sgstTcs: halfTcs,
+                cgstTcs: Number(cgstTcs.toFixed(2)),
+                sgstTcs: Number(sgstTcs.toFixed(2)),
+                igstTcs: Number(igstTcs.toFixed(2)),
                 totalTcs: totalTcsFixed,
             },
         });
@@ -527,6 +645,9 @@ let SellerService = class SellerService {
         const payout = await this.prisma.sellerPayout.findUnique({ where: { id: payoutId } });
         if (!payout) {
             throw new common_1.NotFoundException('Seller payout record not found.');
+        }
+        if (payout.status === client_1.SellerPayoutStatus.SETTLED) {
+            throw new common_1.BadRequestException('This seller payout has already been settled.');
         }
         const updated = await this.prisma.sellerPayout.update({
             where: { id: payoutId },

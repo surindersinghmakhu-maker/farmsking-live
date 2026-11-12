@@ -164,8 +164,18 @@ export async function resetUserPassword(id: string, newPassword?: string): Promi
   return data;
 }
 
-/** The checkbox-toggleable roles — staff roles (Admin/Super Admin/Operator) have their own dedicated flows. */
-export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'AGENT', 'TECHNICAL_TRAINER' as Role];
+/** The checkbox-toggleable roles — Admin Panel staff roles (Super Admin, Admin, Manager, Operator, Technical Trainer) are single-role via Staff flows. */
+export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = [
+  'CUSTOMER',
+  'FARMER',
+  'GARDENER',
+  'SUPERVISOR' as Role,
+  'LABOUR' as Role,
+  'AGENT',
+  'SELLER' as Role,
+  'ADVISOR',
+  'TRADER' as Role,
+];
 
 export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });
@@ -299,8 +309,24 @@ export async function searchBusinessPartners(q: string): Promise<BusinessPartner
 }
 
 /** Self-service Account Deletion (Google Play Store Policy Requirement) */
-export async function deleteMyAccount(): Promise<{ success: boolean; message: string }> {
-  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me');
+export async function requestDeleteMeOtp(mobile?: string): Promise<{
+  success: boolean;
+  deliveredVia?: string[];
+  message: string;
+  devOtp?: string;
+}> {
+  const { data } = await apiClient.post('/users/me/delete-otp', { mobile });
+  return data;
+}
+
+export async function deleteMyAccount(payload?: {
+  otp?: string;
+  firebaseIdToken?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me', {
+    data: payload,
+    headers: payload?.otp ? { 'x-delete-otp': payload.otp } : undefined,
+  });
   return data;
 }
 

@@ -46,7 +46,6 @@ const ALLOWED_MIME_TYPES = [
   'audio/aac',
   'audio/m4a',
   'audio/x-m4a',
-  'application/octet-stream',
 ];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB for 1-minute field videos & audio
 const VALID_EXTENSIONS = [
@@ -98,12 +97,21 @@ export class MediaStoreController {
       limits: { fileSize: MAX_FILE_SIZE },
       fileFilter: (_req, file, callback) => {
         const baseMime = (file.mimetype || '').split(';')[0].trim().toLowerCase();
+        const rawExt = extname(file.originalname || '').toLowerCase();
         if (
-          !ALLOWED_MIME_TYPES.includes(baseMime) &&
-          !baseMime.startsWith('image/') &&
-          !baseMime.startsWith('video/') &&
-          !baseMime.startsWith('audio/')
+          baseMime.includes('svg') ||
+          baseMime.includes('html') ||
+          baseMime.includes('javascript') ||
+          rawExt === '.svg' ||
+          rawExt === '.html' ||
+          rawExt === '.htm' ||
+          rawExt === '.js'
         ) {
+          callback(new BadRequestException('SVG, HTML, and script files are disabled for security.'), false);
+          return;
+        }
+        const isSafeOctet = baseMime === 'application/octet-stream' && VALID_EXTENSIONS.includes(rawExt);
+        if (!isSafeOctet && !ALLOWED_MIME_TYPES.includes(baseMime)) {
           callback(new BadRequestException('Only image, video, and audio files are supported.'), false);
           return;
         }
@@ -158,18 +166,19 @@ export class MediaStoreController {
    */
   @Get('crop/:cropId')
   async getCropMedia(
+    @CurrentUser() user: AuthUser,
     @Param('cropId') cropId: string,
     @Query('scope') scope?: 'active' | 'all',
   ) {
-    return this.mediaStoreService.getMediaForCrop(cropId, scope === 'active' ? 'active' : 'all');
+    return this.mediaStoreService.getMediaForCrop(user, cropId, scope === 'active' ? 'active' : 'all');
   }
 
   /**
    * Retrieve saved written remarks for a crop
    */
   @Get('crop/:cropId/remark')
-  async getCropRemark(@Param('cropId') cropId: string) {
-    return this.mediaStoreService.getCropRemark(cropId);
+  async getCropRemark(@CurrentUser() user: AuthUser, @Param('cropId') cropId: string) {
+    return this.mediaStoreService.getCropRemark(user, cropId);
   }
 
   /**
@@ -189,13 +198,14 @@ export class MediaStoreController {
    */
   @Get()
   async listAll(
+    @CurrentUser() user: AuthUser,
     @Query('cropId') cropId?: string,
     @Query('mediaType') mediaType?: string,
     @Query('provider') provider?: string,
     @Query('limit') limit?: string,
   ) {
     const limitNum = limit ? parseInt(limit, 10) : 50;
-    return this.mediaStoreService.listAll(cropId, mediaType, provider, limitNum);
+    return this.mediaStoreService.listAll(user, cropId, mediaType, provider, limitNum);
   }
 
   /**
@@ -203,10 +213,11 @@ export class MediaStoreController {
    */
   @Post('archive/:cropId')
   async archiveCropMedia(
+    @CurrentUser() user: AuthUser,
     @Param('cropId') cropId: string,
     @Body('retentionDays') retentionDays?: number,
   ) {
-    return this.mediaStoreService.archiveCropMedia(cropId, retentionDays || 30);
+    return this.mediaStoreService.archiveCropMedia(user, cropId, retentionDays || 30);
   }
 
   /**

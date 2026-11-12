@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { AdminStaffPermission, OperatorPermission, Role, SupervisorPermission } from '@prisma/client';
 export interface AuthUser {
     id: string;
     mobile: string;
@@ -9,5 +9,8 @@ export interface AuthUser {
     kingId?: string | null;
     isSeniorDoctor?: boolean;
     employerFarmerId?: string | null;
+    supervisorPermissions?: SupervisorPermission[];
+    operatorPermissions?: OperatorPermission[];
+    adminStaffPermissions?: AdminStaffPermission[];
     supervisorFeaturesConfig?: any;
 }

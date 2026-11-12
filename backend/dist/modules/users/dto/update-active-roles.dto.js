@@ -14,7 +14,17 @@ const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
 const auth_user_util_1 = require("../../../common/utils/auth-user.util");
-exports.ASSIGNABLE_CHECKBOX_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.TECHNICAL_TRAINER, client_1.Role.TRADER];
+exports.ASSIGNABLE_CHECKBOX_ROLES = [
+    client_1.Role.CUSTOMER,
+    client_1.Role.FARMER,
+    client_1.Role.GARDENER,
+    client_1.Role.SUPERVISOR,
+    client_1.Role.LABOUR,
+    client_1.Role.AGENT,
+    client_1.Role.SELLER,
+    client_1.Role.ADVISOR,
+    client_1.Role.TRADER,
+];
 class UpdateActiveRolesDto {
 }
 exports.UpdateActiveRolesDto = UpdateActiveRolesDto;

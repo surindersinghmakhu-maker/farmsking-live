@@ -58,6 +58,18 @@ model User {
   farmAddress             String?
   farmMobile              String?
   panNumber               String?
+  panDocUrl               String?
+  aadhaarLast4            String?
+  aadhaarDocUrl           String?
+  aadhaarBackUrl          String?
+  gstin                   String?
+  gstDocUrl               String?
+  chequeDocUrl            String?
+  mandiLicenseNo          String?
+  kycVerified             Boolean      @default(false)
+  kycVerifiedAt           DateTime?
+  termsAcceptedAt         DateTime?
+  privacyPolicyVersion    String?
   alternativeMobile       String?
   bankAccountNumber       String?
   bankIfsc                String?
@@ -83,8 +95,9 @@ model User {
 
   operatorPermissions    OperatorPermission[]   @default([])
   adminStaffPermissions  AdminStaffPermission[] @default([])
-  supervisorPermissions  SupervisorPermission[] @default([])
-  employerFarmerId       String?
+  supervisorPermissions    SupervisorPermission[] @default([])
+  supervisorFeaturesConfig Json?                  @default("{}")
+  employerFarmerId         String?
   employerFarmer         User?                  @relation("FarmerSupervisors", fields: [employerFarmerId], references: [id], onDelete: SetNull)
   supervisors            User[]                 @relation("FarmerSupervisors")
   /// Who referred this account in — set once at signup (referral code) or by a Super Admin afterwards, never changed again.
@@ -236,8 +249,12 @@ model User {
   gardenExpenses       GardenExpense[]
   gardenExpertPlans    GardenExpertPlan[]           @relation("ExpertPlanOwner")
   expertAssignments    GardenExpertAssignment[]     @relation("ExpertAssignment")
-  gardenerAssignments  GardenExpertAssignment[]     @relation("GardenerAssignment")
-  gardenerPlanPayments GardenerPlanPaymentRequest[]
+  gardenerAssignments         GardenExpertAssignment[]     @relation("GardenerAssignment")
+  gardenerPlanPayments        GardenerPlanPaymentRequest[]
+  partnerApplications         PartnerApplication[]         @relation("PartnerApplicantUser")
+  partnerApplicationsReviewed PartnerApplication[]         @relation("PartnerReviewerUser")
+  verifiedSignupLeads         VerifiedSignupLead[]         @relation("LeadConvertedUser")
+  verifiedLeadsConvertedByMe  VerifiedSignupLead[]         @relation("LeadConvertedByAdmin")
 
   @@index([kingId])
   @@index([mobile])

@@ -368,7 +368,7 @@ export interface SystemIntegrationsConfig {
         };
     };
     storage: {
-        activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+        activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'GCP_STORAGE' | 'MINIO' | 'BUNNY_CDN' | 'DIGITALOCEAN';
         isEnabled?: boolean;
         providers: {
             cloudflareR2: {

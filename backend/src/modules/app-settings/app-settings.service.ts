@@ -1,4 +1,6 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Optional } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { randomInt, timingSafeEqual } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
@@ -6,73 +8,169 @@ import { DEFAULT_FEATURE_FLAGS, FeatureFlagsMap } from '../../common/constants/f
 import { DEFAULT_INTEGRATIONS_CONFIG, SystemIntegrationsConfig } from './constants/system-integrations.constant';
 
 const SINGLETON_ID = 'default';
+const MAX_STEPUP_ATTEMPTS = 5;
 
 @Injectable()
 export class AppSettingsService {
   private cache: { data: any; timestamp: number } | null = null;
+  private rawCache: { data: any; timestamp: number } | null = null;
   private readonly CACHE_TTL_MS = 15000;
-  private readonly adminActionOtpStore = new Map<string, { otp: string; expiresAt: number }>();
+  private readonly adminActionOtpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
+
+  private sanitizePublicFlags(flags: Record<string, any> | null | undefined): Record<string, any> {
+    if (!flags || typeof flags !== 'object') return {};
+    const {
+      systemIntegrations: _si,
+      serviceProvidersConfig: _spc,
+      googleDriveWebhookUrl: _gdwu,
+      smtp: _smtp,
+      gatewaySecrets: _gs,
+      ...safeFlags
+    } = flags;
+    return safeFlags;
+  }
 
   /** Step-up 2FA: Request OTP for critical Admin API / System configuration changes */
   async requestAdminActionOtp(admin: AuthUser) {
-    if (!admin || !['ADMIN', 'SUPER_ADMIN'].includes(admin.role)) {
+    const activeRoles = (admin?.roles?.length ? admin.roles : [admin?.role]).filter(
+      (r) => r && !(admin?.deactivatedRoles || []).includes(r as any),
+    );
+    if (!admin || (!activeRoles.includes('ADMIN' as any) && !activeRoles.includes('SUPER_ADMIN' as any))) {
       throw new UnauthorizedException('Only authorized Admin or Super Admin can request action confirmation OTP.');
     }
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = randomInt(100000, 1000000).toString();
     this.adminActionOtpStore.set(admin.id, {
       otp: otpCode,
       expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes validity
+      attempts: 0,
     });
 
     const isDev = process.env.NODE_ENV !== 'production';
+    const channels: string[] = [];
+
+    // Deliver 6-digit Step-Up 2FA OTP via configured WhatsApp / Email channels using lazy ModuleRef (avoids circular module init)
+    try {
+      const dbAdmin = await this.prisma.user.findUnique({
+        where: { id: admin.id },
+        select: { mobile: true, email: true },
+      });
+
+      if (dbAdmin?.mobile && this.moduleRef) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { WhatsappBotService } = require('../whatsapp/whatsapp.service');
+          const waSvc = this.moduleRef.get(WhatsappBotService, { strict: false });
+          if (waSvc?.sendOtpMessage) {
+            const waRes = await waSvc.sendOtpMessage(dbAdmin.mobile, otpCode);
+            if (waRes?.success) channels.push('WhatsApp');
+          }
+        } catch {}
+      }
+
+      if (dbAdmin?.email && !dbAdmin.email.includes('placeholder') && this.moduleRef) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { EmailService } = require('../email/email.service');
+          const emailSvc = this.moduleRef.get(EmailService, { strict: false });
+          if (emailSvc?.sendEmailOtp) {
+            const sent = await emailSvc.sendEmailOtp(dbAdmin.email, otpCode);
+            if (sent) channels.push('Email');
+          }
+        } catch {}
+      }
+    } catch {}
 
     return {
       success: true,
-      message: 'Admin authorization code generated for critical change confirmation.',
+      deliveredVia: channels,
+      message:
+        channels.length > 0
+          ? `Admin Step-Up 2FA code sent via ${channels.join(' & ')}.`
+          : isDev
+          ? 'Local development mode: Admin Step-Up 2FA code generated.'
+          : 'Admin authorization code generated for critical change confirmation.',
       devOtp: isDev ? otpCode : undefined,
       expiresInSeconds: 300,
     };
   }
 
-  /** Validates step-up 2FA OTP before saving sensitive admin changes */
+  /** Strictly validates mandatory Step-Up 2FA OTP before saving critical admin changes */
   verifyAdminActionOtp(adminId: string, otp?: string) {
-    // If no OTP is passed, allow authenticated Super Admin / Admin to save settings seamlessly
-    if (!otp || !otp.trim()) {
-      return true;
-    }
-
-    // Allow universal test code '123456'
-    if (otp.trim() === '123456') {
-      return true;
+    if (!adminId) {
+      throw new UnauthorizedException('Admin authentication required for this action.');
     }
 
     const stored = this.adminActionOtpStore.get(adminId);
+    const provided = otp?.trim();
+
     if (!stored) {
-      return true;
+      throw new BadRequestException('Admin Step-Up 2FA verification required. Please request a fresh 6-digit authorization code.');
+    }
+
+    if (!provided) {
+      throw new BadRequestException('Admin 6-digit Step-Up 2FA authorization code is required to complete this change.');
     }
 
     if (Date.now() > stored.expiresAt) {
       this.adminActionOtpStore.delete(adminId);
-      throw new BadRequestException('Admin authorization code has expired. Please try again.');
+      throw new BadRequestException('Admin authorization code has expired. Please request a new code.');
     }
 
-    if (stored.otp !== otp.trim()) {
-      throw new BadRequestException('Invalid confirmation code. Please verify and try again.');
+    if (stored.attempts >= MAX_STEPUP_ATTEMPTS) {
+      this.adminActionOtpStore.delete(adminId);
+      throw new BadRequestException('Maximum authorization attempts exceeded. Please request a new 6-digit code.');
+    }
+
+    const expectedBuf = Buffer.from(stored.otp, 'utf8');
+    const providedBuf = Buffer.from(provided, 'utf8');
+    const isMatch = expectedBuf.length === providedBuf.length && timingSafeEqual(expectedBuf, providedBuf);
+
+    if (!isMatch) {
+      stored.attempts += 1;
+      if (stored.attempts >= MAX_STEPUP_ATTEMPTS) {
+        this.adminActionOtpStore.delete(adminId);
+        throw new BadRequestException('Too many invalid attempts. Authorization code invalidated; please request a fresh code.');
+      }
+      throw new BadRequestException(
+        `Invalid authorization code. ${MAX_STEPUP_ATTEMPTS - stored.attempts} attempt(s) remaining.`,
+      );
     }
 
     this.adminActionOtpStore.delete(adminId);
     return true;
   }
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly moduleRef?: ModuleRef,
+  ) {}
 
   clearCache() {
     this.cache = null;
+    this.rawCache = null;
+  }
+
+  private async getRawAppSettings() {
+    const now = Date.now();
+    if (this.rawCache && now - this.rawCache.timestamp < this.CACHE_TTL_MS) {
+      return this.rawCache.data;
+    }
+    const settings = await this.prisma.appSetting.upsert({
+      where: { id: SINGLETON_ID },
+      update: {},
+      create: {
+        id: SINGLETON_ID,
+        upiId: 'surindersinghmakhu-5@oksbi',
+        upiPayeeName: 'Surinder Singh',
+      },
+    });
+    this.rawCache = { data: settings, timestamp: now };
+    return settings;
   }
 
   async getSeo() {
-    const settings = await this.get();
+    const settings = await this.getRawAppSettings();
     const flags = ((settings as any).featureFlags as Record<string, any>) || {};
     const seo = flags.seoSettings || {};
     return {
@@ -113,15 +211,7 @@ export class AppSettingsService {
       return this.cache.data;
     }
 
-    const settings = await this.prisma.appSetting.upsert({
-      where: { id: SINGLETON_ID },
-      update: {},
-      create: {
-        id: SINGLETON_ID,
-        upiId: 'surindersinghmakhu-5@oksbi',
-        upiPayeeName: 'Surinder Singh',
-      },
-    });
+    const settings = await this.getRawAppSettings();
 
     let logoUrl = settings.logoUrl;
     if (!logoUrl) {
@@ -135,7 +225,8 @@ export class AppSettingsService {
     }
 
     const flags = ((settings as any).featureFlags as Record<string, any>) || {};
-    let faviconUrl = flags.faviconUrl;
+    const safeFlags = this.sanitizePublicFlags(flags);
+    let faviconUrl = safeFlags.faviconUrl;
     const storedInt = flags.systemIntegrations as Partial<SystemIntegrationsConfig> | undefined;
     if (!faviconUrl) {
       faviconUrl = storedInt?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.png';
@@ -156,10 +247,12 @@ export class AppSettingsService {
     const baseShippingCharge = storedInt?.product?.baseShippingCharge ?? (partnerFees as any)[activeLogistics] ?? 65;
     const freeDeliveryThreshold = storedInt?.product?.freeDeliveryThreshold ?? 499;
 
+    const { featureFlags: _rawFf, ...settingsWithoutRawFlags } = settings as Record<string, any>;
     const result = {
-      ...flags,
-      ...settings,
-      ...flags,
+      ...safeFlags,
+      ...settingsWithoutRawFlags,
+      featureFlags: safeFlags,
+      ...safeFlags,
       logoUrl,
       faviconUrl: faviconUrl || 'https://farmsking.in/favicon.ico',
       upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
@@ -585,7 +678,7 @@ export class AppSettingsService {
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsMap> {
-    const settings = await this.get();
+    const settings = await this.getRawAppSettings();
     const storedFlags = (settings as any).featureFlags as FeatureFlagsMap | null;
     if (!storedFlags) {
       return DEFAULT_FEATURE_FLAGS;
@@ -609,15 +702,21 @@ export class AppSettingsService {
 
   async updateFeatureFlags(admin: AuthUser, flags: FeatureFlagsMap) {
     this.clearCache();
+    const existing = await this.getRawAppSettings();
+    const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};
+    const mergedFlags = {
+      ...currentFlags,
+      ...flags,
+    };
     return this.prisma.appSetting.upsert({
       where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, featureFlags: flags as any, updatedById: admin.id },
-      update: { featureFlags: flags as any, updatedById: admin.id },
+      create: { id: SINGLETON_ID, featureFlags: mergedFlags as any, updatedById: admin.id },
+      update: { featureFlags: mergedFlags as any, updatedById: admin.id },
     });
   }
 
   async getIntegrations(): Promise<SystemIntegrationsConfig> {
-    const settings = await this.get();
+    const settings = await this.getRawAppSettings();
     const stored = (settings as any).featureFlags?.systemIntegrations as Partial<SystemIntegrationsConfig> | null;
     if (!stored) {
       return DEFAULT_INTEGRATIONS_CONFIG;
@@ -855,8 +954,15 @@ export class AppSettingsService {
     };
   }
 
-  async updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig> & { adminConfirmationOtp?: string }): Promise<SystemIntegrationsConfig> {
-    this.verifyAdminActionOtp(admin?.id, payload?.adminConfirmationOtp);
+  async updateIntegrations(
+    admin: AuthUser,
+    rawPayload: Partial<SystemIntegrationsConfig> & { adminConfirmationOtp?: string },
+    options?: { skipStepUp?: boolean },
+  ): Promise<SystemIntegrationsConfig> {
+    if (!options?.skipStepUp) {
+      this.verifyAdminActionOtp(admin?.id, rawPayload?.adminConfirmationOtp);
+    }
+    const { adminConfirmationOtp: _ignoredOtp, ...payload } = rawPayload || {};
     this.clearCache();
     const current = await this.getIntegrations();
     const merged: SystemIntegrationsConfig = {
@@ -1164,17 +1270,21 @@ export class AppSettingsService {
           LOCAL: 40,
         };
         const fee = (partnerFees as any)[partnerKey] ?? (partnerKey === 'DELHIVERY' ? 70 : partnerKey === 'BLUEDART' ? 90 : 65);
-        await this.updateIntegrations(admin, {
-          ...integrations,
-          logistics: {
-            ...integrations.logistics,
-            activeProvider: partnerKey as any,
+        await this.updateIntegrations(
+          admin,
+          {
+            ...integrations,
+            logistics: {
+              ...integrations.logistics,
+              activeProvider: partnerKey as any,
+            },
+            product: {
+              ...integrations.product,
+              baseShippingCharge: fee,
+            },
           },
-          product: {
-            ...integrations.product,
-            baseShippingCharge: fee,
-          },
-        });
+          { skipStepUp: true },
+        );
       } catch (err) {
         console.warn('Could not sync logistics provider to integrations:', err);
       }

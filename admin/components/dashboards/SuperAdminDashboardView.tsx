@@ -558,7 +558,7 @@ export const SuperAdminDashboardView: React.FC = () => {
 
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#eff6ff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#dbeafe', gap: 12 }}
-                  onPress={() => router.push('/(tabs)/super-users' as never)}
+                  onPress={() => router.push('/admin/(tabs)/super-users' as never)}
                   activeOpacity={0.8}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
@@ -783,7 +783,7 @@ export const SuperAdminDashboardView: React.FC = () => {
                 activeOpacity={0.8}
                 onPress={() => {
                   setShowAiTelemetryModal(false);
-                  router.push('/(tabs)/super-settings' as never);
+                  router.push('/admin/(tabs)/super-settings' as never);
                 }}
               >
                 <Ionicons name="key-outline" size={16} color="#334155" />

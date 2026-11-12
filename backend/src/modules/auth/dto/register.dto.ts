@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, IsEnum, Matches, MinLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, IsEnum, Matches, MinLength } from 'class-validator';
 import { SoilType, WaterType } from '@prisma/client';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
@@ -91,4 +91,8 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   firebaseIdToken?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

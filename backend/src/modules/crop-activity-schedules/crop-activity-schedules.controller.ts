@@ -28,7 +28,7 @@ export class CropActivitySchedulesController {
     return this.cropActivitySchedulesService.bulkCreate(user, dto);
   }
 
-  @Roles(Role.FARMER)
+  @Roles(Role.FARMER, Role.SUPERVISOR)
   @Get('today')
   findToday(@CurrentUser() user: AuthUser) {
     return this.cropActivitySchedulesService.findTodayForFarmer(user);
@@ -52,7 +52,7 @@ export class CropActivitySchedulesController {
     return this.cropActivitySchedulesService.findDelayedForAdvisor(user);
   }
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('crop/:cropCycleId')
   findAllForCropCycle(@CurrentUser() user: AuthUser, @Param('cropCycleId') cropCycleId: string) {
     return this.cropActivitySchedulesService.findAllForCropCycle(user, cropCycleId);

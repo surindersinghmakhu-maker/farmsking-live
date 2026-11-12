@@ -241,13 +241,17 @@ export class CropProblemsService {
           isReadByAdmin: true,
         },
       });
-      this.chatGateway.server.to(userRoom(problem.reportedById)).emit('admin_chat_message', adminMsg);
-      this.chatGateway.server.emit('admin_chat_message', adminMsg);
+      this.chatGateway.server
+        .to(userRoom(problem.reportedById))
+        .to('role:ADMIN_DESK')
+        .emit('admin_chat_message', adminMsg);
     } catch {}
 
-    // 4. Socket emit
-    this.chatGateway.server.to(userRoom(problem.reportedById)).emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
-    this.chatGateway.server.emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
+    // 4. Socket emit scoped to reporting farmer & Admin Desk
+    this.chatGateway.server
+      .to(userRoom(problem.reportedById))
+      .to('role:ADMIN_DESK')
+      .emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
 
     return updated;
   }

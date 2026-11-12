@@ -34,10 +34,10 @@ export declare class PartiesService {
         ownerId: string;
         address: string | null;
     } | {
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -166,10 +166,10 @@ export declare class PartiesService {
     recordExpenseCredit(partyId: string, expenseId: string, amount: number, reason: string): Promise<void>;
     private generateKingId;
     createUnifiedParty(user: AuthUser, dto: CreateUnifiedPartyDto): Promise<{
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -185,10 +185,10 @@ export declare class PartiesService {
         ownerFarmerId: string | null;
     }>;
     listUnifiedParties(user: AuthUser, role?: PartyRole): Promise<{
+        roles: import(".prisma/client").$Enums.PartyRole[];
         id: string;
         kingId: string;
         mobile: string | null;
-        roles: import(".prisma/client").$Enums.PartyRole[];
         name: string;
         village: string | null;
         district: string | null;
@@ -260,10 +260,10 @@ export declare class PartiesService {
     }>;
     getArhtiyaLedgerHisab(user: AuthUser, partyId: string): Promise<{
         party: {
+            roles: import(".prisma/client").$Enums.PartyRole[];
             id: string;
             kingId: string;
             mobile: string | null;
-            roles: import(".prisma/client").$Enums.PartyRole[];
             name: string;
             village: string | null;
             district: string | null;
@@ -325,7 +325,6 @@ export declare class PartiesService {
             kingId: string | null;
             village: string | null;
             district: string | null;
-            id?: undefined;
             state?: undefined;
         };
         buyerMobile: string;
@@ -336,19 +335,17 @@ export declare class PartiesService {
     } | {
         found: boolean;
         farmer: {
-            id: string;
             name: string;
             farmName: string;
-            mobile: string;
+            mobile: string | null;
             kingId: string | null;
-            village: string | null;
             district: string | null;
             state: string | null;
+            village?: undefined;
         };
         buyerParty: {
             name: string | undefined;
             mobile: string;
-            address: string | null | undefined;
             kingId: string | null;
             shopNumber: string | null;
             mandiName: string | null;

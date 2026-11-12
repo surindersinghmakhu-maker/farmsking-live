@@ -212,7 +212,7 @@ exports.PartiesController = PartiesController = __decorate([
     (0, swagger_1.ApiTags)('Parties & Khata'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.TRADER, client_1.Role.SUPERVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.TRADER, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('parties'),
     __metadata("design:paramtypes", [parties_service_1.PartiesService])
 ], PartiesController);

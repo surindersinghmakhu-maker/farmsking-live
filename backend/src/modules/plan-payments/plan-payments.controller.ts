@@ -26,7 +26,7 @@ export class PlanPaymentsController {
     return this.planPaymentsService.listMine(user);
   }
 
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get('pending')
   listPending() {
     return this.planPaymentsService.listPending();

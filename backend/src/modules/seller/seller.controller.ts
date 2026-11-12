@@ -34,21 +34,24 @@ export class SellerController {
   }
 
   /** Get Seller Dashboard Stats */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SELLER, Role.TRADER, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('dashboard/stats')
   getDashboardStats(@CurrentUser() user: AuthUser) {
     return this.sellerService.getDashboardStats(user);
   }
 
   /** Get Incoming Customer Sub-Orders for Current Seller Store */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SELLER, Role.TRADER, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('orders')
   getMyOrders(@CurrentUser() user: AuthUser) {
     return this.sellerService.getMyOrders(user);
   }
 
   /** Seller: Update Own Sub-Order Status (Accept / Pack) */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SELLER, Role.TRADER, Role.ADMIN, Role.SUPER_ADMIN)
   @Patch('orders/:subOrderId/status')
   updateMySubOrderStatus(
     @CurrentUser() user: AuthUser,
@@ -58,9 +61,9 @@ export class SellerController {
     return this.sellerService.updateMySubOrderStatus(user, subOrderId, status);
   }
 
-  /** Admin: List all Seller Payout transactions */
+  /** Admin/Accountant: List all Seller Payout transactions */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get('admin/payouts')
   listAllPayoutsForAdmin(@Query('status') status?: string) {
     return this.sellerService.listAllPayoutsForAdmin(status);
@@ -88,9 +91,9 @@ export class SellerController {
     return this.sellerService.settlePayoutByAdmin(payoutId, cashfreeUtrNo);
   }
 
-  /** Admin: List all stores */
+  /** Admin/Accountant: List all stores */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get('admin/stores')
   listStoresForAdmin(@Query('kycStatus') kycStatus?: SellerKycStatus) {
     return this.sellerService.listStoresForAdmin(kycStatus);
@@ -120,9 +123,9 @@ export class SellerController {
     return this.sellerService.updateSellerSettings(storeId, dto);
   }
 
-  /** CA/Admin: Generate GSTR-8 Report */
+  /** CA/Admin/Accountant: Generate GSTR-8 Report */
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get('admin/gstr8')
   generateGstr8Report(
     @Query('sellerStoreId') sellerStoreId: string,

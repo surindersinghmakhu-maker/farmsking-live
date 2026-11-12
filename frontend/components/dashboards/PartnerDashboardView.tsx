@@ -60,6 +60,13 @@ export const PartnerDashboardView: React.FC = () => {
   const activeReferrals = (referrals ?? []).filter((r) => r.commissionEarned > 0).length;
   const recentReferrals = (referrals ?? []).slice(0, 5);
 
+  const isAlsoSeller =
+    user?.role === 'SELLER' ||
+    (Array.isArray(user?.roles) &&
+      user.roles.includes('SELLER') &&
+      !(Array.isArray((user as any)?.deactivatedRoles) && (user as any).deactivatedRoles.includes('SELLER'))) ||
+    Boolean((user as any)?.sellerStore);
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -71,6 +78,23 @@ export const PartnerDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        {isAlsoSeller ? (
+          <TouchableOpacity
+            style={styles.sellerShortcutCard}
+            activeOpacity={0.85}
+            onPress={() => router.push('/seller-dashboard' as any)}
+          >
+            <View style={styles.sellerShortcutIcon}>
+              <Ionicons name="storefront" size={20} color="#10b981" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sellerShortcutTitle}>Open Seller Store & Orders</Text>
+              <Text style={styles.sellerShortcutSub}>Manage products, dispatch orders & bank payouts</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#10b981" />
+          </TouchableOpacity>
+        ) : null}
+
         {/* Earnings Card */}
         <LinearGradient colors={theme.heroGradient} style={[styles.earningsCard, premiumShadow(theme.primary, 'md')]}>
           <Ionicons name="wallet" size={104} color={theme.primary} style={styles.watermark} />
@@ -112,7 +136,7 @@ export const PartnerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Earnings & Payout Breakdown</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/wallet' as never)}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(partner)/(tabs)/wallet' as never)}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>View Wallet</Text>
             </TouchableOpacity>
           </View>
@@ -155,7 +179,7 @@ export const PartnerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Referrals</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/referrals' as never)}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(partner)/(tabs)/referrals' as never)}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -229,6 +253,27 @@ const styles = StyleSheet.create({
   referralItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
   userIconBg: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   refInfo: { flex: 1, marginLeft: 12 },
+  sellerShortcutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1.3,
+    borderColor: 'rgba(16, 185, 129, 0.45)',
+    ...premiumShadow('#10b981', 'sm'),
+  },
+  sellerShortcutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sellerShortcutTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
+  sellerShortcutSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
   refName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   refDate: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   refComm: { fontSize: 13.5, fontFamily: FONT.extraBold },

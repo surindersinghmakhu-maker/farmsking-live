@@ -65,7 +65,7 @@ export default function HomeScreen() {
     }
   };
 
-  if (currentRole === 'CUSTOMER') {
+  if (currentRole === 'CUSTOMER' || currentRole === 'TRADER') {
     return <Redirect href="/(user)/(tabs)/shop" />;
   }
 

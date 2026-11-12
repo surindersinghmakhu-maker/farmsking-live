@@ -178,7 +178,7 @@ export default function LoginScreen() {
           if (res?.isProfileIncomplete) {
             router.replace('/farmer-profile-setup');
           } else {
-            router.replace('/(tabs)' as any);
+            router.replace('/admin/(tabs)' as any);
           }
         } catch (err: any) {
           setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
@@ -260,7 +260,7 @@ export default function LoginScreen() {
         const credential = await confirmationResult.confirm(cleanCode);
         const idToken = await credential.user.getIdToken();
         await firebaseLogin(idToken);
-        router.replace('/(tabs)' as any);
+        router.replace('/admin/(tabs)' as any);
       } else {
         throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
       }
@@ -279,7 +279,7 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     try {
       await login({ mobile: mobile.trim(), password: password.trim() });
-      router.replace('/(tabs)' as any);
+      router.replace('/admin/(tabs)' as any);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet ? 'Network error! Could not connect. Please check your internet.' : (err?.response?.data?.message ?? err?.message ?? 'Login failed.'));

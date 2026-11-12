@@ -2134,6 +2134,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.medium,
   },
+  providerSelectContainer: {
+    gap: 8,
+    marginTop: 6,
+  },
+  sectionHeading: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+  },
+  providerOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  providerOptionPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
   fieldsContainer: {
     gap: 8,
     marginTop: 4,

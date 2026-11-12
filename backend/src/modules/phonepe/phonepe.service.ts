@@ -145,6 +145,10 @@ export class PhonePeService {
     if (!username || !password || !authorizationHeader) return false;
 
     const expected = createHash('sha256').update(`${username}:${password}`).digest('hex');
-    return authorizationHeader === expected;
+    const a = Buffer.from(authorizationHeader.trim(), 'utf8');
+    const b = Buffer.from(expected, 'utf8');
+    if (a.length !== b.length) return false;
+    const { timingSafeEqual } = require('crypto') as typeof import('crypto');
+    return timingSafeEqual(a, b);
   }
 }

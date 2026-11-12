@@ -1,4 +1,5 @@
-import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Headers, Post, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
@@ -41,6 +42,7 @@ export class RazorpayController {
   /**
    * Verify Client Payment Signature
    */
+  @UseGuards(JwtAuthGuard)
   @Post('verify')
   verifyPayment(@Body() dto: VerifyRazorpayPaymentDto) {
     return this.razorpayService.verifyPayment(dto);
@@ -50,8 +52,17 @@ export class RazorpayController {
    * Razorpay Webhook Handler
    */
   @Post('webhook')
-  handleWebhook(@Body() body: any, @Headers('x-razorpay-signature') signature?: string) {
-    return this.razorpayService.handleWebhook(body, signature);
+  handleWebhook(
+    @Req() req: Request,
+    @Body() body: any,
+    @Headers('x-razorpay-signature') signature?: string,
+  ) {
+    const rawBody = (req as any).rawBody
+      ? Buffer.isBuffer((req as any).rawBody)
+        ? (req as any).rawBody.toString('utf8')
+        : String((req as any).rawBody)
+      : JSON.stringify(body);
+    return this.razorpayService.handleWebhook(rawBody, signature);
   }
 }
 

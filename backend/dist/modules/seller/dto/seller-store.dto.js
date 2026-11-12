@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateSellerSettingsDto = exports.VerifySellerKycDto = exports.UpdateSellerKycDto = exports.CreateSellerStoreDto = void 0;
 const class_validator_1 = require("class-validator");
 const client_1 = require("@prisma/client");
+const tax_compliance_util_1 = require("../../../common/utils/tax-compliance.util");
 class CreateSellerStoreDto {
 }
 exports.CreateSellerStoreDto = CreateSellerStoreDto;
@@ -37,14 +38,34 @@ __decorate([
 ], CreateSellerStoreDto.prototype, "legalName", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.GSTIN_REGEX, { message: 'GSTIN must be a valid 15-character GSTIN.' }),
     __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "gstin", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateSellerStoreDto.prototype, "isCompositionDealer", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "gstEnrolmentId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.PAN_REGEX, { message: 'PAN must be a valid 10-character PAN (e.g. ABCDE1234F).' }),
+    __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "panNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.AADHAAR_LAST4_REGEX, { message: 'Aadhaar last 4 digits must be numeric.' }),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "aadhaarLast4", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "upiId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -52,7 +73,7 @@ __decorate([
 ], CreateSellerStoreDto.prototype, "bankAccountNo", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.IFSC_REGEX, { message: 'Bank IFSC must be a valid 11-character IFSC code.' }),
     __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "bankIfsc", void 0);
 __decorate([
@@ -87,7 +108,7 @@ __decorate([
 ], CreateSellerStoreDto.prototype, "wantsToSellFood", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.FSSAI_REGEX, { message: 'FSSAI License must be 14 digits.' }),
     __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "fssaiNo", void 0);
 __decorate([
@@ -110,6 +131,56 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSellerStoreDto.prototype, "agriLicenseExpiryDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "seedLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "seedLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "seedLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "pesticideLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "pesticideLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "pesticideLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "fertilizerLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "fertilizerLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSellerStoreDto.prototype, "fertilizerLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateSellerStoreDto.prototype, "termsAccepted", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -195,14 +266,34 @@ __decorate([
 ], UpdateSellerKycDto.prototype, "legalName", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.GSTIN_REGEX, { message: 'GSTIN must be a valid 15-character GSTIN.' }),
     __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "gstin", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateSellerKycDto.prototype, "isCompositionDealer", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "gstEnrolmentId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.PAN_REGEX, { message: 'PAN must be a valid 10-character PAN (e.g. ABCDE1234F).' }),
+    __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "panNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.AADHAAR_LAST4_REGEX, { message: 'Aadhaar last 4 digits must be numeric.' }),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "aadhaarLast4", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "upiId", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -210,7 +301,7 @@ __decorate([
 ], UpdateSellerKycDto.prototype, "bankAccountNo", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.IFSC_REGEX, { message: 'Bank IFSC must be a valid 11-character IFSC code.' }),
     __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "bankIfsc", void 0);
 __decorate([
@@ -245,7 +336,7 @@ __decorate([
 ], UpdateSellerKycDto.prototype, "wantsToSellFood", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(tax_compliance_util_1.FSSAI_REGEX, { message: 'FSSAI License must be 14 digits.' }),
     __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "fssaiNo", void 0);
 __decorate([
@@ -268,6 +359,56 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateSellerKycDto.prototype, "agriLicenseExpiryDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "seedLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "seedLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "seedLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "pesticideLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "pesticideLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "pesticideLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "fertilizerLicenseNo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "fertilizerLicenseExpiry", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateSellerKycDto.prototype, "fertilizerLicenseDocUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateSellerKycDto.prototype, "termsAccepted", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),

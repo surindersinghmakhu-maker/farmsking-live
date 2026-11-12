@@ -1,5 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  ECOMMERCE_TCS_RATE_PERCENT,
+  COMMISSION_GST_RATE_PERCENT,
+  detectInterStateSupply,
+  isRealStatutoryId,
+  isValidGstin,
+} from '../../common/utils/tax-compliance.util';
 
 export enum InvoiceTypeEnum {
   CUSTOMER_INVOICE = 'CUSTOMER_INVOICE',
@@ -125,7 +132,7 @@ export class BillingService {
       isInterState = false,
     } = params;
 
-    const isSellerGstRegistered = Boolean(sellerGstin && sellerGstin.trim().length >= 15);
+    const isSellerGstRegistered = isValidGstin(sellerGstin);
     const gstRate = isSellerGstRegistered ? Number(productGstPercentage || 0) : 0;
 
     let netTaxableAmount = grossPrice;
@@ -154,18 +161,18 @@ export class BillingService {
       }
     }
 
-    // Section 52 TCS: 1% on net taxable value for GST registered sellers only
-    const tcsRate = isSellerGstRegistered ? 1.0 : 0.0;
+    // Section 52 CGST TCS: 0.5% strictly on net taxable value for GST-registered sellers
+    const tcsRate = isSellerGstRegistered ? ECOMMERCE_TCS_RATE_PERCENT : 0.0;
     const tcsAmount = isSellerGstRegistered
       ? Number(((netTaxableAmount * tcsRate) / 100).toFixed(2))
       : 0.0;
 
     // FarmsKing Commission: Charged on Net Taxable Base Price (excluding Product GST)
-    const commRate = Number(sellerCommissionRate || 5);
+    const commRate = Number(sellerCommissionRate || 8);
     const commissionAmount = Number(((netTaxableAmount * commRate) / 100).toFixed(2));
 
-    // GST on Commission: 18% on platform commission
-    const commissionGstRate = 18.0;
+    // GST on Commission: 18% on platform commission (SAC 998599)
+    const commissionGstRate = COMMISSION_GST_RATE_PERCENT;
     const commissionGstAmount = Number(((commissionAmount * commissionGstRate) / 100).toFixed(2));
 
     const totalDeductions = Number(
@@ -242,10 +249,31 @@ export class BillingService {
       sellerItemsMap.get(storeId)?.push(item);
     }
 
+    const orderGrossBeforeDiscount = order.items.reduce(
+      (s, it) => s + Number(it.subtotal || Number(it.price) * it.quantity),
+      0,
+    );
+    const discountRatio =
+      orderGrossBeforeDiscount > 0 && Number(order.discountAmount || 0) > 0
+        ? Math.max(0, 1 - Number(order.discountAmount) / orderGrossBeforeDiscount)
+        : 1;
+
+    const appSetting = await this.prisma.appSetting.findUnique({ where: { id: 'default' } }).catch(() => null);
+    const pmGstin = (appSetting?.featureFlags as any)?.systemIntegrations?.projectMasterData?.taxGst?.gstNumber;
+    const envCompanyGstin = process.env.COMPANY_GSTIN || pmGstin;
+    const companyGstinLabel = isRealStatutoryId(envCompanyGstin)
+      ? envCompanyGstin
+      : 'GST Registration Pending';
+
     for (const [storeId, items] of sellerItemsMap.entries()) {
       const firstItem = items[0];
       const store = firstItem?.sellerStore;
       const sellerGstin = store?.gstin || null;
+      const isInterState = detectInterStateSupply(
+        store?.pickupState || 'Punjab',
+        order.deliveryAddress || order.customer?.state || 'Punjab',
+      );
+      const commIsInterState = detectInterStateSupply('Punjab', store?.pickupState || 'Punjab');
 
       let subOrderTotal = 0;
       let totalNetTaxable = 0;
@@ -258,7 +286,8 @@ export class BillingService {
       let totalCommissionGst = 0;
 
       for (const item of items) {
-        const itemGross = Number(item.subtotal || Number(item.price) * item.quantity);
+        const rawGross = Number(item.subtotal || Number(item.price) * item.quantity);
+        const itemGross = Number((rawGross * discountRatio).toFixed(2));
         const gstPct = item.product?.gstPercentage ? Number(item.product.gstPercentage) : 0;
         const commPct = Number(
           item.product?.commissionOverridePercentage ?? store?.commissionRate ?? 8.0,
@@ -270,6 +299,7 @@ export class BillingService {
           productGstPercentage: gstPct,
           sellerGstin: sellerGstin,
           sellerCommissionRate: commPct,
+          isInterState,
         });
 
         subOrderTotal += calc.grossAmount;
@@ -297,18 +327,19 @@ export class BillingService {
           financialYear: custInv.financialYear,
           invoiceType: 'CUSTOMER_INVOICE',
           customerName: order.customer.name,
-          customerGstin: null,
-          sellerName: store?.storeName || 'FarmsKing Store',
+          customerGstin: (order.customer as any).gstin || null,
+          sellerName: store?.legalName || store?.storeName || 'FarmsKing Store',
           sellerGstin: sellerGstin,
-          grossAmount: subOrderTotal,
-          netTaxableAmount: totalNetTaxable,
-          gstAmount: totalGst,
-          cgstAmount: totalCgst,
-          sgstAmount: totalSgst,
-          igstAmount: totalIgst,
-          tcsAmount: totalTcs,
-          commissionAmount: totalCommission,
-          commissionGstAmount: totalCommissionGst,
+          placeOfSupply: order.customer?.state || store?.pickupState || 'Punjab',
+          grossAmount: Number(subOrderTotal.toFixed(2)),
+          netTaxableAmount: Number(totalNetTaxable.toFixed(2)),
+          gstAmount: Number(totalGst.toFixed(2)),
+          cgstAmount: Number(totalCgst.toFixed(2)),
+          sgstAmount: Number(totalSgst.toFixed(2)),
+          igstAmount: Number(totalIgst.toFixed(2)),
+          tcsAmount: Number(totalTcs.toFixed(2)),
+          commissionAmount: Number(totalCommission.toFixed(2)),
+          commissionGstAmount: Number(totalCommissionGst.toFixed(2)),
         },
       });
 
@@ -317,6 +348,10 @@ export class BillingService {
         InvoiceTypeEnum.COMMISSION_INVOICE,
       );
 
+      const commCgst = commIsInterState ? 0 : Number((totalCommissionGst / 2).toFixed(2));
+      const commSgst = commIsInterState ? 0 : Number((totalCommissionGst - commCgst).toFixed(2));
+      const commIgst = commIsInterState ? Number(totalCommissionGst.toFixed(2)) : 0;
+
       const commissionInvoice = await this.prisma.orderInvoice.create({
         data: {
           orderId: order.id,
@@ -324,17 +359,20 @@ export class BillingService {
           invoiceNumber: commInv.invoiceNumber,
           financialYear: commInv.financialYear,
           invoiceType: 'COMMISSION_INVOICE',
-          customerName: store?.storeName || 'Seller',
+          customerName: store?.legalName || store?.storeName || 'Seller',
           customerGstin: sellerGstin,
           sellerName: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
-          sellerGstin: process.env.COMPANY_GSTIN || 'Registered E-Commerce Operator (Sec 52 CGST)',
-          grossAmount: totalCommission + totalCommissionGst,
-          netTaxableAmount: totalCommission,
-          gstAmount: totalCommissionGst,
-          cgstAmount: Number((totalCommissionGst / 2).toFixed(2)),
-          sgstAmount: Number((totalCommissionGst / 2).toFixed(2)),
-          commissionAmount: totalCommission,
-          commissionGstAmount: totalCommissionGst,
+          sellerGstin: companyGstinLabel,
+          sacCode: '998599',
+          placeOfSupply: store?.pickupState || 'Punjab',
+          grossAmount: Number((totalCommission + totalCommissionGst).toFixed(2)),
+          netTaxableAmount: Number(totalCommission.toFixed(2)),
+          gstAmount: Number(totalCommissionGst.toFixed(2)),
+          cgstAmount: commCgst,
+          sgstAmount: commSgst,
+          igstAmount: commIgst,
+          commissionAmount: Number(totalCommission.toFixed(2)),
+          commissionGstAmount: Number(totalCommissionGst.toFixed(2)),
         },
       });
 

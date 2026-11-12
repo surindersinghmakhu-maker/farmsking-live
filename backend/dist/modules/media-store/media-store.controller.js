@@ -46,7 +46,6 @@ const ALLOWED_MIME_TYPES = [
     'audio/aac',
     'audio/m4a',
     'audio/x-m4a',
-    'application/octet-stream',
 ];
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const VALID_EXTENSIONS = [
@@ -110,21 +109,21 @@ let MediaStoreController = class MediaStoreController {
         }
         return this.mediaStoreService.uploadBase64(user, trimmed, body.cropId, body.mediaType, body.filename);
     }
-    async getCropMedia(cropId, scope) {
-        return this.mediaStoreService.getMediaForCrop(cropId, scope === 'active' ? 'active' : 'all');
+    async getCropMedia(user, cropId, scope) {
+        return this.mediaStoreService.getMediaForCrop(user, cropId, scope === 'active' ? 'active' : 'all');
     }
-    async getCropRemark(cropId) {
-        return this.mediaStoreService.getCropRemark(cropId);
+    async getCropRemark(user, cropId) {
+        return this.mediaStoreService.getCropRemark(user, cropId);
     }
     async saveCropRemark(user, cropId, body) {
         return this.mediaStoreService.saveCropRemark(user, cropId, body.remarksText || '');
     }
-    async listAll(cropId, mediaType, provider, limit) {
+    async listAll(user, cropId, mediaType, provider, limit) {
         const limitNum = limit ? parseInt(limit, 10) : 50;
-        return this.mediaStoreService.listAll(cropId, mediaType, provider, limitNum);
+        return this.mediaStoreService.listAll(user, cropId, mediaType, provider, limitNum);
     }
-    async archiveCropMedia(cropId, retentionDays) {
-        return this.mediaStoreService.archiveCropMedia(cropId, retentionDays || 30);
+    async archiveCropMedia(user, cropId, retentionDays) {
+        return this.mediaStoreService.archiveCropMedia(user, cropId, retentionDays || 30);
     }
     async deleteMedia(user, id) {
         return this.mediaStoreService.deleteMedia(id, user);
@@ -145,10 +144,19 @@ __decorate([
         limits: { fileSize: MAX_FILE_SIZE },
         fileFilter: (_req, file, callback) => {
             const baseMime = (file.mimetype || '').split(';')[0].trim().toLowerCase();
-            if (!ALLOWED_MIME_TYPES.includes(baseMime) &&
-                !baseMime.startsWith('image/') &&
-                !baseMime.startsWith('video/') &&
-                !baseMime.startsWith('audio/')) {
+            const rawExt = (0, path_1.extname)(file.originalname || '').toLowerCase();
+            if (baseMime.includes('svg') ||
+                baseMime.includes('html') ||
+                baseMime.includes('javascript') ||
+                rawExt === '.svg' ||
+                rawExt === '.html' ||
+                rawExt === '.htm' ||
+                rawExt === '.js') {
+                callback(new common_1.BadRequestException('SVG, HTML, and script files are disabled for security.'), false);
+                return;
+            }
+            const isSafeOctet = baseMime === 'application/octet-stream' && VALID_EXTENSIONS.includes(rawExt);
+            if (!isSafeOctet && !ALLOWED_MIME_TYPES.includes(baseMime)) {
                 callback(new common_1.BadRequestException('Only image, video, and audio files are supported.'), false);
                 return;
             }
@@ -173,17 +181,19 @@ __decorate([
 ], MediaStoreController.prototype, "uploadBase64", null);
 __decorate([
     (0, common_1.Get)('crop/:cropId'),
-    __param(0, (0, common_1.Param)('cropId')),
-    __param(1, (0, common_1.Query)('scope')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('cropId')),
+    __param(2, (0, common_1.Query)('scope')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], MediaStoreController.prototype, "getCropMedia", null);
 __decorate([
     (0, common_1.Get)('crop/:cropId/remark'),
-    __param(0, (0, common_1.Param)('cropId')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('cropId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], MediaStoreController.prototype, "getCropRemark", null);
 __decorate([
@@ -197,20 +207,22 @@ __decorate([
 ], MediaStoreController.prototype, "saveCropRemark", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)('cropId')),
-    __param(1, (0, common_1.Query)('mediaType')),
-    __param(2, (0, common_1.Query)('provider')),
-    __param(3, (0, common_1.Query)('limit')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)('cropId')),
+    __param(2, (0, common_1.Query)('mediaType')),
+    __param(3, (0, common_1.Query)('provider')),
+    __param(4, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:paramtypes", [Object, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], MediaStoreController.prototype, "listAll", null);
 __decorate([
     (0, common_1.Post)('archive/:cropId'),
-    __param(0, (0, common_1.Param)('cropId')),
-    __param(1, (0, common_1.Body)('retentionDays')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('cropId')),
+    __param(2, (0, common_1.Body)('retentionDays')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Number]),
+    __metadata("design:paramtypes", [Object, String, Number]),
     __metadata("design:returntype", Promise)
 ], MediaStoreController.prototype, "archiveCropMedia", null);
 __decorate([

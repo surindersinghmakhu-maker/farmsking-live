@@ -8,11 +8,11 @@ export declare class UploadsController {
         storageKey: string;
         id: string;
         createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
     uploadBase64(user: AuthUser, body: {
         dataUri: string;
@@ -23,10 +23,10 @@ export declare class UploadsController {
         storageKey: string;
         id: string;
         createdAt: Date;
-        uploadedById: string;
         fileUrl: string;
         mimeType: string;
         originalName: string;
         sizeBytes: number;
+        uploadedById: string;
     }>;
 }

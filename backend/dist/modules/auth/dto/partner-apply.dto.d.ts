@@ -1,0 +1,37 @@
+import { AdvisorType, SellerType } from '@prisma/client';
+export declare class PartnerApplyDto {
+    mobile: string;
+    requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+    advisorType?: AdvisorType;
+    name: string;
+    email?: string;
+    password?: string;
+    pincode?: string;
+    postOffice?: string;
+    village?: string;
+    district?: string;
+    state?: string;
+    qualification?: string;
+    specialization?: string;
+    yearsExperience?: number;
+    bio?: string;
+    panNumber: string;
+    panDocUrl: string;
+    aadhaarLast4: string;
+    aadhaarDocUrl: string;
+    aadhaarBackUrl?: string;
+    gstin?: string;
+    gstDocUrl?: string;
+    bankAccountHolderName: string;
+    bankAccountNumber: string;
+    bankIfsc: string;
+    upiId?: string;
+    chequeDocUrl: string;
+    photoUrl: string;
+    storeName?: string;
+    legalName?: string;
+    sellerType?: SellerType;
+    pickupAddress?: string;
+    termsAccepted: boolean;
+    firebaseIdToken?: string;
+}

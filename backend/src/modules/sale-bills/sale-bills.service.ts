@@ -4,6 +4,7 @@ import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 import { ChatGateway } from '../chat/chat.gateway';
 import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
+import { assertSupervisorPermission } from '../../common/utils/supervisor-permission.util';
 
 @Injectable()
 export class SaleBillsService {
@@ -55,6 +56,7 @@ export class SaleBillsService {
   }
 
   async create(user: AuthUser, dto: CreateSaleBillDto) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'entry');
     const farmerId = getEffectiveFarmerId(user);
     if (dto.billNo) {
       const existing = await this.prisma.saleBill.findFirst({
@@ -109,6 +111,7 @@ export class SaleBillsService {
   }
 
   async update(user: AuthUser, id: string, dto: CreateSaleBillDto) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'entry');
     const existing = await this.findOneOrThrow(user, id);
     const nowIso = new Date().toISOString();
 
@@ -152,6 +155,7 @@ export class SaleBillsService {
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'view');
     const farmerId = getEffectiveFarmerId(user);
     let bill: any = null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -181,6 +185,7 @@ export class SaleBillsService {
   }
 
   async listMine(user: AuthUser) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'view');
     const farmerId = getEffectiveFarmerId(user);
     return this.prisma.saleBill.findMany({
       where: { farmerId },
@@ -189,12 +194,14 @@ export class SaleBillsService {
   }
 
   async countMine(user: AuthUser) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'view');
     const farmerId = getEffectiveFarmerId(user);
     const count = await this.prisma.saleBill.count({ where: { farmerId } });
     return { count };
   }
 
   async remove(user: AuthUser, id: string) {
+    await assertSupervisorPermission(this.prisma, user, 'sales', 'entry');
     const bill = await this.findOneOrThrow(user, id);
     // Delete all linked party ledger entries first to avoid orphaned records
     await this.prisma.partyLedgerEntry.deleteMany({

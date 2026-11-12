@@ -26,7 +26,7 @@ function toUserRole(role: Role, advisorType: 'FARM' | 'GARDEN' | null | undefine
 }
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loginPortal } = useAuth();
 
   const primaryRole = user ? toUserRole(user.role, user.advisorType) : 'CUSTOMER';
 
@@ -66,48 +66,80 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   const isAdvisorOrDoctor = (r: UserRole) => r === 'ADVISOR' || r === 'FARM_ADVISOR' || r === 'GARDEN_ADVISOR';
   const hasAdvisorRole = assignedRoles.some(isAdvisorOrDoctor);
+  const hasAgentRole = assignedRoles.includes('AGENT');
   const hasFarmerRole = assignedRoles.includes('FARMER');
+  const hasGardenerRole = assignedRoles.includes('GARDENER');
+  const hasTraderRole = assignedRoles.includes('TRADER' as UserRole);
 
   const advisorRoleToUse = assignedRoles.find(isAdvisorOrDoctor) || (isAdvisorOrDoctor(primaryRole) ? primaryRole : 'FARM_ADVISOR');
 
-  const defaultInitialRole = isStaffUser
-    ? (user?.role as UserRole)
-    : (user?.role === 'LABOUR'
-      ? 'LABOUR'
-      : (hasAdvisorRole
-        ? advisorRoleToUse
-        : (hasFarmerRole
-          ? 'FARMER'
-          : primaryRole)));
+  const resolvePortalDefaultRole = (): UserRole => {
+    if (!user?.id) return primaryRole;
+    if (isStaffUser) return user.role as UserRole;
+    if (assignedRoles.includes('SUPERVISOR')) return 'SUPERVISOR';
+    if (assignedRoles.includes('LABOUR') || user.role === 'LABOUR') return 'LABOUR';
+
+    if (loginPortal === 'CLIENT') {
+      if (hasFarmerRole) return 'FARMER';
+      if (hasGardenerRole) return 'GARDENER';
+      if (hasTraderRole) return 'TRADER' as UserRole;
+      return 'CUSTOMER';
+    }
+
+    if (loginPortal === 'PARTNER') {
+      if (hasAdvisorRole) return advisorRoleToUse;
+      if (hasAgentRole) return 'AGENT';
+      if (assignedRoles.includes('SELLER')) return 'SELLER';
+    }
+
+    // Fallback when no explicit loginPortal is stored yet
+    if (hasAdvisorRole) return advisorRoleToUse;
+    if (hasFarmerRole) return 'FARMER';
+    if (hasGardenerRole) return 'GARDENER';
+    if (hasTraderRole) return 'TRADER' as UserRole;
+    if (hasAgentRole) return 'AGENT';
+    return primaryRole;
+  };
+
+  const defaultInitialRole = resolvePortalDefaultRole();
 
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
   useEffect(() => {
-    if (!user?.id) {
-      setRoleState(primaryRole);
-      return;
-    }
+    let active = true;
+    const syncRole = async () => {
+      if (!user?.id) {
+        if (active) setRoleState(primaryRole);
+        return;
+      }
 
-    if (isStaffUser) {
-      setRoleState(user.role as UserRole);
-      return;
-    }
+      const savedRole = (await AppStorage.getItemAsync(`${LAST_DASHBOARD_KEY_PREFIX}${user.id}`).catch(() => null)) as UserRole | null;
+      if (!active) return;
 
-    if (user.role === 'LABOUR') {
-      setRoleState('LABOUR');
-      return;
-    }
+      const portalAllowed: UserRole[] | null =
+        loginPortal === 'CLIENT'
+          ? ['FARMER', 'GARDENER', 'TRADER', 'SUPERVISOR', 'LABOUR', 'CUSTOMER']
+          : loginPortal === 'PARTNER'
+            ? ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'SELLER']
+            : null;
 
-    // Priority 1: If Doctor or Advisor role is assigned -> Default to Doctor/Advisor tab
-    const advisorRole = assignedRoles.find(isAdvisorOrDoctor);
-    if (advisorRole) {
-      setRoleState(advisorRole);
-      return;
-    }
+      setRoleState((prev) => {
+        if (prev && assignedRoles.includes(prev) && (!portalAllowed || portalAllowed.includes(prev))) {
+          return prev;
+        }
+        if (savedRole && assignedRoles.includes(savedRole) && (!portalAllowed || portalAllowed.includes(savedRole))) {
+          return savedRole;
+        }
+        return resolvePortalDefaultRole();
+      });
+    };
 
-    // Priority 2: Use user's assigned primary role (GARDENER or FARMER or CUSTOMER)
-    setRoleState(primaryRole);
-  }, [user?.id, user?.role, primaryRole, assignedRoles, isStaffUser]);
+    syncRole();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.role, loginPortal, primaryRole, assignedRoles, isStaffUser]);
 
   const setRole = (next: UserRole) => {
     if (assignedRoles.includes(next)) {

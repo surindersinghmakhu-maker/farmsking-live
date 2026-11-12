@@ -1,5 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
+import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { CashfreeService } from './cashfree.service';
@@ -9,15 +13,17 @@ import { CreateCashfreeVendorDto, CreateSplitOrderDto } from './dto/cashfree.dto
 export class CashfreeController {
   constructor(private readonly cashfreeService: CashfreeService) {}
 
-  /** Onboard a Seller Store to Cashfree Marketplace */
-  @UseGuards(JwtAuthGuard)
+  /** Admin/Super Admin: Onboard a Verified Seller Store to Cashfree Marketplace */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('vendors')
   createVendor(@Body() dto: CreateCashfreeVendorDto) {
     return this.cashfreeService.createVendorOnCashfree(dto);
   }
 
   /** Create a Cashfree Split Payment Order */
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('orders/split')
   createSplitOrder(@Body() dto: CreateSplitOrderDto) {
     return this.cashfreeService.createSplitOrder(dto);
@@ -59,15 +65,25 @@ export class CashfreeController {
   }
 
   /** Verify Cashfree Payment Status */
+  @UseGuards(JwtAuthGuard)
   @Get('orders/:orderId/verify')
-  verifyPayment(@Param('orderId') orderId: string) {
-    return this.cashfreeService.verifyPayment(orderId);
+  verifyPayment(@CurrentUser() user: AuthUser, @Param('orderId') orderId: string) {
+    return this.cashfreeService.verifyPayment(orderId, user);
   }
 
   /** Cashfree Webhook Callback Endpoint */
   @Post('webhook')
-  handleWebhook(@Body() body: any) {
-    return this.cashfreeService.handleWebhook(body);
+  handleWebhook(
+    @Req() req: Request,
+    @Body() body: any,
+    @Headers('x-webhook-signature') signature?: string,
+    @Headers('x-webhook-timestamp') timestamp?: string,
+  ) {
+    const rawBody = (req as any).rawBody
+      ? Buffer.isBuffer((req as any).rawBody)
+        ? (req as any).rawBody.toString('utf8')
+        : String((req as any).rawBody)
+      : undefined;
+    return this.cashfreeService.handleWebhook(body, signature, timestamp, rawBody);
   }
 }
-

@@ -169,8 +169,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.listAllCoupons();
   }
 
-  /** Super Admin: Comprehensive financial accounting summary of all plan coupon direct income & wallet debits */
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  /** Super Admin/Accountant: Comprehensive financial accounting summary of all plan coupon direct income & wallet debits */
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.ACCOUNTANT)
   @Get('financial-summary')
   getCouponFinancialSummary() {
     return this.farmerPlansService.getCouponFinancialSummary();

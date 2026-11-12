@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
+import { AccountantCaReportView } from '@/components/compliance/AccountantCaReportView';
+import { AdvocateComplianceDesk } from '@/components/compliance/AdvocateComplianceDesk';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAllWithdrawals, useApproveWithdrawal, useRejectWithdrawal } from '@/src/hooks/useWithdrawals';
@@ -33,13 +35,15 @@ const STATUS_META: Record<WithdrawalStatus, { color: string; bg: string; label: 
   REJECTED: { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' },
 };
 
-type SectionKey = 'REQUESTS' | 'WALLETS' | 'PARTNERS' | 'SEARCH';
+type SectionKey = 'REQUESTS' | 'WALLETS' | 'PARTNERS' | 'CA_ACCOUNTS' | 'ADVOCATE_LEGAL' | 'SEARCH';
 type PartnerSubTab = 'VENDORS' | 'ADVISORS' | 'STAFF' | 'MEMBERSHIPS';
 
 const SECTIONS: { value: SectionKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'REQUESTS', label: 'Action Required', icon: 'time-outline' },
   { value: 'WALLETS', label: 'App Wallet', icon: 'wallet-outline' },
   { value: 'PARTNERS', label: 'Partner Ledgers', icon: 'briefcase-outline' },
+  { value: 'CA_ACCOUNTS', label: 'CA Accounts', icon: 'calculator-outline' },
+  { value: 'ADVOCATE_LEGAL', label: 'Advocate Legal', icon: 'shield-checkmark-outline' },
   { value: 'SEARCH', label: 'Find Ledger', icon: 'search-outline' },
 ];
 
@@ -111,7 +115,7 @@ export default function SuperAccountsScreen() {
   const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTab>('VENDORS');
 
   useEffect(() => {
-    if (params.section && (['REQUESTS', 'WALLETS', 'PARTNERS', 'SEARCH'] as SectionKey[]).includes(params.section)) {
+    if (params.section && (['REQUESTS', 'WALLETS', 'PARTNERS', 'CA_ACCOUNTS', 'ADVOCATE_LEGAL', 'SEARCH'] as SectionKey[]).includes(params.section)) {
       setSection(params.section);
     }
     if (params.sub && (['VENDORS', 'ADVISORS', 'STAFF', 'MEMBERSHIPS'] as PartnerSubTab[]).includes(params.sub)) {
@@ -123,7 +127,18 @@ export default function SuperAccountsScreen() {
   const sectionSlideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const idx = section === 'REQUESTS' ? 0 : section === 'WALLETS' ? 1 : section === 'PARTNERS' ? 2 : 3;
+    const idx =
+      section === 'REQUESTS'
+        ? 0
+        : section === 'WALLETS'
+          ? 1
+          : section === 'PARTNERS'
+            ? 2
+            : section === 'CA_ACCOUNTS'
+              ? 3
+              : section === 'ADVOCATE_LEGAL'
+                ? 4
+                : 5;
     Animated.spring(sectionSlideAnim, {
       toValue: idx,
       friction: 9,
@@ -204,8 +219,8 @@ export default function SuperAccountsScreen() {
               isLight && styles.slidingSectionPillLight,
               {
                 left: sectionSlideAnim.interpolate({
-                  inputRange: [0, 1, 2, 3],
-                  outputRange: ['0.8%', '25.6%', '50.4%', '75.2%'],
+                  inputRange: [0, 1, 2, 3, 4, 5],
+                  outputRange: ['0.5%', '17.1%', '33.7%', '50.3%', '66.9%', '83.5%'],
                 }),
               },
             ]}
@@ -329,7 +344,7 @@ export default function SuperAccountsScreen() {
                     </View>
                     <View>
                       <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>Seller Payments & Settlements 💰</Text>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#15803d' : '#6ee7b7' }}>Merchant store sales, 1% GST TCS & bank payouts in Market hub</Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isLight ? '#15803d' : '#6ee7b7' }}>Merchant store sales, 0.5% Sec 52 TCS &amp; Sec 194-O TDS payouts in Market hub</Text>
                     </View>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={isLight ? '#16a34a' : '#34d399'} />
@@ -468,6 +483,9 @@ export default function SuperAccountsScreen() {
             ) : null}
           </View>
         ) : null}
+
+        {section === 'CA_ACCOUNTS' ? <AccountantCaReportView /> : null}
+        {section === 'ADVOCATE_LEGAL' ? <AdvocateComplianceDesk mode="EMBEDDED" /> : null}
 
         {section === 'WALLETS' ? (
           <AdminWalletManagementView />
@@ -1111,7 +1129,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2.5,
     bottom: 2.5,
-    width: '24%',
+    width: '16.2%',
     borderRadius: RADIUS.pill,
     backgroundColor: '#10b981',
     ...premiumShadow('#10b981', 'sm'),

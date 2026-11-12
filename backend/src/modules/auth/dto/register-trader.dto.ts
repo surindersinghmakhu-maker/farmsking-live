@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
+import { AADHAAR_LAST4_REGEX, GSTIN_REGEX, PAN_REGEX } from '../../../common/utils/tax-compliance.util';
 
 /**
  * Data Transfer Object for Stage 2 Trader Self-Registration.
@@ -104,4 +105,29 @@ export class RegisterTraderDto {
   @IsOptional()
   @IsString()
   firebaseIdToken?: string;
+
+  @ApiPropertyOptional({ description: '15-character GSTIN (if GST registered)' })
+  @IsOptional()
+  @Matches(GSTIN_REGEX, { message: 'GSTIN must be a valid 15-character GSTIN.' })
+  gstin?: string;
+
+  @ApiPropertyOptional({ description: '10-character PAN for TDS Sec 194H/194Q/194O compliance' })
+  @IsOptional()
+  @Matches(PAN_REGEX, { message: 'PAN must be a valid 10-character PAN.' })
+  panNumber?: string;
+
+  @ApiPropertyOptional({ description: 'APMC / State Mandi Trader License Number' })
+  @IsOptional()
+  @IsString()
+  mandiLicenseNo?: string;
+
+  @ApiPropertyOptional({ description: 'Last 4 digits of Aadhaar for KYC verification' })
+  @IsOptional()
+  @Matches(AADHAAR_LAST4_REGEX, { message: 'Aadhaar last 4 digits must be numeric.' })
+  aadhaarLast4?: string;
+
+  @ApiPropertyOptional({ description: 'Terms & Privacy acceptance consent' })
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

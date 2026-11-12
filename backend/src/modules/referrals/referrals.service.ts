@@ -17,9 +17,16 @@ export class ReferralsService {
   async linkReferralOnSignUp(referredUserId: string, referrerKingId: string) {
     if (!referrerKingId) return null;
 
+    const cleanInput = referrerKingId.trim();
+    const rawDigits = cleanInput.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+
     const referrer = await this.prisma.user.findFirst({
       where: {
-        kingId: referrerKingId.trim(),
+        OR: [
+          { kingId: { equals: cleanInput, mode: 'insensitive' } },
+          ...(cleanMobile.length === 10 ? [{ mobile: cleanMobile }, { mobile: `+91${cleanMobile}` }] : []),
+        ],
         deletedAt: null,
       },
     });
@@ -35,7 +42,7 @@ export class ReferralsService {
     });
     if (existing) return existing;
 
-    // Create Level 1 Direct Referral
+    // Create Level 1 Direct Referral and sync referredById on User
     const directRef = await this.prisma.userReferral.create({
       data: {
         referrerId: referrer.id,
@@ -43,6 +50,11 @@ export class ReferralsService {
         level: 1,
         trustScoreBonus: 10,
       },
+    });
+
+    await this.prisma.user.updateMany({
+      where: { id: referredUserId, referredById: null },
+      data: { referredById: referrer.id },
     });
 
     // Check if referrer was also referred (Level 2 Grandparent Referral)
@@ -195,7 +207,7 @@ export class ReferralsService {
     });
 
     const inviteKingId = currentUser?.kingId || user.id;
-    const inviteUrl = `https://farmsking.com/invite?ref=${inviteKingId}`;
+    const inviteUrl = `https://farmsking.in/register?ref=${inviteKingId}`;
 
 
     return {

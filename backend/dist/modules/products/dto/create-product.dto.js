@@ -57,11 +57,13 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "sellingPrice", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "mrp", void 0);
 __decorate([
@@ -178,6 +180,8 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(100),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "commissionOverridePercentage", void 0);
 __decorate([
@@ -192,6 +196,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "returnWindowDays", void 0);
 __decorate([
@@ -201,6 +206,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "replacementWindowDays", void 0);
 __decorate([
@@ -211,11 +217,14 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "bulkDiscountMinQty", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(100),
     __metadata("design:type", Number)
 ], CreateProductDto.prototype, "bulkDiscountPercentage", void 0);
 //# sourceMappingURL=create-product.dto.js.map

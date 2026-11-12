@@ -24,3 +24,10 @@ export declare class CompleteOtpRegistrationDto {
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
     portal?: 'CLIENT' | 'PARTNER';
 }
+export declare class SendMobileOtpDto {
+    mobile: string;
+}
+export declare class VerifyMobileOtpDto {
+    mobile: string;
+    otp: string;
+}

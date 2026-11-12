@@ -8,63 +8,147 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppSettingsService = void 0;
 const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
+const crypto_1 = require("crypto");
 const prisma_service_1 = require("../prisma/prisma.service");
 const feature_flags_constant_1 = require("../../common/constants/feature-flags.constant");
 const system_integrations_constant_1 = require("./constants/system-integrations.constant");
 const SINGLETON_ID = 'default';
+const MAX_STEPUP_ATTEMPTS = 5;
 let AppSettingsService = class AppSettingsService {
+    sanitizePublicFlags(flags) {
+        if (!flags || typeof flags !== 'object')
+            return {};
+        const { systemIntegrations: _si, serviceProvidersConfig: _spc, googleDriveWebhookUrl: _gdwu, smtp: _smtp, gatewaySecrets: _gs, ...safeFlags } = flags;
+        return safeFlags;
+    }
     async requestAdminActionOtp(admin) {
-        if (!admin || !['ADMIN', 'SUPER_ADMIN'].includes(admin.role)) {
+        const activeRoles = (admin?.roles?.length ? admin.roles : [admin?.role]).filter((r) => r && !(admin?.deactivatedRoles || []).includes(r));
+        if (!admin || (!activeRoles.includes('ADMIN') && !activeRoles.includes('SUPER_ADMIN'))) {
             throw new common_1.UnauthorizedException('Only authorized Admin or Super Admin can request action confirmation OTP.');
         }
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpCode = (0, crypto_1.randomInt)(100000, 1000000).toString();
         this.adminActionOtpStore.set(admin.id, {
             otp: otpCode,
             expiresAt: Date.now() + 5 * 60 * 1000,
+            attempts: 0,
         });
         const isDev = process.env.NODE_ENV !== 'production';
+        const channels = [];
+        try {
+            const dbAdmin = await this.prisma.user.findUnique({
+                where: { id: admin.id },
+                select: { mobile: true, email: true },
+            });
+            if (dbAdmin?.mobile && this.moduleRef) {
+                try {
+                    const { WhatsappBotService } = require('../whatsapp/whatsapp.service');
+                    const waSvc = this.moduleRef.get(WhatsappBotService, { strict: false });
+                    if (waSvc?.sendOtpMessage) {
+                        const waRes = await waSvc.sendOtpMessage(dbAdmin.mobile, otpCode);
+                        if (waRes?.success)
+                            channels.push('WhatsApp');
+                    }
+                }
+                catch { }
+            }
+            if (dbAdmin?.email && !dbAdmin.email.includes('placeholder') && this.moduleRef) {
+                try {
+                    const { EmailService } = require('../email/email.service');
+                    const emailSvc = this.moduleRef.get(EmailService, { strict: false });
+                    if (emailSvc?.sendEmailOtp) {
+                        const sent = await emailSvc.sendEmailOtp(dbAdmin.email, otpCode);
+                        if (sent)
+                            channels.push('Email');
+                    }
+                }
+                catch { }
+            }
+        }
+        catch { }
         return {
             success: true,
-            message: 'Admin authorization code generated for critical change confirmation.',
+            deliveredVia: channels,
+            message: channels.length > 0
+                ? `Admin Step-Up 2FA code sent via ${channels.join(' & ')}.`
+                : isDev
+                    ? 'Local development mode: Admin Step-Up 2FA code generated.'
+                    : 'Admin authorization code generated for critical change confirmation.',
             devOtp: isDev ? otpCode : undefined,
             expiresInSeconds: 300,
         };
     }
     verifyAdminActionOtp(adminId, otp) {
-        if (!otp || !otp.trim()) {
-            return true;
-        }
-        if (otp.trim() === '123456') {
-            return true;
+        if (!adminId) {
+            throw new common_1.UnauthorizedException('Admin authentication required for this action.');
         }
         const stored = this.adminActionOtpStore.get(adminId);
+        const provided = otp?.trim();
         if (!stored) {
-            return true;
+            throw new common_1.BadRequestException('Admin Step-Up 2FA verification required. Please request a fresh 6-digit authorization code.');
+        }
+        if (!provided) {
+            throw new common_1.BadRequestException('Admin 6-digit Step-Up 2FA authorization code is required to complete this change.');
         }
         if (Date.now() > stored.expiresAt) {
             this.adminActionOtpStore.delete(adminId);
-            throw new common_1.BadRequestException('Admin authorization code has expired. Please try again.');
+            throw new common_1.BadRequestException('Admin authorization code has expired. Please request a new code.');
         }
-        if (stored.otp !== otp.trim()) {
-            throw new common_1.BadRequestException('Invalid confirmation code. Please verify and try again.');
+        if (stored.attempts >= MAX_STEPUP_ATTEMPTS) {
+            this.adminActionOtpStore.delete(adminId);
+            throw new common_1.BadRequestException('Maximum authorization attempts exceeded. Please request a new 6-digit code.');
+        }
+        const expectedBuf = Buffer.from(stored.otp, 'utf8');
+        const providedBuf = Buffer.from(provided, 'utf8');
+        const isMatch = expectedBuf.length === providedBuf.length && (0, crypto_1.timingSafeEqual)(expectedBuf, providedBuf);
+        if (!isMatch) {
+            stored.attempts += 1;
+            if (stored.attempts >= MAX_STEPUP_ATTEMPTS) {
+                this.adminActionOtpStore.delete(adminId);
+                throw new common_1.BadRequestException('Too many invalid attempts. Authorization code invalidated; please request a fresh code.');
+            }
+            throw new common_1.BadRequestException(`Invalid authorization code. ${MAX_STEPUP_ATTEMPTS - stored.attempts} attempt(s) remaining.`);
         }
         this.adminActionOtpStore.delete(adminId);
         return true;
     }
-    constructor(prisma) {
+    constructor(prisma, moduleRef) {
         this.prisma = prisma;
+        this.moduleRef = moduleRef;
         this.cache = null;
+        this.rawCache = null;
         this.CACHE_TTL_MS = 15000;
         this.adminActionOtpStore = new Map();
     }
     clearCache() {
         this.cache = null;
+        this.rawCache = null;
+    }
+    async getRawAppSettings() {
+        const now = Date.now();
+        if (this.rawCache && now - this.rawCache.timestamp < this.CACHE_TTL_MS) {
+            return this.rawCache.data;
+        }
+        const settings = await this.prisma.appSetting.upsert({
+            where: { id: SINGLETON_ID },
+            update: {},
+            create: {
+                id: SINGLETON_ID,
+                upiId: 'surindersinghmakhu-5@oksbi',
+                upiPayeeName: 'Surinder Singh',
+            },
+        });
+        this.rawCache = { data: settings, timestamp: now };
+        return settings;
     }
     async getSeo() {
-        const settings = await this.get();
+        const settings = await this.getRawAppSettings();
         const flags = settings.featureFlags || {};
         const seo = flags.seoSettings || {};
         return {
@@ -102,15 +186,7 @@ let AppSettingsService = class AppSettingsService {
         if (this.cache && now - this.cache.timestamp < this.CACHE_TTL_MS) {
             return this.cache.data;
         }
-        const settings = await this.prisma.appSetting.upsert({
-            where: { id: SINGLETON_ID },
-            update: {},
-            create: {
-                id: SINGLETON_ID,
-                upiId: 'surindersinghmakhu-5@oksbi',
-                upiPayeeName: 'Surinder Singh',
-            },
-        });
+        const settings = await this.getRawAppSettings();
         let logoUrl = settings.logoUrl;
         if (!logoUrl) {
             const superAdmin = await this.prisma.user.findFirst({
@@ -122,7 +198,8 @@ let AppSettingsService = class AppSettingsService {
             }
         }
         const flags = settings.featureFlags || {};
-        let faviconUrl = flags.faviconUrl;
+        const safeFlags = this.sanitizePublicFlags(flags);
+        let faviconUrl = safeFlags.faviconUrl;
         const storedInt = flags.systemIntegrations;
         if (!faviconUrl) {
             faviconUrl = storedInt?.projectMasterData?.faviconUrl || 'https://farmsking.in/favicon.png';
@@ -142,10 +219,12 @@ let AppSettingsService = class AppSettingsService {
         };
         const baseShippingCharge = storedInt?.product?.baseShippingCharge ?? partnerFees[activeLogistics] ?? 65;
         const freeDeliveryThreshold = storedInt?.product?.freeDeliveryThreshold ?? 499;
+        const { featureFlags: _rawFf, ...settingsWithoutRawFlags } = settings;
         const result = {
-            ...flags,
-            ...settings,
-            ...flags,
+            ...safeFlags,
+            ...settingsWithoutRawFlags,
+            featureFlags: safeFlags,
+            ...safeFlags,
             logoUrl,
             faviconUrl: faviconUrl || 'https://farmsking.in/favicon.ico',
             upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
@@ -550,7 +629,7 @@ let AppSettingsService = class AppSettingsService {
         }
     }
     async getFeatureFlags() {
-        const settings = await this.get();
+        const settings = await this.getRawAppSettings();
         const storedFlags = settings.featureFlags;
         if (!storedFlags) {
             return feature_flags_constant_1.DEFAULT_FEATURE_FLAGS;
@@ -572,14 +651,20 @@ let AppSettingsService = class AppSettingsService {
     }
     async updateFeatureFlags(admin, flags) {
         this.clearCache();
+        const existing = await this.getRawAppSettings();
+        const currentFlags = existing?.featureFlags || {};
+        const mergedFlags = {
+            ...currentFlags,
+            ...flags,
+        };
         return this.prisma.appSetting.upsert({
             where: { id: SINGLETON_ID },
-            create: { id: SINGLETON_ID, featureFlags: flags, updatedById: admin.id },
-            update: { featureFlags: flags, updatedById: admin.id },
+            create: { id: SINGLETON_ID, featureFlags: mergedFlags, updatedById: admin.id },
+            update: { featureFlags: mergedFlags, updatedById: admin.id },
         });
     }
     async getIntegrations() {
-        const settings = await this.get();
+        const settings = await this.getRawAppSettings();
         const stored = settings.featureFlags?.systemIntegrations;
         if (!stored) {
             return system_integrations_constant_1.DEFAULT_INTEGRATIONS_CONFIG;
@@ -816,8 +901,11 @@ let AppSettingsService = class AppSettingsService {
             },
         };
     }
-    async updateIntegrations(admin, payload) {
-        this.verifyAdminActionOtp(admin?.id, payload?.adminConfirmationOtp);
+    async updateIntegrations(admin, rawPayload, options) {
+        if (!options?.skipStepUp) {
+            this.verifyAdminActionOtp(admin?.id, rawPayload?.adminConfirmationOtp);
+        }
+        const { adminConfirmationOtp: _ignoredOtp, ...payload } = rawPayload || {};
         this.clearCache();
         const current = await this.getIntegrations();
         const merged = {
@@ -1126,7 +1214,7 @@ let AppSettingsService = class AppSettingsService {
                         ...integrations.product,
                         baseShippingCharge: fee,
                     },
-                });
+                }, { skipStepUp: true });
             }
             catch (err) {
                 console.warn('Could not sync logistics provider to integrations:', err);
@@ -1263,6 +1351,8 @@ let AppSettingsService = class AppSettingsService {
 exports.AppSettingsService = AppSettingsService;
 exports.AppSettingsService = AppSettingsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __param(1, (0, common_1.Optional)()),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        core_1.ModuleRef])
 ], AppSettingsService);
 //# sourceMappingURL=app-settings.service.js.map

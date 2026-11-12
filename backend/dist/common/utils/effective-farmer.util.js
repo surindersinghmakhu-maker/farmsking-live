@@ -2,10 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getEffectiveFarmerId = getEffectiveFarmerId;
 const client_1 = require("@prisma/client");
+const auth_user_util_1 = require("./auth-user.util");
 function getEffectiveFarmerId(user) {
-    if ((user.role === client_1.Role.SUPERVISOR ||
-        (Array.isArray(user.roles) && user.roles.includes(client_1.Role.SUPERVISOR))) &&
-        user.employerFarmerId) {
+    if ((0, auth_user_util_1.hasActiveRole)(user, client_1.Role.SUPERVISOR) && user.employerFarmerId) {
         return user.employerFarmerId;
     }
     return user.id;

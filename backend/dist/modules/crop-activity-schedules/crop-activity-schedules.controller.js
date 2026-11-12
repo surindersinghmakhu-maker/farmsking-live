@@ -82,7 +82,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CropActivitySchedulesController.prototype, "bulkCreate", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR),
     (0, common_1.Get)('today'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -114,7 +114,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CropActivitySchedulesController.prototype, "findDelayedForAdvisor", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('crop/:cropCycleId'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('cropCycleId')),

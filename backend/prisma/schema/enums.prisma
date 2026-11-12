@@ -15,6 +15,7 @@ enum Role {
   TECHNICAL_TRAINER
   SELLER
   TRADER
+  ACCOUNTANT
 }
 
 /// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.
@@ -399,4 +400,17 @@ enum ExpertApplicationStatus {
   FORM_SUBMITTED
   APPROVED
   REJECTED
+}
+
+enum PartnerApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerifiedLeadStatus {
+  OTP_CONFIRMED
+  COMPLETED_SELF
+  CONVERTED_BY_ADMIN
+  DISMISSED
 }

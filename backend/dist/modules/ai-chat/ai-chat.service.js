@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var AiChatService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AiChatService = exports.AiChatRequestDto = void 0;
+exports.AiChatService = exports.DiagnoseLeafDto = exports.AiChatRequestDto = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const class_validator_1 = require("class-validator");
@@ -21,18 +21,29 @@ exports.AiChatRequestDto = AiChatRequestDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(1000),
     __metadata("design:type", String)
 ], AiChatRequestDto.prototype, "message", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayMaxSize)(20),
     __metadata("design:type", Array)
 ], AiChatRequestDto.prototype, "history", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['agri', 'garden']),
     __metadata("design:type", String)
 ], AiChatRequestDto.prototype, "mode", void 0);
+class DiagnoseLeafDto {
+}
+exports.DiagnoseLeafDto = DiagnoseLeafDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(8_000_000),
+    __metadata("design:type", String)
+], DiagnoseLeafDto.prototype, "imageBase64", void 0);
 const MAX_MESSAGE_LENGTH = 1000;
 const MAX_HISTORY_ITEM_LENGTH = 2000;
 const GARDEN_SYSTEM_PROMPT = `You are "FarmsKing Garden Expert AI" — a premium, highly knowledgeable assistant exclusively for VIP Gardeners on the FarmsKing platform.
@@ -286,7 +297,11 @@ CRITICAL INSTRUCTIONS:
         if (rawBase64.startsWith('data:')) {
             const parts = rawBase64.split(';base64,');
             if (parts.length === 2) {
-                mimeType = parts[0].replace('data:', '') || 'image/jpeg';
+                const candidateMime = parts[0].replace('data:', '').trim().toLowerCase();
+                if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(candidateMime)) {
+                    return this.getFallbackDiagnosis();
+                }
+                mimeType = candidateMime;
                 rawBase64 = parts[1];
             }
         }

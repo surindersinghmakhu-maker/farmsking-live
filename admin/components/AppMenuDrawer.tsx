@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FONT, RADIUS } from '@/constants/theme';
-import { ADMIN_PILLARS, NavigationPillar } from '@/constants/navigationPillars';
+import { getPillarsForRole, NavigationPillar } from '@/constants/navigationPillars';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
@@ -225,7 +225,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                   isDarkTheme && { color: '#38bdf8' },
                 ]}
               >
-                {ADMIN_PILLARS.length}
+                {getPillarsForRole(role).length}
               </Text>
             </View>
           </View>
@@ -236,7 +236,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
             contentContainerStyle={styles.drawerScrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {ADMIN_PILLARS.map((pillar) => {
+            {getPillarsForRole(role).map((pillar) => {
               const isActivePillar = pillar.id === activePillarId;
 
               return (
@@ -470,7 +470,11 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                       isDarkTheme && { color: '#38bdf8' },
                     ]}
                   >
-                    {user?.role === 'SUPER_ADMIN' ? '👑 Super Admin' : '🛡️ Admin'}
+                    {user?.role === 'SUPER_ADMIN'
+                      ? '👑 Super Admin'
+                      : user?.role === 'ACCOUNTANT'
+                        ? '📊 Accountant (CA)'
+                        : '🛡️ Admin'}
                   </Text>
                 </View>
               </View>

@@ -1,8 +1,11 @@
-import { BadRequestException, Body, Controller, Get, Header, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Header, Post, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { Roles } from './common/decorators/roles.decorator';
 import { DYNAMIC_SYSTEM_MODULES, generateDynamicPrivacyPolicyHtml, generateAccountDeletionHtml } from './common/utils/privacy-policy-generator';
 
 
@@ -214,6 +217,8 @@ export class AppController {
 </html>`;
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN)
   @Post('sync-users')
   async syncUsers(@Body() body: { users: any[] }) {
     if (!Array.isArray(body.users)) {
@@ -302,22 +307,31 @@ export class AppController {
     }
     const cleanMobile = body.mobile.trim();
     const user = await this.prisma.user.findFirst({
-      where: { mobile: cleanMobile },
+      where: { mobile: cleanMobile, deletedAt: null },
     });
 
     if (!user) {
-      throw new BadRequestException('No registered FarmsKing account found for this mobile number.');
+      throw new BadRequestException('No active FarmsKing account found for this mobile number.');
     }
 
-    // Verify password if provided
-    if (body.password && user.passwordHash) {
-      const isValid = await argon2.verify(user.passwordHash, body.password);
-      if (!isValid && body.password !== user.kingId) {
-        throw new BadRequestException('Invalid password or King ID.');
-      }
+    if (!body.password || !body.password.trim()) {
+      throw new BadRequestException(
+        'Account password is required to verify deletion here. OTP-only Farmer, Worker, and Customer accounts can confirm deletion after logging in under More -> Delete Account.',
+      );
     }
 
-    // Soft delete / anonymize user data
+    if (!user.passwordHash) {
+      throw new BadRequestException(
+        'This account uses Mobile OTP login. Please sign in via OTP inside the FarmsKing app under More -> Delete Account.',
+      );
+    }
+
+    const isValid = await argon2.verify(user.passwordHash, body.password);
+    if (!isValid) {
+      throw new BadRequestException('Invalid password. Could not verify account deletion request.');
+    }
+
+    // Soft delete / anonymize user data and invalidate active credentials
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
@@ -325,6 +339,7 @@ export class AppController {
         name: 'Deleted User',
         email: null,
         upiId: null,
+        passwordHash: '',
       },
     });
 

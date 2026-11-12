@@ -27,7 +27,7 @@ export class FarmerPlanPaymentsController {
     return this.farmerPlanPaymentsService.listMine(user);
   }
 
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get('pending')
   listPending() {
     return this.farmerPlanPaymentsService.listPending();

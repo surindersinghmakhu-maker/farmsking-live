@@ -1,8 +1,14 @@
-import { Controller, Get, Post, Body, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, NotFoundException, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { GoogleDriveBackupService } from './google-drive-backup.service';
 import * as fs from 'fs';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN)
 @Controller('backup')
 export class GoogleDriveBackupController {
   constructor(private readonly backupService: GoogleDriveBackupService) {}

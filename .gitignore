@@ -71,3 +71,11 @@ Govt/
 legal/
 data/statutory_promoters_master_data.json
 
+# Cryptographic Keys, Service Accounts & Debug Log Dumps
+*.pem
+*.key
+*.p12
+*service-account*.json
+pm2-error.txt
+frontend/public/pm2-error.txt
+

@@ -163,7 +163,7 @@ export interface SystemIntegrationsConfig {
     };
   };
   storage: {
-    activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'MINIO' | 'BUNNY_CDN';
+    activeProvider: 'CLOUDFLARE_R2' | 'FIREBASE' | 'CLOUDINARY' | 'LOCAL' | 'NEON_S3' | 'SUPABASE' | 'AWS_S3' | 'GOOGLE_GCS' | 'GCP_STORAGE' | 'MINIO' | 'BUNNY_CDN' | 'DIGITALOCEAN';
     isEnabled?: boolean;
     providers: {
       cloudflareR2: { accountId: string; accessKeyId: string; secretAccessKey: string; bucketName: string; publicUrl: string };
@@ -397,9 +397,9 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
   mcaSrn: 'AC6979718',
   cinNumber: 'U01100PB2026PTC063294',
   cin: 'U01100PB2026PTC063294',
-  companyPan: 'AABCF1234D',
-  panNumber: 'AABCF1234D',
-  companyTan: 'PTLA12345B',
+  companyPan: '',
+  panNumber: '',
+  companyTan: '',
   crcApprovalStatus: 'OFFICIALLY APPROVED BY CRC MANESAR',
   crcApprovalDate: '22/10/2026',
   approvingAuthority: 'Assistant Registrar of Companies, CRC Manesar',
@@ -472,7 +472,7 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
     },
     feeReceipt: {
       subject: 'Payment & Order Confirmation #{{order_id}} — FarmsKing',
-      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#16a34a;margin-bottom:8px;">Payment Received Successfully ✅</h2>\\n<p style="font-size:15px;">Dear {{farmer_name}}, we have received your payment of <strong>₹{{amount}}</strong> for Order <strong>#{{order_id}}</strong>.</p>\\n<p style="font-size:14px;color:#475569;">Your agricultural supplies are being packed and dispatched directly to your village destination.</p>\\n<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>\\n<p style="font-size:12px;color:#94a3b8;">Issued by FARMSKING TECHNOLOGIES PRIVATE LIMITED | GSTIN: 03AAAAF0000A1Z5</p>\\n</div>',
+      body: '<div style="font-family:Arial,sans-serif;padding:24px;color:#1e293b;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:12px;">\\n<h2 style="color:#16a34a;margin-bottom:8px;">Payment Received Successfully ✅</h2>\\n<p style="font-size:15px;">Dear {{farmer_name}}, we have received your payment of <strong>₹{{amount}}</strong> for Order <strong>#{{order_id}}</strong>.</p>\\n<p style="font-size:14px;color:#475569;">Your agricultural supplies are being packed and dispatched directly to your destination.</p>\\n<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>\\n<p style="font-size:12px;color:#94a3b8;">Issued by FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294</p>\\n</div>',
     },
     resultPublished: {
       subject: 'AI Crop Doctor Diagnostic Report: {{crop_name}}',
@@ -505,10 +505,10 @@ export const DEFAULT_PROJECT_MASTER_DATA: ProjectMasterDataConfig = {
 
   taxGst: {
     enabled: true,
-    gstNumber: '03AAAAF0000A1Z5',
+    gstNumber: '',
     taxPercentage: 5.0,
     invoicePrefix: 'FK-INV-',
-    panNumber: 'AAAAF0000A',
+    panNumber: '',
     hsnSacCode: '998314',
   },
 
@@ -990,10 +990,10 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
     faviconUrl: 'https://farmsking.in/favicon.ico',
     registeredAddress: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India',
     headquarters: 'Near Grain Market, Makhu, District Ferozepur, Punjab - 142044, India',
-    gstin: '03AAAAF0000A1Z5',
-    cin: 'U01100PB2026PTC000000',
-    pan: 'AAAAF0000A',
-    fssaiLicense: '10023064000123',
+    gstin: '',
+    cin: 'U01100PB2026PTC063294',
+    pan: '',
+    fssaiLicense: '',
     supportEmail: 'support@farmsking.in',
     supportPhone: '+91 95776 22000',
     whatsappHelpline: '+91 95776 22000',

@@ -37,17 +37,26 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
                 deactivatedRoles: true,
                 name: true,
                 kingId: true,
+                isSeniorDoctor: true,
                 employerFarmerId: true,
+                supervisorPermissions: true,
+                operatorPermissions: true,
+                adminStaffPermissions: true,
+                isPermanentlyBlocked: true,
+                lockoutUntil: true,
             },
         });
         if (!user) {
             throw new common_1.UnauthorizedException();
         }
+        if (user.isPermanentlyBlocked || (user.lockoutUntil && new Date(user.lockoutUntil) > new Date())) {
+            throw new common_1.UnauthorizedException('Your account is currently suspended or locked. Please contact Admin Support.');
+        }
+        const isValid = this.userSessionService.isValidSession(user.id, payload.sid, payload.iat);
+        if (!isValid) {
+            throw new common_1.UnauthorizedException('Session Terminated: Please log in again to continue.');
+        }
         if (payload.sid) {
-            const isValid = this.userSessionService.isValidSession(user.id, payload.sid);
-            if (!isValid) {
-                throw new common_1.UnauthorizedException('⚠️ Session Terminated: Your account was logged in on another device. Oldest session logged out automatically.');
-            }
             this.userSessionService.touchSession(user.id, payload.sid);
             user.sessionId = payload.sid;
         }

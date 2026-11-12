@@ -13,6 +13,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 import { CreateFarmerPlanCouponDto } from './dto/create-farmer-plan-coupon.dto';
 import { GenerateAdvisorCouponDto } from './dto/generate-advisor-coupon.dto';
 import { RedeemFarmerPlanCouponDto } from './dto/redeem-farmer-plan-coupon.dto';
@@ -633,8 +634,24 @@ export class FarmerPlansService implements OnModuleInit {
 
   /** Fetches full membership history records including active, sleep mode, and past plans */
   async getPlanHistory(user: AuthUser, farmerId?: string) {
-    const targetFarmerId = farmerId ?? (hasActiveRole(user, Role.FARMER) ? user.id : undefined);
+    const effectiveSelf = hasActiveRole(user, Role.SUPERVISOR) ? getEffectiveFarmerId(user) : user.id;
+    const isAdmin = hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN);
+    const targetFarmerId = farmerId ?? (hasActiveRole(user, Role.FARMER) || hasActiveRole(user, Role.SUPERVISOR) ? effectiveSelf : undefined);
     if (!targetFarmerId) throw new BadRequestException('Farmer ID is required.');
+
+    if (!isAdmin && targetFarmerId !== effectiveSelf) {
+      let allowed = false;
+      if (hasActiveRole(user, Role.ADVISOR)) {
+        const assignment = await this.prisma.advisorAssignment.findFirst({
+          where: { advisorId: user.id, farmerId: targetFarmerId, deletedAt: null },
+          select: { id: true },
+        });
+        allowed = Boolean(assignment);
+      }
+      if (!allowed) {
+        throw new ForbiddenException('You can only view your own farmer plan history.');
+      }
+    }
 
     // Trigger effective plan check to auto-resume slept plan if active expired
     await this.getEffectivePlan(targetFarmerId);
@@ -1314,60 +1331,73 @@ export class FarmerPlansService implements OnModuleInit {
     }
 
     const totalDebit = debitAmount * quantity;
+    const createdByRole = isPartnerOnly ? Role.AGENT : isAdvisor ? Role.ADVISOR : user.role;
 
-    if (totalDebit > 0) {
-      const balance = await this.walletService.getBalance(user.id);
-      if (balance < totalDebit) {
-        throw new BadRequestException(
-          `Insufficient Wallet Balance — Generating ${quantity} coupon(s) costs ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}), but your wallet balance is ₹${balance.toLocaleString('en-IN')}. Please top up your wallet.`,
-        );
-      }
-    }
-
-    const created: Awaited<ReturnType<typeof this.prisma.farmerPlanCoupon.create>>[] = [];
-    for (let i = 0; i < quantity; i += 1) {
-      let code = generateCode(dto.plan);
-      while (await this.prisma.farmerPlanCoupon.findUnique({ where: { code } })) {
-        code = generateCode(dto.plan);
-      }
-
-      const coupon = await this.prisma.farmerPlanCoupon.create({
-        data: {
-          code,
-          category,
-          plan: dto.plan,
-          daysGranted: dto.daysGranted,
-          assignedFarmerId: dto.assignedFarmerId,
-          assignedAdvisorId: targetAdvisorId ?? (isAdvisor ? user.id : undefined),
-          assignedBusinessPartnerId: isPartnerOnly ? user.id : dto.assignedBusinessPartnerId,
-          doctorKingId: user.kingId ?? dbUser?.kingId ?? null,
-          advisorKingId: targetAdvisorKingId ?? null,
-          createdById: user.id,
-          createdByRole: user.role,
-          generationCostAmount: debitAmount > 0 ? debitAmount : null,
-          doctorFeeAmount: doctorFeeAmount != null ? doctorFeeAmount : null,
-          adminPlatformFeePercent: adminPlatformFeePercent != null ? adminPlatformFeePercent : null,
-          adminPlatformFeeAmount: adminPlatformFeeAmount != null ? adminPlatformFeeAmount : null,
-          includeMembership,
-          includedMembershipPlan,
-          includedMembershipDays,
-        },
-      });
-
-      if (debitAmount > 0) {
-        const debitReason = isDoctorCoupon
-          ? `Generated Doctor Consultation coupon ${coupon.code} (Fee ₹${doctorFeeAmount}, Admin Fee ₹${adminPlatformFeeAmount}${includeMembership ? `, Membership ₹${debitAmount - (adminPlatformFeeAmount ?? 0)}` : ''})`
-          : `Generated ${dto.plan} plan coupon ${coupon.code}`;
-
-        await this.walletService.debit(
-          user.id,
-          debitAmount,
-          debitReason,
-        );
+    const created = await this.prisma.$transaction(async (tx) => {
+      if (totalDebit > 0) {
+        await tx.$executeRaw`SELECT "id" FROM "users" WHERE "id" = ${user.id} FOR UPDATE`;
+        const [credits, debits] = await Promise.all([
+          tx.walletTransaction.aggregate({ where: { userId: user.id, type: 'CREDIT' }, _sum: { amount: true } }),
+          tx.walletTransaction.aggregate({ where: { userId: user.id, type: 'DEBIT' }, _sum: { amount: true } }),
+        ]);
+        const balance = Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
+        if (balance < totalDebit) {
+          throw new BadRequestException(
+            `Insufficient Wallet Balance — Generating ${quantity} coupon(s) costs ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}), but your wallet balance is ₹${balance.toLocaleString('en-IN')}. Please top up your wallet.`,
+          );
+        }
       }
 
-      created.push(coupon);
-    }
+      const items: Awaited<ReturnType<typeof this.prisma.farmerPlanCoupon.create>>[] = [];
+      for (let i = 0; i < quantity; i += 1) {
+        let code = generateCode(dto.plan);
+        while (await tx.farmerPlanCoupon.findUnique({ where: { code } })) {
+          code = generateCode(dto.plan);
+        }
+
+        const coupon = await tx.farmerPlanCoupon.create({
+          data: {
+            code,
+            category,
+            plan: dto.plan,
+            daysGranted: dto.daysGranted,
+            assignedFarmerId: dto.assignedFarmerId,
+            assignedAdvisorId: targetAdvisorId ?? (isAdvisor ? user.id : undefined),
+            assignedBusinessPartnerId: isPartnerOnly ? user.id : dto.assignedBusinessPartnerId,
+            doctorKingId: user.kingId ?? dbUser?.kingId ?? null,
+            advisorKingId: targetAdvisorKingId ?? null,
+            createdById: user.id,
+            createdByRole,
+            generationCostAmount: debitAmount > 0 ? debitAmount : null,
+            doctorFeeAmount: doctorFeeAmount != null ? doctorFeeAmount : null,
+            adminPlatformFeePercent: adminPlatformFeePercent != null ? adminPlatformFeePercent : null,
+            adminPlatformFeeAmount: adminPlatformFeeAmount != null ? adminPlatformFeeAmount : null,
+            includeMembership,
+            includedMembershipPlan,
+            includedMembershipDays,
+          },
+        });
+
+        if (debitAmount > 0) {
+          const debitReason = isDoctorCoupon
+            ? `Generated Doctor Consultation coupon ${coupon.code} (Fee ₹${doctorFeeAmount}, Admin Fee ₹${adminPlatformFeeAmount}${includeMembership ? `, Membership ₹${debitAmount - (adminPlatformFeeAmount ?? 0)}` : ''})`
+            : `Generated ${dto.plan} plan coupon ${coupon.code}`;
+
+          await tx.walletTransaction.create({
+            data: {
+              userId: user.id,
+              type: 'DEBIT',
+              amount: debitAmount,
+              reason: debitReason,
+            },
+          });
+        }
+
+        items.push(coupon);
+      }
+
+      return items;
+    });
 
     return quantity === 1 ? created[0] : created;
   }

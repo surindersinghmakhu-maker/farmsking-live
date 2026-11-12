@@ -8,22 +8,15 @@ export declare class LabourService {
     constructor(prisma: PrismaService);
     searchByMobile(mobile: string): Promise<{
         exists: boolean;
-        user: null;
-        profiles: never[];
-    } | {
-        exists: boolean;
         user: {
             id: string;
             kingId: string | null;
-            mobile: string;
             name: string;
-            village: string | null;
-            district: string | null;
-            state: string | null;
             photoUrl: string | null;
-        };
+        } | null;
         profiles: any[];
     }>;
+    assertSupervisorLabourAccess(user: AuthUser, mode: 'view' | 'entry'): Promise<void>;
     createWorker(user: AuthUser, dto: CreateLabourWorkerDto): Promise<{
         user: {
             id: string;

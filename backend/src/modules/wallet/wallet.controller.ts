@@ -34,7 +34,7 @@ export class WalletController {
   /** Admin/Super Admin: Comprehensive list of all users and their wallet balances. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR, Role.ACCOUNTANT)
   @Get('admin/all-users')
   getAdminAllWallets(
     @Query('search') search?: string,
@@ -53,7 +53,7 @@ export class WalletController {
   /** Admin/Super Admin: Detailed calculation breakdown of all issued bonuses & transactions. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR, Role.ACCOUNTANT)
   @Get('admin/bonus-report')
   getAdminBonusReport() {
     return this.walletService.getAdminBonusReport();
@@ -62,7 +62,7 @@ export class WalletController {
   /** Admin/Super Admin: Automated comprehensive wallet, withdrawal & financial audit report. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR, Role.ACCOUNTANT)
   @Get('admin/automated-report')
   getAdminAutomatedReport() {
     return this.walletService.getAdminAutomatedReport();
@@ -71,7 +71,7 @@ export class WalletController {
   /** Admin/Super Admin (or Operator with VIEW_WALLETS): full transaction ledger for any partner/advisor's wallet. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR, Role.ACCOUNTANT)
   @Get('admin/:userId')
   getWalletForUser(@Param('userId') userId: string) {
     return this.walletService.getWalletForUser(userId);

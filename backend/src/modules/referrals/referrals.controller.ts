@@ -1,11 +1,14 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { IsString, MinLength } from 'class-validator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { ReferralsService } from './referrals.service';
 
 export class LinkReferralDto {
-  referrerKingId: string;
+  @IsString()
+  @MinLength(3)
+  referrerKingId!: string;
 }
 
 @UseGuards(JwtAuthGuard)

@@ -169,9 +169,8 @@ let GoogleDriveBackupService = GoogleDriveBackupService_1 = class GoogleDriveBac
             const webhookSetting = await this.prisma.appSetting.findUnique({
                 where: { id: 'default' },
             }).catch(() => null);
-            const defaultWebhookUrl = 'https://script.google.com/macros/s/AKfycbyBOdk4ba0T1J0mLucABOVwh_UtqbqsYjPxAdcRIXb6KGK7INC2gtMIqwdnDJDInoYe/exec';
-            const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.googleDriveWebhookUrl || defaultWebhookUrl;
-            if (driveWebhookUrl && driveWebhookUrl.startsWith('http')) {
+            const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.googleDriveWebhookUrl;
+            if (driveWebhookUrl && driveWebhookUrl.startsWith('https://')) {
                 const res = await fetch(driveWebhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

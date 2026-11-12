@@ -59,7 +59,10 @@ let AdminChatService = class AdminChatService {
             await this.notificationsService.create(farmerId, client_1.NotificationType.ADVISOR_MESSAGE, '🛡️ Support Reply from Admin', dto.message.trim(), { farmerId, type: 'ADMIN_CHAT' });
         }
         if (this.chatGateway?.server) {
-            this.chatGateway.server.emit('admin_chat_message', chatMsg);
+            this.chatGateway.server
+                .to(`user:${farmerId}`)
+                .to('role:ADMIN_DESK')
+                .emit('admin_chat_message', chatMsg);
         }
         return {
             message: 'Chat message sent successfully',
@@ -195,10 +198,8 @@ let AdminChatService = class AdminChatService {
         catch { }
         await this.notificationsService.create(farmerId, client_1.NotificationType.CROP_PROBLEM_UPDATE, '✅ Request / Problem Solved', notes?.trim() || 'Your support request has been marked as resolved by Admin.', { farmerId, type: 'PROBLEM_SOLVED' });
         if (this.chatGateway?.server) {
-            this.chatGateway.server.to(`user:${farmerId}`).emit('admin_chat_message', chatMsg);
-            this.chatGateway.server.emit('admin_chat_message', chatMsg);
-            this.chatGateway.server.to(`user:${farmerId}`).emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
-            this.chatGateway.server.emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
+            this.chatGateway.server.to(`user:${farmerId}`).to('role:ADMIN_DESK').emit('admin_chat_message', chatMsg);
+            this.chatGateway.server.to(`user:${farmerId}`).to('role:ADMIN_DESK').emit('crop_problem_updated', { farmerId, status: 'RESOLVED' });
         }
         return {
             message: 'Farmer support request marked as solved successfully.',

@@ -213,7 +213,11 @@ export default function RecordsScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const { user } = useAuth();
-  const isSupervisor = user?.role === 'SUPERVISOR' || (Array.isArray(user?.roles) && user.roles.includes('SUPERVISOR' as any));
+  const deactivatedRoles = Array.isArray((user as any)?.deactivatedRoles) ? (user as any).deactivatedRoles : [];
+  const activeUserRoles = [user?.role, ...(Array.isArray(user?.roles) ? user.roles : [])].filter(
+    (r) => r && !deactivatedRoles.includes(r),
+  );
+  const isSupervisor = activeUserRoles.includes('SUPERVISOR' as any) && !activeUserRoles.includes('FARMER' as any);
   const supervisorConfig = (user?.supervisorFeaturesConfig as any) || {};
 
   const canViewSales = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.sales?.view || supervisorConfig.sales?.entry);
@@ -228,7 +232,7 @@ export default function RecordsScreen() {
   const canViewParties = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.sales?.view || supervisorConfig.purchases?.view);
 
   const initialRecordType = isSupervisor && user?.employerFarmerId
-    ? canViewSales ? 'SALES' : canViewExpenses ? 'EXPENSES' : canViewLabour ? 'LABOUR' : 'OVERVIEW'
+    ? canViewSales ? 'SALES' : canViewExpenses ? 'EXPENSES' : canViewLabour ? 'LABOUR' : canViewParties ? 'PARTIES' : 'OVERVIEW'
     : 'OVERVIEW';
 
   const [recordType, setRecordType] = useState<'EXPENSES' | 'SALES' | 'OVERVIEW' | 'LABOUR' | 'ANALYSIS' | 'PARTIES'>(initialRecordType);
@@ -4135,6 +4139,18 @@ export default function RecordsScreen() {
               </Modal>
             </>
           ) : recordType === 'OVERVIEW' ? (
+            isSupervisor && user?.employerFarmerId ? (
+              <View style={{ padding: 28, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 15, fontFamily: FONT.bold, color: colors.text, marginBottom: 6 }}>
+                  Accounts Overview Restricted
+                </Text>
+                <Text style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', lineHeight: 19 }}>
+                  {canViewSales || canViewExpenses || canViewLabour || canViewParties
+                    ? 'Select an enabled module tab above (Sales, Expenses, Labour, or Parties).'
+                    : 'Your employer farmer has not enabled Accounts permissions for this Supervisor account yet.'}
+                </Text>
+              </View>
+            ) : (
             /* OVERVIEW TAB */
             <ProfessionalOverviewView
               totalSalesRevenue={totalSalesRevenue}
@@ -4159,6 +4175,7 @@ export default function RecordsScreen() {
                 setShowExpenseForm(true);
               }}
             />
+            )
           ) : (
             /* ANALYSIS (PAYMENTS) TAB — Receivable/Payable party ledgers */
             <View style={{ flex: 1 }}>

@@ -137,8 +137,10 @@ let CallRequestsService = class CallRequestsService {
                 },
             });
             if (this.chatGateway?.server) {
-                this.chatGateway.server.to((0, chat_gateway_1.userRoom)(request.farmerId)).emit('admin_chat_message', adminMsg);
-                this.chatGateway.server.emit('admin_chat_message', adminMsg);
+                this.chatGateway.server
+                    .to((0, chat_gateway_1.userRoom)(request.farmerId))
+                    .to('role:ADMIN_DESK')
+                    .emit('admin_chat_message', adminMsg);
             }
         }
         catch { }

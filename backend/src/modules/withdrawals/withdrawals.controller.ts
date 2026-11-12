@@ -56,7 +56,7 @@ export class WithdrawalsController {
     return this.withdrawalsService.listMine(user);
   }
 
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ACCOUNTANT)
   @Get()
   listAll() {
     return this.withdrawalsService.listAll();

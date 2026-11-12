@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
@@ -193,7 +193,9 @@ export class RazorpayService {
       .update(body)
       .digest('hex');
 
-    if (expectedSignature !== dto.razorpaySignature) {
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+    const actualBuf = Buffer.from(dto.razorpaySignature || '', 'utf8');
+    if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
       throw new BadRequestException('Invalid Razorpay payment signature');
     }
 
@@ -221,11 +223,15 @@ export class RazorpayService {
    */
   async handleWebhook(rawBody: string, signatureHeader?: string) {
     const creds = await this.getCredentials();
-    if (signatureHeader && creds.webhookSecret) {
-      const isValid = this.verifyWebhookSignature(rawBody, signatureHeader, creds.webhookSecret);
-      if (!isValid) {
-        this.logger.warn('Razorpay webhook signature verification failed');
-      }
+    const webhookSecret = creds.webhookSecret?.trim();
+    if (!webhookSecret || webhookSecret === 'rzp_webhook_secret' || !signatureHeader) {
+      throw new UnauthorizedException('Razorpay webhook signature or secret verification failed.');
+    }
+
+    const isValid = this.verifyWebhookSignature(rawBody, signatureHeader, webhookSecret);
+    if (!isValid) {
+      this.logger.warn('Razorpay webhook signature verification failed');
+      throw new UnauthorizedException('Invalid Razorpay webhook signature.');
     }
 
     let payload: any;
@@ -287,10 +293,13 @@ export class RazorpayService {
       this.logger.warn(`FarmerPlanPaymentRequest ${requestId} not found for Razorpay fulfillment`);
       return;
     }
+    if (request.status === PlanPaymentStatus.CONFIRMED) {
+      return;
+    }
 
-    // Mark as submitted / confirmed
-    await this.prisma.farmerPlanPaymentRequest.update({
-      where: { id: requestId },
+    // Atomic claim to ensure duplicate webhooks cannot double-mint VIP coupons
+    const claimed = await this.prisma.farmerPlanPaymentRequest.updateMany({
+      where: { id: requestId, status: { not: PlanPaymentStatus.CONFIRMED } },
       data: {
         status: PlanPaymentStatus.CONFIRMED,
         utr: paymentData?.id ? `RZP-${paymentData.id}` : (isRecurring ? 'RZP-AUTOPAY' : 'RZP-PAID'),
@@ -298,6 +307,9 @@ export class RazorpayService {
         confirmedAt: new Date(),
       },
     });
+    if (claimed.count === 0) {
+      return;
+    }
 
     // Auto-extend farmer plan
     const prefix = request.targetPlan === FarmerSubscriptionPlan.PRO ? 'FB' : request.targetPlan === FarmerSubscriptionPlan.SMART ? 'FP' : 'FS';

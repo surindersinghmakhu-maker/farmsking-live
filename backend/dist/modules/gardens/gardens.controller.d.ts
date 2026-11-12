@@ -40,6 +40,54 @@ export declare class GardensController {
         location: string | null;
         healthScore: number;
     })[]>;
+    addExpense(user: AuthUser, dto: CreateGardenExpenseDto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        gardenId: string;
+        plantId: string | null;
+        categoryName: string;
+    }>;
+    listExpenses(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
+        garden: {
+            id: string;
+            name: string;
+        };
+        plant: {
+            id: string;
+            name: string;
+        } | null;
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        gardenId: string;
+        plantId: string | null;
+        categoryName: string;
+    })[]>;
+    deleteExpense(user: AuthUser, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string | null;
+        amount: import("@prisma/client/runtime/library").Decimal;
+        recordedById: string;
+        expenseDate: Date;
+        receiptPhotoUrl: string | null;
+        gardenId: string;
+        plantId: string | null;
+        categoryName: string;
+    }>;
     findOne(user: AuthUser, id: string): Promise<{
         plants: {
             id: string;
@@ -85,52 +133,4 @@ export declare class GardensController {
         plantedDate: Date | null;
         healthNotes: string | null;
     }[]>;
-    addExpense(user: AuthUser, dto: CreateGardenExpenseDto): import(".prisma/client").Prisma.Prisma__GardenExpenseClient<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
-        gardenId: string;
-        plantId: string | null;
-        categoryName: string;
-    }, never, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
-    listExpenses(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
-        garden: {
-            id: string;
-            name: string;
-        };
-        plant: {
-            id: string;
-            name: string;
-        } | null;
-    } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
-        gardenId: string;
-        plantId: string | null;
-        categoryName: string;
-    })[]>;
-    deleteExpense(user: AuthUser, id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        amount: import("@prisma/client/runtime/library").Decimal;
-        recordedById: string;
-        expenseDate: Date;
-        receiptPhotoUrl: string | null;
-        gardenId: string;
-        plantId: string | null;
-        categoryName: string;
-    }>;
 }

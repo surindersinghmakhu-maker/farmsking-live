@@ -35,10 +35,12 @@ export const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'farm', 'records', 'shop', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
   CUSTOMER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
-  ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  AGENT: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
+  TRADER: { tabs: ['shop', 'cart', 'orders', 'wallet', 'more'] },
+  SELLER: { tabs: ['shop', 'cart', 'wallet', 'more'] },
+  ADVISOR: { tabs: ['index', 'farmers', 'chat', 'wallet', 'more'] },
+  FARM_ADVISOR: { tabs: ['index', 'farmers', 'chat', 'wallet', 'more'] },
+  GARDEN_ADVISOR: { tabs: ['index', 'farmers', 'chat', 'wallet', 'more'] },
+  AGENT: { tabs: ['index', 'referrals', 'wallet', 'more'] },
   ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
   SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
   MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
@@ -66,6 +68,8 @@ export interface RoleTabItem {
 export function getTabsForRole(role?: string | null): RoleTabItem[] {
   const roleKey = (role || 'FARMER').toUpperCase();
   const config = ROLE_TABS[roleKey] || ROLE_TABS.FARMER;
+  const isPartnerPortalRole = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'].includes(roleKey);
+  const tabBase = isPartnerPortalRole ? '/(partner)/(tabs)' : '/(user)/(tabs)';
 
   return config.tabs.map((name) => {
     switch (name) {
@@ -76,7 +80,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           label: 'Home',
           icon: 'home',
           iconOutline: 'home-outline',
-          path: '/(user)/(tabs)',
+          path: tabBase,
           color: '#10b981',
           glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
           laser: ['#00ff87', '#10b981', '#059669'],
@@ -147,7 +151,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           label: 'More',
           icon: 'grid',
           iconOutline: 'grid-outline',
-          path: `/(user)/(tabs)/${name}`,
+          path: `${tabBase}/${name}`,
           isMore: true,
           color: '#a855f7',
           glow: ['rgba(168, 85, 247, 0.32)', 'rgba(126, 34, 206, 0.18)', 'rgba(168, 85, 247, 0.05)'],
@@ -183,6 +187,20 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           border: 'rgba(16, 185, 129, 0.50)',
           shadow: '#10b981',
         };
+      case 'orders':
+        return {
+          key: 'orders',
+          tabName: 'orders',
+          label: 'Orders',
+          icon: 'receipt',
+          iconOutline: 'receipt-outline',
+          path: '/(user)/(tabs)/orders',
+          color: '#38bdf8',
+          glow: ['rgba(56, 189, 248, 0.32)', 'rgba(14, 165, 233, 0.18)', 'rgba(56, 189, 248, 0.05)'],
+          laser: ['#38bdf8', '#0ea5e9', '#0284c7'],
+          border: 'rgba(56, 189, 248, 0.50)',
+          shadow: '#38bdf8',
+        };
       case 'wallet':
         return {
           key: 'wallet',
@@ -190,7 +208,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           label: 'Wallet',
           icon: 'wallet',
           iconOutline: 'wallet-outline',
-          path: roleKey === 'AGENT' ? '/(partner)/(tabs)/wallet' : '/(user)/(tabs)/wallet',
+          path: `${tabBase}/wallet`,
           color: '#f59e0b',
           glow: ['rgba(245, 158, 11, 0.32)', 'rgba(217, 119, 6, 0.18)', 'rgba(245, 158, 11, 0.05)'],
           laser: ['#fbbf24', '#f59e0b', '#d97706'],
@@ -204,7 +222,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           label: roleKey === 'GARDEN_ADVISOR' ? 'Gardens' : 'Farmers',
           icon: 'leaf',
           iconOutline: 'leaf-outline',
-          path: '/(user)/(tabs)/farmers',
+          path: `${tabBase}/farmers`,
           color: '#10b981',
           glow: ['rgba(16, 185, 129, 0.32)', 'rgba(5, 150, 105, 0.18)', 'rgba(16, 185, 129, 0.05)'],
           laser: ['#00ff87', '#10b981', '#059669'],
@@ -218,7 +236,7 @@ export function getTabsForRole(role?: string | null): RoleTabItem[] {
           label: 'Chat',
           icon: 'chatbubble',
           iconOutline: 'chatbubble-outline',
-          path: '/(user)/(tabs)/chat',
+          path: `${tabBase}/chat`,
           color: '#38bdf8',
           glow: ['rgba(56, 189, 248, 0.32)', 'rgba(14, 165, 233, 0.18)', 'rgba(56, 189, 248, 0.05)'],
           laser: ['#38bdf8', '#0ea5e9', '#0284c7'],

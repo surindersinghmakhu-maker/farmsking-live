@@ -1,6 +1,6 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { AiChatService, AiChatRequestDto } from './ai-chat.service';
+import { AiChatService, AiChatRequestDto, DiagnoseLeafDto } from './ai-chat.service';
 
 @Controller('ai-chat')
 @UseGuards(ThrottlerGuard)
@@ -14,8 +14,8 @@ export class AiChatController {
   }
 
   @Post('diagnose-leaf')
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
-  async diagnoseLeaf(@Body() body: { imageBase64: string }) {
-    return this.aiChatService.diagnoseLeaf(body?.imageBase64 || '');
+  @Throttle({ default: { limit: 6, ttl: 60000 } })
+  async diagnoseLeaf(@Body() body: DiagnoseLeafDto) {
+    return this.aiChatService.diagnoseLeaf(body.imageBase64);
   }
 }

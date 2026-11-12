@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "npx prisma@6.4.0 generate",
-    "build": "npx prisma@6.4.0 generate && pm2 logs farmsking-backend --nostream --lines 150 > ../frontend/public/pm2-error.txt || true",
+    "build": "npx prisma@6.4.0 generate && nest build",
     "build:local": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

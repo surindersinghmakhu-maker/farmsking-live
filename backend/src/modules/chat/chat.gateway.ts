@@ -13,14 +13,29 @@ import { Server, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
 import { ChatService } from './chat.service';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { ADMIN_STAFF_ROLES, getActiveRolesList } from '../../common/utils/role-policy.util';
+import { UserSessionService } from '../auth/user-session.service';
 
 interface AuthedSocket extends Socket {
   data: { user?: AuthUser };
 }
 
 export const userRoom = (userId: string) => `user:${userId}`;
+export const ADMIN_DESK_ROOM = 'role:ADMIN_DESK';
 
-@WebSocketGateway({ namespace: '/chat', cors: { origin: true, credentials: true } })
+const WS_ALLOWED_ORIGINS = [
+  'https://farmsking.in',
+  'https://www.farmsking.in',
+  'https://admin.farmsking.in',
+  'http://localhost:8081',
+  'http://localhost:8082',
+  'http://localhost:3000',
+  /^http:\/\/localhost:\d+$/,
+  /^http:\/\/127\.0\.0\.1:\d+$/,
+  /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+];
+
+@WebSocketGateway({ namespace: '/chat', cors: { origin: WS_ALLOWED_ORIGINS, credentials: true } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
@@ -37,6 +52,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+    private readonly userSessionService: UserSessionService,
   ) {}
 
   broadcastMarketRateUpdate(payload?: any) {
@@ -75,17 +91,45 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const payload = this.jwtService.verify<{ sub: string }>(token);
+      const payload = this.jwtService.verify<{ sub: string; sid?: string; iat?: number }>(token);
       const user = await this.prisma.user.findFirst({
         where: { id: payload.sub, deletedAt: null },
-        select: { id: true, mobile: true, role: true, roles: true, deactivatedRoles: true, name: true },
+        select: {
+          id: true,
+          mobile: true,
+          role: true,
+          roles: true,
+          deactivatedRoles: true,
+          name: true,
+          isPermanentlyBlocked: true,
+          lockoutUntil: true,
+        },
       });
       if (!user) {
         client.disconnect();
         return;
       }
-      client.data.user = user;
+      if (user.isPermanentlyBlocked || (user.lockoutUntil && new Date(user.lockoutUntil) > new Date())) {
+        client.disconnect();
+        return;
+      }
+      if (!this.userSessionService.isValidSession(user.id, payload.sid, payload.iat)) {
+        client.disconnect();
+        return;
+      }
+      client.data.user = {
+        id: user.id,
+        mobile: user.mobile,
+        role: user.role,
+        roles: user.roles,
+        deactivatedRoles: user.deactivatedRoles,
+        name: user.name,
+      };
       client.join(userRoom(user.id));
+      const activeRoles = getActiveRolesList(user);
+      if (activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r))) {
+        client.join(ADMIN_DESK_ROOM);
+      }
       this.setOnline(user.id);
     } catch {
       client.disconnect();

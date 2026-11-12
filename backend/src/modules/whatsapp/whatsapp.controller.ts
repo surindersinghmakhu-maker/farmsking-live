@@ -1,8 +1,14 @@
 
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { WhatsappBotService } from './whatsapp.service';
 import { WhatsAppGroupSyncService } from './whatsapp-group-sync.service';
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN)
 @Controller('whatsapp')
 export class WhatsappBotController {
   constructor(

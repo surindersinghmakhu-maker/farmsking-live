@@ -76,7 +76,12 @@ async function bootstrap() {
     const port = parseInt(configService.get('PORT', '3000'), 10);
     const host = configService.get('HOST', '0.0.0.0');
     const corsOrigins = configService.get('CORS_ORIGINS', '');
-    app.use((0, express_1.json)({ limit: '50mb' }));
+    app.use((0, express_1.json)({
+        limit: '50mb',
+        verify: (req, _res, buf) => {
+            req.rawBody = buf;
+        },
+    }));
     app.use((0, express_1.urlencoded)({ limit: '50mb', extended: true }));
     app.setGlobalPrefix(apiPrefix);
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), {
@@ -127,14 +132,16 @@ async function bootstrap() {
     }));
     const { httpAdapter } = app.get(core_2.HttpAdapterHost);
     app.useGlobalFilters(new sentry_filter_1.SentryFilter(httpAdapter));
-    const swaggerConfig = new swagger_1.DocumentBuilder()
-        .setTitle('FarmsKing API')
-        .setDescription('FarmsKing Backend API Documentation')
-        .setVersion('2.0')
-        .addBearerAuth()
-        .build();
-    const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
-    swagger_1.SwaggerModule.setup('api/docs', app, document);
+    if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {
+        const swaggerConfig = new swagger_1.DocumentBuilder()
+            .setTitle('FarmsKing API')
+            .setDescription('FarmsKing Backend API Documentation')
+            .setVersion('2.0')
+            .addBearerAuth()
+            .build();
+        const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
+        swagger_1.SwaggerModule.setup('api/docs', app, document);
+    }
     common_1.Logger.log(`Attempting to start server on ${host}:${port}`, 'Bootstrap');
     try {
         await app.listen(port, host);

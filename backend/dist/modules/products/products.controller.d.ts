@@ -365,13 +365,12 @@ export declare class ProductsController {
         photoUrls: string[];
     }>;
     getReviews(id: string): Promise<{
-        reviews: ({
+        reviews: {
+            isVerifiedBuyer: boolean;
             user: {
                 id: string;
-                mobile: string;
                 name: string;
             };
-        } & {
             id: string;
             createdAt: Date;
             title: string | null;
@@ -380,9 +379,10 @@ export declare class ProductsController {
             productId: string;
             comment: string | null;
             photoUrls: string[];
-        })[];
+        }[];
         total: number;
-        avgRating: number;
+        verifiedBuyerCount: number;
+        avgRating: number | null;
     }>;
     update(user: AuthUser, id: string, dto: UpdateProductDto): Promise<{
         id: string;

@@ -511,22 +511,24 @@ export default function LoginScreen() {
       // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS with Backend Fallback
       try {
         if (typeof window !== 'undefined') {
-          let el = document.getElementById('recaptcha-container-login');
-          if (!el) {
-            el = document.createElement('div');
-            el.id = 'recaptcha-container-login';
-            el.style.position = 'fixed';
-            el.style.bottom = '0';
-            el.style.right = '0';
-            el.style.zIndex = '9999';
-            document.body.appendChild(el);
-          }
           if ((window as any).recaptchaVerifierLogin) {
             try {
               (window as any).recaptchaVerifierLogin.clear();
             } catch {}
             (window as any).recaptchaVerifierLogin = null;
           }
+          const oldEl = document.getElementById('recaptcha-container-login');
+          if (oldEl && oldEl.parentNode) {
+            oldEl.parentNode.removeChild(oldEl);
+          }
+          const el = document.createElement('div');
+          el.id = 'recaptcha-container-login';
+          el.style.position = 'fixed';
+          el.style.bottom = '0';
+          el.style.right = '0';
+          el.style.zIndex = '9999';
+          document.body.appendChild(el);
+
           (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
             auth,
             el,
@@ -567,9 +569,12 @@ export default function LoginScreen() {
           return;
         } catch (backendErr: any) {
           console.warn('[Backend OTP fallback error]:', backendErr);
+          if (applyStructuredPartnerError(backendErr, cleanNum)) {
+            return;
+          }
           const backendStatus = backendErr?.response?.status;
           const backendMsg = backendErr?.response?.data?.message;
-          if ((backendStatus === 403 || backendStatus === 401) && backendMsg) {
+          if (backendStatus && backendStatus < 500 && backendMsg) {
             setError(Array.isArray(backendMsg) ? backendMsg.join(', ') : String(backendMsg));
             return;
           }

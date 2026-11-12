@@ -86,6 +86,36 @@ let CouponsService = class CouponsService {
             orderBy: { createdAt: 'desc' },
         });
     }
+    async listAvailablePromotions() {
+        const now = new Date();
+        const rows = await this.prisma.coupon.findMany({
+            where: {
+                isActive: true,
+                kind: client_1.CouponKind.GENERIC,
+                expiresAt: { gt: now },
+            },
+            select: {
+                id: true,
+                code: true,
+                kind: true,
+                discountType: true,
+                discountValue: true,
+                discountMaxCap: true,
+                minOrderAmount: true,
+                expiresAt: true,
+                usageLimit: true,
+                usedCount: true,
+            },
+            orderBy: { expiresAt: 'asc' },
+            take: 30,
+        });
+        return rows
+            .filter((c) => c.usedCount < c.usageLimit)
+            .map(({ usageLimit, usedCount, ...safe }) => ({
+            ...safe,
+            remainingUses: Math.max(0, usageLimit - usedCount),
+        }));
+    }
     async findOneOrThrow(id) {
         const coupon = await this.prisma.coupon.findUnique({ where: { id } });
         if (!coupon) {

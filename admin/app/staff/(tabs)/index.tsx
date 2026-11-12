@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
@@ -7,13 +7,22 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 
 export default function OperationsDeskIndexScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <BrandLogo size={36} useHdQuality style={{ marginRight: 4 }} />
+          <BrandLogo
+            size={isMobile ? 34 : undefined}
+            height={isMobile ? 34 : 34}
+            width={isMobile ? 34 : 104}
+            useFavicon={isMobile}
+            useHdQuality
+            style={{ marginRight: 4 }}
+          />
           <View>
             <Text style={styles.title}>Operations Desk</Text>
             <Text style={styles.subtitle}>Command • Coordinate • Deliver • Technical Training & Dispatch</Text>

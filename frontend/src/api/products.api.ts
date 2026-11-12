@@ -37,3 +37,39 @@ export async function removeProduct(id: string): Promise<Product> {
   const { data } = await apiClient.delete<Product>('/products/' + id);
   return data;
 }
+
+export interface ProductReviewItem {
+  id: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  title?: string | null;
+  comment?: string | null;
+  photoUrls?: string[];
+  createdAt: string;
+  isVerifiedBuyer?: boolean;
+  user?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface ProductReviewsResponse {
+  reviews: ProductReviewItem[];
+  total: number;
+  verifiedBuyerCount?: number;
+  avgRating: number | null;
+}
+
+export async function getProductReviews(productId: string): Promise<ProductReviewsResponse> {
+  const { data } = await apiClient.get<ProductReviewsResponse>(`/products/${productId}/reviews`);
+  return data;
+}
+
+export async function submitProductReview(
+  productId: string,
+  payload: { rating: number; title?: string; comment?: string; photoUrls?: string[] },
+): Promise<ProductReviewItem> {
+  const { data } = await apiClient.post<ProductReviewItem>(`/products/${productId}/reviews`, payload);
+  return data;
+}

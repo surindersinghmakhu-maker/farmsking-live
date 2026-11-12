@@ -9,6 +9,15 @@ export function useMyCoupons() {
   return useQuery({ queryKey: ['coupons', 'mine'], queryFn: api.listMyCoupons });
 }
 
+export function useAvailablePromotions(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['coupons', 'available'],
+    queryFn: api.listAvailablePromotions,
+    enabled,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useCouponRedemptions(id: string | undefined, enabled: boolean = true) {
   return useQuery({
     queryKey: ['coupons', id, 'redemptions'],

@@ -52,10 +52,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/brand_logo.png",
-          "imageWidth": 220,
+          "image": "./assets/images/favicon.png",
+          "imageWidth": 96,
           "resizeMode": "contain",
-          "backgroundColor": "#022c22"
+          "backgroundColor": "#070c18"
         }
       ],
       "expo-secure-store",

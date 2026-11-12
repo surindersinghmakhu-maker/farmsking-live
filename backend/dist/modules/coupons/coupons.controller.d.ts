@@ -92,6 +92,17 @@ export declare class CouponsController {
         isActive: boolean;
         createdById: string;
     }[]>;
+    listAvailablePromotions(): Promise<{
+        remainingUses: number;
+        id: string;
+        code: string;
+        discountType: import(".prisma/client").$Enums.DiscountValueType;
+        discountValue: import("@prisma/client/runtime/library").Decimal;
+        discountMaxCap: import("@prisma/client/runtime/library").Decimal | null;
+        minOrderAmount: import("@prisma/client/runtime/library").Decimal | null;
+        kind: import(".prisma/client").$Enums.CouponKind;
+        expiresAt: Date;
+    }[]>;
     update(id: string, dto: UpdateCouponDto): Promise<{
         id: string;
         createdAt: Date;

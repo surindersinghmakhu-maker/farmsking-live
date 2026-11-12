@@ -90,6 +90,39 @@ export class CouponsService {
     });
   }
 
+  /** Lists active, non-expired public GENERIC promotions with safe customer-facing fields only (no partner PII or commission data). */
+  async listAvailablePromotions() {
+    const now = new Date();
+    const rows = await this.prisma.coupon.findMany({
+      where: {
+        isActive: true,
+        kind: CouponKind.GENERIC,
+        expiresAt: { gt: now },
+      },
+      select: {
+        id: true,
+        code: true,
+        kind: true,
+        discountType: true,
+        discountValue: true,
+        discountMaxCap: true,
+        minOrderAmount: true,
+        expiresAt: true,
+        usageLimit: true,
+        usedCount: true,
+      },
+      orderBy: { expiresAt: 'asc' },
+      take: 30,
+    });
+
+    return rows
+      .filter((c) => c.usedCount < c.usageLimit)
+      .map(({ usageLimit, usedCount, ...safe }) => ({
+        ...safe,
+        remainingUses: Math.max(0, usageLimit - usedCount),
+      }));
+  }
+
   private async findOneOrThrow(id: string) {
     const coupon = await this.prisma.coupon.findUnique({ where: { id } });
     if (!coupon) {

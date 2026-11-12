@@ -1,7 +1,7 @@
 import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
-import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
+import { PublicInquiryDto, UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 import { FeatureFlagsMap } from '../../common/constants/feature-flags.constant';
 import { SystemIntegrationsConfig } from './constants/system-integrations.constant';
 export declare class AppSettingsService {
@@ -256,5 +256,10 @@ export declare class AppSettingsService {
     updateVisitorStats(admin: AuthUser, dto: any): Promise<{
         success: boolean;
         stats: any;
+    }>;
+    submitPublicInquiry(dto: PublicInquiryDto): Promise<{
+        success: boolean;
+        ticketId: string;
+        message: string;
     }>;
 }

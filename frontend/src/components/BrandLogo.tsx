@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, ImageStyle, Platform, StyleProp, View, ViewStyle } from 'react-native';
+import { Image, ImageStyle, Platform, StyleProp, useWindowDimensions, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { resolveMediaUrl } from '@/src/api/client';
@@ -26,6 +26,8 @@ export interface BrandLogoProps {
   isNight?: boolean;
   useFavicon?: boolean;
   emblem?: boolean;
+  /** Automatically uses square K Brand Favicon on mobile screens (<=768px) and full Brand Logo on PC screens (>768px). */
+  responsiveMobileFavicon?: boolean;
   resizeMode?: 'contain' | 'cover' | 'stretch' | 'center';
 }
 
@@ -61,13 +63,20 @@ export function BrandLogo({
   isNight = false,
   useFavicon = false,
   emblem = false,
+  responsiveMobileFavicon = false,
   resizeMode = 'contain',
 }: BrandLogoProps) {
+  const { width: viewportWidth } = useWindowDimensions();
   const { data: settings } = useAppSettings();
 
   const [imageError, setImageError] = useState(false);
   const isDarkMode = dark || isNight;
-  const isEmblemMode = round || useGoldRing || useFavicon || emblem;
+  const isEmblemMode =
+    round ||
+    useGoldRing ||
+    useFavicon ||
+    emblem ||
+    (responsiveMobileFavicon && viewportWidth <= 768);
 
   // Highest priority: The official Brand Logo saved in Settings
   const rawLogo = settings?.logoUrl || '/brand_logo.png';

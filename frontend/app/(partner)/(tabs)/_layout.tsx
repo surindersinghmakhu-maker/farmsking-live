@@ -430,7 +430,7 @@ export default function TabLayout() {
         <View style={[desktopStyles.headerBar, { height: 52, paddingHorizontal: 12, backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder, borderBottomWidth: 1 }]}>
           <View style={desktopStyles.headerLeft}>
             <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(partner)/(tabs)' as any)}>
-              <BrandLogo height={28} width={96} useFastBundledOnly={true} dark={colors.isDark} resizeMode="contain" />
+              <BrandLogo size={32} useFavicon={true} useFastBundledOnly={true} dark={colors.isDark} resizeMode="contain" />
             </TouchableOpacity>
           </View>
 

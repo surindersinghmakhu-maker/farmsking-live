@@ -175,7 +175,7 @@ export default function TermsOfServiceScreen() {
               </Text>
             </View>
             <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
-              All hybrid seeds, bio-fertilizers, soluble nutrients, spray equipment, and organic inputs on FarmsKing Agri Store adhere to the Seeds Act (1966), Fertilizer Control Order (1985), and Insecticides Act (1968).
+              All hybrid seeds, bio-fertilizers, soluble nutrients, live nursery saplings, and organic inputs on FarmsKing Agri Store adhere to the Seeds Act (1966), Fertilizer Control Order (1985), and Insecticides Act (1968).
             </Text>
             <View style={styles.bulletList}>
               <View style={styles.bulletItem}>

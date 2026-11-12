@@ -56,9 +56,9 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
         this.prisma = prisma;
         this.appSettingsService = appSettingsService;
         this.logger = new common_1.Logger(RazorpayService_1.name);
-        this.keyId = this.configService.get('RAZORPAY_KEY_ID') || 'rzp_test_placeholder';
-        this.keySecret = this.configService.get('RAZORPAY_KEY_SECRET') || 'rzp_test_secret';
-        this.webhookSecret = this.configService.get('RAZORPAY_WEBHOOK_SECRET') || 'rzp_webhook_secret';
+        this.keyId = this.configService.get('RAZORPAY_KEY_ID') || '';
+        this.keySecret = this.configService.get('RAZORPAY_KEY_SECRET') || '';
+        this.webhookSecret = this.configService.get('RAZORPAY_WEBHOOK_SECRET') || '';
     }
     async getCredentials() {
         try {
@@ -82,6 +82,9 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
     }
     async getBasicAuthHeader() {
         const creds = await this.getCredentials();
+        if (!creds.keyId || !creds.keySecret) {
+            throw new common_1.BadRequestException('Razorpay credentials are not configured. Please contact support.');
+        }
         return 'Basic ' + Buffer.from(`${creds.keyId}:${creds.keySecret}`).toString('base64');
     }
     async createStandardOrder(dto) {
@@ -197,6 +200,9 @@ let RazorpayService = RazorpayService_1 = class RazorpayService {
     }
     async verifyPayment(dto) {
         const creds = await this.getCredentials();
+        if (!creds.keySecret) {
+            throw new common_1.UnauthorizedException('Razorpay verification secret is not configured.');
+        }
         const body = `${dto.razorpayOrderId}|${dto.razorpayPaymentId}`;
         const expectedSignature = crypto
             .createHmac('sha256', creds.keySecret)

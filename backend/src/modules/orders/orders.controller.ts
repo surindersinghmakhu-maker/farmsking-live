@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { OrderStatus, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -141,6 +142,7 @@ export class OrdersController {
 export class OrdersPublicController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @Get('track/:orderNumber')
   trackOrder(@Param('orderNumber') orderNumber: string) {
     return this.ordersService.trackPublicOrder(orderNumber);

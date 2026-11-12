@@ -669,6 +669,8 @@ export interface Product {
   imageUrl?: string | null;
   stockQty: number;
   isActive: boolean;
+  isTopSeller?: boolean;
+  rating?: number;
   createdAt: string;
   updatedAt: string;
 }

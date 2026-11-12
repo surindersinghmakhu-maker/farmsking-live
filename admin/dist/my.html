@@ -4,6 +4,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <link rel="preload" href="/favicon.png?v=7" as="image" />
     <title>FarmsKing - Admin Staff</title>
     <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
     <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India" />
@@ -297,15 +298,54 @@
     </noscript>
     
     <!-- The root element for your Expo app. -->
-    <div id="root">
-    <div id="farmsking-admin-splash" style="position: fixed; inset: 0; background: #022c22; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 16px;" />
-      <div style="color: #fef08a; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 10px;">Smart Farming</div>
-      <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
-        🌾 India’s Intelligent Agriculture Platform
+    <div id="root"></div>
+
+    <style>
+      #farmsking-web-splash {
+        position: fixed;
+        inset: 0;
+        background: #022c22;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        pointer-events: none;
+        transition: opacity 0.14s ease-out, transform 0.14s ease-out;
+        will-change: opacity, transform;
+      }
+    </style>
+    <div id="farmsking-web-splash">
+      <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 14px;" />
+      <div style="color: #fef08a; font-size: 16px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing · Admin Staff</div>
+      <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12px; font-weight: 600;">
+        🌾 India's Intelligent Agriculture Platform
       </div>
     </div>
-    </div>
-  <script src="/_expo/static/js/web/entry-29d7a5d041a1f44416e66b8eeb4ddaed.js" defer></script>
+    <script>
+      (function() {
+        var dismissed = false;
+        window.__dismissFarmsKingSplash = function() {
+          if (dismissed) return;
+          dismissed = true;
+          var el = document.getElementById('farmsking-web-splash');
+          if (el) {
+            el.style.opacity = '0';
+            el.style.transform = 'scale(1.01)';
+            setTimeout(function() {
+              if (el && el.parentNode) el.parentNode.removeChild(el);
+            }, 150);
+          }
+        };
+        setTimeout(function() {
+          if (!dismissed && window.__dismissFarmsKingSplash) {
+            window.__dismissFarmsKingSplash();
+          }
+        }, 900);
+      })();
+    </script>
+    
+  <script src="/_expo/static/js/web/entry-84620d2b9a5e81c872433166ceeaffbf.js" defer></script>
 </body>
 </html>

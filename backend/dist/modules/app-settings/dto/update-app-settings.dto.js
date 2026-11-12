@@ -9,8 +9,34 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateAppSettingsDto = void 0;
+exports.UpdateAppSettingsDto = exports.PublicInquiryDto = void 0;
 const class_validator_1 = require("class-validator");
+class PublicInquiryDto {
+}
+exports.PublicInquiryDto = PublicInquiryDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(80),
+    __metadata("design:type", String)
+], PublicInquiryDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^[6-9]\d{9}$/, { message: 'Please provide a valid 10-digit Indian mobile number.' }),
+    __metadata("design:type", String)
+], PublicInquiryDto.prototype, "mobile", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(60),
+    __metadata("design:type", String)
+], PublicInquiryDto.prototype, "topic", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(5),
+    (0, class_validator_1.MaxLength)(1500),
+    __metadata("design:type", String)
+], PublicInquiryDto.prototype, "message", void 0);
 class UpdateAppSettingsDto {
 }
 exports.UpdateAppSettingsDto = UpdateAppSettingsDto;

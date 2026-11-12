@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { FONT, RADIUS } from '@/constants/theme';
 
 export function SplashView() {
+  const imgSrc = Platform.OS === 'web' ? { uri: '/favicon.png?v=7' } : require('@/assets/images/favicon.png');
+
   return (
     <View style={styles.container}>
       <Image
-        source={require('@/assets/images/favicon.png')}
+        source={imgSrc}
         style={[
           styles.faviconImg,
           Platform.OS === 'web'

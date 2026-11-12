@@ -1,9 +1,10 @@
 import { Injectable, UnauthorizedException, BadRequestException, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomInt, timingSafeEqual } from 'crypto';
+import { NotificationType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
-import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
+import { PublicInquiryDto, UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 import { DEFAULT_FEATURE_FLAGS, FeatureFlagsMap } from '../../common/constants/feature-flags.constant';
 import { DEFAULT_INTEGRATIONS_CONFIG, SystemIntegrationsConfig } from './constants/system-integrations.constant';
 
@@ -333,8 +334,8 @@ export class AppSettingsService {
     }
 
     const companyLegalName = pm.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED';
-    const helplinePhone = pm.primaryMobile || mobile || '+91 95776-22000';
-    const supportEmail = pm.contactEmail || pm.supportEmail || email || 'farmskingindia@gmail.com';
+    const helplinePhone = pm.primaryMobile || (settings as any)?.adminMobile || '+91 95776-22000';
+    const supportEmail = pm.contactEmail || pm.supportEmail || email || 'support@farmsking.in';
     const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
     const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
 
@@ -1439,5 +1440,65 @@ export class AppSettingsService {
 
     this.clearCache();
     return { success: true, stats: updated };
+  }
+
+  /** Capture a public customer inquiry cleanly into Admin notifications and the audit log. */
+  async submitPublicInquiry(dto: PublicInquiryDto) {
+    const cleanName = dto.name.trim();
+    const cleanMobile = dto.mobile.replace(/\D/g, '').slice(-10);
+    const cleanTopic = (dto.topic || 'General Inquiry').trim();
+    const cleanMessage = dto.message.trim();
+    const ticketId = `INQ-${Date.now().toString(36).toUpperCase()}`;
+
+    const admins = await this.prisma.user.findMany({
+      where: {
+        deletedAt: null,
+        role: { in: [Role.SUPER_ADMIN, Role.ADMIN] },
+      },
+      select: { id: true },
+    });
+
+    if (admins.length > 0) {
+      await this.prisma.notification.createMany({
+        data: admins.map((a) => ({
+          userId: a.id,
+          type: NotificationType.SYSTEM,
+          title: `New Inquiry (${cleanTopic}): ${cleanName}`,
+          body: `Mobile: ${cleanMobile} • Ticket: ${ticketId} — ${cleanMessage.slice(0, 240)}`,
+          data: {
+            ticketId,
+            senderName: cleanName,
+            senderMobile: cleanMobile,
+            topic: cleanTopic,
+            message: cleanMessage,
+          },
+        })),
+      });
+    }
+
+    await this.prisma.auditLog
+      .create({
+        data: {
+          method: 'POST',
+          path: '/api/v1/public-contact/inquiry',
+          action: 'PUBLIC_CONTACT_INQUIRY',
+          targetId: ticketId,
+          statusCode: 201,
+          metadata: {
+            ticketId,
+            senderName: cleanName,
+            senderMobile: cleanMobile,
+            topic: cleanTopic,
+            message: cleanMessage,
+          },
+        },
+      })
+      .catch(() => {});
+
+    return {
+      success: true,
+      ticketId,
+      message: 'Your inquiry has been submitted to our FarmsKing Support Desk.',
+    };
   }
 }

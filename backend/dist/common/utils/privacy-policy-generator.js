@@ -342,7 +342,7 @@ function generateAccountDeletionHtml(baseUrl = 'https://farmsking.in') {
       statusBox.style.display = 'none';
 
       try {
-        const res = await fetch('/api/request-account-deletion', {
+        const res = await fetch('/api/v1/api/request-account-deletion', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mobile, password, reason })
@@ -361,7 +361,7 @@ function generateAccountDeletionHtml(baseUrl = 'https://farmsking.in') {
       } catch (err) {
         statusBox.style.display = 'block';
         statusBox.className = 'status-msg status-error';
-        statusBox.innerHTML = '❌ Could not submit request. Please check internet or contact support (+91 9872066901).';
+        statusBox.innerHTML = '❌ Could not submit request. Please check internet or contact support (+91 95776-22000).';
       } finally {
         btn.disabled = false;
         btn.innerText = 'Submit Account Deletion Request';

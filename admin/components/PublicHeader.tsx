@@ -166,16 +166,25 @@ export default function PublicHeader({
     <>
       <View style={[styles.floatingHeader, !isDesktop && styles.floatingHeaderMobile, menuOpen && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
         <TouchableOpacity
-          style={[styles.logoContainer, styles.logoCapsule]}
+          style={[styles.logoContainer, styles.logoCapsule, !isDesktop && { paddingHorizontal: 8, paddingVertical: 4 }]}
           onPress={() => router.push('/')}
           activeOpacity={0.8}
         >
-          <BrandLogo
-            height={isDesktop ? 38 : 30}
-            width={isDesktop ? 124 : 98}
-            useHdQuality
-            resizeMode="contain"
-          />
+          {isDesktop ? (
+            <BrandLogo
+              height={38}
+              width={124}
+              useHdQuality
+              resizeMode="contain"
+            />
+          ) : (
+            <BrandLogo
+              size={32}
+              useFavicon={true}
+              useHdQuality
+              resizeMode="contain"
+            />
+          )}
         </TouchableOpacity>
 
         {/* Desktop Nav: Continuous Gliding Colorful Spring Pill */}

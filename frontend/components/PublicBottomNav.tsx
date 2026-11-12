@@ -431,7 +431,10 @@ export default function PublicBottomNav() {
             {/* Header */}
             <View style={sheetStyles.sheetHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <BrandLogo height={24} width={88} dark={true} resizeMode="contain" />
+                <BrandLogo size={28} useFavicon={true} dark={true} resizeMode="contain" />
+                <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#f8fafc', letterSpacing: -0.2 }}>
+                  FarmsKing
+                </Text>
                 <View style={sheetStyles.appBadge}>
                   <Text style={sheetStyles.appBadgeText}>App Directory</Text>
                 </View>
@@ -771,7 +774,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingTop: 4,
-    paddingBottom: 6,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 6,
     position: 'relative',
     shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: -3 },

@@ -42,3 +42,24 @@ export function useRemoveProduct() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
   });
 }
+
+export function useProductReviews(productId?: string) {
+  return useQuery({
+    queryKey: ['product-reviews', productId],
+    queryFn: () => api.getProductReviews(productId as string),
+    enabled: Boolean(productId),
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useSubmitProductReview(productId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { rating: number; title?: string; comment?: string }) =>
+      api.submitProductReview(productId as string, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}

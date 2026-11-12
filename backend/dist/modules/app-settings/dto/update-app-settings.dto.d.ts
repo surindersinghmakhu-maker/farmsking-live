@@ -1,3 +1,9 @@
+export declare class PublicInquiryDto {
+    name: string;
+    mobile: string;
+    topic?: string;
+    message: string;
+}
 export declare class UpdateAppSettingsDto {
     appName?: string;
     logoUrl?: string;

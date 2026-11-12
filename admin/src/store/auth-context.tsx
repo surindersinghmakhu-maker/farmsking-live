@@ -1,7 +1,7 @@
 import * as SecureStore from '../lib/storage';
 import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
-import { AppState, Alert } from 'react-native';
+import { AppState, Alert, Platform } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
@@ -42,8 +42,26 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const USER_KEY = 'farmsking_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const getInitialWebUser = (): User | null => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const token = window.localStorage.getItem(TOKEN_KEY);
+        const storedUser = window.localStorage.getItem(USER_KEY);
+        if (token && storedUser) {
+          const parsed = JSON.parse(storedUser);
+          const mapRole = (r: any) => (r === 'BUSINESS_PARTNER' ? 'AGENT' : r);
+          if (parsed?.role) parsed.role = mapRole(parsed.role);
+          if (Array.isArray(parsed?.roles)) parsed.roles = parsed.roles.map(mapRole);
+          if (Array.isArray(parsed?.deactivatedRoles)) parsed.deactivatedRoles = parsed.deactivatedRoles.map(mapRole);
+          return parsed;
+        }
+      } catch {}
+    }
+    return null;
+  };
+
+  const [user, setUser] = useState<User | null>(getInitialWebUser);
+  const [isLoading, setIsLoading] = useState(Platform.OS !== 'web');
   const userRef = useRef<User | null>(null);
   userRef.current = user;
   const queryClient = useQueryClient();

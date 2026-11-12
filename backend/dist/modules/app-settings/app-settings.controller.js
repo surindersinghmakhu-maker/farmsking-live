@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PublicContactController = exports.AppSettingsController = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
@@ -227,6 +228,9 @@ let PublicContactController = class PublicContactController {
     getPublicAppSettings() {
         return this.appSettingsService.get();
     }
+    submitPublicInquiry(dto) {
+        return this.appSettingsService.submitPublicInquiry(dto);
+    }
 };
 exports.PublicContactController = PublicContactController;
 __decorate([
@@ -247,6 +251,14 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PublicContactController.prototype, "getPublicAppSettings", null);
+__decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, common_1.Post)('inquiry'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [update_app_settings_dto_1.PublicInquiryDto]),
+    __metadata("design:returntype", void 0)
+], PublicContactController.prototype, "submitPublicInquiry", null);
 exports.PublicContactController = PublicContactController = __decorate([
     (0, common_1.Controller)('public-contact'),
     __metadata("design:paramtypes", [app_settings_service_1.AppSettingsService])

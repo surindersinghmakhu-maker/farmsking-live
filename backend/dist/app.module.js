@@ -18,7 +18,6 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const farms_module_1 = require("./modules/farms/farms.module");
 const plots_module_1 = require("./modules/plots/plots.module");
 const crops_module_1 = require("./modules/crops/crops.module");
-const dashboard_module_1 = require("./modules/dashboard/dashboard.module");
 const market_rates_module_1 = require("./modules/market-rates/market-rates.module");
 const expenses_module_1 = require("./modules/expenses/expenses.module");
 const uploads_module_1 = require("./modules/uploads/uploads.module");
@@ -92,7 +91,6 @@ exports.AppModule = AppModule = __decorate([
             farms_module_1.FarmsModule,
             plots_module_1.PlotsModule,
             crops_module_1.CropsModule,
-            dashboard_module_1.DashboardModule,
             market_rates_module_1.MarketRatesModule,
             parties_module_1.PartiesModule,
             sale_bills_module_1.SaleBillsModule,

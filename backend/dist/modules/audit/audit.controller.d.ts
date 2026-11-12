@@ -14,14 +14,14 @@ export declare class AuditController {
         } & {
             id: string;
             createdAt: Date;
-            method: string;
-            metadata: import("@prisma/client/runtime/library").JsonValue | null;
-            action: string;
-            actorId: string | null;
             actorRole: import(".prisma/client").$Enums.Role | null;
+            method: string;
             path: string;
+            action: string;
             targetId: string | null;
             statusCode: number;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+            actorId: string | null;
         })[];
         total: number;
         page: number;

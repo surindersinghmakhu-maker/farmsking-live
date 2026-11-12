@@ -494,9 +494,8 @@ export default function TabLayout() {
               onPress={() => router.push(role === 'CUSTOMER' ? ('/(user)/(tabs)/shop' as any) : ('/(user)/(tabs)' as any))}
             >
               <BrandLogo
-                height={28}
-                width={96}
-                useHdQuality={true}
+                size={32}
+                useFavicon={true}
                 dark={isDark}
                 resizeMode="contain"
                 style={[

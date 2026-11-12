@@ -241,6 +241,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <link rel="preload" href="/favicon.png?v=7" as="image" />
     <title>FarmsKing - Smart Farming</title>
     <meta name="description" content="FarmsKing (farmsking.in) is India's premier Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India." />
     <meta name="keywords" content="FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab" />
@@ -517,15 +518,15 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
         z-index: 9999999;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         pointer-events: none;
-        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: opacity 0.14s ease-out, transform 0.14s ease-out;
         will-change: opacity, transform;
       }
     </style>
     <div id="farmsking-web-splash">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 76px; height: 76px; border-radius: 20px; filter: drop-shadow(0 4px 22px rgba(16, 185, 129, 0.5)); margin-bottom: 16px;" />
-        <div style="color: #fef08a; font-size: 17px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing Smart Farming</div>
-        <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 18px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12.5px; font-weight: 600;">
+        <img src="/favicon.png?v=7" alt="FarmsKing" style="width: 72px; height: 72px; border-radius: 18px; filter: drop-shadow(0 4px 20px rgba(16, 185, 129, 0.45)); margin-bottom: 14px;" />
+        <div style="color: #fef08a; font-size: 16px; font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px;">FarmsKing Smart Farming</div>
+        <div style="background: rgba(255, 255, 255, 0.12); padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25); color: #d1fae5; font-size: 12px; font-weight: 600;">
           🌾 India's Intelligent Agriculture Platform
         </div>
       </div>
@@ -539,19 +540,19 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
           var el = document.getElementById('farmsking-web-splash');
           if (el) {
             el.style.opacity = '0';
-            el.style.transform = 'scale(1.02)';
+            el.style.transform = 'scale(1.01)';
             setTimeout(function() {
               if (el && el.parentNode) el.parentNode.removeChild(el);
-            }, 350);
+            }, 150);
           }
         };
 
-        // Safety fallback: if app takes longer than 3000ms, dismiss automatically so user is never stuck
+        // Fast safety fallback so splash never lingers on slow connections
         setTimeout(function() {
           if (!dismissed && window.__dismissFarmsKingSplash) {
             window.__dismissFarmsKingSplash();
           }
-        }, 3000);
+        }, 900);
       })();
     </script>
     `;
@@ -603,6 +604,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
       'support',
       'terms',
       'privacy-policy',
+      'account-deletion',
       'refund-policy',
       'shipping-policy',
       'order-tracking',

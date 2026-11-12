@@ -29,7 +29,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { resolveMediaUrl } from '@/src/api/client';
-import { useCreateProduct, useProducts, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
+import { useCreateProduct, useProducts, useProductReviews, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
 import PublicHeader from '@/components/PublicHeader';
 import {
   useAllOrders,
@@ -55,7 +55,8 @@ import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
-import { UltraPremiumEcomHub } from '@/src/components/UltraPremiumEcomHub';
+import { ProductReviewsSection } from '@/src/components/ProductReviewsSection';
+import { CustomerTrustStrip } from '@/src/components/CustomerTrustStrip';
 
 const theme = RoleThemes.CUSTOMER;
 
@@ -2279,7 +2280,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   }}
                 >
                   <Ionicons name="pricetag" size={16} color="#ffffff" />
-                  <Text style={{ color: '#0f172a', fontSize: 12.5, fontFamily: FONT.bold }}>
+                  <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>
                     🎟️ Open Discount Coupons & Offers Engine
                   </Text>
                 </TouchableOpacity>
@@ -2565,6 +2566,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 contentContainerStyle={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
                 showsVerticalScrollIndicator={false}
               >
+                <View style={{ width: '100%' }}>
+                  <CustomerTrustStrip onOpenCart={() => setActiveSubTab('CHECKOUT')} />
+                </View>
                 {filteredProducts.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="storefront-outline" size={48} color="#94a3b8" />
@@ -5192,6 +5196,7 @@ function FarmsKingProductDetailModal({
   onAddToCart: () => void;
   onBuyNow: () => void;
 }) {
+  const { data: reviewsSummary } = useProductReviews(product?.id);
 
   const images = useMemo(() => {
     const list: string[] = [];
@@ -5471,15 +5476,17 @@ function FarmsKingProductDetailModal({
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
           {/* Main Hero Gallery */}
           <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', gap: 12, ...premiumShadow('rgba(0,0,0,0.1)', 'sm') }}>
-            {/* FarmsKing Bestseller Tag */}
+            {/* FarmsKing Verified / Top Seller Tag */}
             <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ backgroundColor: '#fff7ed', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#ffedd5', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons name="ribbon" size={14} color="#ea580c" />
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#c2410c' }}>#1 Best Seller in {product.category || 'Agri Store'}</Text>
+              <View style={{ backgroundColor: product.isTopSeller ? '#fff7ed' : '#ecfdf5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: product.isTopSeller ? '#ffedd5' : '#a7f3d0', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name={product.isTopSeller ? 'ribbon' : 'checkmark-circle'} size={14} color={product.isTopSeller ? '#ea580c' : '#059669'} />
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: product.isTopSeller ? '#c2410c' : '#047857' }}>
+                  {product.isTopSeller ? `Top Seller in ${product.category || 'Agri Store'}` : `Verified ${product.category || 'Agri Store'} Product`}
+                </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <Ionicons name="shield-checkmark" size={14} color="#16a34a" />
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>100% Genuine</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>KYC Verified</Text>
               </View>
             </View>
 
@@ -5590,14 +5597,20 @@ function FarmsKingProductDetailModal({
               {product.name}
             </Text>
 
-            {/* Ratings & Reviews */}
+            {/* Genuine Customer Ratings & Reviews Summary */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
-                <Ionicons name="star" size={13} color="#d97706" />
-                <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#b45309' }}>4.9</Text>
-              </View>
-              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#0284c7' }}>
-                1,428 ratings · 350+ answered questions
+              {reviewsSummary?.avgRating != null ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
+                  <Ionicons name="star" size={13} color="#d97706" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                    {reviewsSummary.avgRating.toFixed(1)}
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#0369a1' }}>
+                {reviewsSummary && reviewsSummary.total > 0
+                  ? `${reviewsSummary.total} verified review${reviewsSummary.total === 1 ? '' : 's'} · ${reviewsSummary.verifiedBuyerCount ?? 0} verified buyer${reviewsSummary.verifiedBuyerCount === 1 ? '' : 's'}`
+                  : 'New Listing · Genuine buyer reviews enabled'}
               </Text>
             </View>
 
@@ -5673,7 +5686,7 @@ function FarmsKingProductDetailModal({
                       minWidth: 80,
                     }}
                   >
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#e2e8f0' }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#334155' }}>
                       {sz}
                     </Text>
                     <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isSelected ? '#166534' : '#64748b', marginTop: 2 }}>
@@ -5696,7 +5709,7 @@ function FarmsKingProductDetailModal({
                   </Text>
                 </View>
                 <View style={{ backgroundColor: '#166534', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
-                  <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>100% PURE</Text>
+                  <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>100% PURE</Text>
                 </View>
               </View>
 
@@ -5767,11 +5780,13 @@ function FarmsKingProductDetailModal({
               <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
                 💡 About This Item & Highlights:
               </Text>
-              <Text style={{ fontSize: 12.5, fontFamily: FONT.regular, color: '#e2e8f0', lineHeight: 19 }}>
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.regular, color: '#334155', lineHeight: 19 }}>
                 {cleanProductDisplayDescription(product.description)}
               </Text>
             </View>
           ) : null}
+
+          <ProductReviewsSection productId={product.id} />
 
 
         </ScrollView>
@@ -5793,7 +5808,7 @@ function FarmsKingProductDetailModal({
               onAddToCart();
             }}
           >
-            <Text style={{ color: '#0f172a', fontSize: 13, fontFamily: FONT.bold }}>
+            <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.bold }}>
               {cartQty > 0 ? `In Cart (${cartQty}) · Add More` : '🛒 Add to Cart'}
             </Text>
           </TouchableOpacity>

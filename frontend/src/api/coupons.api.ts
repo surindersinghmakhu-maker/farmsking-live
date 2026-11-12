@@ -39,6 +39,23 @@ export async function listMyCoupons(): Promise<Coupon[]> {
   return data;
 }
 
+export interface AvailablePromotion {
+  id: string;
+  code: string;
+  kind: 'GENERIC' | 'PARTNER_REFERRAL' | string;
+  discountType: DiscountValueType;
+  discountValue: string | number;
+  discountMaxCap?: string | number | null;
+  minOrderAmount?: string | number | null;
+  expiresAt: string;
+  remainingUses: number;
+}
+
+export async function listAvailablePromotions(): Promise<AvailablePromotion[]> {
+  const { data } = await apiClient.get<AvailablePromotion[]>('/coupons/available');
+  return data;
+}
+
 export async function updateCoupon(id: string, payload: UpdateCouponPayload): Promise<Coupon> {
   const { data } = await apiClient.patch<Coupon>(`/coupons/${id}`, payload);
   return data;

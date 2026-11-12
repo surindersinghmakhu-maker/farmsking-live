@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Headers, Patch, Post, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -6,7 +7,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { AppSettingsService } from './app-settings.service';
-import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
+import { PublicInquiryDto, UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 
 @Controller('app-settings')
 export class AppSettingsController {
@@ -159,6 +160,13 @@ export class PublicContactController {
   @Get('app-settings')
   getPublicAppSettings() {
     return this.appSettingsService.get();
+  }
+
+  /** Submit a public customer inquiry to Admin notifications, audit log & email helpdesk */
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('inquiry')
+  submitPublicInquiry(@Body() dto: PublicInquiryDto) {
+    return this.appSettingsService.submitPublicInquiry(dto);
   }
 }
 

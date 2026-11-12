@@ -90,7 +90,7 @@ export default function RefundPolicyScreen() {
               Refund, Return & Cancellation Policy
             </Text>
             <Text style={[styles.heroSubtitle, isDay ? styles.heroSubtitleDay : styles.heroSubtitleNight]}>
-              Transparent, Farmer-First Guidelines for Certified Seeds, Bio-Nutrients, and Equipment Purchases
+              Transparent, Farmer-First Guidelines for Certified Seeds, Organic Bio-Nutrients, and Crop Care Supplies
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
               FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab - 143422
@@ -175,7 +175,7 @@ export default function RefundPolicyScreen() {
               <View style={styles.bulletItem}>
                 <Text style={[styles.bulletDot, isDay ? styles.bulletDotDay : styles.bulletDotNight]}>✓</Text>
                 <Text style={[styles.bulletText, isDay ? styles.bulletTextDay : styles.bulletTextNight]}>
-                  Defective agricultural equipment, malfunctioning battery sprayers, or non-functional solar implements.
+                  Damaged or non-viable approved nursery plants, microbial bio-fertilizers, or crop nutrition packs verified within 24 hours of delivery.
                 </Text>
               </View>
             </View>

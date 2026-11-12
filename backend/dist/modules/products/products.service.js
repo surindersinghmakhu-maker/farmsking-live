@@ -250,16 +250,42 @@ let ProductsService = class ProductsService {
             throw new common_1.BadRequestException('Rating must be between 1 and 5 stars.');
         }
         const product = await this.findOneOrThrow(productId);
-        const review = await this.prisma.productReview.create({
-            data: {
-                productId,
-                userId: user.id,
-                rating,
-                title: title || '',
-                comment: comment || '',
-                photoUrls: photoUrls || [],
-            },
+        const cleanTitle = (title || '').trim().slice(0, 120);
+        const cleanComment = (comment || '').trim().slice(0, 1200);
+        const existingReview = await this.prisma.productReview.findFirst({
+            where: { productId, userId: user.id },
+            orderBy: { createdAt: 'desc' },
         });
+        const review = existingReview
+            ? await this.prisma.productReview.update({
+                where: { id: existingReview.id },
+                data: {
+                    rating,
+                    title: cleanTitle,
+                    comment: cleanComment,
+                    photoUrls: photoUrls || existingReview.photoUrls || [],
+                },
+            })
+            : await this.prisma.productReview.create({
+                data: {
+                    productId,
+                    userId: user.id,
+                    rating,
+                    title: cleanTitle,
+                    comment: cleanComment,
+                    photoUrls: photoUrls || [],
+                },
+            });
+        const stats = await this.prisma.productReview.aggregate({
+            where: { productId },
+            _avg: { rating: true },
+        });
+        if (stats?._avg?.rating != null) {
+            await this.prisma.product.update({
+                where: { id: productId },
+                data: { rating: parseFloat(stats._avg.rating.toFixed(1)) },
+            });
+        }
         const recentReviews = await this.prisma.productReview.findMany({
             where: { productId },
             orderBy: { createdAt: 'desc' },
@@ -299,16 +325,42 @@ let ProductsService = class ProductsService {
             where: { productId },
             take: 200,
             include: {
-                user: { select: { id: true, name: true, mobile: true } },
+                user: { select: { id: true, name: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
-        const total = reviews.length;
-        const avgRating = total > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1) : '5.0';
+        const reviewerIds = Array.from(new Set(reviews.map((r) => r.userId).filter(Boolean)));
+        const verifiedBuyerSet = new Set();
+        if (reviewerIds.length > 0 && this.prisma.customerOrderItem?.findMany) {
+            const boughtItems = await this.prisma.customerOrderItem.findMany({
+                where: {
+                    productId,
+                    order: {
+                        customerId: { in: reviewerIds },
+                        status: { not: 'CANCELLED' },
+                    },
+                },
+                select: {
+                    order: { select: { customerId: true } },
+                },
+            });
+            for (const item of boughtItems) {
+                if (item.order?.customerId) {
+                    verifiedBuyerSet.add(item.order.customerId);
+                }
+            }
+        }
+        const enrichedReviews = reviews.map((r) => ({
+            ...r,
+            isVerifiedBuyer: verifiedBuyerSet.has(r.userId),
+        }));
+        const total = enrichedReviews.length;
+        const avgRating = total > 0 ? parseFloat((enrichedReviews.reduce((acc, r) => acc + r.rating, 0) / total).toFixed(1)) : null;
         return {
-            reviews,
+            reviews: enrichedReviews,
             total,
-            avgRating: parseFloat(avgRating),
+            verifiedBuyerCount: enrichedReviews.filter((r) => r.isVerifiedBuyer).length,
+            avgRating,
         };
     }
     async listPendingForAdmin() {

@@ -185,3 +185,17 @@ export async function getSupportContact(): Promise<SupportContact> {
   }
 }
 
+export interface PublicInquiryPayload {
+  name: string;
+  mobile: string;
+  topic?: string;
+  message: string;
+}
+
+export async function submitPublicInquiry(
+  payload: PublicInquiryPayload,
+): Promise<{ success: boolean; ticketId?: string; message?: string }> {
+  const { data } = await apiClient.post('/public-contact/inquiry', payload);
+  return data;
+}
+

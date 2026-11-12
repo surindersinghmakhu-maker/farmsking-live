@@ -46,8 +46,8 @@ export declare class IsoControlsService implements OnModuleInit {
         id: string;
         createdAt: Date;
         action: string;
-        moduleKey: string | null;
         actorId: string;
+        moduleKey: string | null;
         actorName: string | null;
         details: import("@prisma/client/runtime/library").JsonValue | null;
     }[]>;

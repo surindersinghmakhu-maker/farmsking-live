@@ -1226,10 +1226,10 @@ const styles = StyleSheet.create({
     ...premiumShadow('rgba(0,0,0,0.45)', 'lg'),
   },
   headerMobile: {
-    top: 6,
+    top: Platform.OS === 'ios' ? 46 : Platform.OS === 'android' ? 28 : 6,
     left: 0,
     right: 0,
-    marginHorizontal: 'auto',
+    alignSelf: 'center',
     width: '96%',
     paddingHorizontal: 8,
     paddingVertical: 6,

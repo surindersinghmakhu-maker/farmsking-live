@@ -149,13 +149,10 @@ function RootNavigation() {
     }
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      // Double animation frame gives browser time to composite and paint the actual target screen
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if ((window as any).__dismissFarmsKingSplash) {
-            (window as any).__dismissFarmsKingSplash();
-          }
-        });
+        if ((window as any).__dismissFarmsKingSplash) {
+          (window as any).__dismissFarmsKingSplash();
+        }
       });
     }
   }, [user, isLoading, segmentsPath]);
@@ -189,6 +186,7 @@ function RootNavigation() {
         <Stack.Screen name="terms" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="refund-policy" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="order-tracking" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="account-deletion" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
         <Stack.Screen name="+not-found" options={{ title: 'FarmsKing - Smart Farming' }} />
       </Stack>
       <PublicBottomNav />

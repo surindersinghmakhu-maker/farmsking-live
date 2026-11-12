@@ -1,4 +1,25 @@
-import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+
+export class PublicInquiryDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  name!: string;
+
+  @IsString()
+  @Matches(/^[6-9]\d{9}$/, { message: 'Please provide a valid 10-digit Indian mobile number.' })
+  mobile!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  topic?: string;
+
+  @IsString()
+  @MinLength(5)
+  @MaxLength(1500)
+  message!: string;
+}
 
 export class UpdateAppSettingsDto {
   @IsOptional()

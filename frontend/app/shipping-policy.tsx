@@ -67,7 +67,7 @@ export default function ShippingPolicyScreen() {
               Shipping & Delivery Policy
             </Text>
             <Text style={[styles.heroSubtitle, isDay ? styles.heroSubtitleDay : styles.heroSubtitleNight]}>
-              Dispatch Slas, Courier Partners, Delivery Windows & Packaging Standards for Certified Agri Inputs
+              Dispatch SLAs, Courier Partners, Delivery Windows & Packaging Standards for Certified Agri Inputs
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
               FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Pan-India Fulfillment

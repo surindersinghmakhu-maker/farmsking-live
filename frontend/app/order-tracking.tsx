@@ -54,7 +54,7 @@ export default function OrderTrackingScreen() {
   const handleTrackOrder = async (queryId?: string) => {
     const idToSearch = (queryId || searchInput).trim();
     if (!idToSearch) {
-      setErrorMessage('Please enter a valid Order ID or Phone Number.');
+      setErrorMessage('Please enter a valid Order Number or AWB Tracking ID.');
       return;
     }
 

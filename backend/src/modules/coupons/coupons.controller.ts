@@ -45,6 +45,12 @@ export class CouponsController {
     return this.couponsService.listMine(user);
   }
 
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.AGENT)
+  @Get('available')
+  listAvailablePromotions() {
+    return this.couponsService.listAvailablePromotions();
+  }
+
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateCouponDto) {

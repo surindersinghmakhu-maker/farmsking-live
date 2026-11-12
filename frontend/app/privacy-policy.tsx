@@ -278,6 +278,10 @@ export default function PrivacyPolicyScreen() {
             activeOpacity={0.8}
             onPress={() => {
               tap();
+              if (!user) {
+                router.push('/account-deletion' as any);
+                return;
+              }
               setIsDeleteModalOpen(true);
             }}
           >
@@ -360,7 +364,7 @@ export default function PrivacyPolicyScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   headerBar: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 36,
+    paddingTop: Platform.OS === 'ios' ? 50 : Platform.OS === 'android' ? 32 : 14,
     paddingBottom: 14,
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   langToggle: { backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
   langText: { color: '#FFF', fontSize: 11.5, fontFamily: FONT.bold },
-  scrollContent: { padding: 16, gap: 12, maxWidth: 540, alignSelf: 'center', width: '100%' },
+  scrollContent: { padding: 16, paddingBottom: 90, gap: 12, maxWidth: 820, alignSelf: 'center', width: '100%' },
   card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0' },
   autoSyncBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ecfdf5', padding: 8, borderRadius: RADIUS.md, marginTop: 10, borderWidth: 1, borderColor: '#a7f3d0' },
   moduleCard: { gap: 4 },

@@ -23,7 +23,7 @@ export default function ReferralsScreen() {
   const handleShare = async () => {
     tap();
     const link = network?.inviteUrl || `https://farmsking.in/register?ref=${kingId}`;
-    const message = `🌾 *FarmsKing (फ़ार्मਸਕਿੰਗ) — भारत का भरोसेमंद स्मार्ट डिजिटल कृषि प्लेटफॉर्म* 🚜✨\n\nनमस्ते! 👨‍🌾\nमैं FarmsKing App का उपयोग अपनी खेती के प्रबंधन और फसल सुरक्षा के लिए कर रहा हूँ। आप भी इस फ्री ऐप को जॉइन करें और पाएँ ये बेहतरीन सुविधाएँ:\n\n📊 *1. लाइव मंडी भाव व सटीक मौसम जानकारी:*\nपंजाब व देश की सभी मंडियों के रोजाना भाव और आपके गाँव के मौसम की पल-पल अपडेट।\n\n🩺 *2. AI Crop Doctor व रोग पहचान:*\nपौधे/फसल की फोटो खींचकर 2 सेकंड में रोग की पहचान करें और एक्सपर्ट डॉक्टरों से दवा/स्प्रे सलाह पाएँ।\n\n🏪 *3. एग्रीस्टोर व डायरेक्ट फसल बिक्री:*\nअसली बीज, खाद व कीटनाशक बेस्ट रेट पर ऑर्डर करें और अपनी फसल सीधे खरीदारों को बेचें।\n\n📘 *4. डिजिटल फार्म खाता व लेबर मैनेजमेंट:*\nखेती का पूरा हिसाब-किताब, डीजल-स्प्रे का खर्चा और मजदूरों की हाजिरी आसानी से मैनेज करें।\n\n👇 *नीचे दिए गए लिंक से मुफ़्त में ऐप डाउनलोड व रजिस्टर करें:*\n👉 ${link}\n\n---\n👑 *FarmsKing Platform* · _स्मार्ट खेती, बेहतर उपज, अधिक मुनाफ़ा!_ 🌾`;
+    const message = `FarmsKing — Smart Farming & Trusted Agri Store\n\nHello,\nI use the FarmsKing platform for crop management, soil and plant care, and verified farm supplies. You can join free using my invite link and get:\n\n1. Live APMC Mandi Rates & Local Weather Updates\n2. AI Crop Doctor & Expert Agronomy Advice\n3. KYC-Verified Agri Store with 100% GST Tax Invoices\n4. Digital Farm Ledger, Spray Schedules & Order Tracking\n\nRegister here: ${link}\n\nFarmsKing Technologies Private Limited`;
     if (Platform.OS === 'web') {
       await Clipboard.setStringAsync(message);
       alert('Full invitation message & link copied to clipboard!');

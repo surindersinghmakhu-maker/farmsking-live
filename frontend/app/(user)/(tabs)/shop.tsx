@@ -29,7 +29,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { resolveMediaUrl } from '@/src/api/client';
-import { useCreateProduct, useProducts, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
+import { useCreateProduct, useProducts, useProductReviews, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
 import {
   useAllOrders,
   useCancelOrder,
@@ -54,6 +54,8 @@ import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
+import { ProductReviewsSection } from '@/src/components/ProductReviewsSection';
+import { CustomerTrustStrip } from '@/src/components/CustomerTrustStrip';
 
 const theme = RoleThemes.CUSTOMER;
 
@@ -2837,6 +2839,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               <View
                 style={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
               >
+                <View style={{ width: '100%' }}>
+                  <CustomerTrustStrip onOpenCart={() => setActiveSubTab('CHECKOUT')} />
+                </View>
                 {isLoadingProducts && (!products || (products as Product[]).length === 0) ? (
                   <View style={{ width: '100%', paddingVertical: 40, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                     <ActivityIndicator size="large" color="#16a34a" />
@@ -5504,6 +5509,7 @@ function FarmsKingProductDetailModal({
   onAddToCart: () => void;
   onBuyNow: () => void;
 }) {
+  const { data: reviewsSummary } = useProductReviews(product?.id);
 
   const images = useMemo(() => {
     const list: string[] = [];
@@ -5783,15 +5789,17 @@ function FarmsKingProductDetailModal({
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
           {/* Main Hero Gallery */}
           <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', gap: 12, ...premiumShadow('#0f172a', 'sm') }}>
-            {/* FarmsKing Bestseller Tag */}
+            {/* FarmsKing Verified / Top Seller Tag */}
             <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ backgroundColor: '#fff7ed', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#ffedd5', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons name="ribbon" size={14} color="#ea580c" />
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#c2410c' }}>#1 Best Seller in {product.category || 'Agri Store'}</Text>
+              <View style={{ backgroundColor: product.isTopSeller ? '#fff7ed' : '#ecfdf5', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: product.isTopSeller ? '#ffedd5' : '#a7f3d0', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name={product.isTopSeller ? 'ribbon' : 'checkmark-circle'} size={14} color={product.isTopSeller ? '#ea580c' : '#059669'} />
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: product.isTopSeller ? '#c2410c' : '#047857' }}>
+                  {product.isTopSeller ? `Top Seller in ${product.category || 'Agri Store'}` : `Verified ${product.category || 'Agri Store'} Product`}
+                </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                 <Ionicons name="shield-checkmark" size={14} color="#16a34a" />
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>100% Genuine</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>KYC Verified</Text>
               </View>
             </View>
 
@@ -5902,14 +5910,20 @@ function FarmsKingProductDetailModal({
               {product.name}
             </Text>
 
-            {/* Ratings & Reviews */}
+            {/* Genuine Customer Ratings & Reviews Summary */}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
-                <Ionicons name="star" size={13} color="#d97706" />
-                <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#b45309' }}>4.9</Text>
-              </View>
-              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#0284c7' }}>
-                1,428 ratings · 350+ answered questions
+              {reviewsSummary?.avgRating != null ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#fde68a' }}>
+                  <Ionicons name="star" size={13} color="#d97706" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                    {reviewsSummary.avgRating.toFixed(1)}
+                  </Text>
+                </View>
+              ) : null}
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#0369a1' }}>
+                {reviewsSummary && reviewsSummary.total > 0
+                  ? `${reviewsSummary.total} verified review${reviewsSummary.total === 1 ? '' : 's'} · ${reviewsSummary.verifiedBuyerCount ?? 0} verified buyer${reviewsSummary.verifiedBuyerCount === 1 ? '' : 's'}`
+                  : 'New Listing · Genuine buyer reviews enabled'}
               </Text>
             </View>
 
@@ -6084,6 +6098,8 @@ function FarmsKingProductDetailModal({
               </Text>
             </View>
           ) : null}
+
+          <ProductReviewsSection productId={product.id} />
 
 
         </ScrollView>

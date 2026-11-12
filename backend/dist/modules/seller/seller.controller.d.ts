@@ -338,9 +338,9 @@ export declare class SellerController {
         orderId: string;
         commissionAmount: import("@prisma/client/runtime/library").Decimal;
         sellerStoreId: string;
+        subtotal: import("@prisma/client/runtime/library").Decimal;
         shiprocketOrderId: string | null;
         shiprocketShipmentId: string | null;
-        subtotal: import("@prisma/client/runtime/library").Decimal;
         cashfreeTransferId: string | null;
         shippingFee: import("@prisma/client/runtime/library").Decimal;
         rtoFee: import("@prisma/client/runtime/library").Decimal;
@@ -357,9 +357,9 @@ export declare class SellerController {
         orderId: string;
         commissionAmount: import("@prisma/client/runtime/library").Decimal;
         sellerStoreId: string;
+        subtotal: import("@prisma/client/runtime/library").Decimal;
         shiprocketOrderId: string | null;
         shiprocketShipmentId: string | null;
-        subtotal: import("@prisma/client/runtime/library").Decimal;
         cashfreeTransferId: string | null;
         shippingFee: import("@prisma/client/runtime/library").Decimal;
         rtoFee: import("@prisma/client/runtime/library").Decimal;

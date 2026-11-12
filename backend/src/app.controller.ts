@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Header, Post, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AppService } from './app.service';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { Role } from '@prisma/client';
@@ -148,17 +149,26 @@ export class AppController {
       \`).join('');
     }
 
+    function escapeHtml(raw) {
+      return String(raw ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function generatePDF() {
-      const farmerName = document.getElementById('farmerName').value || 'FarmsKing Partner Farmer';
-      const area = document.getElementById('area').value || '1 Acre';
-      const plantsCount = document.getElementById('plantsCount').value || '10,000 Plants';
+      const farmerName = escapeHtml(document.getElementById('farmerName').value || 'FarmsKing Partner Farmer');
+      const area = escapeHtml(document.getElementById('area').value || '1 Acre');
+      const plantsCount = escapeHtml(document.getElementById('plantsCount').value || '10,000 Plants');
 
       const printWindow = window.open('', '_blank');
       const rowsHtml = scheduleItems.map(item => \`
         <tr>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">\${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">\${item.product}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">\${item.quantity}</td>
+          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">\${escapeHtml(item.srNo)}</td>
+          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">\${escapeHtml(item.product)}</td>
+          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">\${escapeHtml(item.quantity)}</td>
         </tr>
       \`).join('');
 
@@ -168,15 +178,17 @@ export class AppController {
         <head>
           <title>MARIGOLD PRODUCTION DRENCHING SCHEDULE - FarmsKing</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 25px; color: #111827; }
-            .header-banner { background: #14532d; color: white; padding: 18px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+            @page { size: A4; margin: 12mm 15mm; }
+            body { font-family: Arial, sans-serif; padding: 16px; color: #111827; }
+            .header-banner { background: #14532d; color: white; padding: 18px; border-radius: 10px; text-align: center; margin-bottom: 20px; page-break-inside: avoid; }
             .header-banner h1 { margin: 0; color: #facc15; font-size: 24px; }
             .header-banner h2 { margin: 4px 0 0 0; color: #fef08a; font-size: 16px; }
-            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
+            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: bold; page-break-inside: avoid; }
             table { width: 100%; border-collapse: collapse; }
+            tr { page-break-inside: avoid; }
             th { background-color: #15803d; color: white; padding: 10px; border: 1px solid #15803d; text-transform: uppercase; font-size: 13px; }
             td { font-size: 13px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; page-break-inside: avoid; }
           </style>
         </head>
         <body>
@@ -290,16 +302,17 @@ export class AppController {
   getPrivacyPolicyJson() {
     return {
       success: true,
-      appName: 'FarmsKing (ਫਾਰਮਜ਼ਕਿੰਗ)',
+      appName: 'FarmsKing',
       version: '1.0.0',
       lastUpdated: new Date().toISOString(),
       modules: DYNAMIC_SYSTEM_MODULES,
       deletionUrl: 'https://farmsking.in/account-deletion',
       supportEmail: 'support@farmsking.in',
-      helpline: '+91 9872066901',
+      helpline: '+91 95776-22000',
     };
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('api/request-account-deletion')
   async requestAccountDeletion(@Body() body: { mobile?: string; password?: string; reason?: string }) {
     if (!body.mobile || body.mobile.trim().length !== 10) {

@@ -28,8 +28,12 @@ import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
 import { WebKeyboardScrollGlobalizer } from '@/src/utils/webKeyboardScroll';
 import { AdminStepUpProvider } from '@/components/AdminStepUpProvider';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// Prevent the splash screen from auto-hiding on native mobile until assets load; hide immediately on web.
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync().catch(() => {});
+} else {
+  SplashScreen.hideAsync().catch(() => {});
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,6 +105,17 @@ function RootNavigation() {
     }
   }, [user, isLoading, segmentsPath]);
 
+  useEffect(() => {
+    if (isLoading) return;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        if ((window as any).__dismissFarmsKingSplash) {
+          (window as any).__dismissFarmsKingSplash();
+        }
+      });
+    }
+  }, [isLoading, segmentsPath]);
+
   if (isLoading) {
     return <SplashView />;
   }
@@ -145,23 +160,11 @@ export default function RootLayout() {
     Manrope_800ExtraBold,
   });
 
-  const [minTimeElapsed, setMinTimeElapsed] = useState(Platform.OS === 'web');
+  // Render UI without artificial splash wait
+  const isReady = Platform.OS === 'web' || Boolean(loaded || fontError);
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      setMinTimeElapsed(true);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, 450);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const isReady = (loaded || fontError) && minTimeElapsed;
-
-  useEffect(() => {
-    if (isReady) {
+    if (Platform.OS !== 'web' && isReady) {
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [isReady]);

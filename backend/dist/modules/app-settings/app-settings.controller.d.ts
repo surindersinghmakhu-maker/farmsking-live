@@ -1,6 +1,6 @@
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { AppSettingsService } from './app-settings.service';
-import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
+import { PublicInquiryDto, UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 export declare class AppSettingsController {
     private readonly appSettingsService;
     constructor(appSettingsService: AppSettingsService);
@@ -341,4 +341,9 @@ export declare class PublicContactController {
         };
     }>;
     getPublicAppSettings(): Promise<any>;
+    submitPublicInquiry(dto: PublicInquiryDto): Promise<{
+        success: boolean;
+        ticketId: string;
+        message: string;
+    }>;
 }

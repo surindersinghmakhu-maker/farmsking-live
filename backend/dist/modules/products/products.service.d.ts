@@ -296,13 +296,12 @@ export declare class ProductsService {
         photoUrls: string[];
     }>;
     getReviews(productId: string): Promise<{
-        reviews: ({
+        reviews: {
+            isVerifiedBuyer: boolean;
             user: {
                 id: string;
-                mobile: string;
                 name: string;
             };
-        } & {
             id: string;
             createdAt: Date;
             title: string | null;
@@ -311,9 +310,10 @@ export declare class ProductsService {
             productId: string;
             comment: string | null;
             photoUrls: string[];
-        })[];
+        }[];
         total: number;
-        avgRating: number;
+        verifiedBuyerCount: number;
+        avgRating: number | null;
     }>;
     listPendingForAdmin(): Promise<({
         sellerStore: {

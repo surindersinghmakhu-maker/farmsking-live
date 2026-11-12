@@ -42,6 +42,9 @@ let CouponsController = class CouponsController {
     listMine(user) {
         return this.couponsService.listMine(user);
     }
+    listAvailablePromotions() {
+        return this.couponsService.listAvailablePromotions();
+    }
     update(id, dto) {
         return this.couponsService.update(id, dto);
     }
@@ -98,6 +101,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], CouponsController.prototype, "listMine", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.AGENT),
+    (0, common_1.Get)('available'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], CouponsController.prototype, "listAvailablePromotions", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Patch)(':id'),

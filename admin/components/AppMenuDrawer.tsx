@@ -151,7 +151,7 @@ export const AppMenuDrawer: React.FC<AppMenuDrawerProps> = ({
                   },
                 ]}
               >
-                <BrandLogo size={16} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
+                <BrandLogo size={18} useFavicon={true} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
               </View>
               <View style={styles.brandTextCol}>
                 <Text style={[styles.brandTitleText, isLight && { color: '#0f172a' }]}>

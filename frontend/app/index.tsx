@@ -3955,8 +3955,17 @@ export default function PublicLandingPage() {
           <View style={S.footerColumnsGrid}>
             {/* Column 1: Brand & Mission */}
             <View style={[S.footerCol, isTablet && S.footerColTablet, isMobile && S.footerColMobile]}>
-              <View style={[S.footerBrandRow, { alignSelf: 'flex-start', marginBottom: 12 }]}>
-                <BrandLogo height={38} width={128} useHdQuality resizeMode="contain" />
+              <View style={[S.footerBrandRow, { alignSelf: 'flex-start', marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+                {isMobile ? (
+                  <>
+                    <BrandLogo size={36} useFavicon={true} useHdQuality resizeMode="contain" />
+                    <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDay ? '#0f172a' : '#f8fafc' }}>
+                      FarmsKing
+                    </Text>
+                  </>
+                ) : (
+                  <BrandLogo height={38} width={128} useHdQuality resizeMode="contain" />
+                )}
               </View>
               <Text style={[S.footerDesc, isDay && S.footerDescDay]}>
                 India's integrated agricultural intelligence platform uniting precision farming, urban gardening, AI plant pathology, and direct APMC mandi trade.
@@ -4140,13 +4149,16 @@ export default function PublicLandingPage() {
 
             {/* Header: Brand & Close Button */}
             <View style={S.drawerHeaderRow}>
-              <View style={S.drawerBrandRow}>
+              <View style={[S.drawerBrandRow, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
                 <BrandLogo
-                  height={36}
-                  width={120}
+                  size={34}
+                  useFavicon={true}
                   useHdQuality
                   resizeMode="contain"
                 />
+                <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: isDay ? '#0f172a' : '#f8fafc' }}>
+                  FarmsKing
+                </Text>
               </View>
               <TouchableOpacity
                 style={[S.drawerCloseBtn, isDay && S.drawerCloseBtnDay]}

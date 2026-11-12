@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import PublicHeader from '@/components/PublicHeader';
 import { useSupportContact } from '@/src/hooks/useAppSettings';
+import { submitPublicInquiry } from '@/src/api/appSettings.api';
 import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 
 export default function ContactUsPage() {
@@ -37,6 +38,9 @@ export default function ContactUsPage() {
   const [senderMobile, setSenderMobile] = useState('');
   const [senderTopic, setSenderTopic] = useState('Crop Advisory');
   const [senderMessage, setSenderMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [ticketId, setTicketId] = useState<string | null>(null);
+  const [submittedMobile, setSubmittedMobile] = useState('');
   const [isSent, setIsSent] = useState(false);
 
   useEffect(() => {
@@ -71,33 +75,60 @@ export default function ContactUsPage() {
     Linking.openURL('https://maps.google.com/?q=Makhu,Punjab,142044');
   };
 
-  const handleSendMessage = () => {
-    if (!senderName.trim() || !senderMobile.trim() || !senderMessage.trim()) {
+  const handleSendMessage = async () => {
+    const cleanName = senderName.trim();
+    const cleanMobile = senderMobile.replace(/\D/g, '').slice(-10);
+    const cleanMessage = senderMessage.trim();
+
+    if (!cleanName || cleanMobile.length !== 10 || !/^[6-9]\d{9}$/.test(cleanMobile) || cleanMessage.length < 5) {
+      const msg = 'Please enter your Name, a valid 10-digit Mobile Number, and your message (at least 5 characters).';
       if (Platform.OS === 'web') {
-        window.alert('Please fill in your Name, Mobile Number, and Message.');
+        window.alert(msg);
       } else {
-        Alert.alert('Incomplete Form', 'Please fill in your Name, Mobile Number, and Message.');
+        Alert.alert('Incomplete Form', msg);
       }
       return;
     }
 
-    setIsSent(true);
+    try {
+      setIsSending(true);
+      const res = await submitPublicInquiry({
+        name: cleanName,
+        mobile: cleanMobile,
+        topic: senderTopic,
+        message: cleanMessage,
+      });
 
-    // Record real farmer activity permanently into live social proof feed
-    recordRealFarmerActivity({
-      name: senderName.trim(),
-      location: 'Punjab, India',
-      action: `Submitted Agronomy Inquiry (${senderTopic})`,
-      detail: 'Contacted FarmsKing Official Advisory Desk',
-      emoji: '🌾',
-      tagColor: '#059669',
-    });
-    setTimeout(() => {
+      setSubmittedMobile(cleanMobile);
+      setTicketId(res?.ticketId || null);
+      setIsSent(true);
+
+      recordRealFarmerActivity({
+        name: cleanName,
+        location: 'Punjab, India',
+        action: `Submitted Agronomy Inquiry (${senderTopic})`,
+        detail: 'Contacted FarmsKing Official Advisory Desk',
+        emoji: '🌾',
+        tagColor: '#059669',
+      });
+
       setSenderName('');
       setSenderMobile('');
       setSenderMessage('');
-      setIsSent(false);
-    }, 6000);
+      setTimeout(() => {
+        setIsSent(false);
+        setTicketId(null);
+      }, 8000);
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || 'Could not submit inquiry right now. Please call 95776-22000 or try again.';
+      if (Platform.OS === 'web') {
+        window.alert(Array.isArray(errMsg) ? errMsg.join('\n') : errMsg);
+      } else {
+        Alert.alert('Submission Failed', Array.isArray(errMsg) ? errMsg.join('\n') : errMsg);
+      }
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -340,9 +371,11 @@ export default function ContactUsPage() {
               <View style={styles.successBanner}>
                 <Ionicons name="checkmark-circle" size={22} color="#059669" />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.successTitle}>Inquiry Submitted Successfully!</Text>
+                  <Text style={styles.successTitle}>
+                    Inquiry Submitted Successfully{ticketId ? ` (#${ticketId})` : ''}!
+                  </Text>
                   <Text style={styles.successSub}>
-                    Thank you. A FarmsKing specialist will contact you on +91 {senderMobile} within 24 hours.
+                    Thank you. A FarmsKing specialist will contact you on +91 {submittedMobile} within 24 hours.
                   </Text>
                 </View>
               </View>
@@ -422,7 +455,12 @@ export default function ContactUsPage() {
                 />
 
                 {/* Submit Button */}
-                <TouchableOpacity style={styles.submitBtn} onPress={handleSendMessage} activeOpacity={0.88}>
+                <TouchableOpacity
+                  style={[styles.submitBtn, isSending && { opacity: 0.7 }]}
+                  onPress={handleSendMessage}
+                  disabled={isSending}
+                  activeOpacity={0.88}
+                >
                   <LinearGradient
                     colors={['#10b981', '#059669', '#047857']}
                     start={{ x: 0, y: 0 }}
@@ -430,7 +468,9 @@ export default function ContactUsPage() {
                     style={styles.submitGradient}
                   >
                     <Ionicons name="paper-plane" size={16} color="#ffffff" />
-                    <Text style={styles.submitBtnText}>Submit Inquiry to FarmsKing Helpdesk</Text>
+                    <Text style={styles.submitBtnText}>
+                      {isSending ? 'Submitting Inquiry...' : 'Submit Inquiry to FarmsKing Helpdesk'}
+                    </Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -489,7 +529,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? ({ filter: 'blur(110px)', pointerEvents: 'none' } as any) : {}),
   },
 
-  scrollContent: { paddingBottom: 60, paddingTop: 90 },
+  scrollContent: { paddingBottom: 95, paddingTop: Platform.OS === 'ios' ? 110 : 90 },
   container: { width: '100%', maxWidth: 1080, alignSelf: 'center', paddingHorizontal: 16 },
 
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14, alignSelf: 'flex-start' },

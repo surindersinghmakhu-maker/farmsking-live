@@ -15,14 +15,14 @@ export declare class AuditService {
         } & {
             id: string;
             createdAt: Date;
-            method: string;
-            metadata: Prisma.JsonValue | null;
-            action: string;
-            actorId: string | null;
             actorRole: import(".prisma/client").$Enums.Role | null;
+            method: string;
             path: string;
+            action: string;
             targetId: string | null;
             statusCode: number;
+            metadata: Prisma.JsonValue | null;
+            actorId: string | null;
         })[];
         total: number;
         page: number;

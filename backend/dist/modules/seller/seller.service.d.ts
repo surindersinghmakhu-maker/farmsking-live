@@ -590,9 +590,9 @@ export declare class SellerService {
         orderId: string;
         commissionAmount: Prisma.Decimal;
         sellerStoreId: string;
+        subtotal: Prisma.Decimal;
         shiprocketOrderId: string | null;
         shiprocketShipmentId: string | null;
-        subtotal: Prisma.Decimal;
         cashfreeTransferId: string | null;
         shippingFee: Prisma.Decimal;
         rtoFee: Prisma.Decimal;
@@ -609,9 +609,9 @@ export declare class SellerService {
         orderId: string;
         commissionAmount: Prisma.Decimal;
         sellerStoreId: string;
+        subtotal: Prisma.Decimal;
         shiprocketOrderId: string | null;
         shiprocketShipmentId: string | null;
-        subtotal: Prisma.Decimal;
         cashfreeTransferId: string | null;
         shippingFee: Prisma.Decimal;
         rtoFee: Prisma.Decimal;

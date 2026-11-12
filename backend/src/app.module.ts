@@ -9,7 +9,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { FarmsModule } from './modules/farms/farms.module';
 import { PlotsModule } from './modules/plots/plots.module';
 import { CropsModule } from './modules/crops/crops.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MarketRatesModule } from './modules/market-rates/market-rates.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -83,7 +82,6 @@ import { RedisModule } from './modules/redis/redis.module';
     FarmsModule,
     PlotsModule,
     CropsModule,
-    DashboardModule,
     MarketRatesModule,
     PartiesModule,
     SaleBillsModule,

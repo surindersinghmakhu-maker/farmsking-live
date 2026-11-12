@@ -30,7 +30,7 @@ const FAQS_DATA: FAQItem[] = [
     category: 'Orders & Delivery',
     icon: 'cart-outline',
     question: 'How do I track my agricultural inputs and seed orders?',
-    answer: 'You can track your orders in real time by visiting the "Order Tracking" section on our website or app with your Order ID or phone number. You also receive automated SMS and WhatsApp milestone notifications at dispatch, transit, and out-for-delivery.',
+    answer: 'You can track your orders in real time by visiting the "Order Tracking" section on our website or app with your Order Number or AWB Tracking Code. You also receive automated SMS and WhatsApp milestone notifications at dispatch, transit, and out-for-delivery.',
   },
   {
     id: 'f2',

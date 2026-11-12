@@ -11,18 +11,32 @@ server {
     root /var/www/farmsking-live/admin/dist;
     index index.html;
 
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_min_length 512;
+    gzip_types text/plain text/css application/json application/javascript text/javascript text/xml application/xml application/xml+rss image/svg+xml font/ttf font/otf application/font-woff application/font-woff2;
+
     ssl_certificate /etc/letsencrypt/live/admin.farmsking.in/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/admin.farmsking.in/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location ^~ /_expo/static/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
     location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|otf|ttf|svg)$ {
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000, immutable";
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
     }
 
@@ -57,18 +71,32 @@ server {
     root /var/www/farmsking-live/frontend/dist;
     index index.html;
 
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_min_length 512;
+    gzip_types text/plain text/css application/json application/javascript text/javascript text/xml application/xml application/xml+rss image/svg+xml font/ttf font/otf application/font-woff application/font-woff2;
+
     ssl_certificate /etc/letsencrypt/live/farmsking.tech/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/farmsking.tech/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location ^~ /_expo/static/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
     location ~* \.(?:ico|css|js|gif|jpe?g|png|woff2?|eot|otf|ttf|svg)$ {
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000, immutable";
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
     }
 

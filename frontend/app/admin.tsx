@@ -61,7 +61,7 @@ export default function AdminWebPortalScreen() {
             <Ionicons name="call-outline" size={18} color="#94a3b8" />
             <TextInput
               style={styles.input}
-              placeholder="e.g. 9872066901"
+              placeholder="Enter admin mobile number"
               placeholderTextColor="#64748b"
               keyboardType="phone-pad"
               value={mobile}

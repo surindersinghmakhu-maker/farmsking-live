@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersPublicController = exports.OrdersController = void 0;
 const common_1 = require("@nestjs/common");
+const throttler_1 = require("@nestjs/throttler");
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
@@ -277,6 +278,7 @@ let OrdersPublicController = class OrdersPublicController {
 };
 exports.OrdersPublicController = OrdersPublicController;
 __decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 15, ttl: 60_000 } }),
     (0, common_1.Get)('track/:orderNumber'),
     __param(0, (0, common_1.Param)('orderNumber')),
     __metadata("design:type", Function),

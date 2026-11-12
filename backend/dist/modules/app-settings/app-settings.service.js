@@ -16,6 +16,7 @@ exports.AppSettingsService = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const crypto_1 = require("crypto");
+const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const feature_flags_constant_1 = require("../../common/constants/feature-flags.constant");
 const system_integrations_constant_1 = require("./constants/system-integrations.constant");
@@ -299,8 +300,8 @@ let AppSettingsService = class AppSettingsService {
             }
         }
         const companyLegalName = pm.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED';
-        const helplinePhone = pm.primaryMobile || mobile || '+91 95776-22000';
-        const supportEmail = pm.contactEmail || pm.supportEmail || email || 'farmskingindia@gmail.com';
+        const helplinePhone = pm.primaryMobile || settings?.adminMobile || '+91 95776-22000';
+        const supportEmail = pm.contactEmail || pm.supportEmail || email || 'support@farmsking.in';
         const registeredAddress = pm.registeredAddress || 'M/s GURU NANAK COMPUTER ACADEMY, Near Co-operative Bank, Goindwal Sahib, Tehsil Khadoor Sahib, District Tarn Taran, Punjab - 143422, India';
         const operationalHqAddress = pm.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India';
         const appDownloadUrl = settings?.appDownloadUrl || pm?.appDownloadUrl || 'https://www.farmsking.in';
@@ -1346,6 +1347,60 @@ let AppSettingsService = class AppSettingsService {
         });
         this.clearCache();
         return { success: true, stats: updated };
+    }
+    async submitPublicInquiry(dto) {
+        const cleanName = dto.name.trim();
+        const cleanMobile = dto.mobile.replace(/\D/g, '').slice(-10);
+        const cleanTopic = (dto.topic || 'General Inquiry').trim();
+        const cleanMessage = dto.message.trim();
+        const ticketId = `INQ-${Date.now().toString(36).toUpperCase()}`;
+        const admins = await this.prisma.user.findMany({
+            where: {
+                deletedAt: null,
+                role: { in: [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN] },
+            },
+            select: { id: true },
+        });
+        if (admins.length > 0) {
+            await this.prisma.notification.createMany({
+                data: admins.map((a) => ({
+                    userId: a.id,
+                    type: client_1.NotificationType.SYSTEM,
+                    title: `New Inquiry (${cleanTopic}): ${cleanName}`,
+                    body: `Mobile: ${cleanMobile} • Ticket: ${ticketId} — ${cleanMessage.slice(0, 240)}`,
+                    data: {
+                        ticketId,
+                        senderName: cleanName,
+                        senderMobile: cleanMobile,
+                        topic: cleanTopic,
+                        message: cleanMessage,
+                    },
+                })),
+            });
+        }
+        await this.prisma.auditLog
+            .create({
+            data: {
+                method: 'POST',
+                path: '/api/v1/public-contact/inquiry',
+                action: 'PUBLIC_CONTACT_INQUIRY',
+                targetId: ticketId,
+                statusCode: 201,
+                metadata: {
+                    ticketId,
+                    senderName: cleanName,
+                    senderMobile: cleanMobile,
+                    topic: cleanTopic,
+                    message: cleanMessage,
+                },
+            },
+        })
+            .catch(() => { });
+        return {
+            success: true,
+            ticketId,
+            message: 'Your inquiry has been submitted to our FarmsKing Support Desk.',
+        };
     }
 };
 exports.AppSettingsService = AppSettingsService;

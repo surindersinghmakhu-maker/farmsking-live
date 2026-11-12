@@ -55,13 +55,35 @@ export function updateWebFavicon(url?: string | null) {
   }
 }
 
-// Immediately ensure official favicon on browser execution
+export function syncAdminDocumentTitle() {
+  if (typeof document === 'undefined') return;
+  const desired = 'FarmsKing - Admin Staff';
+  if (document.title !== desired) {
+    document.title = desired;
+  }
+}
+
+// Immediately ensure official favicon and Admin Staff title on browser execution
 if (typeof document !== 'undefined') {
   updateWebFavicon();
+  syncAdminDocumentTitle();
 }
 
 export function AppFaviconGlobalizer() {
   useAppSettings();
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    syncAdminDocumentTitle();
+    const titleEl = document.querySelector('title');
+    if (!titleEl || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => syncAdminDocumentTitle());
+    observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+    window.addEventListener('popstate', syncAdminDocumentTitle);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('popstate', syncAdminDocumentTitle);
+    };
+  }, []);
   return null;
 }
 

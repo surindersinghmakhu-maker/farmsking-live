@@ -72,7 +72,7 @@ let AppController = class AppController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MARIGOLD PRODUCTION - DRENCHING SCHEDULE | FarmsKing</title>
+  <title>FarmsKing - Smart Farming</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=7" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png?v=7" />
   <link rel="shortcut icon" href="/favicon.ico?v=7" />

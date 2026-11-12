@@ -210,7 +210,7 @@ try {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform</title>
+    <title>FarmsKing - Admin Staff</title>
     <meta name="description" content="India's national agritech platform. AI Crop Doctor diagnostics, live mandi rates, certified organic vermicompost &amp; floriculture. Regd: Goindwal Sahib, HQ: Makhu." />
     <meta name="keywords" content="FarmsKing, FarmsKing Technologies, AI Crop Doctor, Live Mandi Rates, Organic Vermicompost, Bio-Fertilizers, Marigold Farming, Commercial Floriculture, Home Gardening, Balcony Gardening, Sustainable Farming, Nature Lovers, Goindwal Sahib, Makhu, Punjab, National Agri Marketplace, Agtech India" />
     <meta property="og:title" content="FarmsKing - AI Crop Doctor, Live Mandi &amp; Organic Platform" />

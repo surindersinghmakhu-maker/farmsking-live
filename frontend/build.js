@@ -241,7 +241,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>FarmsKing: Smart Farming Platform &amp; Agriculture App India | Farming Easy, Farming Smart (farmsking.in)</title>
+    <title>FarmsKing - Smart Farming</title>
     <meta name="description" content="FarmsKing (farmsking.in) is India's premier Smart Farming Platform &amp; Agriculture App. Farming Easy, Farming Smart. Access real-time AI Crop Doctor pathology, live APMC mandi rates across 50+ crops, satellite crop telemetry, certified organic inputs, and farm bahi-khata for farmers across India." />
     <meta name="keywords" content="FarmsKing, farmsking.in, farmsking app, farmsking platform, farmsking india, farmsking farmers, smart farming, farming easy farming smart, smart farming app, smart farming platform india, smart agriculture india, AI Crop Doctor, live mandi rates, kisan app, Punjab kheti, digital agriculture India, Garden King, Nature King, AI King, Organic King, Account King, Pure Organic Food, Zero Fake Products, No Hardware Sales, No Equipment Rental, Rare Technology Agritech, Real Human Agronomy Service, Live Plants Delivery, Makhu, Goindwal Sahib, Punjab" />
     <meta property="og:site_name" content="FarmsKing - Smart Farming Platform &amp; Agriculture App India" />

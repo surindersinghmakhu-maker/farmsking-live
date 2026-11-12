@@ -46,7 +46,7 @@ export default function Root({ children }: PropsWithChildren) {
 
 
         {/* Primary Page Title & Canonical SEO Tags */}
-        <title>FarmsKing: Smart Farming | Farming Easy, Farming Smart (farmsking.in)</title>
+        <title>FarmsKing - Smart Farming</title>
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 

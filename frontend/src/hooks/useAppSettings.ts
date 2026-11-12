@@ -56,13 +56,40 @@ export function updateWebFavicon(url?: string | null) {
   }
 }
 
-// Immediately ensure official favicon on browser execution
+export function syncWebDocumentTitle() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return;
+  const host = window.location.hostname || '';
+  const path = window.location.pathname || '';
+  const desired =
+    host.startsWith('admin.') || path.startsWith('/admin')
+      ? 'FarmsKing - Admin Staff'
+      : 'FarmsKing - Smart Farming';
+  if (document.title !== desired) {
+    document.title = desired;
+  }
+}
+
+// Immediately ensure official favicon and title on browser execution
 if (typeof document !== 'undefined') {
   updateWebFavicon();
+  syncWebDocumentTitle();
 }
 
 export function AppFaviconGlobalizer() {
   useAppSettings();
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    syncWebDocumentTitle();
+    const titleEl = document.querySelector('title');
+    if (!titleEl || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => syncWebDocumentTitle());
+    observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+    window.addEventListener('popstate', syncWebDocumentTitle);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('popstate', syncWebDocumentTitle);
+    };
+  }, []);
   return null;
 }
 

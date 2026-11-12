@@ -25,6 +25,7 @@ import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { SplashView } from '@/components/SplashView';
 import PublicBottomNav from '@/components/PublicBottomNav';
 import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
+import { WebKeyboardScrollGlobalizer } from '@/src/utils/webKeyboardScroll';
 import { StaffSessionGuardian } from '@/src/components/StaffSessionGuardian';
 
 // Prevent the splash screen from auto-hiding on native mobile until assets load; hide immediately on web.
@@ -167,28 +168,28 @@ function RootNavigation() {
     <View style={{ flex: 1 }}>
       <StaffSessionGuardian />
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
-        <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
-        <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
-        <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
-        <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
-        <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
-        <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
-        <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
-        <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
-        <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
-        <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
-        <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
-        <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
-        <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
-        <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
-        <Stack.Screen name="compliance" options={{ headerShown: false, title: 'MCA & Statutory Compliance • FarmsKing' }} />
-        <Stack.Screen name="privacy-policy" options={{ headerShown: false, title: 'Privacy Policy (DPDPA 2023) • FarmsKing' }} />
-        <Stack.Screen name="terms" options={{ headerShown: false, title: 'Terms of Service • FarmsKing' }} />
-        <Stack.Screen name="refund-policy" options={{ headerShown: false, title: 'Refund & Return Policy • FarmsKing' }} />
-        <Stack.Screen name="order-tracking" options={{ headerShown: false, title: 'Order Tracking • FarmsKing' }} />
-        <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
+        <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+        <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="compliance" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="privacy-policy" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="terms" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="refund-policy" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="order-tracking" options={{ headerShown: false, title: 'FarmsKing - Smart Farming' }} />
+        <Stack.Screen name="+not-found" options={{ title: 'FarmsKing - Smart Farming' }} />
       </Stack>
       <PublicBottomNav />
     </View>
@@ -254,6 +255,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppFaviconGlobalizer />
+      <WebKeyboardScrollGlobalizer />
       <GlobalVisitorTelemetryRecorder />
       <LanguageProvider>
         <ExecutiveThemeProvider>

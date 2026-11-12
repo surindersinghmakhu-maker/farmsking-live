@@ -25,6 +25,7 @@ import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { ExecutiveVaultProvider } from '@/src/portals/ExecutiveSecurityVault';
 import { SplashView } from '@/components/SplashView';
 import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
+import { WebKeyboardScrollGlobalizer } from '@/src/utils/webKeyboardScroll';
 import { AdminStepUpProvider } from '@/components/AdminStepUpProvider';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -106,26 +107,26 @@ function RootNavigation() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing Command Center' }} />
-      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Command HQ' }} />
-      <Stack.Screen name="garden" options={{ headerShown: false, title: 'GreenSpace™ Garden Portal' }} />
-      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Commerce' }} />
-      <Stack.Screen name="farmer" options={{ headerShown: false, title: 'Agri-Hub Portal' }} />
-      <Stack.Screen name="staff" options={{ headerShown: false, title: 'Operations Desk' }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
-      <Stack.Screen name="public-store" options={{ headerShown: false, title: 'FarmsKing Store' }} />
-      <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
-      <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
-      <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
-      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
-      <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
-      <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
-      <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
-      <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
+      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="garden" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="farmer" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="staff" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="public-store" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing - Admin Staff' }} />
+      <Stack.Screen name="+not-found" options={{ title: 'FarmsKing - Admin Staff' }} />
     </Stack>
   );
 }
@@ -181,6 +182,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppFaviconGlobalizer />
+      <WebKeyboardScrollGlobalizer />
       <LanguageProvider>
         <ExecutiveThemeProvider>
           <AuthProvider>

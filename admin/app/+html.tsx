@@ -10,7 +10,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
         {/* Primary Page Title & Canonical SEO Tags */}
-        <title>FarmsKing - India's #1 Smart Farming & Crop Intelligence Platform | Smart Agriculture</title>
+        <title>FarmsKing - Admin Staff</title>
         <link rel="canonical" href="https://farmsking.in/" />
         <meta name="theme-color" content="#166534" />
 

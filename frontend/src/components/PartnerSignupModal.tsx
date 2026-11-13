@@ -44,14 +44,22 @@ type DocFieldKey =
   | 'gstDocUrl';
 
 const PARTNER_ROLE_CARDS: {
-  id: 'SELLER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'AGENT';
-  role: 'AGENT' | 'ADVISOR' | 'SELLER';
+  id: 'NURSERY_OWNER' | 'SELLER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'AGENT';
+  role: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
   advisorType?: 'FARM' | 'GARDEN';
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   accent: string;
 }[] = [
+  {
+    id: 'NURSERY_OWNER',
+    role: 'NURSERY_OWNER',
+    title: 'Nursery Owner',
+    subtitle: 'Grow & supply flower, vegetable & paddy seedlings across India (HSN 0602 GST Exempt)',
+    icon: 'leaf',
+    accent: '#22c55e',
+  },
   {
     id: 'SELLER',
     role: 'SELLER',
@@ -88,7 +96,8 @@ const PARTNER_ROLE_CARDS: {
   },
 ];
 
-function formatPartnerRoleLabel(role: 'AGENT' | 'ADVISOR' | 'SELLER', advType?: 'FARM' | 'GARDEN' | null) {
+function formatPartnerRoleLabel(role: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER', advType?: 'FARM' | 'GARDEN' | null) {
+  if (role === 'NURSERY_OWNER') return 'Nursery Owner';
   if (role === 'SELLER') return 'Seller';
   if (role === 'AGENT') return 'Sales Manager';
   return advType === 'GARDEN' ? 'Garden Advisor' : 'Crop Doctor / Advisor';
@@ -119,7 +128,7 @@ export function PartnerSignupModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Profile + Role fields
-  const [requestedRole, setRequestedRole] = useState<'AGENT' | 'ADVISOR' | 'SELLER'>('AGENT');
+  const [requestedRole, setRequestedRole] = useState<'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER'>('NURSERY_OWNER');
   const [advisorType, setAdvisorType] = useState<'FARM' | 'GARDEN'>('FARM');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -434,6 +443,12 @@ export function PartnerSignupModal({
       setErrorMsg('Academic qualification / agronomy certification is required for Advisors.');
       return;
     }
+    if (requestedRole === 'NURSERY_OWNER') {
+      if (!storeName.trim() || !pickupAddress.trim() || !/^\d{6}$/.test(pincode.trim())) {
+        setErrorMsg('Nursery Name, Greenhouse / Dispatch Address, and 6-digit PIN Code are required for Nursery Owners.');
+        return;
+      }
+    }
     if (requestedRole === 'SELLER') {
       if (!storeName.trim() || !pickupAddress.trim() || !/^\d{6}$/.test(pincode.trim())) {
         setErrorMsg('Store Name, Full Pickup Address, and 6-digit PIN Code are required for Sellers.');
@@ -480,10 +495,10 @@ export function PartnerSignupModal({
         upiId: upiId.trim() || undefined,
         chequeDocUrl,
         photoUrl,
-        storeName: requestedRole === 'SELLER' ? storeName.trim() : undefined,
-        legalName: requestedRole === 'SELLER' ? legalName.trim() || undefined : undefined,
+        storeName: requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? storeName.trim() : undefined,
+        legalName: requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? legalName.trim() || undefined : undefined,
         sellerType: requestedRole === 'SELLER' ? sellerType : undefined,
-        pickupAddress: requestedRole === 'SELLER' ? pickupAddress.trim() : undefined,
+        pickupAddress: requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? pickupAddress.trim() : undefined,
         termsAccepted: true,
       });
       setSubmittedMessage(res.message);
@@ -812,7 +827,7 @@ export function PartnerSignupModal({
 
                 <View style={styles.gridTwo}>
                   <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Postal PIN Code {requestedRole === 'SELLER' ? '*' : ''}</Text>
+                    <Text style={styles.label}>Postal PIN Code {requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? '*' : ''}</Text>
                     <View style={{ flexDirection: 'row', gap: 6 }}>
                       <TextInput
                         style={[styles.input, { flex: 1 }]}
@@ -939,6 +954,81 @@ export function PartnerSignupModal({
                       multiline
                       value={bio}
                       onChangeText={setBio}
+                    />
+                  </View>
+                )}
+
+                {requestedRole === 'NURSERY_OWNER' && (
+                  <View style={[styles.roleBox, { borderColor: 'rgba(34, 197, 94, 0.4)', backgroundColor: 'rgba(34, 197, 94, 0.04)' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                      <Ionicons name="leaf" size={20} color="#22c55e" />
+                      <Text style={[styles.sectionTitle, { marginBottom: 0, color: '#22c55e' }]}>
+                        Nursery &amp; Greenhouse Farm Details
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(34, 197, 94, 0.10)', borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.25)', borderRadius: RADIUS.xs, padding: 10, marginBottom: 12 }}>
+                      <Text style={{ fontSize: 11.5, color: '#86efac', fontFamily: FONT.medium, lineHeight: 16 }}>
+                        🌿 Statutory Exemption: Live seedlings and nursery plants under HSN 0602 are 100% GST-exempt across India. GSTIN is optional for nursery growers.
+                      </Text>
+                    </View>
+
+                    <View style={styles.gridTwo}>
+                      <View style={styles.fieldCol}>
+                        <Text style={styles.label}>Nursery / Farm Brand Name *</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. Green High-Tech Nursery & Polyhouse"
+                          placeholderTextColor="#64748b"
+                          value={storeName}
+                          onChangeText={setStoreName}
+                        />
+                      </View>
+                      <View style={styles.fieldCol}>
+                        <Text style={styles.label}>Owner / Grower Legal Name *</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Grower Legal Name"
+                          placeholderTextColor="#64748b"
+                          value={legalName || name}
+                          onChangeText={(v) => {
+                            setLegalName(v);
+                            setName(v);
+                          }}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.gridTwo}>
+                      <View style={styles.fieldCol}>
+                        <Text style={styles.label}>Primary Nursery Specialization *</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. Flower Plugs, Tomato Seedlings, PR-126 Paddy"
+                          placeholderTextColor="#64748b"
+                          value={specialization}
+                          onChangeText={setSpecialization}
+                        />
+                      </View>
+                      <View style={styles.fieldCol}>
+                        <Text style={styles.label}>Estimated Seasonal Capacity (Optional)</Text>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="e.g. 50,000 Plugs / 100 Acres Paniri"
+                          placeholderTextColor="#64748b"
+                          value={qualification}
+                          onChangeText={setQualification}
+                        />
+                      </View>
+                    </View>
+
+                    <Text style={styles.label}>Greenhouse / Nursery Dispatch Address *</Text>
+                    <TextInput
+                      style={[styles.input, { minHeight: 56 }]}
+                      placeholder="Village / Road, Near Bus Stand / Landmark for Roadways Bus & Railway dispatch"
+                      placeholderTextColor="#64748b"
+                      multiline
+                      value={pickupAddress}
+                      onChangeText={setPickupAddress}
                     />
                   </View>
                 )}

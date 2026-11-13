@@ -78,6 +78,12 @@ const CLIENT_BENEFITS: ShowcaseBenefit[] = [
 
 const PARTNER_BENEFITS: ShowcaseBenefit[] = [
   {
+    icon: 'leaf',
+    color: '#22c55e',
+    title: 'Nursery Seedling & Paniri Desk',
+    desc: 'Supply certified flower, vegetable & paddy plugs with central escrow',
+  },
+  {
     icon: 'people',
     color: '#fbbf24',
     title: 'Manage Adopted Farmers',
@@ -1574,7 +1580,7 @@ export default function LoginScreen() {
                     Need a Partner role or Rejected Profile update?
                   </Text>
                   <Text style={styles.partnerApplySub}>
-                    Apply as Seller, Crop Doctor / Advisor, Garden Advisor, or Sales Manager. Existing accounts keep their exact same King ID after Admin approval.
+                    Apply as Nursery Owner, Seller, Crop Doctor / Advisor, Garden Advisor, or Sales Manager. Existing accounts keep their exact same King ID after Admin approval.
                   </Text>
                 </View>
                 <TouchableOpacity

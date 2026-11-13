@@ -59,7 +59,7 @@ const CATEGORIES: CategoryOption[] = [
   {
     id: 'CLIENTS',
     title: '3. Clients',
-    subtitle: 'Farmers, Gardeners, Customers & Farm Supervisors',
+    subtitle: 'Farmers, Gardeners, Customers, Farm Supervisors & Labour Workers',
     icon: 'people',
     color: '#16a34a',
     bgColor: 'rgba(22, 163, 74, 0.14)',
@@ -94,6 +94,7 @@ const ROLES_BY_CATEGORY: Record<AdminCreateCategory, RoleOption[]> = {
     { value: 'GARDENER', label: 'Gardener', desc: 'Home garden plots & plant care', icon: 'flower-outline' },
     { value: 'CUSTOMER', label: 'Customer', desc: 'Marketplace buyer account', icon: 'cart-outline' },
     { value: 'SUPERVISOR', label: 'Supervisor', desc: 'Farm supervisor linked to a Farmer', icon: 'shield-checkmark-outline' },
+    { value: 'LABOUR', label: 'Labour Worker', desc: 'Field worker & farm operations attendance', icon: 'hammer-outline' },
   ],
 };
 
@@ -426,7 +427,7 @@ export function UnifiedAddUserModal({
       const res = await createUserMutation.mutateAsync(payload);
       setCreatedResult({
         name: res.user.name,
-        kingId: res.user.kingId,
+        kingId: res.user.kingId ?? null,
         mobile: res.user.mobile,
         role: selectedRole.replace(/_/g, ' '),
         tempPassword: res.tempPassword,

@@ -21,9 +21,9 @@ export class PartnerApplyDto {
   @Matches(/^\+?\d{10,15}$/, { message: 'Valid 10-digit mobile number is required.' })
   mobile: string;
 
-  @ApiProperty({ enum: ['AGENT', 'ADVISOR', 'SELLER'] })
-  @IsIn(['AGENT', 'ADVISOR', 'SELLER'])
-  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  @ApiProperty({ enum: ['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'] })
+  @IsIn(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'])
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
 
   @ApiPropertyOptional({ enum: AdvisorType })
   @IsOptional()

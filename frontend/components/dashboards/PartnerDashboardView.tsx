@@ -95,6 +95,29 @@ export const PartnerDashboardView: React.FC = () => {
           </TouchableOpacity>
         ) : null}
 
+        {/* Nursery Coordination Hub Shortcut for Agents */}
+        <TouchableOpacity
+          style={styles.nurseryShortcutCard}
+          activeOpacity={0.85}
+          onPress={() => router.push('/nursery' as any)}
+        >
+          <View style={styles.nurseryShortcutIcon}>
+            <Ionicons name="leaf" size={20} color="#22c55e" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.nurseryHeaderRow}>
+              <Text style={styles.nurseryShortcutTitle}>Nursery Seedling Hub</Text>
+              <View style={styles.commissionBadge}>
+                <Text style={styles.commissionBadgeText}>2% AGENT COMM</Text>
+              </View>
+            </View>
+            <Text style={styles.nurseryShortcutSub}>
+              Direct flower & vegetable seedling bookings, dispatch tracking & 2% partner commission
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#22c55e" />
+        </TouchableOpacity>
+
         {/* Earnings Card */}
         <LinearGradient colors={theme.heroGradient} style={[styles.earningsCard, premiumShadow(theme.primary, 'md')]}>
           <Ionicons name="wallet" size={104} color={theme.primary} style={styles.watermark} />
@@ -274,6 +297,41 @@ const styles = StyleSheet.create({
   },
   sellerShortcutTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   sellerShortcutSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  nurseryShortcutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1.3,
+    borderColor: 'rgba(34, 197, 94, 0.45)',
+    ...premiumShadow('#22c55e', 'sm'),
+  },
+  nurseryShortcutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(34, 197, 94, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nurseryHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  nurseryShortcutTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
+  commissionBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  commissionBadgeText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#22c55e', letterSpacing: 0.5 },
+  nurseryShortcutSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   refName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   refDate: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   refComm: { fontSize: 13.5, fontFamily: FONT.extraBold },

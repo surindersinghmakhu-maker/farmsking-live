@@ -1,0 +1,233 @@
+// ─── Streamlined Nursery Marketplace, Transport & Partner Engine ───
+
+enum NurseryCategoryType {
+  FLOWER_PLUG_EXPRESS     // Flowers: Marigold, Rose, Petunia, Chrysanthemum
+  VEGETABLE_PLUG          // Vegetables: Tomato, Chili, Capsicum, Cauliflower, Onion
+  PADDY_FIELD_BULK        // Paddy/Rice: PR-126, Basmati 1509, 1847
+  ORNAMENTAL_INDOOR       // Ornamental/Indoor: Money Plant, Areca Palm, Snake Plant
+  AGRO_FORESTRY_TIMBER    // Timber/Forestry: Clonal Poplar, Eucalyptus/Safeda, Neem
+  MEDICINAL_KITCHEN_HERB  // Herbs: Tulsi, Aloe Vera, Lemongrass, Mint
+}
+
+enum TransportMode {
+  ROADWAYS_BUS_PARCEL     // Roadways / Private Bus Express Parcel
+  INDIAN_RAILWAYS         // Indian Railways Parcel Express
+  TRACTOR_TROLLEY_LOCAL   // Local Tractor Trolley (Bulk Paddy)
+}
+
+enum InterStateDeliveryMode {
+  BUS_STAND_SELF_PICKUP   // Buyer collects directly from bus stand
+  RAILWAY_STATION_PICKUP  // Buyer collects from railway parcel office
+  DOORSTEP_DELIVERY       // Local partner/runner delivers to farm or home
+}
+
+enum PartnerPayoutSchedule {
+  WEEKLY                  // Auto-settled every Monday
+  BIWEEKLY                // Auto-settled every 15 days
+  MONTHLY                 // Auto-settled on the 1st of each month
+  INSTANT_ON_DELIVERY     // Immediate transfer upon confirmed delivery
+}
+
+enum DeliveryPricingType {
+  INCLUDED                // Freight included in unit price
+  EXCLUDED                // Self pickup / Freight charged separately
+}
+
+enum CancellationStage {
+  ADVANCE_5_DAYS_PLUS     // 20% deduction (15% grower + 5% FK)
+  CRITICAL_2_TO_5_DAYS    // 50% heavy penalty (40% grower + 10% FK)
+  LAST_48_HOURS_LOCKED    // 100% forfeiture (95% grower + 5% FK)
+}
+
+model PlotNurseryBatch {
+  id                      String                 @id @default(uuid())
+  plotId                  String?
+  plot                    Plot?                  @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  ownerId                 String
+  owner                   User                   @relation("GrowerNurseryBatches", fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  category                NurseryCategoryType    @default(FLOWER_PLUG_EXPRESS)
+  varietyName             String                 // e.g. "Marigold Calcutta Orange", "Chili Seminis", "PR-126"
+  sowingDate              DateTime
+  readyDate               DateTime
+  uprootingDeadline       DateTime               // Latest safe harvest/dispatch deadline
+  
+  // Seed Verification Badge
+  seedTagPhotoUrl         String?                // Photo of Seed Packet / GST Bill / PAU Tag
+  isSeedCertified         Boolean                @default(false)
+  
+  // Batch Proof Photos (Only 2 photos per batch, zero order-level spam)
+  sowingPhotoUrl          String?
+  uprootingPhotoUrl       String?
+  
+  // Tray / Acre Specifications
+  trayCavityCount         Int?                   @default(104) // 50, 104, 128 cavities per tray
+  guaranteedBundlesPerAcre Int?                  @default(300) // Standard 300 bundles/acre for paddy
+  
+  // Pricing & Capacities
+  deliveryPricingType     DeliveryPricingType    @default(INCLUDED)
+  pricePerUnit            Decimal                @db.Decimal(10, 2) // Price per Tray or per Acre
+  estimatedCapacity       Decimal                @db.Decimal(8, 2)  // e.g. 500 Trays or 10 Acres
+  bookedQuantity          Decimal                @default(0) @db.Decimal(8, 2)
+  minOrderAmount          Decimal                @default(2000) @db.Decimal(10, 2) // Minimum ₹2,000 order guard
+  
+  // Flash Sale
+  isFlashSaleActive       Boolean                @default(false)    // Triggerable 2 days before deadline
+  flashDiscountPercent    Decimal?               @db.Decimal(5, 2)  // e.g. 25-30%
+  
+  // Operational Status
+  stage                   String                 @default("READY_FOR_SALE") // SOWN | READY_FOR_SALE | UPROOTING | COMPLETED
+  isDelistedDueToFine     Boolean                @default(false)
+  
+  // Ratings
+  deliveryRatingAvg       Decimal                @default(5.0) @db.Decimal(3, 2)
+  qualityRatingAvg        Decimal                @default(5.0) @db.Decimal(3, 2)
+  growthRatingAvg         Decimal                @default(5.0) @db.Decimal(3, 2)
+  compositeCoreScore      Decimal                @default(5.0) @db.Decimal(3, 2)
+  totalReviews            Int                    @default(0)
+
+  orders                  PlotNurseryOrder[]
+  reviews                 NurseryReview[]
+
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([stage])
+  @@map("plot_nursery_batches")
+}
+
+model PlotNurseryOrder {
+  id                      String                 @id @default(uuid())
+  orderNumber             String                 @unique // e.g. "FK-NB-2026-0001"
+  batchId                 String
+  batch                   PlotNurseryBatch       @relation(fields: [batchId], references: [id], onDelete: Restrict)
+  buyerId                 String                 // Verified FarmsKing Customer ID (Logged-in User)
+  buyer                   User                   @relation("BuyerNurseryOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  agentId                 String?                // Local Field Partner ID (Nullable)
+  agent                   User?                  @relation("AgentNurseryReferrals", fields: [agentId], references: [id], onDelete: SetNull)
+  
+  quantityUnits           Decimal                @db.Decimal(8, 2) // Number of Trays or Acres
+  unitPrice               Decimal                @db.Decimal(10, 2)
+  orderSubtotal           Decimal                @db.Decimal(12, 2) // Subtotal >= ₹2,000
+  
+  transportMode           TransportMode          @default(ROADWAYS_BUS_PARCEL)
+  deliveryMode            InterStateDeliveryMode @default(BUS_STAND_SELF_PICKUP)
+  deliveryPricingType     DeliveryPricingType    @default(INCLUDED)
+  
+  // Central Escrow & Commission Splits
+  farmerPlatformFee       Decimal                @default(100) @db.Decimal(10, 2) // Flat ₹100 platform fee
+  farmskingCommission     Decimal                @db.Decimal(10, 2) // 5% = orderSubtotal * 0.05
+  agentFarmerShare        Decimal                @default(0) @db.Decimal(10, 2)   // 1% if agent
+  agentOwnerShare         Decimal                @default(0) @db.Decimal(10, 2)   // 1% if agent
+  totalAgentCommission    Decimal                @default(0) @db.Decimal(10, 2)   // 2% total
+  rollingReserveHeld      Decimal                @default(0) @db.Decimal(10, 2)   // 10% withheld towards reserve
+  ownerNetPayout          Decimal                @db.Decimal(12, 2) // Net payout to grower
+  
+  // Bus Parcel Logistics
+  busNumber               String?                // e.g. "PB-11-XX-1234 PRTC"
+  busDepotRoute           String?                // e.g. "Ludhiana to Rohtak Cantt"
+  expectedArrivalAt       DateTime?
+  busConductorMobile      String?
+  busBiltyPhotoUrl        String?
+  
+  // Indian Railways Parcel Logistics
+  trainNumber             String?                // e.g. "12054 Jan Shatabdi"
+  railwayReceiptNumber    String?                // RR / Bilty Number
+  destinationStation      String?                // e.g. "Ambala Cantt Jn"
+  rrBiltyPhotoUrl         String?
+  
+  // Tractor Trolley Driver Details
+  driverName              String?
+  driverMobile            String?
+  vehicleNumber           String?
+  
+  // Pre-Unload Inspection & Confirmation
+  deliveryOtp             String                 // 4-Digit Buyer Verification OTP
+  isConfirmedReceived     Boolean                @default(false)
+  receivedConfirmedAt     DateTime?
+  
+  // Free Date Extension
+  requestedDeliveryDate   DateTime
+  originalDeliveryDate    DateTime
+  isDateExtended          Boolean                @default(false)
+  extendedAt              DateTime?
+  
+  // 3-Tier Heavy Cancellation
+  isCancelled             Boolean                @default(false)
+  cancellationStage       CancellationStage?
+  cancellationFee         Decimal?               @db.Decimal(10, 2)
+  cancellationOwnerClaim  Decimal?               @db.Decimal(10, 2)
+  cancellationFkShare     Decimal?               @db.Decimal(10, 2)
+  refundAmountToFarmer    Decimal?               @db.Decimal(10, 2)
+  
+  // Force Majeure
+  isForceMajeure          Boolean                @default(false)
+  calamityType            String?
+  
+  status                  String                 @default("BOOKED_ESCROW_PAID")
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  enquiries               NurseryEnquiryTicket[]
+  review                  NurseryReview?
+
+  @@index([batchId])
+  @@index([buyerId])
+  @@index([status])
+  @@map("plot_nursery_orders")
+}
+
+model NurseryEnquiryTicket {
+  id                      String                 @id @default(uuid())
+  orderId                 String?
+  order                   PlotNurseryOrder?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  customerId              String                 // Farmer ID
+  customer                User                   @relation("CustomerNurseryTickets", fields: [customerId], references: [id], onDelete: Cascade)
+  assignedPartnerId       String                 // Local Field Partner handling this
+  assignedPartner         User                   @relation("PartnerHandledNurseryTickets", fields: [assignedPartnerId], references: [id], onDelete: Restrict)
+  
+  subject                 String                 // e.g. "Parcel Delivery Coordination", "Bus Arrival Tracking"
+  description             String
+  isLoggedByPartner       Boolean                @default(false) // True if farmer called and partner logged it
+  status                  String                 @default("OPEN_ASSIGNED_TO_PARTNER")
+  partnerResolutionNote   String?
+  isEscalatedToAdmin      Boolean                @default(false)
+  
+  createdAt               DateTime               @default(now())
+  resolvedAt              DateTime?
+
+  @@index([customerId])
+  @@index([assignedPartnerId])
+  @@index([status])
+  @@map("nursery_enquiry_tickets")
+}
+
+model NurseryReview {
+  id                      String                 @id @default(uuid())
+  orderId                 String                 @unique
+  order                   PlotNurseryOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  batchId                 String
+  batch                   PlotNurseryBatch       @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  buyerId                 String
+  
+  // Stage 1: Delivery & Freshness Rating (Within 48h of Delivery)
+  deliveryRating          Int                    // 1-5 Stars
+  plantQualityRating      Int                    // 1-5 Stars
+  
+  // Stage 2: Day 35 Field Establishment (Tillering)
+  growthRating            Int?                   // 1-5 Stars
+  
+  compositeRating         Decimal                @db.Decimal(3, 2)
+  reviewText              String?
+  reviewPhotos            String[]
+  isPublic                Boolean                @default(true)
+  
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  @@index([batchId])
+  @@map("nursery_reviews")
+}
+

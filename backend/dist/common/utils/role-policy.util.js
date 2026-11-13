@@ -24,6 +24,7 @@ exports.PARTNER_PORTAL_ROLES = [
     client_1.Role.AGENT,
     client_1.Role.ADVISOR,
     client_1.Role.SELLER,
+    client_1.Role.NURSERY_OWNER,
 ];
 exports.EXPLICIT_CLIENT_ROLES = [
     client_1.Role.FARMER,
@@ -41,6 +42,7 @@ const OPERATIONAL_NON_CUSTOMER_ROLES = [
     client_1.Role.SELLER,
     client_1.Role.ADVISOR,
     client_1.Role.TRADER,
+    client_1.Role.NURSERY_OWNER,
     ...exports.ADMIN_STAFF_ROLES,
 ];
 const PRIMARY_ROLE_PRIORITY = [
@@ -58,10 +60,11 @@ const PRIMARY_ROLE_PRIORITY = [
     client_1.Role.ADVISOR,
     client_1.Role.AGENT,
     client_1.Role.SELLER,
+    client_1.Role.NURSERY_OWNER,
     client_1.Role.CUSTOMER,
 ];
 exports.STAFF_CATEGORY_ROLES = exports.ADMIN_STAFF_ROLES;
-exports.PARTNER_CATEGORY_ROLES = [client_1.Role.AGENT, client_1.Role.ADVISOR, client_1.Role.SELLER, client_1.Role.TRADER];
+exports.PARTNER_CATEGORY_ROLES = [client_1.Role.AGENT, client_1.Role.ADVISOR, client_1.Role.SELLER, client_1.Role.TRADER, client_1.Role.NURSERY_OWNER];
 exports.CLIENT_CATEGORY_ROLES = [client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
 function getActiveRolesList(user) {
     const deactivated = new Set(user.deactivatedRoles ?? []);
@@ -84,19 +87,25 @@ function validateRoleCombination(roles) {
         };
     }
     const farmStaffMatches = unique.filter((r) => exports.FARM_STAFF_ROLES.includes(r));
-    if (farmStaffMatches.length > 1) {
-        return {
-            valid: false,
-            error: 'An account cannot hold both Supervisor and Labour Worker roles.',
-        };
-    }
     if ((unique.includes(client_1.Role.FARMER) || unique.includes(client_1.Role.GARDENER)) && farmStaffMatches.length > 0) {
         return {
             valid: false,
             error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Farmer or Gardener on the same account.',
         };
     }
+    if (staffMatches.length > 0 && farmStaffMatches.length > 0) {
+        return {
+            valid: false,
+            error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Admin Staff roles on the same account.',
+        };
+    }
     const partnerMatches = unique.filter((r) => exports.PARTNER_CATEGORY_ROLES.includes(r));
+    if (partnerMatches.length > 0 && farmStaffMatches.length > 0) {
+        return {
+            valid: false,
+            error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Partner roles on the same account.',
+        };
+    }
     const isAdvisorAndAgentOnly = partnerMatches.length === 2 &&
         partnerMatches.includes(client_1.Role.ADVISOR) &&
         partnerMatches.includes(client_1.Role.AGENT);

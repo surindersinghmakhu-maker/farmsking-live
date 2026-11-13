@@ -34,6 +34,7 @@ export const ADMIN_CREATE_ROLES = [
   'GARDENER',
   'CUSTOMER',
   'SUPERVISOR',
+  'LABOUR',
 ] as const;
 export type AdminCreateRoleKey = (typeof ADMIN_CREATE_ROLES)[number];
 

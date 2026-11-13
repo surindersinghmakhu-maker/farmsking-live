@@ -24,8 +24,8 @@ __decorate([
     __metadata("design:type", String)
 ], PartnerApplyDto.prototype, "mobile", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ enum: ['AGENT', 'ADVISOR', 'SELLER'] }),
-    (0, class_validator_1.IsIn)(['AGENT', 'ADVISOR', 'SELLER']),
+    (0, swagger_1.ApiProperty)({ enum: ['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'] }),
+    (0, class_validator_1.IsIn)(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER']),
     __metadata("design:type", String)
 ], PartnerApplyDto.prototype, "requestedRole", void 0);
 __decorate([

@@ -21,11 +21,12 @@ export const FARM_STAFF_ROLES: readonly Role[] = [
   Role.LABOUR,
 ];
 
-/** Roles permitted inside the Partner (Seller, Crop Doctor, Garden Advisor, Sales Manager) login tab. */
+/** Roles permitted inside the Partner (Seller, Crop Doctor, Garden Advisor, Sales Manager, Nursery Owner) login tab. */
 export const PARTNER_PORTAL_ROLES: readonly Role[] = [
   Role.AGENT,
   Role.ADVISOR,
   Role.SELLER,
+  Role.NURSERY_OWNER,
 ];
 
 /** Explicit non-baseline client roles that allow logging into the User login tab even alongside Partner roles. */
@@ -46,6 +47,7 @@ const OPERATIONAL_NON_CUSTOMER_ROLES: readonly Role[] = [
   Role.SELLER,
   Role.ADVISOR,
   Role.TRADER,
+  Role.NURSERY_OWNER,
   ...ADMIN_STAFF_ROLES,
 ];
 
@@ -64,11 +66,12 @@ const PRIMARY_ROLE_PRIORITY: readonly Role[] = [
   Role.ADVISOR,
   Role.AGENT,
   Role.SELLER,
+  Role.NURSERY_OWNER,
   Role.CUSTOMER,
 ];
 
 export const STAFF_CATEGORY_ROLES: readonly Role[] = ADMIN_STAFF_ROLES;
-export const PARTNER_CATEGORY_ROLES: readonly Role[] = [Role.AGENT, Role.ADVISOR, Role.SELLER, Role.TRADER];
+export const PARTNER_CATEGORY_ROLES: readonly Role[] = [Role.AGENT, Role.ADVISOR, Role.SELLER, Role.TRADER, Role.NURSERY_OWNER];
 export const CLIENT_CATEGORY_ROLES: readonly Role[] = [Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.SUPERVISOR, Role.LABOUR];
 
 export function getActiveRolesList(user: {
@@ -103,21 +106,26 @@ export function validateRoleCombination(roles: Role[]): { valid: boolean; error?
   }
 
   const farmStaffMatches = unique.filter((r) => FARM_STAFF_ROLES.includes(r));
-  if (farmStaffMatches.length > 1) {
-    return {
-      valid: false,
-      error: 'An account cannot hold both Supervisor and Labour Worker roles.',
-    };
-  }
+  // Note: Supervisor CAN now combine with Labour Worker role (e.g. Supervisor executing or recording field labour).
   if ((unique.includes(Role.FARMER) || unique.includes(Role.GARDENER)) && farmStaffMatches.length > 0) {
     return {
       valid: false,
       error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Farmer or Gardener on the same account.',
     };
   }
-
-  // 3. Partner Category: Advisor (Crop Doctor / Garden Advisor) + Agent (Sales Manager) can combine; Seller and Trader are dedicated
+  if (staffMatches.length > 0 && farmStaffMatches.length > 0) {
+    return {
+      valid: false,
+      error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Admin Staff roles on the same account.',
+    };
+  }
   const partnerMatches = unique.filter((r) => PARTNER_CATEGORY_ROLES.includes(r));
+  if (partnerMatches.length > 0 && farmStaffMatches.length > 0) {
+    return {
+      valid: false,
+      error: 'Farm Staff roles (Supervisor or Labour) cannot combine with Partner roles on the same account.',
+    };
+  }
   const isAdvisorAndAgentOnly =
     partnerMatches.length === 2 &&
     partnerMatches.includes(Role.ADVISOR) &&

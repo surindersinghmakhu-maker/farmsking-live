@@ -14,7 +14,8 @@ export type UserRole =
   | 'SUPERVISOR'
   | 'TECHNICAL_TRAINER'
   | 'SELLER'
-  | 'TRADER';
+  | 'TRADER'
+  | 'NURSERY_OWNER';
 
 /**
  * Shared, role-agnostic surface tokens — every role's theme spreads this
@@ -221,6 +222,17 @@ export const RoleThemes: Record<UserRole, {
     primary: '#38bdf8',
     primaryLight: 'rgba(56, 189, 248, 0.15)',
     accent: '#10b981',
+  },
+  NURSERY_OWNER: {
+    ...SURFACE,
+    name: 'Nursery Hub',
+    badge: 'Seedlings, Batches & Dispatch Escrow',
+    headerBg: '#021209',
+    gradient: ['#021209', '#042413'],
+    heroGradient: ['#042413', '#021209'],
+    primary: '#10b981',
+    primaryLight: 'rgba(16, 185, 129, 0.15)',
+    accent: '#00ff87',
   },
 };
 

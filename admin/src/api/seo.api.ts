@@ -1,4 +1,4 @@
-import client from './client';
+import { apiClient } from './client';
 
 export interface SeoStatusResponse {
   lastSubmittedAt: string | null;
@@ -10,11 +10,11 @@ export interface SeoStatusResponse {
 }
 
 export async function getSeoStatusApi(): Promise<SeoStatusResponse> {
-  const { data } = await client.get<SeoStatusResponse>('/seo/status');
+  const { data } = await apiClient.get<SeoStatusResponse>('/seo/status');
   return data;
 }
 
 export async function triggerSeoSubmitApi(): Promise<{ message: string; report: SeoStatusResponse }> {
-  const { data } = await client.post<{ message: string; report: SeoStatusResponse }>('/seo/submit');
+  const { data } = await apiClient.post<{ message: string; report: SeoStatusResponse }>('/seo/submit');
   return data;
 }

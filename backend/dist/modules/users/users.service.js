@@ -817,9 +817,9 @@ let UsersService = class UsersService {
                 return { supervisor: updated, tempPassword: '(Already Assigned)' };
             }
             const activeExisting = (0, role_policy_util_1.getActiveRolesList)(existing);
-            const incompatibleRoles = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+            const incompatibleRoles = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
             if (incompatibleRoles.length > 0) {
-                throw new common_1.ConflictException(`This mobile number already holds active role (${incompatibleRoles.join(', ')}). A supervisor must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`);
+                throw new common_1.ConflictException(`This mobile number already holds active role (${incompatibleRoles.join(', ')}). A supervisor cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`);
             }
             const updatedRoles = Array.from(new Set([...(existing.roles ?? []), client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER]));
             const nextDeactivated = (existing.deactivatedRoles ?? []).filter((r) => r !== client_1.Role.SUPERVISOR);
@@ -915,9 +915,9 @@ let UsersService = class UsersService {
             throw new common_1.BadRequestException('You cannot appoint yourself as your own supervisor.');
         }
         const activeTargetRoles = (0, role_policy_util_1.getActiveRolesList)(target);
-        const incompatibleTargetRoles = activeTargetRoles.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+        const incompatibleTargetRoles = activeTargetRoles.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
         if (incompatibleTargetRoles.length > 0) {
-            throw new common_1.ConflictException(`This account already holds an active role (${incompatibleTargetRoles.join(', ')}). Supervisors must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`);
+            throw new common_1.ConflictException(`This account already holds an active role (${incompatibleTargetRoles.join(', ')}). Supervisors cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`);
         }
         if (target.employerFarmerId && target.employerFarmerId !== farmer.id) {
             const currentEmployer = await this.prisma.user.findUnique({
@@ -1002,9 +1002,9 @@ let UsersService = class UsersService {
         const currentUser = await this.prisma.user.findUnique({ where: { id: user.id } });
         if (currentUser) {
             const activeExisting = (0, role_policy_util_1.getActiveRolesList)(currentUser);
-            const incompatible = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.CUSTOMER);
+            const incompatible = activeExisting.filter((r) => r !== client_1.Role.SUPERVISOR && r !== client_1.Role.LABOUR && r !== client_1.Role.CUSTOMER);
             if (incompatible.length > 0) {
-                throw new common_1.ConflictException(`Your account already holds active role (${incompatible.join(', ')}). Only a dedicated mobile account without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles can accept a Farm Supervisor appointment.`);
+                throw new common_1.ConflictException(`Your account already holds active role (${incompatible.join(', ')}). Farm Supervisors cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`);
             }
         }
         if (currentUser?.employerFarmerId && currentUser.employerFarmerId !== request.farmerId) {
@@ -2843,8 +2843,10 @@ let UsersService = class UsersService {
                 }
                 const clientOpRoles = [client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
                 const existingClientOp = activeRoles.find((r) => clientOpRoles.includes(r));
-                if (existingClientOp && targetRoleKey !== 'CUSTOMER') {
-                    throw new common_1.ConflictException(`In the Client category, this mobile number already holds ${existingClientOp} (${existing.name} · King ID: ${existing.kingId || existing.id}). Only one Farmer or Gardener role is allowed.`);
+                const isSupervisorAndLabourCombo = (existingClientOp === client_1.Role.SUPERVISOR && targetRoleKey === 'LABOUR') ||
+                    (existingClientOp === client_1.Role.LABOUR && targetRoleKey === 'SUPERVISOR');
+                if (existingClientOp && targetRoleKey !== 'CUSTOMER' && !isSupervisorAndLabourCombo) {
+                    throw new common_1.ConflictException(`In the Client category, this mobile number already holds ${existingClientOp} (${existing.name} · King ID: ${existing.kingId || existing.id}).`);
                 }
                 if (targetRoleKey) {
                     const targetRole = this.mapAdminCreateRoleKeyToPrismaRole(targetRoleKey);
@@ -2880,7 +2882,7 @@ let UsersService = class UsersService {
         const allowedByCategory = {
             STAFF: ['ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'],
             PARTNERS: ['AGENT', 'SELLER', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TRADER'],
-            CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR'],
+            CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR', 'LABOUR'],
         };
         if (!allowedByCategory[category]?.includes(roleKey)) {
             throw new common_1.BadRequestException(`Role ${roleKey} does not belong to category ${category}.`);
@@ -3057,6 +3059,10 @@ let UsersService = class UsersService {
             case 'SUPERVISOR':
                 primaryRole = client_1.Role.SUPERVISOR;
                 assignedRoles = [client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER];
+                break;
+            case 'LABOUR':
+                primaryRole = client_1.Role.LABOUR;
+                assignedRoles = [client_1.Role.LABOUR, client_1.Role.CUSTOMER];
                 break;
             case 'CUSTOMER':
             default:

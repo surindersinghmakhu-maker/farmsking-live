@@ -16,6 +16,7 @@ enum Role {
   SELLER
   TRADER
   ACCOUNTANT
+  NURSERY_OWNER
 }
 
 /// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.

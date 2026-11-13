@@ -8,7 +8,8 @@
     "build:web": "node frontend/build.js",
     "deploy": "node scripts/deploy.js",
     "deploye": "node scripts/deploy.js",
-    "eploye": "node scripts/deploy.js"
+    "eploye": "node scripts/deploy.js",
+    "deoky": "node scripts/deploy.js"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

@@ -613,6 +613,17 @@ let AuthService = class AuthService {
                 }
             }
         }
+        if (dto.requestedRole === 'NURSERY_OWNER') {
+            if (!dto.storeName?.trim()) {
+                throw new common_1.BadRequestException('Nursery Name is required for Nursery Owner registration.');
+            }
+            if (!dto.pickupAddress?.trim()) {
+                throw new common_1.BadRequestException('Nursery / Greenhouse Address is required for seedling dispatches.');
+            }
+            if (!dto.pincode?.trim() || !/^\d{6}$/.test(dto.pincode.trim())) {
+                throw new common_1.BadRequestException('Valid 6-digit PIN Code is required for Nursery location.');
+            }
+        }
         const activeApp = await this.prisma.partnerApplication.findFirst({
             where: {
                 mobile: cleanMobile,
@@ -659,10 +670,10 @@ let AuthService = class AuthService {
             upiId: dto.upiId?.trim() || null,
             chequeDocUrl: dto.chequeDocUrl.trim(),
             photoUrl: dto.photoUrl.trim(),
-            storeName: dto.requestedRole === 'SELLER' ? dto.storeName?.trim() || null : null,
-            legalName: dto.requestedRole === 'SELLER' ? dto.legalName?.trim() || null : null,
+            storeName: dto.requestedRole === 'SELLER' || dto.requestedRole === 'NURSERY_OWNER' ? dto.storeName?.trim() || null : null,
+            legalName: dto.requestedRole === 'SELLER' || dto.requestedRole === 'NURSERY_OWNER' ? dto.legalName?.trim() || null : null,
             sellerType: dto.requestedRole === 'SELLER' ? resolvedSellerType : null,
-            pickupAddress: dto.requestedRole === 'SELLER' ? dto.pickupAddress?.trim() || null : null,
+            pickupAddress: dto.requestedRole === 'SELLER' || dto.requestedRole === 'NURSERY_OWNER' ? dto.pickupAddress?.trim() || null : null,
             isPhoneVerified: true,
             termsAcceptedAt: new Date(),
             status: client_1.PartnerApplicationStatus.PENDING,

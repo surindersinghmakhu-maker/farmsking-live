@@ -217,7 +217,7 @@ export interface PartnerUserSummary {
 export interface PartnerApplicationDto {
   id: string;
   mobile: string;
-  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
   advisorType?: 'FARM' | 'GARDEN' | null;
   name: string;
   email?: string | null;
@@ -257,7 +257,7 @@ export interface PartnerApplicationDto {
 
 export interface PartnerApplyPayload {
   mobile: string;
-  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
   advisorType?: 'FARM' | 'GARDEN';
   name: string;
   email?: string;

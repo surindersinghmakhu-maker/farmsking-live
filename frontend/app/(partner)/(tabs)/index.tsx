@@ -12,6 +12,7 @@ import { AdvisorDashboardView } from '@/components/dashboards/AdvisorDashboardVi
 import { GardenAdvisorDashboardView } from '@/components/dashboards/GardenAdvisorDashboardView';
 import { GardenerDashboardView } from '@/components/dashboards/GardenerDashboardView';
 import { PartnerDashboardView } from '@/components/dashboards/PartnerDashboardView';
+import { NurseryOwnerDashboardView } from '@/components/dashboards/NurseryOwnerDashboardView';
 
 import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboardView';
 import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView';
@@ -79,6 +80,8 @@ export default function HomeScreen() {
         return <GardenerDashboardView />;
       case 'AGENT':
         return <PartnerDashboardView />;
+      case 'NURSERY_OWNER':
+        return <NurseryOwnerDashboardView />;
 
       case 'OPERATOR':
         return <OperatorDashboardView />;

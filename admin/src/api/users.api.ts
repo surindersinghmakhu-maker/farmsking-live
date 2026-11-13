@@ -614,7 +614,8 @@ export type AdminCreateRoleKey =
   | 'FARMER'
   | 'GARDENER'
   | 'CUSTOMER'
-  | 'SUPERVISOR';
+  | 'SUPERVISOR'
+  | 'LABOUR';
 
 export interface AdminCreateUserPayload {
   otpVerificationToken: string;

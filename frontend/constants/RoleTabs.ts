@@ -41,6 +41,7 @@ export const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARM_ADVISOR: { tabs: ['index', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'farmers', 'chat', 'wallet', 'more'] },
   AGENT: { tabs: ['index', 'referrals', 'wallet', 'more'] },
+  NURSERY_OWNER: { tabs: ['index', 'wallet', 'more'] },
   ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
   SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
   MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
@@ -68,7 +69,7 @@ export interface RoleTabItem {
 export function getTabsForRole(role?: string | null): RoleTabItem[] {
   const roleKey = (role || 'FARMER').toUpperCase();
   const config = ROLE_TABS[roleKey] || ROLE_TABS.FARMER;
-  const isPartnerPortalRole = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'].includes(roleKey);
+  const isPartnerPortalRole = ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'NURSERY_OWNER'].includes(roleKey);
   const tabBase = isPartnerPortalRole ? '/(partner)/(tabs)' : '/(user)/(tabs)';
 
   return config.tabs.map((name) => {

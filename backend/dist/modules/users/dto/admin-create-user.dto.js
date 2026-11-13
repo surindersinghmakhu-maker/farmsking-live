@@ -29,6 +29,7 @@ exports.ADMIN_CREATE_ROLES = [
     'GARDENER',
     'CUSTOMER',
     'SUPERVISOR',
+    'LABOUR',
 ];
 class AdminCreateSendOtpDto {
 }

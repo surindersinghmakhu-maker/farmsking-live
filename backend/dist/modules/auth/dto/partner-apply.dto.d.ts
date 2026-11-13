@@ -1,7 +1,7 @@
 import { AdvisorType, SellerType } from '@prisma/client';
 export declare class PartnerApplyDto {
     mobile: string;
-    requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+    requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
     advisorType?: AdvisorType;
     name: string;
     email?: string;

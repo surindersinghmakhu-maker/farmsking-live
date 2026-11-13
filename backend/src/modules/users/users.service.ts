@@ -919,11 +919,11 @@ export class UsersService implements OnModuleInit {
       // Existing user has resigned or was unassigned: link them as supervisor for this farmer ONLY if compatible!
       const activeExisting = getActiveRolesList(existing);
       const incompatibleRoles = activeExisting.filter(
-        (r) => r !== Role.SUPERVISOR && r !== Role.CUSTOMER,
+        (r) => r !== Role.SUPERVISOR && r !== Role.LABOUR && r !== Role.CUSTOMER,
       );
       if (incompatibleRoles.length > 0) {
         throw new ConflictException(
-          `This mobile number already holds active role (${incompatibleRoles.join(', ')}). A supervisor must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`,
+          `This mobile number already holds active role (${incompatibleRoles.join(', ')}). A supervisor cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`,
         );
       }
       const updatedRoles = Array.from(new Set([...(existing.roles ?? []), Role.SUPERVISOR, Role.CUSTOMER]));
@@ -1031,11 +1031,11 @@ export class UsersService implements OnModuleInit {
 
     const activeTargetRoles = getActiveRolesList(target);
     const incompatibleTargetRoles = activeTargetRoles.filter(
-      (r) => r !== Role.SUPERVISOR && r !== Role.CUSTOMER,
+      (r) => r !== Role.SUPERVISOR && r !== Role.LABOUR && r !== Role.CUSTOMER,
     );
     if (incompatibleTargetRoles.length > 0) {
       throw new ConflictException(
-        `This account already holds an active role (${incompatibleTargetRoles.join(', ')}). Supervisors must use a dedicated mobile number without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles.`,
+        `This account already holds an active role (${incompatibleTargetRoles.join(', ')}). Supervisors cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`,
       );
     }
 
@@ -1185,11 +1185,11 @@ export class UsersService implements OnModuleInit {
     if (currentUser) {
       const activeExisting = getActiveRolesList(currentUser);
       const incompatible = activeExisting.filter(
-        (r) => r !== Role.SUPERVISOR && r !== Role.CUSTOMER,
+        (r) => r !== Role.SUPERVISOR && r !== Role.LABOUR && r !== Role.CUSTOMER,
       );
       if (incompatible.length > 0) {
         throw new ConflictException(
-          `Your account already holds active role (${incompatible.join(', ')}). Only a dedicated mobile account without Farmer, Gardener, Labour, Agent, Seller, Advisor, Trader, or Staff roles can accept a Farm Supervisor appointment.`,
+          `Your account already holds active role (${incompatible.join(', ')}). Farm Supervisors cannot combine with Farmer, Gardener, Agent, Seller, Advisor, Trader, or Staff roles.`,
         );
       }
     }
@@ -3431,9 +3431,12 @@ export class UsersService implements OnModuleInit {
         }
         const clientOpRoles: Role[] = [Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.LABOUR];
         const existingClientOp = activeRoles.find((r) => clientOpRoles.includes(r));
-        if (existingClientOp && targetRoleKey !== 'CUSTOMER') {
+        const isSupervisorAndLabourCombo =
+          (existingClientOp === Role.SUPERVISOR && targetRoleKey === 'LABOUR') ||
+          (existingClientOp === Role.LABOUR && targetRoleKey === 'SUPERVISOR');
+        if (existingClientOp && targetRoleKey !== 'CUSTOMER' && !isSupervisorAndLabourCombo) {
           throw new ConflictException(
-            `In the Client category, this mobile number already holds ${existingClientOp} (${existing.name} · King ID: ${existing.kingId || existing.id}). Only one Farmer or Gardener role is allowed.`,
+            `In the Client category, this mobile number already holds ${existingClientOp} (${existing.name} · King ID: ${existing.kingId || existing.id}).`,
           );
         }
         if (targetRoleKey) {
@@ -3479,7 +3482,7 @@ export class UsersService implements OnModuleInit {
     const allowedByCategory: Record<AdminCreateCategory, readonly AdminCreateRoleKey[]> = {
       STAFF: ['ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'],
       PARTNERS: ['AGENT', 'SELLER', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TRADER'],
-      CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR'],
+      CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR', 'LABOUR'],
     };
     if (!allowedByCategory[category]?.includes(roleKey)) {
       throw new BadRequestException(`Role ${roleKey} does not belong to category ${category}.`);
@@ -3674,6 +3677,10 @@ export class UsersService implements OnModuleInit {
       case 'SUPERVISOR':
         primaryRole = Role.SUPERVISOR;
         assignedRoles = [Role.SUPERVISOR, Role.CUSTOMER];
+        break;
+      case 'LABOUR':
+        primaryRole = Role.LABOUR;
+        assignedRoles = [Role.LABOUR, Role.CUSTOMER];
         break;
       case 'CUSTOMER':
       default:

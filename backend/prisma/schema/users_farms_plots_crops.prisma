@@ -256,6 +256,13 @@ model User {
   verifiedSignupLeads         VerifiedSignupLead[]         @relation("LeadConvertedUser")
   verifiedLeadsConvertedByMe  VerifiedSignupLead[]         @relation("LeadConvertedByAdmin")
 
+  // Nursery Marketplace Relations
+  growerNurseryBatches         PlotNurseryBatch[]           @relation("GrowerNurseryBatches")
+  buyerNurseryOrders           PlotNurseryOrder[]           @relation("BuyerNurseryOrders")
+  agentNurseryOrders           PlotNurseryOrder[]           @relation("AgentNurseryReferrals")
+  customerNurseryTickets       NurseryEnquiryTicket[]       @relation("CustomerNurseryTickets")
+  partnerHandledNurseryTickets NurseryEnquiryTicket[]       @relation("PartnerHandledNurseryTickets")
+
   @@index([kingId])
   @@index([mobile])
   @@index([role])
@@ -319,6 +326,7 @@ model Plot {
   labourWorkEntries LabourWorkEntry[]
   irrigationRecords IrrigationRecord[]
   satelliteScans    PlotSatelliteScan[]
+  nurseryBatches    PlotNurseryBatch[]
 
   @@index([farmId])
   @@index([farmId, deletedAt])

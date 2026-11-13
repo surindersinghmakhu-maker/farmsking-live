@@ -7,13 +7,13 @@ import {
 
 describe('Role Policy Matrix & Portal Eligibility', () => {
   describe('validateRoleCombination', () => {
-    it('allows Farmer + Agent + Seller (+ Customer) on one account', () => {
-      const res = validateRoleCombination([Role.CUSTOMER, Role.FARMER, Role.AGENT, Role.SELLER]);
+    it('allows Farmer + Advisor + Agent (+ Customer) on one account', () => {
+      const res = validateRoleCombination([Role.CUSTOMER, Role.FARMER, Role.ADVISOR, Role.AGENT]);
       expect(res.valid).toBe(true);
     });
 
-    it('allows Gardener + Agent + Seller on one account', () => {
-      const res = validateRoleCombination([Role.CUSTOMER, Role.GARDENER, Role.AGENT, Role.SELLER]);
+    it('allows Gardener + Advisor + Agent on one account', () => {
+      const res = validateRoleCombination([Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.AGENT]);
       expect(res.valid).toBe(true);
     });
 
@@ -27,38 +27,38 @@ describe('Role Policy Matrix & Portal Eligibility', () => {
       expect(res.valid).toBe(false);
     });
 
-    it('blocks Supervisor from combining with Farmer, Agent, Seller, or Labour', () => {
+    it('allows Supervisor to combine with Labour, while blocking Farmer, Agent, or Seller', () => {
+      expect(validateRoleCombination([Role.SUPERVISOR, Role.LABOUR]).valid).toBe(true);
+      expect(validateRoleCombination([Role.SUPERVISOR, Role.LABOUR, Role.CUSTOMER]).valid).toBe(true);
       expect(validateRoleCombination([Role.SUPERVISOR, Role.FARMER]).valid).toBe(false);
       expect(validateRoleCombination([Role.SUPERVISOR, Role.AGENT]).valid).toBe(false);
       expect(validateRoleCombination([Role.SUPERVISOR, Role.SELLER]).valid).toBe(false);
-      expect(validateRoleCombination([Role.SUPERVISOR, Role.LABOUR]).valid).toBe(false);
       expect(validateRoleCombination([Role.SUPERVISOR, Role.CUSTOMER]).valid).toBe(true);
     });
 
-    it('blocks Labour from combining with Farmer, Agent, Seller, or Supervisor', () => {
+    it('allows Labour to combine with Supervisor, while blocking Farmer, Agent, or Seller', () => {
+      expect(validateRoleCombination([Role.LABOUR, Role.SUPERVISOR]).valid).toBe(true);
       expect(validateRoleCombination([Role.LABOUR, Role.FARMER]).valid).toBe(false);
       expect(validateRoleCombination([Role.LABOUR, Role.AGENT]).valid).toBe(false);
       expect(validateRoleCombination([Role.LABOUR, Role.SELLER]).valid).toBe(false);
       expect(validateRoleCombination([Role.LABOUR, Role.CUSTOMER]).valid).toBe(true);
     });
 
-    it('keeps Admin Panel staff (Admin, Super Admin, Manager, Operator, Technical Trainer) strictly single-role', () => {
-      expect(validateRoleCombination([Role.TECHNICAL_TRAINER, Role.FARMER]).valid).toBe(false);
-      expect(validateRoleCombination([Role.MANAGER, Role.AGENT]).valid).toBe(false);
+    it('keeps Admin Panel staff strictly single-role within the staff category', () => {
       expect(validateRoleCombination([Role.OPERATOR, Role.TECHNICAL_TRAINER]).valid).toBe(false);
-      expect(validateRoleCombination([Role.ACCOUNTANT, Role.FARMER]).valid).toBe(false);
-      expect(validateRoleCombination([Role.ACCOUNTANT, Role.AGENT]).valid).toBe(false);
-      expect(validateRoleCombination([Role.TECHNICAL_TRAINER, Role.CUSTOMER]).valid).toBe(true);
+      expect(validateRoleCombination([Role.ADMIN, Role.MANAGER]).valid).toBe(false);
+      expect(validateRoleCombination([Role.SUPER_ADMIN, Role.ACCOUNTANT]).valid).toBe(false);
       expect(validateRoleCombination([Role.MANAGER]).valid).toBe(true);
       expect(validateRoleCombination([Role.ACCOUNTANT]).valid).toBe(true);
+      expect(validateRoleCombination([Role.TECHNICAL_TRAINER]).valid).toBe(true);
     });
   });
 
   describe('evaluatePortalEligibility', () => {
-    it('allows dual Farmer + Agent + Seller in BOTH User (CLIENT) and Agent (PARTNER) login tabs', () => {
+    it('allows dual Farmer + Advisor + Agent in BOTH User (CLIENT) and Agent (PARTNER) login tabs', () => {
       const dualUser = {
         role: Role.FARMER,
-        roles: [Role.CUSTOMER, Role.FARMER, Role.AGENT, Role.SELLER],
+        roles: [Role.CUSTOMER, Role.FARMER, Role.ADVISOR, Role.AGENT],
         deactivatedRoles: [],
       };
       expect(evaluatePortalEligibility(dualUser, 'CLIENT').allowed).toBe(true);
@@ -97,7 +97,7 @@ describe('Role Policy Matrix & Portal Eligibility', () => {
       expect(evaluatePortalEligibility(labour, 'PARTNER').allowed).toBe(false);
     });
 
-    it('blocks all Admin Panel staff roles from both CLIENT and PARTNER login tabs', () => {
+    it('blocks pure Admin Panel staff accounts with no Client or Partner role from CLIENT and PARTNER login tabs', () => {
       for (const staffRole of [
         Role.SUPER_ADMIN,
         Role.ADMIN,
@@ -106,7 +106,7 @@ describe('Role Policy Matrix & Portal Eligibility', () => {
         Role.TECHNICAL_TRAINER,
         Role.ACCOUNTANT,
       ]) {
-        const staff = { role: staffRole, roles: [staffRole, Role.CUSTOMER], deactivatedRoles: [] };
+        const staff = { role: staffRole, roles: [staffRole], deactivatedRoles: [] };
         expect(evaluatePortalEligibility(staff, 'CLIENT').allowed).toBe(false);
         expect(evaluatePortalEligibility(staff, 'PARTNER').allowed).toBe(false);
       }

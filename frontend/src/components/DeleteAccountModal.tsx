@@ -27,6 +27,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const [useServerOtp, setUseServerOtp] = useState(false);
   const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isDeletedSuccess, setIsDeletedSuccess] = useState(false);
+  const [deletedSummary, setDeletedSummary] = useState<string | null>(null);
 
   const isLocalhost =
     Platform.OS === 'web' &&
@@ -48,6 +50,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setIsSendingOtp(false);
       setIsVerifying(false);
       setIsDeletingAccount(false);
+      setIsDeletedSuccess(false);
+      setDeletedSummary(null);
     }
   }, [visible]);
 
@@ -146,10 +150,12 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
     setIsVerifying(true);
     setErrorMsg(null);
     try {
+      let resultMsg = 'Your FarmsKing ID and account have been permanently deleted.';
       if (useServerOtp) {
         // Verify server-issued 6-digit OTP atomically inside DELETE /users/me
         setIsDeletingAccount(true);
-        await deleteMyAccount({ otp: otpInput.trim() });
+        const res = await deleteMyAccount({ otp: otpInput.trim() });
+        if (res?.message) resultMsg = res.message;
       } else {
         if (!confirmationResult) {
           setErrorMsg('OTP session expired. Please request a new OTP.');
@@ -162,147 +168,196 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
 
         // 2. Delete Account on Backend with cryptographic verification proof
         setIsDeletingAccount(true);
-        await deleteMyAccount({ firebaseIdToken });
+        const res = await deleteMyAccount({ firebaseIdToken });
+        if (res?.message) resultMsg = res.message;
       }
 
-      // 3. Logout
-      await logout();
+      setIsDeletingAccount(false);
+      setIsVerifying(false);
+      setDeletedSummary(resultMsg);
+      setIsDeletedSuccess(true);
     } catch (err: any) {
       console.warn('Verification/Deletion Error:', err);
       setErrorMsg(err?.response?.data?.message || err?.message || 'Invalid OTP or failed to delete account.');
       setIsDeletingAccount(false);
-    } finally {
       setIsVerifying(false);
     }
   };
 
+  const handleFinalSignOut = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.warn('Logout after delete error:', e);
+    }
+    onClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={isDeletedSuccess ? handleFinalSignOut : onClose}>
       <View style={styles.overlay}>
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <View style={styles.iconBg}>
-              <Ionicons name="trash-outline" size={24} color="#dc2626" />
-            </View>
-            <Text style={styles.title}>Delete Account</Text>
-            <Text style={styles.subTitle}>Verify via OTP to permanently delete account.</Text>
-          </View>
+        <View style={[styles.card, isDeletedSuccess && { borderColor: '#ef4444' }]}>
+          {isDeletedSuccess ? (
+            <View style={{ alignItems: 'center', width: '100%', paddingVertical: 6 }}>
+              <View style={[styles.iconBg, { backgroundColor: '#fee2e2', width: 56, height: 56, borderRadius: 28, marginBottom: 12 }]}>
+                <Ionicons name="checkmark-done-circle" size={32} color="#dc2626" />
+              </View>
 
-          <View style={{ gap: 12, width: '100%' }}>
-            {!otpSent ? (
-              <>
-                <View>
-                  <Text style={styles.label}>1. Enter Registered Mobile Number *</Text>
-                  <View style={styles.inputWrap}>
-                    <Ionicons name="call-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="e.g. 9876543210"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                      value={mobileInput}
-                      onChangeText={(t) => {
-                        setMobileInput(t);
-                        setErrorMsg(null);
-                      }}
-                    />
-                  </View>
-                </View>
+              <Text style={[styles.title, { color: '#991b1b', fontSize: 20 }]}>
+                ID Permanently Deleted
+              </Text>
+              <Text style={[styles.subTitle, { color: '#475569', marginTop: 6, lineHeight: 18, textAlign: 'center' }]}>
+                Your FarmsKing ID and account have been permanently deleted.
+              </Text>
 
-                {errorMsg ? (
-                  <View style={styles.errorBox}>
-                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
-                    <Text style={styles.errorText}>{errorMsg}</Text>
-                  </View>
-                ) : null}
-
-                <View style={styles.rowActions}>
-                  <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={isSendingOtp}>
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.actionBtn} onPress={handleSendOtp} disabled={isSendingOtp || mobileInput.length !== 10}>
-                    {isSendingOtp ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <Text style={styles.actionBtnText}>Send OTP</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.successBox}>
-                  <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <Text style={styles.successText}>
-                    OTP sent to {mobileInput}
-                    {serverDevOtp ? ` (Local dev code: ${serverDevOtp})` : ''}
+              <View style={[styles.successBox, { backgroundColor: '#fef2f2', borderColor: '#fecaca', padding: 14, marginVertical: 14, width: '100%' }]}>
+                <Ionicons name="shield-checkmark" size={22} color="#dc2626" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b', marginBottom: 4 }}>
+                    Mobile Number Unlinked & Data Protected
+                  </Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#64748b', lineHeight: 18 }}>
+                    Your mobile number has been successfully unlinked and freed. In accordance with statutory tax and audit regulations, your historical records (orders, bills, ledger entries) remain safely archived.
                   </Text>
                 </View>
+              </View>
 
-                <View>
-                  <Text style={styles.label}>2. Enter 6-Digit OTP *</Text>
-                  <View style={styles.inputWrap}>
-                    <Ionicons name="keypad-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={[styles.textInput, { fontSize: 16, letterSpacing: 2 }]}
-                      placeholder="000000"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="number-pad"
-                      maxLength={6}
-                      textContentType="oneTimeCode"
-                      autoComplete="one-time-code"
-                      value={otpInput}
-                      onChangeText={(t) => {
-                        setOtpInput(t);
-                        setErrorMsg(null);
-                      }}
-                    />
-                  </View>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#dc2626', width: '100%', paddingVertical: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}
+                onPress={handleFinalSignOut}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="log-out-outline" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+                <Text style={[styles.actionBtnText, { fontSize: 15 }]}>Done & Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.header}>
+                <View style={styles.iconBg}>
+                  <Ionicons name="trash-outline" size={24} color="#dc2626" />
                 </View>
+                <Text style={styles.title}>Delete Account</Text>
+                <Text style={styles.subTitle}>Verify via OTP to permanently delete account.</Text>
+              </View>
 
-                <View>
-                  <Text style={styles.label}>3. Type "delete" to confirm *</Text>
-                  <View style={styles.inputWrap}>
-                    <Ionicons name="text-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={styles.textInput}
-                      placeholder="Type delete"
-                      placeholderTextColor="#94a3b8"
-                      autoCapitalize="none"
-                      value={deleteConfirmInput}
-                      onChangeText={(t) => {
-                        setDeleteConfirmInput(t);
-                        setErrorMsg(null);
-                      }}
-                    />
-                  </View>
-                </View>
+              <View style={{ gap: 12, width: '100%' }}>
+                {!otpSent ? (
+                  <>
+                    <View>
+                      <Text style={styles.label}>1. Enter Registered Mobile Number *</Text>
+                      <View style={styles.inputWrap}>
+                        <Ionicons name="call-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                        <TextInput
+                          style={styles.textInput}
+                          placeholder="e.g. 9876543210"
+                          placeholderTextColor="#94a3b8"
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                          value={mobileInput}
+                          onChangeText={(t) => {
+                            setMobileInput(t);
+                            setErrorMsg(null);
+                          }}
+                        />
+                      </View>
+                    </View>
 
-                {errorMsg ? (
-                  <View style={styles.errorBox}>
-                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
-                    <Text style={styles.errorText}>{errorMsg}</Text>
-                  </View>
-                ) : null}
+                    {errorMsg ? (
+                      <View style={styles.errorBox}>
+                        <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                        <Text style={styles.errorText}>{errorMsg}</Text>
+                      </View>
+                    ) : null}
 
-                <View style={styles.rowActions}>
-                  <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={isVerifying || isDeletingAccount}>
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                  </TouchableOpacity>
+                    <View style={styles.rowActions}>
+                      <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={isSendingOtp}>
+                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                      </TouchableOpacity>
 
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#dc2626' }]} onPress={handleVerifyAndDelete} disabled={isVerifying || isDeletingAccount || otpInput.length !== 6 || deleteConfirmInput.trim().toLowerCase() !== 'delete'}>
-                    {isVerifying || isDeletingAccount ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <Text style={styles.actionBtnText}>Verify & Delete</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
+                      <TouchableOpacity style={styles.actionBtn} onPress={handleSendOtp} disabled={isSendingOtp || mobileInput.length !== 10}>
+                        {isSendingOtp ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <Text style={styles.actionBtnText}>Send OTP</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.successBox}>
+                      <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                      <Text style={styles.successText}>
+                        OTP sent to {mobileInput}
+                        {serverDevOtp ? ` (Local dev code: ${serverDevOtp})` : ''}
+                      </Text>
+                    </View>
+
+                    <View>
+                      <Text style={styles.label}>2. Enter 6-Digit OTP *</Text>
+                      <View style={styles.inputWrap}>
+                        <Ionicons name="keypad-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                        <TextInput
+                          style={[styles.textInput, { fontSize: 16, letterSpacing: 2 }]}
+                          placeholder="000000"
+                          placeholderTextColor="#94a3b8"
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          textContentType="oneTimeCode"
+                          autoComplete="one-time-code"
+                          value={otpInput}
+                          onChangeText={(t) => {
+                            setOtpInput(t);
+                            setErrorMsg(null);
+                          }}
+                        />
+                      </View>
+                    </View>
+
+                    <View>
+                      <Text style={styles.label}>3. Type "delete" to confirm *</Text>
+                      <View style={styles.inputWrap}>
+                        <Ionicons name="text-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                        <TextInput
+                          style={styles.textInput}
+                          placeholder="Type delete"
+                          placeholderTextColor="#94a3b8"
+                          autoCapitalize="none"
+                          value={deleteConfirmInput}
+                          onChangeText={(t) => {
+                            setDeleteConfirmInput(t);
+                            setErrorMsg(null);
+                          }}
+                        />
+                      </View>
+                    </View>
+
+                    {errorMsg ? (
+                      <View style={styles.errorBox}>
+                        <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                        <Text style={styles.errorText}>{errorMsg}</Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.rowActions}>
+                      <TouchableOpacity style={styles.cancelBtn} onPress={onClose} disabled={isVerifying || isDeletingAccount}>
+                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#dc2626' }]} onPress={handleVerifyAndDelete} disabled={isVerifying || isDeletingAccount || otpInput.length !== 6 || deleteConfirmInput.trim().toLowerCase() !== 'delete'}>
+                        {isVerifying || isDeletingAccount ? (
+                          <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                          <Text style={styles.actionBtnText}>Verify & Delete</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
+            </>
+          )}
         </View>
       </View>
     </Modal>

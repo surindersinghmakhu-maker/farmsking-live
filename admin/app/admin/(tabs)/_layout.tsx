@@ -968,25 +968,7 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
-            name="admin-sellers"
-            options={{
-              href: null,
-            }}
-          />
-          <Tabs.Screen
-            name="seller-payouts"
-            options={{
-              href: null,
-            }}
-          />
-          <Tabs.Screen
             name="admin-offers"
-            options={{
-              href: null,
-            }}
-          />
-          <Tabs.Screen
-            name="legal-compliance"
             options={{
               href: null,
             }}

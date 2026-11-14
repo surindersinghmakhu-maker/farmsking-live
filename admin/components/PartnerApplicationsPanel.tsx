@@ -213,11 +213,13 @@ export function PartnerApplicationsPanel() {
                           <Text style={styles.rolePillText}>
                             {app.requestedRole === 'AGENT'
                               ? 'Sales Manager'
-                              : app.requestedRole === 'SELLER'
-                                ? 'Seller'
-                                : app.advisorType === 'GARDEN'
-                                  ? 'Garden Advisor'
-                                  : 'Crop Doctor / Advisor'}
+                              : app.requestedRole === 'NURSERY_OWNER'
+                                ? 'Nursery Owner (HSN 0602 Seedlings)'
+                                : app.requestedRole === 'SELLER'
+                                  ? 'Seller'
+                                  : app.advisorType === 'GARDEN'
+                                    ? 'Garden Advisor'
+                                    : 'Crop Doctor / Advisor'}
                             {app.requestedRole === 'SELLER' && app.sellerType ? ` (${app.sellerType})` : ''}
                           </Text>
                         </View>
@@ -309,10 +311,14 @@ export function PartnerApplicationsPanel() {
                     <Text style={[styles.detailLine, { color: textColor }]}>UPI: {app.upiId || '—'}</Text>
                   </View>
 
-                  {(app.requestedRole === 'ADVISOR' || app.requestedRole === 'SELLER') ? (
+                  {(app.requestedRole === 'ADVISOR' || app.requestedRole === 'SELLER' || app.requestedRole === 'NURSERY_OWNER') ? (
                     <View style={[styles.detailBlock, { borderColor: cardBorder }]}>
                       <Text style={[styles.detailHeading, { color: subTextColor }]}>
-                        {app.requestedRole === 'ADVISOR' ? 'ADVISOR CREDENTIALS' : 'SELLER STORE DETAILS'}
+                        {app.requestedRole === 'ADVISOR'
+                          ? 'ADVISOR CREDENTIALS'
+                          : app.requestedRole === 'NURSERY_OWNER'
+                            ? 'NURSERY & GREENHOUSE DETAILS'
+                            : 'SELLER STORE DETAILS'}
                       </Text>
                       {app.requestedRole === 'ADVISOR' ? (
                         <>
@@ -320,6 +326,12 @@ export function PartnerApplicationsPanel() {
                           <Text style={[styles.detailLine, { color: textColor }]}>
                             Experience: {app.yearsExperience ?? 0} yrs  •  {app.specialization || '—'}
                           </Text>
+                        </>
+                      ) : app.requestedRole === 'NURSERY_OWNER' ? (
+                        <>
+                          <Text style={[styles.detailLine, { color: textColor }]}>Nursery: {app.storeName || '—'} ({app.legalName || 'Exempt Under HSN 0602'})</Text>
+                          <Text style={[styles.detailLine, { color: textColor }]}>Dispatch Hub: {app.pickupAddress || '—'}</Text>
+                          <Text style={[styles.detailLine, { color: '#10b981' }]}>GST Status: 100% Tax-Exempt Live Seedlings & Root Plugs (HSN 0602)</Text>
                         </>
                       ) : (
                         <>

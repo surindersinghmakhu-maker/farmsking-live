@@ -1,7 +1,7 @@
 import { SellerType, SoilType, WaterType } from '@prisma/client';
 export declare const ADMIN_CREATE_CATEGORIES: readonly ["STAFF", "PARTNERS", "CLIENTS"];
 export type AdminCreateCategory = (typeof ADMIN_CREATE_CATEGORIES)[number];
-export declare const ADMIN_CREATE_ROLES: readonly ["ADMIN", "MANAGER", "OPERATOR", "TECHNICAL_TRAINER", "ACCOUNTANT", "AGENT", "SELLER", "FARM_ADVISOR", "GARDEN_ADVISOR", "TRADER", "FARMER", "GARDENER", "CUSTOMER", "SUPERVISOR", "LABOUR"];
+export declare const ADMIN_CREATE_ROLES: readonly ["ADMIN", "MANAGER", "OPERATOR", "TECHNICAL_TRAINER", "ACCOUNTANT", "AGENT", "SELLER", "FARM_ADVISOR", "GARDEN_ADVISOR", "TRADER", "NURSERY_OWNER", "FARMER", "GARDENER", "CUSTOMER", "SUPERVISOR", "LABOUR"];
 export type AdminCreateRoleKey = (typeof ADMIN_CREATE_ROLES)[number];
 export declare class AdminCreateSendOtpDto {
     mobile: string;

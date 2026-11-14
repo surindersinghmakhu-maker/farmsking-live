@@ -344,21 +344,85 @@ export class AppController {
       throw new BadRequestException('Invalid password. Could not verify account deletion request.');
     }
 
-    // Soft delete / anonymize user data and invalidate active credentials
+    // 1. Rename mobile & email to unique deleted markers so the mobile number is freed up
+    // and historical records (orders, bills, ledger entries) remain relational without breaking.
+    const prefix = `${cleanMobile}_del_`;
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let delMobile = `${prefix}${Date.now()}`;
+    for (let i = 0; i < alphabet.length; i += 1) {
+      const candidate = `${prefix}${alphabet[i]}`;
+      const conflict = await this.prisma.user.findFirst({
+        where: { mobile: candidate, id: { not: user.id } },
+        select: { id: true },
+      });
+      if (!conflict) {
+        delMobile = candidate;
+        break;
+      }
+    }
+
+    let delEmail: string | null = null;
+    if (user.email) {
+      const cleanEmail = user.email.trim();
+      const emailPrefix = `${cleanEmail}_del_`;
+      delEmail = `${emailPrefix}${Date.now()}`;
+      for (let i = 0; i < alphabet.length; i += 1) {
+        const candidate = `${emailPrefix}${alphabet[i]}`;
+        const conflict = await this.prisma.user.findFirst({
+          where: { email: candidate, id: { not: user.id } },
+          select: { id: true },
+        });
+        if (!conflict) {
+          delEmail = candidate;
+          break;
+        }
+      }
+    }
+
+    // 2. Anonymize user PII & mark deleted while preserving King ID for audit ledger integrity
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         deletedAt: new Date(),
-        name: 'Deleted User',
-        email: null,
+        name: 'Deleted Account',
+        mobile: delMobile,
+        email: delEmail,
+        googleId: null,
+        photoUrl: null,
+        village: null,
+        district: null,
+        state: null,
+        pincode: null,
+        postOffice: null,
         upiId: null,
-        passwordHash: '',
+        panNumber: null,
+        panDocUrl: null,
+        aadhaarLast4: null,
+        aadhaarDocUrl: null,
+        gstin: null,
+        mandiLicenseNo: null,
+        bankAccountNumber: null,
+        bankIfsc: null,
+        bankAccountHolderName: null,
+        billPrintingAddress: null,
+        farmName: null,
+        farmAddress: null,
+        farmMobile: null,
+        specialization: null,
+        bio: null,
+        yearsExperience: null,
+        gpsLat: null,
+        gpsLng: null,
+        gpsLocationName: null,
+        securityQuestion: null,
+        securityAnswerHash: null,
+        passwordHash: 'ACCOUNT_DELETED_PERMANENTLY',
       },
     });
 
     return {
       success: true,
-      message: `Account for mobile ${cleanMobile} has been successfully deleted and unlinked from FarmsKing.`,
+      message: 'Your FarmsKing ID and account have been permanently deleted. Your mobile number has been unlinked and freed, while linked historical records (orders, bills, audit ledger) remain safely preserved.',
       deletedAt: new Date().toISOString(),
     };
   }

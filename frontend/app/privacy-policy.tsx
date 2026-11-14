@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
+import { DeleteAccountModal } from '@/src/components/DeleteAccountModal';
 
 interface PolicyModule {
   id: string;
@@ -287,7 +288,7 @@ export default function PrivacyPolicyScreen() {
           >
             <Ionicons name="trash-outline" size={16} color="#ffffff" />
             <Text style={{ color: '#FFF', fontSize: 13, fontFamily: FONT.bold }}>
-              {lang === 'PA' ? 'ਅਕਾਊਂਟ ਡਿਲੀਟ ਕਰੋ (Delete Account)' : 'Delete Account Now'}
+              Delete Account Now
             </Text>
           </TouchableOpacity>
         </View>
@@ -299,64 +300,16 @@ export default function PrivacyPolicyScreen() {
         >
           <Ionicons name="globe-outline" size={16} color="#0284c7" />
           <Text style={{ color: '#0284c7', fontSize: 12.5, fontFamily: FONT.bold }}>
-            {lang === 'PA' ? '🌐 ਵੈੱਬਸਾਈਟ ਤੇ ਪ੍ਰਾਈਵੇਸੀ ਪਾਲਿਸੀ ਵੇਖੋ' : '🌐 View Web Privacy Policy Page'}
+            View Web Privacy Policy Page
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Delete Account Modal */}
-      <Modal visible={isDeleteModalOpen} animationType="fade" transparent onRequestClose={() => setIsDeleteModalOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="warning" size={22} color="#dc2626" />
-                <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#991b1b' }}>Delete Account</Text>
-              </View>
-              <TouchableOpacity onPress={() => setIsDeleteModalOpen(false)}>
-                <Ionicons name="close" size={20} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 12 }}>
-              Are you sure you want to delete your FarmsKing account ({user?.mobile || user?.name})? All your saved plots, crop advisories, and history will be permanently erased.
-            </Text>
-
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a', marginBottom: 6 }}>
-              Type <Text style={{ color: '#dc2626', fontFamily: FONT.extraBold }}>DELETE</Text> to confirm:
-            </Text>
-            <TextInput
-              style={styles.confirmInput}
-              value={deleteConfirmText}
-              onChangeText={setDeleteConfirmText}
-              placeholder="DELETE"
-              placeholderTextColor="#cbd5e1"
-              autoCapitalize="characters"
-            />
-
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#f1f5f9', paddingVertical: 12, borderRadius: RADIUS.md, alignItems: 'center' }}
-                onPress={() => setIsDeleteModalOpen(false)}
-              >
-                <Text style={{ color: '#475569', fontSize: 13, fontFamily: FONT.bold }}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#dc2626', paddingVertical: 12, borderRadius: RADIUS.md, alignItems: 'center' }}
-                onPress={handleDeleteAccount}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <ActivityIndicator color="#FFF" size="small" />
-                ) : (
-                  <Text style={{ color: '#FFF', fontSize: 13, fontFamily: FONT.bold }}>Delete Permanently</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <DeleteAccountModal
+        visible={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+      />
     </View>
   );
 }

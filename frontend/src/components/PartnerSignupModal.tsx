@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { FONT, RADIUS } from '@/constants/theme';
 import { resolveMediaUrl } from '@/src/api/client';
@@ -43,56 +42,66 @@ type DocFieldKey =
   | 'chequeDocUrl'
   | 'gstDocUrl';
 
-const PARTNER_ROLE_CARDS: {
-  id: 'NURSERY_OWNER' | 'SELLER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'AGENT';
+type PartnerRoleKey = 'NURSERY_OWNER' | 'SELLER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'AGENT';
+
+interface PartnerRoleCardConfig {
+  id: PartnerRoleKey;
   role: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
   advisorType?: 'FARM' | 'GARDEN';
   title: string;
+  badge: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   accent: string;
-}[] = [
+}
+
+const PARTNER_ROLE_CARDS: PartnerRoleCardConfig[] = [
   {
     id: 'NURSERY_OWNER',
     role: 'NURSERY_OWNER',
     title: 'Nursery Owner',
-    subtitle: 'Grow & supply flower, vegetable & paddy seedlings across India (HSN 0602 GST Exempt)',
-    icon: 'leaf',
-    accent: '#22c55e',
+    badge: 'HSN 0602 Exempt',
+    subtitle: 'Live flower, vegetable & paddy seedlings hub',
+    icon: 'leaf-outline',
+    accent: '#10b981',
   },
   {
-    id: 'SELLER',
-    role: 'SELLER',
-    title: 'Seller',
-    subtitle: 'Sell certified seeds, agri inputs & farm products (Sec 194-O / GST Sec 52)',
-    icon: 'storefront',
-    accent: '#38bdf8',
+    id: 'AGENT',
+    role: 'AGENT',
+    title: 'Sales Manager',
+    badge: '2% Comm + TDS 194-H',
+    subtitle: 'Farmer outreach, coupons & referral network',
+    icon: 'briefcase-outline',
+    accent: '#f59e0b',
   },
   {
     id: 'FARM_ADVISOR',
     role: 'ADVISOR',
     advisorType: 'FARM',
-    title: 'Crop Doctor / Advisor',
-    subtitle: 'Provide crop advisory, spray schedules & farm visits (TDS Sec 194-J)',
-    icon: 'medical',
-    accent: '#10b981',
+    title: 'Crop Doctor',
+    badge: 'Field Agronomy',
+    subtitle: 'Crop prescriptions, spray plans & farm visits',
+    icon: 'medkit-outline',
+    accent: '#38bdf8',
   },
   {
     id: 'GARDEN_ADVISOR',
     role: 'ADVISOR',
     advisorType: 'GARDEN',
     title: 'Garden Advisor',
-    subtitle: 'Guide home gardens, kitchen gardens & nurseries (TDS Sec 194-J)',
-    icon: 'flower',
+    badge: 'Urban Flora',
+    subtitle: 'Kitchen garden, terrace plants & landscaping',
+    icon: 'sunny-outline',
     accent: '#ec4899',
   },
   {
-    id: 'AGENT',
-    role: 'AGENT',
-    title: 'Sales Manager',
-    subtitle: 'Manage farmer outreach & earn commission on plans and orders (TDS Sec 194-H)',
-    icon: 'briefcase',
-    accent: '#f59e0b',
+    id: 'SELLER',
+    role: 'SELLER',
+    title: 'Seller',
+    badge: 'Marketplace Store',
+    subtitle: 'Agri inputs, seeds, bio-fertilizers & tools',
+    icon: 'storefront-outline',
+    accent: '#8b5cf6',
   },
 ];
 
@@ -111,7 +120,10 @@ export function PartnerSignupModal({
   initialExistingUserSummary = null,
   initialExistingApplication = null,
 }: PartnerSignupModalProps) {
-  const [step, setStep] = useState<'OTP' | 'PENDING_VIEW' | 'FORM' | 'SUBMITTED'>('OTP');
+  // Wizard Steps: 1 (Role & OTP) -> 2 (Profile & Hub) -> 3 (KYC & Payouts) -> 4 (Submitted)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // OTP & Mobile state
   const [mobile, setMobile] = useState('');
   const [otpInput, setOtpInput] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -127,7 +139,8 @@ export function PartnerSignupModal({
   const [uploadingKey, setUploadingKey] = useState<DocFieldKey | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Profile + Role fields
+  // Profile fields
+  const [selectedRoleCardId, setSelectedRoleCardId] = useState<PartnerRoleKey>('NURSERY_OWNER');
   const [requestedRole, setRequestedRole] = useState<'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER'>('NURSERY_OWNER');
   const [advisorType, setAdvisorType] = useState<'FARM' | 'GARDEN'>('FARM');
   const [name, setName] = useState('');
@@ -140,19 +153,17 @@ export function PartnerSignupModal({
   const [district, setDistrict] = useState('');
   const [stateName, setStateName] = useState('');
 
-  // Advisor fields
+  // Role-Specific fields
   const [qualification, setQualification] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [yearsExperience, setYearsExperience] = useState('');
   const [bio, setBio] = useState('');
-
-  // Seller fields
   const [storeName, setStoreName] = useState('');
   const [legalName, setLegalName] = useState('');
   const [sellerType, setSellerType] = useState<'FARMER' | 'COMMERCIAL'>('FARMER');
   const [pickupAddress, setPickupAddress] = useState('');
 
-  // Statutory KYC + Bank fields
+  // Statutory KYC & Bank fields
   const [panNumber, setPanNumber] = useState('');
   const [aadhaarLast4, setAadhaarLast4] = useState('');
   const [gstin, setGstin] = useState('');
@@ -179,7 +190,17 @@ export function PartnerSignupModal({
 
     if (app) {
       setRequestedRole(app.requestedRole);
-      if (app.advisorType) setAdvisorType(app.advisorType);
+      if (app.advisorType) {
+        setAdvisorType(app.advisorType);
+        setSelectedRoleCardId(app.advisorType === 'GARDEN' ? 'GARDEN_ADVISOR' : 'FARM_ADVISOR');
+      } else if (app.requestedRole === 'NURSERY_OWNER') {
+        setSelectedRoleCardId('NURSERY_OWNER');
+      } else if (app.requestedRole === 'SELLER') {
+        setSelectedRoleCardId('SELLER');
+      } else {
+        setSelectedRoleCardId('AGENT');
+      }
+
       setName(app.name || userSummary?.name || '');
       setEmail(app.email || userSummary?.email || '');
       setPincode(app.pincode || userSummary?.pincode || '');
@@ -214,15 +235,8 @@ export function PartnerSignupModal({
       setAadhaarBackUrl(app.aadhaarBackUrl || userSummary?.aadhaarBackUrl || '');
       setChequeDocUrl(app.chequeDocUrl || userSummary?.chequeDocUrl || '');
       setGstDocUrl(app.gstDocUrl || userSummary?.gstDocUrl || '');
-      setTermsAccepted(true);
-
-      if (app.status === 'PENDING') {
-        setStep('PENDING_VIEW');
-        return;
-      }
     } else if (userSummary) {
       setName(userSummary.name || '');
-      setLegalName(userSummary.name || '');
       setEmail(userSummary.email || '');
       setPincode(userSummary.pincode || '');
       setPostOffice(userSummary.postOffice || '');
@@ -245,40 +259,39 @@ export function PartnerSignupModal({
       setAadhaarDocUrl(userSummary.aadhaarDocUrl || '');
       setAadhaarBackUrl(userSummary.aadhaarBackUrl || '');
       setChequeDocUrl(userSummary.chequeDocUrl || '');
-      setGstDocUrl(userSummary.gstDocUrl || '');
-      setTermsAccepted(false);
     }
-    setStep('FORM');
   };
 
   useEffect(() => {
-    if (!visible) return;
-    setErrorMsg(null);
-    setOtpInput('');
-    setDevOtp(null);
-    setPassword('');
-    const cleanInitMobile = initialMobile.replace(/\D/g, '').slice(-10);
-    setMobile(cleanInitMobile);
-
-    if (initialPartnerUploadToken) {
-      setUploadToken(initialPartnerUploadToken);
-      setOtpSent(true);
-      applyPrefillFromServer(initialExistingUserSummary, initialExistingApplication);
-    } else if (initialExistingApplication?.status === 'PENDING') {
-      setUploadToken(null);
-      setExistingUser(initialExistingUserSummary);
-      setExistingApp(initialExistingApplication);
-      setStep('PENDING_VIEW');
+    if (visible) {
+      setErrorMsg(null);
+      if (initialMobile) {
+        setMobile(initialMobile.replace(/\D/g, '').slice(-10));
+      }
+      if (initialPartnerUploadToken) {
+        setUploadToken(initialPartnerUploadToken);
+      }
+      if (initialExistingUserSummary || initialExistingApplication) {
+        applyPrefillFromServer(initialExistingUserSummary, initialExistingApplication);
+      }
     } else {
-      setUploadToken(null);
+      // Reset wizard
+      setCurrentStep(1);
+      setMobile('');
+      setOtpInput('');
       setOtpSent(false);
+      setDevOtp(null);
+      setUploadToken(null);
       setExistingUser(null);
       setExistingApp(null);
-      setStep('OTP');
-      setRequestedRole('AGENT');
+      setSubmittedMessage('');
+      setErrorMsg(null);
+      setSelectedRoleCardId('NURSERY_OWNER');
+      setRequestedRole('NURSERY_OWNER');
       setAdvisorType('FARM');
       setName('');
       setEmail('');
+      setPassword('');
       setPincode('');
       setPostOffice('');
       setPostOffices([]);
@@ -309,6 +322,14 @@ export function PartnerSignupModal({
       setTermsAccepted(false);
     }
   }, [visible, initialMobile, initialPartnerUploadToken, initialExistingUserSummary, initialExistingApplication]);
+
+  const handleSelectRole = (card: PartnerRoleCardConfig) => {
+    setSelectedRoleCardId(card.id);
+    setRequestedRole(card.role);
+    if (card.advisorType) {
+      setAdvisorType(card.advisorType);
+    }
+  };
 
   const handleSendOtp = async () => {
     const clean = mobile.replace(/\D/g, '').slice(-10);
@@ -375,7 +396,7 @@ export function PartnerSignupModal({
 
   const handlePickAndUpload = async (field: DocFieldKey, setter: (url: string) => void) => {
     if (!uploadToken) {
-      setErrorMsg('Mobile OTP session missing. Please re-verify OTP to upload KYC documents.');
+      setErrorMsg('Mobile OTP session missing. Please verify OTP first.');
       return;
     }
     setErrorMsg(null);
@@ -396,21 +417,72 @@ export function PartnerSignupModal({
     }
   };
 
-  const handleSubmit = async () => {
+  const validateStep1 = () => {
     setErrorMsg(null);
-    const cleanMob = mobile.replace(/\D/g, '').slice(-10);
+    const clean = mobile.replace(/\D/g, '').slice(-10);
+    if (clean.length !== 10) {
+      setErrorMsg('Please enter a valid 10-digit Indian mobile number.');
+      return false;
+    }
+    if (!uploadToken) {
+      setErrorMsg('Please verify your mobile number with OTP before continuing.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    setErrorMsg(null);
     if (!name.trim() || name.trim().length < 2) {
-      setErrorMsg('Please enter your full legal name.');
-      return;
+      setErrorMsg('Please enter your full legal name as per PAN.');
+      return false;
+    }
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErrorMsg('Please enter a valid email address (e.g. name@example.com) or leave it empty.');
+      return false;
     }
     if (!existingApp?.hasPassword && !existingUser && (!password.trim() || password.trim().length < 8)) {
       setErrorMsg('Please set a Partner login password of at least 8 characters.');
-      return;
+      return false;
     }
     if (password.trim() && password.trim().length < 8) {
       setErrorMsg('Password must be at least 8 characters long.');
+      return false;
+    }
+    if (requestedRole === 'NURSERY_OWNER') {
+      if (!storeName.trim()) {
+        setErrorMsg('Nursery / GreenHouse business name is required.');
+        return false;
+      }
+      if (!pickupAddress.trim()) {
+        setErrorMsg('GreenHouse / Hub dispatch address is required for tray couriers.');
+        return false;
+      }
+      if (!/^\d{6}$/.test(pincode.trim())) {
+        setErrorMsg('Valid 6-digit Postal PIN Code is required for nursery dispatch.');
+        return false;
+      }
+    }
+    if (requestedRole === 'ADVISOR' && !qualification.trim()) {
+      setErrorMsg('Academic qualification / agronomy degree is required for Advisors.');
+      return false;
+    }
+    if (requestedRole === 'SELLER') {
+      if (!storeName.trim() || !pickupAddress.trim() || !/^\d{6}$/.test(pincode.trim())) {
+        setErrorMsg('Store Name, Full Pickup Address, and 6-digit PIN Code are required for Sellers.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    setErrorMsg(null);
+    if (!validateStep2()) {
+      setCurrentStep(2);
       return;
     }
+
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber.trim().toUpperCase())) {
       setErrorMsg('Valid 10-character PAN is required (e.g. ABCDE1234F).');
       return;
@@ -439,22 +511,8 @@ export function PartnerSignupModal({
       setErrorMsg('Please upload your Passport Profile Photo.');
       return;
     }
-    if (requestedRole === 'ADVISOR' && !qualification.trim()) {
-      setErrorMsg('Academic qualification / agronomy certification is required for Advisors.');
-      return;
-    }
-    if (requestedRole === 'NURSERY_OWNER') {
-      if (!storeName.trim() || !pickupAddress.trim() || !/^\d{6}$/.test(pincode.trim())) {
-        setErrorMsg('Nursery Name, Greenhouse / Dispatch Address, and 6-digit PIN Code are required for Nursery Owners.');
-        return;
-      }
-    }
-    if (requestedRole === 'SELLER') {
-      if (!storeName.trim() || !pickupAddress.trim() || !/^\d{6}$/.test(pincode.trim())) {
-        setErrorMsg('Store Name, Full Pickup Address, and 6-digit PIN Code are required for Sellers.');
-        return;
-      }
-      if (sellerType === 'COMMERCIAL' && (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin.trim().toUpperCase()) || !gstDocUrl)) {
+    if (requestedRole === 'SELLER' && sellerType === 'COMMERCIAL') {
+      if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin.trim().toUpperCase()) || !gstDocUrl) {
         setErrorMsg('Valid 15-character GSTIN and GST Certificate photo are mandatory for Commercial Sellers.');
         return;
       }
@@ -465,6 +523,7 @@ export function PartnerSignupModal({
     }
 
     setBusySubmit(true);
+    const cleanMob = mobile.replace(/\D/g, '').slice(-10);
     try {
       const res = await submitPartnerApplicationApi({
         mobile: cleanMob,
@@ -502,7 +561,7 @@ export function PartnerSignupModal({
         termsAccepted: true,
       });
       setSubmittedMessage(res.message);
-      setStep('SUBMITTED');
+      setCurrentStep(4);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Submission failed. Check your entries and try again.';
       setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
@@ -511,750 +570,773 @@ export function PartnerSignupModal({
     }
   };
 
-  const renderUploadButton = (
+  const renderUploadCard = (
     field: DocFieldKey,
     label: string,
     urlValue: string,
     setter: (v: string) => void,
     required = true,
   ) => {
-    const isBusy = uploadingKey === field;
-    const isDone = Boolean(urlValue);
+    const isUploading = uploadingKey === field;
+    const isUploaded = Boolean(urlValue);
+    const resolvedUrl = urlValue ? resolveMediaUrl(urlValue) || urlValue : null;
+
     return (
-      <View style={styles.docCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.docLabel}>
-              {label} {required ? <Text style={{ color: '#ef4444' }}>*</Text> : <Text style={{ color: '#64748b' }}>(Optional)</Text>}
+      <View style={styles.uploadCard}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons
+              name={isUploaded ? 'checkmark-circle' : 'document-attach-outline'}
+              size={16}
+              color={isUploaded ? '#00ff87' : '#94a3b8'}
+            />
+            <Text style={styles.uploadLabel} numberOfLines={1}>
+              {label} {required ? '*' : '(Optional)'}
             </Text>
-            <Text style={styles.docSub}>{isDone ? 'Uploaded & Ready' : 'Select clear photo (JPG / PNG)'}</Text>
           </View>
-          <TouchableOpacity
-            style={[styles.uploadBtn, isDone && styles.uploadBtnDone]}
-            disabled={isBusy}
-            onPress={() => handlePickAndUpload(field, setter)}
-            activeOpacity={0.85}
-          >
-            {isBusy ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Ionicons name={isDone ? 'checkmark-circle' : 'cloud-upload-outline'} size={15} color="#fff" />
-                <Text style={styles.uploadBtnText}>{isDone ? 'Replace' : 'Upload'}</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <Text style={styles.uploadSub} numberOfLines={1}>
+            {isUploaded ? 'Document Attached & Verified' : 'JPG, PNG or WebP image'}
+          </Text>
         </View>
-        {isDone ? (
-          <Image
-            source={{ uri: resolveMediaUrl(urlValue) || urlValue }}
-            style={styles.docThumb}
-            resizeMode="cover"
-          />
-        ) : null}
+
+        <TouchableOpacity
+          style={[styles.uploadActionBtn, isUploaded && styles.uploadActionBtnDone]}
+          onPress={() => handlePickAndUpload(field, setter)}
+          disabled={isUploading}
+          activeOpacity={0.8}
+        >
+          {isUploading ? (
+            <ActivityIndicator size="small" color="#00ff87" />
+          ) : isUploaded ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              {resolvedUrl ? (
+                <Image source={{ uri: resolvedUrl }} style={styles.uploadMiniThumb} />
+              ) : null}
+              <Text style={styles.uploadBtnTextDone}>Change</Text>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="cloud-upload-outline" size={13} color="#020d06" />
+              <Text style={styles.uploadBtnText}>Upload</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
     );
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.headerBadge}>
-                <Ionicons name="shield-checkmark" size={13} color="#fbbf24" />
-                <Text style={styles.headerBadgeText}>PARTNER ONBOARDING &amp; KYC</Text>
+      <View style={styles.overlay}>
+        <View style={styles.dialog}>
+          {/* Top Header */}
+          <View style={styles.headerRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={styles.headerIconBadge}>
+                <Ionicons name="briefcase" size={18} color="#00ff87" />
               </View>
-              <Text style={styles.headerTitle}>
-                {existingApp?.status === 'REJECTED'
-                  ? 'Edit & Resubmit Partner Profile'
-                  : 'Apply for FarmsKing Partner Account'}
-              </Text>
-              <Text style={styles.headerSub}>
-                Agent, Crop Doctor / Advisor, or Store Seller (Activated after Admin verification)
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headerTitle}>Apply for FarmsKing Partner Account</Text>
+                <Text style={styles.headerSub}>3-Step Onboarding • Role & OTP, Profile Details, KYC & Bank</Text>
+              </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#94a3b8" />
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="close-circle" size={26} color="#94a3b8" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={true}>
-            {errorMsg ? (
-              <View style={styles.errorBanner}>
-                <Ionicons name="alert-circle" size={17} color="#f87171" />
-                <Text style={styles.errorBannerText}>{errorMsg}</Text>
-              </View>
-            ) : null}
+          {/* Stepper Navigation */}
+          {currentStep !== 4 && (
+            <View style={styles.stepperRow}>
+              {[
+                { num: 1, label: '1. Role & OTP' },
+                { num: 2, label: '2. Profile & Hub' },
+                { num: 3, label: '3. KYC & Bank' },
+              ].map((s) => {
+                const isActive = currentStep === s.num;
+                const isDone = currentStep > s.num;
+                const canClick = s.num === 1 || (s.num === 2 && Boolean(uploadToken)) || (s.num === 3 && Boolean(uploadToken) && name.trim().length >= 2);
 
-            {/* Existing King ID Sync Banner */}
-            {existingUser?.kingId ? (
-              <View style={styles.kingIdBanner}>
-                <Ionicons name="key" size={18} color="#34d399" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.kingIdTitle}>
-                    Existing FarmsKing Account Found — King ID: {existingUser.kingId}
-                  </Text>
-                  <Text style={styles.kingIdDesc}>
-                    After Admin approves your Partner application, your approved Partner role will be linked to this exact same King ID ({existingUser.kingId}) without changing your User Login access.
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {/* Rejection Reason Banner */}
-            {existingApp?.status === 'REJECTED' ? (
-              <View style={styles.rejectedBanner}>
-                <Ionicons name="warning" size={18} color="#fca5a5" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rejectedTitle}>Previous Application Rejected</Text>
-                  <Text style={styles.rejectedReason}>
-                    Admin Reason: {existingApp.rejectionReason || 'Documents or profile details need correction.'}
-                  </Text>
-                  <Text style={styles.rejectedHint}>
-                    Update your details or documents below and submit again for approval.
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {/* STEP 1: MOBILE OTP VERIFICATION */}
-            {step === 'OTP' && (
-              <View style={{ gap: 14 }}>
-                <Text style={styles.sectionTitle}>Step 1: Verify Your Mobile Number</Text>
-                <Text style={styles.helpText}>
-                  If you already have a Farmer, Gardener, Trader, or Buyer account on this mobile number, we will automatically keep your exact same King ID after Admin approval.
-                </Text>
-
-                <Text style={styles.label}>10-Digit Mobile Number *</Text>
-                <View style={styles.rowInput}>
-                  <Text style={styles.prefix}>+91</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Enter 10-digit mobile number"
-                    placeholderTextColor="#64748b"
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                    value={mobile}
-                    editable={!otpSent}
-                    onChangeText={(t) => {
-                      setMobile(t.replace(/\D/g, '').slice(-10));
-                      setErrorMsg(null);
+                return (
+                  <TouchableOpacity
+                    key={s.num}
+                    disabled={!canClick}
+                    onPress={() => {
+                      if (s.num === 1) setCurrentStep(1);
+                      else if (s.num === 2 && validateStep1()) setCurrentStep(2);
+                      else if (s.num === 3 && validateStep1() && validateStep2()) setCurrentStep(3);
                     }}
-                  />
+                    style={[
+                      styles.stepChip,
+                      isActive && styles.stepChipActive,
+                      isDone && styles.stepChipDone,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.stepChipText,
+                        { color: isActive ? '#020d06' : isDone ? '#00ff87' : '#94a3b8' },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {isDone ? `✓ ${s.label}` : s.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Error Banner */}
+          {errorMsg ? (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={16} color="#f87171" />
+              <Text style={styles.errorText}>{errorMsg}</Text>
+            </View>
+          ) : null}
+
+          {/* Scrollable Wizard Body */}
+          <ScrollView
+            style={{ maxHeight: Platform.OS === 'web' ? 560 : 500 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: 14, paddingBottom: 6 }}
+          >
+            {/* ================= STEP 1: ROLE & OTP ================= */}
+            {currentStep === 1 && (
+              <View style={{ gap: 14 }}>
+                {/* Existing App Notice if any */}
+                {existingApp && (
+                  <View style={styles.existingAppBanner}>
+                    <Ionicons name="information-circle" size={18} color="#f59e0b" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.existingAppTitle}>
+                        Existing Application Found: {formatPartnerRoleLabel(existingApp.requestedRole, existingApp.advisorType)}
+                      </Text>
+                      <Text style={styles.existingAppSub}>
+                        Status: <Text style={{ color: '#fbbf24', fontFamily: FONT.bold }}>{existingApp.status}</Text>. You can edit details and submit an updated application.
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Role Selection */}
+                <View style={{ gap: 8 }}>
+                  <Text style={styles.sectionLabel}>Select Role (PARTNERS)</Text>
+                  <View style={styles.roleGrid}>
+                    {PARTNER_ROLE_CARDS.map((card) => {
+                      const selected = selectedRoleCardId === card.id;
+                      const alreadyActive = existingUser?.activeRoles?.includes(card.role);
+
+                      return (
+                        <TouchableOpacity
+                          key={card.id}
+                          style={[
+                            styles.roleCard,
+                            selected && styles.roleCardActive,
+                            alreadyActive && { opacity: 0.5 },
+                          ]}
+                          disabled={Boolean(alreadyActive)}
+                          onPress={() => handleSelectRole(card)}
+                          activeOpacity={0.85}
+                        >
+                          <View style={[styles.roleIconBadge, { backgroundColor: selected ? 'rgba(0, 255, 135, 0.15)' : `${card.accent}1f` }]}>
+                            <Ionicons name={card.icon} size={17} color={selected ? '#00ff87' : card.accent} />
+                          </View>
+                          <Text
+                            style={[
+                              styles.roleCardTitle,
+                              selected && styles.roleCardTitleActive,
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {card.title}
+                          </Text>
+                          <Ionicons
+                            name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                            size={18}
+                            color={selected ? '#00ff87' : 'rgba(148, 163, 184, 0.35)'}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
 
-                {!otpSent ? (
-                  <TouchableOpacity onPress={handleSendOtp} disabled={busyOtp} activeOpacity={0.85} style={styles.primaryBtn}>
-                    <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.primaryBtnGrad}>
-                      {busyOtp ? (
-                        <ActivityIndicator color="#0f172a" />
-                      ) : (
-                        <Text style={styles.primaryBtnText}>Send Verification OTP</Text>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={{ gap: 10 }}>
-                    {devOtp ? (
-                      <View style={styles.devPill}>
-                        <Text style={styles.devPillText}>Localhost Server OTP: {devOtp}</Text>
-                        <TouchableOpacity onPress={() => setOtpInput(devOtp)}>
-                          <Text style={styles.devFillText}>Auto-Fill</Text>
-                        </TouchableOpacity>
+                {/* Mobile Number OTP Box */}
+                <View style={styles.otpBox}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={styles.sectionLabel}>Mobile Number OTP Verification (Required)</Text>
+                    {uploadToken ? (
+                      <View style={styles.verifiedTag}>
+                        <Ionicons name="checkmark-circle" size={13} color="#00ff87" />
+                        <Text style={styles.verifiedTagText}>Verified</Text>
                       </View>
                     ) : null}
+                  </View>
 
-                    <Text style={styles.label}>Enter 4-Digit Verification OTP *</Text>
-                    <View style={styles.rowInput}>
-                      <TextInput
-                        style={[styles.textInput, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.bold }]}
-                        placeholder="••••"
-                        placeholderTextColor="#64748b"
-                        keyboardType="number-pad"
-                        maxLength={4}
-                        value={otpInput}
-                        onChangeText={setOtpInput}
-                      />
+                  {!uploadToken ? (
+                    <View style={{ gap: 8 }}>
+                      <View style={styles.twoColRow}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', borderRadius: RADIUS.md, backgroundColor: '#020d06', paddingHorizontal: 10 }}>
+                          <Text style={{ color: '#94a3b8', fontSize: 13, fontFamily: FONT.bold, marginRight: 6 }}>+91</Text>
+                          <TextInput
+                            style={[styles.inputBare, { flex: 1 }]}
+                            placeholder="10-digit mobile number"
+                            placeholderTextColor="#64748b"
+                            keyboardType="phone-pad"
+                            maxLength={10}
+                            value={mobile}
+                            onChangeText={(t) => setMobile(t.replace(/\D/g, '').slice(0, 10))}
+                            editable={!otpSent || busyOtp}
+                          />
+                        </View>
+                        <TouchableOpacity
+                          style={[styles.primaryActionBtn, (mobile.length !== 10 || busyOtp) && styles.btnDisabled]}
+                          onPress={handleSendOtp}
+                          disabled={mobile.length !== 10 || busyOtp}
+                        >
+                          {busyOtp && !otpSent ? (
+                            <ActivityIndicator size="small" color="#020d06" />
+                          ) : (
+                            <Text style={styles.primaryActionBtnText}>{otpSent ? 'Resend' : 'Send OTP'}</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* OTP Input Row */}
+                      {otpSent && (
+                        <View style={{ gap: 6, marginTop: 4 }}>
+                          <View style={styles.twoColRow}>
+                            <TextInput
+                              style={[styles.input, { flex: 1 }]}
+                              placeholder="Enter 4-digit OTP"
+                              placeholderTextColor="#64748b"
+                              keyboardType="number-pad"
+                              maxLength={6}
+                              value={otpInput}
+                              onChangeText={setOtpInput}
+                            />
+                            <TouchableOpacity
+                              style={[styles.verifyBtn, (otpInput.length < 4 || busyOtp) && styles.btnDisabled]}
+                              onPress={handleVerifyOtp}
+                              disabled={otpInput.length < 4 || busyOtp}
+                            >
+                              {busyOtp ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                              ) : (
+                                <Text style={styles.verifyBtnText}>Verify OTP</Text>
+                              )}
+                            </TouchableOpacity>
+                          </View>
+
+                          {devOtp ? (
+                            <View style={styles.devPill}>
+                              <Text style={styles.devPillText}>Local Server OTP: {devOtp}</Text>
+                              <TouchableOpacity onPress={() => setOtpInput(devOtp)}>
+                                <Text style={styles.devFillText}>Auto-Fill</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ) : null}
+                        </View>
+                      )}
                     </View>
-
-                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                  ) : (
+                    <View style={styles.verifiedStrip}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                        <Ionicons name="shield-checkmark" size={20} color="#00ff87" />
+                        <View>
+                          <Text style={styles.verifiedPhone}>+91 {mobile}</Text>
+                          <Text style={styles.verifiedMeta}>
+                            {existingUser?.kingId ? `Linked to King ID: ${existingUser.kingId}` : 'Mobile verified for document upload'}
+                          </Text>
+                        </View>
+                      </View>
                       <TouchableOpacity
-                        style={styles.secondaryBtn}
                         onPress={() => {
+                          setUploadToken(null);
                           setOtpSent(false);
                           setOtpInput('');
                         }}
                       >
-                        <Text style={styles.secondaryBtnText}>Change Number</Text>
+                        <Text style={styles.changePhoneText}>Change</Text>
                       </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
 
-                      <TouchableOpacity onPress={handleVerifyOtp} disabled={busyOtp} style={[styles.primaryBtn, { flex: 1 }]}>
-                        <LinearGradient colors={['#10b981', '#059669']} style={styles.primaryBtnGrad}>
-                          {busyOtp ? (
-                            <ActivityIndicator color="#fff" />
-                          ) : (
-                            <Text style={[styles.primaryBtnText, { color: '#fff' }]}>Verify &amp; Continue</Text>
-                          )}
-                        </LinearGradient>
-                      </TouchableOpacity>
+            {/* ================= STEP 2: PROFILE & HUB ================= */}
+            {currentStep === 2 && (
+              <View style={{ gap: 14 }}>
+                {/* Personal Information */}
+                <View style={{ gap: 8 }}>
+                  <Text style={styles.sectionLabel}>Personal & Account Information</Text>
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Full Legal Name *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Full Name (matches PAN)"
+                        placeholderTextColor="#64748b"
+                        value={name}
+                        onChangeText={setName}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Email Address (Optional)</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="email@example.com"
+                        placeholderTextColor="#64748b"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={email}
+                        onChangeText={setEmail}
+                      />
+                    </View>
+                  </View>
+
+                  <View>
+                    <Text style={styles.label}>
+                      Partner Login Password {existingApp?.hasPassword || existingUser ? '(Optional — leave blank to keep current)' : '* (Minimum 8 characters)'}
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Create secure password for Partner Login"
+                      placeholderTextColor="#64748b"
+                      secureTextEntry
+                      value={password}
+                      onChangeText={setPassword}
+                    />
+                  </View>
+                </View>
+
+                {/* Postal Address */}
+                <View style={{ gap: 8 }}>
+                  <Text style={styles.sectionLabel}>Address & Postal PIN Code</Text>
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Postal PIN Code {requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? '*' : ''}</Text>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <TextInput
+                          style={[styles.input, { flex: 1 }]}
+                          placeholder="6-digit PIN"
+                          placeholderTextColor="#64748b"
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          value={pincode}
+                          onChangeText={(t) => setPincode(t.replace(/\D/g, '').slice(0, 6))}
+                        />
+                        <TouchableOpacity style={styles.lookupBtn} onPress={handleLookupPin} disabled={busyPin}>
+                          {busyPin ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.lookupBtnText}>Lookup</Text>}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Post Office / Village</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Village / Town"
+                        placeholderTextColor="#64748b"
+                        value={village || postOffice}
+                        onChangeText={(t) => {
+                          setVillage(t);
+                          if (!postOffice) setPostOffice(t);
+                        }}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>District</Text>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: '#0f172a' }]}
+                        placeholder="District"
+                        placeholderTextColor="#64748b"
+                        value={district}
+                        onChangeText={setDistrict}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>State</Text>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: '#0f172a' }]}
+                        placeholder="State"
+                        placeholderTextColor="#64748b"
+                        value={stateName}
+                        onChangeText={setStateName}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                {/* Role Specific Configuration */}
+                {requestedRole === 'NURSERY_OWNER' && (
+                  <View style={styles.roleSpecificBox}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={styles.sectionLabel}>Nursery & Greenhouse Dispatch Hub</Text>
+                      <View style={[styles.miniBadge, { borderColor: '#10b981' }]}>
+                        <Text style={[styles.miniBadgeText, { color: '#10b981' }]}>HSN 0602 GST-Exempt</Text>
+                      </View>
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Nursery Business / Farm Name *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Green Valley Plant Nursery"
+                        placeholderTextColor="#64748b"
+                        value={storeName}
+                        onChangeText={setStoreName}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Greenhouse / Hub Dispatch Address *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Complete pickup address for bus & train bilty parcel dispatch"
+                        placeholderTextColor="#64748b"
+                        value={pickupAddress}
+                        onChangeText={setPickupAddress}
+                      />
+                    </View>
+                    <View style={styles.complianceNoteBox}>
+                      <Ionicons name="shield-checkmark" size={15} color="#10b981" />
+                      <Text style={styles.complianceNoteText}>
+                        HSN 0602 Statutory Note: Live plants, seedlings, and root plugs are 100% exempt from GST under Indian agricultural tax laws.
+                      </Text>
                     </View>
                   </View>
                 )}
-              </View>
-            )}
 
-            {/* PENDING APPLICATION STATUS VIEW */}
-            {step === 'PENDING_VIEW' && existingApp && (
-              <View style={styles.statusCard}>
-                <View style={styles.statusIconWrap}>
-                  <Ionicons name="time" size={32} color="#fbbf24" />
-                </View>
-                <Text style={styles.statusTitle}>Application Under Admin Review</Text>
-                <Text style={styles.statusDesc}>
-                  Your application for <Text style={{ color: '#fbbf24', fontFamily: FONT.bold }}>{formatPartnerRoleLabel(existingApp.requestedRole, existingApp.advisorType)}</Text> on mobile <Text style={{ color: '#fff', fontFamily: FONT.bold }}>+91 {existingApp.mobile}</Text> has been received and is awaiting Admin verification.
-                </Text>
-                <Text style={styles.statusMeta}>
-                  You will be able to sign in on the Partner Login tab immediately once an Admin approves your KYC documents.
-                </Text>
-
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14, width: '100%' }}>
-                  <TouchableOpacity
-                    style={styles.secondaryBtn}
-                    onPress={() => setStep('FORM')}
-                  >
-                    <Text style={styles.secondaryBtnText}>Update Details</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.primaryBtn, { flex: 1 }]}
-                    onPress={onClose}
-                  >
-                    <LinearGradient colors={['#10b981', '#059669']} style={styles.primaryBtnGrad}>
-                      <Text style={[styles.primaryBtnText, { color: '#fff' }]}>Back to Login</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {/* STEP 2 & 3: FULL PARTNER PROFILE & KYC FORM */}
-            {step === 'FORM' && (
-              <View style={{ gap: 16 }}>
-                {/* Role Selection */}
-                <Text style={styles.sectionTitle}>1. Select Partner Role</Text>
-                <View style={{ gap: 8 }}>
-                  {PARTNER_ROLE_CARDS.map((card) => {
-                    const selected =
-                      requestedRole === card.role &&
-                      (card.role !== 'ADVISOR' || advisorType === card.advisorType);
-                    const alreadyHasRole = existingUser?.activeRoles?.includes(card.role);
-                    return (
-                      <TouchableOpacity
-                        key={card.id}
-                        style={[
-                          styles.roleOption,
-                          selected && { borderColor: card.accent, backgroundColor: 'rgba(245, 158, 11, 0.08)' },
-                          alreadyHasRole && { opacity: 0.5 },
-                        ]}
-                        disabled={Boolean(alreadyHasRole)}
-                        onPress={() => {
-                          setRequestedRole(card.role);
-                          if (card.advisorType) setAdvisorType(card.advisorType);
-                        }}
-                        activeOpacity={0.85}
-                      >
-                        <View style={[styles.roleIconBox, { backgroundColor: `${card.accent}22` }]}>
-                          <Ionicons name={card.icon} size={18} color={card.accent} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.roleTitle}>
-                            {card.title} {alreadyHasRole ? '(Already Active)' : ''}
-                          </Text>
-                          <Text style={styles.roleDesc}>{card.subtitle}</Text>
-                        </View>
-                        <Ionicons
-                          name={selected ? 'radio-button-on' : 'radio-button-off'}
-                          size={20}
-                          color={selected ? card.accent : '#64748b'}
-                        />
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* Basic & Login Details */}
-                <Text style={styles.sectionTitle}>2. Profile &amp; Address Details</Text>
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Full Legal Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Full Name (matches PAN)"
-                      placeholderTextColor="#64748b"
-                      value={name}
-                      onChangeText={setName}
-                    />
-                  </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Email Address</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="email@example.com"
-                      placeholderTextColor="#64748b"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      value={email}
-                      onChangeText={setEmail}
-                    />
-                  </View>
-                </View>
-
-                <View>
-                  <Text style={styles.label}>
-                    Partner Login Password {existingApp?.hasPassword || existingUser ? '(Optional — leave blank to keep current)' : '* (Minimum 8 characters)'}
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Create secure password for Partner Login"
-                    placeholderTextColor="#64748b"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                  />
-                </View>
-
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Postal PIN Code {requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? '*' : ''}</Text>
-                    <View style={{ flexDirection: 'row', gap: 6 }}>
-                      <TextInput
-                        style={[styles.input, { flex: 1 }]}
-                        placeholder="6-digit PIN"
-                        placeholderTextColor="#64748b"
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        value={pincode}
-                        onChangeText={(t) => setPincode(t.replace(/\D/g, '').slice(0, 6))}
-                      />
-                      <TouchableOpacity style={styles.lookupBtn} onPress={handleLookupPin} disabled={busyPin}>
-                        {busyPin ? (
-                          <ActivityIndicator size="small" color="#fff" />
-                        ) : (
-                          <Text style={styles.lookupBtnText}>Lookup</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Post Office / Village</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Village / Town"
-                      placeholderTextColor="#64748b"
-                      value={village || postOffice}
-                      onChangeText={(t) => {
-                        setVillage(t);
-                        if (!postOffice) setPostOffice(t);
-                      }}
-                    />
-                  </View>
-                </View>
-
-                {postOffices.length > 1 ? (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                    {postOffices.slice(0, 8).map((po) => (
-                      <TouchableOpacity
-                        key={po}
-                        style={[styles.poChip, postOffice === po && styles.poChipActive]}
-                        onPress={() => setPostOffice(po)}
-                      >
-                        <Text style={[styles.poChipText, postOffice === po && { color: '#fbbf24' }]}>{po}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                ) : null}
-
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>District</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="District"
-                      placeholderTextColor="#64748b"
-                      value={district}
-                      onChangeText={setDistrict}
-                    />
-                  </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>State</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="State"
-                      placeholderTextColor="#64748b"
-                      value={stateName}
-                      onChangeText={setStateName}
-                    />
-                  </View>
-                </View>
-
-                {/* Role-Specific Fields */}
                 {requestedRole === 'ADVISOR' && (
-                  <View style={styles.roleBox}>
-                    <Text style={styles.sectionTitle}>Crop Doctor / Advisor Credentials</Text>
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      {(['FARM', 'GARDEN'] as const).map((t) => (
-                        <TouchableOpacity
-                          key={t}
-                          style={[styles.choiceBtn, advisorType === t && styles.choiceBtnActive]}
-                          onPress={() => setAdvisorType(t)}
-                        >
-                          <Text style={[styles.choiceBtnText, advisorType === t && { color: '#10b981' }]}>
-                            {t === 'FARM' ? 'Farm Crop Advisor' : 'Garden Plant Advisor'}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                  <View style={styles.roleSpecificBox}>
+                    <Text style={styles.sectionLabel}>Advisor Credentials & Experience</Text>
                     <View style={styles.gridTwo}>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Qualification / Degree *</Text>
+                        <Text style={styles.label}>Academic Qualification / Certification *</Text>
                         <TextInput
                           style={styles.input}
-                          placeholder="e.g. B.Sc. Agriculture"
+                          placeholder="e.g. B.Sc Agriculture / Horticulture Diploma"
                           placeholderTextColor="#64748b"
                           value={qualification}
                           onChangeText={setQualification}
                         />
                       </View>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Years Experience</Text>
+                        <Text style={styles.label}>Years of Experience</Text>
                         <TextInput
                           style={styles.input}
                           placeholder="e.g. 5"
                           placeholderTextColor="#64748b"
                           keyboardType="number-pad"
                           value={yearsExperience}
-                          onChangeText={(v) => setYearsExperience(v.replace(/\D/g, ''))}
+                          onChangeText={setYearsExperience}
                         />
                       </View>
                     </View>
-                    <Text style={styles.label}>Specialization &amp; Bio</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Crop disease control, orchards, soil nutrition..."
-                      placeholderTextColor="#64748b"
-                      value={specialization}
-                      onChangeText={setSpecialization}
-                    />
-                    <TextInput
-                      style={[styles.input, { minHeight: 64, textAlignVertical: 'top' }]}
-                      placeholder="Brief experience summary for farmers"
-                      placeholderTextColor="#64748b"
-                      multiline
-                      value={bio}
-                      onChangeText={setBio}
-                    />
-                  </View>
-                )}
-
-                {requestedRole === 'NURSERY_OWNER' && (
-                  <View style={[styles.roleBox, { borderColor: 'rgba(34, 197, 94, 0.4)', backgroundColor: 'rgba(34, 197, 94, 0.04)' }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                      <Ionicons name="leaf" size={20} color="#22c55e" />
-                      <Text style={[styles.sectionTitle, { marginBottom: 0, color: '#22c55e' }]}>
-                        Nursery &amp; Greenhouse Farm Details
-                      </Text>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Specialization</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Paddy & Wheat Agronomy, Organic Pest Control"
+                        placeholderTextColor="#64748b"
+                        value={specialization}
+                        onChangeText={setSpecialization}
+                      />
                     </View>
-                    <View style={{ backgroundColor: 'rgba(34, 197, 94, 0.10)', borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.25)', borderRadius: RADIUS.xs, padding: 10, marginBottom: 12 }}>
-                      <Text style={{ fontSize: 11.5, color: '#86efac', fontFamily: FONT.medium, lineHeight: 16 }}>
-                        🌿 Statutory Exemption: Live seedlings and nursery plants under HSN 0602 are 100% GST-exempt across India. GSTIN is optional for nursery growers.
-                      </Text>
-                    </View>
-
-                    <View style={styles.gridTwo}>
-                      <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Nursery / Farm Brand Name *</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="e.g. Green High-Tech Nursery & Polyhouse"
-                          placeholderTextColor="#64748b"
-                          value={storeName}
-                          onChangeText={setStoreName}
-                        />
-                      </View>
-                      <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Owner / Grower Legal Name *</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Grower Legal Name"
-                          placeholderTextColor="#64748b"
-                          value={legalName || name}
-                          onChangeText={(v) => {
-                            setLegalName(v);
-                            setName(v);
-                          }}
-                        />
-                      </View>
-                    </View>
-
-                    <View style={styles.gridTwo}>
-                      <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Primary Nursery Specialization *</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="e.g. Flower Plugs, Tomato Seedlings, PR-126 Paddy"
-                          placeholderTextColor="#64748b"
-                          value={specialization}
-                          onChangeText={setSpecialization}
-                        />
-                      </View>
-                      <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Estimated Seasonal Capacity (Optional)</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="e.g. 50,000 Plugs / 100 Acres Paniri"
-                          placeholderTextColor="#64748b"
-                          value={qualification}
-                          onChangeText={setQualification}
-                        />
-                      </View>
-                    </View>
-
-                    <Text style={styles.label}>Greenhouse / Nursery Dispatch Address *</Text>
-                    <TextInput
-                      style={[styles.input, { minHeight: 56 }]}
-                      placeholder="Village / Road, Near Bus Stand / Landmark for Roadways Bus & Railway dispatch"
-                      placeholderTextColor="#64748b"
-                      multiline
-                      value={pickupAddress}
-                      onChangeText={setPickupAddress}
-                    />
                   </View>
                 )}
 
                 {requestedRole === 'SELLER' && (
-                  <View style={styles.roleBox}>
-                    <Text style={styles.sectionTitle}>Marketplace Seller Store Details</Text>
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      {(['FARMER', 'COMMERCIAL'] as const).map((t) => (
-                        <TouchableOpacity
-                          key={t}
-                          style={[styles.choiceBtn, sellerType === t && styles.choiceBtnActive]}
-                          onPress={() => setSellerType(t)}
-                        >
-                          <Text style={[styles.choiceBtnText, sellerType === t && { color: '#38bdf8' }]}>
-                            {t === 'FARMER' ? 'Farmer Seller (Unregistered)' : 'Commercial / Agri Dealer (GSTIN)'}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                  <View style={styles.roleSpecificBox}>
+                    <Text style={styles.sectionLabel}>Seller Store & Pickup Details</Text>
                     <View style={styles.gridTwo}>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Firm / Store Name *</Text>
+                        <Text style={styles.label}>Store Display Name *</Text>
                         <TextInput
                           style={styles.input}
-                          placeholder="e.g. Punjab Kisan Kendra"
+                          placeholder="e.g. Kisan Agro Center"
                           placeholderTextColor="#64748b"
                           value={storeName}
                           onChangeText={setStoreName}
                         />
                       </View>
                       <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Owner / Proprietor Legal Name (Editable) *</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Firm Owner / Proprietor Name"
-                          placeholderTextColor="#64748b"
-                          value={legalName || name}
-                          onChangeText={(v) => {
-                            setLegalName(v);
-                            setName(v);
-                          }}
-                        />
+                        <Text style={styles.label}>Seller Category *</Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                          {(['FARMER', 'COMMERCIAL'] as const).map((st) => {
+                            const isSel = sellerType === st;
+                            return (
+                              <TouchableOpacity
+                                key={st}
+                                style={[styles.choiceChip, isSel && styles.choiceChipActive]}
+                                onPress={() => setSellerType(st)}
+                              >
+                                <Text style={[styles.choiceChipText, isSel && { color: '#020d06' }]}>
+                                  {st === 'FARMER' ? 'Farmer / Producer' : 'Commercial (GST)'}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
                       </View>
                     </View>
-                    <Text style={styles.label}>Full Pickup / Warehouse Address *</Text>
-                    <TextInput
-                      style={[styles.input, { minHeight: 56 }]}
-                      placeholder="Shop No, Market/Mandi, Landmark for Courier Pickup"
-                      placeholderTextColor="#64748b"
-                      multiline
-                      value={pickupAddress}
-                      onChangeText={setPickupAddress}
-                    />
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Warehouse / Shop Pickup Address *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Complete address for courier parcel pickup"
+                        placeholderTextColor="#64748b"
+                        value={pickupAddress}
+                        onChangeText={setPickupAddress}
+                      />
+                    </View>
                   </View>
                 )}
+              </View>
+            )}
 
-                {/* Statutory Tax & Bank Payouts */}
-                <Text style={styles.sectionTitle}>3. Tax KYC &amp; Bank Payout Details</Text>
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>PAN Number * (Sec 194-O/H/J TDS)</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="ABCDE1234F"
-                      placeholderTextColor="#64748b"
-                      autoCapitalize="characters"
-                      maxLength={10}
-                      value={panNumber}
-                      onChangeText={(t) => setPanNumber(t.toUpperCase())}
-                    />
+            {/* ================= STEP 3: KYC & BANK ================= */}
+            {currentStep === 3 && (
+              <View style={{ gap: 14 }}>
+                {/* Identity Verification */}
+                <View style={{ gap: 8 }}>
+                  <Text style={styles.sectionLabel}>Statutory Identity Verification (Income Tax & Compliance)</Text>
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>10-Character PAN Number *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="ABCDE1234F"
+                        placeholderTextColor="#64748b"
+                        autoCapitalize="characters"
+                        maxLength={10}
+                        value={panNumber}
+                        onChangeText={(t) => setPanNumber(t.toUpperCase().trim())}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Aadhaar Card (Last 4 Digits) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. 5678"
+                        placeholderTextColor="#64748b"
+                        keyboardType="number-pad"
+                        maxLength={4}
+                        value={aadhaarLast4}
+                        onChangeText={(t) => setAadhaarLast4(t.replace(/\D/g, '').slice(0, 4))}
+                      />
+                    </View>
                   </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Aadhaar Last 4 Digits *</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="1234"
-                      placeholderTextColor="#64748b"
-                      keyboardType="number-pad"
-                      maxLength={4}
-                      value={aadhaarLast4}
-                      onChangeText={(t) => setAadhaarLast4(t.replace(/\D/g, '').slice(0, 4))}
-                    />
-                  </View>
-                </View>
 
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>
-                      GSTIN {requestedRole === 'SELLER' && sellerType === 'COMMERCIAL' ? '*' : '(Optional)'}
-                    </Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="03ABCDE1234F1Z5"
-                      placeholderTextColor="#64748b"
-                      autoCapitalize="characters"
-                      maxLength={15}
-                      value={gstin}
-                      onChangeText={(t) => setGstin(t.toUpperCase())}
-                    />
-                  </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>UPI ID (Optional)</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="name@bank"
-                      placeholderTextColor="#64748b"
-                      autoCapitalize="none"
-                      value={upiId}
-                      onChangeText={setUpiId}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.gridTwo}>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Bank Account Holder Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Exact name on bank account"
-                      placeholderTextColor="#64748b"
-                      value={bankAccountHolderName}
-                      onChangeText={setBankAccountHolderName}
-                    />
-                  </View>
-                  <View style={styles.fieldCol}>
-                    <Text style={styles.label}>Bank Account Number *</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Account number"
-                      placeholderTextColor="#64748b"
-                      keyboardType="number-pad"
-                      value={bankAccountNumber}
-                      onChangeText={setBankAccountNumber}
-                    />
-                  </View>
-                </View>
-
-                <View>
-                  <Text style={styles.label}>Bank IFSC Code *</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="SBIN0001234"
-                    placeholderTextColor="#64748b"
-                    autoCapitalize="characters"
-                    maxLength={11}
-                    value={bankIfsc}
-                    onChangeText={(t) => setBankIfsc(t.toUpperCase())}
-                  />
-                </View>
-
-                {/* KYC Document Uploads */}
-                <Text style={styles.sectionTitle}>4. Required KYC Documents Upload</Text>
-                <View style={styles.docsGrid}>
-                  {renderUploadButton('photoUrl', 'Passport Profile Photo', photoUrl, setPhotoUrl, true)}
-                  {renderUploadButton('panDocUrl', 'PAN Card Photo', panDocUrl, setPanDocUrl, true)}
-                  {renderUploadButton('aadhaarDocUrl', 'Aadhaar Front Photo', aadhaarDocUrl, setAadhaarDocUrl, true)}
-                  {renderUploadButton('aadhaarBackUrl', 'Aadhaar Back Photo', aadhaarBackUrl, setAadhaarBackUrl, false)}
-                  {renderUploadButton('chequeDocUrl', 'Cancelled Cheque / Passbook', chequeDocUrl, setChequeDocUrl, true)}
-                  {renderUploadButton(
-                    'gstDocUrl',
-                    'GST Registration Certificate',
-                    gstDocUrl,
-                    setGstDocUrl,
-                    requestedRole === 'SELLER' && sellerType === 'COMMERCIAL',
+                  {/* Commercial Seller GSTIN */}
+                  {requestedRole === 'SELLER' && sellerType === 'COMMERCIAL' && (
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>15-Character GSTIN *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="03AAAAA0000A1Z5"
+                        placeholderTextColor="#64748b"
+                        autoCapitalize="characters"
+                        maxLength={15}
+                        value={gstin}
+                        onChangeText={(t) => setGstin(t.toUpperCase().trim())}
+                      />
+                    </View>
                   )}
+
+                  {/* Upload Document Cards Grid */}
+                  <View style={{ gap: 8, marginTop: 4 }}>
+                    {renderUploadCard('panDocUrl', 'PAN Card Photo', panDocUrl, setPanDocUrl, true)}
+                    {renderUploadCard('aadhaarDocUrl', 'Aadhaar Card Front', aadhaarDocUrl, setAadhaarDocUrl, true)}
+                    {renderUploadCard('aadhaarBackUrl', 'Aadhaar Card Back', aadhaarBackUrl, setAadhaarBackUrl, false)}
+                    {requestedRole === 'SELLER' && sellerType === 'COMMERCIAL' &&
+                      renderUploadCard('gstDocUrl', 'GST Registration Certificate', gstDocUrl, setGstDocUrl, true)}
+                  </View>
                 </View>
 
-                {/* Statutory Consent */}
+                {/* Bank Account Setup */}
+                <View style={{ gap: 8 }}>
+                  <Text style={styles.sectionLabel}>Bank Account & Escrow Payouts (Direct Deposit)</Text>
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Bank Account Holder Name *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Name as printed on passbook"
+                        placeholderTextColor="#64748b"
+                        value={bankAccountHolderName}
+                        onChangeText={setBankAccountHolderName}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>Bank Account Number *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Account number"
+                        placeholderTextColor="#64748b"
+                        keyboardType="number-pad"
+                        value={bankAccountNumber}
+                        onChangeText={setBankAccountNumber}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.gridTwo}>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>11-Character IFSC Code *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="e.g. SBIN0001234"
+                        placeholderTextColor="#64748b"
+                        autoCapitalize="characters"
+                        maxLength={11}
+                        value={bankIfsc}
+                        onChangeText={(t) => setBankIfsc(t.toUpperCase().trim())}
+                      />
+                    </View>
+                    <View style={styles.fieldCol}>
+                      <Text style={styles.label}>UPI ID (Optional)</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="username@bank"
+                        placeholderTextColor="#64748b"
+                        autoCapitalize="none"
+                        value={upiId}
+                        onChangeText={setUpiId}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={{ gap: 8, marginTop: 4 }}>
+                    {renderUploadCard('chequeDocUrl', 'Cancelled Cheque / Passbook Copy', chequeDocUrl, setChequeDocUrl, true)}
+                    {renderUploadCard('photoUrl', 'Passport Profile Photo', photoUrl, setPhotoUrl, true)}
+                  </View>
+                </View>
+
+                {/* Statutory Terms Acceptance */}
                 <TouchableOpacity
-                  style={styles.consentRow}
-                  onPress={() => setTermsAccepted((v) => !v)}
-                  activeOpacity={0.85}
+                  style={styles.termsRow}
+                  activeOpacity={0.8}
+                  onPress={() => setTermsAccepted(!termsAccepted)}
                 >
                   <Ionicons
                     name={termsAccepted ? 'checkbox' : 'square-outline'}
-                    size={21}
-                    color={termsAccepted ? '#10b981' : '#64748b'}
+                    size={22}
+                    color={termsAccepted ? '#00ff87' : '#94a3b8'}
                   />
-                  <Text style={styles.consentText}>
-                    I confirm all details and documents belong to me. I agree to FarmsKing Technologies Private Limited Partner Terms, statutory TDS (Sec 194-O / 194-H / 194-J), and GST Section 52 TCS compliance.
+                  <Text style={styles.termsText}>
+                    I confirm that the statutory details and documents provided are accurate. I accept the{' '}
+                    <Text style={{ color: '#00ff87', fontFamily: FONT.bold }}>FarmsKing Partner Terms of Service</Text>{' '}
+                    and acknowledge Section 194-O / 194-H Income Tax TDS compliance deductions.
                   </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={busySubmit || Boolean(uploadingKey)}
-                  style={[styles.primaryBtn, (busySubmit || Boolean(uploadingKey)) && { opacity: 0.65 }]}
-                  activeOpacity={0.88}
-                >
-                  <LinearGradient colors={['#10b981', '#059669']} style={styles.primaryBtnGrad}>
-                    {busySubmit ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={[styles.primaryBtnText, { color: '#fff' }]}>
-                        {existingApp?.status === 'REJECTED'
-                          ? 'Save Changes & Resubmit Application'
-                          : 'Submit Partner Application for Admin Approval'}
-                      </Text>
-                    )}
-                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
 
-            {/* SUBMITTED CONFIRMATION SCREEN */}
-            {step === 'SUBMITTED' && (
-              <View style={styles.statusCard}>
-                <View style={[styles.statusIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.16)' }]}>
-                  <Ionicons name="checkmark-done-circle" size={40} color="#10b981" />
+            {/* ================= STEP 4: SUBMITTED SUCCESS ================= */}
+            {currentStep === 4 && (
+              <View style={styles.successContainer}>
+                <View style={styles.successIconBadge}>
+                  <Ionicons name="checkmark-circle" size={44} color="#00ff87" />
                 </View>
-                <Text style={styles.statusTitle}>Application Submitted Successfully</Text>
-                <Text style={styles.statusDesc}>{submittedMessage}</Text>
-                {existingUser?.kingId ? (
-                  <Text style={[styles.statusMeta, { color: '#34d399', fontFamily: FONT.bold }]}>
-                    Your existing King ID ({existingUser.kingId}) will be preserved upon Admin approval.
-                  </Text>
-                ) : null}
-                <TouchableOpacity onPress={onClose} style={[styles.primaryBtn, { marginTop: 14, width: '100%' }]}>
-                  <LinearGradient colors={['#10b981', '#059669']} style={styles.primaryBtnGrad}>
-                    <Text style={[styles.primaryBtnText, { color: '#fff' }]}>Done — Return to Login</Text>
-                  </LinearGradient>
+                <Text style={styles.successTitle}>Application Submitted Successfully!</Text>
+                <Text style={styles.successSub}>
+                  {submittedMessage || 'Your Partner KYC documents have been received and are now under review.'}
+                </Text>
+
+                <View style={styles.successMetaCard}>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.metaKey}>Partner Role:</Text>
+                    <Text style={styles.metaVal}>{formatPartnerRoleLabel(requestedRole, advisorType)}</Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.metaKey}>Mobile Number:</Text>
+                    <Text style={styles.metaVal}>+91 {mobile}</Text>
+                  </View>
+                  <View style={styles.metaRow}>
+                    <Text style={styles.metaKey}>Verification Desk:</Text>
+                    <Text style={[styles.metaVal, { color: '#fbbf24' }]}>Pending Admin Verification</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.primaryActionBtn} onPress={onClose}>
+                  <Text style={styles.primaryActionBtnText}>Done / Back to Login</Text>
                 </TouchableOpacity>
               </View>
             )}
           </ScrollView>
+
+          {/* Bottom Action Bar */}
+          {currentStep !== 4 && (
+            <View style={styles.bottomBar}>
+              {currentStep === 1 ? (
+                <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
+                  <Text style={styles.secondaryBtnText}>Cancel</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.secondaryBtn}
+                  onPress={() => {
+                    setErrorMsg(null);
+                    setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3) : 1));
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="arrow-back" size={15} color="#e2e8f0" />
+                    <Text style={styles.secondaryBtnText}>Back</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {currentStep === 1 && (
+                <TouchableOpacity
+                  style={[styles.primaryActionBtn, { flex: 1 }, !uploadToken && styles.btnDisabled]}
+                  onPress={() => {
+                    if (validateStep1()) setCurrentStep(2);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.primaryActionBtnText}>Next: Fill Profile Details</Text>
+                    <Ionicons name="arrow-forward" size={15} color="#020d06" />
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {currentStep === 2 && (
+                <TouchableOpacity
+                  style={[styles.primaryActionBtn, { flex: 1 }]}
+                  onPress={() => {
+                    if (validateStep2()) setCurrentStep(3);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.primaryActionBtnText}>Next: KYC & Bank Payouts</Text>
+                    <Ionicons name="arrow-forward" size={15} color="#020d06" />
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {currentStep === 3 && (
+                <TouchableOpacity
+                  style={[styles.primaryActionBtn, { flex: 1 }, busySubmit && styles.btnDisabled]}
+                  onPress={handleSubmit}
+                  disabled={busySubmit}
+                >
+                  {busySubmit ? (
+                    <ActivityIndicator size="small" color="#020d06" />
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.primaryActionBtnText}>Submit Partner Application</Text>
+                      <Ionicons name="checkmark-done" size={16} color="#020d06" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -1262,218 +1344,254 @@ export function PartnerSignupModal({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 6, 23, 0.85)',
+    backgroundColor: 'rgba(2, 6, 23, 0.82)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Platform.OS === 'web' ? 24 : 12,
-    zIndex: 9999,
+    padding: 16,
   },
-  sheet: {
+  dialog: {
     width: '100%',
     maxWidth: 720,
-    maxHeight: '92%',
-    backgroundColor: '#0f172a',
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-    backgroundColor: '#090e17',
+    padding: 18,
     gap: 12,
+    backgroundColor: '#061a10',
+    borderColor: 'rgba(0, 255, 135, 0.22)',
+    ...(Platform.OS === 'web'
+      ? ({
+          boxShadow: '0 20px 48px -10px rgba(0, 0, 0, 0.85), 0 0 24px rgba(0, 255, 135, 0.15)',
+        } as any)
+      : {
+          elevation: 12,
+        }),
   },
-  headerBadge: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    alignSelf: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+    paddingBottom: 4,
+  },
+  headerIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+  },
+  headerSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    gap: 6,
+    padding: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    backgroundColor: '#020d06',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  stepChip: {
+    flex: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: RADIUS.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepChipActive: {
+    backgroundColor: '#00ff87',
+  },
+  stepChipDone: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+  },
+  stepChipText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  sectionLabel: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+    marginBottom: 2,
+  },
+  label: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+    marginBottom: 4,
+  },
+  roleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  roleCard: {
+    minWidth: Platform.OS === 'web' ? 175 : '48%',
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#0a1f13',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  roleCardActive: {
+    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+  },
+  roleIconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleCardTitle: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
+    color: '#e2e8f0',
+  },
+  roleCardTitleActive: {
+    color: '#00ff87',
+    fontFamily: FONT.bold,
+  },
+  miniBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+  },
+  miniBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+  otpBox: {
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#020d06',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 8,
+  },
+  verifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: 'rgba(245, 158, 11, 0.14)',
-    marginBottom: 6,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
   },
-  headerBadgeText: { fontSize: 10, fontFamily: FONT.bold, color: '#fbbf24', letterSpacing: 0.6 },
-  headerTitle: { fontSize: 18, fontFamily: FONT.bold, color: '#f8fafc' },
-  headerSub: { fontSize: 12, fontFamily: FONT.regular, color: '#94a3b8', marginTop: 2 },
-  closeBtn: { padding: 4 },
-  body: { padding: 20, gap: 14 },
-  sectionTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#f8fafc', marginTop: 4 },
-  helpText: { fontSize: 12.5, fontFamily: FONT.regular, color: '#94a3b8', lineHeight: 18 },
-  label: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#cbd5e1', marginBottom: 4 },
+  verifiedTagText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  gridTwo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  fieldCol: {
+    flex: 1,
+    minWidth: 200,
+  },
   input: {
-    backgroundColor: '#1e293b',
     borderWidth: 1,
-    borderColor: '#334155',
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#f8fafc',
+    paddingVertical: 8,
     fontSize: 13,
     fontFamily: FONT.medium,
-  },
-  rowInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-  },
-  prefix: { color: '#fbbf24', fontFamily: FONT.bold, fontSize: 14, marginRight: 8 },
-  textInput: {
-    flex: 1,
-    paddingVertical: 11,
     color: '#f8fafc',
-    fontSize: 14,
-    fontFamily: FONT.medium,
+    backgroundColor: '#020d06',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
   },
-  gridTwo: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  fieldCol: { flex: 1, minWidth: 230 },
+  inputBare: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#f8fafc',
+    paddingVertical: 8,
+    outlineStyle: 'none' as any,
+  },
+  primaryActionBtn: {
+    backgroundColor: '#00ff87',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryActionBtnText: {
+    color: '#020d06',
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+  },
+  verifyBtn: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyBtnText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  secondaryBtn: {
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  secondaryBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
   lookupBtn: {
     backgroundColor: '#0284c7',
     paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: RADIUS.md,
   },
-  lookupBtnText: { color: '#fff', fontFamily: FONT.bold, fontSize: 12 },
-  poChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#1e293b',
+  lookupBtnText: {
+    color: '#fff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
-  poChipActive: { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.14)' },
-  poChipText: { color: '#cbd5e1', fontSize: 11, fontFamily: FONT.medium },
-  roleOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 12,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#1e293b',
-  },
-  roleIconBox: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  roleTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#f8fafc' },
-  roleDesc: { fontSize: 11.5, fontFamily: FONT.regular, color: '#94a3b8', marginTop: 2 },
-  roleBox: {
-    padding: 14,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
-    gap: 10,
-  },
-  choiceBtn: {
-    flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-  },
-  choiceBtnActive: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.12)' },
-  choiceBtnText: { color: '#cbd5e1', fontSize: 11.5, fontFamily: FONT.bold, textAlign: 'center' },
-  docsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  docCard: {
-    flex: 1,
-    minWidth: 250,
-    backgroundColor: '#1e293b',
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: RADIUS.md,
-    padding: 12,
-    gap: 8,
-  },
-  docLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#f8fafc' },
-  docSub: { fontSize: 10.5, fontFamily: FONT.regular, color: '#94a3b8', marginTop: 2 },
-  uploadBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: RADIUS.sm,
-  },
-  uploadBtnDone: { backgroundColor: '#16a34a' },
-  uploadBtnText: { color: '#fff', fontSize: 11, fontFamily: FONT.bold },
-  docThumb: { width: '100%', height: 90, borderRadius: RADIUS.sm, backgroundColor: '#0f172a' },
-  consentRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.25)',
-    borderRadius: RADIUS.md,
-    padding: 12,
-  },
-  consentText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#cbd5e1', lineHeight: 17 },
-  primaryBtn: { borderRadius: RADIUS.md, overflow: 'hidden' },
-  primaryBtnGrad: { paddingVertical: 13, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
-  primaryBtnText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  secondaryBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#475569',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryBtnText: { color: '#e2e8f0', fontSize: 13, fontFamily: FONT.semiBold },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.4)',
-    padding: 12,
-    borderRadius: RADIUS.md,
-  },
-  errorBannerText: { flex: 1, color: '#fecaca', fontSize: 12, fontFamily: FONT.medium },
-  kingIdBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.4)',
-    padding: 12,
-    borderRadius: RADIUS.md,
-  },
-  kingIdTitle: { color: '#34d399', fontSize: 12.5, fontFamily: FONT.bold },
-  kingIdDesc: { color: '#d1fae5', fontSize: 11.5, fontFamily: FONT.regular, marginTop: 2, lineHeight: 16 },
-  rejectedBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.5)',
-    padding: 12,
-    borderRadius: RADIUS.md,
-  },
-  rejectedTitle: { color: '#fca5a5', fontSize: 13, fontFamily: FONT.bold },
-  rejectedReason: { color: '#fee2e2', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 2 },
-  rejectedHint: { color: '#cbd5e1', fontSize: 11, fontFamily: FONT.regular, marginTop: 3 },
   devPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1481,32 +1599,253 @@ const styles = StyleSheet.create({
     backgroundColor: '#064e3b',
     borderColor: '#10b981',
     borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+  },
+  devPillText: {
+    color: '#a7f3d0',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  devFillText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    textDecorationLine: 'underline',
+  },
+  verifiedStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: RADIUS.md,
-  },
-  devPillText: { color: '#a7f3d0', fontSize: 12, fontFamily: FONT.bold },
-  devFillText: { color: '#ffffff', fontSize: 12, fontFamily: FONT.bold, textDecorationLine: 'underline' },
-  statusCard: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    backgroundColor: '#1e293b',
-    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  verifiedPhone: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  verifiedMeta: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  changePhoneText: {
+    color: '#38bdf8',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    textDecorationLine: 'underline',
+  },
+  existingAppBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 10,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+  },
+  existingAppTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#f59e0b',
+  },
+  existingAppSub: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#cbd5e1',
+    marginTop: 2,
+  },
+  roleSpecificBox: {
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#0a1f13',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    gap: 8,
+  },
+  complianceNoteBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  complianceNoteText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#a7f3d0',
+    flex: 1,
+    lineHeight: 15,
+  },
+  choiceChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.35)',
+  },
+  choiceChipActive: {
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
+  },
+  choiceChipText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  uploadCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#020d06',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     gap: 10,
   },
-  statusIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(245, 158, 11, 0.14)',
+  uploadLabel: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  uploadSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  uploadActionBtn: {
+    backgroundColor: '#00ff87',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statusTitle: { fontSize: 17, fontFamily: FONT.bold, color: '#f8fafc', textAlign: 'center' },
-  statusDesc: { fontSize: 13, fontFamily: FONT.regular, color: '#cbd5e1', textAlign: 'center', lineHeight: 19 },
-  statusMeta: { fontSize: 12, fontFamily: FONT.regular, color: '#94a3b8', textAlign: 'center', lineHeight: 17 },
+  uploadActionBtnDone: {
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
+    borderWidth: 1,
+    borderColor: '#00ff87',
+  },
+  uploadBtnText: {
+    color: '#020d06',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  uploadBtnTextDone: {
+    color: '#00ff87',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  uploadMiniThumb: {
+    width: 16,
+    height: 16,
+    borderRadius: 3,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 10,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#cbd5e1',
+    lineHeight: 16,
+  },
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 12,
+  },
+  successIconBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    textAlign: 'center',
+  },
+  successSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 18,
+    paddingHorizontal: 20,
+  },
+  successMetaCard: {
+    width: '100%',
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#020d06',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 6,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  metaKey: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  metaVal: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 8,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+    color: '#fca5a5',
+  },
 });
-

@@ -25,6 +25,7 @@ exports.ADMIN_CREATE_ROLES = [
     'FARM_ADVISOR',
     'GARDEN_ADVISOR',
     'TRADER',
+    'NURSERY_OWNER',
     'FARMER',
     'GARDENER',
     'CUSTOMER',

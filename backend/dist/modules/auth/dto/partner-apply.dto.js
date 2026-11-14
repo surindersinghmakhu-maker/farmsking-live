@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PartnerApplyDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class PartnerApplyDto {
 }
@@ -25,7 +26,10 @@ __decorate([
 ], PartnerApplyDto.prototype, "mobile", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ enum: ['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'] }),
-    (0, class_validator_1.IsIn)(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER']),
+    (0, class_transformer_1.Transform)(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value)),
+    (0, class_validator_1.IsIn)(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'], {
+        message: 'requestedRole must be one of: AGENT, ADVISOR, SELLER, NURSERY_OWNER',
+    }),
     __metadata("design:type", String)
 ], PartnerApplyDto.prototype, "requestedRole", void 0);
 __decorate([
@@ -44,6 +48,14 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
+        }
+        return undefined;
+    }),
+    (0, class_validator_1.ValidateIf)((o) => typeof o.email === 'string' && o.email.length > 0),
     (0, class_validator_1.IsEmail)({}, { message: 'Please enter a valid email address.' }),
     __metadata("design:type", String)
 ], PartnerApplyDto.prototype, "email", void 0);

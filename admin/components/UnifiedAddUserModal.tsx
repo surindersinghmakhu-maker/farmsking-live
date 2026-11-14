@@ -51,7 +51,7 @@ const CATEGORIES: CategoryOption[] = [
   {
     id: 'PARTNERS',
     title: '2. Partners',
-    subtitle: 'Sales Managers, Sellers, Crop Doctors, Garden Advisors & Traders',
+    subtitle: 'Nursery Owners, Sales Managers, Sellers, Crop Doctors, Garden Advisors & Traders',
     icon: 'briefcase',
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.14)',
@@ -83,6 +83,7 @@ const ROLES_BY_CATEGORY: Record<AdminCreateCategory, RoleOption[]> = {
     { value: 'ACCOUNTANT', label: 'Accountant (CA)', desc: 'GST, TDS, payouts & audit desk', icon: 'calculator-outline' },
   ],
   PARTNERS: [
+    { value: 'NURSERY_OWNER', label: 'Nursery Owner', desc: 'HSN 0602 live seedlings, plugs & booking hub', icon: 'leaf-outline' },
     { value: 'AGENT', label: 'Sales Manager', desc: 'Coupons, referrals & sales commission', icon: 'briefcase-outline' },
     { value: 'SELLER', label: 'Seller', desc: 'Verified marketplace store & inventory', icon: 'storefront-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctor', desc: 'Field agronomy & prescription desk', icon: 'medical-outline' },
@@ -358,6 +359,10 @@ export function UnifiedAddUserModal({
       setError('Full name is required.');
       return;
     }
+    if (selectedRole === 'NURSERY_OWNER' && !storeName.trim()) {
+      setError('Nursery / Farm Name is required for Nursery Owner accounts.');
+      return;
+    }
     if (selectedRole === 'SELLER' && !storeName.trim()) {
       setError('Store name is required for Seller accounts.');
       return;
@@ -407,6 +412,12 @@ export function UnifiedAddUserModal({
             ...(bankAccountHolderName.trim() ? { bankAccountHolderName: bankAccountHolderName.trim() } : {}),
             ...(bankAccountNumber.trim() ? { bankAccountNumber: bankAccountNumber.trim() } : {}),
             ...(bankIfsc.trim() ? { bankIfsc: bankIfsc.trim().toUpperCase() } : {}),
+          }
+        : {}),
+      ...(selectedRole === 'NURSERY_OWNER'
+        ? {
+            storeName: storeName.trim(),
+            ...(address.trim() ? { address: address.trim() } : {}),
           }
         : {}),
       ...(selectedRole === 'SELLER'
@@ -617,16 +628,15 @@ export function UnifiedAddUserModal({
                           setError(null);
                         }}
                       >
-                        <Ionicons name={r.icon} size={15} color={active ? '#00ff87' : mutedCol} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.rolePillLabel, { color: active ? '#00ff87' : titleCol }]}>
-                            {r.label}
-                          </Text>
-                          <Text style={[styles.rolePillDesc, { color: mutedCol }]} numberOfLines={1}>
-                            {r.desc}
-                          </Text>
-                        </View>
-                        {active && <Ionicons name="checkmark-circle" size={16} color="#00ff87" />}
+                        <Ionicons name={r.icon} size={16} color={active ? '#00ff87' : mutedCol} />
+                        <Text style={[styles.rolePillLabel, { color: active ? '#00ff87' : titleCol, flex: 1 }, active && { fontFamily: FONT.bold }]}>
+                          {r.label}
+                        </Text>
+                        <Ionicons
+                          name={active ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={16}
+                          color={active ? '#00ff87' : 'rgba(148, 163, 184, 0.3)'}
+                        />
                       </TouchableOpacity>
                     );
                   })}
@@ -772,6 +782,8 @@ export function UnifiedAddUserModal({
                 <Text style={[styles.sectionLabel, { color: titleCol }]}>
                   {selectedRole === 'SELLER'
                     ? 'Owner / Proprietor Name (Editable) *'
+                    : selectedRole === 'NURSERY_OWNER'
+                    ? 'Nursery Owner Legal Name (Editable) *'
                     : category === 'STAFF'
                     ? 'Staff Member Name *'
                     : 'Personal Name (Editable) *'}
@@ -781,6 +793,8 @@ export function UnifiedAddUserModal({
                   placeholder={
                     selectedRole === 'SELLER'
                       ? 'Owner / Proprietor Legal Name *'
+                      : selectedRole === 'NURSERY_OWNER'
+                      ? 'Nursery Owner Legal Name *'
                       : category === 'STAFF'
                       ? 'Staff Member Full Name *'
                       : 'Client Personal Name *'
@@ -955,6 +969,42 @@ export function UnifiedAddUserModal({
                       value={bio}
                       onChangeText={setBio}
                     />
+                  </View>
+                )}
+
+                {/* Nursery Owner fields */}
+                {selectedRole === 'NURSERY_OWNER' && (
+                  <View style={{ gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={[styles.sectionLabel, { color: '#10b981' }]}>
+                        Nursery & Greenhouse Details (Mandatory) *
+                      </Text>
+                      <View style={[styles.choiceChip, { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#10b981' }}>HSN 0602 GST-Exempt</Text>
+                      </View>
+                    </View>
+                    <View style={styles.twoColRow}>
+                      <TextInput
+                        style={[styles.input, { flex: 1, color: titleCol, borderColor: borderCol, backgroundColor: subSurface }]}
+                        placeholder="Nursery / Farm Name *"
+                        placeholderTextColor={mutedCol}
+                        value={storeName}
+                        onChangeText={setStoreName}
+                      />
+                      <TextInput
+                        style={[styles.input, { flex: 1, color: titleCol, borderColor: borderCol, backgroundColor: subSurface }]}
+                        placeholder="Greenhouse / Dispatch Address *"
+                        placeholderTextColor={mutedCol}
+                        value={address}
+                        onChangeText={setAddress}
+                      />
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8, borderRadius: RADIUS.md, backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                      <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#a7f3d0', flex: 1 }}>
+                        HSN 0602 Statutory Note: Live seedlings, plants & plugs are 100% GST-exempt across India.
+                      </Text>
+                    </View>
                   </View>
                 )}
 
@@ -1222,12 +1272,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rolePillCard: {
-    minWidth: 185,
+    minWidth: 175,
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    padding: 10,
+    gap: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
     borderRadius: RADIUS.md,
     borderWidth: 1,
   },
@@ -1236,12 +1287,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 135, 0.1)',
   },
   rolePillLabel: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-  },
-  rolePillDesc: {
-    fontSize: 10.5,
-    fontFamily: FONT.regular,
+    fontSize: 13,
+    fontFamily: FONT.semiBold,
   },
   otpBox: {
     padding: 12,

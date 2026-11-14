@@ -242,22 +242,22 @@ export default function SuperUsersScreen() {
     }).length;
   };
 
-  const [deleteVerificationTarget, setDeleteVerificationTarget] = useState<AdminUser | null>(null);
+  const [blockVerificationTarget, setBlockVerificationTarget] = useState<AdminUser | null>(null);
 
-  const handleDeleteUser = (targetUser: AdminUser) => {
+  const handleBlockUser = (targetUser: AdminUser) => {
     if (targetUser.mobile === '9872066901') {
-      const msg = 'Primary Super Admin account 9872066901 cannot be deleted.';
+      const msg = 'Primary Super Admin account 9872066901 cannot be blocked.';
       if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Cannot Delete', msg);
+      else Alert.alert('Cannot Block', msg);
       return;
     }
-    if (targetUser.deletedAt || targetUser.isPermanentlyDeleted || targetUser.name === 'Deleted Account') {
-      const msg = 'This account is already in the Deleted list and cannot be deleted again.';
+    if (targetUser.deletedAt || targetUser.isPermanentlyBlocked || targetUser.name === 'Deleted Account') {
+      const msg = 'This account is already blocked or deleted.';
       if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Already Deleted', msg);
+      else Alert.alert('Already Blocked', msg);
       return;
     }
-    setDeleteVerificationTarget(targetUser);
+    setBlockVerificationTarget(targetUser);
   };
 
   const currentRoleRawUsers = (data?.items ?? []).filter((u) => {
@@ -914,7 +914,8 @@ export default function SuperUsersScreen() {
               {visibleItems.map((u) => {
                 const isUserOperator = u.role === 'OPERATOR' || (Array.isArray(u.roles) && u.roles.includes('OPERATOR'));
                 const isDeletedUser = Boolean(u.deletedAt);
-                const canRestoreUser = isDeletedUser && !hasNewActiveAccountOnMobile(u);
+                const isSelfDeletedUser = Boolean(u.isPermanentlyDeleted || u.name === 'Deleted Account' || (!u.isPermanentlyBlocked && isDeletedUser));
+                const canRestoreUser = isDeletedUser && !isSelfDeletedUser && !hasNewActiveAccountOnMobile(u);
                 return (
                   <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
                     <UserRow
@@ -922,9 +923,14 @@ export default function SuperUsersScreen() {
                       isDesktop={isDesktop}
                       isOperator={isUserOperator}
                       canRestore={canRestoreUser}
-                      onDeactivate={() => deactivate.mutate(u.id)}
+                      onDeactivate={() => handleBlockUser(u)}
                       onReactivate={() => {
                         reactivate.mutate(u.id, {
+                          onSuccess: () => {
+                            const msg = `Account for ${u.name} unblocked successfully and mobile number restored.`;
+                            if (Platform.OS === 'web') alert(msg);
+                            else Alert.alert('Unblocked', msg);
+                          },
                           onError: (err: any) => {
                             const msg = err?.response?.data?.message || err?.message || 'Cannot restore this account.';
                             if (Platform.OS === 'web') alert(msg);
@@ -932,7 +938,6 @@ export default function SuperUsersScreen() {
                           },
                         });
                       }}
-                      onDelete={isSuperAdmin && !isDeletedUser ? () => handleDeleteUser(u) : undefined}
                       onEditPermissions={isUserOperator ? () => setPermissionsTarget(u) : undefined}
                       onEditRoles={u.role !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
                       onOpenDetail={() => setDetailTargetId(u.id)}
@@ -1022,7 +1027,7 @@ export default function SuperUsersScreen() {
       <OperatorPermissionsModal target={permissionsTarget} onClose={() => setPermissionsTarget(null)} />
       <EditRolesModal target={rolesTarget} onClose={() => setRolesTarget(null)} />
       <UserDetailModal userId={detailTargetId} onClose={() => setDetailTargetId(null)} />
-      <DeleteUserSecurityModal target={deleteVerificationTarget} onClose={() => setDeleteVerificationTarget(null)} />
+      <BlockUserSecurityModal target={blockVerificationTarget} onClose={() => setBlockVerificationTarget(null)} />
       <AddTrainerModal visible={isAddTrainerOpen} onClose={() => setIsAddTrainerOpen(false)} />
       <TrainerReportsModal visible={isTrainerReportsOpen} onClose={() => setIsTrainerReportsOpen(false)} />
     </View>
@@ -1147,37 +1152,28 @@ function AddUserTypePickerModal({
   );
 }
 
-function DeleteUserSecurityModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
-  const deleteUser = useDeleteUser();
-  const [confirmInput, setConfirmInput] = useState('');
+function BlockUserSecurityModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
+  const deactivate = useDeactivateUser();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setConfirmInput('');
     setError(null);
   }, [target]);
 
   if (!target) return null;
 
-  const expectedMobile = target.mobile.trim();
-  const isMatch = confirmInput.trim() === expectedMobile || confirmInput.trim().toUpperCase() === 'DELETE';
-
-  const handleConfirmDelete = async () => {
-    if (!isMatch) {
-      setError(`Verification failed. Please type "${expectedMobile}" or "DELETE" to confirm.`);
-      return;
-    }
+  const handleConfirmBlock = async () => {
     setError(null);
     try {
-      await deleteUser.mutateAsync(target.id);
-      if (Platform.OS === 'web') alert(`Account for ${target.name} permanently deleted.`);
-      else Alert.alert('Account Deleted', `Account for ${target.name} deleted successfully.`);
+      const res: any = await deactivate.mutateAsync(target.id);
+      const msg = res?.message || (res?.wasHardDeleted
+        ? `Account for ${target.name} had zero records and was permanently removed from database.`
+        : `Account for ${target.name} blocked and mobile number unlinked.`);
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('User Blocked', msg);
       onClose();
     } catch (err: any) {
-      if (err?.code === 'ADMIN_STEPUP_CANCELLED') {
-        return;
-      }
-      setError(err?.response?.data?.message || err?.message || 'Could not delete user account.');
+      setError(err?.response?.data?.message || err?.message || 'Could not block user account.');
     }
   };
 
@@ -1187,8 +1183,8 @@ function DeleteUserSecurityModal({ target, onClose }: { target: AdminUser | null
         <View style={[styles.modalCard, { borderColor: '#fca5a5', borderWidth: 1.5 }]}>
           <View style={styles.modalHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-              <Ionicons name="shield-checkmark" size={20} color="#dc2626" />
-              <Text style={[styles.modalTitle, { color: '#dc2626' }]}>Security Verification</Text>
+              <Ionicons name="ban-outline" size={20} color="#dc2626" />
+              <Text style={[styles.modalTitle, { color: '#dc2626' }]}>Block User Account</Text>
             </View>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
@@ -1196,49 +1192,41 @@ function DeleteUserSecurityModal({ target, onClose }: { target: AdminUser | null
           </View>
 
           <View style={{ backgroundColor: '#fef2f2', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fecaca', marginVertical: 6 }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#991b1b' }}>
-              ⚠️ Anti-Hacker & Accidental Protection Safeguard
+            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b' }}>
+              Confirm Account Block
             </Text>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#7f1d1d', marginTop: 4, lineHeight: 16 }}>
-              You are about to permanently delete <Text style={{ fontFamily: FONT.bold }}>{target.name}</Text> ({target.mobile}). All associated data will be removed.
+            <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#7f1d1d', marginTop: 4, lineHeight: 17 }}>
+              Are you sure you want to block <Text style={{ fontFamily: FONT.bold }}>{target.name}</Text> ({target.mobile})?
+            </Text>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#991b1b', marginTop: 6, lineHeight: 16 }}>
+              • If this user has platform entries (orders, bills, ledger entries), their mobile number will be unlinked &amp; freed, while historical audit records remain safely preserved.{'\n'}
+              • If this user has zero entries, the empty account will be permanently removed from the database.
             </Text>
           </View>
 
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 8 }}>
-            Type user's mobile number <Text style={{ color: '#dc2626' }}>{expectedMobile}</Text> or <Text style={{ color: '#dc2626' }}>DELETE</Text> to verify:
-          </Text>
-
-          <TextInput
-            style={[
-              styles.input,
-              { marginTop: 6, borderColor: isMatch ? '#16a34a' : '#cbd5e1', borderWidth: 1.5, fontFamily: FONT.bold, color: '#0f172a' },
-            ]}
-            value={confirmInput}
-            onChangeText={setConfirmInput}
-            placeholder={`Enter ${expectedMobile} or DELETE`}
-            placeholderTextColor="#94a3b8"
-            autoCapitalize="characters"
-          />
-
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-            <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]} onPress={onClose}>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <TouchableOpacity
+              style={[styles.submitBtn, { flex: 1, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]}
+              onPress={onClose}
+              disabled={deactivate.isPending}
+            >
               <Text style={[styles.submitBtnText, { color: '#475569' }]}>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.submitBtn,
-                { flex: 1.4, backgroundColor: isMatch ? '#dc2626' : '#cbd5e1' },
+                { flex: 1.4, backgroundColor: '#dc2626' },
               ]}
-              disabled={!isMatch || deleteUser.isPending}
-              onPress={handleConfirmDelete}
+              disabled={deactivate.isPending}
+              onPress={handleConfirmBlock}
             >
-              {deleteUser.isPending ? (
+              {deactivate.isPending ? (
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
-                <Text style={styles.submitBtnText}>🛑 Verify & Delete</Text>
+                <Text style={styles.submitBtnText}>🛑 Block User</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -2163,7 +2151,6 @@ function UserRow({
   canRestore = true,
   onDeactivate,
   onReactivate,
-  onDelete,
   onEditPermissions,
   onEditRoles,
   onOpenDetail,
@@ -2174,7 +2161,6 @@ function UserRow({
   canRestore?: boolean;
   onDeactivate: () => void;
   onReactivate: () => void;
-  onDelete?: () => void;
   onEditPermissions?: () => void;
   onEditRoles?: () => void;
   onOpenDetail?: () => void;
@@ -2182,6 +2168,7 @@ function UserRow({
   const { isLight } = useExecutiveTheme();
   const isBlocked = Boolean(user.isPermanentlyBlocked);
   const isDeactivated = Boolean(user.deletedAt) || isBlocked;
+  const isSelfDeleted = Boolean(user.isPermanentlyDeleted || user.name === 'Deleted Account' || (!isBlocked && Boolean(user.deletedAt)));
   const isOnline = !isDeactivated && Boolean(user.isOnline);
   const isPrimarySuperAdmin = user.mobile === '9872066901';
   const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p: any) => p[0] ?? '').join('').toUpperCase() || '?';
@@ -2365,26 +2352,38 @@ function UserRow({
           ) : null}
 
           {isDeactivated ? (
-            canRestore ? (
+            isSelfDeleted ? (
+              <View
+                style={[
+                  styles.actionBtnCompact,
+                  { backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.14)', borderColor: isLight ? '#cbd5e1' : 'rgba(100, 116, 139, 0.35)' },
+                ]}
+              >
+                <Ionicons name="archive-outline" size={12} color={isLight ? '#64748b' : '#94a3b8'} />
+                <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#64748b' : '#94a3b8' }]}>
+                  Self-Deleted (Audit)
+                </Text>
+              </View>
+            ) : canRestore ? (
               <TouchableOpacity
                 style={[styles.actionBtnCompact, styles.actionBtnRestore]}
                 activeOpacity={0.8}
                 onPress={onReactivate}
               >
-                <Ionicons name={isBlocked ? 'lock-open-outline' : 'refresh'} size={12} color="#00ff87" />
+                <Ionicons name="lock-open-outline" size={12} color="#00ff87" />
                 <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>
-                  {isBlocked ? 'Unblock' : 'Restore'}
+                  Unblock
                 </Text>
               </TouchableOpacity>
             ) : (
               <View
                 style={[
                   styles.actionBtnCompact,
-                  { backgroundColor: 'rgba(100, 116, 139, 0.14)', borderColor: 'rgba(100, 116, 139, 0.35)' },
+                  { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)' },
                 ]}
               >
-                <Ionicons name="ban-outline" size={12} color="#94a3b8" />
-                <Text style={[styles.actionBtnTextCompact, { color: '#94a3b8' }]}>New ID Active</Text>
+                <Ionicons name="ban-outline" size={12} color="#f87171" />
+                <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Mobile Reused</Text>
               </View>
             )
           ) : !isPrimarySuperAdmin ? (
@@ -2395,16 +2394,6 @@ function UserRow({
             >
               <Ionicons name="ban-outline" size={12} color="#f87171" />
               <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Block</Text>
-            </TouchableOpacity>
-          ) : null}
-
-          {!isDeactivated && onDelete ? (
-            <TouchableOpacity
-              style={[styles.actionBtnCompact, styles.actionBtnDelete]}
-              activeOpacity={0.8}
-              onPress={onDelete}
-            >
-              <Ionicons name="trash-outline" size={12} color="#ffffff" />
             </TouchableOpacity>
           ) : null}
         </View>

@@ -583,7 +583,7 @@ let UsersService = class UsersService {
         this.whatsappGroupSyncService.autoRemoveUser(user.id, dbUser.mobile ?? '', dbUser.name ?? 'User').catch(() => { });
         return {
             success: true,
-            message: 'Account deleted successfully. Your King ID and all linked historical records (orders, bills, workers, wallet) are retained for audit. Personal information has been permanently removed in accordance with Google Play Store policy.',
+            message: 'Your FarmsKing ID and account have been permanently deleted. Your mobile number has been unlinked and your personal information permanently removed, while linked historical records (orders, bills, audit ledger) remain safely preserved.',
         };
     }
     async getMyInviteLink(user) {
@@ -1530,6 +1530,50 @@ let UsersService = class UsersService {
         });
         return { tempPassword };
     }
+    async countUserRelatedRecords(userId) {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: {
+                    _count: {
+                        select: {
+                            farms: true,
+                            gardens: true,
+                            customers: true,
+                            expensesRecorded: true,
+                            salesRecorded: true,
+                            paymentsRecorded: true,
+                            customerOrders: true,
+                            labourEntriesRecorded: true,
+                            labourWorkersCreated: true,
+                            fertilizersAdded: true,
+                            fertilizerUsagesRecorded: true,
+                            spraysRecorded: true,
+                            harvestsRecorded: true,
+                            advisorAssignmentsAsAdvisor: true,
+                            advisorAssignmentsAsFarmer: true,
+                            advisorSubscriptionsAsFarmer: true,
+                            cropProblemsReported: true,
+                            cropProblemsAssigned: true,
+                            callRequestsAsFarmer: true,
+                            callRequestsAsAdvisor: true,
+                            farmerPriceLockContracts: true,
+                            buyerPriceLockContracts: true,
+                            partnerAssignmentsAsPartner: true,
+                            couponsAsBusinessPartner: true,
+                        },
+                    },
+                },
+            });
+            const counts = user?._count;
+            if (!counts)
+                return 0;
+            return Object.values(counts).reduce((sum, n) => sum + (typeof n === 'number' ? n : 0), 0);
+        }
+        catch {
+            return 0;
+        }
+    }
     async deactivate(caller, id) {
         const user = await this.findActiveOrThrow(id);
         this.assertCanManageTarget(caller, user);
@@ -1542,20 +1586,43 @@ let UsersService = class UsersService {
         if (user.deletedAt || user.isPermanentlyBlocked) {
             throw new common_1.ConflictException('User is already blocked or deleted.');
         }
+        const relatedCount = await this.countUserRelatedRecords(id);
+        if (relatedCount === 0) {
+            await this.prisma.user.delete({ where: { id } });
+            this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+            return {
+                ...user,
+                deletedAt: new Date(),
+                isPermanentlyBlocked: true,
+                wasHardDeleted: true,
+                message: 'User had no associated entries or records and has been permanently deleted from the database.',
+            };
+        }
+        const delMobile = (await this.generateUniqueDeletedIdentifier(user.mobile, 'mobile', id, id));
+        const delEmail = await this.generateUniqueDeletedIdentifier(user.email, 'email', id, id);
         const updated = await this.prisma.user.update({
             where: { id },
             data: {
                 deletedAt: new Date(),
                 isPermanentlyBlocked: true,
+                mobile: delMobile,
+                email: delEmail,
             },
             select: SAFE_USER_SELECT,
         });
         this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
-        return updated;
+        return {
+            ...updated,
+            wasHardDeleted: false,
+            message: `User has ${relatedCount} linked platform records. Mobile number has been unlinked and freed, and the account is preserved in audit archive.`,
+        };
     }
     async reactivate(caller, id) {
         const user = await this.findActiveOrThrow(id);
         this.assertCanManageTarget(caller, user);
+        if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY' || (!user.isPermanentlyBlocked && Boolean(user.deletedAt))) {
+            throw new common_1.ConflictException('This account was permanently deleted by the user and cannot be restored. It remains strictly as an audit ledger.');
+        }
         if (!user.deletedAt && !user.isPermanentlyBlocked) {
             throw new common_1.ConflictException('User is already active.');
         }
@@ -1576,15 +1643,8 @@ let UsersService = class UsersService {
             select: { id: true, kingId: true, name: true },
         });
         if (existing) {
-            throw new common_1.ConflictException(`Cannot restore: Another active account (${existing.kingId || existing.name}) already exists on mobile ${restoredMobile}.`);
+            throw new common_1.ConflictException(`Cannot unblock: Mobile number ${restoredMobile} has already been registered by a new active user (${existing.kingId || existing.name}).`);
         }
-        const wasAnonymized = user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY';
-        const nextPasswordHash = wasAnonymized ? await argon2.hash(generateTempPassword()) : undefined;
-        const nextName = user.name === 'Deleted Account'
-            ? restoredMobile.startsWith('G_')
-                ? 'Restored Account'
-                : `User ${restoredMobile.slice(-4)}`
-            : undefined;
         const updated = await this.prisma.user.update({
             where: { id },
             data: {
@@ -1595,8 +1655,6 @@ let UsersService = class UsersService {
                 mobile: restoredMobile,
                 email: restoredEmail,
                 ...(restoredKingId ? { kingId: restoredKingId } : {}),
-                ...(nextPasswordHash ? { passwordHash: nextPasswordHash } : {}),
-                ...(nextName ? { name: nextName } : {}),
             },
             select: SAFE_USER_SELECT,
         });
@@ -1847,6 +1905,16 @@ let UsersService = class UsersService {
         }
         if (this.appSettingsService) {
             this.appSettingsService.verifyAdminActionOtp(caller.id, adminConfirmationOtp);
+        }
+        const relatedCount = await this.countUserRelatedRecords(id);
+        if (relatedCount === 0) {
+            await this.prisma.user.delete({ where: { id } });
+            this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+            return {
+                success: true,
+                message: `Account for ${user.name} had no platform records and was permanently deleted from the database.`,
+                wasHardDeleted: true,
+            };
         }
         const delMobile = (await this.generateUniqueDeletedIdentifier(user.mobile, 'mobile', id, id));
         const delEmail = await this.generateUniqueDeletedIdentifier(user.email, 'email', id, id);
@@ -2881,7 +2949,7 @@ let UsersService = class UsersService {
     assertAdminCreateCategoryAndRole(caller, category, roleKey) {
         const allowedByCategory = {
             STAFF: ['ADMIN', 'MANAGER', 'OPERATOR', 'TECHNICAL_TRAINER', 'ACCOUNTANT'],
-            PARTNERS: ['AGENT', 'SELLER', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TRADER'],
+            PARTNERS: ['AGENT', 'SELLER', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TRADER', 'NURSERY_OWNER'],
             CLIENTS: ['FARMER', 'GARDENER', 'CUSTOMER', 'SUPERVISOR', 'LABOUR'],
         };
         if (!allowedByCategory[category]?.includes(roleKey)) {
@@ -3048,6 +3116,7 @@ let UsersService = class UsersService {
             case 'AGENT':
             case 'SELLER':
             case 'TRADER':
+            case 'NURSERY_OWNER':
                 primaryRole = dto.role;
                 assignedRoles = [primaryRole, client_1.Role.CUSTOMER];
                 break;

@@ -384,7 +384,7 @@ export async function getMyAssistantDoctors(): Promise<AdminUser[]> {
 export interface PartnerApplicationItem {
   id: string;
   mobile: string;
-  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER';
+  requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
   advisorType?: 'FARM' | 'GARDEN' | null;
   name: string;
   email?: string | null;
@@ -611,6 +611,7 @@ export type AdminCreateRoleKey =
   | 'FARM_ADVISOR'
   | 'GARDEN_ADVISOR'
   | 'TRADER'
+  | 'NURSERY_OWNER'
   | 'FARMER'
   | 'GARDENER'
   | 'CUSTOMER'

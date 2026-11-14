@@ -18,6 +18,7 @@ import PublicHeader from '@/components/PublicHeader';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
 import { useAuth } from '@/src/store/auth-context';
+import { DeleteAccountModal } from '@/src/components/DeleteAccountModal';
 
 export default function AccountDeletionScreen() {
   const router = useRouter();
@@ -39,6 +40,8 @@ export default function AccountDeletionScreen() {
   const [confirmText, setConfirmText] = useState('');
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletedPermanently, setIsDeletedPermanently] = useState(false);
 
   const isDay = themeMode === 'day';
 
@@ -53,29 +56,7 @@ export default function AccountDeletionScreen() {
     setStatusMessage(null);
 
     if (user) {
-      if (confirmText.trim().toUpperCase() !== 'DELETE') {
-        setStatusMessage({ type: 'error', text: 'Please type DELETE in capital letters to confirm account deletion.' });
-        return;
-      }
-      try {
-        setLoading(true);
-        await apiClient.delete('/users/me');
-        setStatusMessage({
-          type: 'success',
-          text: 'Your FarmsKing account and personal data have been deleted and unlinked.',
-        });
-        setTimeout(() => {
-          logout().catch(() => {});
-          router.replace('/');
-        }, 1200);
-      } catch (err: any) {
-        setStatusMessage({
-          type: 'error',
-          text: err?.response?.data?.message || 'Unable to process deletion request right now.',
-        });
-      } finally {
-        setLoading(false);
-      }
+      setShowDeleteModal(true);
       return;
     }
 
@@ -99,9 +80,10 @@ export default function AccountDeletionScreen() {
         password: password.trim(),
         reason: reason.trim() || undefined,
       });
+      setIsDeletedPermanently(true);
       setStatusMessage({
         type: 'success',
-        text: data?.message || 'Your account deletion request has been processed.',
+        text: data?.message || 'Your FarmsKing ID and account have been permanently deleted.',
       });
       setPassword('');
       setReason('');
@@ -148,129 +130,159 @@ export default function AccountDeletionScreen() {
               </View>
             </View>
 
-            <View style={styles.warningBox}>
-              <Ionicons name="warning-outline" size={18} color="#b91c1c" />
-              <Text style={styles.warningText}>
-                Deleting your account permanently unlinks your FarmsKing King ID, saved farm plots, crop history, and profile credentials. Financial tax records required by statutory law are retained securely in anonymized ledger form.
-              </Text>
-            </View>
-
-            {user ? (
-              <View style={{ gap: 12 }}>
-                <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
-                  Signed in as: {user.name || 'Member'} ({user.mobile})
+            {isDeletedPermanently ? (
+              <View style={{ alignItems: 'center', paddingVertical: 14, gap: 14 }}>
+                <View style={[styles.iconCircle, { backgroundColor: '#fee2e2', width: 64, height: 64, borderRadius: 32, marginBottom: 8 }]}>
+                  <Ionicons name="checkmark-done-circle" size={38} color="#dc2626" />
+                </View>
+                <Text style={[styles.title, { color: '#991b1b', fontSize: 22, textAlign: 'center' }]}>
+                  ID Permanently Deleted
                 </Text>
-                <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
-                  Type DELETE to confirm permanent deletion:
+                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: isDay ? '#1e293b' : '#f1f5f9', textAlign: 'center' }}>
+                  Your FarmsKing ID and account have been permanently deleted.
                 </Text>
-                <TextInput
-                  style={[styles.input, isDay ? styles.inputDay : styles.inputNight, { textAlign: 'center', letterSpacing: 2 }]}
-                  value={confirmText}
-                  onChangeText={setConfirmText}
-                  placeholder="DELETE"
-                  placeholderTextColor="#94a3b8"
-                  autoCapitalize="characters"
-                />
+                <View style={{ backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1, borderRadius: RADIUS.md, padding: 14, width: '100%' }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b', marginBottom: 4 }}>
+                    Mobile Number Unlinked &amp; Data Protected
+                  </Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#64748b', lineHeight: 18 }}>
+                    Your mobile number has been successfully unlinked and freed. In accordance with statutory audit regulations, your historical records (orders, bills, ledger entries) remain safely archived.
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#dc2626', borderRadius: RADIUS.md, paddingVertical: 14, paddingHorizontal: 24, marginTop: 12, width: '100%', alignItems: 'center' }}
+                  onPress={() => router.replace('/')}
+                >
+                  <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 15 }}>Back to FarmsKing Home</Text>
+                </TouchableOpacity>
               </View>
             ) : (
-              <View style={{ gap: 12 }}>
-                <View>
-                  <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
-                    Registered Mobile Number (10 Digits) *
+              <>
+                <View style={styles.warningBox}>
+                  <Ionicons name="warning-outline" size={18} color="#b91c1c" />
+                  <Text style={styles.warningText}>
+                    Deleting your account permanently unlinks your FarmsKing King ID, saved farm plots, crop history, and profile credentials. Financial tax records required by statutory law are retained securely in anonymized ledger form.
                   </Text>
-                  <TextInput
-                    style={[styles.input, isDay ? styles.inputDay : styles.inputNight]}
-                    value={mobile}
-                    onChangeText={setMobile}
-                    placeholder="Enter 10-digit mobile number"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
                 </View>
 
-                <View>
-                  <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
-                    Account Password *
-                  </Text>
-                  <TextInput
-                    style={[styles.input, isDay ? styles.inputDay : styles.inputNight]}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter account password"
-                    placeholderTextColor="#94a3b8"
-                    secureTextEntry
-                  />
-                </View>
-
-                <View>
-                  <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
-                    Reason (Optional)
-                  </Text>
-                  <TextInput
-                    style={[styles.input, styles.inputDay, !isDay && styles.inputNight, { minHeight: 72, textAlignVertical: 'top' }]}
-                    value={reason}
-                    onChangeText={setReason}
-                    placeholder="Optional feedback or reason"
-                    placeholderTextColor="#94a3b8"
-                    multiline
-                  />
-                </View>
-              </View>
-            )}
-
-            {statusMessage ? (
-              <View
-                style={[
-                  styles.statusBox,
-                  statusMessage.type === 'success' ? styles.statusSuccess : styles.statusError,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.statusText,
-                    { color: statusMessage.type === 'success' ? '#065f46' : '#991b1b' },
-                  ]}
-                >
-                  {statusMessage.text}
-                </Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              style={[styles.submitBtn, loading && { opacity: 0.7 }]}
-              onPress={handleSubmit}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={['#dc2626', '#b91c1c']}
-                style={styles.submitGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
+                {user ? (
+                  <View style={{ gap: 12 }}>
+                    <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
+                      Signed in as: {user.name || 'Member'} ({user.mobile})
+                    </Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.regular, color: isDay ? '#475569' : '#94a3b8', lineHeight: 19 }}>
+                      As an active member, account deletion requires a one-time SMS / WhatsApp OTP verification to ensure security before permanently unlinking your ID.
+                    </Text>
+                  </View>
                 ) : (
-                  <>
-                    <Ionicons name="trash" size={16} color="#ffffff" />
-                    <Text style={styles.submitBtnText}>Confirm Account Deletion</Text>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
+                  <View style={{ gap: 12 }}>
+                    <View>
+                      <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
+                        Registered Mobile Number (10 Digits) *
+                      </Text>
+                      <TextInput
+                        style={[styles.input, isDay ? styles.inputDay : styles.inputNight]}
+                        value={mobile}
+                        onChangeText={setMobile}
+                        placeholder="Enter 10-digit mobile number"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                      />
+                    </View>
 
-            <View style={styles.footerRow}>
-              <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} activeOpacity={0.75}>
-                <Text style={styles.linkText}>OTP Account? Sign in first →</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => router.push('/privacy-policy' as any)} activeOpacity={0.75}>
-                <Text style={styles.linkText}>View Privacy Policy</Text>
-              </TouchableOpacity>
-            </View>
+                    <View>
+                      <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
+                        Account Password *
+                      </Text>
+                      <TextInput
+                        style={[styles.input, isDay ? styles.inputDay : styles.inputNight]}
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Enter account password"
+                        placeholderTextColor="#94a3b8"
+                        secureTextEntry
+                      />
+                    </View>
+
+                    <View>
+                      <Text style={[styles.label, isDay ? styles.labelDay : styles.labelNight]}>
+                        Reason (Optional)
+                      </Text>
+                      <TextInput
+                        style={[styles.input, styles.inputDay, !isDay && styles.inputNight, { minHeight: 72, textAlignVertical: 'top' }]}
+                        value={reason}
+                        onChangeText={setReason}
+                        placeholder="Optional feedback or reason"
+                        placeholderTextColor="#94a3b8"
+                        multiline
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {statusMessage ? (
+                  <View
+                    style={[
+                      styles.statusBox,
+                      statusMessage.type === 'success' ? styles.statusSuccess : styles.statusError,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: statusMessage.type === 'success' ? '#065f46' : '#991b1b' },
+                      ]}
+                    >
+                      {statusMessage.text}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <TouchableOpacity
+                  style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={['#dc2626', '#b91c1c']}
+                    style={styles.submitGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <>
+                        <Ionicons name="trash" size={16} color="#ffffff" />
+                        <Text style={styles.submitBtnText}>
+                          {user ? 'Verify via OTP & Delete Account' : 'Confirm Account Deletion'}
+                        </Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <View style={styles.footerRow}>
+                  <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)} activeOpacity={0.75}>
+                    <Text style={styles.linkText}>OTP Account? Sign in first →</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => router.push('/privacy-policy' as any)} activeOpacity={0.75}>
+                    <Text style={styles.linkText}>View Privacy Policy</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </ScrollView>
+
+      {/* In-app OTP verified deletion modal */}
+      <DeleteAccountModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </View>
   );
 }

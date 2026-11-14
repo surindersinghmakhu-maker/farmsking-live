@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AdvisorType, SellerType } from '@prisma/client';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -12,6 +13,7 @@ import {
   Matches,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class PartnerApplyDto {
@@ -22,7 +24,10 @@ export class PartnerApplyDto {
   mobile: string;
 
   @ApiProperty({ enum: ['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'] })
-  @IsIn(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'])
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
+  @IsIn(['AGENT', 'ADVISOR', 'SELLER', 'NURSERY_OWNER'], {
+    message: 'requestedRole must be one of: AGENT, ADVISOR, SELLER, NURSERY_OWNER',
+  })
   requestedRole: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_OWNER';
 
   @ApiPropertyOptional({ enum: AdvisorType })
@@ -38,6 +43,14 @@ export class PartnerApplyDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
+    }
+    return undefined;
+  })
+  @ValidateIf((o) => typeof o.email === 'string' && o.email.length > 0)
   @IsEmail({}, { message: 'Please enter a valid email address.' })
   email?: string;
 

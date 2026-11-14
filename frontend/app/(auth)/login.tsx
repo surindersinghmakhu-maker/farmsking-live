@@ -336,7 +336,7 @@ export default function LoginScreen() {
     let currY = window.innerHeight / 2;
 
     const onMove = (e: MouseEvent) => {
-      if (!isMouseActive) setIsMouseActive(true);
+      setIsMouseActive((prev) => (prev ? prev : true));
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
       mouseTargetRef.current = { x: e.clientX, y: e.clientY, normX: nx, normY: ny };
@@ -349,16 +349,29 @@ export default function LoginScreen() {
 
     const loop = () => {
       const tgt = mouseTargetRef.current;
-      currX += (tgt.x - currX) * 0.08;
-      currY += (tgt.y - currY) * 0.08;
-      const nx = (currX / window.innerWidth) * 2 - 1;
-      const ny = (currY / window.innerHeight) * 2 - 1;
-      setMousePos({
-        x: Math.round(currX),
-        y: Math.round(currY),
-        normX: Math.round(nx * 1000) / 1000,
-        normY: Math.round(ny * 1000) / 1000,
-      });
+      const dx = tgt.x - currX;
+      const dy = tgt.y - currY;
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        currX += dx * 0.08;
+        currY += dy * 0.08;
+        const nx = (currX / window.innerWidth) * 2 - 1;
+        const ny = (currY / window.innerHeight) * 2 - 1;
+        const nextX = Math.round(currX);
+        const nextY = Math.round(currY);
+        const nextNormX = Math.round(nx * 1000) / 1000;
+        const nextNormY = Math.round(ny * 1000) / 1000;
+        setMousePos((prev) => {
+          if (prev.x === nextX && prev.y === nextY && prev.normX === nextNormX && prev.normY === nextNormY) {
+            return prev;
+          }
+          return {
+            x: nextX,
+            y: nextY,
+            normX: nextNormX,
+            normY: nextNormY,
+          };
+        });
+      }
       animId = requestAnimationFrame(loop);
     };
 

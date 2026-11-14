@@ -428,7 +428,10 @@ export default function ShopScreen() {
   // Cart & Checkout State
   const { addItem, items, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [isCategoryListDropdownOpen, setIsCategoryListDropdownOpen] = useState(false);
+  const [isStoreNavCategoryDropdownOpen, setIsStoreNavCategoryDropdownOpen] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>('CATALOG');
   const [storeLayoutMode, setStoreLayoutMode] = useState<'GRID' | 'COMPACT_LIST'>('GRID');
 
@@ -880,6 +883,7 @@ export default function ShopScreen() {
   }, [products, farmerFoodsEnabled, isAdminOrSuperAdmin]);
 
   const filteredProducts = useMemo(() => {
+    const q = appliedSearchQuery.trim().toLowerCase();
     return (products ?? []).filter((p) => {
       // 1. Regular customers only see active products
       if (!isAdminOrSuperAdmin && !p.isActive) return false;
@@ -887,9 +891,9 @@ export default function ShopScreen() {
       // 2. If '🔴 Hidden / Off Products' or 'Hidden / Off' category is selected by Admin
       if (activeCategory === '🔴 Hidden / Off Products' || activeCategory === 'Hidden / Off') {
         const matchesSearch =
-          !searchQuery.trim() ||
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          (p.category && p.category.toLowerCase().includes(q));
         return !p.isActive && matchesSearch;
       }
 
@@ -910,12 +914,12 @@ export default function ShopScreen() {
         (activeCategory === 'Bio & Organics' && (pCat.includes('bio') || pCat.includes('organic') || pCat.includes('compost') || pCat.includes('cocopeat'))) ||
         (activeCategory === '🔥 Deals & VIP Coupons' && (pCat.includes('coupon') || pCat.includes('plan') || pCat.includes('deal') || pCat.includes('farmer plan')));
       const matchesSearch =
-        !searchQuery.trim() ||
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        (p.category && p.category.toLowerCase().includes(q));
       return matchesCategory && matchesSearch;
     });
-  }, [products, activeCategory, searchQuery, isAdminOrSuperAdmin]);
+  }, [products, activeCategory, appliedSearchQuery, isAdminOrSuperAdmin]);
 
   const outOfStockCount = (products ?? []).filter((p) => p.stockQty <= 0).length;
   const lowStockCount = (products ?? []).filter((p) => p.stockQty > 0 && p.stockQty <= Number(lowStockAlertThreshold)).length;
@@ -2334,32 +2338,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               </View>
 
               {/* Row 2: Search */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={[styles.searchBarBox, { flex: 1, height: 40, borderColor: 'rgba(74,222,128,0.35)', borderWidth: 1.5, backgroundColor: 'rgba(255,255,255,0.08)' }]}>
-                  <Ionicons name="search" size={16} color="#16a34a" />
-                  <TextInput
-                    style={[styles.searchInput, { fontSize: 12.5, color: '#ffffff' }]}
-                    placeholder="Search products, seeds, fertilizers..."
-                    placeholderTextColor="#64748b"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={{ backgroundColor: 'rgba(34,197,94,0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(74,222,128,0.25)' }}>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#4ade80' }}>Search</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
 
             </View>
           </LinearGradient>
 
-          {/* Sub Nav Bar (Catalog, Cart, My Orders) with Liquid Spring Sliding Pill */}
           <View style={styles.storeNavTabsBar}>
             <View style={styles.storeNavTabsContainer}>
               <Animated.View
@@ -2378,18 +2360,20 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 onPress={() => {
                   tap();
                   setActiveSubTab('CATALOG');
+                  setIsCategoryListDropdownOpen((prev) => !prev);
                 }}
                 activeOpacity={0.8}
               >
                 <Ionicons name="grid-outline" size={15} color={activeSubTab === 'CATALOG' ? '#047857' : '#64748b'} />
-                <Text style={[styles.storeNavTabText, activeSubTab === 'CATALOG' && styles.storeNavTabTextActive]}>
-                  Catalog
+                <Text style={[styles.storeNavTabText, activeSubTab === 'CATALOG' && styles.storeNavTabTextActive]} numberOfLines={1}>
+                  {activeCategory === 'All' ? 'Category' : activeCategory}
                 </Text>
-                <View style={[styles.storeTabBadge, activeSubTab === 'CATALOG' && styles.storeTabBadgeActive]}>
-                  <Text style={[styles.storeTabBadgeText, activeSubTab === 'CATALOG' && styles.storeTabBadgeTextActive]}>
-                    {filteredProducts.length}
-                  </Text>
-                </View>
+                <Ionicons
+                  name={isCategoryListDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={activeSubTab === 'CATALOG' ? '#047857' : '#64748b'}
+                  style={{ marginLeft: 2 }}
+                />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2442,52 +2426,91 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
           {activeSubTab === 'CATALOG' ? (
             <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-              {/* Category Filter Chips Bar */}
-              <View style={styles.categoryChipsBar}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.categoryChipsScroll}
+              {/* Category Dropdown Menu Panel (Only visible when dropdown is toggled) */}
+              {isCategoryListDropdownOpen && (
+                <View
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#e2e8f0',
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 8,
+                    elevation: 5,
+                    zIndex: 50,
+                  }}
                 >
-                  {categoriesList.map((cat) => {
-                    const isHiddenCat = cat === '🔴 Hidden / Off Products';
-                    const isActive = activeCategory === cat;
-                    return (
-                      <TouchableOpacity
-                        key={cat}
-                        style={[
-                          styles.categoryChip,
-                          isActive && styles.categoryChipActive,
-                          isHiddenCat && styles.categoryChipHidden,
-                          isHiddenCat && isActive && styles.categoryChipHiddenActive,
-                          Platform.OS === 'web'
-                            ? ({
-                                transform: isActive ? 'scale(1.06)' : 'scale(1)',
-                                transition: 'all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              } as any)
-                            : isActive
-                            ? { transform: [{ scale: 1.05 }] }
-                            : {},
-                        ]}
-                        onPress={() => {
-                          tap();
-                          setActiveCategory(cat);
-                        }}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryChipText,
-                            isActive && styles.categoryChipTextActive,
-                            isHiddenCat && { color: isActive ? '#ffffff' : '#dc2626' },
-                          ]}
-                        >
-                          {cat}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
+                  <View style={{ maxWidth: 1200, alignSelf: 'center', width: '100%' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        Select Department / Category
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        {activeCategory !== 'All' && (
+                          <TouchableOpacity
+                            onPress={() => {
+                              tap();
+                              setActiveCategory('All');
+                              setIsCategoryListDropdownOpen(false);
+                            }}
+                            style={{
+                              paddingHorizontal: 8,
+                              paddingVertical: 3,
+                              borderRadius: 6,
+                              backgroundColor: '#fee2e2',
+                            }}
+                          >
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626' }}>Reset Filter</Text>
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => setIsCategoryListDropdownOpen(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Ionicons name="close" size={18} color="#64748b" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                      {categoriesList.filter((cat) => cat !== 'All').map((cat) => {
+                        const isSelected = activeCategory === cat;
+                        return (
+                          <TouchableOpacity
+                            key={cat}
+                            onPress={() => {
+                              tap();
+                              setActiveCategory(activeCategory === cat ? 'All' : cat);
+                              setIsCategoryListDropdownOpen(false);
+                            }}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 6,
+                              paddingHorizontal: 12,
+                              paddingVertical: 7,
+                              borderRadius: 16,
+                              backgroundColor: isSelected ? '#059669' : '#f1f5f9',
+                              borderWidth: 1,
+                              borderColor: isSelected ? '#00ff87' : '#e2e8f0',
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                fontFamily: isSelected ? FONT.bold : FONT.medium,
+                                color: isSelected ? '#ffffff' : '#334155',
+                              }}
+                            >
+                              {cat}
+                            </Text>
+                            {isSelected && <Ionicons name="checkmark" size={13} color="#ffffff" />}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+              )}
 
               {/* Admin Quick Alert Banner for Hidden / Turned Off Products */}
               {isAdminOrSuperAdmin && inactiveProductCount > 0 && (
@@ -2527,18 +2550,89 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </TouchableOpacity>
               )}
 
-              {/* Layout View Mode Bar (Grid vs List Toggle) */}
+              {/* Layout View Mode Bar (Grid vs List Toggle) with Search Input */}
               <View style={{ width: '100%', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
-                <View style={styles.layoutModeBar}>
+                <View style={[styles.layoutModeBar, { flexWrap: 'wrap', gap: 10, paddingVertical: 8 }]}>
+                  {/* Left: Products Count Pill */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b' }}>
-                      {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden Products' : 'Available Products'}
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'Hidden' : 'Products'}
                     </Text>
                     <View style={styles.productCountPill}>
                       <Text style={styles.productCountPillText}>{filteredProducts.length}</Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+
+                  {/* Right Group: Search Bar placed immediately to the left of Grid/List View Buttons */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end' }}>
+                    <View
+                      style={{
+                        width: 260,
+                        maxWidth: '100%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1',
+                        paddingLeft: 10,
+                        paddingRight: 4,
+                        height: 34,
+                        gap: 6,
+                      }}
+                    >
+                      <Ionicons name="search" size={13} color="#64748b" />
+                      <TextInput
+                        style={{
+                          flex: 1,
+                          fontSize: 12,
+                          fontFamily: FONT.medium,
+                          color: '#0f172a',
+                          padding: 0,
+                        }}
+                        placeholder="Search products..."
+                        placeholderTextColor="#94a3b8"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        onSubmitEditing={() => {
+                          tap();
+                          setAppliedSearchQuery(searchQuery.trim());
+                        }}
+                        returnKeyType="search"
+                      />
+                      {searchQuery ? (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSearchQuery('');
+                            setAppliedSearchQuery('');
+                          }}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                        </TouchableOpacity>
+                      ) : null}
+
+                      {/* Search Submit Button */}
+                      <TouchableOpacity
+                        onPress={() => {
+                          tap();
+                          setAppliedSearchQuery(searchQuery.trim());
+                        }}
+                        activeOpacity={0.8}
+                        style={{
+                          backgroundColor: '#16a34a',
+                          paddingHorizontal: 9,
+                          paddingVertical: 5,
+                          borderRadius: 6,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                      >
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Search</Text>
+                      </TouchableOpacity>
+                    </View>
+
                     <TouchableOpacity
                       style={[styles.layoutToggleBtn, storeLayoutMode === 'GRID' && styles.layoutToggleBtnActive]}
                       onPress={() => { tap(); setStoreLayoutMode('GRID'); }}

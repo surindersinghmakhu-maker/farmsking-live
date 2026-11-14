@@ -862,7 +862,7 @@ export default function ShopScreen() {
   }, [allOrders]);
 
   const categoriesList = useMemo(() => {
-    const defaults = ['All', '🔥 Deals & VIP Coupons', 'Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics'];
+    const defaults = ['All', 'Deals', 'Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics'];
     if (farmerFoodsEnabled) defaults.push('Farmer Made Foods');
     if (isAdminOrSuperAdmin) defaults.push('🔴 Hidden / Off Products');
     const mappedDistinct = (products ?? [])
@@ -874,7 +874,7 @@ export default function ShopScreen() {
         if (c.toLowerCase().startsWith('live plant') || c.toLowerCase().startsWith('plant') || c.toLowerCase().startsWith('nursery')) return 'Live Plants & Nursery';
         if (c.toLowerCase().startsWith('crop prot') || c.toLowerCase().startsWith('insect') || c.toLowerCase().startsWith('pestic')) return 'Crop Protection';
         if (c.toLowerCase().includes('farmer made') || c.toLowerCase().startsWith('natural farmer') || c.toLowerCase().includes('jaggery') || c.toLowerCase().includes('ghee') || c.toLowerCase().includes('honey')) return 'Farmer Made Foods';
-        if (c.toLowerCase().includes('coupon') || c.toLowerCase().includes('plan') || c.toLowerCase().includes('deal')) return '🔥 Deals & VIP Coupons';
+        if (c.toLowerCase().includes('coupon') || c.toLowerCase().includes('plan') || c.toLowerCase().includes('deal')) return 'Deals';
         if (c.toLowerCase().startsWith('bio') || c.toLowerCase().startsWith('organic')) return 'Bio & Organics';
         return c;
       })
@@ -912,7 +912,7 @@ export default function ShopScreen() {
         (activeCategory === 'Crop Protection' && (pCat.includes('crop') || pCat.includes('protect') || pCat.includes('neem') || pCat.includes('pest') || pCat.includes('spray'))) ||
         (activeCategory === 'Live Plants & Nursery' && (pCat.includes('plant') || pCat.includes('nursery') || pCat.includes('sapling') || pCat.includes('flower') || pCat.includes('flora') || pCat.includes('indoor'))) ||
         (activeCategory === 'Bio & Organics' && (pCat.includes('bio') || pCat.includes('organic') || pCat.includes('compost') || pCat.includes('cocopeat'))) ||
-        (activeCategory === '🔥 Deals & VIP Coupons' && (pCat.includes('coupon') || pCat.includes('plan') || pCat.includes('deal') || pCat.includes('farmer plan')));
+        ((activeCategory === 'Deals' || activeCategory === '🔥 Deals & VIP Coupons') && (pCat.includes('coupon') || pCat.includes('plan') || pCat.includes('deal') || pCat.includes('farmer plan')));
       const matchesSearch =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -6122,12 +6122,6 @@ function ProductCard({
       })()}
 
       <View style={styles.cardContent}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 }}>
-          <Ionicons name="storefront-outline" size={11} color="#059669" />
-          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#059669' }} numberOfLines={1}>
-            {(product as any).sellerStore?.storeName || 'FarmsKing Direct'}
-          </Text>
-        </View>
         <Text style={styles.productCategoryTag}>{product.category || 'Agri Inputs'}</Text>
         <Text style={[styles.productName, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={2}>{product.name}</Text>
 

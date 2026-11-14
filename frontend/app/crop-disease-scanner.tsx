@@ -1,2 +1,2 @@
-export { default } from './ai-doctor';
+﻿export { default } from './ai-doctor';
 

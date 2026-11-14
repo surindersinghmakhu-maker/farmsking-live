@@ -65,7 +65,7 @@ async function bootstrap() {
         Sentry.init({
             dsn: sentryDsn,
             integrations: [(0, profiling_node_1.nodeProfilingIntegration)()],
-            tracesSampleRate: 1.0,
+            tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
         });
         common_1.Logger.log('Sentry initialized for error tracking', 'Bootstrap');
     }

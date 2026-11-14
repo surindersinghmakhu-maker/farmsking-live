@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+﻿import { apiClient } from './client';
 
 export type FarmerPlanType = 'FREE' | 'PRO' | 'SMART' | 'SUPER' | 'SILVER' | 'GOLD' | 'ROYAL';
 
@@ -24,7 +24,7 @@ export interface MyFarmerPlanResponse {
 export interface FarmerPlanCouponPreview {
   code: string;
   plan: FarmerPlanType;
-  /** The plan the farmer will actually be on after redemption — same as `plan` unless they already
+  /** The plan the farmer will actually be on after redemption â€” same as `plan` unless they already
    * have a higher tier active, in which case the current (higher) tier is kept and the coupon's days
    * are just added on top of it instead of downgrading them. */
   resultPlan: FarmerPlanType;
@@ -45,7 +45,7 @@ export interface FarmerPlanCouponRedeemResult {
   newEndDate: string;
   extended: boolean;
   advisorHired: boolean;
-  /** True if this coupon's tier was lower than the farmer's already-active plan — their current (higher) plan was kept and only extended by the coupon's days. */
+  /** True if this coupon's tier was lower than the farmer's already-active plan â€” their current (higher) plan was kept and only extended by the coupon's days. */
   keptHigherPlan: boolean;
 }
 
@@ -179,7 +179,7 @@ export async function listAllFarmerPlanCoupons(): Promise<FarmerPlanCoupon[]> {
   return data;
 }
 
-/** Super Admin: deactivate an unused coupon so it can no longer be redeemed — never deleted, stays in history. */
+/** Super Admin: deactivate an unused coupon so it can no longer be redeemed â€” never deleted, stays in history. */
 export async function deactivateFarmerPlanCoupon(id: string): Promise<FarmerPlanCoupon> {
   const { data } = await apiClient.patch<FarmerPlanCoupon>(`/farmer-plans/coupons/${id}/deactivate`);
   return data;
@@ -205,7 +205,7 @@ export interface GenerateAdvisorCouponPayload {
   assignedBusinessPartnerId?: string;
 }
 
-/** Advisor self-service: generates their own plan coupon — the Super-Admin-configured generation cost is debited from their wallet. */
+/** Advisor self-service: generates their own plan coupon â€” the Super-Admin-configured generation cost is debited from their wallet. */
 export async function generateOwnFarmerPlanCoupon(payload: GenerateAdvisorCouponPayload): Promise<FarmerPlanCoupon | FarmerPlanCoupon[]> {
   const { data } = await apiClient.post<FarmerPlanCoupon | FarmerPlanCoupon[]>('/farmer-plans/coupons/generate', payload);
   return data;
@@ -316,59 +316,59 @@ export async function activateTrial(): Promise<{ message: string; plan: string; 
 export const PLAN_DISPLAY_MAP: Record<string, { title: string; badge: string; icon: string; color: string; desc: string }> = {
   FREE: {
     title: 'Free Pass',
-    badge: '🟢 Free Pass',
+    badge: 'ðŸŸ¢ Free Pass',
     icon: 'ticket-outline',
     color: '#10b981',
-    desc: 'ਮੁਫ਼ਤ ਐਂਟਰੀ (ਮੰਡੀ ਰੇਟ, ਬੁਨਿਆਦੀ ਮੌਸਮ ਜਾਣਕਾਰੀ, 30 ਫ੍ਰੀ ਬਿਲ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ)',
+    desc: 'à¨®à©à¨«à¨¼à¨¤ à¨à¨‚à¨Ÿà¨°à©€ (à¨®à©°à¨¡à©€ à¨°à©‡à¨Ÿ, à¨¬à©à¨¨à¨¿à¨†à¨¦à©€ à¨®à©Œà¨¸à¨® à¨œà¨¾à¨£à¨•à¨¾à¨°à©€, 30 à¨«à©à¨°à©€ à¨¬à¨¿à¨² à¨¡à¨¾à¨Šà¨¨à¨²à©‹à¨¡/à¨¸à¨¼à©‡à¨…à¨°)',
   },
   PRO: {
     title: 'Kisan Card',
-    badge: '📝 Kisan Card',
+    badge: 'ðŸ“ Kisan Card',
     icon: 'card-outline',
     color: '#0284c7',
-    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+    desc: 'à¨«à¨¸à¨² à¨¡à¨¿à¨œà©€à¨Ÿà¨² à¨–à¨¾à¨¤à¨¾ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨«à¨¸à¨²à¨¾à¨‚ à¨¦à©€ à¨²à¨¿à¨¸à¨Ÿ, à¨à¨•à¨Ÿà¨¿à¨µ à¨²à¨¿à¨®à¨Ÿ max 5 à¨«à¨¸à¨²à¨¾à¨‚)',
   },
   BASIC: {
     title: 'Kisan Card',
-    badge: '📝 Kisan Card',
+    badge: 'ðŸ“ Kisan Card',
     icon: 'card-outline',
     color: '#0284c7',
-    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+    desc: 'à¨«à¨¸à¨² à¨¡à¨¿à¨œà©€à¨Ÿà¨² à¨–à¨¾à¨¤à¨¾ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨«à¨¸à¨²à¨¾à¨‚ à¨¦à©€ à¨²à¨¿à¨¸à¨Ÿ, à¨à¨•à¨Ÿà¨¿à¨µ à¨²à¨¿à¨®à¨Ÿ max 5 à¨«à¨¸à¨²à¨¾à¨‚)',
   },
   SMART: {
     title: 'Boss Card',
-    badge: '👷 Boss Card',
+    badge: 'ðŸ‘· Boss Card',
     icon: 'briefcase-outline',
     color: '#d97706',
-    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+    desc: 'à¨«à¨¸à¨² + à¨²à©‡à¨¬à¨° à¨®à©ˆà¨¨à©‡à¨œà¨®à©ˆà¨‚à¨Ÿ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨…à¨¨à¨²à¨¿à¨®à¨Ÿà¨¿à¨¡ à¨«à¨¸à¨²à¨¾à¨‚ + à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬ à¨¤à©‡ à¨²à©Œà¨—à¨‡à¨¨)',
   },
   SILVER: {
     title: 'Boss Card',
-    badge: '👷 Boss Card',
+    badge: 'ðŸ‘· Boss Card',
     icon: 'briefcase-outline',
     color: '#d97706',
-    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+    desc: 'à¨«à¨¸à¨² + à¨²à©‡à¨¬à¨° à¨®à©ˆà¨¨à©‡à¨œà¨®à©ˆà¨‚à¨Ÿ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨…à¨¨à¨²à¨¿à¨®à¨Ÿà¨¿à¨¡ à¨«à¨¸à¨²à¨¾à¨‚ + à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬ à¨¤à©‡ à¨²à©Œà¨—à¨‡à¨¨)',
   },
   SUPER: {
     title: 'King Card',
-    badge: '👑 King Card',
+    badge: 'ðŸ‘‘ King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'à¨¸à©à¨ªà¨° à¨«à¨¾à¨°à¨®à¨° à¨à¨¸à¨Ÿà©‡à¨Ÿ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨«à¨¸à¨²à¨¾à¨‚ + à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬ + à¨†à¨ªà¨£à©‡ à¨¨à¨¾à¨² 5 à¨Ÿà©€à¨® à¨®à©ˆà¨‚à¨¬à¨° à¨à¨•à¨¸à©ˆà¨¸)',
   },
   VIP: {
     title: 'King Card',
-    badge: '👑 King Card',
+    badge: 'ðŸ‘‘ King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'à¨¸à©à¨ªà¨° à¨«à¨¾à¨°à¨®à¨° à¨à¨¸à¨Ÿà©‡à¨Ÿ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨«à¨¸à¨²à¨¾à¨‚ + à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬ + à¨†à¨ªà¨£à©‡ à¨¨à¨¾à¨² 5 à¨Ÿà©€à¨® à¨®à©ˆà¨‚à¨¬à¨° à¨à¨•à¨¸à©ˆà¨¸)',
   },
   ROYAL: {
     title: 'King Card',
-    badge: '👑 King Card',
+    badge: 'ðŸ‘‘ King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'à¨¸à©à¨ªà¨° à¨«à¨¾à¨°à¨®à¨° à¨à¨¸à¨Ÿà©‡à¨Ÿ (à¨¸à¨¾à¨°à©€à¨†à¨‚ à¨«à¨¸à¨²à¨¾à¨‚ + à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬ + à¨†à¨ªà¨£à©‡ à¨¨à¨¾à¨² 5 à¨Ÿà©€à¨® à¨®à©ˆà¨‚à¨¬à¨° à¨à¨•à¨¸à©ˆà¨¸)',
   },
 };
 
@@ -397,7 +397,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Kisan Card',
-          message: 'ਦੂਜੇ ਰਾਜਾਂ (ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, MP, ਦਿੱਲੀ) ਦੇ ਮੰਡੀ ਰੇਟ ਵੇਖਣ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+          message: 'à¨¦à©‚à¨œà©‡ à¨°à¨¾à¨œà¨¾à¨‚ (à¨¹à¨°à¨¿à¨†à¨£à¨¾, à¨°à¨¾à¨œà¨¸à¨¥à¨¾à¨¨, MP, à¨¦à¨¿à©±à¨²à©€) à¨¦à©‡ à¨®à©°à¨¡à©€ à¨°à©‡à¨Ÿ à¨µà©‡à¨–à¨£ à¨²à¨ˆ Kisan Card à¨…à¨¨à¨²à©Œà¨• à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };
@@ -412,7 +412,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Kisan Card',
-          message: 'Free Pass ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+          message: 'Free Pass à¨µà¨¿à©±à¨š 30 à¨¬à¨¿à¨²à¨¾à¨‚ à¨¤à©±à¨• à¨¹à©€ à¨«à©à¨°à©€ à¨¡à¨¾à¨Šà¨¨à¨²à©‹à¨¡/à¨¸à¨¼à©‡à¨…à¨° à¨®à¨¿à¨²à¨¦à¨¾ à¨¹à©ˆà¥¤ à¨…à¨¨à¨²à¨¿à¨®à¨Ÿà¨¿à¨¡ à¨¬à¨¿à¨²à¨¾à¨‚ à¨²à¨ˆ Kisan Card à¨…à¨¨à¨²à©Œà¨• à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };
@@ -422,7 +422,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਮੈਕਸੀਮਮ 5 ਫਸਲਾਂ (Kisan Card) ਤੋਂ ਵੱਧ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ ਜੋੜਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: 'à¨®à©ˆà¨•à¨¸à©€à¨®à¨® 5 à¨«à¨¸à¨²à¨¾à¨‚ (Kisan Card) à¨¤à©‹à¨‚ à¨µà©±à¨§ à¨…à¨¨à¨²à¨¿à¨®à¨Ÿà¨¿à¨¡ à¨«à¨¸à¨²à¨¾à¨‚ à¨œà©‹à©œà¨¨ à¨²à¨ˆ Boss Card à¨…à¨ªà¨—à©à¨°à©‡à¨¡ à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -432,7 +432,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਫੋਟੋ ਅਪਲੋਡ (ਬੀਮਾਰ ਫਸਲ, ਬਿਲ ਸਕੈਨ) ਅਤੇ AI ਜਾਂਚ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: 'à¨«à©‹à¨Ÿà©‹ à¨…à¨ªà¨²à©‹à¨¡ (à¨¬à©€à¨®à¨¾à¨° à¨«à¨¸à¨², à¨¬à¨¿à¨² à¨¸à¨•à©ˆà¨¨) à¨…à¨¤à©‡ AI à¨œà¨¾à¨‚à¨š à¨²à¨ˆ Boss Card à¨…à¨ªà¨—à©à¨°à©‡à¨¡ à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -442,7 +442,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਮਜ਼ਦੂਰ/ਲੇਬਰ ਹਿਸਾਬ, ਹਾਜ਼ਰੀ ਅਤੇ Labour Login ਚਾਲੂ ਕਰਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: 'à¨®à¨œà¨¼à¨¦à©‚à¨°/à¨²à©‡à¨¬à¨° à¨¹à¨¿à¨¸à¨¾à¨¬, à¨¹à¨¾à¨œà¨¼à¨°à©€ à¨…à¨¤à©‡ Labour Login à¨šà¨¾à¨²à©‚ à¨•à¨°à¨¨ à¨²à¨ˆ Boss Card à¨…à¨ªà¨—à©à¨°à©‡à¨¡ à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -452,7 +452,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'King Card',
-          message: 'ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ/ਸੁਪਰਵਾਈਜ਼ਰ ਜੋੜਨ ਲਈ King Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: 'à¨†à¨ªà¨£à©‡ à¨¨à¨¾à¨² 5 à¨Ÿà©€à¨® à¨®à©ˆà¨‚à¨¬à¨°/à¨¸à©à¨ªà¨°à¨µà¨¾à¨ˆà¨œà¨¼à¨° à¨œà©‹à©œà¨¨ à¨²à¨ˆ King Card à¨…à¨ªà¨—à©à¨°à©‡à¨¡ à¨•à¨°à©‹!',
         };
       }
       return { allowed: true, requiredCard: 'King Card', message: '' };

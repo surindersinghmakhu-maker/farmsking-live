@@ -8,6 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -459,6 +460,10 @@ export function UnifiedAddUserModal({
   const currentRoles = category ? ROLES_BY_CATEGORY[category].filter((r) => !r.superAdminOnly || isSuperAdmin) : [];
   const selectedRoleMeta = currentRoles.find((r) => r.value === selectedRole);
 
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isMobile = windowWidth < 640;
+  const scrollMaxHeight = Math.max(340, Math.min(560, windowHeight - 220));
+
   const cardBg = isLight ? '#ffffff' : '#061a10';
   const subSurface = isLight ? '#f8fafc' : '#020d06';
   const borderCol = isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)';
@@ -527,7 +532,7 @@ export function UnifiedAddUserModal({
             </View>
           )}
 
-          <ScrollView style={{ maxHeight: 540 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+          <ScrollView style={{ maxHeight: scrollMaxHeight }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
             {createdResult ? (
               <View style={{ gap: 12, paddingVertical: 8 }}>
                 <View style={styles.successBox}>

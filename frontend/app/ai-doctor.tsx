@@ -536,7 +536,7 @@ export default function AiDoctorScreen() {
         ? rawApiUrl
         : (typeof window !== 'undefined' && window.location.origin
             ? `${window.location.origin}/api/v1`
-            : 'http://localhost:3000/api/v1');
+            : (process.env.EXPO_PUBLIC_API_URL || 'https://api.farmsking.com/api/v1'));
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 14000);

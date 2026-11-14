@@ -2566,9 +2566,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 contentContainerStyle={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
                 showsVerticalScrollIndicator={false}
               >
-                <View style={{ width: '100%' }}>
-                  <CustomerTrustStrip onOpenCart={() => setActiveSubTab('CHECKOUT')} />
-                </View>
+
                 {filteredProducts.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="storefront-outline" size={48} color="#94a3b8" />

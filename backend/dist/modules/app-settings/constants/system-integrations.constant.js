@@ -250,8 +250,8 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
         },
         providers: {
             phonepe: {
-                merchantId: process.env.PHONEPE_MERCHANT_ID || 'M22KMYD10AWD8_2607081836',
-                clientId: process.env.PHONEPE_CLIENT_ID || 'M22KMYD10AWD8_2607081836',
+                merchantId: process.env.PHONEPE_MERCHANT_ID || '',
+                clientId: process.env.PHONEPE_CLIENT_ID || '',
                 clientSecret: process.env.PHONEPE_CLIENT_SECRET || '',
                 saltKey: process.env.PHONEPE_SALT_KEY || '',
                 saltIndex: process.env.PHONEPE_SALT_INDEX || '1',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -39,22 +39,22 @@ export interface AiDiseaseDiagnostic {
 
 const SAMPLE_PHOTOS = [
   {
-    title: '🌾 Wheat Yellow Rust',
+    title: 'ðŸŒ¾ Wheat Yellow Rust',
     cropKey: 'Wheat',
     url: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb147fc?w=600&auto=format&fit=crop',
   },
   {
-    title: '🌾 Paddy Blast Fungus',
+    title: 'ðŸŒ¾ Paddy Blast Fungus',
     cropKey: 'Paddy',
     url: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=600&auto=format&fit=crop',
   },
   {
-    title: '🌱 Cotton Leaf Curl',
+    title: 'ðŸŒ± Cotton Leaf Curl',
     cropKey: 'Cotton',
     url: 'https://images.unsplash.com/photo-1595855759920-86582396756a?w=600&auto=format&fit=crop',
   },
   {
-    title: '🍅 Tomato Late Blight',
+    title: 'ðŸ… Tomato Late Blight',
     cropKey: 'Tomato',
     url: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=600&auto=format&fit=crop',
   },
@@ -62,10 +62,10 @@ const SAMPLE_PHOTOS = [
 
 const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
   Wheat: {
-    cropName: 'Wheat (ਕਣਕ)',
+    cropName: 'Wheat (à¨•à¨£à¨•)',
     diseaseName: 'Yellow Rust / Stripe Rust',
-    punjabiName: 'ਪੀਲੀ ਕੁੰਗੀ (Yellow Rust)',
-    hindiName: 'पीला रतुआ (Yellow Rust)',
+    punjabiName: 'à¨ªà©€à¨²à©€ à¨•à©à©°à¨—à©€ (Yellow Rust)',
+    hindiName: 'à¤ªà¥€à¤²à¤¾ à¤°à¤¤à¥à¤† (Yellow Rust)',
     latinName: 'Puccinia striiformis f. sp. tritici',
     confidenceScore: 96.8,
     category: 'FUNGAL',
@@ -82,10 +82,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 380,
   },
   Paddy: {
-    cropName: 'Paddy / Rice (ਝੋਨਾ / ਬਾਸਮਤੀ)',
+    cropName: 'Paddy / Rice (à¨à©‹à¨¨à¨¾ / à¨¬à¨¾à¨¸à¨®à¨¤à©€)',
     diseaseName: 'Paddy Leaf Blast & Sheath Blight',
-    punjabiName: 'ਝੋਨੇ ਦਾ ਬਲਾਸਟ ਤੇ ਝੁਲਸ ਰੋਗ (Paddy Blast)',
-    hindiName: 'धान का झुलसा रोग (Paddy Leaf Blast)',
+    punjabiName: 'à¨à©‹à¨¨à©‡ à¨¦à¨¾ à¨¬à¨²à¨¾à¨¸à¨Ÿ à¨¤à©‡ à¨à©à¨²à¨¸ à¨°à©‹à¨— (Paddy Blast)',
+    hindiName: 'à¤§à¤¾à¤¨ à¤•à¤¾ à¤à¥à¤²à¤¸à¤¾ à¤°à¥‹à¤— (Paddy Leaf Blast)',
     latinName: 'Magnaporthe oryzae / Rhizoctonia solani',
     confidenceScore: 94.5,
     category: 'FUNGAL',
@@ -102,10 +102,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 420,
   },
   Cotton: {
-    cropName: 'Cotton (ਨਰਮਾ / ਕਪਾਹ)',
+    cropName: 'Cotton (à¨¨à¨°à¨®à¨¾ / à¨•à¨ªà¨¾à¨¹)',
     diseaseName: 'Pink Bollworm & Leaf Curl Virus',
-    punjabiName: 'ਗੁਲਾਬੀ ਸੁੰਡੀ ਤੇ ਪੱਤਾ ਮਰੋੜ ਰੋਗ (Pink Bollworm & CLCuV)',
-    hindiName: 'गुलाबी सुंडी और लीफ कर्ल वायरस',
+    punjabiName: 'à¨—à©à¨²à¨¾à¨¬à©€ à¨¸à©à©°à¨¡à©€ à¨¤à©‡ à¨ªà©±à¨¤à¨¾ à¨®à¨°à©‹à©œ à¨°à©‹à¨— (Pink Bollworm & CLCuV)',
+    hindiName: 'à¤—à¥à¤²à¤¾à¤¬à¥€ à¤¸à¥à¤‚à¤¡à¥€ à¤”à¤° à¤²à¥€à¤« à¤•à¤°à¥à¤² à¤µà¤¾à¤¯à¤°à¤¸',
     latinName: 'Pectinophora gossypiella / Begomovirus',
     confidenceScore: 95.2,
     category: 'PEST_ATTACK',
@@ -122,10 +122,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 495,
   },
   Sugarcane: {
-    cropName: 'Sugarcane (ਕਮਾਦ / ਗੰਨਾ)',
+    cropName: 'Sugarcane (à¨•à¨®à¨¾à¨¦ / à¨—à©°à¨¨à¨¾)',
     diseaseName: 'Sugarcane Red Rot Disease',
-    punjabiName: 'ਗੰਨੇ ਦਾ ਰੱਤਾ ਰੋਗ (Red Rot)',
-    hindiName: 'गन्ने का लाल सड़न रोग (Red Rot)',
+    punjabiName: 'à¨—à©°à¨¨à©‡ à¨¦à¨¾ à¨°à©±à¨¤à¨¾ à¨°à©‹à¨— (Red Rot)',
+    hindiName: 'à¤—à¤¨à¥à¤¨à¥‡ à¤•à¤¾ à¤²à¤¾à¤² à¤¸à¤¡à¤¼à¤¨ à¤°à¥‹à¤— (Red Rot)',
     latinName: 'Colletotrichum falcatum',
     confidenceScore: 92.4,
     category: 'FUNGAL',
@@ -142,10 +142,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 340,
   },
   Tomato: {
-    cropName: 'Tomato / Vegetables (ਟਮਾਟਰ ਤੇ ਸਬਜ਼ੀਆਂ)',
+    cropName: 'Tomato / Vegetables (à¨Ÿà¨®à¨¾à¨Ÿà¨° à¨¤à©‡ à¨¸à¨¬à¨œà¨¼à©€à¨†à¨‚)',
     diseaseName: 'Late Blight & Leaf Curl',
-    punjabiName: 'ਟਮਾਟਰ ਦਾ ਅਗੇਤਾ/ਪਛੇਤਾ ਝੁਲਸ ਰੋਗ (Late Blight)',
-    hindiName: 'टमाटर का पछेता अगेता झुलसा रोग',
+    punjabiName: 'à¨Ÿà¨®à¨¾à¨Ÿà¨° à¨¦à¨¾ à¨…à¨—à©‡à¨¤à¨¾/à¨ªà¨›à©‡à¨¤à¨¾ à¨à©à¨²à¨¸ à¨°à©‹à¨— (Late Blight)',
+    hindiName: 'à¤Ÿà¤®à¤¾à¤Ÿà¤° à¤•à¤¾ à¤ªà¤›à¥‡à¤¤à¤¾ à¤…à¤—à¥‡à¤¤à¤¾ à¤à¥à¤²à¤¸à¤¾ à¤°à¥‹à¤—',
     latinName: 'Phytophthora infestans',
     confidenceScore: 97.1,
     category: 'FUNGAL',
@@ -162,10 +162,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 650,
   },
   Potato: {
-    cropName: 'Potato (ਆਲੂ)',
+    cropName: 'Potato (à¨†à¨²à©‚)',
     diseaseName: 'Potato Early & Late Blight',
-    punjabiName: 'ਆਲੂਆਂ ਦਾ ਝੁਲਸ ਰੋਗ (Potato Blight)',
-    hindiName: 'आलू का झुलसा रोग',
+    punjabiName: 'à¨†à¨²à©‚à¨†à¨‚ à¨¦à¨¾ à¨à©à¨²à¨¸ à¨°à©‹à¨— (Potato Blight)',
+    hindiName: 'à¤†à¤²à¥‚ à¤•à¤¾ à¤à¥à¤²à¤¸à¤¾ à¤°à¥‹à¤—',
     latinName: 'Alternaria solani / Phytophthora infestans',
     confidenceScore: 96.0,
     category: 'FUNGAL',
@@ -182,10 +182,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 430,
   },
   Mustard: {
-    cropName: 'Mustard / Oilseeds (ਸਰ੍ਹੋਂ / ਰਾਇਆ)',
+    cropName: 'Mustard / Oilseeds (à¨¸à¨°à©à¨¹à©‹à¨‚ / à¨°à¨¾à¨‡à¨†)',
     diseaseName: 'White Rust & Alternaria Blight',
-    punjabiName: 'ਸਰ੍ਹੋਂ ਦੀ ਚਿੱਟੀ ਕੁੰਗੀ ਤੇ ਚੇਪਾ (White Rust & Aphids)',
-    hindiName: 'सरसों का सफेद रोगाणु और माहो',
+    punjabiName: 'à¨¸à¨°à©à¨¹à©‹à¨‚ à¨¦à©€ à¨šà¨¿à©±à¨Ÿà©€ à¨•à©à©°à¨—à©€ à¨¤à©‡ à¨šà©‡à¨ªà¨¾ (White Rust & Aphids)',
+    hindiName: 'à¤¸à¤°à¤¸à¥‹à¤‚ à¤•à¤¾ à¤¸à¤«à¥‡à¤¦ à¤°à¥‹à¤—à¤¾à¤£à¥ à¤”à¤° à¤®à¤¾à¤¹à¥‹',
     latinName: 'Albugo candida / Lipaphis erysimi',
     confidenceScore: 93.8,
     category: 'PEST_ATTACK',
@@ -201,10 +201,10 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedPrice: 280,
   },
   Citrus: {
-    cropName: 'Citrus & Fruits (ਕਿੰਨੂ / ਫਲਦਾਰ ਪੌਦੇ)',
+    cropName: 'Citrus & Fruits (à¨•à¨¿à©°à¨¨à©‚ / à¨«à¨²à¨¦à¨¾à¨° à¨ªà©Œà¨¦à©‡)',
     diseaseName: 'Citrus Canker & Dieback',
-    punjabiName: 'ਕਿੰਨੂ ਦਾ ਕੈਂਕਰ ਤੇ ਸੁੱਕੜ ਰੋਗ (Citrus Canker)',
-    hindiName: 'नींबू वर्गीय फल का कैंकर रोग',
+    punjabiName: 'à¨•à¨¿à©°à¨¨à©‚ à¨¦à¨¾ à¨•à©ˆà¨‚à¨•à¨° à¨¤à©‡ à¨¸à©à©±à¨•à©œ à¨°à©‹à¨— (Citrus Canker)',
+    hindiName: 'à¤¨à¥€à¤‚à¤¬à¥‚ à¤µà¤°à¥à¤—à¥€à¤¯ à¤«à¤² à¤•à¤¾ à¤•à¥ˆà¤‚à¤•à¤° à¤°à¥‹à¤—',
     latinName: 'Xanthomonas citri subsp. citri',
     confidenceScore: 95.0,
     category: 'BACTERIAL',
@@ -360,8 +360,8 @@ export default function CropDiseaseScannerScreen() {
           name: farmerName,
           location,
           action: `Scanned ${cleanCrop} with AI Crop Doctor`,
-          detail: `${diagnostic.diseaseName} detected • ${diagnostic.confidenceScore}% AI Confidence`,
-          emoji: '🧪',
+          detail: `${diagnostic.diseaseName} detected â€¢ ${diagnostic.confidenceScore}% AI Confidence`,
+          emoji: 'ðŸ§ª',
           tagColor: '#06b6d4',
         });
       } catch {
@@ -379,7 +379,7 @@ export default function CropDiseaseScannerScreen() {
       unit: 'pack',
       imageUrl: selectedImage || undefined,
     });
-    setAddedToCartNotice(`🛒 Added ${scanResult.recommendedProductName} (₹${scanResult.recommendedPrice}) to Cart! Redirecting to checkout...`);
+    setAddedToCartNotice(`ðŸ›’ Added ${scanResult.recommendedProductName} (â‚¹${scanResult.recommendedPrice}) to Cart! Redirecting to checkout...`);
     setTimeout(() => {
       router.push('/(user)/(tabs)/shop' as any);
     }, 1200);
@@ -387,7 +387,7 @@ export default function CropDiseaseScannerScreen() {
 
   const handleShareReportWhatsApp = () => {
     if (!scanResult) return;
-    const msg = `🤖 *FarmsKing AI Universal Crop Disease Report*\n\n🌾 *Detected Crop:* ${scanResult.cropName}\n⚠️ *Disease Identified:* ${scanResult.diseaseName} (${scanResult.punjabiName})\n🔬 *Pathogen:* ${scanResult.latinName}\n📊 *AI Confidence Match:* ${scanResult.confidenceScore}%\n🚨 *Severity:* ${scanResult.severity}\n\n💊 *Recommended Spray:* ${scanResult.firstAidSpray}\n⚙️ *Dosage:* ${scanResult.dosageInstructions}\n🌱 *Organic Remedy:* ${scanResult.organicRemedy}\n\n🛒 Order genuine medicine from FarmsKing Store.`;
+    const msg = `ðŸ¤– *FarmsKing AI Universal Crop Disease Report*\n\nðŸŒ¾ *Detected Crop:* ${scanResult.cropName}\nâš ï¸ *Disease Identified:* ${scanResult.diseaseName} (${scanResult.punjabiName})\nðŸ”¬ *Pathogen:* ${scanResult.latinName}\nðŸ“Š *AI Confidence Match:* ${scanResult.confidenceScore}%\nðŸš¨ *Severity:* ${scanResult.severity}\n\nðŸ’Š *Recommended Spray:* ${scanResult.firstAidSpray}\nâš™ï¸ *Dosage:* ${scanResult.dosageInstructions}\nðŸŒ± *Organic Remedy:* ${scanResult.organicRemedy}\n\nðŸ›’ Order genuine medicine from FarmsKing Store.`;
     const encoded = encodeURIComponent(msg);
     const whatsappUrl = `whatsapp://send?text=${encoded}`;
 
@@ -408,7 +408,7 @@ export default function CropDiseaseScannerScreen() {
           <Ionicons name="arrow-back" size={22} color="#0f172a" />
         </TouchableOpacity>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>🤖 Universal AI Crop Scanner</Text>
+          <Text style={styles.headerTitle}>ðŸ¤– Universal AI Crop Scanner</Text>
           <Text style={{ fontSize: 10, fontFamily: 'Inter_600SemiBold', color: '#16a34a' }}>
             Automatic 1-Step Crop & Disease Identification
           </Text>
@@ -422,7 +422,7 @@ export default function CropDiseaseScannerScreen() {
         {/* Banner */}
         <View style={styles.bannerCard}>
           <View style={styles.bannerBadge}>
-            <Text style={styles.bannerBadgeText}>⚡ Automatic Universal AI Scanner</Text>
+            <Text style={styles.bannerBadgeText}>âš¡ Automatic Universal AI Scanner</Text>
           </View>
           <Text style={styles.bannerHeading}>Scan Any Crop / Leaf Photo Directly</Text>
           <Text style={styles.bannerSub}>
@@ -463,19 +463,19 @@ export default function CropDiseaseScannerScreen() {
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.cameraBtn} onPress={handlePickFromCamera}>
               <Ionicons name="camera" size={18} color="#ffffff" />
-              <Text style={styles.cameraBtnText}>📷 Open Camera</Text>
+              <Text style={styles.cameraBtnText}>ðŸ“· Open Camera</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.galleryBtn} onPress={handlePickFromGallery}>
               <Ionicons name="images" size={18} color="#15803d" />
-              <Text style={styles.galleryBtnText}>🖼️ Choose Gallery</Text>
+              <Text style={styles.galleryBtnText}>ðŸ–¼ï¸ Choose Gallery</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Sample Photo Tester Bar */}
         <View style={styles.sampleBarBox}>
-          <Text style={styles.sampleTitle}>💡 Or Test AI Scan with 1-Tap Sample Leaf Photos:</Text>
+          <Text style={styles.sampleTitle}>ðŸ’¡ Or Test AI Scan with 1-Tap Sample Leaf Photos:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
             {SAMPLE_PHOTOS.map((sample, idx) => (
               <TouchableOpacity
@@ -496,8 +496,8 @@ export default function CropDiseaseScannerScreen() {
         {isScanning && (
           <View style={styles.loadingCard}>
             <ActivityIndicator size="large" color="#15803d" />
-            <Text style={styles.loadingText}>🤖 AI Model Identifying Crop & Analyzing Leaf Pathogens...</Text>
-            <Text style={styles.loadingSub}>Computer Vision Deep Neural Network · Matching ICAR & PAU Advisory Database</Text>
+            <Text style={styles.loadingText}>ðŸ¤– AI Model Identifying Crop & Analyzing Leaf Pathogens...</Text>
+            <Text style={styles.loadingSub}>Computer Vision Deep Neural Network Â· Matching ICAR & PAU Advisory Database</Text>
           </View>
         )}
 
@@ -551,7 +551,7 @@ export default function CropDiseaseScannerScreen() {
                     { color: scanResult.severity === 'CRITICAL' || scanResult.severity === 'HIGH' ? '#dc2626' : '#b45309' },
                   ]}
                 >
-                  ⚠️ {scanResult.severity} SEVERITY
+                  âš ï¸ {scanResult.severity} SEVERITY
                 </Text>
               </View>
             </View>
@@ -560,11 +560,11 @@ export default function CropDiseaseScannerScreen() {
             <View style={styles.prescriptionBox}>
               <View style={styles.prescHeader}>
                 <Ionicons name="flask" size={18} color="#15803d" />
-                <Text style={styles.prescTitle}>💊 Recommended Chemical First-Aid Spray</Text>
+                <Text style={styles.prescTitle}>ðŸ’Š Recommended Chemical First-Aid Spray</Text>
               </View>
               <Text style={styles.prescText}>{scanResult.firstAidSpray}</Text>
               <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>⚙️ Exact Dosage & Spraying Method:</Text>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>âš™ï¸ Exact Dosage & Spraying Method:</Text>
                 <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>{scanResult.dosageInstructions}</Text>
               </View>
             </View>
@@ -573,14 +573,14 @@ export default function CropDiseaseScannerScreen() {
             <View style={[styles.prescriptionBox, { backgroundColor: '#fdf4ff', borderLeftColor: '#c026d3' }]}>
               <View style={styles.prescHeader}>
                 <Ionicons name="leaf" size={18} color="#a21caf" />
-                <Text style={[styles.prescTitle, { color: '#86198f' }]}>🌿 Natural Organic Bio-Remedy & Home Treatment</Text>
+                <Text style={[styles.prescTitle, { color: '#86198f' }]}>ðŸŒ¿ Natural Organic Bio-Remedy & Home Treatment</Text>
               </View>
               <Text style={[styles.prescText, { color: '#701a75' }]}>{scanResult.organicRemedy}</Text>
             </View>
 
             {/* Precautions */}
             <View style={styles.precautionsBox}>
-              <Text style={styles.precTitle}>📋 Key Preventive Agronomist Precautions:</Text>
+              <Text style={styles.precTitle}>ðŸ“‹ Key Preventive Agronomist Precautions:</Text>
               {scanResult.precautions.map((item, idx) => (
                 <View key={idx} style={styles.precautionItem}>
                   <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
@@ -594,10 +594,10 @@ export default function CropDiseaseScannerScreen() {
               <Ionicons name="cart" size={20} color="#ffffff" />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 13.5, fontWeight: '800', color: '#ffffff' }}>
-                  🛒 Order Recommended Chemical Spray (₹{scanResult.recommendedPrice})
+                  ðŸ›’ Order Recommended Chemical Spray (â‚¹{scanResult.recommendedPrice})
                 </Text>
                 <Text style={{ fontSize: 10.5, color: '#dcfce7' }}>
-                  100% Genuine Factory Chemical · Free 24h Village Delivery
+                  100% Genuine Factory Chemical Â· Free 24h Village Delivery
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#ffffff" />
@@ -611,10 +611,10 @@ export default function CropDiseaseScannerScreen() {
           </View>
         )}
 
-        {/* 🤖 FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
+        {/* ðŸ¤– FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
         <View style={{ marginTop: 10 }}>
           <Text style={{ fontSize: 15, fontWeight: '800', color: '#0f172a', marginBottom: 4 }}>
-            💬 Ask FarmsKing Kheti Mitra AI Doctor
+            ðŸ’¬ Ask FarmsKing Kheti Mitra AI Doctor
           </Text>
           <Text style={{ fontSize: 11.5, color: '#64748b', marginBottom: 6 }}>
             Ask any question about crops, fertilizers, sprays, disease remedies, or mandi rates in Punjabi, Hindi & English.

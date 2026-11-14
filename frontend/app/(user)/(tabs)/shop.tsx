@@ -2839,9 +2839,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               <View
                 style={storeLayoutMode === 'COMPACT_LIST' ? [styles.grid, { flexDirection: 'column', gap: 8 }] : styles.grid}
               >
-                <View style={{ width: '100%' }}>
-                  <CustomerTrustStrip onOpenCart={() => setActiveSubTab('CHECKOUT')} />
-                </View>
+
                 {isLoadingProducts && (!products || (products as Product[]).length === 0) ? (
                   <View style={{ width: '100%', paddingVertical: 40, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                     <ActivityIndicator size="large" color="#16a34a" />

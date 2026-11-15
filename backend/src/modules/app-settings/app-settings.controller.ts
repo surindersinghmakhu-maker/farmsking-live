@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -125,10 +125,40 @@ export class AppSettingsController {
     return this.appSettingsService.getVisitorStats();
   }
 
-  /** Public endpoint to record a page visit */
+  /** Public endpoint to record a page visit with geolocation and telemetry */
   @Post('record-visit')
-  recordVisit(@Body() dto: { device?: string; path?: string }) {
-    return this.appSettingsService.recordVisit(dto);
+  recordVisit(
+    @Body() dto: {
+      device?: string;
+      path?: string;
+      state?: string;
+      city?: string;
+      timezone?: string;
+      screen?: string;
+      browser?: string;
+      os?: string;
+    },
+    @Req() req: any
+  ) {
+    const rawIp =
+      req?.headers?.['cf-connecting-ip'] ||
+      req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
+      req?.headers?.['x-real-ip'] ||
+      req?.socket?.remoteAddress ||
+      req?.ip ||
+      '';
+
+    const cfCity = req?.headers?.['cf-ipcity']?.toString();
+    const cfRegion = req?.headers?.['cf-region']?.toString() || req?.headers?.['cf-region-code']?.toString();
+    const cfCountry = req?.headers?.['cf-ipcountry']?.toString();
+
+    return this.appSettingsService.recordVisit(dto, {
+      ip: rawIp,
+      cfCity,
+      cfRegion,
+      cfCountry,
+      userAgent: req?.headers?.['user-agent']?.toString(),
+    });
   }
 
   /** Update visitor counter baseline (Super Admin only) */

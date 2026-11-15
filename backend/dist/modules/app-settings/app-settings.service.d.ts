@@ -252,6 +252,18 @@ export declare class AppSettingsService {
     recordVisit(dto: {
         device?: string;
         path?: string;
+        state?: string;
+        city?: string;
+        timezone?: string;
+        screen?: string;
+        browser?: string;
+        os?: string;
+    }, meta?: {
+        ip?: string;
+        cfCity?: string;
+        cfRegion?: string;
+        cfCountry?: string;
+        userAgent?: string;
     }): Promise<any>;
     updateVisitorStats(admin: AuthUser, dto: any): Promise<{
         success: boolean;

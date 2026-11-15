@@ -127,6 +127,33 @@ export interface UpdateAppSettingsPayload {
   otpDeliveryChannel?: string;
 }
 
+export interface VisitorSessionItem {
+  id: string;
+  ipMasked: string;
+  city: string;
+  state: string;
+  country: string;
+  device: 'mobile' | 'desktop';
+  os: string;
+  browser: string;
+  network: string;
+  path: string;
+  visitedAt: string;
+  isActive: boolean;
+}
+
+export interface StateBreakdownItem {
+  state: string;
+  visits: number;
+  percentage: number;
+}
+
+export interface CityBreakdownItem {
+  city: string;
+  state: string;
+  visits: number;
+}
+
 export interface VisitorStats {
   totalVisits: number;
   todayVisits: number;
@@ -137,6 +164,9 @@ export interface VisitorStats {
   liveActiveEstimate: number;
   todayDate: string;
   lastVisitedAt: string;
+  stateBreakdown?: StateBreakdownItem[];
+  cityBreakdown?: CityBreakdownItem[];
+  recentVisitors?: VisitorSessionItem[];
 }
 
 export async function getVisitorStats(): Promise<VisitorStats> {

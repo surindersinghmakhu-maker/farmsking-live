@@ -74,8 +74,23 @@ let AppSettingsController = class AppSettingsController {
     getVisitorStats() {
         return this.appSettingsService.getVisitorStats();
     }
-    recordVisit(dto) {
-        return this.appSettingsService.recordVisit(dto);
+    recordVisit(dto, req) {
+        const rawIp = req?.headers?.['cf-connecting-ip'] ||
+            req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
+            req?.headers?.['x-real-ip'] ||
+            req?.socket?.remoteAddress ||
+            req?.ip ||
+            '';
+        const cfCity = req?.headers?.['cf-ipcity']?.toString();
+        const cfRegion = req?.headers?.['cf-region']?.toString() || req?.headers?.['cf-region-code']?.toString();
+        const cfCountry = req?.headers?.['cf-ipcountry']?.toString();
+        return this.appSettingsService.recordVisit(dto, {
+            ip: rawIp,
+            cfCity,
+            cfRegion,
+            cfCountry,
+            userAgent: req?.headers?.['user-agent']?.toString(),
+        });
     }
     updateVisitorStats(user, dto) {
         return this.appSettingsService.updateVisitorStats(user, dto);
@@ -197,8 +212,9 @@ __decorate([
 __decorate([
     (0, common_1.Post)('record-visit'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], AppSettingsController.prototype, "recordVisit", null);
 __decorate([

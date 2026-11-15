@@ -623,6 +623,7 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     // LOGIN & Official Routes Static HTML & Directories
     const staticRoutes = [
       'login',
+      'partner-login',
       'register',
       'forgot-password',
       'shop',

@@ -315,15 +315,31 @@ export default function PublicHeader({
 
   const goToDashboard = () => {
     setMoreMenuOpen(false);
+    const activeRoles = Array.from(
+      new Set(
+        [
+          user?.role,
+          ...(Array.isArray((user as any)?.roles) ? (user as any).roles : []),
+        ].filter(Boolean)
+      )
+    );
+    if (activeRoles.includes('ADMIN') || activeRoles.includes('SUPER_ADMIN')) {
+      router.push('/admin' as any);
+      return;
+    }
+    if (activeRoles.includes('SELLER')) {
+      router.push('/seller-dashboard' as any);
+      return;
+    }
     if (
-      ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(
-        user?.role || ''
+      ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].some((r) =>
+        activeRoles.includes(r)
       )
     ) {
       router.push('/(partner)/(tabs)' as any);
-    } else {
-      router.push('/(user)/(tabs)' as any);
+      return;
     }
+    router.push('/(user)/(tabs)' as any);
   };
 
   const handleNavClick = (link: (typeof MAIN_NAV_LINKS)[0]) => {

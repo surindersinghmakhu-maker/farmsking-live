@@ -214,12 +214,31 @@ function GlobalVisitorTelemetryRecorder() {
       if (sessionStorage.getItem('farmsking_session_visit_recorded')) return;
       sessionStorage.setItem('farmsking_session_visit_recorded', '1');
       const isMobile = window.innerWidth < 768;
+
+      const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+      let os = 'Windows';
+      if (/Android/i.test(ua)) os = 'Android';
+      else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS';
+      else if (/Mac/i.test(ua)) os = 'macOS';
+      else if (/Linux/i.test(ua)) os = 'Linux';
+
+      let browser = 'Chrome';
+      if (/Firefox/i.test(ua)) browser = 'Firefox';
+      else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+      else if (/Edg/i.test(ua)) browser = 'Edge';
+
+      const timeZone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata' : 'Asia/Kolkata';
+
       fetch('/api/v1/app-settings/record-visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           device: isMobile ? 'mobile' : 'desktop',
           path: window.location.pathname || '/',
+          os,
+          browser,
+          timezone: timeZone,
+          screen: typeof window !== 'undefined' && window.screen ? `${window.screen.width}x${window.screen.height}` : '1920x1080',
         }),
       }).catch(() => {});
     } catch {}

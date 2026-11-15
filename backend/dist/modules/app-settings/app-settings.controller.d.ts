@@ -225,7 +225,13 @@ export declare class AppSettingsController {
     recordVisit(dto: {
         device?: string;
         path?: string;
-    }): Promise<any>;
+        state?: string;
+        city?: string;
+        timezone?: string;
+        screen?: string;
+        browser?: string;
+        os?: string;
+    }, req: any): Promise<any>;
     updateVisitorStats(user: AuthUser, dto: any): Promise<{
         success: boolean;
         stats: any;

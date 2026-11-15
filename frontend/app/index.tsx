@@ -955,19 +955,6 @@ export default function PublicLandingPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
-  // Guard: If authenticated, immediately preserve session & redirect to appropriate dashboard
-  useEffect(() => {
-    if (!isLoading && user) {
-      if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
-        router.replace('/(partner)/(tabs)');
-      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-        router.replace('/admin');
-      } else {
-        router.replace('/(user)/(tabs)');
-      }
-    }
-  }, [user, isLoading]);
-
   const { items: cartItems } = useCart();
   const totalCartCount = useMemo(() => (cartItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0), [cartItems]);
   const { width } = useWindowDimensions();
@@ -2391,10 +2378,21 @@ export default function PublicLandingPage() {
               <TouchableOpacity
                 accessibilityRole="link"
                 // @ts-ignore
-                href={user ? (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '') ? '/(partner)/(tabs)' : '/(user)/(tabs)') : '/ai-doctor'}
+                href={
+                  user
+                    ? user.role === 'SELLER'
+                      ? '/seller-dashboard'
+                      : ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')
+                      ? '/(partner)/(tabs)'
+                      : '/(user)/(tabs)'
+                    : '/ai-doctor'
+                }
                 onPress={() => {
                   if (user) {
-                    if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user?.role || '')) {
+                    const roles = [user.role, ...(Array.isArray((user as any).roles) ? (user as any).roles : [])];
+                    if (roles.includes('SELLER')) {
+                      router.push('/seller-dashboard' as any);
+                    } else if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].some((r) => roles.includes(r))) {
                       router.push('/(partner)/(tabs)' as any);
                     } else {
                       router.push('/(user)/(tabs)' as any);
@@ -2423,7 +2421,13 @@ export default function PublicLandingPage() {
                   </View>
                   <View style={S.btnPrimaryTextBox}>
                     <Text style={[S.btnPrimaryTextWide, isMobile && { fontSize: 12.5, lineHeight: 16 }]} numberOfLines={1}>
-                      {user ? 'Open Farmer Dashboard' : 'Scan Crop Leaf Free'}
+                      {user
+                        ? user.role === 'SELLER'
+                          ? 'Open Seller Dashboard'
+                          : ['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'].includes(user.role)
+                          ? 'Open Partner Dashboard'
+                          : 'Open Farmer Dashboard'
+                        : 'Scan Crop Leaf Free'}
                     </Text>
                   </View>
                   <View style={[S.btnPrimaryArrowPill, isMobile && { width: 20, height: 20, borderRadius: 10 }]}>
@@ -2456,7 +2460,14 @@ export default function PublicLandingPage() {
               style={[S.heroLoginPill, isDay ? S.heroLoginPillDay : S.heroLoginPillNight]}
               onPress={() => {
                 if (user) {
-                  router.push('/(user)/(tabs)');
+                  const roles = [user.role, ...(Array.isArray((user as any).roles) ? (user as any).roles : [])];
+                  if (roles.includes('SELLER')) {
+                    router.push('/seller-dashboard' as any);
+                  } else if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR'].some((r) => roles.includes(r))) {
+                    router.push('/(partner)/(tabs)' as any);
+                  } else {
+                    router.push('/(user)/(tabs)');
+                  }
                 } else {
                   router.push('/login');
                 }

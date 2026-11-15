@@ -138,13 +138,31 @@ const ONBOARDING_ROLE_CARDS: Array<{
 ];
 
 export default function LoginScreen() {
-  const { user, login, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin } = useAuth();
+  const { user, login, googleLogin, sendLoginOtp, otpLogin, completeOtpRegistration, firebaseLogin, logout } = useAuth();
   const { data: appSettings } = useAppSettings();
   const { setLanguage } = useLanguage();
   const router = useRouter();
   const { redirect, portal } = useLocalSearchParams<{ redirect?: string; portal?: string }>();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 960;
+
+  const handleBackHome = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.href = '/';
+    } else {
+      router.replace('/');
+    }
+  };
+
+  const getDashboardRoute = (u: any) => {
+    if (!u) return '/login';
+    const roles = [u.role, ...(Array.isArray(u.roles) ? u.roles : [])];
+    if (roles.includes('SELLER')) return '/seller-dashboard';
+    if (['AGENT', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].some((r) => roles.includes(r))) {
+      return '/(partner)/(tabs)';
+    }
+    return '/(user)/(tabs)';
+  };
 
   const [portalMode, setPortalMode] = useState<'CLIENT' | 'PARTNER'>(() =>
     String(portal || '').toLowerCase() === 'partner' ? 'PARTNER' : 'CLIENT',
@@ -158,9 +176,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (String(portal || '').toLowerCase() === 'partner') {
-      setPortalMode('PARTNER');
-    } else if (String(portal || '').toLowerCase() === 'client') {
-      setPortalMode('CLIENT');
+      router.replace('/partner-login' as any);
     }
   }, [portal]);
 
@@ -925,7 +941,11 @@ export default function LoginScreen() {
 
                 <View>
                   {/* Brand Emblem & Compact Header */}
-                  <View style={styles.showcaseHeader}>
+                  <TouchableOpacity
+                    style={styles.showcaseHeader}
+                    onPress={() => router.replace('/')}
+                    activeOpacity={0.8}
+                  >
                     <BrandLogo size={42} round useGoldRing useHdQuality />
                     <View style={{ marginLeft: 12 }}>
                       <Text style={styles.showcaseBrandName}>FarmsKing</Text>
@@ -940,7 +960,7 @@ export default function LoginScreen() {
                           : 'Smart Farming & Seeds App'}
                       </Text>
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
                   {/* Compact Trust Seal Strip */}
                   <View style={styles.complianceSealRow}>
@@ -1025,7 +1045,9 @@ export default function LoginScreen() {
             <View style={styles.topNavRow}>
               <TouchableOpacity
                 style={styles.backHomeBtn}
-                onPress={() => router.replace('/')}
+                onPress={handleBackHome}
+                accessibilityRole="link"
+                {...(Platform.OS === 'web' ? { href: '/' } : {})}
                 activeOpacity={0.8}
               >
                 <Ionicons name="arrow-back" size={14} color="#94a3b8" />
@@ -1033,144 +1055,63 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               {!isDesktop ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  onPress={handleBackHome}
+                  accessibilityRole="link"
+                  {...(Platform.OS === 'web' ? { href: '/' } : {})}
+                  activeOpacity={0.8}
+                >
                   <BrandLogo size={26} round useGoldRing useHdQuality />
                   <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#f8fafc' }}>FarmsKing</Text>
-                </View>
-              ) : (
-                <View
-                  style={[
-                    styles.portalHeaderTag,
-                    portalMode === 'PARTNER'
-                      ? { backgroundColor: 'rgba(245, 158, 11, 0.12)', borderColor: 'rgba(245, 158, 11, 0.35)' }
-                      : { backgroundColor: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.35)' },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.portalHeaderTagText,
-                      { color: portalMode === 'PARTNER' ? '#fbbf24' : '#34d399' },
-                    ]}
-                  >
-                    {portalMode === 'PARTNER' ? 'PARTNER PORTAL' : 'FAST OTP LOGIN'}
-                  </Text>
-                </View>
-              )}
+                </TouchableOpacity>
+              ) : null}
             </View>
 
-            {/* ── ULTRA-COMPACT & PREMIUM 2-PART SELECTOR: USER VS PARTNER ── */}
-            <View style={styles.portalSwitchTray}>
-              {/* OPTION 1: USER */}
-              <TouchableOpacity
-                style={[
-                  styles.portalPillBtn,
-                  portalMode === 'CLIENT' && styles.portalPillBtnClientActive,
-                ]}
-                activeOpacity={0.9}
-                onPress={() => handleSwitchPortal('CLIENT')}
-              >
-                <Text
-                  style={[
-                    styles.portalPillTitle,
-                    portalMode === 'CLIENT' && { color: '#ecfdf5' },
-                  ]}
-                >
-                  User
-                </Text>
-                <Text
-                  style={[
-                    styles.portalPillSub,
-                    portalMode === 'CLIENT' && { color: '#6ee7b7' },
-                  ]}
-                >
-                  Farmer, Gardener &amp; Buyer
-                </Text>
-              </TouchableOpacity>
-
-              {/* OPTION 2: PARTNER */}
-              <TouchableOpacity
-                style={[
-                  styles.portalPillBtn,
-                  portalMode === 'PARTNER' && styles.portalPillBtnAgentActive,
-                ]}
-                activeOpacity={0.9}
-                onPress={() => handleSwitchPortal('PARTNER')}
-              >
-                <Text
-                  style={[
-                    styles.portalPillTitle,
-                    portalMode === 'PARTNER' && { color: '#fffbeb' },
-                  ]}
-                >
-                  Partners
-                </Text>
-                <Text
-                  style={[
-                    styles.portalPillSub,
-                    portalMode === 'PARTNER' && { color: '#fcd34d' },
-                  ]}
-                >
-                  Seller, Crop Doctor, Garden Advisor &amp; Sales Manager
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* PARTNER LOGIN METHOD TOGGLE (Mobile OTP vs King ID & Password) */}
-            {portalMode === 'PARTNER' && (
-              <View style={styles.partnerMethodBar}>
-                <TouchableOpacity
-                  style={[
-                    styles.partnerMethodBtn,
-                    partnerAuthMethod === 'OTP' && styles.partnerMethodBtnActive,
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setPartnerAuthMethod('OTP');
-                    setError(null);
-                  }}
-                >
-                  <Ionicons
-                    name="phone-portrait-outline"
-                    size={13}
-                    color={partnerAuthMethod === 'OTP' ? '#0f172a' : '#cbd5e1'}
-                  />
-                  <Text
-                    style={[
-                      styles.partnerMethodText,
-                      partnerAuthMethod === 'OTP' && styles.partnerMethodTextActive,
-                    ]}
-                  >
-                    Mobile OTP
+            {/* Already Signed In Banner */}
+            {user && (
+              <View style={styles.activeSessionBanner}>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="person-circle" size={15} color="#34d399" />
+                    <Text style={styles.activeSessionTitle}>Already Signed In</Text>
+                  </View>
+                  <Text style={styles.activeSessionSubtitle} numberOfLines={1}>
+                    {user.name || user.mobile} ({user.role})
                   </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.partnerMethodBtn,
-                    partnerAuthMethod === 'PASSWORD' && styles.partnerMethodBtnActive,
-                  ]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setPartnerAuthMethod('PASSWORD');
-                    setError(null);
-                  }}
-                >
-                  <Ionicons
-                    name="key-outline"
-                    size={13}
-                    color={partnerAuthMethod === 'PASSWORD' ? '#0f172a' : '#cbd5e1'}
-                  />
-                  <Text
-                    style={[
-                      styles.partnerMethodText,
-                      partnerAuthMethod === 'PASSWORD' && styles.partnerMethodTextActive,
-                    ]}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <TouchableOpacity
+                    style={styles.activeSessionBtn}
+                    onPress={() => router.push(getDashboardRoute(user) as any)}
+                    activeOpacity={0.85}
                   >
-                    King ID &amp; Password
-                  </Text>
-                </TouchableOpacity>
+                    <Text style={styles.activeSessionBtnText}>Dashboard →</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.activeSessionBtn, styles.activeSessionLogoutBtn]}
+                    onPress={async () => {
+                      await logout();
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={styles.activeSessionLogoutText}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
+
+            {/* Title & Portal Badge */}
+            <View style={styles.headingBox}>
+              <View style={styles.userBadge}>
+                <Ionicons name="leaf" size={11} color="#34d399" />
+                <Text style={styles.userBadgeText}>FARMER &amp; USER LOGIN</Text>
+              </View>
+              <Text style={styles.mainTitle}>Fast Mobile OTP Sign In</Text>
+              <Text style={styles.subTitle}>
+                Instant access to crop scan, leaf doctor advice, and live mandi rates
+              </Text>
+            </View>
 
             {/* Error Banner */}
             {error ? (
@@ -1223,25 +1164,22 @@ export default function LoginScreen() {
                       </Text>
                     </TouchableOpacity>
                   ) : null}
-                  {((portalMode === 'CLIENT' && (error.includes('Agent Login') || error.includes('Partner Login'))) ||
-                    (portalMode === 'PARTNER' && (error.includes('User Login') || error.includes('Client Login') || error.includes('Farmer')))) && (
+                  {((error.includes('Agent Login') || error.includes('Partner Login') || error.includes('Partner'))) && (
                     <TouchableOpacity
-                      onPress={() => handleSwitchPortal(portalMode === 'CLIENT' ? 'PARTNER' : 'CLIENT')}
+                      onPress={() => router.push('/partner-login' as any)}
                       activeOpacity={0.85}
                       style={[
                         styles.portalSwitchHintBtn,
-                        portalMode === 'CLIENT'
-                          ? { borderColor: 'rgba(245, 158, 11, 0.45)', backgroundColor: 'rgba(245, 158, 11, 0.14)' }
-                          : { borderColor: 'rgba(16, 185, 129, 0.45)', backgroundColor: 'rgba(16, 185, 129, 0.14)' },
+                        { borderColor: 'rgba(245, 158, 11, 0.45)', backgroundColor: 'rgba(245, 158, 11, 0.14)' },
                       ]}
                     >
                       <Text
                         style={[
                           styles.portalSwitchHintText,
-                          { color: portalMode === 'CLIENT' ? '#fbbf24' : '#34d399' },
+                          { color: '#fbbf24' },
                         ]}
                       >
-                        {portalMode === 'CLIENT' ? 'Switch to Partner Login →' : 'Switch to User Login →'}
+                        Open Partner Login Screen →
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -1630,6 +1568,21 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
+
+            {/* Small Option to open dedicated Partner Login Screen */}
+            <View style={styles.smallPartnerBottomCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="briefcase-outline" size={13} color="#f59e0b" />
+                <Text style={styles.smallPartnerBottomLabel}>Are you a Seller, Doctor or Advisor?</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.smallPartnerLinkBtn}
+                onPress={() => router.push('/partner-login' as any)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.smallPartnerLinkText}>Partner Login →</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Statutory Corporate Identity Footer */}
             <View style={styles.statutoryFooter}>
@@ -2369,6 +2322,134 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#34d399',
     letterSpacing: 0.4,
+  },
+
+  // ── Small Header Partner Link ──
+  smallPartnerHeaderPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4.5,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.40)',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+    borderRadius: 999,
+  },
+  smallPartnerHeaderText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#fbbf24',
+  },
+  activeSessionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 12,
+  },
+  activeSessionTitle: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    letterSpacing: 0.3,
+  },
+  activeSessionSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#f8fafc',
+  },
+  activeSessionBtn: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 7,
+    backgroundColor: '#10b981',
+  },
+  activeSessionBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  activeSessionLogoutBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.45)',
+  },
+  activeSessionLogoutText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#fca5a5',
+  },
+  headingBox: {
+    marginBottom: 14,
+  },
+  userBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4.5,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    paddingHorizontal: 7.5,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  userBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+    letterSpacing: 0.6,
+  },
+  mainTitle: {
+    fontSize: 20,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    letterSpacing: -0.2,
+  },
+  subTitle: {
+    fontSize: 12,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  smallPartnerBottomCard: {
+    marginTop: 14,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  smallPartnerBottomLabel: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#fde68a',
+  },
+  smallPartnerLinkBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.40)',
+  },
+  smallPartnerLinkText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#fbbf24',
   },
 
   // ── Ultra-Compact & Premium Login Option Switcher ──

@@ -27,6 +27,7 @@ import * as withdrawalsApi from '@/src/api/withdrawals.api';
 import * as planPaymentsApi from '@/src/api/planPayments.api';
 import { getSeoStatusApi, triggerSeoSubmitApi } from '@/src/api/seo.api';
 import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+import { VisitorGeoTelemetryModal } from './VisitorGeoTelemetryModal';
 
 const tap = () => {
   if (Platform.OS !== 'web') {
@@ -44,6 +45,7 @@ export const AdminExecutiveOverview: React.FC = () => {
   const isTablet = width >= 768 && width < 1024;
 
   const [showTelemetry, setShowTelemetry] = useState(false);
+  const [showGeoModal, setShowGeoModal] = useState(false);
   const [selectedMobilePillar, setSelectedMobilePillar] = useState<string>('EXECUTIVE');
   const [isSubmittingSeo, setIsSubmittingSeo] = useState(false);
   const [seoNotice, setSeoNotice] = useState<string | null>(null);
@@ -142,11 +144,12 @@ export const AdminExecutiveOverview: React.FC = () => {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.bg }]}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
+    <>
+      <ScrollView
+        style={[styles.container, { backgroundColor: colors.bg }]}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       {/* 👑 1. STREAMLINED EXECUTIVE HEADER */}
       {isDesktop ? (
         <View
@@ -791,12 +794,17 @@ export const AdminExecutiveOverview: React.FC = () => {
         const desktopPct = 100 - mobilePct;
 
         return (
-          <View
+          <TouchableOpacity
             style={[
               styles.compactVisitorStrip,
               isLight && styles.compactVisitorStripLight,
               isDarkTheme && styles.compactVisitorStripDark,
             ]}
+            onPress={() => {
+              tap();
+              setShowGeoModal(true);
+            }}
+            activeOpacity={0.85}
           >
             {/* Left: Indicator & Title */}
             <View style={styles.compactVisitorLeft}>
@@ -857,6 +865,20 @@ export const AdminExecutiveOverview: React.FC = () => {
                   {mobilePct}% M · {desktopPct}% D
                 </Text>
               </View>
+
+              {/* 📍 View State & Area Details Action Button */}
+              <TouchableOpacity
+                style={styles.geoInspectorBtn}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  tap();
+                  setShowGeoModal(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="location" size={11} color="#38bdf8" />
+                <Text style={styles.geoInspectorBtnText}>📍 View State & Area Details ❯</Text>
+              </TouchableOpacity>
             </View>
 
             {/* Right: Instant Refresh + ISO 27001 Seal */}
@@ -866,7 +888,10 @@ export const AdminExecutiveOverview: React.FC = () => {
                   styles.compactSyncBtn,
                   { backgroundColor: isLight ? '#f1f5f9' : 'rgba(56, 189, 248, 0.12)' },
                 ]}
-                onPress={() => refetchVisitorStats()}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  refetchVisitorStats();
+                }}
                 activeOpacity={0.7}
               >
                 {isFetchingVisitorStats ? (
@@ -880,7 +905,7 @@ export const AdminExecutiveOverview: React.FC = () => {
                 <Text style={[styles.compactIsoText, { color: subTextColor }]}>ISO 27001</Text>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         );
       })()}
 
@@ -970,6 +995,16 @@ export const AdminExecutiveOverview: React.FC = () => {
         </View>
       </View>
     </ScrollView>
+
+    {/* 📍 LIVE WEBSITE TELEMETRY & VISITOR GEOLOCATION INSPECTOR MODAL */}
+    <VisitorGeoTelemetryModal
+      visible={showGeoModal}
+      onClose={() => setShowGeoModal(false)}
+      stats={visitorStats}
+      onRefresh={refetchVisitorStats}
+      isRefreshing={isFetchingVisitorStats}
+    />
+  </>
   );
 };
 
@@ -1830,6 +1865,22 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     fontFamily: FONT.bold,
     letterSpacing: 0.2,
+  },
+  geoInspectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+  },
+  geoInspectorBtnText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
   },
 
   /* 🚀 SEO & AI Search Engine Automation Card */

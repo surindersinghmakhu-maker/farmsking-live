@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   View,
@@ -20,7 +20,13 @@ import { apiClient } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
 import * as ImagePicker from 'expo-image-picker';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { useAuth } from '@/src/store/auth-context';
 import { RADIUS, FONT } from '@/constants/theme';
+import {
+  getCategoryFieldConfig,
+  getAllCategoryConfigs,
+  CategoryFieldConfig,
+} from '@/constants/categorySchema';
 
 export interface ProductVariantItem {
   id: string;
@@ -37,6 +43,7 @@ export interface ProductVariantItem {
 
 export default function SellerDashboardScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [hasStore, setHasStore] = useState(false);
   const [storeData, setStoreData] = useState<any>(null);
@@ -263,9 +270,32 @@ export default function SellerDashboardScreen() {
   const [proteinG, setProteinG] = useState('8.5 g');
   const [carbsG, setCarbsG] = useState('72 g');
   const [fatG, setFatG] = useState('4.2 g');
+  const [sugarG, setSugarG] = useState('1.5 g');
+  const [fiberG, setFiberG] = useState('2.8 g');
+  const [sodiumMg, setSodiumMg] = useState('35 mg');
+  const [foodNetQty, setFoodNetQty] = useState('1 Kg / 1 L');
   const [storageInstruction, setStorageInstruction] = useState('Store in a cool, dry place away from direct sunlight.');
   const [foodShelfLife, setFoodShelfLife] = useState('9 Months from MFD');
   const [organicCertStatus, setOrganicCertStatus] = useState<'Jaivik Bharat Certified' | 'Natural Farmer Direct' | 'Conventional / Regular'>('Jaivik Bharat Certified');
+
+  // 13. Dynamic Category-Specific Attributes (Seeds, Nursery, Nutrition, Protection)
+  const [germinationRate, setGerminationRate] = useState('85%');
+  const [seedPurity, setSeedPurity] = useState('98%');
+  const [sowingSeason, setSowingSeason] = useState('Rabi (Winter)');
+  const [seedVarietyType, setSeedVarietyType] = useState('Hybrid F1');
+  const [cropDurationDays, setCropDurationDays] = useState('120 - 135 Days');
+
+  // Live Plants & Nursery Specifications
+  const [plantAgeHeight, setPlantAgeHeight] = useState('1 - 2 Feet (6 Months)');
+  const [plantPropagationType, setPlantPropagationType] = useState('Grafted / Budded');
+  const [containerType, setContainerType] = useState('Nursery Polybag');
+
+  // Fertilizer & Nutrition Specifications
+  const [npkRatio, setNpkRatio] = useState('19:19:19 NPK');
+  const [applicationMethod, setApplicationMethod] = useState('Foliar Spray & Fertigation');
+
+  // Crop Protection Specifications
+  const [waitingPeriodPhi, setWaitingPeriodPhi] = useState('14 Days (PHI)');
 
   // 4 Mandatory Photo Angles
   const [imageFrontUrl, setImageFrontUrl] = useState<string | null>(null);
@@ -350,6 +380,61 @@ export default function SellerDashboardScreen() {
 
   // Product Type selection before builder: 'FOOD' | 'FARM'
   const [productType, setProductType] = useState<'FOOD' | 'FARM' | null>(null);
+
+  // QA & Developer Testing Account Bypass (Mobile: 9501529971)
+  const isTestingAccount = Boolean(
+    (user && (user.mobile === '9501529971' || (user as any).farmMobile === '9501529971')) ||
+    storeData?.panNumber === 'BFAPS5771J' ||
+    storeData?.seller?.mobile === '9501529971'
+  );
+
+  // Domain Approval & License Compliance Checks (Mutual Exclusivity: Food vs Chemical)
+  const hasFssaiLicense = Boolean(
+    isTestingAccount ||
+    (storeData?.fssaiNo && storeData.fssaiNo.trim()) ||
+    (fssaiNo && fssaiNo.trim())
+  );
+
+  const hasChemicalLicense = Boolean(
+    isTestingAccount ||
+    (storeData?.pesticideLicenseNo && storeData.pesticideLicenseNo.trim()) ||
+    (storeData?.fertilizerLicenseNo && storeData.fertilizerLicenseNo.trim()) ||
+    (storeData?.agriLicenseNo && storeData.agriLicenseNo.trim()) ||
+    storeData?.entityType === 'PESTICIDE_DEALER' ||
+    (pesticideLicenseNo && pesticideLicenseNo.trim()) ||
+    (fertilizerLicenseNo && fertilizerLicenseNo.trim()) ||
+    (agriLicenseNo && agriLicenseNo.trim()) ||
+    entityType === 'PESTICIDE_DEALER'
+  );
+
+  // A seller cannot be both Food and Chemical seller (except official testing account)!
+  const isChemicalSeller = isTestingAccount ? false : hasChemicalLicense;
+  const isFoodSeller = isTestingAccount ? false : (hasFssaiLicense && !hasChemicalLicense);
+
+  // Active Category Config derived from Category Attribute Engine
+  const activeCategoryConfig = useMemo(() => {
+    return getCategoryFieldConfig(productCategory, productType || undefined);
+  }, [productCategory, productType]);
+
+  const availableCategories = useMemo(() => {
+    const all = getAllCategoryConfigs();
+    if (isTestingAccount) {
+      if (productType === 'FOOD') return all.filter((c) => c.type === 'FOOD');
+      if (productType === 'FARM') return all.filter((c) => c.type === 'FARM');
+      return all;
+    }
+    if (productType === 'FOOD') {
+      if (isChemicalSeller) return [];
+      return all.filter((c) => c.type === 'FOOD');
+    }
+    if (productType === 'FARM') {
+      if (isFoodSeller) {
+        return all.filter((c) => c.type === 'FARM' && !c.isPesticideOrProtection && c.slug !== 'fertilizers');
+      }
+      return all.filter((c) => c.type === 'FARM');
+    }
+    return all;
+  }, [productType, isChemicalSeller, isFoodSeller, isTestingAccount]);
 
   useEffect(() => {
     fetchStoreData();
@@ -699,6 +784,22 @@ export default function SellerDashboardScreen() {
       }
     }
 
+    // 3b. Statutory Mutual Exclusivity Check (Food vs Agrochemicals)
+    const isSupplyingChemical = Boolean(
+      pesticideLicenseNo.trim() ||
+      fertilizerLicenseNo.trim() ||
+      entityType === 'PESTICIDE_DEALER'
+    );
+    const isSupplyingFood = Boolean(wantsToSellFood || fssaiNo.trim());
+
+    if (!isTestingAccount && isSupplyingChemical && isSupplyingFood) {
+      showAlert(
+        'Statutory Restriction: Food & Agrochemicals ⚠️',
+        'Under FSSAI (Food Safety) and CIBRC (Insecticides Act) regulations, a seller cannot hold licenses for or list both Edible Food products and Agrochemicals (Pesticides / Chemical Fertilizers) under the same store account. Please register separate specialized accounts for Food and Agrochemicals.'
+      );
+      return false;
+    }
+
     // 4. Pesticide / Seed Dealer License Notice
     if (entityType === 'PESTICIDE_DEALER' && !agriLicenseNo.trim() && !pesticideLicenseNo.trim() && !seedLicenseNo.trim()) {
       showAlert('Agri Input License Required ⚠️', 'Pesticide / Seed Dealers must provide Seed, Insecticide, or Agri Input License No.');
@@ -923,22 +1024,37 @@ export default function SellerDashboardScreen() {
     const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
     const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
 
-    // FSSAI License Enforcement for Food Products
-    const isFoodCategory = productCategorySlug === 'food-products';
-    if (isFoodCategory && (!activeFssaiNo || !activeFssaiNo.trim())) {
+    // Mutual Exclusivity Enforcement: Food vs Chemical Agrochemicals
+    if (!isTestingAccount && activeCategoryConfig.isFoodProduct && isChemicalSeller) {
       showAlert(
-        'FSSAI License Required ⚠️',
-        'FSSAI License No. must be filled in store settings to enter and list Food Products.'
+        'Compliance Violation 🚫',
+        'Chemical and pesticide dealers are strictly prohibited from listing food produce under statutory FSSAI cross-contamination regulations.'
       );
       return;
     }
 
-    // Agri Inputs License Enforcement for Seeds & Pesticides
-    const isAgriInputCategory = productCategorySlug === 'pesticides' || productCategorySlug === 'bio-fertilizers' || productCategorySlug === 'khad-spray';
-    if (isAgriInputCategory && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+    if (!isTestingAccount && (activeCategoryConfig.isPesticideOrProtection || activeCategoryConfig.slug === 'fertilizers') && isFoodSeller) {
+      showAlert(
+        'Compliance Violation 🚫',
+        'Food-licensed vendors are strictly prohibited from listing toxic chemical pesticides or fertilizers.'
+      );
+      return;
+    }
+
+    // FSSAI License Enforcement for Food Products (Mandatory)
+    if (!isTestingAccount && activeCategoryConfig.isFoodProduct && !hasFssaiLicense) {
+      showAlert(
+        'FSSAI License Required ⚠️',
+        `A verified 14-digit FSSAI License No. must be attached in store settings to list products under ${activeCategoryConfig.name}.`
+      );
+      return;
+    }
+
+    // Agri Inputs License Enforcement for Seeds, Fertilizers & Pesticides
+    if (!isTestingAccount && activeCategoryConfig.requiresAgriLicense && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
       showAlert(
         'Agri Inputs License Required ⚠️',
-        'Agri Inputs License No. (Seeds / Pesticide License) must be filled in store settings to select and list Seeds & Agrochemical Pesticides.'
+        `Agri Inputs License No. must be filled in store settings to list products under ${activeCategoryConfig.name}.`
       );
       return;
     }
@@ -952,10 +1068,22 @@ export default function SellerDashboardScreen() {
         .map((v) => `${v.packSize}: Selling ₹${v.price || basePrice} MRP ₹${v.mrp || baseMrpVal} Stock ${v.stockQty || 0} SKU: ${v.sku || skuCode}`)
         .join(' | ');
 
-      const headerMeta = `Brand: ${newBrand || storeData?.storeName || 'FarmsKing Certified'} | Crop: ${suitableCrops || newTargetCrop || 'All Crops'} | PrimaryVariant: ${primaryVariant.packSize} | PackSizes: ${variantPackNames.join(', ')} | MRP: ₹${baseMrpVal} | Selling: ₹${basePrice} | VariantRates: ${variantRatesFormatted} | GST: ${parsedGst}% | Formula: ${technicalName || 'Standard'} | Dosage: ${dosageInstructions || 'As per advice'} | SKU: ${primaryVariant.sku}`;
+      const headerMeta = `Brand: ${newBrand || storeData?.storeName || 'FarmsKing Certified'} | Crop: ${suitableCrops || newTargetCrop || 'All Crops'} | PrimaryVariant: ${primaryVariant.packSize} | PackSizes: ${variantPackNames.join(', ')} | MRP: ₹${baseMrpVal} | Selling: ₹${basePrice} | VariantRates: ${variantRatesFormatted} | GST: ${parsedGst}% | Formula: ${technicalName || newTechnicalFormula || 'Standard'} | Dosage: ${dosageInstructions || newDosageInstructions || 'As per advice'} | SKU: ${primaryVariant.sku}`;
       const descMeta: string[] = [headerMeta];
       if (newProductDescription) descMeta.push(`\nDescription:\n${newProductDescription}`);
       descMeta.push(`\nVARIANTS_MATRIX:${JSON.stringify(productVariants)}`);
+
+      if (activeCategoryConfig.isSeed) {
+        descMeta.push(`\nSEED_SPECS: Germination ${germinationRate} | Purity ${seedPurity} | Season ${sowingSeason} | Variety ${seedVarietyType} | Duration ${cropDurationDays}`);
+      } else if (activeCategoryConfig.isLivePlantOrNursery) {
+        descMeta.push(`\nNURSERY_SPECS: Height ${plantAgeHeight} | Method ${plantPropagationType} | Container ${containerType}`);
+      } else if (activeCategoryConfig.isFertilizer) {
+        descMeta.push(`\nFERTILIZER_SPECS: Formula/NPK ${npkRatio || newTechnicalFormula} | Form ${physicalForm} | AppMethod ${applicationMethod} | Dosage ${newDosageInstructions || dosageInstructions}`);
+      } else if (activeCategoryConfig.isPesticideOrProtection) {
+        descMeta.push(`\nCROP_PROTECTION_SPECS: ActiveIngredient ${newTechnicalFormula} | Mode ${modeOfAction} | Toxicity ${toxicityBand} | PHI ${waitingPeriodPhi} | TargetPests ${targetPests}`);
+      } else if (activeCategoryConfig.isFoodProduct) {
+        descMeta.push(`\nFOOD_SPECS: Veg ${isVegProduct ? 'VEG' : 'NON_VEG'} | FSSAI ${storeData?.fssaiNo || fssaiNo} | Organic ${organicCertStatus} | Ingredients ${ingredientsList} | Allergens ${allergenInfo} | Nutrition Energy:${energyKcal},Protein:${proteinG},Carbs:${carbsG},Fat:${fatG},Sugar:${sugarG},Fiber:${fiberG},Sodium:${sodiumMg} | NetQty ${foodNetQty} | Storage ${storageInstruction} | ShelfLife ${foodShelfLife} | Producer ${farmerProducerName}`);
+      }
 
       await apiClient.post('/products', {
         name: productName.trim(),
@@ -964,8 +1092,8 @@ export default function SellerDashboardScreen() {
         sellingPrice: basePrice,
         mrp: baseMrpVal,
         unit: newUnit || 'kg',
-        categorySlug: productCategorySlug,
-        category: productCategorySlug,
+        categorySlug: activeCategoryConfig.slug || productCategorySlug,
+        category: productCategory,
         stockQty: totalStock || 50,
         hsnCode: hsnCode || '120991',
         gstPercentage: parsedGst,
@@ -1279,7 +1407,16 @@ export default function SellerDashboardScreen() {
                 {/* Food Seller Toggle & FSSAI Compliance */}
                 <TouchableOpacity
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, backgroundColor: '#111827', borderRadius: RADIUS.md, borderWidth: 1, borderColor: wantsToSellFood ? '#10B981' : '#374151', marginVertical: 6 }}
-                  onPress={() => setWantsToSellFood(!wantsToSellFood)}
+                  onPress={() => {
+                    if (!wantsToSellFood && (pesticideLicenseNo.trim() || fertilizerLicenseNo.trim() || entityType === 'PESTICIDE_DEALER')) {
+                      showAlert(
+                        'Statutory Domain Restriction ⚠️',
+                        'Under FSSAI & CIBRC regulations, Agrochemical (pesticide/fertilizer) sellers cannot sell food products under the same account. Please remove chemical licenses or create a separate food store account.'
+                      );
+                      return;
+                    }
+                    setWantsToSellFood(!wantsToSellFood);
+                  }}
                 >
                   <MaterialCommunityIcons name={wantsToSellFood ? 'checkbox-marked' : 'checkbox-blank-outline'} size={22} color={wantsToSellFood ? '#10B981' : '#9CA3AF'} />
                   <Text style={{ color: '#E5E7EB', fontSize: 12, fontWeight: '600', flex: 1 }}>
@@ -1366,7 +1503,13 @@ export default function SellerDashboardScreen() {
                       placeholder="Insecticides Act"
                       placeholderTextColor="#6B7280"
                       value={pesticideLicenseNo}
-                      onChangeText={setPesticideLicenseNo}
+                      onChangeText={(val) => {
+                        if (val.trim() && (wantsToSellFood || fssaiNo.trim())) {
+                          showAlert('Statutory Exclusivity ⚠️', 'Pesticide licenses cannot be added to a food seller account under FSSAI and CIBRC safety laws.');
+                          return;
+                        }
+                        setPesticideLicenseNo(val);
+                      }}
                     />
                     <TextInput
                       style={[styles.input, { marginTop: 4 }]}
@@ -1383,7 +1526,13 @@ export default function SellerDashboardScreen() {
                       placeholder="FCO Reg No."
                       placeholderTextColor="#6B7280"
                       value={fertilizerLicenseNo}
-                      onChangeText={setFertilizerLicenseNo}
+                      onChangeText={(val) => {
+                        if (val.trim() && (wantsToSellFood || fssaiNo.trim())) {
+                          showAlert('Statutory Exclusivity ⚠️', 'Chemical fertilizer licenses cannot be added to a food seller account under FSSAI safety laws.');
+                          return;
+                        }
+                        setFertilizerLicenseNo(val);
+                      }}
                     />
                     <TextInput
                       style={[styles.input, { marginTop: 4 }]}
@@ -2038,7 +2187,11 @@ export default function SellerDashboardScreen() {
                         Farm / Agri Product
                       </Text>
                       <Text style={{ color: productType === 'FARM' ? '#BFDBFE' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
-                        Seeds, Tools & Agri Inputs
+                        {isTestingAccount
+                          ? 'All Agri Inputs, Tools & Fertilizers (Test Mode)'
+                          : isFoodSeller
+                          ? 'Non-Chemical (Tools & Farm)'
+                          : 'Agri Inputs & Machinery'}
                       </Text>
                     </View>
                   </View>
@@ -2050,21 +2203,37 @@ export default function SellerDashboardScreen() {
                   )}
                 </TouchableOpacity>
 
-                {/* RIGHT BUTTON: Food Product */}
+                {/* RIGHT BUTTON: Food Product (Strictly Gated by FSSAI & Chemical Exclusivity, 100% Unlocked for Testing ID) */}
                 <TouchableOpacity
                   style={{
                     flex: 1,
-                    backgroundColor: productType === 'FOOD' ? '#064E3B' : '#1F2937',
+                    backgroundColor: isTestingAccount
+                      ? (productType === 'FOOD' ? '#064E3B' : '#1F2937')
+                      : isChemicalSeller
+                      ? '#1F1A24'
+                      : !hasFssaiLicense
+                      ? '#1C1917'
+                      : productType === 'FOOD'
+                      ? '#064E3B'
+                      : '#1F2937',
                     borderRadius: 10,
                     paddingHorizontal: 10,
                     paddingVertical: 10,
                     borderWidth: 1.5,
-                    borderColor: productType === 'FOOD' ? '#10B981' : '#374151',
+                    borderColor: isTestingAccount
+                      ? (productType === 'FOOD' ? '#10B981' : '#059669')
+                      : isChemicalSeller
+                      ? '#7F1D1D'
+                      : !hasFssaiLicense
+                      ? '#D97706'
+                      : productType === 'FOOD'
+                      ? '#10B981'
+                      : '#374151',
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 6,
-                    opacity: storeData?.kycStatus === 'BLOCKED' ? 0.5 : 1,
+                    opacity: storeData?.kycStatus === 'BLOCKED' ? 0.5 : !isTestingAccount && (isChemicalSeller || !hasFssaiLicense) ? 0.75 : 1,
                   }}
                   activeOpacity={0.8}
                   onPress={() => {
@@ -2072,21 +2241,76 @@ export default function SellerDashboardScreen() {
                       showAlert('Store Blocked 🚫', 'Your store is currently blocked by Admin. Product listing is disabled.');
                       return;
                     }
+                    if (!isTestingAccount && isChemicalSeller) {
+                      showAlert(
+                        'Food Listing Prohibited 🚫',
+                        'Agrochemical / Pesticide vendors cannot sell Food products under the same license due to statutory FSSAI & CIBRC cross-contamination safety regulations. Please register a separate specialized account for food items.'
+                      );
+                      return;
+                    }
+                    if (!isTestingAccount && !hasFssaiLicense) {
+                      showAlert(
+                        'FSSAI Food License Required 🔒',
+                        'Listing Food products requires a verified 14-digit FSSAI License Number. Please update your seller profile under KYC details to unlock Food Products.'
+                      );
+                      return;
+                    }
                     setProductType(productType === 'FOOD' ? null : 'FOOD');
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                     <Ionicons
-                      name={productType === 'FOOD' ? 'radio-button-on' : 'radio-button-off'}
+                      name={
+                        isTestingAccount
+                          ? (productType === 'FOOD' ? 'radio-button-on' : 'radio-button-off')
+                          : isChemicalSeller
+                          ? 'ban-outline'
+                          : !hasFssaiLicense
+                          ? 'lock-closed-outline'
+                          : productType === 'FOOD'
+                          ? 'radio-button-on'
+                          : 'radio-button-off'
+                      }
                       size={18}
-                      color={productType === 'FOOD' ? '#10B981' : '#9CA3AF'}
+                      color={
+                        isTestingAccount
+                          ? (productType === 'FOOD' ? '#10B981' : '#34D399')
+                          : isChemicalSeller
+                          ? '#EF4444'
+                          : !hasFssaiLicense
+                          ? '#F59E0B'
+                          : productType === 'FOOD'
+                          ? '#10B981'
+                          : '#9CA3AF'
+                      }
                     />
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
                         Food Product
                       </Text>
-                      <Text style={{ color: productType === 'FOOD' ? '#A7F3D0' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
-                        Foods & Farm Produce
+                      <Text
+                        style={{
+                          color: isTestingAccount
+                            ? '#A7F3D0'
+                            : isChemicalSeller
+                            ? '#FCA5A5'
+                            : !hasFssaiLicense
+                            ? '#FCD34D'
+                            : productType === 'FOOD'
+                            ? '#A7F3D0'
+                            : '#9CA3AF',
+                          fontSize: 10,
+                          marginTop: 1,
+                        }}
+                        numberOfLines={1}
+                      >
+                        {isTestingAccount
+                          ? 'FSSAI Fresh & Processed Food (Test Mode)'
+                          : isChemicalSeller
+                          ? 'Prohibited (Chemical Vendor)'
+                          : !hasFssaiLicense
+                          ? 'Locked (Needs FSSAI License)'
+                          : 'FSSAI Packaged & Fresh Food'}
                       </Text>
                     </View>
                   </View>
@@ -2096,8 +2320,52 @@ export default function SellerDashboardScreen() {
                       <Text style={{ color: '#064E3B', fontSize: 8.5, fontWeight: '800' }}>ACTIVE</Text>
                     </View>
                   )}
+                  {isTestingAccount && productType !== 'FOOD' && (
+                    <View style={{ backgroundColor: '#065F46', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#A7F3D0', fontSize: 8.5, fontWeight: '800' }}>TEST ON</Text>
+                    </View>
+                  )}
+                  {!isTestingAccount && isChemicalSeller && (
+                    <View style={{ backgroundColor: '#991B1B', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#FFF', fontSize: 8.5, fontWeight: '800' }}>PROHIBITED</Text>
+                    </View>
+                  )}
+                  {!isTestingAccount && !isChemicalSeller && !hasFssaiLicense && (
+                    <View style={{ backgroundColor: '#B45309', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#FFF', fontSize: 8.5, fontWeight: '800' }}>FSSAI REQ</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
+
+              {/* Informational Guidance Banners */}
+              {isTestingAccount ? (
+                <View style={{ marginTop: 8, backgroundColor: '#064E3B', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#10B981', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="flask" size={16} color="#34D399" />
+                  <Text style={{ color: '#A7F3D0', fontSize: 11, flex: 1, fontWeight: '700' }}>
+                    🧪 Testing Sandbox Active (9501529971): All product types (Food + Farm + Agrochemicals) and categories are 100% unlocked for testing.
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  {isChemicalSeller && (
+                    <View style={{ marginTop: 8, backgroundColor: '#2D0A0A', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#991B1B', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="information-circle-outline" size={16} color="#F87171" />
+                      <Text style={{ color: '#FCA5A5', fontSize: 11, flex: 1 }}>
+                        Statutory Rule: Agrochemical / Pesticide vendors cannot sell Food products in the same store due to FSSAI & CIBRC cross-contamination safety laws.
+                      </Text>
+                    </View>
+                  )}
+                  {!isChemicalSeller && !hasFssaiLicense && (
+                    <View style={{ marginTop: 8, backgroundColor: '#2D1F08', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#B45309', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="shield-outline" size={16} color="#FBBF24" />
+                      <Text style={{ color: '#FDE68A', fontSize: 11, flex: 1 }}>
+                        Food Products Locked: Attach a verified 14-digit FSSAI License in Seller KYC Settings to unlock Food Product creation.
+                      </Text>
+                    </View>
+                  )}
+                </>
+              )}
             </View>
 
             {/* Premium Product Builder Form (Opens when Radio Option is selected) */}
@@ -2160,7 +2428,144 @@ export default function SellerDashboardScreen() {
                   </View>
                 )}
 
-                {/* 3. MULTI-PHOTO GALLERY & PRESET SAMPLE PHOTOS */}
+                {/* 1. PRIMARY CATEGORY SELECTOR */}
+                <Text style={styles.inputLabel}>Primary Category *</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#1F2937',
+                    borderWidth: 1,
+                    borderColor: '#374151',
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                  onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name={(activeCategoryConfig.icon as any) || 'leaf-outline'} size={18} color="#10B981" />
+                    <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '700' }}>
+                      {productCategory || 'Select Category'}
+                    </Text>
+                    <View style={{ backgroundColor: '#064E3B', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginLeft: 4 }}>
+                      <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '700' }}>
+                        {activeCategoryConfig.badge || activeCategoryConfig.type}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                {showCategoryDropdown && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
+                    {availableCategories.map((c) => (
+                      <TouchableOpacity
+                        key={c.id || c.name}
+                        style={{
+                          paddingVertical: 9,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: productCategory === c.name ? '#1E3A5F' : 'transparent',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                        onPress={() => {
+                          const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
+                          if (c.requiresAgriLicense && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+                            showAlert('Agri Inputs License Required ⚠️', `Agri Inputs License No. (Seeds / Pesticide License) must be filled in store settings to select ${c.name}.`);
+                            return;
+                          }
+                          setProductCategory(c.name);
+                          setProductCategorySlug(c.slug as any);
+                          if (c.isFoodProduct) setIsFarmerMadeProduct(true);
+                          else setIsFarmerMadeProduct(false);
+                          setShowCategoryDropdown(false);
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <Ionicons name={(c.icon as any) || 'ellipse-outline'} size={16} color={productCategory === c.name ? '#60A5FA' : '#9CA3AF'} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: productCategory === c.name ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: productCategory === c.name ? '700' : '500' }}>
+                              {c.name}
+                            </Text>
+                            <Text style={{ color: '#9CA3AF', fontSize: 10 }}>{c.description}</Text>
+                          </View>
+                        </View>
+                        {productCategory === c.name && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* 2. PRODUCT NAME */}
+                <Text style={styles.inputLabel}>Product Title / Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={productType === 'FOOD' ? 'e.g. Pure Organic Desi Sugarcane Jaggery (Gur)' : 'e.g. Wheat Seed Certified HD-3086 or NPK 19:19:19'}
+                  placeholderTextColor="#9CA3AF"
+                  value={productName}
+                  onChangeText={setProductName}
+                />
+
+                {/* 3. BRAND SELECTOR DROPDOWN */}
+                <Text style={styles.inputLabel}>Brand / Producer *</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#1F2937',
+                    borderWidth: 1,
+                    borderColor: '#374151',
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                  onPress={() => setShowBrandDropdown(!showBrandDropdown)}
+                >
+                  <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '600' }}>
+                    🏢 {newBrand || 'Select Brand / Producer'}
+                  </Text>
+                  <Ionicons name={showBrandDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                {showBrandDropdown && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
+                    {(productType === 'FOOD'
+                      ? ['FarmsKing Certified', 'Natural Farmer Direct', 'Desi Organics', 'Gramin Udyog', 'Self Help Group (SHG)']
+                      : ['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct']
+                    ).map((b) => (
+                      <TouchableOpacity
+                        key={b}
+                        style={{
+                          paddingVertical: 9,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: newBrand === b ? '#1E3A5F' : 'transparent',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                        onPress={() => {
+                          setNewBrand(b);
+                          setShowBrandDropdown(false);
+                        }}
+                      >
+                        <Text style={{ color: newBrand === b ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: newBrand === b ? '700' : '400' }}>
+                          {b}
+                        </Text>
+                        {newBrand === b && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* 4. MULTI-PHOTO GALLERY & PRESET SAMPLE PHOTOS */}
                 <Text style={styles.inputLabel}>Product Photo(s) * (Select Gallery, Angle Photo, or Preset Sample)</Text>
                 
                 {/* Preset Sample Photo Buttons */}
@@ -2251,130 +2656,16 @@ export default function SellerDashboardScreen() {
                   </ScrollView>
                 ) : null}
 
-                {/* 4. PRODUCT NAME */}
-                <Text style={styles.inputLabel}>Product Title / Name *</Text>
+                {/* 5. FULL PRODUCT DESCRIPTION */}
+                <Text style={styles.inputLabel}>Full Product Description</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Pure Organic Desi Sugarcane Jaggery (Gur)"
+                  style={[styles.input, { height: 80 }]}
+                  placeholder="Enter detailed benefits, usage guide, application instructions..."
                   placeholderTextColor="#9CA3AF"
-                  value={productName}
-                  onChangeText={setProductName}
+                  multiline
+                  value={newProductDescription}
+                  onChangeText={setNewProductDescription}
                 />
-
-                {/* 5. BRAND SELECTOR DROPDOWN */}
-                <Text style={styles.inputLabel}>Brand / Producer *</Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#1F2937',
-                    borderWidth: 1,
-                    borderColor: '#374151',
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
-                  }}
-                  onPress={() => setShowBrandDropdown(!showBrandDropdown)}
-                >
-                  <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '600' }}>
-                    🏢 {newBrand || 'Select Brand / Producer'}
-                  </Text>
-                  <Ionicons name={showBrandDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
-                </TouchableOpacity>
-
-                {showBrandDropdown && (
-                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
-                    {(productType === 'FOOD'
-                      ? ['FarmsKing Certified', 'Natural Farmer Direct', 'Desi Organics', 'Gramin Udyog', 'Self Help Group (SHG)']
-                      : ['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct']
-                    ).map((b) => (
-                      <TouchableOpacity
-                        key={b}
-                        style={{
-                          paddingVertical: 9,
-                          paddingHorizontal: 12,
-                          borderRadius: 6,
-                          backgroundColor: newBrand === b ? '#1E3A5F' : 'transparent',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                        onPress={() => {
-                          setNewBrand(b);
-                          setShowBrandDropdown(false);
-                        }}
-                      >
-                        <Text style={{ color: newBrand === b ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: newBrand === b ? '700' : '400' }}>
-                          {b}
-                        </Text>
-                        {newBrand === b && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-
-                {/* 6. CATEGORY SELECTOR DROPDOWN */}
-                <Text style={styles.inputLabel}>Primary Category *</Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: '#1F2937',
-                    borderWidth: 1,
-                    borderColor: '#374151',
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 10,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 8,
-                  }}
-                  onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                >
-                  <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '600' }}>
-                    {productType === 'FOOD' ? '🥗' : '🌾'} {productCategory || 'Select Category'}
-                  </Text>
-                  <Ionicons name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
-                </TouchableOpacity>
-
-                {showCategoryDropdown && (
-                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
-                    {(productType === 'FOOD'
-                      ? ['Natural Farmer Foods', 'Farmer Made Foods', 'Organic Staples & Grocery', 'Fresh Fruits & Vegetables', 'Dairy & Edibles', 'Handmade Delicacies']
-                      : ['Seeds', 'Fertilizers', 'Crop Protection', 'Live Plants & Nursery', 'Bio & Organics']
-                    ).map((c) => (
-                      <TouchableOpacity
-                        key={c}
-                        style={{
-                          paddingVertical: 9,
-                          paddingHorizontal: 12,
-                          borderRadius: 6,
-                          backgroundColor: productCategory === c ? '#1E3A5F' : 'transparent',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                        onPress={() => {
-                          const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
-                          if (productType === 'FARM' && c.includes('Protection') && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
-                            showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Pesticide License) must be filled in store settings to select Chemical Crop Protection.');
-                            return;
-                          }
-                          setProductCategory(c);
-                          if (productType === 'FOOD') setIsFarmerMadeProduct(true);
-                          else setIsFarmerMadeProduct(false);
-                          setShowCategoryDropdown(false);
-                        }}
-                      >
-                        <Text style={{ color: productCategory === c ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: productCategory === c ? '700' : '400' }}>
-                          {productType === 'FOOD' ? '🥗' : '🌾'} {c}
-                        </Text>
-                        {productCategory === c && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
 
                 {/* 7 & 8. DYNAMIC PRODUCT VARIANTS MATRIX (PRICE, MRP, STOCK, WEIGHT & DIMENSIONS PER VARIANT) */}
                 <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#059669' }}>
@@ -2396,7 +2687,10 @@ export default function SellerDashboardScreen() {
 
                   {/* Variant Quick Select Chips */}
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-                    {['250 ml', '500 ml', '1 Litre', '5 Litres', '500 gram', '1 Kg', '5 Kg Bag', '25 Kg Bag', '50 Kg Bag'].map((sz) => {
+                    {(productType === 'FOOD' || activeCategoryConfig.isFoodProduct
+                      ? ['100 g', '250 g', '500 g', '1 Kg Pack', '2 Kg Pack', '5 Kg Bag', '10 Kg Bag', '250 ml', '500 ml', '1 Litre Jar', '5 Litres Can']
+                      : ['250 ml', '500 ml', '1 Litre', '5 Litres', '500 gram', '1 Kg', '5 Kg Bag', '25 Kg Bag', '50 Kg Bag']
+                    ).map((sz) => {
                       const isAdded = productVariants.some((v) => v.packSize === sz);
                       return (
                         <TouchableOpacity
@@ -2577,139 +2871,411 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                {/* 11. AGRI SPECIFIC TECHNICAL FORMULATION & TOXICITY (Farm Mode Only) */}
-                {productType === 'FARM' && (
-                  <View>
-                    {/* LIQUID / HAZARDOUS CARGO MODE TOGGLE */}
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: isDangerousGood ? '#78350F' : '#1F2937',
-                        borderRadius: 8,
-                        padding: 10,
-                        marginVertical: 6,
-                        borderWidth: 1,
-                        borderColor: isDangerousGood ? '#F59E0B' : '#374151',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                      onPress={() => setIsDangerousGood(!isDangerousGood)}
-                    >
-                      <View style={{ flex: 1, marginRight: 8 }}>
-                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
-                          🧪 Liquid / Bio-Chemical Cargo Mode ({isDangerousGood ? 'Surface Transport Mandatory' : 'Standard'})
-                        </Text>
-                        <Text style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 2 }}>
-                          Enable for liquid sprays, bio-fertilizers, or oils (Air Cargo Restricted by IATA).
-                        </Text>
-                      </View>
-                      <Ionicons
-                        name={isDangerousGood ? 'checkbox' : 'square-outline'}
-                        size={22}
-                        color={isDangerousGood ? '#F59E0B' : '#9CA3AF'}
-                      />
-                    </TouchableOpacity>
+                {/* 11. DYNAMIC CATEGORY-SPECIFIC ATTRIBUTES ENGINE */}
+                {/* Section Header */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 8, paddingHorizontal: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name={(activeCategoryConfig.icon as any) || 'options-outline'} size={18} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 13.5, fontWeight: '800' }}>
+                      {activeCategoryConfig.name} Specifications & Regulatory Profile
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: '#064E3B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                    <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '700' }}>
+                      {activeCategoryConfig.badge}
+                    </Text>
+                  </View>
+                </View>
 
-                    {/* TARGET CROP & TECHNICAL FORMULA */}
-                    <Text style={styles.inputLabel}>Target Crop</Text>
-                    <TextInput style={styles.input} value={newTargetCrop} onChangeText={setNewTargetCrop} placeholder="e.g. Wheat, Cotton, Sugarcane, Vegetables" placeholderTextColor="#9CA3AF" />
-
-                    <Text style={styles.inputLabel}>Technical Formula / Active Ingredients (Optional)</Text>
-                    <TextInput style={styles.input} value={newTechnicalFormula} onChangeText={setNewTechnicalFormula} placeholder="e.g. Neem Oil 10000 PPM" placeholderTextColor="#9CA3AF" />
-
-                    <Text style={styles.inputLabel}>Dosage Instructions per Acre (Optional)</Text>
-                    <TextInput style={styles.input} value={newDosageInstructions} onChangeText={setNewDosageInstructions} placeholder="e.g. 250 ml per acre in 150L water" placeholderTextColor="#9CA3AF" />
-
-                    {/* AGRI E-COMMERCE SPECIFICATIONS & CIBRC TOXICITY */}
-                    <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#374151' }}>
-                      <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-                        🌿 Agri Specifications & CIBRC Safety Rating (BigHaat & AgroStar Standard)
+                {/* A. LIQUID / HAZARDOUS CARGO MODE TOGGLE (Only when allowed for category) */}
+                {activeCategoryConfig.isLiquidOptionAllowed && (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: isDangerousGood ? '#78350F' : '#1F2937',
+                      borderRadius: 8,
+                      padding: 10,
+                      marginVertical: 6,
+                      borderWidth: 1,
+                      borderColor: isDangerousGood ? '#F59E0B' : '#374151',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    onPress={() => setIsDangerousGood(!isDangerousGood)}
+                  >
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
+                        🧪 Liquid / Bio-Chemical Cargo Mode ({isDangerousGood ? 'Surface Transport Mandatory' : 'Standard Packaging'})
                       </Text>
+                      <Text style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 2 }}>
+                        Enable for liquid sprays, bio-fertilizers, or oils (Mandatory Surface Transport rule).
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name={isDangerousGood ? 'checkbox' : 'square-outline'}
+                      size={22}
+                      color={isDangerousGood ? '#F59E0B' : '#9CA3AF'}
+                    />
+                  </TouchableOpacity>
+                )}
 
-                      {/* Physical State Form & Mode of Action */}
-                      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Physical Form / State</Text>
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                            {['Liquid / Spray', 'Granules / Khad', 'Powder / WP'].map((f) => (
-                              <TouchableOpacity
-                                key={f}
-                                style={[styles.entityChip, physicalForm === f && styles.activeEntityChip]}
-                                onPress={() => setPhysicalForm(f)}
-                              >
-                                <Text style={[styles.entityText, physicalForm === f && styles.activeEntityText, { fontSize: 10 }]}>{f}</Text>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        </View>
+                {/* B. TARGET CROP (For Seeds, Fertilizers, and Crop Protection) */}
+                {(activeCategoryConfig.isSeed || activeCategoryConfig.isFertilizer || activeCategoryConfig.isPesticideOrProtection) && (
+                  <View style={{ marginVertical: 4 }}>
+                    <Text style={styles.inputLabel}>Target Crop / Recommended For</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newTargetCrop}
+                      onChangeText={setNewTargetCrop}
+                      placeholder={activeCategoryConfig.isSeed ? "e.g. Wheat, Basmati Paddy, Cotton, Mustard" : "e.g. Wheat, Cotton, Sugarcane, Vegetables"}
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+                )}
 
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Mode of Action</Text>
-                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                            {['Systemic Action', 'Contact Action', 'Preventive & Curative', 'Foliar Spray'].map((m) => (
-                              <TouchableOpacity
-                                key={m}
-                                style={[styles.entityChip, modeOfAction === m && styles.activeEntityChip]}
-                                onPress={() => setModeOfAction(m)}
-                              >
-                                <Text style={[styles.entityText, modeOfAction === m && styles.activeEntityText, { fontSize: 10 }]}>{m}</Text>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
+                {/* C. SEEDS SPECIFICATIONS & GERMINATION PROFILE (Only for Seeds) */}
+                {activeCategoryConfig.isSeed && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#059669' }}>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                      🌱 Seed Quality & Certified Agronomy Specifications
+                    </Text>
+
+                    {/* Germination % and Genetic Purity % */}
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Germination Rate (%)</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={germinationRate}
+                          onChangeText={setGerminationRate}
+                          placeholder="e.g. 85%"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                        <View style={{ flexDirection: 'row', gap: 4, marginTop: 4 }}>
+                          {['80%', '85%', '90%', '95%'].map((g) => (
+                            <TouchableOpacity
+                              key={g}
+                              style={[styles.entityChip, germinationRate === g && styles.activeEntityChip]}
+                              onPress={() => setGerminationRate(g)}
+                            >
+                              <Text style={[styles.entityText, germinationRate === g && styles.activeEntityText, { fontSize: 10 }]}>{g}</Text>
+                            </TouchableOpacity>
+                          ))}
                         </View>
                       </View>
 
-                      {/* CIBRC Toxicity Warning Band */}
-                      <Text style={styles.inputLabel}>CIBRC Insecticide Toxicity Safety Rating</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                        {[
-                          { label: '🟢 Green (Safe / Organic)', color: '#059669' },
-                          { label: '🔵 Blue (Moderate Toxicity)', color: '#2563EB' },
-                          { label: '🟡 Yellow (High Toxicity)', color: '#D97706' },
-                          { label: '🔴 Red (Extremely Toxic)', color: '#DC2626' },
-                        ].map((b) => (
-                          <TouchableOpacity
-                            key={b.label}
-                            style={[styles.entityChip, toxicityBand === b.label && { backgroundColor: b.color, borderColor: '#FFF' }]}
-                            onPress={() => setToxicityBand(b.label)}
-                          >
-                            <Text style={[styles.entityText, toxicityBand === b.label && { color: '#FFF', fontWeight: '800' }, { fontSize: 10.5 }]}>
-                              {b.label}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Physical / Genetic Purity (%)</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={seedPurity}
+                          onChangeText={setSeedPurity}
+                          placeholder="e.g. 98%"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                        <View style={{ flexDirection: 'row', gap: 4, marginTop: 4 }}>
+                          {['95%', '98%', '99%'].map((p) => (
+                            <TouchableOpacity
+                              key={p}
+                              style={[styles.entityChip, seedPurity === p && styles.activeEntityChip]}
+                              onPress={() => setSeedPurity(p)}
+                            >
+                              <Text style={[styles.entityText, seedPurity === p && styles.activeEntityText, { fontSize: 10 }]}>{p}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Sowing Season */}
+                    <Text style={styles.inputLabel}>Suitable Sowing Season</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                      {['Rabi (Winter)', 'Kharif (Monsoon)', 'Zaid (Summer)', 'All Season Sowing'].map((s) => (
+                        <TouchableOpacity
+                          key={s}
+                          style={[styles.entityChip, sowingSeason === s && styles.activeEntityChip]}
+                          onPress={() => setSowingSeason(s)}
+                        >
+                          <Text style={[styles.entityText, sowingSeason === s && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {sowingSeason === s ? `✅ ${s}` : s}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Seed Variety / Type */}
+                    <Text style={[styles.inputLabel, { marginTop: 6 }]}>Seed Variety / Breeding Category</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                      {['Hybrid F1', 'Certified Desi / OP', 'Research Variety', 'Breeder / Foundation'].map((v) => (
+                        <TouchableOpacity
+                          key={v}
+                          style={[styles.entityChip, seedVarietyType === v && styles.activeEntityChip]}
+                          onPress={() => setSeedVarietyType(v)}
+                        >
+                          <Text style={[styles.entityText, seedVarietyType === v && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {seedVarietyType === v ? `✅ ${v}` : v}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Crop Duration Days */}
+                    <View style={{ marginTop: 6 }}>
+                      <Text style={styles.inputLabel}>Crop Duration to Harvest</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={cropDurationDays}
+                        onChangeText={setCropDurationDays}
+                        placeholder="e.g. 120 - 135 Days"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    </View>
+                  </View>
+                )}
+
+                {/* D. LIVE PLANTS & NURSERY SPECIFICATIONS (Only for Nursery) */}
+                {activeCategoryConfig.isLivePlantOrNursery && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#10B981' }}>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                      🌸 Live Plant & Nursery Horticulture Specifications
+                    </Text>
+
+                    <Text style={styles.inputLabel}>Plant Age & Height</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={plantAgeHeight}
+                      onChangeText={setPlantAgeHeight}
+                      placeholder="e.g. 1 - 2 Feet (6 Months Old)"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    <Text style={styles.inputLabel}>Propagation Method</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                      {['Grafted / Budded', 'Seedling Grown', 'Air Layered / Cutting', 'Tissue Culture'].map((m) => (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.entityChip, plantPropagationType === m && styles.activeEntityChip]}
+                          onPress={() => setPlantPropagationType(m)}
+                        >
+                          <Text style={[styles.entityText, plantPropagationType === m && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {plantPropagationType === m ? `✅ ${m}` : m}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Text style={[styles.inputLabel, { marginTop: 6 }]}>Container & Root Packaging</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                      {['Nursery Polybag', 'Plastic Pot', 'Root Ball / Bare Root', 'Plug Tray'].map((cnt) => (
+                        <TouchableOpacity
+                          key={cnt}
+                          style={[styles.entityChip, containerType === cnt && styles.activeEntityChip]}
+                          onPress={() => setContainerType(cnt)}
+                        >
+                          <Text style={[styles.entityText, containerType === cnt && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {containerType === cnt ? `✅ ${cnt}` : cnt}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* E. FERTILIZERS & PLANT NUTRITION (Only for Fertilizers & Bio-Organics) */}
+                {activeCategoryConfig.isFertilizer && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#2563EB' }}>
+                    <Text style={{ color: '#60A5FA', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                      🧪 Plant Nutrition & Fertilizer Specification (FCO Standard)
+                    </Text>
+
+                    <Text style={styles.inputLabel}>Technical Formula / NPK Ratio / Nutrient Content</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newTechnicalFormula || npkRatio}
+                      onChangeText={(val) => {
+                        setNewTechnicalFormula(val);
+                        setNpkRatio(val);
+                      }}
+                      placeholder="e.g. NPK 19:19:19, Zinc Sulphate 33%, Humic Acid 12%"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    {/* Physical State Form */}
+                    <Text style={[styles.inputLabel, { marginTop: 6 }]}>Physical Form / State</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {['Granules / Khad', 'Liquid / Spray', 'Water Soluble Powder / WP'].map((f) => (
+                        <TouchableOpacity
+                          key={f}
+                          style={[styles.entityChip, physicalForm === f && styles.activeEntityChip]}
+                          onPress={() => setPhysicalForm(f)}
+                        >
+                          <Text style={[styles.entityText, physicalForm === f && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {physicalForm === f ? `✅ ${f}` : f}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Application Method */}
+                    <Text style={[styles.inputLabel, { marginTop: 8 }]}>Method of Application</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      {['Foliar Spray', 'Fertigation / Drip', 'Broadcasting / Soil', 'Seed Treatment'].map((m) => (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.entityChip, applicationMethod === m && styles.activeEntityChip]}
+                          onPress={() => setApplicationMethod(m)}
+                        >
+                          <Text style={[styles.entityText, applicationMethod === m && styles.activeEntityText, { fontSize: 10.5 }]}>
+                            {applicationMethod === m ? `✅ ${m}` : m}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <Text style={[styles.inputLabel, { marginTop: 8 }]}>Dosage Instructions per Acre</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newDosageInstructions}
+                      onChangeText={setNewDosageInstructions}
+                      placeholder="e.g. 500 ml / 250 g per acre in 150L water"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+                )}
+
+                {/* F. CROP PROTECTION & CIBRC SAFETY RATING (Only for Crop Protection) */}
+                {activeCategoryConfig.isPesticideOrProtection && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#D97706' }}>
+                    <Text style={{ color: '#F59E0B', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                      ⚠️ CIBRC Regulated Crop Protection & Agrochemical Safety Matrix
+                    </Text>
+
+                    <Text style={styles.inputLabel}>Active Chemical Formula / Technical Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={newTechnicalFormula}
+                      onChangeText={setNewTechnicalFormula}
+                      placeholder="e.g. Chlorpyrifos 50% + Cypermethrin 5% EC"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    <Text style={styles.inputLabel}>Target Pests / Diseases / Weeds</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={targetPests}
+                      onChangeText={setTargetPests}
+                      placeholder="e.g. Aphids, Bollworm, Stem Borer, Blight"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    {/* Physical State Form & Mode of Action */}
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8, marginTop: 4 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Physical Form</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                          {['Liquid / Spray', 'Granules / Khad', 'Powder / WP'].map((f) => (
+                            <TouchableOpacity
+                              key={f}
+                              style={[styles.entityChip, physicalForm === f && styles.activeEntityChip]}
+                              onPress={() => setPhysicalForm(f)}
+                            >
+                              <Text style={[styles.entityText, physicalForm === f && styles.activeEntityText, { fontSize: 10 }]}>{f}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
                       </View>
 
-                      {/* Shelf Life & Return Policy */}
-                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Shelf Life / Expiry Duration</Text>
-                          <TextInput
-                            style={styles.input}
-                            value={shelfLife}
-                            onChangeText={setShelfLife}
-                            placeholder="e.g. 2 Years from Mfg Date"
-                            placeholderTextColor="#9CA3AF"
-                          />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Mode of Action</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                          {['Systemic Action', 'Contact Action', 'Preventive & Curative'].map((m) => (
+                            <TouchableOpacity
+                              key={m}
+                              style={[styles.entityChip, modeOfAction === m && styles.activeEntityChip]}
+                              onPress={() => setModeOfAction(m)}
+                            >
+                              <Text style={[styles.entityText, modeOfAction === m && styles.activeEntityText, { fontSize: 10 }]}>{m}</Text>
+                            </TouchableOpacity>
+                          ))}
                         </View>
+                      </View>
+                    </View>
 
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.inputLabel}>Return & Replacement Policy</Text>
-                          <TextInput
-                            style={styles.input}
-                            value={returnPolicy}
-                            onChangeText={setReturnPolicy}
-                            placeholder="Replacement Only (Agri Inputs)"
-                            placeholderTextColor="#9CA3AF"
-                          />
-                        </View>
+                    {/* CIBRC Toxicity Warning Band */}
+                    <Text style={styles.inputLabel}>CIBRC Insecticide Toxicity Safety Rating</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                      {[
+                        { label: '🟢 Green (Safe / Organic)', color: '#059669' },
+                        { label: '🔵 Blue (Moderate Toxicity)', color: '#2563EB' },
+                        { label: '🟡 Yellow (High Toxicity)', color: '#D97706' },
+                        { label: '🔴 Red (Extremely Toxic)', color: '#DC2626' },
+                      ].map((b) => (
+                        <TouchableOpacity
+                          key={b.label}
+                          style={[styles.entityChip, toxicityBand === b.label && { backgroundColor: b.color, borderColor: '#FFF' }]}
+                          onPress={() => setToxicityBand(b.label)}
+                        >
+                          <Text style={[styles.entityText, toxicityBand === b.label && { color: '#FFF', fontWeight: '800' }, { fontSize: 10.5 }]}>
+                            {b.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Waiting Period / PHI</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={waitingPeriodPhi}
+                          onChangeText={setWaitingPeriodPhi}
+                          placeholder="e.g. 14 Days Waiting Period"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Dosage Instructions</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={newDosageInstructions}
+                          onChangeText={setNewDosageInstructions}
+                          placeholder="e.g. 250 ml per acre"
+                          placeholderTextColor="#9CA3AF"
+                        />
                       </View>
                     </View>
                   </View>
                 )}
 
+                {/* G. COMMON SHELF LIFE & RETURN POLICY (For Agri Products) */}
+                {!activeCategoryConfig.isFoodProduct && (
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 6, marginBottom: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Shelf Life / Expiry Duration</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={shelfLife}
+                        onChangeText={setShelfLife}
+                        placeholder="e.g. 2 Years from Mfg Date"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Return & Replacement Policy</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={returnPolicy}
+                        onChangeText={setReturnPolicy}
+                        placeholder="Replacement Only"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    </View>
+                  </View>
+                )}
+
                 {/* 12. FSSAI PACKAGED FOOD COMPLIANCE & NUTRITIONAL MATRIX (Food Mode Only) */}
-                {productType === 'FOOD' && (
+                {(productType === 'FOOD' || activeCategoryConfig.isFoodProduct) && (
                   <View style={{ backgroundColor: '#064E3B', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1.5, borderColor: '#10B981' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -2756,10 +3322,14 @@ export default function SellerDashboardScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Ionicons name="shield-checkmark" size={18} color="#10B981" />
                         <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
-                          FSSAI License: <Text style={{ color: '#F59E0B' }}>{storeData?.fssaiNo || fssaiNo || 'Exempt Direct Farmer'}</Text>
+                          FSSAI License: <Text style={{ color: '#10B981', fontWeight: '800' }}>{storeData?.fssaiNo || fssaiNo || '14-Digit Required'}</Text>
                         </Text>
                       </View>
-                      <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>FSSAI Verified</Text>
+                      <View style={{ backgroundColor: (storeData?.fssaiNo || fssaiNo) ? '#065F46' : '#7F1D1D', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                        <Text style={{ color: '#FFF', fontSize: 9, fontWeight: '800' }}>
+                          {(storeData?.fssaiNo || fssaiNo) ? 'FSSAI ATTACHED' : 'UNLICENSED'}
+                        </Text>
+                      </View>
                     </View>
 
                     {/* Organic Certification Selector Dropdown */}
@@ -2877,6 +3447,50 @@ export default function SellerDashboardScreen() {
                       </View>
                     </View>
 
+                    {/* Second Nutritional Row: Sugar, Fiber, Sodium, Net Weight */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Sugar (g)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={sugarG}
+                          onChangeText={setSugarG}
+                          placeholder="2.1 g"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Dietary Fiber (g)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={fiberG}
+                          onChangeText={setFiberG}
+                          placeholder="3.4 g"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Sodium (mg)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={sodiumMg}
+                          onChangeText={setSodiumMg}
+                          placeholder="12 mg"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Net Quantity</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={foodNetQty}
+                          onChangeText={setFoodNetQty}
+                          placeholder="500 g / 1 L"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                    </View>
+
                     {/* Storage & Expiry / Best Before */}
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       <View style={{ flex: 1 }}>
@@ -2913,17 +3527,6 @@ export default function SellerDashboardScreen() {
                     />
                   </View>
                 )}
-
-                {/* 13. FULL DESCRIPTION */}
-                <Text style={styles.inputLabel}>Full Product Description</Text>
-                <TextInput
-                  style={[styles.input, { height: 80 }]}
-                  placeholder="Enter detailed benefits, usage guide, and storage instructions..."
-                  placeholderTextColor="#9CA3AF"
-                  multiline
-                  value={newProductDescription}
-                  onChangeText={setNewProductDescription}
-                />
 
                 {/* Compact & Responsive Action Buttons */}
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
@@ -2998,7 +3601,7 @@ export default function SellerDashboardScreen() {
 
                         {/* Visual Highlighting Badges on Photo */}
                         <View style={{ position: 'absolute', top: 8, left: 8, flexDirection: 'column', gap: 4 }}>
-                          {(productCategorySlug === 'food-products' || isFarmerMadeProduct || productCategory.includes('Food')) && (
+                          {activeCategoryConfig.isFoodProduct && (
                             <View style={{ backgroundColor: isVegProduct ? '#059669' : '#DC2626', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                               <View style={{ width: 10, height: 10, borderRadius: isVegProduct ? 5 : 0, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center' }}>
                                 <View style={{ width: 4, height: 4, borderRadius: isVegProduct ? 2 : 0, backgroundColor: isVegProduct ? '#059669' : '#DC2626' }} />
@@ -3006,16 +3609,31 @@ export default function SellerDashboardScreen() {
                               <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>{isVegProduct ? '🟢 100% Veg Food' : '🔴 Non-Veg Food'}</Text>
                             </View>
                           )}
-                          {(productCategorySlug === 'pesticides' || productCategorySlug === 'bio-fertilizers') && (
-                            <View style={{ backgroundColor: '#D97706', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌾 Organic / Bio Formula</Text>
+                          {activeCategoryConfig.isSeed && (
+                            <View style={{ backgroundColor: '#059669', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌱 {germinationRate} Germination | {seedVarietyType}</Text>
                             </View>
                           )}
-                          {organicCertStatus && (
+                          {activeCategoryConfig.isLivePlantOrNursery && (
+                            <View style={{ backgroundColor: '#0D9488', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌸 {plantAgeHeight} | {plantPropagationType}</Text>
+                            </View>
+                          )}
+                          {activeCategoryConfig.isFertilizer && (
+                            <View style={{ backgroundColor: '#2563EB', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🧪 {npkRatio || newTechnicalFormula || 'Plant Nutrition'}</Text>
+                            </View>
+                          )}
+                          {activeCategoryConfig.isPesticideOrProtection && (
+                            <View style={{ backgroundColor: toxicityBand.includes('Green') ? '#059669' : toxicityBand.includes('Blue') ? '#2563EB' : toxicityBand.includes('Yellow') ? '#D97706' : '#DC2626', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>⚠️ {toxicityBand.split(' ')[0]} CIBRC Rated</Text>
+                            </View>
+                          )}
+                          {activeCategoryConfig.isFoodProduct && organicCertStatus ? (
                             <View style={{ backgroundColor: '#1D4ED8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
                               <Text style={{ color: '#FFF', fontSize: 10.5, fontWeight: '800' }}>🇮🇳 {organicCertStatus}</Text>
                             </View>
-                          )}
+                          ) : null}
                           {newBrand === 'FarmsKing Certified' && (
                             <View style={{ backgroundColor: '#047857', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
                               <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>👑 FarmsKing Direct</Text>
@@ -3087,8 +3705,40 @@ export default function SellerDashboardScreen() {
                           </Text>
                         </View>
 
-                        {/* Technical info if chemical/seed */}
-                        {technicalName ? (
+                        {/* Technical info or dynamic category specs */}
+                        {activeCategoryConfig.isSeed && (
+                          <View style={{ backgroundColor: '#064E3B', borderRadius: 8, padding: 8, marginVertical: 6, borderWidth: 1, borderColor: '#059669' }}>
+                            <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '700' }}>🌱 Seed Quality Specs</Text>
+                            <Text style={{ color: '#D1D5DB', fontSize: 10.5, marginTop: 2 }}>
+                              Germination: {germinationRate} | Purity: {seedPurity} | Season: {sowingSeason} | Variety: {seedVarietyType}
+                            </Text>
+                          </View>
+                        )}
+                        {activeCategoryConfig.isLivePlantOrNursery && (
+                          <View style={{ backgroundColor: '#134E4A', borderRadius: 8, padding: 8, marginVertical: 6, borderWidth: 1, borderColor: '#0D9488' }}>
+                            <Text style={{ color: '#2DD4BF', fontSize: 11, fontWeight: '700' }}>🌸 Nursery Live Plant Profile</Text>
+                            <Text style={{ color: '#D1D5DB', fontSize: 10.5, marginTop: 2 }}>
+                              Height/Age: {plantAgeHeight} | Method: {plantPropagationType} | Root: {containerType}
+                            </Text>
+                          </View>
+                        )}
+                        {activeCategoryConfig.isFertilizer && (
+                          <View style={{ backgroundColor: '#1E3A8A', borderRadius: 8, padding: 8, marginVertical: 6, borderWidth: 1, borderColor: '#2563EB' }}>
+                            <Text style={{ color: '#60A5FA', fontSize: 11, fontWeight: '700' }}>🧪 Plant Nutrition Profile</Text>
+                            <Text style={{ color: '#D1D5DB', fontSize: 10.5, marginTop: 2 }}>
+                              Formula/NPK: {npkRatio || newTechnicalFormula || 'Standard'} | Form: {physicalForm} | App: {applicationMethod}
+                            </Text>
+                          </View>
+                        )}
+                        {activeCategoryConfig.isPesticideOrProtection && (
+                          <View style={{ backgroundColor: '#78350F', borderRadius: 8, padding: 8, marginVertical: 6, borderWidth: 1, borderColor: '#D97706' }}>
+                            <Text style={{ color: '#FCD34D', fontSize: 11, fontWeight: '700' }}>⚠️ CIBRC Regulated Protection</Text>
+                            <Text style={{ color: '#D1D5DB', fontSize: 10.5, marginTop: 2 }}>
+                              Active: {newTechnicalFormula || 'Standard'} | Toxicity: {toxicityBand} | PHI: {waitingPeriodPhi}
+                            </Text>
+                          </View>
+                        )}
+                        {technicalName && !activeCategoryConfig.isSeed && !activeCategoryConfig.isLivePlantOrNursery ? (
                           <Text style={{ color: '#A7F3D0', fontSize: 12, marginVertical: 4 }}>🧪 Technical: {technicalName}</Text>
                         ) : null}
 

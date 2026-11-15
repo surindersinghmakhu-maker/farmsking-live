@@ -84,11 +84,13 @@ let AppSettingsController = class AppSettingsController {
         const cfCity = req?.headers?.['cf-ipcity']?.toString();
         const cfRegion = req?.headers?.['cf-region']?.toString() || req?.headers?.['cf-region-code']?.toString();
         const cfCountry = req?.headers?.['cf-ipcountry']?.toString();
+        const cfAsn = req?.headers?.['cf-ipasn']?.toString() || req?.headers?.['cf-ray']?.toString();
         return this.appSettingsService.recordVisit(dto, {
             ip: rawIp,
             cfCity,
             cfRegion,
             cfCountry,
+            cfAsn,
             userAgent: req?.headers?.['user-agent']?.toString(),
         });
     }

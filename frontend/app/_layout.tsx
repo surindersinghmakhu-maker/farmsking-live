@@ -229,16 +229,49 @@ function GlobalVisitorTelemetryRecorder() {
 
       const timeZone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata' : 'Asia/Kolkata';
 
+      const nav: any = typeof navigator !== 'undefined' ? navigator : {};
+      const win: any = typeof window !== 'undefined' ? window : {};
+      const scr = win.screen;
+
+      const dpr = win.devicePixelRatio || 1;
+      const screenText = scr ? `${scr.width} × ${scr.height} (${dpr}x DPR)` : '1920 × 1080 (FHD)';
+      const orientation = win.innerWidth > win.innerHeight ? 'Landscape' : 'Portrait';
+
+      const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+      const connType = conn?.effectiveType ? `${conn.effectiveType.toUpperCase()} Mobile/Broadband` : undefined;
+      const rttLatency = conn?.rtt ? String(conn.rtt) : undefined;
+      const downlinkSpeed = conn?.downlink ? `${conn.downlink} Mbps` : undefined;
+
+      const hardwareCores = nav.hardwareConcurrency ? `${nav.hardwareConcurrency} Cores` : undefined;
+      const deviceMemory = nav.deviceMemory ? `${nav.deviceMemory} GB` : undefined;
+
+      let referrer = document.referrer || '';
+      if (!referrer) {
+        referrer = 'Direct / PWA Home App';
+      } else if (referrer.includes('whatsapp') || referrer.includes('wa.me')) {
+        referrer = 'WhatsApp Agronomy Share';
+      } else if (referrer.includes('google')) {
+        referrer = 'Google Organic Search';
+      }
+
       fetch('/api/v1/app-settings/record-visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           device: isMobile ? 'mobile' : 'desktop',
-          path: window.location.pathname || '/',
+          path: win.location?.pathname || '/',
           os,
           browser,
           timezone: timeZone,
-          screen: typeof window !== 'undefined' && window.screen ? `${window.screen.width}x${window.screen.height}` : '1920x1080',
+          screen: screenText,
+          orientation,
+          referrer,
+          hardwareCores,
+          deviceMemory,
+          connectionType: connType,
+          rttLatency,
+          downlinkSpeed,
+          language: nav.language || 'en-IN',
         }),
       }).catch(() => {});
     } catch {}

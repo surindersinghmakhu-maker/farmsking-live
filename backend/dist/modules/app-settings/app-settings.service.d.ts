@@ -258,11 +258,21 @@ export declare class AppSettingsService {
         screen?: string;
         browser?: string;
         os?: string;
+        referrer?: string;
+        orientation?: string;
+        hardwareCores?: string;
+        deviceMemory?: string;
+        connectionType?: string;
+        rttLatency?: string;
+        downlinkSpeed?: string;
+        language?: string;
+        touchSupport?: string;
     }, meta?: {
         ip?: string;
         cfCity?: string;
         cfRegion?: string;
         cfCountry?: string;
+        cfAsn?: string;
         userAgent?: string;
     }): Promise<any>;
     updateVisitorStats(admin: AuthUser, dto: any): Promise<{

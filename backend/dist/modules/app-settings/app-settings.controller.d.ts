@@ -231,6 +231,15 @@ export declare class AppSettingsController {
         screen?: string;
         browser?: string;
         os?: string;
+        referrer?: string;
+        orientation?: string;
+        hardwareCores?: string;
+        deviceMemory?: string;
+        connectionType?: string;
+        rttLatency?: string;
+        downlinkSpeed?: string;
+        language?: string;
+        touchSupport?: string;
     }, req: any): Promise<any>;
     updateVisitorStats(user: AuthUser, dto: any): Promise<{
         success: boolean;

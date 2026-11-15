@@ -128,7 +128,8 @@ export class AppSettingsController {
   /** Public endpoint to record a page visit with geolocation and telemetry */
   @Post('record-visit')
   recordVisit(
-    @Body() dto: {
+    @Body()
+    dto: {
       device?: string;
       path?: string;
       state?: string;
@@ -137,6 +138,15 @@ export class AppSettingsController {
       screen?: string;
       browser?: string;
       os?: string;
+      referrer?: string;
+      orientation?: string;
+      hardwareCores?: string;
+      deviceMemory?: string;
+      connectionType?: string;
+      rttLatency?: string;
+      downlinkSpeed?: string;
+      language?: string;
+      touchSupport?: string;
     },
     @Req() req: any
   ) {
@@ -151,12 +161,14 @@ export class AppSettingsController {
     const cfCity = req?.headers?.['cf-ipcity']?.toString();
     const cfRegion = req?.headers?.['cf-region']?.toString() || req?.headers?.['cf-region-code']?.toString();
     const cfCountry = req?.headers?.['cf-ipcountry']?.toString();
+    const cfAsn = req?.headers?.['cf-ipasn']?.toString() || req?.headers?.['cf-ray']?.toString();
 
     return this.appSettingsService.recordVisit(dto, {
       ip: rawIp,
       cfCity,
       cfRegion,
       cfCountry,
+      cfAsn,
       userAgent: req?.headers?.['user-agent']?.toString(),
     });
   }

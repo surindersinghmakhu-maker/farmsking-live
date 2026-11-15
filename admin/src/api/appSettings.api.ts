@@ -133,13 +133,75 @@ export interface VisitorSessionItem {
   city: string;
   state: string;
   country: string;
+  agroZone?: string;
+  centroidCoords?: string;
+  cropBelt?: string;
   device: 'mobile' | 'desktop';
   os: string;
   browser: string;
+  screenResolution?: string;
   network: string;
+  asn?: string;
+  operator?: string;
+  connectionType?: string;
+  latencyMs?: string;
+  referrer?: string;
   path: string;
+  dwellTime?: string;
+  securityStatus?: string;
   visitedAt: string;
   isActive: boolean;
+}
+
+export interface AgroZoneItem {
+  zoneId: string;
+  zoneName: string;
+  subRegions: string;
+  dominantCrops: string;
+  visits: number;
+  percentage: number;
+  soilType: string;
+  headquartersDistance: string;
+}
+
+export interface NetworkAsnItem {
+  asn: string;
+  operator: string;
+  networkType: string;
+  circle: string;
+  visits: number;
+  percentage: number;
+  avgLatencyMs: number;
+  threatScore: string;
+}
+
+export interface TrafficSourceItem {
+  channel: string;
+  sourceName: string;
+  visits: number;
+  percentage: number;
+  badge: string;
+  icon: string;
+}
+
+export interface HardwareProfile {
+  fhdScreenPct: number;
+  touchDevicePct: number;
+  eightCoreCpuPct: number;
+  highMemoryPct: number;
+  tlsVersion: string;
+  httpProtocol: string;
+}
+
+export interface StatutoryComplianceInfo {
+  statutoryFramework: string;
+  certInDirective: string;
+  isoStandard: string;
+  ipMaskingStandard: string;
+  gpsPositioningPolicy: string;
+  encryptionAudit: string;
+  registeredEntity: string;
+  grievanceOfficerContact: string;
 }
 
 export interface StateBreakdownItem {
@@ -166,6 +228,11 @@ export interface VisitorStats {
   lastVisitedAt: string;
   stateBreakdown?: StateBreakdownItem[];
   cityBreakdown?: CityBreakdownItem[];
+  agroZoneBreakdown?: AgroZoneItem[];
+  networkAsnBreakdown?: NetworkAsnItem[];
+  trafficSources?: TrafficSourceItem[];
+  hardwareProfile?: HardwareProfile;
+  statutoryCompliance?: StatutoryComplianceInfo;
   recentVisitors?: VisitorSessionItem[];
 }
 

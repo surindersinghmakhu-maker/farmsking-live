@@ -68,7 +68,7 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; l
 export default function MoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
+  const { executiveTheme, setExecutiveTheme, colors, isLight, toggleThemeMode, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const updateAppSettings = useUpdateAppSettings();
   const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN';
@@ -153,21 +153,59 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
 
 
-  const isAdvisorRole = role === ('FARM_ADVISOR' as any) || role === ('GARDEN_ADVISOR' as any) || user?.role === ('FARM_ADVISOR' as any) || user?.role === ('GARDEN_ADVISOR' as any) || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR' as any) || user.roles.includes('GARDEN_ADVISOR' as any)));
+  const isAdvisorRole =
+    role === ('ADVISOR' as any) ||
+    role === ('FARM_ADVISOR' as any) ||
+    role === ('GARDEN_ADVISOR' as any) ||
+    user?.role === ('ADVISOR' as any) ||
+    user?.role === ('FARM_ADVISOR' as any) ||
+    user?.role === ('GARDEN_ADVISOR' as any) ||
+    (Array.isArray(user?.roles) &&
+      (user.roles.includes('ADVISOR' as any) ||
+        user.roles.includes('FARM_ADVISOR' as any) ||
+        user.roles.includes('GARDEN_ADVISOR' as any)));
   const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
 
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
     FARMER_ONLY_ITEM,
-    ...(isAdvisorRole ? [ADVISOR_PROFILE_ITEM] : []),
+    ...(isAdvisorRole
+      ? [
+          {
+            key: 'tabAdvisorWallet' as any,
+            label: 'Advisor Wallet & Payouts',
+            icon: 'wallet-outline',
+            href: '/(partner)/(tabs)/wallet',
+          },
+          ADVISOR_PROFILE_ITEM,
+        ]
+      : []),
     ...(isLabourRole ? [LABOUR_ITEM] : []),
   ];
+
+  const dynStyles = {
+    sectionTitle: { color: isLight ? '#475569' : subTextColor },
+    sectionCard: {
+      backgroundColor: isLight ? '#ffffff' : cardBg,
+      borderColor: isLight ? '#e2e8f0' : cardBorder,
+      borderWidth: 1,
+    },
+    row: {
+      borderBottomColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.06)',
+    },
+    rowLabel: {
+      color: isLight ? '#0f172a' : textColor,
+    },
+    rowSubLabel: {
+      color: isLight ? '#64748b' : subTextColor,
+    },
+  };
 
   return (
     <>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (colors.bg || '#020d06') }]}
         contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false}
       >
@@ -209,44 +247,66 @@ export default function MoreScreen() {
 
               {/* Account Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
-                <View style={styles.sectionCard}>
+                <Text style={[styles.sectionTitle, dynStyles.sectionTitle]}>{t('accountSection')}</Text>
+                <View style={[styles.sectionCard, dynStyles.sectionCard]}>
+                  {/* 🌓 Display Theme Mode Toggle (Light / Dark) */}
+                  <TouchableOpacity
+                    style={[styles.row, dynStyles.row]}
+                    activeOpacity={0.7}
+                    onPress={() => toggleThemeMode()}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#fef3c7' : 'rgba(0, 255, 135, 0.12)' }]}>
+                      <Ionicons name={isLight ? 'sunny-outline' : 'moon-outline'} size={18} color={isLight ? '#d97706' : '#00ff87'} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Display Theme Mode</Text>
+                      <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>
+                        {isLight ? 'Light Mode (Daytime View)' : 'Dark Emerald Mode (Executive Night View)'}
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.35)' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#0f172a' : '#00ff87' }}>
+                        {isLight ? 'Switch Dark 🌙' : 'Switch Light ☀️'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
                   {/* Account Sub-Items listed directly */}
                   {accountItems.map((item) => (
                     <TouchableOpacity
                       key={item.key}
-                      style={styles.row}
+                      style={[styles.row, dynStyles.row]}
                       activeOpacity={0.7}
                       onPress={() => item.href && router.push(item.href as any)}
                     >
                       <View style={styles.rowIconBg}>
                         <Ionicons name={item.icon} size={18} color={theme.primary} />
                       </View>
-                      <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Text style={[styles.rowLabel, dynStyles.rowLabel]}>{t(item.key, item.label)}</Text>
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                     </TouchableOpacity>
                   ))}
 
                   {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature — Farmers only) */}
                   {(role === 'FARMER' || user?.role === 'FARMER' || (Array.isArray(user?.roles) && user.roles.includes('FARMER'))) ? (
                     <TouchableOpacity
-                      style={styles.row}
+                      style={[styles.row, dynStyles.row]}
                       activeOpacity={0.7}
                       onPress={() => setShowSupervisorModal(true)}
                     >
-                      <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                      <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#eef2ff' : 'rgba(79, 70, 229, 0.2)' }]}>
                         <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
                       </View>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={styles.rowLabel}>Supervisor Management</Text>
+                          <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Supervisor Management</Text>
                           <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
                             <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
                           </View>
                         </View>
-                        <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Add & Manage Supervisor Sub-Accounts</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                     </TouchableOpacity>
                   ) : null}
 
@@ -255,11 +315,11 @@ export default function MoreScreen() {
                     const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
-                        style={[styles.row, { borderBottomWidth: 0 }]}
+                        style={[styles.row, dynStyles.row, { borderBottomWidth: 0 }]}
                         activeOpacity={0.8}
                         onPress={() => router.push('/seller-dashboard')}
                       >
-                        <View style={[styles.rowIconBg, { backgroundColor: isSellerRole ? '#d1fae5' : '#fef3c7' }]}>
+                        <View style={[styles.rowIconBg, { backgroundColor: isSellerRole ? (isLight ? '#d1fae5' : 'rgba(5, 150, 105, 0.2)') : (isLight ? '#fef3c7' : 'rgba(217, 119, 6, 0.2)') }]}>
                           <Ionicons
                             name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
                             size={18}
@@ -267,10 +327,10 @@ export default function MoreScreen() {
                           />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.rowLabel}>
+                          <Text style={[styles.rowLabel, dynStyles.rowLabel]}>
                             {isSellerRole ? '🏪 Seller Portal' : '🌾 Register as Seller'}
                           </Text>
-                          <Text style={styles.rowSubLabel}>
+                          <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>
                             {isSellerRole
                               ? 'Add Products, Manage Orders & Cashfree Payouts'
                               : 'Start Selling Farm Produce, Seeds & Organics Pan-India'}
@@ -297,36 +357,74 @@ export default function MoreScreen() {
               {/* Dedicated App Parts: VIP Pass Scheme & Crops Care */}
               {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>👑 VIP PASS SCHEME & CROPS CARE</Text>
-                  <View style={styles.sectionCard}>
+                  <Text style={[styles.sectionTitle, dynStyles.sectionTitle]}>👑 VIP PASS SCHEME & CROPS CARE</Text>
+                  <View style={[styles.sectionCard, dynStyles.sectionCard]}>
                     <TouchableOpacity
-                      style={styles.row}
+                      style={[styles.row, dynStyles.row]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}
                     >
-                      <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                      <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#fef3c7' : 'rgba(217, 119, 6, 0.2)' }]}>
                         <Ionicons name="ribbon-outline" size={18} color="#d97706" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>👑 FarmsKing VIP Pass Scheme</Text>
-                        <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
+                        <Text style={[styles.rowLabel, dynStyles.rowLabel]}>👑 FarmsKing VIP Pass Scheme</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Farmer App Plans & Specialist Doctor Advisory</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.row, { borderBottomWidth: 0 }]}
+                      style={[styles.row, dynStyles.row, { borderBottomWidth: 0 }]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}
                     >
-                      <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                      <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(22, 163, 74, 0.2)' }]}>
                         <Ionicons name="medical-outline" size={18} color="#16a34a" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
-                        <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
+                        <Text style={[styles.rowLabel, dynStyles.rowLabel]}>🩺 Crops Care Plan</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Specialist Doctor Advisory & Coupon Offers</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : null}
+
+              {/* 💼 Dedicated Advisor Business & Earnings Section */}
+              {isAdvisorRole ? (
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, dynStyles.sectionTitle]}>💼 ADVISOR BUSINESS & EARNINGS</Text>
+                  <View style={[styles.sectionCard, dynStyles.sectionCard]}>
+                    <TouchableOpacity
+                      style={[styles.row, dynStyles.row]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/(partner)/(tabs)/wallet' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#fef3c7' : 'rgba(217, 119, 6, 0.2)' }]}>
+                        <Ionicons name="wallet-outline" size={18} color="#d97706" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.rowLabel, dynStyles.rowLabel]}>💳 Advisor Wallet & Payouts</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>View Consultation Earnings, Commission & Bank Payouts</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.row, dynStyles.row, { borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/advisor-profile' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(22, 163, 74, 0.2)' }]}>
+                        <Ionicons name="briefcase-outline" size={18} color="#16a34a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.rowLabel, dynStyles.rowLabel]}>🩺 Advisor Profile & Agronomy Status</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Specialization, Working Hours & Consultation Rate</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -334,104 +432,104 @@ export default function MoreScreen() {
 
           {/* Developer & Support Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('devSupportSection')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, dynStyles.sectionTitle]}>{t('devSupportSection')}</Text>
+            <View style={[styles.sectionCard, dynStyles.sectionCard]}>
               {__DEV__ ? (
                 <TouchableOpacity
-                  style={styles.row}
+                  style={[styles.row, dynStyles.row]}
                   activeOpacity={0.7}
                   onPress={() => setShowServerModal(true)}
                 >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                  <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(22, 163, 74, 0.2)' }]}>
                     <Ionicons name="hardware-chip-outline" size={18} color="#16a34a" />
                   </View>
-                  <Text style={styles.rowLabel}>{t('serverIpConfig')}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  <Text style={[styles.rowLabel, dynStyles.rowLabel]}>{t('serverIpConfig')}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                 </TouchableOpacity>
               ) : null}
 
 
               {/* Privacy Policy Row */}
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, dynStyles.row]}
                 activeOpacity={0.7}
                 onPress={() => setShowPrivacyModal(true)}
               >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(22, 163, 74, 0.2)' }]}>
                   <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Privacy Policy</Text>
-                  <Text style={styles.rowSubLabel}>Data Protection, KYC &amp; DPDPA 2023</Text>
+                  <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Privacy Policy</Text>
+                  <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Data Protection, KYC &amp; DPDPA 2023</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
 
               {/* Terms of Service Row */}
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, dynStyles.row]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/terms')}
               >
-                <View style={[styles.rowIconBg, { backgroundColor: '#ede9fe' }]}>
+                <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#ede9fe' : 'rgba(124, 58, 237, 0.2)' }]}>
                   <Ionicons name="document-text-outline" size={18} color="#7c3aed" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Terms &amp; TDS Compliance</Text>
-                  <Text style={styles.rowSubLabel}>Sec 194-O / 194-H / 194-J &amp; Sec 79 IT Act</Text>
+                  <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Terms &amp; TDS Compliance</Text>
+                  <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Sec 194-O / 194-H / 194-J &amp; Sec 79 IT Act</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
 
               {/* Refund & Shipping Rows */}
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, dynStyles.row]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/refund-policy')}
               >
-                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#fef3c7' : 'rgba(217, 119, 6, 0.2)' }]}>
                   <Ionicons name="refresh-circle-outline" size={18} color="#d97706" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Refund &amp; Cancellation Policy</Text>
-                  <Text style={styles.rowSubLabel}>5-7 Working Days Gateway Refunds</Text>
+                  <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Refund &amp; Cancellation Policy</Text>
+                  <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>5-7 Working Days Gateway Refunds</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, dynStyles.row]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/shipping-policy')}
               >
-                <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+                <View style={[styles.rowIconBg, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.2)' }]}>
                   <Ionicons name="cube-outline" size={18} color="#0284c7" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>Shipping &amp; Delivery Policy</Text>
-                  <Text style={styles.rowSubLabel}>Dispatch &amp; Cold-Chain Transit SLAs</Text>
+                  <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Shipping &amp; Delivery Policy</Text>
+                  <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Dispatch &amp; Cold-Chain Transit SLAs</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
 
 
 
               {/* Support Row */}
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
+              <TouchableOpacity style={[styles.row, dynStyles.row]} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
                 <View style={styles.rowIconBg}>
                   <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Support</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Support</Text>
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
 
               {/* Contact Us Row (At the very bottom) */}
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
+              <TouchableOpacity style={[styles.row, dynStyles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
                 <View style={styles.rowIconBg}>
                   <Ionicons name="call-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Contact Us</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                <Text style={[styles.rowLabel, dynStyles.rowLabel]}>Contact Us</Text>
+                <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -536,8 +634,8 @@ export default function MoreScreen() {
                     handleOpenDeleteModal();
                   }}
                 >
-                  <Ionicons name="trash-outline" size={16} color="#ffffff" />
-                  <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.bold }}>Delete Account & Purge Data</Text>
+                  <Ionicons name="pause-circle-outline" size={16} color="#ffffff" />
+                  <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.bold }}>Deactivate Partner Account</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
@@ -549,7 +647,7 @@ export default function MoreScreen() {
         </View>
       </Modal>
 
-      <DeleteAccountModal visible={showDeleteConfirmModal} onClose={() => setShowDeleteConfirmModal(false)} />
+      <DeleteAccountModal visible={showDeleteConfirmModal} onClose={() => setShowDeleteConfirmModal(false)} portal="PARTNER" />
     </>
   );
 }

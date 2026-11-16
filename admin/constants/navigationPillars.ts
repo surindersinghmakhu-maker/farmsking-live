@@ -79,6 +79,71 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     ],
   },
   {
+    id: 'PARTNERS',
+    title: 'Partners',
+    shortTitle: 'Partners',
+    icon: 'briefcase-outline',
+    iconFilled: 'briefcase',
+    badge: 'Partner Governance',
+    color: '#f59e0b',
+    subTabs: [
+      {
+        id: 'partners-overview',
+        title: 'Partner Command Center',
+        shortTitle: 'Partners Hub',
+        description: 'Unified ecosystem overview, live telemetry & partner network',
+        icon: 'briefcase',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'OVERVIEW' },
+      },
+      {
+        id: 'new-approvals',
+        title: 'New Account Approvals',
+        shortTitle: 'New Approvals',
+        description: 'Review merchant licenses, doctor degrees, nursery & agent KYC applications',
+        icon: 'checkmark-circle-outline',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'NEW_APPROVALS' },
+      },
+      {
+        id: 'edit-approvals',
+        title: 'Profile & Edit Approvals',
+        shortTitle: 'Edit Requests',
+        description: 'Approve bank/UPI changes, GSTIN credentials, clinic hours & store info',
+        icon: 'create-outline',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'EDIT_APPROVALS' },
+      },
+      {
+        id: 'partner-finances',
+        title: 'Finance & Payouts (Hisab-Kitab)',
+        shortTitle: 'Finances & Payouts',
+        description: 'Partner commissions, doctor fee shares, withdrawal payouts & ledgers',
+        icon: 'cash-outline',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'FINANCES' },
+      },
+      {
+        id: 'data-sharing-ops',
+        title: 'Data Sharing & Operations',
+        shortTitle: 'Live Operations',
+        description: 'Doctor consultation queues, store catalog, agent networks & plant stock',
+        icon: 'share-social-outline',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'OPERATIONS' },
+      },
+      {
+        id: 'partner-reports',
+        title: 'Reports & Tax Audits',
+        shortTitle: 'Reports & Audit',
+        description: 'GSTR-8 TCS statements, TDS 194-H/194-J, performance metrics & A4 exports',
+        icon: 'document-text-outline',
+        path: '/admin/(tabs)/partners',
+        params: { tab: 'REPORTS' },
+      },
+    ],
+  },
+  {
     id: 'COMMERCE',
     title: 'Market',
     shortTitle: 'Market',
@@ -405,6 +470,12 @@ export function getPillarsForRole(role?: string | null): NavigationPillar[] {
   if (role !== 'ACCOUNTANT') return ADMIN_PILLARS;
   return ADMIN_PILLARS.map((pillar) => {
     if (pillar.id === 'FINANCE') return pillar;
+    if (pillar.id === 'PARTNERS') {
+      return {
+        ...pillar,
+        subTabs: pillar.subTabs.filter((t) => ['partner-finances', 'partner-reports'].includes(t.id)),
+      };
+    }
     if (pillar.id === 'EXECUTIVE') {
       return {
         ...pillar,
@@ -429,6 +500,10 @@ export function getPillarsForRole(role?: string | null): NavigationPillar[] {
 export function normalizePillarId(pillarId?: string): string {
   if (!pillarId) return 'EXECUTIVE';
   switch (pillarId) {
+    case 'PARTNER':
+    case 'PARTNERS':
+    case 'PARTNER_HUB':
+      return 'PARTNERS';
     case 'PLAN_OFFERS':
     case 'PLAN-OFFERS':
     case 'PLANS_OFFERS':
@@ -532,6 +607,16 @@ export function detectPillarFromRoute(
     effectivePillar === 'NEW-FINANCE'
   ) {
     return 'FINANCE';
+  }
+
+  // 0.2 Partner Governance routes
+  if (
+    pathname.includes('partners') ||
+    effectivePillar === 'PARTNERS' ||
+    effectivePillar === 'PARTNER' ||
+    effectivePillar === 'PARTNER_HUB'
+  ) {
+    return 'PARTNERS';
   }
 
   // 1. Executive Command routes

@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
-import { IsArray, IsIn } from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsArray, IsIn, IsOptional } from 'class-validator';
+import { AdvisorType, Role } from '@prisma/client';
 import { normalizeRoleAlias } from '../../../common/utils/auth-user.util';
 
 /** The set of operational & client roles an Admin can toggle via checkboxes (Admin Panel staff roles use dedicated single-role flows). */
@@ -22,4 +22,12 @@ export class UpdateActiveRolesDto {
   @IsArray()
   @IsIn(ASSIGNABLE_CHECKBOX_ROLES, { each: true })
   activeRoles: Role[];
+
+  @IsOptional()
+  @IsIn(['FARM', 'GARDEN'])
+  advisorType?: AdvisorType | null;
+
+  @IsOptional()
+  @IsIn(ASSIGNABLE_CHECKBOX_ROLES)
+  primaryRole?: Role;
 }

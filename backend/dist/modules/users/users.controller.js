@@ -71,16 +71,18 @@ let UsersController = class UsersController {
     requestDeleteMeOtp(user, body) {
         return this.usersService.requestDeleteMeOtp(user, body?.mobile);
     }
-    deleteMe(user, body, queryOtp, headerOtp) {
+    deleteMe(user, body, queryOtp, queryPortal, headerOtp, headerPortal) {
         return this.usersService.deleteMe(user, {
             otp: body?.otp || queryOtp || headerOtp,
             firebaseIdToken: body?.firebaseIdToken,
+            portal: body?.portal || queryPortal || headerPortal,
         });
     }
-    deleteMePost(user, body, queryOtp, headerOtp) {
+    deleteMePost(user, body, queryOtp, queryPortal, headerOtp, headerPortal) {
         return this.usersService.deleteMe(user, {
             otp: body?.otp || queryOtp || headerOtp,
             firebaseIdToken: body?.firebaseIdToken,
+            portal: body?.portal || queryPortal || headerPortal,
         });
     }
     getMyInviteLink(user) {
@@ -231,7 +233,7 @@ let UsersController = class UsersController {
         return this.usersService.updateRole(user, id, dto.role);
     }
     updateActiveRoles(user, id, dto) {
-        return this.usersService.updateActiveRoles(user, id, dto.activeRoles);
+        return this.usersService.updateActiveRoles(user, id, dto.activeRoles, dto.advisorType, dto.primaryRole);
     }
     deactivate(user, id) {
         return this.usersService.deactivate(user, id);
@@ -283,9 +285,11 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Query)('otp')),
-    __param(3, (0, common_1.Headers)('x-delete-otp')),
+    __param(3, (0, common_1.Query)('portal')),
+    __param(4, (0, common_1.Headers)('x-delete-otp')),
+    __param(5, (0, common_1.Headers)('x-portal')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteMe", null);
 __decorate([
@@ -294,9 +298,11 @@ __decorate([
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Query)('otp')),
-    __param(3, (0, common_1.Headers)('x-delete-otp')),
+    __param(3, (0, common_1.Query)('portal')),
+    __param(4, (0, common_1.Headers)('x-delete-otp')),
+    __param(5, (0, common_1.Headers)('x-portal')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object, String, String]),
+    __metadata("design:paramtypes", [Object, Object, String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "deleteMePost", null);
 __decorate([

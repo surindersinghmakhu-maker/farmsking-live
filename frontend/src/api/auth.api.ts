@@ -71,6 +71,12 @@ export async function logoutOtherSessions(): Promise<{ success: boolean; message
   return data;
 }
 
+export async function apiLogout(): Promise<void> {
+  try {
+    await apiClient.post('/auth/logout');
+  } catch {}
+}
+
 export async function verifyAccountPassword(password: string, mobile?: string): Promise<{ success: boolean; message: string }> {
   const { data } = await apiClient.post<{ success: boolean; message: string }>('/auth/verify-password', { password, mobile });
   return data;
@@ -313,6 +319,18 @@ export async function verifyPartnerOtpApi(mobile: string, otp: string): Promise<
   message: string;
 }> {
   const { data } = await apiClient.post('/auth/partner-otp/verify', { mobile, otp });
+  return data;
+}
+
+export async function getPartnerApplySessionApi(): Promise<{
+  success: boolean;
+  mobile: string;
+  partnerUploadToken: string;
+  existingUserSummary: PartnerUserSummary | null;
+  existingApplication: PartnerApplicationDto | null;
+  activePartnerRoles: string[];
+}> {
+  const { data } = await apiClient.get('/auth/partner-apply-session');
   return data;
 }
 

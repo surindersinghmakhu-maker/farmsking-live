@@ -390,3 +390,25 @@ Every developer, designer, and AI agent working on FarmsKing MUST strictly uphol
 
 5. **100% Pure English & Easy Wording**:
    - All user-facing text must remain 100% pure professional English with simple, crystal-clear phrasing so cultivators and partners understand every feature immediately without confusion.
+
+---
+
+## 14. 🌾 Two Distinct Farmer Plan Models (ਕਿਸਾਨਾਂ ਲਈ ਦੋ ਵੱਖ-ਵੱਖ ਪਲੈਨ ਮਾਡਲ)
+> **ਪ੍ਰੋਜੈਕਟ ਵਿੱਚ ਕਿਸਾਨ ਲਈ ਦੋ ਵੱਖਰੇ ਪਲੈਨ ਹਨ: (1) ਫਾਰਮਰ ਪਲੈਨ (ਖੇਤੀ ਰਿਕਾਰਡ ਤੇ ਅਕਾਊਂਟ ਮੈਨੇਜਮੈਂਟ) ਅਤੇ (2) ਕ੍ਰੌਪ ਕੇਅਰ ਪਲੈਨ (ਡਾਕਟਰ/ਐਡਵਾਈਜ਼ਰ ਕੰਸਲਟੇਸ਼ਨ ਪਲੈਨ)**
+
+1. **Farmer Plan (Farm Records & Account Management System)**:
+   - **Purpose**: Provides farmers with an end-to-end digital farm ledger and crop accounting system directly on the FarmsKing platform.
+   - **Core Features**:
+     - Complete crop cultivation and seasonal field records (variety, acreage, sowing dates, harvesting milestones).
+     - Digital Bahi-Khata (Kisan Passbook) for income and expenditure tracking (fertilizer, diesel, labour, seeds).
+     - Arhtiya (Commission Agent) automated compound interest and cash advance calculator.
+     - Live APMC mandi price tracking and unit conversions.
+     - Satellite field monitoring (NDVI, soil moisture, vegetation health).
+
+2. **Crop Care Plan (Doctor & Advisor Consultation Plans)**:
+   - **Purpose**: Enables certified agricultural specialists (Crop Doctors and Farm/Garden Advisors) to offer premium agronomy and pathology consultation services to farmers.
+   - **Core Features**:
+     - Advisors set and charge their professional advisory fees from farmers for specialized crop supervision.
+     - Customized spray schedules, chemical/organic remedy dosages, and pathogen diagnostics calibrated to ICAR standards.
+     - Direct voice/video calls, scheduled field visits, and structured disease inspection follow-ups.
+     - Advisors earn transparent consultation fees and performance-linked incentives while protecting the farmer's crop yield.

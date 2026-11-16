@@ -11,6 +11,9 @@ import { useBecomeFarmer, useBecomeGardener } from '../hooks/useBecomeRole';
 
 import { BecomeFarmerModal } from './BecomeFarmerModal';
 import { BecomeGardenerModal } from './BecomeGardenerModal';
+import { PartnerSignupModal } from './PartnerSignupModal';
+import { getPartnerApplySessionApi } from '../api/auth.api';
+import { useExecutiveTheme } from '../store/theme-context';
 
 const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   CUSTOMER: 'cart',
@@ -49,12 +52,21 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const router = useRouter();
   const { role, setRole, assignedRoles } = useRole();
   const { user, updateUser, setLoginPortal } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const becomeFarmer = useBecomeFarmer();
   const becomeGardener = useBecomeGardener();
   const [pending, setPending] = useState<'FARMER' | 'GARDENER' | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
   const [isGardenerModalOpen, setIsGardenerModalOpen] = useState(false);
+  const [isPartnerSignupOpen, setIsPartnerSignupOpen] = useState(false);
+  const [partnerSession, setPartnerSession] = useState<{
+    mobile: string;
+    partnerUploadToken: string;
+    existingUserSummary: any;
+    existingApplication: any;
+  } | null>(null);
+  const [loadingPartnerSession, setLoadingPartnerSession] = useState(false);
 
   const isFarmStaff = assignedRoles.some((r) => r === 'SUPERVISOR' || r === 'LABOUR');
   if (isFarmStaff) {
@@ -90,6 +102,26 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
     }
   };
 
+  const handleOpenAddRole = async () => {
+    tap();
+    setLoadingPartnerSession(true);
+    try {
+      const res = await getPartnerApplySessionApi();
+      setPartnerSession(res);
+      setIsPartnerSignupOpen(true);
+    } catch {
+      setPartnerSession({
+        mobile: user?.mobile || '',
+        partnerUploadToken: '',
+        existingUserSummary: (user as any) || null,
+        existingApplication: null,
+      });
+      setIsPartnerSignupOpen(true);
+    } finally {
+      setLoadingPartnerSession(false);
+    }
+  };
+
   if (isCustomerOnly) {
     return (
       <View style={styles.section}>
@@ -111,7 +143,7 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
             {pending === 'FARMER' ? <ActivityIndicator color={RoleThemes.FARMER.primary} size="small" /> : <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />}
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.row}
+            style={[styles.row, styles.rowDivider]}
             activeOpacity={0.7}
             disabled={pending !== null}
             onPress={() => grantRole('GARDENER')}
@@ -125,6 +157,26 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
             </View>
             {pending === 'GARDENER' ? <ActivityIndicator color={RoleThemes.GARDENER.primary} size="small" /> : <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.row}
+            activeOpacity={0.7}
+            disabled={loadingPartnerSession}
+            onPress={handleOpenAddRole}
+          >
+            <View style={[styles.iconBg, { backgroundColor: 'rgba(0, 255, 135, 0.14)' }]}>
+              {loadingPartnerSession ? (
+                <ActivityIndicator color="#00ff87" size="small" />
+              ) : (
+                <Ionicons name="briefcase" size={17} color="#00ff87" />
+              )}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>Apply as Business Partner</Text>
+              <Text style={styles.rowSub}>Join as Nursery Owner, Doctor, Seller or Agent</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+          </TouchableOpacity>
         </View>
 
         <BecomeFarmerModal
@@ -137,14 +189,20 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
           onClose={() => setIsGardenerModalOpen(false)}
           onSuccess={handleGardenerSuccess}
         />
+        <PartnerSignupModal
+          visible={isPartnerSignupOpen}
+          onClose={() => setIsPartnerSignupOpen(false)}
+          initialMobile={partnerSession?.mobile || user?.mobile || ''}
+          initialPartnerUploadToken={partnerSession?.partnerUploadToken || null}
+          initialExistingUserSummary={partnerSession?.existingUserSummary || (user as any) || null}
+          initialExistingApplication={partnerSession?.existingApplication || null}
+        />
       </View>
     );
   }
 
   const switchableRoles = assignedRoles.filter((r) => r !== 'CUSTOMER' && r !== 'SELLER');
   const totalOptionsCount = switchableRoles.length + (hasSellerRole ? 1 : 0) + (extraRows?.length ?? 0);
-  if (totalOptionsCount <= 1) return null;
-
   const activeTheme = RoleThemes[role] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
 
   const handleSelectDashboard = async (nextRole: UserRole) => {
@@ -169,26 +227,43 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>SWITCH DASHBOARD</Text>
+      <Text style={styles.sectionTitle}>
+        {totalOptionsCount > 1 ? 'SWITCH DASHBOARD & ROLES' : 'ACTIVE WORKSPACE & ROLES'}
+      </Text>
 
       {/* Dropdown Trigger Button */}
-      <TouchableOpacity
-        style={[styles.dropdownTrigger, { borderColor: activeTheme.primary }]}
-        activeOpacity={0.85}
-        onPress={() => {
-          tap();
-          setIsDropdownOpen(!isDropdownOpen);
-        }}
-      >
-        <View style={[styles.iconBg, { backgroundColor: activeTheme.primaryLight }]}>
-          <Ionicons name={ROLE_ICONS[role] || 'leaf'} size={17} color={activeTheme.primary} />
+      {totalOptionsCount > 1 ? (
+        <TouchableOpacity
+          style={[styles.dropdownTrigger, { borderColor: activeTheme.primary }]}
+          activeOpacity={0.85}
+          onPress={() => {
+            tap();
+            setIsDropdownOpen(!isDropdownOpen);
+          }}
+        >
+          <View style={[styles.iconBg, { backgroundColor: activeTheme.primaryLight }]}>
+            <Ionicons name={ROLE_ICONS[role] || 'leaf'} size={17} color={activeTheme.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>{activeTheme.name}</Text>
+            <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Workspace · Tap to switch</Text>
+          </View>
+          <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+        </TouchableOpacity>
+      ) : (
+        <View style={[styles.dropdownTrigger, { borderColor: activeTheme.primary, backgroundColor: isLight ? '#ffffff' : '#04160c' }]}>
+          <View style={[styles.iconBg, { backgroundColor: activeTheme.primaryLight }]}>
+            <Ionicons name={ROLE_ICONS[role] || 'leaf'} size={17} color={activeTheme.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.rowLabel, { color: isLight ? '#0f172a' : '#ffffff' }]}>{activeTheme.name}</Text>
+            <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Role: {activeTheme.name}</Text>
+          </View>
+          <View style={styles.activeBadge}>
+            <Text style={styles.activeBadgeText}>Active</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowLabel}>{activeTheme.name}</Text>
-          <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Workspace · Tap to switch</Text>
-        </View>
-        <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
-      </TouchableOpacity>
+      )}
 
       {/* Dropdown Options List */}
       {isDropdownOpen ? (
@@ -252,6 +327,47 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
           ))}
         </View>
       ) : null}
+
+      {/* + Add Another Role Card */}
+      <TouchableOpacity
+        style={[
+          styles.addRoleCard,
+          {
+            backgroundColor: isLight ? '#ffffff' : '#04160c',
+            borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.28)',
+          },
+          premiumShadow(isLight ? '#000000' : '#00ff87', 'sm'),
+        ]}
+        activeOpacity={0.85}
+        disabled={loadingPartnerSession}
+        onPress={handleOpenAddRole}
+      >
+        <View style={[styles.iconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.14)' }]}>
+          {loadingPartnerSession ? (
+            <ActivityIndicator size="small" color="#16a34a" />
+          ) : (
+            <Ionicons name="add-circle" size={20} color="#16a34a" />
+          )}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.rowLabel, { color: isLight ? '#0f172a' : '#ffffff' }]}>
+            + Add Another Partner Role
+          </Text>
+          <Text style={[styles.rowSub, { color: isLight ? '#64748b' : '#94a3b8' }]}>
+            Expand your profile: Seller, Crop Doctor, Nursery, or Agent with 1-click KYC reuse
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={isLight ? '#94a3b8' : '#64748b'} />
+      </TouchableOpacity>
+
+      <PartnerSignupModal
+        visible={isPartnerSignupOpen}
+        onClose={() => setIsPartnerSignupOpen(false)}
+        initialMobile={partnerSession?.mobile || user?.mobile || ''}
+        initialPartnerUploadToken={partnerSession?.partnerUploadToken || null}
+        initialExistingUserSummary={partnerSession?.existingUserSummary || (user as any) || null}
+        initialExistingApplication={partnerSession?.existingApplication || null}
+      />
     </View>
   );
 }
@@ -310,4 +426,13 @@ const styles = StyleSheet.create({
   rowSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
   activeBadge: { backgroundColor: 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
   activeBadgeText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#00ff87' },
+  addRoleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.2,
+    marginTop: 8,
+  },
 });

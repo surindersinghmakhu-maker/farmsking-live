@@ -11,9 +11,11 @@ import { useAuth } from '@/src/store/auth-context';
 interface DeleteAccountModalProps {
   visible: boolean;
   onClose: () => void;
+  portal?: 'USER' | 'PARTNER';
 }
 
-export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps) {
+export function DeleteAccountModal({ visible, onClose, portal = 'USER' }: DeleteAccountModalProps) {
+  const isPartner = portal === 'PARTNER';
   const { user, logout } = useAuth();
   const [mobileInput, setMobileInput] = useState('');
   const [otpInput, setOtpInput] = useState('');
@@ -142,19 +144,30 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       return;
     }
 
-    if (deleteConfirmInput.trim().toLowerCase() !== 'delete') {
-      setErrorMsg('Please type "delete" to confirm.');
-      return;
+    const normalizedInput = deleteConfirmInput.trim().toLowerCase();
+    if (isPartner) {
+      if (normalizedInput !== 'deactivate' && normalizedInput !== 'delete') {
+        setErrorMsg('Please type "deactivate" to confirm.');
+        return;
+      }
+    } else {
+      if (normalizedInput !== 'delete') {
+        setErrorMsg('Please type "delete" to confirm.');
+        return;
+      }
     }
 
     setIsVerifying(true);
     setErrorMsg(null);
     try {
-      let resultMsg = 'Your FarmsKing ID and account have been permanently deleted.';
+      let resultMsg = isPartner
+        ? 'Your FarmsKing Partner account has been securely deactivated.'
+        : 'Your FarmsKing ID and account have been permanently deleted.';
+
       if (useServerOtp) {
         // Verify server-issued 6-digit OTP atomically inside DELETE /users/me
         setIsDeletingAccount(true);
-        const res = await deleteMyAccount({ otp: otpInput.trim() });
+        const res = await deleteMyAccount({ otp: otpInput.trim(), portal });
         if (res?.message) resultMsg = res.message;
       } else {
         if (!confirmationResult) {
@@ -166,9 +179,9 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
         const cred = await confirmationResult.confirm(otpInput.trim());
         const firebaseIdToken = await cred.user.getIdToken();
 
-        // 2. Delete Account on Backend with cryptographic verification proof
+        // 2. Delete / Deactivate Account on Backend with cryptographic verification proof
         setIsDeletingAccount(true);
-        const res = await deleteMyAccount({ firebaseIdToken });
+        const res = await deleteMyAccount({ firebaseIdToken, portal });
         if (res?.message) resultMsg = res.message;
       }
 
@@ -178,7 +191,11 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setIsDeletedSuccess(true);
     } catch (err: any) {
       console.warn('Verification/Deletion Error:', err);
-      setErrorMsg(err?.response?.data?.message || err?.message || 'Invalid OTP or failed to delete account.');
+      setErrorMsg(
+        err?.response?.data?.message ||
+        err?.message ||
+        (isPartner ? 'Invalid OTP or failed to deactivate partner account.' : 'Invalid OTP or failed to delete account.')
+      );
       setIsDeletingAccount(false);
       setIsVerifying(false);
     }
@@ -196,34 +213,38 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={isDeletedSuccess ? handleFinalSignOut : onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.card, isDeletedSuccess && { borderColor: '#ef4444' }]}>
+        <View style={[styles.card, isDeletedSuccess && { borderColor: isPartner ? '#f59e0b' : '#ef4444' }]}>
           {isDeletedSuccess ? (
             <View style={{ alignItems: 'center', width: '100%', paddingVertical: 6 }}>
-              <View style={[styles.iconBg, { backgroundColor: '#fee2e2', width: 56, height: 56, borderRadius: 28, marginBottom: 12 }]}>
-                <Ionicons name="checkmark-done-circle" size={32} color="#dc2626" />
+              <View style={[styles.iconBg, { backgroundColor: isPartner ? '#fef3c7' : '#fee2e2', width: 56, height: 56, borderRadius: 28, marginBottom: 12 }]}>
+                <Ionicons name={isPartner ? 'pause-circle' : 'checkmark-done-circle'} size={32} color={isPartner ? '#d97706' : '#dc2626'} />
               </View>
 
-              <Text style={[styles.title, { color: '#991b1b', fontSize: 20 }]}>
-                ID Permanently Deleted
+              <Text style={[styles.title, { color: isPartner ? '#b45309' : '#991b1b', fontSize: 20 }]}>
+                {isPartner ? 'Partner Profile Deactivated' : 'ID Permanently Deleted'}
               </Text>
               <Text style={[styles.subTitle, { color: '#475569', marginTop: 6, lineHeight: 18, textAlign: 'center' }]}>
-                Your FarmsKing ID and account have been permanently deleted.
+                {deletedSummary || (isPartner
+                  ? 'Your business listings and consultations have been safely deactivated.'
+                  : 'Your FarmsKing ID and account have been permanently deleted.')}
               </Text>
 
-              <View style={[styles.successBox, { backgroundColor: '#fef2f2', borderColor: '#fecaca', padding: 14, marginVertical: 14, width: '100%' }]}>
-                <Ionicons name="shield-checkmark" size={22} color="#dc2626" style={{ marginTop: 2 }} />
+              <View style={[styles.successBox, { backgroundColor: isPartner ? '#fffbeb' : '#fef2f2', borderColor: isPartner ? '#fde68a' : '#fecaca', padding: 14, marginVertical: 14, width: '100%' }]}>
+                <Ionicons name="shield-checkmark" size={22} color={isPartner ? '#d97706' : '#dc2626'} style={{ marginTop: 2 }} />
                 <View style={{ flex: 1, marginLeft: 8 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b', marginBottom: 4 }}>
-                    Mobile Number Unlinked & Data Protected
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isPartner ? '#b45309' : '#991b1b', marginBottom: 4 }}>
+                    {isPartner ? 'Commercial & Statutory Records Preserved' : 'Mobile Number Unlinked & Data Protected'}
                   </Text>
                   <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#64748b', lineHeight: 18 }}>
-                    Your mobile number has been successfully unlinked and freed. In accordance with statutory tax and audit regulations, your historical records (orders, bills, ledger entries) remain safely archived.
+                    {isPartner
+                      ? 'In compliance with statutory tax and e-commerce rules, all GST invoices, sales ledgers, and consultation logs remain securely archived under your King ID. To settle balances or reactivate your account, please contact FarmsKing Admin.'
+                      : 'Your mobile number has been successfully unlinked and freed. In accordance with statutory tax and audit regulations, your historical records (orders, bills, ledger entries) remain safely archived.'}
                   </Text>
                 </View>
               </View>
 
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#dc2626', width: '100%', paddingVertical: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}
+                style={[styles.actionBtn, { backgroundColor: isPartner ? '#d97706' : '#dc2626', width: '100%', paddingVertical: 14, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }]}
                 onPress={handleFinalSignOut}
                 activeOpacity={0.85}
               >
@@ -234,11 +255,15 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
           ) : (
             <>
               <View style={styles.header}>
-                <View style={styles.iconBg}>
-                  <Ionicons name="trash-outline" size={24} color="#dc2626" />
+                <View style={[styles.iconBg, isPartner && { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name={isPartner ? 'pause-circle-outline' : 'trash-outline'} size={24} color={isPartner ? '#d97706' : '#dc2626'} />
                 </View>
-                <Text style={styles.title}>Delete Account</Text>
-                <Text style={styles.subTitle}>Verify via OTP to permanently delete account.</Text>
+                <Text style={styles.title}>{isPartner ? 'Deactivate Partner Profile' : 'Delete Account'}</Text>
+                <Text style={styles.subTitle}>
+                  {isPartner
+                    ? 'Verify via OTP to suspend partner listings & consultations.'
+                    : 'Verify via OTP to permanently delete account.'}
+                </Text>
               </View>
 
               <View style={{ gap: 12, width: '100%' }}>
@@ -275,7 +300,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                         <Text style={styles.cancelBtnText}>Cancel</Text>
                       </TouchableOpacity>
 
-                      <TouchableOpacity style={styles.actionBtn} onPress={handleSendOtp} disabled={isSendingOtp || mobileInput.length !== 10}>
+                      <TouchableOpacity style={[styles.actionBtn, isPartner && { backgroundColor: '#d97706' }]} onPress={handleSendOtp} disabled={isSendingOtp || mobileInput.length !== 10}>
                         {isSendingOtp ? (
                           <ActivityIndicator color="#ffffff" size="small" />
                         ) : (
@@ -316,12 +341,14 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                     </View>
 
                     <View>
-                      <Text style={styles.label}>3. Type "delete" to confirm *</Text>
+                      <Text style={styles.label}>
+                        {isPartner ? '3. Type "deactivate" to confirm *' : '3. Type "delete" to confirm *'}
+                      </Text>
                       <View style={styles.inputWrap}>
                         <Ionicons name="text-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
                         <TextInput
                           style={styles.textInput}
-                          placeholder="Type delete"
+                          placeholder={isPartner ? 'Type deactivate' : 'Type delete'}
                           placeholderTextColor="#94a3b8"
                           autoCapitalize="none"
                           value={deleteConfirmInput}
@@ -345,11 +372,24 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                         <Text style={styles.cancelBtnText}>Cancel</Text>
                       </TouchableOpacity>
 
-                      <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#dc2626' }]} onPress={handleVerifyAndDelete} disabled={isVerifying || isDeletingAccount || otpInput.length !== 6 || deleteConfirmInput.trim().toLowerCase() !== 'delete'}>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: isPartner ? '#d97706' : '#dc2626' }]}
+                        onPress={handleVerifyAndDelete}
+                        disabled={
+                          isVerifying ||
+                          isDeletingAccount ||
+                          otpInput.length !== 6 ||
+                          (isPartner
+                            ? (deleteConfirmInput.trim().toLowerCase() !== 'deactivate' && deleteConfirmInput.trim().toLowerCase() !== 'delete')
+                            : deleteConfirmInput.trim().toLowerCase() !== 'delete')
+                        }
+                      >
                         {isVerifying || isDeletingAccount ? (
                           <ActivityIndicator color="#ffffff" size="small" />
                         ) : (
-                          <Text style={styles.actionBtnText}>Verify & Delete</Text>
+                          <Text style={styles.actionBtnText}>
+                            {isPartner ? 'Verify & Deactivate' : 'Verify & Delete'}
+                          </Text>
                         )}
                       </TouchableOpacity>
                     </View>

@@ -127,15 +127,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       disconnectChatSocket();
       queryClient.clear();
 
-      if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
+      if (
+        msg &&
+        (msg.includes('120 minutes') ||
+          msg.includes('30 minutes') ||
+          msg.includes('Session Terminated') ||
+          msg.includes('logged in on another device') ||
+          msg.includes('Partner session expired'))
+      ) {
         Alert.alert(
-          'Session Terminated',
-          'Your account was signed in on another device. Under the 2-device limit, your oldest session was signed out automatically.',
+          'Session Expired / Terminated',
+          msg.includes('120 minutes') || msg.includes('30 minutes') || msg.includes('Partner session')
+            ? 'Your administrative session expired due to 120 minutes of inactivity. For ISO 27001 security, please sign in again.'
+            : 'Your account was signed in on another device. Under the 2-device limit, your oldest session was signed out automatically.',
           [{ text: 'OK' }]
         );
       }
     });
     return () => setUnauthorizedHandler(null);
+  }, [queryClient]);
+
+  // Track continuous user interaction to detect 120-minute idle inactivity
+  const lastActivityTimeRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const recordActivity = () => {
+      lastActivityTimeRef.current = Date.now();
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+    events.forEach((ev) => window.addEventListener(ev, recordActivity, { passive: true }));
+
+    // Check every 15 seconds if idle for >= 120 minutes (7,200,000 ms)
+    const intervalId = window.setInterval(() => {
+      if (!userRef.current) return;
+      const idleMs = Date.now() - lastActivityTimeRef.current;
+      const ONE_HUNDRED_TWENTY_MINUTES_MS = 120 * 60 * 1000;
+      if (idleMs >= ONE_HUNDRED_TWENTY_MINUTES_MS) {
+        SecureStore.deleteItemAsync(TOKEN_KEY);
+        SecureStore.deleteItemAsync(USER_KEY);
+        setUser(null);
+        disconnectChatSocket();
+        queryClient.clear();
+        Alert.alert(
+          'Session Expired (120 Min Inactivity)',
+          'Your admin session was locked due to 120 minutes of inactivity. For ISO 27001 data security, please sign in again.',
+          [{ text: 'OK' }]
+        );
+        try {
+          router.replace('/(auth)/login' as any);
+        } catch {
+          router.replace('/');
+        }
+      }
+    }, 15000);
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, recordActivity));
+      window.clearInterval(intervalId);
+    };
   }, [queryClient]);
 
   const persistSession = async (token: string, sessionUser: User) => {

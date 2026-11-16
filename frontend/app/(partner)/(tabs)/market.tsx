@@ -6,15 +6,17 @@ import { FONT, SPACING } from '@/constants/theme';
 import { CropDoctorCareView } from '@/src/components/CropDoctorCareView';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
 import { Ionicons } from '@expo/vector-icons';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARMER;
 
 export default function MarketScreen() {
+  const { colors, isLight } = useExecutiveTheme();
   const { plan, meta, limits } = useFarmerPlan();
   const advisorIncluded = limits?.advisorIncluded ?? (plan === 'SILVER' || plan === 'GOLD' || plan === 'ROYAL');
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f8fafc' : (colors.bg || '#020d06') }]}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <View style={styles.heroTitleRow}>
           <Text style={styles.heroTitle}>Crop Doctor</Text>

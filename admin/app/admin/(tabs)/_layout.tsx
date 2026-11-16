@@ -101,7 +101,7 @@ type TabName =
   | 'crop-disease-scanner'
   | 'super-users' | 'super-coupons' | 'super-accounts' | 'cpanel' | 'super-settings'
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders' | 'trainer-dashboard' | 'garden' | 'legal-compliance' | 'seller-payouts' | 'admin-sellers';
+  | 'operator-orders' | 'trainer-dashboard' | 'garden' | 'legal-compliance' | 'seller-payouts' | 'admin-sellers' | 'partners';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-accounts', 'super-users', 'super-settings'] },
@@ -144,6 +144,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   'admin-sellers': { key: 'tabSellers' as any, title: 'Sellers', icon: 'storefront-outline', iconFilled: 'storefront' },
   'seller-payouts': { key: 'tabPayouts' as any, title: 'Payouts', icon: 'card-outline', iconFilled: 'card' },
   'legal-compliance': { key: 'tabLegal' as any, title: 'Legal Desk', icon: 'shield-checkmark-outline', iconFilled: 'shield-checkmark' },
+  partners: { key: 'tabPartners' as any, title: 'Partners', icon: 'briefcase-outline', iconFilled: 'briefcase' },
 };
 
 const ALL_TABS: TabName[] = [
@@ -155,7 +156,7 @@ const ALL_TABS: TabName[] = [
   'crop-disease-scanner',
   'super-users', 'super-coupons', 'super-accounts', 'cpanel', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
-  'operator-orders', 'trainer-dashboard', 'garden', 'legal-compliance', 'seller-payouts', 'admin-sellers',
+  'operator-orders', 'trainer-dashboard', 'garden', 'legal-compliance', 'seller-payouts', 'admin-sellers', 'partners',
   'more', 'admin_more',
 ];
 
@@ -969,6 +970,12 @@ export default function TabLayout() {
           />
           <Tabs.Screen
             name="admin-offers"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="partners"
             options={{
               href: null,
             }}

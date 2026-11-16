@@ -255,7 +255,7 @@ function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, da
 export default function WalletScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
-  const { colors } = useExecutiveTheme();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const queryClient = useQueryClient();
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
@@ -349,7 +349,7 @@ export default function WalletScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (colors.bg || '#020d06') }]}>
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {/* 👑 Clean Responsive Royal Header Row (No outer grouping card) */}
         <View style={styles.royalTitleRow}>
@@ -892,6 +892,7 @@ function TablePaginationControls({
 }
 
 function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
+  const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: referralData, isLoading } = useReferralStatement();
   const { data: appSettings } = useAppSettings();
   const [currentPage, setCurrentPage] = useState(1);
@@ -939,19 +940,19 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
       </View>
 
       {/* Upper Header Summary Cards */}
-      <View style={styles.refSummaryCard}>
+      <View style={[styles.refSummaryCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
         <View style={styles.refSummaryCol}>
-          <Text style={styles.refSummaryLabel}>Total Referees</Text>
-          <Text style={styles.refSummaryVal}>{summary.totalReferees}</Text>
+          <Text style={[styles.refSummaryLabel, { color: subTextColor }]}>Total Referees</Text>
+          <Text style={[styles.refSummaryVal, { color: textColor }]}>{summary.totalReferees}</Text>
         </View>
-        <View style={styles.refSummaryDivider} />
+        <View style={[styles.refSummaryDivider, { backgroundColor: isLight ? '#e2e8f0' : cardBorder }]} />
         <View style={styles.refSummaryCol}>
-          <Text style={styles.refSummaryLabel}>Issued Bonus</Text>
+          <Text style={[styles.refSummaryLabel, { color: subTextColor }]}>Issued Bonus</Text>
           <Text style={[styles.refSummaryVal, { color: '#16a34a' }]}>₹{summary.totalIssuedBonus}</Text>
         </View>
-        <View style={styles.refSummaryDivider} />
+        <View style={[styles.refSummaryDivider, { backgroundColor: isLight ? '#e2e8f0' : cardBorder }]} />
         <View style={styles.refSummaryCol}>
-          <Text style={styles.refSummaryLabel}>Pending Bonus</Text>
+          <Text style={[styles.refSummaryLabel, { color: subTextColor }]}>Pending Bonus</Text>
           <Text style={[styles.refSummaryVal, { color: '#d97706' }]}>₹{summary.totalPendingBonus}</Text>
         </View>
       </View>
@@ -1037,12 +1038,12 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 8, padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: '#cbd5e1' }]}>
-            <View style={styles.tableHeaderRow}>
-              <Text style={[styles.tableHeadCell, { flex: 1.4 }]}>Name & Mobile</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Registration</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Paid Bonus</Text>
+          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 8, padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: isLight ? '#cbd5e1' : cardBorder, backgroundColor: isLight ? '#ffffff' : cardBg }]}>
+            <View style={[styles.tableHeaderRow, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderBottomColor: isLight ? '#e2e8f0' : cardBorder }]}>
+              <Text style={[styles.tableHeadCell, { flex: 1.4, color: subTextColor }]}>Name & Mobile</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1, color: subTextColor }]}>Reg Date</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center', color: subTextColor }]}>Registration</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center', color: subTextColor }]}>Paid Bonus</Text>
             </View>
 
             {filteredReferees.length === 0 ? (
@@ -1123,6 +1124,7 @@ function WalletHistoryTable({
   referees: RefereeStatementItem[];
   theme: RoleTheme;
 }) {
+  const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -1202,12 +1204,12 @@ function WalletHistoryTable({
       {/* History Table (Collapsible) */}
       {isTxHistoryExpanded && (
         <View style={{ marginTop: 6 }}>
-          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: '#cbd5e1' }]}>
-            <View style={styles.historyTableHeader}>
-              <Text style={[styles.historyHeadCell, { flex: 1.4 }]}>Name & Mobile</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1.2 }]}>Type</Text>
-              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Credit Amount</Text>
+          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: isLight ? '#cbd5e1' : cardBorder, backgroundColor: isLight ? '#ffffff' : cardBg }]}>
+            <View style={[styles.historyTableHeader, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderBottomColor: isLight ? '#e2e8f0' : cardBorder }]}>
+              <Text style={[styles.historyHeadCell, { flex: 1.4, color: subTextColor }]}>Name & Mobile</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1, color: subTextColor }]}>Reg Date</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.2, color: subTextColor }]}>Type</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center', color: subTextColor }]}>Credit Amount</Text>
             </View>
 
             {unifiedLedger.length === 0 ? (

@@ -52,12 +52,18 @@ let UserSessionService = class UserSessionService {
     }
     createSession(userId, deviceInfo) {
         let sessions = this.userSessions.get(userId) || [];
+        const now = Date.now();
+        const INACTIVITY_EXPIRY_MS = 120 * 60 * 1000;
+        sessions = sessions.filter((s) => now - s.lastActiveAt < INACTIVITY_EXPIRY_MS);
+        if (deviceInfo) {
+            sessions = sessions.filter((s) => s.deviceInfo !== deviceInfo);
+        }
         const newSessionId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
         const newSession = {
             sessionId: newSessionId,
             userId,
-            createdAt: Date.now(),
-            lastActiveAt: Date.now(),
+            createdAt: now,
+            lastActiveAt: now,
             deviceInfo,
         };
         sessions.push(newSession);
@@ -88,7 +94,7 @@ let UserSessionService = class UserSessionService {
             evictedOldest,
         };
     }
-    isValidSession(userId, sessionId, tokenIatSec) {
+    isValidSession(userId, sessionId, tokenIatSec, isStaffOrPartner, isAdvisor) {
         const revokedBefore = this.revokedBeforeEpochSec.get(userId);
         if (revokedBefore && tokenIatSec && tokenIatSec < revokedBefore) {
             return false;
@@ -110,7 +116,22 @@ let UserSessionService = class UserSessionService {
             return true;
         }
         const sessions = this.userSessions.get(userId);
-        return sessions.some((s) => s.sessionId === sessionId);
+        const session = sessions.find((s) => s.sessionId === sessionId);
+        if (!session)
+            return false;
+        if (isAdvisor) {
+            return true;
+        }
+        if (isStaffOrPartner) {
+            const STAFF_IDLE_TIMEOUT_MS = 120 * 60 * 1000;
+            const now = Date.now();
+            if (now - session.lastActiveAt > STAFF_IDLE_TIMEOUT_MS) {
+                this.revokedSessionIds.add(sessionId);
+                this.userSessions.set(userId, sessions.filter((s) => s.sessionId !== sessionId));
+                return false;
+            }
+        }
+        return true;
     }
     touchActivity(userId) {
         this.lastSeenAt.set(userId, Date.now());

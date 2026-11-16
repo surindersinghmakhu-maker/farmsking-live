@@ -44,3 +44,11 @@
 - **Institutional ISO Compliance Standard**: Every view must adhere to strict institutional ISO 9001 (Quality Management) and ISO 27001 (Data Security) standards: displaying verified corporate identity (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`, CIN: `U01100PB2026PTC063294`), ICAR-aligned agronomy protocol seals, clear statutory disclaimers, and zero mock or broken states.
 - **Primary PC/Website View & Zero Truncation**: Desktop/PC view is the primary testing and visual benchmark. No header action button, user badge, dashboard card, or live ticker may ever be squeezed, truncated, clipped at the viewport edge, or obstructed by overlapping fixed elements. High-contrast custom scrollbars ensure that all content below the fold is immediately discoverable and smoothly scrollable.
 - **100% Pure English & Easy Wording**: All copy, labels, tooltips, telemetry readings, and status badges must remain in 100% pure professional English with direct, simple phrasing that farmers, agribusiness partners, and administrators grasp effortlessly without technical jargon.
+
+## 8. Two Distinct Farmer Plan Models (ਕਿਸਾਨਾਂ ਲਈ ਦੋ ਵੱਖ-ਵੱਖ ਪਲੈਨ ਮਾਡਲ)
+- **1. Farmer Plan (Farm Records & Account Management)**:
+  - Designed for farmers to manage their comprehensive agricultural records directly on the platform.
+  - Includes crop cultivation logs, acreage tracking, yield estimates, daily expenditure, digital bahi-khata (khatavani), commission agent (Arhtiya) interest calculations, and mandi conversion records.
+- **2. Crop Care Plan (Doctor & Advisor Consultation)**:
+  - Designed for professional agronomy guidance and plant pathology.
+  - Certified Crop Doctors and Farm/Garden Advisors offer consultation plans where they charge their professional advisory fee to farmers and guide them throughout the crop cycle with spray schedules, disease diagnosis, and treatment recommendations.

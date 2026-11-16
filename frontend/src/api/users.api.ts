@@ -177,8 +177,17 @@ export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = [
   'TRADER' as Role,
 ];
 
-export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
-  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });
+export async function updateActiveRoles(
+  id: string,
+  activeRoles: Role[],
+  advisorType?: AdvisorType | null,
+  primaryRole?: Role,
+): Promise<AdminUser> {
+  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, {
+    activeRoles,
+    advisorType,
+    primaryRole,
+  });
   return data;
 }
 
@@ -322,10 +331,14 @@ export async function requestDeleteMeOtp(mobile?: string): Promise<{
 export async function deleteMyAccount(payload?: {
   otp?: string;
   firebaseIdToken?: string;
-}): Promise<{ success: boolean; message: string }> {
-  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me', {
+  portal?: string;
+}): Promise<{ success: boolean; message: string; mode?: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string; mode?: string }>('/users/me', {
     data: payload,
-    headers: payload?.otp ? { 'x-delete-otp': payload.otp } : undefined,
+    headers: {
+      ...(payload?.otp ? { 'x-delete-otp': payload.otp } : {}),
+      ...(payload?.portal ? { 'x-portal': payload.portal } : {}),
+    },
   });
   return data;
 }

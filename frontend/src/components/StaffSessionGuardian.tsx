@@ -12,10 +12,10 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 
-// ISO 27001 Standard Inactivity Timeout: 15 minutes (900 seconds)
-const TIMEOUT_SECONDS = 15 * 60;
-// Warning triggers at last 2 minutes (120 seconds)
-const WARNING_THRESHOLD_SECONDS = 2 * 60;
+// Staff Inactivity Timeout: 120 minutes (7,200 seconds)
+const TIMEOUT_SECONDS = 120 * 60;
+// Warning triggers at last 5 minutes (300 seconds)
+const WARNING_THRESHOLD_SECONDS = 5 * 60;
 
 const STAFF_ROLES = [
   'ADMIN',
@@ -28,9 +28,6 @@ const STAFF_ROLES = [
   'STATE_MANAGER',
   'ACCOUNTS_MANAGER',
   'OPERATIONS_MANAGER',
-  'ADVISOR',
-  'FARM_ADVISOR',
-  'GARDEN_ADVISOR',
   'TECHNICAL_TRAINER',
 ];
 
@@ -38,7 +35,18 @@ export function StaffSessionGuardian() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const isStaff = Boolean(
+  // Advisors stay logged in permanently (no inactivity timeout)
+  const isAdvisor = Boolean(
+    user && (
+      user.role === 'ADVISOR' ||
+      user.role === 'FARM_ADVISOR' ||
+      user.role === 'GARDEN_ADVISOR' ||
+      Boolean(user.advisorType) ||
+      user.roles?.includes('ADVISOR')
+    )
+  );
+
+  const isStaff = !isAdvisor && Boolean(
     user && (STAFF_ROLES.includes(user.role) || user.roles?.some((r) => STAFF_ROLES.includes(r)))
   );
 
@@ -168,7 +176,7 @@ export function StaffSessionGuardian() {
             </Text>
             <Text style={styles.countdownBig}>{formattedTime}</Text>
             <Text style={styles.modalFootnote}>
-              Click "Keep Me Logged In" to extend your session for another 15 minutes.
+              Click "Keep Me Logged In" to extend your session for another 120 minutes.
             </Text>
             <View style={styles.modalBtnRow}>
               <TouchableOpacity
@@ -200,7 +208,7 @@ export function StaffSessionGuardian() {
             </View>
             <Text style={[styles.modalTitle, { color: '#f87171' }]}>Staff Session Terminated</Text>
             <Text style={styles.modalDesc}>
-              Your session was safely locked and logged out due to 15 minutes of inactivity. All master company data remains protected.
+              Your session was safely locked and logged out due to 120 minutes of inactivity. All master company data remains protected.
             </Text>
             <TouchableOpacity
               style={[styles.modalBtn, styles.modalBtnPrimary, { marginTop: 16 }]}

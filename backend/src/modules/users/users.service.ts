@@ -3,6 +3,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { JwtService } from '@nestjs/jwt';
 import {
   AdminStaffPermission,
+  AdvisorType,
   FarmerSubscriptionPlan,
   NotificationType,
   OperatorPermission,
@@ -514,10 +515,20 @@ export class UsersService implements OnModuleInit {
   }
 
   /** Self-service Account Deletion (Google Play Store Policy Requirement): Soft-deletes & purges PII, profile, wallet balance, and photos. */
-  async deleteMe(user: AuthUser, verification?: { otp?: string; firebaseIdToken?: string }) {
+  async deleteMe(user: AuthUser, verification?: { otp?: string; firebaseIdToken?: string; portal?: string }) {
     const dbUser = await this.prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, mobile: true, farmMobile: true, email: true, name: true, kingId: true },
+      select: {
+        id: true,
+        mobile: true,
+        farmMobile: true,
+        email: true,
+        name: true,
+        kingId: true,
+        role: true,
+        roles: true,
+        deactivatedRoles: true,
+      },
     });
 
     if (!dbUser) {
@@ -574,6 +585,79 @@ export class UsersService implements OnModuleInit {
       throw new BadRequestException('Server-side OTP or Firebase phone verification is required before deleting your account.');
     }
 
+    // Identify active roles across portals
+    const allRoles: Role[] = Array.from(new Set([dbUser.role, ...(dbUser.roles || [])]));
+    const currentDeactivatedRoles: Role[] = dbUser.deactivatedRoles || [];
+    const activeRoles: Role[] = allRoles.filter((r) => !currentDeactivatedRoles.includes(r));
+
+    const CLIENT_ROLES: Role[] = [Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.TRADER];
+    const STAFF_ROLES: Role[] = [Role.SUPERVISOR, Role.LABOUR];
+    const PARTNER_ROLES: Role[] = [Role.SELLER, Role.ADVISOR, Role.AGENT, Role.NURSERY_OWNER, Role.TECHNICAL_TRAINER];
+    const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.MANAGER, Role.OPERATOR, Role.ACCOUNTANT];
+
+    const activeStaffRoles = activeRoles.filter((r) => STAFF_ROLES.includes(r));
+    const activePartnerRoles = activeRoles.filter((r) => PARTNER_ROLES.includes(r));
+    const activeAdminRoles = activeRoles.filter((r) => ADMIN_ROLES.includes(r));
+    const activeClientRoles = activeRoles.filter((r) => CLIENT_ROLES.includes(r));
+
+    const requestedPortal = (verification?.portal || '').toUpperCase();
+
+    // 1. BLOCK STAFF & ADMIN SELF-DELETION
+    if (requestedPortal === 'STAFF' || (activeStaffRoles.length > 0 && activeClientRoles.length === 0 && activePartnerRoles.length === 0)) {
+      throw new BadRequestException(
+        'Staff accounts (Supervisor / Labour Worker) cannot be deleted directly from the app. Staff attendance, salary, and field operations are managed directly by your employer farmer. Please contact your employer or admin to deactivate your staff role.'
+      );
+    }
+
+    if (requestedPortal === 'ADMIN' || (activeAdminRoles.length > 0 && activeClientRoles.length === 0 && activePartnerRoles.length === 0)) {
+      throw new BadRequestException(
+        'Administrative governance accounts cannot be self-deleted from the mobile app. Please contact FarmsKing Board or Super Administrator.'
+      );
+    }
+
+    // 2. PARTNER PORTAL DEACTIVATION (Not full deletion, phone is NOT renamed, King ID preserved)
+    if (requestedPortal === 'PARTNER' || (activePartnerRoles.length > 0 && requestedPortal !== 'USER' && requestedPortal !== 'CLIENT')) {
+      const newDeactivatedRoles = Array.from(new Set([...currentDeactivatedRoles, ...activePartnerRoles]));
+
+      // Determine primary fallback role if primary role was a partner role
+      let newPrimaryRole = dbUser.role;
+      if (PARTNER_ROLES.includes(dbUser.role)) {
+        newPrimaryRole = activeClientRoles[0] || Role.CUSTOMER;
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: newPrimaryRole,
+          deactivatedRoles: newDeactivatedRoles,
+          isApproved: false,
+          profileStatus: 'DEACTIVATED',
+          specialization: null,
+          bio: null,
+          yearsExperience: null,
+        },
+      });
+
+      return {
+        success: true,
+        mode: 'PARTNER_DEACTIVATED',
+        message: 'Your FarmsKing Partner account has been securely deactivated. Active business listings, consultations, and doctor availability have been suspended. Because your tax invoices, GST sale bills, and agronomy advice records are legally linked to your King ID under statutory compliance rules, historical ledgers remain safely preserved. To settle pending balances, invoices, or reactivate your account, please contact FarmsKing Admin.',
+      };
+    }
+
+    // 3. CLIENT PORTAL DELETION (Farmer / Gardener / Consumer)
+    // Check if user has active Staff or Partner roles
+    if (activePartnerRoles.length > 0 || activeStaffRoles.length > 0) {
+      const linkedTypes: string[] = [];
+      if (activePartnerRoles.length > 0) linkedTypes.push(`Partner (${activePartnerRoles.join(', ')})`);
+      if (activeStaffRoles.length > 0) linkedTypes.push(`Staff (${activeStaffRoles.join(', ')})`);
+
+      throw new BadRequestException(
+        `Your King ID (${dbUser.kingId || 'Active'}) has an active ${linkedTypes.join(' and ')} account linked to this phone number. Deleting this account would disrupt commercial records, bills, and employer audit trails. Please deactivate or close your ${linkedTypes.join(' and ')} account first before deleting your Farmer account.`
+      );
+    }
+
+    // PROCEED WITH FULL MASTER CLIENT DELETION & ANONYMIZATION
     // 1. Zero out & clear remaining wallet balance — mark transaction clearly for audit
     try {
       const currentBalance = await this.walletService.getBalance(user.id);
@@ -653,7 +737,8 @@ export class UsersService implements OnModuleInit {
 
     return {
       success: true,
-      message: 'Your FarmsKing ID and account have been permanently deleted. Your mobile number has been unlinked and your personal information permanently removed, while linked historical records (orders, bills, audit ledger) remain safely preserved.',
+      mode: 'ACCOUNT_DELETED',
+      message: 'Your FarmsKing Client account has been permanently deleted. Your mobile number has been unlinked and freed for new registration, while historical transaction ledgers remain safely preserved under your King ID.',
     };
   }
 
@@ -1621,7 +1706,13 @@ export class UsersService implements OnModuleInit {
    * every partner/client account keeps for life. Granting FARMER or GARDENER here also provisions
    * their FREE FarmerPlan/GardenerPlan record, same as the self-serve becomeFarmer/becomeGardener flow.
    */
-  async updateActiveRoles(caller: AuthUser, id: string, activeRoles: Role[]) {
+  async updateActiveRoles(
+    caller: AuthUser,
+    id: string,
+    activeRoles: Role[],
+    advisorType?: AdvisorType | null,
+    primaryRole?: Role,
+  ) {
     const user = await this.findActiveOrThrow(id);
     this.assertCanManageTarget(caller, user);
     if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
@@ -1659,18 +1750,24 @@ export class UsersService implements OnModuleInit {
       ...toDeactivate,
     ];
 
-    // If primary role was deactivated, removed from active set, or was just CUSTOMER while operational roles exist -> pick clean primary
+    // Clean primary role resolution
     let newPrimary: Role = user.role;
-    if (
+    if (primaryRole && activeRoles.includes(primaryRole)) {
+      newPrimary = primaryRole;
+    } else if (
       toDeactivate.includes(user.role) ||
       !activeRoles.includes(user.role) ||
       user.role === Role.CUSTOMER
     ) {
       newPrimary = pickBestPrimaryRole(activeRoles);
-      if (!newRoles.includes(newPrimary)) newRoles.push(newPrimary);
     }
+    if (!newRoles.includes(newPrimary)) newRoles.push(newPrimary);
 
-    const isBrandNewAdvisor = toGrant.includes(Role.ADVISOR);
+    const isAdvisorActive = activeRoles.includes(Role.ADVISOR);
+    const finalAdvisorType = isAdvisorActive
+      ? (advisorType || user.advisorType || AdvisorType.FARM)
+      : null;
+
     const deactivatingSupervisor = toDeactivate.includes(Role.SUPERVISOR);
     const updated = await this.prisma.user.update({
       where: { id },
@@ -1678,7 +1775,7 @@ export class UsersService implements OnModuleInit {
         role: newPrimary,
         roles: newRoles,
         deactivatedRoles: newDeactivated,
-        ...(isBrandNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
+        advisorType: finalAdvisorType,
         ...(deactivatingSupervisor ? { employerFarmerId: null, supervisorPermissions: [] } : {}),
       },
       select: SAFE_USER_SELECT,

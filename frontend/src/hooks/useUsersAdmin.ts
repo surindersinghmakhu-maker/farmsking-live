@@ -90,7 +90,17 @@ export function useUserDetail(id: string | undefined) {
 export function useUpdateActiveRoles() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, activeRoles }: { id: string; activeRoles: Role[] }) => api.updateActiveRoles(id, activeRoles),
+    mutationFn: ({
+      id,
+      activeRoles,
+      advisorType,
+      primaryRole,
+    }: {
+      id: string;
+      activeRoles: Role[];
+      advisorType?: AdvisorType | null;
+      primaryRole?: Role;
+    }) => api.updateActiveRoles(id, activeRoles, advisorType, primaryRole),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] }),
   });
 }

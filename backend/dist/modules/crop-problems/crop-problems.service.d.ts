@@ -15,20 +15,20 @@ export declare class CropProblemsService {
     private readonly chatGateway;
     constructor(prisma: PrismaService, cropsService: CropsService, notificationsService: NotificationsService, chatService: ChatService, chatGateway: ChatGateway);
     create(user: AuthUser, dto: CreateCropProblemDto): Promise<{
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -47,10 +47,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -61,23 +61,23 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
     findAllForFarmer(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -96,10 +96,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -110,23 +110,23 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     })[]>;
     findAllForAdvisor(user: AuthUser): Promise<({
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -145,10 +145,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -159,23 +159,23 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     })[]>;
     findOneOrThrow(user: AuthUser, id: string): Promise<{
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -194,10 +194,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -208,25 +208,25 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
     private pickSprayInsertDate;
     respond(user: AuthUser, id: string, dto: RespondCropProblemDto): Promise<{
         insertedScheduleDate: Date | null;
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -244,10 +244,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -258,23 +258,23 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
     updateStatus(user: AuthUser, id: string, dto: UpdateCropProblemStatusDto): Promise<{
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -293,10 +293,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -307,26 +307,26 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
     rate(user: AuthUser, id: string, dto: {
         rating: number;
         feedback?: string;
     }): Promise<{
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -345,10 +345,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -359,23 +359,23 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
     forwardToSeniorDoctor(user: AuthUser, id: string): Promise<{
-        cropCycle: {
-            plot: {
-                id: string;
-                name: string;
-                farmId: string;
-            };
-            id: string;
-            cropName: string;
-        };
         assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
+        cropCycle: {
+            id: string;
+            plot: {
+                id: string;
+                name: string;
+                farmId: string;
+            };
+            cropName: string;
+        };
         reportedBy: {
             id: string;
             mobile: string;
@@ -394,10 +394,10 @@ export declare class CropProblemsService {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string;
         title: string;
+        assignedAdvisorId: string | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
-        cropCycleId: string;
+        description: string;
         reportedById: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
@@ -408,6 +408,6 @@ export declare class CropProblemsService {
         forwardedToSeniorAt: Date | null;
         forwardedFromJuniorId: string | null;
         resolvedAt: Date | null;
-        assignedAdvisorId: string | null;
+        cropCycleId: string;
     }>;
 }

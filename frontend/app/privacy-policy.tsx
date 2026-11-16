@@ -309,6 +309,7 @@ export default function PrivacyPolicyScreen() {
       <DeleteAccountModal
         visible={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
+        portal={user?.role && ['SELLER', 'ADVISOR', 'AGENT', 'NURSERY_OWNER', 'TECHNICAL_TRAINER'].includes(user.role) ? 'PARTNER' : 'USER'}
       />
     </View>
   );

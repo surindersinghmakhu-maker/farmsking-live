@@ -57,10 +57,44 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Your account is currently suspended or locked. Please contact Admin Support.');
     }
 
-    const isValid = this.userSessionService.isValidSession(user.id, payload.sid, payload.iat);
+    const advisorRoles = [
+      'ADVISOR',
+      'FARM_ADVISOR',
+      'GARDEN_ADVISOR',
+      'AGRONOMIST',
+      'DOCTOR',
+      'GARDEN_EXPERT',
+    ];
+    const isAdvisor =
+      advisorRoles.includes(user.role) ||
+      (user.roles || []).some((r: any) => advisorRoles.includes(r)) ||
+      Boolean((user as any).advisorType);
+
+    const staffOrPartnerRoles = [
+      'SELLER',
+      'ADMIN',
+      'SUPER_ADMIN',
+      'SUPERVISOR',
+      'LABOUR',
+      'TRAINER',
+      'TECHNICAL_TRAINER',
+      'FIELD_OFFICER',
+      'DELIVERY_PARTNER',
+      'NURSERY_PARTNER',
+      'OPERATOR',
+      'MANAGER',
+      'ACCOUNTANT',
+    ];
+    const isStaffOrPartner =
+      !isAdvisor &&
+      (staffOrPartnerRoles.includes(user.role) || (user.roles || []).some((r: any) => staffOrPartnerRoles.includes(r)));
+
+    const isValid = this.userSessionService.isValidSession(user.id, payload.sid, payload.iat, isStaffOrPartner, isAdvisor);
     if (!isValid) {
       throw new UnauthorizedException(
-        'Session Terminated: Please log in again to continue.',
+        isStaffOrPartner
+          ? 'Session Terminated: Staff/Partner session expired due to 120 minutes of inactivity. Please log in again.'
+          : 'Session Terminated: Please log in again to continue.',
       );
     }
 

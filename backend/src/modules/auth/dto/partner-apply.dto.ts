@@ -46,7 +46,16 @@ export class PartnerApplyDto {
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
+      if (
+        !trimmed ||
+        trimmed === 'null' ||
+        trimmed === 'undefined' ||
+        !trimmed.includes('@') ||
+        !trimmed.includes('.')
+      ) {
+        return undefined;
+      }
+      return trimmed.toLowerCase();
     }
     return undefined;
   })

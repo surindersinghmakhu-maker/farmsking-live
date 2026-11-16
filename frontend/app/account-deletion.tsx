@@ -282,6 +282,7 @@ export default function AccountDeletionScreen() {
       <DeleteAccountModal
         visible={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
+        portal={user?.role && ['SELLER', 'ADVISOR', 'AGENT', 'NURSERY_OWNER', 'TECHNICAL_TRAINER'].includes(user.role) ? 'PARTNER' : 'USER'}
       />
     </View>
   );

@@ -20,6 +20,7 @@ import { CopyButton } from '@/src/components/CopyButton';
 import { useAvailablePromotions, useCouponPreview } from '@/src/hooks/useCoupons';
 import { useMyReferralNetwork } from '@/src/hooks/useReferralNetwork';
 import { useRedeemBasicPlanCoupon } from '@/src/hooks/useBasicPlanCoupons';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -38,6 +39,7 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
 }) => {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [inputCode, setInputCode] = useState('');
   const [status, setStatus] = useState<{ type: 'SUCCESS' | 'ERROR' | null; message: string }>({
     type: null,
@@ -102,7 +104,7 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
   const promos = availablePromos || [];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f8fafc' : (colors.bg || '#020d06') }]}>
       <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
         <View style={styles.heroHeaderRow}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -138,15 +140,15 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Section 1: Real Backend Coupon & Plan Key Verifier */}
-        <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-          <Text style={styles.cardTitle}>Verify Promo Code or Redeem Plan Key</Text>
-          <Text style={styles.cardSub}>
+        <View style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
+          <Text style={[styles.cardTitle, { color: isLight ? '#0f172a' : textColor }]}>Verify Promo Code or Redeem Plan Key</Text>
+          <Text style={[styles.cardSub, { color: isLight ? '#64748b' : subTextColor }]}>
             Enter a FarmsKing store promo code, partner invite code, or pre-paid plan pass key:
           </Text>
 
           <View style={styles.inputRow}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isLight ? '#f1f5f9' : innerBg, color: isLight ? '#0f172a' : textColor }]}
               placeholder="ENTER CODE"
               placeholderTextColor="#94a3b8"
               value={inputCode}
@@ -214,15 +216,15 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
         ) : null}
 
         {/* Section 3: Live Database Active Offers */}
-        <Text style={styles.sectionHeaderTitle}>ACTIVE STORE PROMOTIONS (LIVE)</Text>
+        <Text style={[styles.sectionHeaderTitle, { color: isLight ? '#64748b' : subTextColor }]}>ACTIVE STORE PROMOTIONS (LIVE)</Text>
 
         {promosLoading ? (
           <ActivityIndicator color="#059669" style={{ marginVertical: 16 }} />
         ) : promos.length === 0 ? (
-          <View style={[styles.emptyOfferCard, premiumShadow('#0f172a', 'sm')]}>
+          <View style={[styles.emptyOfferCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
             <Ionicons name="pricetags-outline" size={26} color="#64748b" />
-            <Text style={styles.emptyOfferTitle}>No Public Store Campaigns Active Right Now</Text>
-            <Text style={styles.emptyOfferSub}>
+            <Text style={[styles.emptyOfferTitle, { color: isLight ? '#0f172a' : textColor }]}>No Public Store Campaigns Active Right Now</Text>
+            <Text style={[styles.emptyOfferSub, { color: isLight ? '#64748b' : subTextColor }]}>
               If your advisor or FarmsKing sales partner gave you an invite code, enter it above to check your discount and apply it during Agri Store checkout.
             </Text>
           </View>
@@ -241,25 +243,25 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
             });
 
             return (
-              <View key={promo.id} style={[styles.offerCard, premiumShadow('#000000', 'sm')]}>
+              <View key={promo.id} style={[styles.offerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder, borderWidth: 1 }, premiumShadow('#000000', 'sm')]}>
                 <View style={styles.offerCardHeader}>
-                  <View style={styles.codeBadge}>
-                    <Ionicons name="pricetag" size={14} color="#0f172a" />
-                    <Text style={styles.codeBadgeText}>{promo.code}</Text>
+                  <View style={[styles.codeBadge, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
+                    <Ionicons name="pricetag" size={14} color={isLight ? '#0f172a' : textColor} />
+                    <Text style={[styles.codeBadgeText, { color: isLight ? '#0f172a' : textColor }]}>{promo.code}</Text>
                   </View>
                   <View style={styles.discountPill}>
                     <Text style={styles.discountPillText}>{badgeText}</Text>
                   </View>
                 </View>
 
-                <Text style={styles.offerTitle}>Save {badgeText} at Agri Store</Text>
-                <Text style={styles.offerDesc}>
+                <Text style={[styles.offerTitle, { color: isLight ? '#0f172a' : textColor }]}>Save {badgeText} at Agri Store</Text>
+                <Text style={[styles.offerDesc, { color: isLight ? '#475569' : subTextColor }]}>
                   {minOrder}
                   {maxCap} · {promo.remainingUses} redemptions remaining
                 </Text>
 
-                <View style={styles.offerFooter}>
-                  <Text style={styles.validText}>Valid until: {expiryStr}</Text>
+                <View style={[styles.offerFooter, { borderTopColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.08)' }]}>
+                  <Text style={[styles.validText, { color: isLight ? '#64748b' : subTextColor }]}>Valid until: {expiryStr}</Text>
                   <CopyButton value={promo.code} />
                 </View>
               </View>

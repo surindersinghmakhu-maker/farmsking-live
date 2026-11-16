@@ -15,6 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { useRole } from '@/src/store/role-context';
 import { useCrops } from '@/src/store/crops-context';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface SavedPlot {
   id: string;
@@ -39,6 +40,7 @@ interface SatelliteZone {
 
 export default function SatelliteMapScreen() {
   const router = useRouter();
+  const { colors: tConfig, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const params = useLocalSearchParams<{
     cropId?: string;
     cropName?: string;
@@ -165,13 +167,13 @@ export default function SatelliteMapScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }]}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : cardBg, borderBottomColor: isLight ? '#e2e8f0' : cardBorder }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
+          <Ionicons name="arrow-back" size={22} color={textColor} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🛰️ Satellite Field Scanner</Text>
+        <Text style={[styles.headerTitle, { color: textColor }]}>🛰️ Satellite Field Scanner</Text>
         <View style={[
           styles.roleTag,
           isAdmin ? { backgroundColor: '#f3e8ff' } : isAdvisor ? { backgroundColor: '#eff6ff' } : { backgroundColor: '#dcfce7' }
@@ -204,12 +206,12 @@ export default function SatelliteMapScreen() {
 
         {/* IF NO REAL CROPS REGISTERED YET */}
         {realPlotsList.length === 0 || !selectedPlot ? (
-          <View style={styles.emptyCropsCard}>
+          <View style={[styles.emptyCropsCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={styles.emptyIconCircle}>
               <Ionicons name="leaf" size={36} color="#16a34a" />
             </View>
-            <Text style={styles.emptyCropsTitle}>No Registered Crops Found</Text>
-            <Text style={styles.emptyCropsSub}>
+            <Text style={[styles.emptyCropsTitle, { color: textColor }]}>No Registered Crops Found</Text>
+            <Text style={[styles.emptyCropsSub, { color: subTextColor }]}>
               Register your real crops in My Crops & Fields to enable satellite GPS mapping and advisor diagnostics.
             </Text>
             <TouchableOpacity
@@ -241,21 +243,21 @@ export default function SatelliteMapScreen() {
             </TouchableOpacity>
 
             {/* Real Crop Plot Selector Dropdown */}
-            <View style={styles.selectorCard}>
-              <Text style={styles.selectorLabel}>Select Real Registered Crop Plot:</Text>
+            <View style={[styles.selectorCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
+              <Text style={[styles.selectorLabel, { color: subTextColor }]}>Select Real Registered Crop Plot:</Text>
               <TouchableOpacity
-                style={styles.pickerBox}
+                style={[styles.pickerBox, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}
                 activeOpacity={0.8}
                 onPress={() => setShowPlotPicker(true)}
               >
                 <Ionicons name="leaf" size={20} color={isAdmin ? '#7c3aed' : isAdvisor ? '#2563eb' : '#16a34a'} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.pickerText}>{selectedPlot.name} — {selectedPlot.cropName}</Text>
-                  <Text style={styles.pickerSubText}>
+                  <Text style={[styles.pickerText, { color: textColor }]}>{selectedPlot.name} — {selectedPlot.cropName}</Text>
+                  <Text style={[styles.pickerSubText, { color: subTextColor }]}>
                     {selectedPlot.coordsText} ({selectedPlot.areaAcres} Acres) · {isAdminUnlocked ? '🔓 Admin Unlocked' : selectedPlot.isLocked ? '🔒 Locked' : '🔓 Unlocked'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={20} color="#64748b" />
+                <Ionicons name="chevron-down" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -292,27 +294,27 @@ export default function SatelliteMapScreen() {
               </View>
             ) : isAdvisor ? (
               /* MODE 2: ADVISOR COMPREHENSIVE CROP ADVISORY & DIAGNOSTIC CARD (EASY ENGLISH) */
-              <View style={styles.advisorAnalysisCard}>
+              <View style={[styles.advisorAnalysisCard, { backgroundColor: isLight ? '#eff6ff' : cardBg, borderColor: isLight ? '#bfdbfe' : cardBorder }]}>
                 <View style={styles.tailoredHeader}>
                   <Ionicons name="analytics" size={20} color="#1d4ed8" />
-                  <Text style={[styles.tailoredTitle, { color: '#1e40af' }]}>
+                  <Text style={[styles.tailoredTitle, { color: isLight ? '#1e40af' : '#60a5fa' }]}>
                     🎓 Advisor Diagnostic & Crop Advisory — {selectedPlot.cropName}
                   </Text>
                 </View>
 
                 {/* 1. Full Crop Profile Details in Easy English */}
-                <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e3a8a' }}>
+                <View style={{ backgroundColor: isLight ? '#ffffff' : innerBg, borderRadius: 10, padding: 10, borderWidth: 1, borderColor: isLight ? '#bfdbfe' : cardBorder, marginBottom: 8, gap: 4 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: isLight ? '#1e3a8a' : '#93c5fd' }}>
                     📋 Field & Crop Profile Summary
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 2 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: subTextColor }}>
                       🌾 Crop: <Text style={{ fontWeight: '800', color: '#16a34a' }}>{selectedPlot.cropName}</Text>
                     </Text>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
-                      📏 Field Area: <Text style={{ fontWeight: '800' }}>{selectedPlot.areaAcres} Acres</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: subTextColor }}>
+                      📏 Field Area: <Text style={{ fontWeight: '800', color: textColor }}>{selectedPlot.areaAcres} Acres</Text>
                     </Text>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: subTextColor }}>
                       📍 GPS Stamp: <Text style={{ fontWeight: '800', color: '#0284c7' }}>{selectedPlot.coordsText}</Text>
                     </Text>
                   </View>
@@ -320,24 +322,24 @@ export default function SatelliteMapScreen() {
 
                 {/* 2. Technical Satellite Metrics in Easy English */}
                 <View style={styles.matrixGrid}>
-                  <View style={styles.matrixBox}>
+                  <View style={[styles.matrixBox, { backgroundColor: isLight ? '#f0f9ff' : innerBg, borderColor: isLight ? '#bae6fd' : cardBorder }]}>
                     <Text style={styles.matrixLabel}>Vegetation NDVI Score</Text>
-                    <Text style={styles.matrixValue}>0.82 (High Healthy Peak)</Text>
+                    <Text style={[styles.matrixValue, { color: textColor }]}>0.82 (High Healthy Peak)</Text>
                   </View>
 
-                  <View style={styles.matrixBox}>
+                  <View style={[styles.matrixBox, { backgroundColor: isLight ? '#f0f9ff' : innerBg, borderColor: isLight ? '#bae6fd' : cardBorder }]}>
                     <Text style={styles.matrixLabel}>Disease Risk Level</Text>
                     <Text style={[styles.matrixValue, { color: '#dc2626' }]}>84% Yellow Rust Risk</Text>
                   </View>
                 </View>
 
                 <View style={styles.matrixGrid}>
-                  <View style={styles.matrixBox}>
+                  <View style={[styles.matrixBox, { backgroundColor: isLight ? '#f0f9ff' : innerBg, borderColor: isLight ? '#bae6fd' : cardBorder }]}>
                     <Text style={styles.matrixLabel}>Soil Hydration Level</Text>
-                    <Text style={styles.matrixValue}>48.3% Average Moisture</Text>
+                    <Text style={[styles.matrixValue, { color: textColor }]}>48.3% Average Moisture</Text>
                   </View>
 
-                  <View style={styles.matrixBox}>
+                  <View style={[styles.matrixBox, { backgroundColor: isLight ? '#f0f9ff' : innerBg, borderColor: isLight ? '#bae6fd' : cardBorder }]}>
                     <Text style={styles.matrixLabel}>GPS Boundary Lock</Text>
                     <Text style={[styles.matrixValue, { color: '#16a34a' }]}>
                       {isAdminUnlocked ? '🔓 Admin Unlocked' : '🔒 Verified & Locked'}
@@ -346,28 +348,28 @@ export default function SatelliteMapScreen() {
                 </View>
 
                 {/* 3. Recommended Advisor Instructions for Farmer (Easy English Advice) */}
-                <View style={{ backgroundColor: '#f0fdf4', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 6, gap: 6 }}>
-                  <Text style={{ fontSize: 12, fontWeight: '800', color: '#15803d' }}>
+                <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.1)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.3)', marginTop: 6, gap: 6 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '800', color: isLight ? '#15803d' : '#34d399' }}>
                     💡 Step-by-Step Advisory Actions to Prescribe to Farmer:
                   </Text>
 
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                     <Ionicons name="water" size={14} color="#0284c7" />
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#166534', flex: 1, lineHeight: 16 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: isLight ? '#166534' : '#86efac', flex: 1, lineHeight: 16 }}>
                       💧 <Text style={{ fontWeight: '800', color: '#0369a1' }}>Irrigation Recommendation:</Text> Instruct farmer to apply light irrigation within 24 hours to relieve central zone moisture stress. Avoid standing water.
                     </Text>
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                     <Ionicons name="flask" size={14} color="#dc2626" />
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#166534', flex: 1, lineHeight: 16 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: isLight ? '#166534' : '#86efac', flex: 1, lineHeight: 16 }}>
                       💊 <Text style={{ fontWeight: '800', color: '#dc2626' }}>Fungicide Spray Treatment:</Text> Prescribe 200ml Propiconazole 25% EC (Tilt) mixed in 200L water per acre after morning dew clears to stop Rust spread.
                     </Text>
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
                     <Ionicons name="leaf" size={14} color="#16a34a" />
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#166534', flex: 1, lineHeight: 16 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: isLight ? '#166534' : '#86efac', flex: 1, lineHeight: 16 }}>
                       🧪 <Text style={{ fontWeight: '800', color: '#15803d' }}>Nutrient Dosage:</Text> Advise top-dressing 20kg Urea per acre with irrigation for vigorous tillering and leaf recovery.
                     </Text>
                   </View>
@@ -387,54 +389,54 @@ export default function SatelliteMapScreen() {
               </View>
             ) : (
               /* MODE 3: FARMER NEED-BASED ACTION VIEW */
-              <View style={styles.farmerActionCard}>
+              <View style={[styles.farmerActionCard, { backgroundColor: isLight ? '#f0fdf4' : cardBg, borderColor: isLight ? '#86efac' : cardBorder }]}>
                 <View style={styles.tailoredHeader}>
                   <Ionicons name="leaf" size={20} color="#15803d" />
                   <Text style={styles.tailoredTitle}>🌾 Farmer Action Summary — {selectedPlot.cropName}</Text>
                 </View>
 
                 {/* Health Status */}
-                <View style={styles.actionRowItem}>
+                <View style={[styles.actionRowItem, { backgroundColor: isLight ? '#f8fafc' : innerBg }]}>
                   <View style={styles.actionIconBgGreen}>
                     <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.actionItemTitle}>Overall Field Health Status</Text>
-                    <Text style={styles.actionItemSub}>88% Healthy Crop Growth ({selectedPlot.name})</Text>
+                    <Text style={[styles.actionItemTitle, { color: textColor }]}>Overall Field Health Status</Text>
+                    <Text style={[styles.actionItemSub, { color: subTextColor }]}>88% Healthy Crop Growth ({selectedPlot.name})</Text>
                   </View>
                 </View>
 
                 {/* Water Moisture Requirement */}
-                <View style={styles.actionRowItem}>
+                <View style={[styles.actionRowItem, { backgroundColor: isLight ? '#f8fafc' : innerBg }]}>
                   <View style={styles.actionIconBgAmber}>
                     <Ionicons name="water" size={18} color="#d97706" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.actionItemTitle}>Irrigation Requirement (Water)</Text>
-                    <Text style={styles.actionItemSub}>Central Zone needs watering within 24 Hours (Moisture 42%)</Text>
+                    <Text style={[styles.actionItemTitle, { color: textColor }]}>Irrigation Requirement (Water)</Text>
+                    <Text style={[styles.actionItemSub, { color: subTextColor }]}>Central Zone needs watering within 24 Hours (Moisture 42%)</Text>
                   </View>
                 </View>
 
                 {/* Spray Prescription */}
-                <View style={styles.actionRowItem}>
+                <View style={[styles.actionRowItem, { backgroundColor: isLight ? '#f8fafc' : innerBg }]}>
                   <View style={styles.actionIconBgRed}>
                     <Ionicons name="alert-circle" size={18} color="#dc2626" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.actionItemTitle}>Recommended Spray / Treatment</Text>
-                    <Text style={styles.actionItemSub}>Apply Tilt 25% EC (Propiconazole) on South Corner</Text>
+                    <Text style={[styles.actionItemTitle, { color: textColor }]}>Recommended Spray / Treatment</Text>
+                    <Text style={[styles.actionItemSub, { color: subTextColor }]}>Apply Tilt 25% EC (Propiconazole) on South Corner</Text>
                   </View>
                 </View>
               </View>
             )}
 
             {/* Interactive Satellite Scanner & Live Field Photo Viewer */}
-            <View style={styles.mapContainer}>
+            <View style={[styles.mapContainer, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
               {/* Header & Mode Switcher */}
               <View style={styles.mapHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.mapTitle}>🛰️ Satellite Scanner — {selectedPlot.cropName}</Text>
-                  <Text style={styles.mapDate}>📍 {selectedPlot.name} · {selectedPlot.coordsText}</Text>
+                  <Text style={[styles.mapTitle, { color: textColor }]}>🛰️ Satellite Scanner — {selectedPlot.cropName}</Text>
+                  <Text style={[styles.mapDate, { color: subTextColor }]}>📍 {selectedPlot.name} · {selectedPlot.coordsText}</Text>
                 </View>
 
                 {/* View Switcher Chips */}
@@ -555,7 +557,7 @@ export default function SatelliteMapScreen() {
               )}
 
               {/* Compact Executive Summary Bar */}
-              <View style={styles.executiveSummaryRow}>
+              <View style={[styles.executiveSummaryRow, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
                 <View style={styles.execMetricItem}>
                   <Text style={styles.execMetricLabel}>NDVI Coverage</Text>
                   <Text style={styles.execMetricValue}>0.82 (Healthy)</Text>
@@ -574,25 +576,25 @@ export default function SatelliteMapScreen() {
             </View>
 
             {/* Detailed Zone Breakdown */}
-            <Text style={styles.sectionHeading}>📊 Detailed Plot Zone Breakdown</Text>
+            <Text style={[styles.sectionHeading, { color: textColor }]}>📊 Detailed Plot Zone Breakdown</Text>
 
             {mockZones.map((zone) => (
-              <View key={zone.id} style={[styles.zoneCard, { borderLeftColor: zone.color }]}>
+              <View key={zone.id} style={[styles.zoneCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderLeftColor: zone.color }]}>
                 <View style={styles.zoneHeader}>
-                  <Text style={styles.zoneName}>{zone.zoneName}</Text>
+                  <Text style={[styles.zoneName, { color: textColor }]}>{zone.zoneName}</Text>
                   <Text style={styles.zoneArea}>{zone.areaAcres} Acres</Text>
                 </View>
                 <Text style={styles.zoneStatus}>{zone.statusLabel}</Text>
 
                 <View style={styles.statsRow}>
-                  <View style={styles.statBox}>
+                  <View style={[styles.statBox, { backgroundColor: isLight ? '#f8fafc' : innerBg }]}>
                     <Text style={styles.statLabel}>NDVI Index Score</Text>
-                    <Text style={styles.statValue}>{zone.ndviScore}</Text>
+                    <Text style={[styles.statValue, { color: textColor }]}>{zone.ndviScore}</Text>
                   </View>
 
-                  <View style={styles.statBox}>
+                  <View style={[styles.statBox, { backgroundColor: isLight ? '#f8fafc' : innerBg }]}>
                     <Text style={styles.statLabel}>Soil Moisture Level</Text>
-                    <Text style={styles.statValue}>{zone.moisturePercent}%</Text>
+                    <Text style={[styles.statValue, { color: textColor }]}>{zone.moisturePercent}%</Text>
                   </View>
                 </View>
               </View>
@@ -604,11 +606,11 @@ export default function SatelliteMapScreen() {
       {/* SAVED REAL CROPS PICKER MODAL */}
       <Modal visible={showPlotPicker} transparent animationType="fade" onRequestClose={() => setShowPlotPicker(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.pickerModalCard}>
+          <View style={[styles.pickerModalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={styles.pickerModalHeader}>
-              <Text style={styles.pickerModalTitle}>Registered Crop Plots ({realPlotsList.length})</Text>
+              <Text style={[styles.pickerModalTitle, { color: textColor }]}>Registered Crop Plots ({realPlotsList.length})</Text>
               <TouchableOpacity onPress={() => setShowPlotPicker(false)}>
-                <Ionicons name="close" size={20} color="#64748b" />
+                <Ionicons name="close" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -617,7 +619,8 @@ export default function SatelliteMapScreen() {
                 key={plot.id}
                 style={[
                   styles.plotOptionCard,
-                  selectedPlot?.id === plot.id && styles.selectedPlotOptionCard,
+                  { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder },
+                  selectedPlot?.id === plot.id && { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16,185,129,0.15)', borderColor: isLight ? '#bbf7d0' : 'rgba(16,185,129,0.35)' },
                 ]}
                 activeOpacity={0.8}
                 onPress={() => {
@@ -627,8 +630,8 @@ export default function SatelliteMapScreen() {
                 }}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.plotOptionName}>{plot.name}</Text>
-                  <Text style={styles.plotOptionSub}>
+                  <Text style={[styles.plotOptionName, { color: textColor }]}>{plot.name}</Text>
+                  <Text style={[styles.plotOptionSub, { color: subTextColor }]}>
                     🌾 {plot.cropName} · {plot.coordsText} ({plot.areaAcres} Acres)
                   </Text>
                 </View>

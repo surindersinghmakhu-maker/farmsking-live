@@ -32,13 +32,24 @@ export class UserSessionService {
     evictedOldest: boolean;
   } {
     let sessions = this.userSessions.get(userId) || [];
+    const now = Date.now();
+    const INACTIVITY_EXPIRY_MS = 120 * 60 * 1000; // 120 minutes
+
+    // Clean up expired sessions so dead sessions don't trigger false multiple-logins warnings
+    sessions = sessions.filter((s) => now - s.lastActiveAt < INACTIVITY_EXPIRY_MS);
+
+    // If logging in from the same device / client, replace that device's session cleanly
+    if (deviceInfo) {
+      sessions = sessions.filter((s) => s.deviceInfo !== deviceInfo);
+    }
+
     const newSessionId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
     
     const newSession: UserSession = {
       sessionId: newSessionId,
       userId,
-      createdAt: Date.now(),
-      lastActiveAt: Date.now(),
+      createdAt: now,
+      lastActiveAt: now,
       deviceInfo,
     };
 
@@ -78,8 +89,10 @@ export class UserSessionService {
 
   /**
    * Validates whether a specific sessionId is still active for the user.
+   * If isAdvisor is true, timeout is completely bypassed so advisor stays permanently logged in.
+   * If isStaffOrPartner is true and not advisor, enforces 120-minute idle inactivity timeout.
    */
-  isValidSession(userId: string, sessionId?: string, tokenIatSec?: number): boolean {
+  isValidSession(userId: string, sessionId?: string, tokenIatSec?: number, isStaffOrPartner?: boolean, isAdvisor?: boolean): boolean {
     const revokedBefore = this.revokedBeforeEpochSec.get(userId);
     if (revokedBefore && tokenIatSec && tokenIatSec < revokedBefore) {
       return false;
@@ -103,7 +116,29 @@ export class UserSessionService {
     }
 
     const sessions = this.userSessions.get(userId)!;
-    return sessions.some((s) => s.sessionId === sessionId);
+    const session = sessions.find((s) => s.sessionId === sessionId);
+    if (!session) return false;
+
+    // Advisors stay logged in permanently with no inactivity timeout
+    if (isAdvisor) {
+      return true;
+    }
+
+    // 120-Minute Inactivity Idle Session Check for Staff, Admin & Partners
+    if (isStaffOrPartner) {
+      const STAFF_IDLE_TIMEOUT_MS = 120 * 60 * 1000; // 120 minutes (2 hours)
+      const now = Date.now();
+      if (now - session.lastActiveAt > STAFF_IDLE_TIMEOUT_MS) {
+        this.revokedSessionIds.add(sessionId);
+        this.userSessions.set(
+          userId,
+          sessions.filter((s) => s.sessionId !== sessionId)
+        );
+        return false;
+      }
+    }
+
+    return true;
   }
 
   touchActivity(userId: string): void {

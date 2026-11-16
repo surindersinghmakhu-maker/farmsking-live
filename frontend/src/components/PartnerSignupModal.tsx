@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { FONT, RADIUS } from '@/constants/theme';
 import { resolveMediaUrl } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
+import { useAuth } from '@/src/store/auth-context';
 import {
   PartnerApplicationDto,
   PartnerUserSummary,
@@ -29,9 +31,14 @@ interface PartnerSignupModalProps {
   visible: boolean;
   onClose: () => void;
   initialMobile?: string;
+  mobile?: string;
   initialPartnerUploadToken?: string | null;
+  uploadToken?: string | null;
   initialExistingUserSummary?: PartnerUserSummary | null;
+  existingUserSummary?: PartnerUserSummary | null;
   initialExistingApplication?: PartnerApplicationDto | null;
+  existingApplication?: PartnerApplicationDto | null;
+  onSubmitted?: (info: { mobile: string; application: any }) => void;
 }
 
 type DocFieldKey =
@@ -112,20 +119,69 @@ function formatPartnerRoleLabel(role: 'AGENT' | 'ADVISOR' | 'SELLER' | 'NURSERY_
   return advType === 'GARDEN' ? 'Garden Advisor' : 'Crop Doctor / Advisor';
 }
 
+function cleanEmailString(val?: string | null, mobileContext?: string): string {
+  if (!val) return '';
+  const s = String(val).trim().toLowerCase();
+  // Strictly prevent mobile numbers or digits-only values from being treated as email
+  if (/^\+?\d+$/.test(s)) return '';
+  if (mobileContext) {
+    const rawDigits = mobileContext.replace(/\D/g, '').slice(-10);
+    if (rawDigits && s.includes(rawDigits)) return '';
+  }
+  if (
+    s === 'null' ||
+    s === 'undefined' ||
+    s === 'none' ||
+    !s.includes('@') ||
+    !s.includes('.') ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)
+  ) {
+    return '';
+  }
+  return s;
+}
+
 export function PartnerSignupModal({
   visible,
   onClose,
   initialMobile = '',
+  mobile: propMobile,
   initialPartnerUploadToken = null,
+  uploadToken: propUploadToken,
   initialExistingUserSummary = null,
+  existingUserSummary: propUserSummary,
   initialExistingApplication = null,
+  existingApplication: propApp,
+  onSubmitted,
 }: PartnerSignupModalProps) {
+  const auth = useAuth?.();
+  const sessionUser = auth?.user;
+  const effectiveInitialMobile = initialMobile || propMobile || '';
+  const effectiveUploadToken = initialPartnerUploadToken || propUploadToken || null;
+  const effectiveUserSummary = initialExistingUserSummary || propUserSummary || null;
+  const effectiveApp = initialExistingApplication || propApp || null;
+
+  const { width, height } = useWindowDimensions();
+  const isMobile = width < 640;
+  const isDesktop = width >= 720;
+  const scrollMaxHeight = Math.max(280, Math.min(560, height - 190));
+
   // Wizard Steps: 1 (Role & OTP) -> 2 (Profile & Hub) -> 3 (KYC & Payouts) -> 4 (Submitted)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   // OTP & Mobile state
   const [mobile, setMobile] = useState('');
-  const [otpInput, setOtpInput] = useState('');
+  const otpCellRefs = [
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+    useRef<TextInput>(null),
+  ];
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [focusedOtpIdx, setFocusedOtpIdx] = useState<number | null>(null);
+  const autoSubmittedOtpRef = useRef<string | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
@@ -149,6 +205,8 @@ export function PartnerSignupModal({
   const [pincode, setPincode] = useState('');
   const [postOffice, setPostOffice] = useState('');
   const [postOffices, setPostOffices] = useState<string[]>([]);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [branchSearch, setBranchSearch] = useState('');
   const [village, setVillage] = useState('');
   const [district, setDistrict] = useState('');
   const [stateName, setStateName] = useState('');
@@ -202,7 +260,7 @@ export function PartnerSignupModal({
       }
 
       setName(app.name || userSummary?.name || '');
-      setEmail(app.email || userSummary?.email || '');
+      setEmail(cleanEmailString(app.email || userSummary?.email, mobile || app.mobile));
       setPincode(app.pincode || userSummary?.pincode || '');
       setPostOffice(app.postOffice || userSummary?.postOffice || '');
       setVillage(app.village || userSummary?.village || '');
@@ -237,7 +295,7 @@ export function PartnerSignupModal({
       setGstDocUrl(app.gstDocUrl || userSummary?.gstDocUrl || '');
     } else if (userSummary) {
       setName(userSummary.name || '');
-      setEmail(userSummary.email || '');
+      setEmail(cleanEmailString(userSummary.email, mobile || userSummary.mobile));
       setPincode(userSummary.pincode || '');
       setPostOffice(userSummary.postOffice || '');
       setVillage(userSummary.village || '');
@@ -265,20 +323,25 @@ export function PartnerSignupModal({
   useEffect(() => {
     if (visible) {
       setErrorMsg(null);
-      if (initialMobile) {
-        setMobile(initialMobile.replace(/\D/g, '').slice(-10));
+      const startingMobile = effectiveInitialMobile || (sessionUser?.mobile ? String(sessionUser.mobile) : '');
+      if (startingMobile) {
+        setMobile(startingMobile.replace(/\D/g, '').slice(-10));
       }
-      if (initialPartnerUploadToken) {
-        setUploadToken(initialPartnerUploadToken);
+      if (effectiveUploadToken) {
+        setUploadToken(effectiveUploadToken);
       }
-      if (initialExistingUserSummary || initialExistingApplication) {
-        applyPrefillFromServer(initialExistingUserSummary, initialExistingApplication);
+      if (effectiveUserSummary || effectiveApp) {
+        applyPrefillFromServer(effectiveUserSummary, effectiveApp);
+      } else if (sessionUser) {
+        if (sessionUser.name && !name) setName(sessionUser.name);
+        if (sessionUser.email && !email) setEmail(cleanEmailString(sessionUser.email, sessionUser.mobile || startingMobile));
       }
     } else {
       // Reset wizard
       setCurrentStep(1);
       setMobile('');
-      setOtpInput('');
+      setOtpDigits(['', '', '', '', '', '']);
+      autoSubmittedOtpRef.current = null;
       setOtpSent(false);
       setDevOtp(null);
       setUploadToken(null);
@@ -295,6 +358,8 @@ export function PartnerSignupModal({
       setPincode('');
       setPostOffice('');
       setPostOffices([]);
+      setShowBranchModal(false);
+      setBranchSearch('');
       setVillage('');
       setDistrict('');
       setStateName('');
@@ -321,7 +386,15 @@ export function PartnerSignupModal({
       setGstDocUrl('');
       setTermsAccepted(false);
     }
-  }, [visible, initialMobile, initialPartnerUploadToken, initialExistingUserSummary, initialExistingApplication]);
+  }, [
+    visible,
+    effectiveInitialMobile,
+    effectiveUploadToken,
+    effectiveUserSummary,
+    effectiveApp,
+    sessionUser?.mobile,
+    sessionUser?.email,
+  ]);
 
   const handleSelectRole = (card: PartnerRoleCardConfig) => {
     setSelectedRoleCardId(card.id);
@@ -339,10 +412,13 @@ export function PartnerSignupModal({
     }
     setBusyOtp(true);
     setErrorMsg(null);
+    autoSubmittedOtpRef.current = null;
     try {
       const res = await sendPartnerOtpApi(clean);
       setOtpSent(true);
+      setOtpDigits(['', '', '', '', '', '']);
       setDevOtp(res.devOtp ? String(res.devOtp) : null);
+      setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Unable to send OTP.';
       setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
@@ -351,44 +427,117 @@ export function PartnerSignupModal({
     }
   };
 
-  const handleVerifyOtp = async () => {
-    const clean = mobile.replace(/\D/g, '').slice(-10);
-    const code = otpInput.trim();
-    if (code.length < 4) {
-      setErrorMsg('Please enter the 4-digit OTP code.');
+  const handleDigitChange = (val: string, index: number) => {
+    const clean = val.replace(/\D/g, '');
+    if (clean.length > 1) {
+      const pasted = clean.slice(0, 6).split('');
+      const newDigits = [...otpDigits];
+      pasted.forEach((d, i) => {
+        newDigits[i] = d;
+      });
+      setOtpDigits(newDigits);
+      const nextIndex = Math.min(pasted.length, 5);
+      otpCellRefs[nextIndex]?.current?.focus();
+      const fullCode = newDigits.join('').trim();
+      if (fullCode.length === 6 && autoSubmittedOtpRef.current !== fullCode) {
+        handleVerifyOtp(fullCode);
+      }
       return;
     }
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = clean;
+    setOtpDigits(newDigits);
+
+    if (clean && index < 5) {
+      otpCellRefs[index + 1]?.current?.focus();
+    }
+
+    const fullCode = newDigits.join('').trim();
+    if (fullCode.length === 6 && autoSubmittedOtpRef.current !== fullCode) {
+      handleVerifyOtp(fullCode);
+    }
+  };
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpCellRefs[index - 1]?.current?.focus();
+    } else if (e.nativeEvent.key === 'Enter') {
+      const fullCode = otpDigits.join('').trim();
+      if (fullCode.length === 6) {
+        handleVerifyOtp(fullCode);
+      }
+    }
+  };
+
+  const handleAutoFillDevOtp = (code: string) => {
+    const chars = code.slice(0, 6).split('');
+    const newDigits = ['', '', '', '', '', ''];
+    chars.forEach((c, i) => {
+      newDigits[i] = c;
+    });
+    setOtpDigits(newDigits);
+    handleVerifyOtp(code);
+  };
+
+  const handleVerifyOtp = async (explicitCode?: string) => {
+    const clean = mobile.replace(/\D/g, '').slice(-10);
+    const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
+    if (code.length < 4) {
+      setErrorMsg('Please enter the complete 6-digit OTP code.');
+      return;
+    }
+    if (busyOtp) return;
+    autoSubmittedOtpRef.current = code;
     setBusyOtp(true);
     setErrorMsg(null);
     try {
       const res = await verifyPartnerOtpApi(clean, code);
       setUploadToken(res.partnerUploadToken);
       applyPrefillFromServer(res.existingUserSummary, res.existingApplication);
+      // Auto-advance to Step 2 (Profile & Hub)
+      setCurrentStep(2);
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'OTP verification failed.';
+      autoSubmittedOtpRef.current = null;
+      const msg = err?.response?.data?.message || err?.message || 'OTP verification failed. Please check the code.';
       setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
     } finally {
       setBusyOtp(false);
     }
   };
 
-  const handleLookupPin = async () => {
-    const cleanPin = pincode.trim();
-    if (!/^\d{6}$/.test(cleanPin)) {
-      setErrorMsg('Please enter a valid 6-digit Postal PIN code first.');
-      return;
+  const handlePincodeChange = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, 6);
+    setPincode(digits);
+    if (digits.length === 6) {
+      triggerPincodeLookup(digits);
+    } else {
+      setPostOffices([]);
+      setShowBranchModal(false);
     }
+  };
+
+  const triggerPincodeLookup = async (digits: string) => {
     setBusyPin(true);
     setErrorMsg(null);
     try {
-      const res = await lookupPincode(cleanPin);
+      const res = await lookupPincode(digits);
       const offices = (res.offices || []).map((o) => o.name);
       setPostOffices(offices);
-      setPostOffice(res.postOffice || offices[0] || '');
       setDistrict(res.district || '');
       setStateName(res.state || '');
+      if (offices.length > 0) {
+        if (!postOffice || !offices.includes(postOffice)) {
+          setPostOffice(offices[0]);
+          setVillage(offices[0]);
+        }
+        setShowBranchModal(true);
+      }
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Could not fetch PIN code details.');
+      setErrorMsg(err?.message || 'Could not fetch PIN code details. Please verify your 6-digit PIN.');
+      setPostOffices([]);
+      setPostOffice('');
+      setVillage('');
     } finally {
       setBusyPin(false);
     }
@@ -437,9 +586,12 @@ export function PartnerSignupModal({
       setErrorMsg('Please enter your full legal name as per PAN.');
       return false;
     }
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setErrorMsg('Please enter a valid email address (e.g. name@example.com) or leave it empty.');
-      return false;
+    if (email.trim()) {
+      const cleanEm = cleanEmailString(email);
+      if (!cleanEm) {
+        setErrorMsg('Please enter a valid email address (e.g. name@example.com) or leave it empty.');
+        return false;
+      }
     }
     if (!existingApp?.hasPassword && !existingUser && (!password.trim() || password.trim().length < 8)) {
       setErrorMsg('Please set a Partner login password of at least 8 characters.');
@@ -530,7 +682,7 @@ export function PartnerSignupModal({
         requestedRole,
         advisorType: requestedRole === 'ADVISOR' ? advisorType : undefined,
         name: name.trim(),
-        email: email.trim() || undefined,
+        email: cleanEmailString(email) || undefined,
         password: password.trim() || undefined,
         pincode: pincode.trim() || undefined,
         postOffice: postOffice.trim() || undefined,
@@ -562,6 +714,9 @@ export function PartnerSignupModal({
       });
       setSubmittedMessage(res.message);
       setCurrentStep(4);
+      if (onSubmitted) {
+        onSubmitted({ mobile: cleanMob, application: res.application });
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Submission failed. Check your entries and try again.';
       setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
@@ -697,7 +852,7 @@ export function PartnerSignupModal({
 
           {/* Scrollable Wizard Body */}
           <ScrollView
-            style={{ maxHeight: Platform.OS === 'web' ? 560 : 500 }}
+            style={{ maxHeight: scrollMaxHeight }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: 14, paddingBottom: 6 }}
           >
@@ -720,9 +875,12 @@ export function PartnerSignupModal({
                 )}
 
                 {/* Role Selection */}
-                <View style={{ gap: 8 }}>
-                  <Text style={styles.sectionLabel}>Select Role (PARTNERS)</Text>
-                  <View style={styles.roleGrid}>
+                <View style={{ gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 }}>
+                    <Text style={[styles.sectionLabel, { fontSize: 11, letterSpacing: 0.5 }]}>Select Role (PARTNERS)</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>5 PARTNER TIERS</Text>
+                  </View>
+                  <View style={isDesktop ? styles.roleGridDesktop : styles.roleGridMobile}>
                     {PARTNER_ROLE_CARDS.map((card) => {
                       const selected = selectedRoleCardId === card.id;
                       const alreadyActive = existingUser?.activeRoles?.includes(card.role);
@@ -732,6 +890,7 @@ export function PartnerSignupModal({
                           key={card.id}
                           style={[
                             styles.roleCard,
+                            isDesktop ? styles.roleCardDesktop : styles.roleCardMobile,
                             selected && styles.roleCardActive,
                             alreadyActive && { opacity: 0.5 },
                           ]}
@@ -740,7 +899,7 @@ export function PartnerSignupModal({
                           activeOpacity={0.85}
                         >
                           <View style={[styles.roleIconBadge, { backgroundColor: selected ? 'rgba(0, 255, 135, 0.15)' : `${card.accent}1f` }]}>
-                            <Ionicons name={card.icon} size={17} color={selected ? '#00ff87' : card.accent} />
+                            <Ionicons name={card.icon} size={13} color={selected ? '#00ff87' : card.accent} />
                           </View>
                           <Text
                             style={[
@@ -748,12 +907,14 @@ export function PartnerSignupModal({
                               selected && styles.roleCardTitleActive,
                             ]}
                             numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.85}
                           >
                             {card.title}
                           </Text>
                           <Ionicons
                             name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                            size={18}
+                            size={14}
                             color={selected ? '#00ff87' : 'rgba(148, 163, 184, 0.35)'}
                           />
                         </TouchableOpacity>
@@ -788,12 +949,21 @@ export function PartnerSignupModal({
                             value={mobile}
                             onChangeText={(t) => setMobile(t.replace(/\D/g, '').slice(0, 10))}
                             editable={!otpSent || busyOtp}
+                            returnKeyType="send"
+                            onSubmitEditing={() => {
+                              if (!busyOtp) handleSendOtp();
+                            }}
+                            onKeyPress={(e: any) => {
+                              if (e.nativeEvent.key === 'Enter' && !busyOtp) {
+                                handleSendOtp();
+                              }
+                            }}
                           />
                         </View>
                         <TouchableOpacity
-                          style={[styles.primaryActionBtn, (mobile.length !== 10 || busyOtp) && styles.btnDisabled]}
+                          style={[styles.primaryActionBtn, (mobile.replace(/\D/g, '').slice(-10).length !== 10 || busyOtp) && styles.btnDisabled]}
                           onPress={handleSendOtp}
-                          disabled={mobile.length !== 10 || busyOtp}
+                          disabled={mobile.replace(/\D/g, '').slice(-10).length !== 10 || busyOtp}
                         >
                           {busyOtp && !otpSent ? (
                             <ActivityIndicator size="small" color="#020d06" />
@@ -803,40 +973,59 @@ export function PartnerSignupModal({
                         </TouchableOpacity>
                       </View>
 
-                      {/* OTP Input Row */}
+                      {/* Segmented OTP Cells */}
                       {otpSent && (
-                        <View style={{ gap: 6, marginTop: 4 }}>
-                          <View style={styles.twoColRow}>
-                            <TextInput
-                              style={[styles.input, { flex: 1 }]}
-                              placeholder="Enter 4-digit OTP"
-                              placeholderTextColor="#64748b"
-                              keyboardType="number-pad"
-                              maxLength={6}
-                              value={otpInput}
-                              onChangeText={setOtpInput}
-                            />
-                            <TouchableOpacity
-                              style={[styles.verifyBtn, (otpInput.length < 4 || busyOtp) && styles.btnDisabled]}
-                              onPress={handleVerifyOtp}
-                              disabled={otpInput.length < 4 || busyOtp}
-                            >
-                              {busyOtp ? (
-                                <ActivityIndicator size="small" color="#fff" />
-                              ) : (
-                                <Text style={styles.verifyBtnText}>Verify OTP</Text>
-                              )}
-                            </TouchableOpacity>
+                        <View style={{ gap: 8, marginTop: 4 }}>
+                          <View style={styles.segmentedRow}>
+                            {otpDigits.map((digit, idx) => {
+                              const isFilled = Boolean(digit);
+                              const isFocused = focusedOtpIdx === idx;
+                              return (
+                                <TextInput
+                                  key={idx}
+                                  ref={otpCellRefs[idx]}
+                                  style={[
+                                    styles.otpCell,
+                                    isFilled && styles.otpCellFilled,
+                                    isFocused && styles.otpCellActive,
+                                  ]}
+                                  keyboardType="number-pad"
+                                  maxLength={idx === 0 ? 6 : 1}
+                                  value={digit}
+                                  onChangeText={(v) => handleDigitChange(v, idx)}
+                                  onKeyPress={(e) => handleKeyPress(e, idx)}
+                                  onFocus={() => setFocusedOtpIdx(idx)}
+                                  onBlur={() => setFocusedOtpIdx(null)}
+                                  selectTextOnFocus
+                                  textAlign="center"
+                                />
+                              );
+                            })}
                           </View>
 
-                          {devOtp ? (
-                            <View style={styles.devPill}>
-                              <Text style={styles.devPillText}>Local Server OTP: {devOtp}</Text>
-                              <TouchableOpacity onPress={() => setOtpInput(devOtp)}>
-                                <Text style={styles.devFillText}>Auto-Fill</Text>
-                              </TouchableOpacity>
-                            </View>
-                          ) : null}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                            {devOtp ? (
+                              <View style={styles.devPill}>
+                                <Text style={styles.devPillText}>Local Server OTP: {devOtp}</Text>
+                                <TouchableOpacity onPress={() => handleAutoFillDevOtp(devOtp)}>
+                                  <Text style={styles.devFillText}>Auto-Fill & Verify</Text>
+                                </TouchableOpacity>
+                              </View>
+                            ) : (
+                              <Text style={{ fontSize: 11, color: '#94a3b8', fontFamily: FONT.medium }}>
+                                Enter 6-digit code received on +91 {mobile}
+                              </Text>
+                            )}
+
+                            {busyOtp && (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <ActivityIndicator size="small" color="#00ff87" />
+                                <Text style={{ fontSize: 11, color: '#00ff87', fontFamily: FONT.bold }}>
+                                  Verifying...
+                                </Text>
+                              </View>
+                            )}
+                          </View>
                         </View>
                       )}
                     </View>
@@ -855,7 +1044,8 @@ export function PartnerSignupModal({
                         onPress={() => {
                           setUploadToken(null);
                           setOtpSent(false);
-                          setOtpInput('');
+                          setOtpDigits(['', '', '', '', '', '']);
+                          autoSubmittedOtpRef.current = null;
                         }}
                       >
                         <Text style={styles.changePhoneText}>Change</Text>
@@ -884,13 +1074,24 @@ export function PartnerSignupModal({
                       />
                     </View>
                     <View style={styles.fieldCol}>
-                      <Text style={styles.label}>Email Address (Optional)</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+                        <Text style={styles.label}>Email Address (Optional)</Text>
+                        {cleanEmailString(email) && (auth?.user?.email === email || existingUser?.email === email) ? (
+                          <View style={styles.emailLinkedBadge}>
+                            <Ionicons name="link" size={10} color="#38bdf8" />
+                            <Text style={styles.emailLinkedBadgeText}>Account Linked</Text>
+                          </View>
+                        ) : null}
+                      </View>
                       <TextInput
                         style={styles.input}
-                        placeholder="email@example.com"
+                        placeholder="email@example.com (optional)"
                         placeholderTextColor="#64748b"
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        autoComplete="off"
+                        autoCorrect={false}
+                        spellCheck={false}
                         value={email}
                         onChangeText={setEmail}
                       />
@@ -914,59 +1115,119 @@ export function PartnerSignupModal({
 
                 {/* Postal Address */}
                 <View style={{ gap: 8 }}>
-                  <Text style={styles.sectionLabel}>Address & Postal PIN Code</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={styles.sectionLabel}>Address & Postal PIN Code</Text>
+                    {postOffice ? (
+                      <View style={styles.readOnlyLockBadge}>
+                        <Ionicons name="shield-checkmark" size={11} color="#00ff87" />
+                        <Text style={styles.readOnlyLockBadgeText}>India Post Verified</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
                   <View style={styles.gridTwo}>
                     <View style={styles.fieldCol}>
-                      <Text style={styles.label}>Postal PIN Code {requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? '*' : ''}</Text>
-                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                      <Text style={styles.label}>
+                        Postal PIN Code {requestedRole === 'SELLER' || requestedRole === 'NURSERY_OWNER' ? '*' : ''}
+                      </Text>
+                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                         <TextInput
                           style={[styles.input, { flex: 1 }]}
-                          placeholder="6-digit PIN"
+                          placeholder="6-digit PIN (e.g. 143422)"
                           placeholderTextColor="#64748b"
                           keyboardType="number-pad"
                           maxLength={6}
                           value={pincode}
-                          onChangeText={(t) => setPincode(t.replace(/\D/g, '').slice(0, 6))}
+                          onChangeText={handlePincodeChange}
                         />
-                        <TouchableOpacity style={styles.lookupBtn} onPress={handleLookupPin} disabled={busyPin}>
-                          {busyPin ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.lookupBtnText}>Lookup</Text>}
+                        <TouchableOpacity
+                          style={[styles.lookupBtn, (pincode.length !== 6 || busyPin) && styles.btnDisabled]}
+                          onPress={() => pincode.length === 6 && triggerPincodeLookup(pincode)}
+                          disabled={pincode.length !== 6 || busyPin}
+                        >
+                          {busyPin ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <Ionicons name="refresh" size={16} color="#fff" />
+                          )}
                         </TouchableOpacity>
                       </View>
                     </View>
+
                     <View style={styles.fieldCol}>
-                      <Text style={styles.label}>Post Office / Village</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Village / Town"
-                        placeholderTextColor="#64748b"
-                        value={village || postOffice}
-                        onChangeText={(t) => {
-                          setVillage(t);
-                          if (!postOffice) setPostOffice(t);
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={styles.label}>Post Office Branch (Read-Only) *</Text>
+                        {postOffices.length > 1 && (
+                          <Text style={{ fontSize: 10, color: '#38bdf8', fontFamily: FONT.medium }}>
+                            {postOffices.length} Branches Found
+                          </Text>
+                        )}
+                      </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.readOnlyBranchSelector,
+                          (!pincode || pincode.length < 6) && styles.selectorDisabled,
+                          Boolean(postOffice) && styles.selectorActive,
+                        ]}
+                        onPress={() => {
+                          if (postOffices.length > 0) {
+                            setShowBranchModal(true);
+                          } else if (pincode.length === 6) {
+                            triggerPincodeLookup(pincode);
+                          }
                         }}
-                      />
+                        disabled={pincode.length < 6 && postOffices.length === 0}
+                        activeOpacity={0.7}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <Ionicons
+                            name="business-outline"
+                            size={16}
+                            color={postOffice ? '#00ff87' : '#64748b'}
+                          />
+                          <Text
+                            style={[
+                              styles.readOnlyBranchText,
+                              !postOffice && { color: '#64748b' },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {postOffice || (pincode.length === 6 ? (busyPin ? 'Looking up branches...' : 'Tap to select branch') : 'Enter 6-digit PIN first')}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          {postOffice ? (
+                            <View style={styles.changePill}>
+                              <Text style={styles.changePillText}>Select</Text>
+                              <Ionicons name="chevron-down" size={13} color="#38bdf8" />
+                            </View>
+                          ) : (
+                            <Ionicons name="chevron-down" size={16} color="#64748b" />
+                          )}
+                        </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
 
                   <View style={styles.gridTwo}>
                     <View style={styles.fieldCol}>
-                      <Text style={styles.label}>District</Text>
+                      <Text style={styles.label}>District (Auto-filled)</Text>
                       <TextInput
-                        style={[styles.input, { backgroundColor: '#0f172a' }]}
+                        style={[styles.input, { backgroundColor: '#0b1320', color: '#94a3b8' }]}
                         placeholder="District"
                         placeholderTextColor="#64748b"
                         value={district}
-                        onChangeText={setDistrict}
+                        editable={false}
                       />
                     </View>
                     <View style={styles.fieldCol}>
-                      <Text style={styles.label}>State</Text>
+                      <Text style={styles.label}>State (Auto-filled)</Text>
                       <TextInput
-                        style={[styles.input, { backgroundColor: '#0f172a' }]}
+                        style={[styles.input, { backgroundColor: '#0b1320', color: '#94a3b8' }]}
                         placeholder="State"
                         placeholderTextColor="#64748b"
                         value={stateName}
-                        onChangeText={setStateName}
+                        editable={false}
                       />
                     </View>
                   </View>
@@ -1101,6 +1362,18 @@ export function PartnerSignupModal({
             {/* ================= STEP 3: KYC & BANK ================= */}
             {currentStep === 3 && (
               <View style={{ gap: 14 }}>
+                {existingUser && Boolean(panDocUrl || aadhaarDocUrl || chequeDocUrl) && (
+                  <View style={styles.verifiedKycBanner}>
+                    <Ionicons name="shield-checkmark" size={18} color="#00ff87" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.verifiedKycTitle}>Common KYC Pre-filled & Verified</Text>
+                      <Text style={styles.verifiedKycSub}>
+                        Your PAN, Aadhaar, and Bank payout details are verified from your primary account. You do not need to re-upload them.
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
                 {/* Identity Verification */}
                 <View style={{ gap: 8 }}>
                   <Text style={styles.sectionLabel}>Statutory Identity Verification (Income Tax & Compliance)</Text>
@@ -1337,6 +1610,132 @@ export function PartnerSignupModal({
               )}
             </View>
           )}
+
+          {/* Post Office Branch Selection Sub-Modal */}
+          {showBranchModal && (
+            <View style={styles.branchModalOverlay}>
+              <View style={styles.branchModalDialog}>
+                <View style={styles.branchModalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                    <View style={styles.branchHeaderIconWrap}>
+                      <Ionicons name="business" size={17} color="#00ff87" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.branchModalTitle}>Select Post Office Branch</Text>
+                      <Text style={styles.branchModalSub}>
+                        PIN Code {pincode} • {district ? `${district}, ` : ''}{stateName || 'India'}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.closeBtn}
+                    onPress={() => setShowBranchModal(false)}
+                  >
+                    <Ionicons name="close" size={18} color="#94a3b8" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Search Bar for Branches if more than 3 */}
+                {postOffices.length > 3 && (
+                  <View style={styles.branchSearchBox}>
+                    <Ionicons name="search" size={14} color="#64748b" />
+                    <TextInput
+                      style={styles.branchSearchInput}
+                      placeholder="Search branch name..."
+                      placeholderTextColor="#64748b"
+                      value={branchSearch}
+                      onChangeText={setBranchSearch}
+                    />
+                    {branchSearch ? (
+                      <TouchableOpacity onPress={() => setBranchSearch('')}>
+                        <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                )}
+
+                {/* Branches List */}
+                <ScrollView
+                  style={{ maxHeight: 270 }}
+                  showsVerticalScrollIndicator={true}
+                  contentContainerStyle={{ gap: 6, paddingVertical: 4 }}
+                >
+                  {postOffices
+                    .filter((b) => !branchSearch || b.toLowerCase().includes(branchSearch.toLowerCase()))
+                    .map((branch, idx) => {
+                      const isSelected = postOffice.toLowerCase() === branch.toLowerCase();
+                      return (
+                        <TouchableOpacity
+                          key={branch + idx}
+                          style={[
+                            styles.branchItemCard,
+                            isSelected && styles.branchItemCardActive,
+                          ]}
+                          onPress={() => {
+                            setPostOffice(branch);
+                            setVillage(branch);
+                            setShowBranchModal(false);
+                            setBranchSearch('');
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                            <View
+                              style={[
+                                styles.branchCheckCircle,
+                                isSelected && styles.branchCheckCircleActive,
+                              ]}
+                            >
+                              <Ionicons
+                                name={isSelected ? 'checkmark' : 'location-outline'}
+                                size={13}
+                                color={isSelected ? '#020d06' : '#94a3b8'}
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text
+                                style={[
+                                  styles.branchItemName,
+                                  isSelected && styles.branchItemNameActive,
+                                ]}
+                              >
+                                {branch}
+                              </Text>
+                              <Text style={styles.branchItemMeta}>
+                                Post Office Branch • PIN {pincode}
+                              </Text>
+                            </View>
+                          </View>
+                          {isSelected && (
+                            <View style={styles.selectedPill}>
+                              <Text style={styles.selectedPillText}>Selected</Text>
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  {postOffices.filter((b) => !branchSearch || b.toLowerCase().includes(branchSearch.toLowerCase())).length === 0 && (
+                    <View style={{ padding: 24, alignItems: 'center' }}>
+                      <Text style={{ color: '#94a3b8', fontSize: 13, fontFamily: FONT.medium }}>
+                        No matching branch found for "{branchSearch}"
+                      </Text>
+                    </View>
+                  )}
+                </ScrollView>
+
+                <View style={styles.branchModalFooter}>
+                  <Text style={styles.branchFooterNote}>
+                    Branch is strictly locked to official India Post records for KYC verification.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.branchConfirmBtn}
+                    onPress={() => setShowBranchModal(false)}
+                  >
+                    <Text style={styles.branchConfirmBtnText}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -1422,51 +1821,70 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
   },
   sectionLabel: {
-    fontSize: 12.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#f8fafc',
+    color: '#cbd5e1',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
     marginBottom: 2,
   },
   label: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#cbd5e1',
-    marginBottom: 4,
+    marginBottom: 3,
   },
-  roleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  roleCard: {
-    minWidth: Platform.OS === 'web' ? 175 : '48%',
-    flex: 1,
+  roleGridDesktop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
+    gap: 6,
+    width: '100%',
+  },
+  roleGridMobile: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    width: '100%',
+  },
+  roleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 7,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     backgroundColor: '#0a1f13',
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
+  roleCardDesktop: {
+    flex: 1,
+    minWidth: 0,
+  },
+  roleCardMobile: {
+    width: '48.5%',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   roleCardActive: {
     borderColor: '#00ff87',
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    boxShadow: '0 0 8px rgba(0, 255, 135, 0.16)',
   },
   roleIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   roleCardTitle: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 10.5,
     fontFamily: FONT.semiBold,
     color: '#e2e8f0',
+    letterSpacing: -0.2,
   },
   roleCardTitleActive: {
     color: '#00ff87',
@@ -1508,6 +1926,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     alignItems: 'center',
+  },
+  segmentedRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 4,
+  },
+  otpCell: {
+    flex: 1,
+    maxWidth: 46,
+    height: 48,
+    backgroundColor: '#020d06',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    borderRadius: RADIUS.md,
+    fontSize: 18,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    textAlign: 'center',
+    padding: 0,
+    outlineStyle: 'none' as any,
+  },
+  otpCellFilled: {
+    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.10)',
+  },
+  otpCellActive: {
+    borderColor: '#38bdf8',
+    backgroundColor: 'rgba(56, 189, 248, 0.08)',
   },
   gridTwo: {
     flexDirection: 'row',
@@ -1651,6 +2099,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(245, 158, 11, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.35)',
+  },
+  verifiedKycBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 10,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.28)',
+  },
+  verifiedKycTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  verifiedKycSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+    marginTop: 2,
   },
   existingAppTitle: {
     fontSize: 12,
@@ -1847,5 +2316,237 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontFamily: FONT.semiBold,
     color: '#fca5a5',
+  },
+  readOnlyLockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.28)',
+  },
+  readOnlyLockBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  emailLinkedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.28)',
+  },
+  emailLinkedBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+  },
+  readOnlyBranchSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: '#07150e',
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    cursor: 'pointer' as any,
+  },
+  selectorDisabled: {
+    opacity: 0.6,
+    cursor: 'not-allowed' as any,
+  },
+  selectorActive: {
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    backgroundColor: '#0a1d13',
+  },
+  readOnlyBranchText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  changePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  changePillText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+  },
+  branchModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(2, 6, 23, 0.94)',
+    zIndex: 999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
+  },
+  branchModalDialog: {
+    width: '100%',
+    maxWidth: 520,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    padding: 16,
+    gap: 10,
+    backgroundColor: '#081c12',
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    ...(Platform.OS === 'web'
+      ? ({
+          boxShadow: '0 20px 48px -10px rgba(0, 0, 0, 0.95), 0 0 24px rgba(0, 255, 135, 0.2)',
+        } as any)
+      : {
+          elevation: 16,
+        }),
+  },
+  branchModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  branchHeaderIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  branchModalTitle: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+  },
+  branchModalSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  branchSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#020d06',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  branchSearchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#f8fafc',
+    paddingVertical: 4,
+    outlineStyle: 'none' as any,
+  },
+  branchItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    backgroundColor: '#04130b',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    cursor: 'pointer' as any,
+  },
+  branchItemCardActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderColor: '#00ff87',
+  },
+  branchCheckCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  branchCheckCircleActive: {
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
+  },
+  branchItemName: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  branchItemNameActive: {
+    color: '#00ff87',
+  },
+  branchItemMeta: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  selectedPill: {
+    backgroundColor: 'rgba(0, 255, 135, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#00ff87',
+  },
+  selectedPillText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  branchModalFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  branchFooterNote: {
+    flex: 1,
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    lineHeight: 14,
+  },
+  branchConfirmBtn: {
+    backgroundColor: '#00ff87',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  branchConfirmBtnText: {
+    color: '#020d06',
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
   },
 });

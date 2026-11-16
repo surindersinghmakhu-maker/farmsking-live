@@ -291,12 +291,24 @@ export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
 
 const THEME_STORAGE_KEY = 'farmsking_executive_theme_setting';
 
+export type AdminThemeMode = 'LIGHT' | 'DARK';
+
 export interface ExecutiveThemeContextValue {
+  themeMode: AdminThemeMode;
+  setThemeMode: (mode: AdminThemeMode) => void;
   executiveTheme: ExecutiveTheme;
   setExecutiveTheme: (theme: ExecutiveTheme) => void;
   colors: ThemeConfig;
   toggleThemeMode: () => void;
   isDark: boolean;
+  isLight: boolean;
+  isMedium: boolean;
+  isDarkTheme: boolean;
+  cardBg: string;
+  cardBorder: string;
+  textColor: string;
+  subTextColor: string;
+  innerBg: string;
 }
 
 const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
@@ -342,7 +354,7 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme], [executiveTheme]);
+  const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme] || EXECUTIVE_THEME_CONFIG.EMERALD, [executiveTheme]);
 
   useEffect(() => {
     if (typeof document !== 'undefined' && document.body) {
@@ -357,16 +369,72 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const isDark = colors.isDark;
+  const isLight = !colors.isDark;
+  const isMedium = executiveTheme === 'EMERALD' || executiveTheme === 'DARK';
+  const isDarkTheme = colors.isDark;
+
+  const themeMode: AdminThemeMode = isLight ? 'LIGHT' : 'DARK';
+  const setThemeMode = (mode: AdminThemeMode) => {
+    setExecutiveTheme(mode === 'LIGHT' ? 'LIGHT' : 'EMERALD');
+  };
+
+  const cardBg = useMemo(() => {
+    if (isLight) return '#ffffff';
+    return colors.cardBg || '#04160c';
+  }, [isLight, colors.cardBg]);
+
+  const cardBorder = useMemo(() => {
+    if (isLight) return '#cbd5e1';
+    return colors.cardBorder || 'rgba(0, 255, 135, 0.22)';
+  }, [isLight, colors.cardBorder]);
+
+  const textColor = useMemo(() => {
+    if (isLight) return '#0f172a';
+    return colors.text || '#ffffff';
+  }, [isLight, colors.text]);
+
+  const subTextColor = useMemo(() => {
+    if (isLight) return '#475569';
+    return colors.textMuted || '#94a3b8';
+  }, [isLight, colors.textMuted]);
+
+  const innerBg = useMemo(() => {
+    if (isLight) return '#f8fafc';
+    return '#072414';
+  }, [isLight]);
 
   const value = useMemo(
     () => ({
+      themeMode,
+      setThemeMode,
       executiveTheme,
       setExecutiveTheme,
       colors,
       toggleThemeMode,
       isDark,
+      isLight,
+      isMedium,
+      isDarkTheme,
+      cardBg,
+      cardBorder,
+      textColor,
+      subTextColor,
+      innerBg,
     }),
-    [executiveTheme, colors, isDark]
+    [
+      themeMode,
+      executiveTheme,
+      colors,
+      isDark,
+      isLight,
+      isMedium,
+      isDarkTheme,
+      cardBg,
+      cardBorder,
+      textColor,
+      subTextColor,
+      innerBg,
+    ]
   );
 
   return <ExecutiveThemeContext.Provider value={value}>{children}</ExecutiveThemeContext.Provider>;

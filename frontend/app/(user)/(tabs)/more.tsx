@@ -207,7 +207,17 @@ export default function MoreScreen() {
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
     NOTIFICATIONS_ITEM,
-    ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' ? [ADVISOR_PROFILE_ITEM] : []),
+    ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'ADVISOR'
+      ? [
+          {
+            key: 'tabAdvisorWallet' as any,
+            label: 'Advisor Wallet & Payouts',
+            icon: 'wallet-outline',
+            href: '/(partner)/(tabs)/wallet',
+          },
+          ADVISOR_PROFILE_ITEM,
+        ]
+      : []),
     FARMER_WALLET_ITEM,
   ];
 
@@ -584,6 +594,44 @@ export default function MoreScreen() {
                 </View>
               ) : null}
 
+              {/* 💼 Dedicated Advisor Business & Earnings Section */}
+              {showAdvisorBusinessSection ? (
+                <View style={styles.section}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>💼 ADVISOR BUSINESS & EARNINGS</Text>
+                  <View style={[styles.sectionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+                    <TouchableOpacity
+                      style={[styles.row, { borderBottomColor: colors.cardBorder }]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/(partner)/(tabs)/wallet' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                        <Ionicons name="wallet-outline" size={18} color="#d97706" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>💳 Advisor Wallet & Payouts</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>View Consultation Earnings, Commission & Bank Payouts</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.row, { borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/advisor-profile' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                        <Ionicons name="briefcase-outline" size={18} color="#16a34a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.rowLabel, { color: colors.text }]}>🩺 Advisor Profile & Agronomy Status</Text>
+                        <Text style={[styles.rowSubLabel, { color: colors.textMuted }]}>Specialization, Working Hours & Consultation Rate</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#64748b" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : null}
+
           {/* Developer & Support Section */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('devSupportSection')}</Text>
@@ -810,7 +858,7 @@ export default function MoreScreen() {
         </View>
       </Modal>
 
-      <DeleteAccountModal visible={showDeleteConfirmModal} onClose={() => setShowDeleteConfirmModal(false)} />
+      <DeleteAccountModal visible={showDeleteConfirmModal} onClose={() => setShowDeleteConfirmModal(false)} portal="USER" />
     </>
   );
 }

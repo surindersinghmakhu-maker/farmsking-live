@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput, Modal, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform, Alert, TextInput, Modal, Linking, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -26,6 +26,7 @@ import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useMyWallet } from '@/src/hooks/useWallet';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'FEES';
 
@@ -90,22 +91,44 @@ function formatWater(water?: string | null): string {
 }
 
 const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string }> = {
-  SUBMISSIONS: { label: 'Requests', icon: 'cloud-upload-outline', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
-  DELAYED: { label: 'Delayed', icon: 'alert-circle', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-  TODAY: { label: 'Today', icon: 'today', color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
-  WEATHER: { label: 'Weather Alerts', icon: 'rainy-outline', color: '#0284c7', bg: '#eff6ff', border: '#bae6fd' },
-  NO_SCHEDULE: { label: 'No Schedule Crops ⚠️', icon: 'warning-outline', color: '#b45309', bg: '#fff7ed', border: '#fed7aa' },
-  PROBLEMS: { label: 'Problem Reports', icon: 'medkit-outline', color: '#e11d48', bg: '#ffe4e6', border: '#fecdd3' },
-  FEES: { label: 'My Fees & Settings', icon: 'wallet-outline', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
+  SUBMISSIONS: { label: 'Requests & Audits', icon: 'cloud-upload', color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.12)', border: 'rgba(56, 189, 248, 0.35)' },
+  DELAYED: { label: 'Delayed Sprays', icon: 'alert-circle', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.35)' },
+  TODAY: { label: "Today's Schedule", icon: 'today', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.35)' },
+  WEATHER: { label: 'Weather Alerts', icon: 'rainy', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.12)', border: 'rgba(14, 165, 233, 0.35)' },
+  NO_SCHEDULE: { label: 'Unscheduled Crops', icon: 'warning', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.12)', border: 'rgba(251, 146, 60, 0.35)' },
+  PROBLEMS: { label: 'Problem Tickets', icon: 'medkit', color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.12)', border: 'rgba(244, 63, 94, 0.35)' },
+  FEES: { label: 'Earnings & Governance', icon: 'wallet', color: '#00ff87', bg: 'rgba(0, 255, 135, 0.12)', border: 'rgba(0, 255, 135, 0.35)' },
 };
 const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS', 'FEES'];
+
+export interface AuditTableRow {
+  id: string;
+  type: 'CROPS' | 'CALLS' | 'FARMERS' | 'PROBLEMS';
+  typeLabel: string;
+  typeIcon: keyof typeof Ionicons.glyphMap;
+  typeColor: string;
+  farmerName: string;
+  farmerMobile?: string;
+  farmerKingId?: string;
+  location?: string;
+  title: string;
+  details: string;
+  dateStr: string;
+  dateTimestamp: number;
+  status: string;
+  severity?: string;
+  raw: any;
+}
 
 const theme = RoleThemes.FARM_ADVISOR;
 
 export const AdvisorDashboardView: React.FC = () => {
-  const { colors: tConfig } = useExecutiveTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const { colors: tConfig, isDark, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
+  const { data: wallet } = useMyWallet();
   const { data: farmerStats } = useFarmerStats();
   const stats = farmerStats ?? { total: 0, active: 0, inactive: 0 };
 
@@ -145,6 +168,11 @@ export const AdvisorDashboardView: React.FC = () => {
   const voiceCallHook = useGroupVoiceCall();
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
   const [selectedReviewCrop, setSelectedReviewCrop] = useState<AdvisorReviewCropCycle | null>(null);
+  const [requestsAuditTab, setRequestsAuditTab] = useState<'PENDING' | 'HISTORY'>('PENDING');
+  const [resolvingCallReq, setResolvingCallReq] = useState<CallRequest | null>(null);
+  const [resolvingCallComment, setResolvingCallComment] = useState('');
+  const resolveCallMutation = useResolveCallRequest();
+
   const [submissionSubFilter, setSubmissionSubFilter] = useState<'CROPS' | 'CALLS' | 'FARMERS' | 'PROBLEMS'>('CROPS');
   const [isProblemHistoryOpen, setIsProblemHistoryOpen] = useState(false);
   const [selectedProblemToRespond, setSelectedProblemToRespond] = useState<CropProblem | null>(null);
@@ -164,6 +192,185 @@ export const AdvisorDashboardView: React.FC = () => {
     const start = (resolvedHistoryPage - 1) * RESOLVED_PAGE_SIZE;
     return resolvedProblems.slice(start, start + RESOLVED_PAGE_SIZE);
   }, [resolvedProblems, resolvedHistoryPage]);
+
+  // Unified Request & Audit Rows: PENDING
+  const pendingTableRows = useMemo<AuditTableRow[]>(() => {
+    const rows: AuditTableRow[] = [];
+
+    // 1. Pending Crops
+    (pendingCrops ?? []).forEach((crop) => {
+      const farmer = crop.plot?.farm?.owner;
+      const loc = [farmer?.village, farmer?.district].filter(Boolean).join(', ') || crop.plot?.farm?.name || crop.plot?.name;
+      const dateObj = crop.createdAt ? new Date(crop.createdAt) : crop.sowingDate ? new Date(crop.sowingDate) : new Date();
+      rows.push({
+        id: `crop-${crop.id}`,
+        type: 'CROPS',
+        typeLabel: 'Crop Review',
+        typeIcon: 'leaf',
+        typeColor: '#38bdf8',
+        farmerName: farmer?.name || 'Farmer',
+        farmerMobile: farmer?.mobile,
+        farmerKingId: farmer?.kingId,
+        location: loc,
+        title: crop.cropName + (crop.variety ? ` (${crop.variety})` : ''),
+        details: `${crop.category || 'General Crop'}${crop.sowingDate ? ` · Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}`,
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'Awaiting Audit',
+        raw: crop,
+      });
+    });
+
+    // 2. Pending Calls
+    (pendingCallRequests ?? []).forEach((call) => {
+      const loc = [call.farmer?.village, call.farmer?.district].filter(Boolean).join(', ');
+      const dateObj = call.createdAt ? new Date(call.createdAt) : new Date();
+      rows.push({
+        id: `call-${call.id}`,
+        type: 'CALLS',
+        typeLabel: 'Call Request',
+        typeIcon: 'call',
+        typeColor: '#f59e0b',
+        farmerName: call.farmer?.name || 'Farmer',
+        farmerMobile: call.farmer?.mobile,
+        farmerKingId: call.farmer?.kingId,
+        location: loc,
+        title: call.topic || call.reason || 'Advisory Call Consultation',
+        details: call.notes || 'Requested phone assistance',
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'Call Pending',
+        raw: call,
+      });
+    });
+
+    // 3. Pending Farmer Hire
+    (pendingFarmerRequests ?? []).forEach((req: any) => {
+      const farmer = req.farmer;
+      const loc = [farmer?.village, farmer?.district, farmer?.state].filter(Boolean).join(', ');
+      const dateObj = req.createdAt ? new Date(req.createdAt) : new Date();
+      rows.push({
+        id: `farmer-${req.id}`,
+        type: 'FARMERS',
+        typeLabel: 'Farmer Hire',
+        typeIcon: 'person-add',
+        typeColor: '#10b981',
+        farmerName: farmer?.name || 'Farmer',
+        farmerMobile: farmer?.mobile,
+        farmerKingId: farmer?.kingId,
+        location: loc,
+        title: 'Farmer Advisory Attachment',
+        details: `Tier: ${req.tier || 'Crop Care Package'}`,
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'New Request',
+        raw: req,
+      });
+    });
+
+    // 4. Pending Problems
+    (pendingProblems ?? []).forEach((prob) => {
+      const loc = [prob.reportedBy?.village, prob.reportedBy?.district].filter(Boolean).join(', ');
+      const dateObj = prob.createdAt ? new Date(prob.createdAt) : new Date();
+      rows.push({
+        id: `prob-${prob.id}`,
+        type: 'PROBLEMS',
+        typeLabel: 'Crop Problem',
+        typeIcon: 'alert-circle',
+        typeColor: '#ef4444',
+        farmerName: prob.reportedBy?.name || 'Farmer',
+        farmerMobile: prob.reportedBy?.mobile,
+        farmerKingId: prob.reportedBy?.kingId,
+        location: loc,
+        title: prob.title,
+        details: `${prob.cropCycle?.cropName ? prob.cropCycle.cropName + ' · ' : ''}${prob.description || 'Reported crop issue'}`,
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: prob.severity || 'Reported',
+        severity: prob.severity,
+        raw: prob,
+      });
+    });
+
+    return rows.sort((a, b) => b.dateTimestamp - a.dateTimestamp);
+  }, [pendingCrops, pendingCallRequests, pendingFarmerRequests, pendingProblems]);
+
+  // Unified Request & Audit Rows: HISTORY
+  const historyTableRows = useMemo<AuditTableRow[]>(() => {
+    const rows: AuditTableRow[] = [];
+
+    // 1. Accepted/Audited Crops
+    (acceptedCrops ?? []).forEach((crop) => {
+      const farmer = crop.plot?.farm?.owner;
+      const loc = [farmer?.village, farmer?.district].filter(Boolean).join(', ') || crop.plot?.farm?.name || crop.plot?.name;
+      const dateObj = crop.updatedAt ? new Date(crop.updatedAt) : crop.createdAt ? new Date(crop.createdAt) : new Date();
+      rows.push({
+        id: `crop-${crop.id}`,
+        type: 'CROPS',
+        typeLabel: 'Crop Audited',
+        typeIcon: 'leaf',
+        typeColor: '#10b981',
+        farmerName: farmer?.name || 'Farmer',
+        farmerMobile: farmer?.mobile,
+        farmerKingId: farmer?.kingId,
+        location: loc,
+        title: crop.cropName + (crop.variety ? ` (${crop.variety})` : ''),
+        details: `Field: ${crop.plot?.name || 'Main Plot'} · Verified & Monitored`,
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'Audited & Active',
+        raw: crop,
+      });
+    });
+
+    // 2. Resolved Calls
+    (callRequests ?? []).filter((r) => r.status !== 'PENDING').forEach((call) => {
+      const loc = [call.farmer?.village, call.farmer?.district].filter(Boolean).join(', ');
+      const dateObj = call.updatedAt ? new Date(call.updatedAt) : call.createdAt ? new Date(call.createdAt) : new Date();
+      rows.push({
+        id: `call-${call.id}`,
+        type: 'CALLS',
+        typeLabel: 'Call Resolved',
+        typeIcon: 'checkmark-circle',
+        typeColor: '#38bdf8',
+        farmerName: call.farmer?.name || 'Farmer',
+        farmerMobile: call.farmer?.mobile,
+        farmerKingId: call.farmer?.kingId,
+        location: loc,
+        title: call.topic || 'Voice Advisory Call',
+        details: call.resolvedComment || 'Call completed and documented',
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'Resolved',
+        raw: call,
+      });
+    });
+
+    // 3. Resolved Problems
+    (resolvedProblems ?? []).forEach((prob) => {
+      const loc = [prob.reportedBy?.village, prob.reportedBy?.district].filter(Boolean).join(', ');
+      const dateObj = prob.updatedAt ? new Date(prob.updatedAt) : prob.createdAt ? new Date(prob.createdAt) : new Date();
+      rows.push({
+        id: `prob-${prob.id}`,
+        type: 'PROBLEMS',
+        typeLabel: 'Problem Resolved',
+        typeIcon: 'medkit',
+        typeColor: '#8b5cf6',
+        farmerName: prob.reportedBy?.name || 'Farmer',
+        farmerMobile: prob.reportedBy?.mobile,
+        farmerKingId: prob.reportedBy?.kingId,
+        location: loc,
+        title: prob.title,
+        details: prob.advisorResponse || prob.diagnosis || 'Prescription provided & resolved',
+        dateStr: dateObj.toLocaleDateString('en-IN'),
+        dateTimestamp: dateObj.getTime(),
+        status: 'Resolved',
+        raw: prob,
+      });
+    });
+
+    return rows.sort((a, b) => b.dateTimestamp - a.dateTimestamp);
+  }, [acceptedCrops, callRequests, resolvedProblems]);
 
   const totalSubmissionsCount = (pendingCrops?.length ?? 0) + pendingCallRequests.length + pendingFarmerRequests.length + pendingProblems.length;
 
@@ -204,8 +411,8 @@ export const AdvisorDashboardView: React.FC = () => {
   const activeMeta = TAB_META[activeTab];
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }}>
+      <ScrollView style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }]} contentContainerStyle={{ flexGrow: 1, paddingBottom: isDesktop ? 32 : 115 }} showsVerticalScrollIndicator={false}>
         <RoleHeader
           currentRole="FARM_ADVISOR"
           profileName={user?.name || 'Advisor'}
@@ -214,80 +421,147 @@ export const AdvisorDashboardView: React.FC = () => {
         />
 
         <View style={styles.content}>
-          {/* My Farmer Roster — Ultra-Compact Professional Strip */}
-          <LinearGradient colors={['#1e3a8a', '#2563eb']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ultraRosterStrip}>
-            <View style={styles.rosterLeftGroup}>
-              <View style={styles.rosterIconBadge}>
-                <Ionicons name="people" size={11} color="#ffffff" />
-              </View>
-              <Text style={styles.rosterTitleText}>MY FARMER ROSTER</Text>
+          {/* Executive Agronomy Command Console Banner */}
+          <LinearGradient
+            colors={isLight ? ['#ffffff', '#f0fdf4', '#dcfce7'] : (isDark ? ['#061a10', '#0a2e1d', '#03140c'] : [cardBg, tConfig.bg, cardBg])}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.executiveHeroCard,
+              {
+                backgroundColor: isLight ? '#ffffff' : cardBg,
+                borderColor: isLight ? '#bbf7d0' : cardBorder,
+                shadowColor: tConfig.shadowColor || '#00ff87',
+              },
+            ]}
+          >
+            <View style={styles.heroTopRow}>
+              <Text style={[styles.heroMainTitle, { color: textColor }]}>Agronomy Command Console</Text>
             </View>
 
-            <View style={styles.rosterMetricsGroup}>
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
-                <Text style={[styles.rosterStatVal, { color: stats.total === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.total}</Text>
-                <Text style={styles.rosterStatLbl}>Total</Text>
+            {/* Quick KPI Telemetry Grid */}
+            <View style={[styles.kpiGrid, isDesktop && styles.kpiGridDesktop]}>
+              {/* Card 1: Farmers */}
+              <TouchableOpacity
+                style={[
+                  styles.kpiCard,
+                  {
+                    backgroundColor: isLight ? '#ffffff' : (isDark ? '#071f14' : cardBg),
+                    borderColor: isLight ? '#bbf7d0' : (isDark ? 'rgba(0, 255, 135, 0.22)' : cardBorder),
+                  },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(partner)/(tabs)/farmers' as never)}
+              >
+                <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)' }]}>
+                  <Ionicons name="people" size={15} color={isLight ? '#16a34a' : '#00ff87'} />
+                </View>
+                <View style={styles.kpiContentCol}>
+                  <View style={styles.kpiValueRow}>
+                    <Text style={[styles.kpiVal, { color: textColor }]}>{stats.total}</Text>
+                    <View style={[styles.kpiTrendBadge, { backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.12)' }]}>
+                      <Text style={[styles.kpiTrendText, { color: isLight ? '#15803d' : '#00ff87' }]}>
+                        {stats.active} Active
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.kpiTitle, { color: subTextColor }]} numberOfLines={1}>Farmers</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
-                <Text style={[styles.rosterStatVal, { color: stats.active === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.active}</Text>
-                <Text style={styles.rosterStatLbl}>Active</Text>
+              {/* Card 2: Crops */}
+              <TouchableOpacity
+                style={[
+                  styles.kpiCard,
+                  {
+                    backgroundColor: isLight ? '#ffffff' : (isDark ? '#071f14' : cardBg),
+                    borderColor: isLight ? '#bae6fd' : (isDark ? 'rgba(56, 189, 248, 0.22)' : cardBorder),
+                  },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setActiveTab('SUBMISSIONS');
+                }}
+              >
+                <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#e0f2fe' : 'rgba(56, 189, 248, 0.15)' }]}>
+                  <Ionicons name="leaf" size={15} color={isLight ? '#0284c7' : '#38bdf8'} />
+                </View>
+                <View style={styles.kpiContentCol}>
+                  <View style={styles.kpiValueRow}>
+                    <Text style={[styles.kpiVal, { color: textColor }]}>{acceptedCrops?.length ?? 0}</Text>
+                    <View style={[styles.kpiTrendBadge, { backgroundColor: pendingCrops?.length ? (isLight ? '#fef3c7' : 'rgba(245, 158, 11, 0.15)') : (isLight ? '#e0f2fe' : 'rgba(56, 189, 248, 0.12)') }]}>
+                      <Text style={[styles.kpiTrendText, { color: pendingCrops?.length ? (isLight ? '#b45309' : '#fbbf24') : (isLight ? '#0369a1' : '#38bdf8') }]}>
+                        {pendingCrops?.length ? `${pendingCrops.length} New` : 'Audited'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.kpiTitle, { color: subTextColor }]} numberOfLines={1}>Crops</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
-                <Text style={[styles.rosterStatVal, { color: stats.inactive === 0 ? '#60a5fa' : '#fca5a5' }]}>{stats.inactive}</Text>
-                <Text style={styles.rosterStatLbl}>Inactive</Text>
+              {/* Card 3: Operations */}
+              <TouchableOpacity
+                style={[
+                  styles.kpiCard,
+                  {
+                    backgroundColor: isLight ? '#ffffff' : (isDark ? '#071f14' : cardBg),
+                    borderColor: isLight ? (delayedSchedule?.length ? '#fecaca' : '#bbf7d0') : (isDark ? (delayedSchedule?.length ? 'rgba(239, 68, 68, 0.3)' : 'rgba(0, 255, 135, 0.22)') : cardBorder),
+                  },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => setActiveTab(delayedSchedule?.length ? 'DELAYED' : 'TODAY')}
+              >
+                <View style={[styles.kpiIconBox, { backgroundColor: delayedSchedule?.length ? (isLight ? '#fee2e2' : 'rgba(239, 68, 68, 0.15)') : (isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)') }]}>
+                  <Ionicons
+                    name={delayedSchedule?.length ? 'alert-circle' : 'calendar'}
+                    size={15}
+                    color={delayedSchedule?.length ? '#ef4444' : (isLight ? '#16a34a' : '#00ff87')}
+                  />
+                </View>
+                <View style={styles.kpiContentCol}>
+                  <View style={styles.kpiValueRow}>
+                    <Text style={[styles.kpiVal, { color: delayedSchedule?.length ? '#ef4444' : textColor }]}>
+                      {delayedSchedule?.length ? delayedSchedule.length : (todaySchedule?.length ?? 0)}
+                    </Text>
+                    <View style={[styles.kpiTrendBadge, { backgroundColor: delayedSchedule?.length ? (isLight ? '#fee2e2' : 'rgba(239, 68, 68, 0.15)') : (isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.12)') }]}>
+                      <Text style={[styles.kpiTrendText, { color: delayedSchedule?.length ? (isLight ? '#b91c1c' : '#f87171') : (isLight ? '#15803d' : '#00ff87') }]}>
+                        {delayedSchedule?.length ? 'Overdue' : 'On Track'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.kpiTitle, { color: subTextColor }]} numberOfLines={1}>Operations</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Card 4: Balance */}
+              <TouchableOpacity
+                style={[
+                  styles.kpiCard,
+                  {
+                    backgroundColor: isLight ? '#ffffff' : (isDark ? '#071f14' : cardBg),
+                    borderColor: isLight ? '#fef08a' : (isDark ? 'rgba(245, 158, 11, 0.22)' : cardBorder),
+                  },
+                ]}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(partner)/(tabs)/wallet' as never)}
+              >
+                <View style={[styles.kpiIconBox, { backgroundColor: isLight ? '#fef3c7' : 'rgba(245, 158, 11, 0.15)' }]}>
+                  <Ionicons name="wallet" size={15} color={isLight ? '#b45309' : '#fbbf24'} />
+                </View>
+                <View style={styles.kpiContentCol}>
+                  <View style={styles.kpiValueRow}>
+                    <Text style={[styles.kpiVal, { color: isLight ? '#b45309' : '#fbbf24' }]}>
+                      ₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}
+                    </Text>
+                    <View style={[styles.kpiTrendBadge, { backgroundColor: isLight ? '#dcfce7' : 'rgba(16, 185, 129, 0.15)' }]}>
+                      <Text style={[styles.kpiTrendText, { color: isLight ? '#15803d' : '#34d399' }]}>Wallet</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.kpiTitle, { color: subTextColor }]} numberOfLines={1}>Balance</Text>
+                </View>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity style={styles.rosterViewAllBtn} activeOpacity={0.85} onPress={() => router.push('/admin/(tabs)/farmers' as never)}>
-              <Ionicons name="chevron-forward" size={13} color="#ffffff" />
-            </TouchableOpacity>
           </LinearGradient>
-
-          {/* Group Voice Call Start Button */}
-          {isGroupVoiceCallEnabled || voiceCallHook.activeCall ? (
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                backgroundColor: '#059669',
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                borderRadius: 12,
-                marginBottom: 10,
-                shadowColor: '#059669',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 6,
-                elevation: 4,
-              }}
-              activeOpacity={0.85}
-              onPress={async () => {
-                try {
-                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setShowVoiceCallModal(true);
-                  if (!voiceCallHook.activeCall) {
-                    await voiceCallHook.startCall('Farmer Live Voice Call');
-                  }
-                } catch (err: any) {
-                  const msg = err?.response?.data?.message || err?.message || 'Could not start group call';
-                  if (Platform.OS === 'web') {
-                    window.alert('Call Error: ' + msg);
-                  } else {
-                    Alert.alert('Call Error', msg);
-                  }
-                }
-              }}
-            >
-              <Ionicons name="call" size={18} color="#ffffff" />
-              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                {voiceCallHook.activeCall ? '🔴 Join Active Group Voice Call' : '🎙️ Start Farmer Group Voice Call'}
-              </Text>
-            </TouchableOpacity>
-          ) : null}
 
           <GroupVoiceCallModal
             visible={showVoiceCallModal}
@@ -298,34 +572,31 @@ export const AdvisorDashboardView: React.FC = () => {
           />
 
           {/* Single tabbed card replaces 4 stacked sections — one clear focus at a time */}
-          <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
+          <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, shadowColor: tConfig.shadowColor || '#00ff87' }]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
               {TAB_ORDER.map((key) => {
                 const meta = TAB_META[key];
                 const isActive = activeTab === key;
                 const count = counts[key] ?? 0;
-                const isEmpty = count === 0;
-
-                const chipTextColor = isActive
-                  ? '#ffffff'
-                  : isEmpty
-                    ? '#2563eb' // Blue text for empty items
-                    : '#dc2626'; // Red text for non-empty items
-
-                const chipBgColor = isActive
-                  ? isEmpty ? '#2563eb' : '#dc2626' // Blue if empty active, Red if items present active
-                  : isEmpty ? '#eff6ff' : '#fef2f2'; // Light blue if empty, Light red if items present
-
-                const chipBorderColor = isActive
-                  ? isEmpty ? '#1d4ed8' : '#b91c1c'
-                  : isEmpty ? '#bfdbfe' : '#fca5a5';
+                const hasUrgent = count > 0 && (key === 'DELAYED' || key === 'PROBLEMS');
 
                 return (
                   <TouchableOpacity
                     key={key}
                     style={[
                       styles.tabChip,
-                      { backgroundColor: chipBgColor, borderColor: chipBorderColor, borderWidth: 1 },
+                      {
+                        backgroundColor: isActive
+                          ? (isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.16)')
+                          : (isLight ? '#f8fafc' : '#072414'),
+                        borderColor: isActive ? meta.color : (isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.18)'),
+                      },
+                      isActive && {
+                        borderWidth: 1.5,
+                        shadowColor: meta.color,
+                        shadowOpacity: isLight ? 0.15 : 0.35,
+                        shadowRadius: 8,
+                      },
                     ]}
                     activeOpacity={0.85}
                     onPress={() => {
@@ -334,442 +605,410 @@ export const AdvisorDashboardView: React.FC = () => {
                     }}
                   >
                     <Ionicons
-                      name={isEmpty ? meta.icon : 'alert-circle'}
-                      size={13}
-                      color={chipTextColor}
+                      name={hasUrgent ? 'alert-circle' : meta.icon}
+                      size={14}
+                      color={isActive ? meta.color : (isLight ? '#64748b' : '#94a3b8')}
                     />
                     <Text
                       style={[
                         styles.tabChipText,
-                        { color: chipTextColor, fontFamily: FONT.bold },
+                        {
+                          color: isActive ? (isLight ? '#15803d' : '#ffffff') : (isLight ? '#475569' : '#cbd5e1'),
+                          fontFamily: isActive ? FONT.extraBold : FONT.semiBold,
+                        },
                       ]}
                     >
                       {meta.label}
                     </Text>
-                    <View
-                      style={[
-                        styles.tabChipCount,
-                        { backgroundColor: isEmpty ? '#2563eb' : '#dc2626' },
-                      ]}
-                    >
-                      <Text style={[styles.tabChipCountText, { color: '#ffffff' }]}>{count}</Text>
-                    </View>
+                    {count > 0 ? (
+                      <View
+                        style={[
+                          styles.tabChipCount,
+                          {
+                            backgroundColor: hasUrgent ? '#ef4444' : isActive ? meta.color : (isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.12)'),
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.tabChipCountText,
+                            {
+                              color: hasUrgent || isActive ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8'),
+                              fontFamily: FONT.extraBold,
+                            },
+                          ]}
+                        >
+                          {count}
+                        </Text>
+                      </View>
+                    ) : null}
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
 
-            <View style={styles.tabBody}>
+            <View style={[styles.tabBody, { borderTopColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }]}>
               {isLoadingByTab[activeTab] ? (
                 <ActivityIndicator color={activeMeta.color} style={{ marginVertical: 16 }} />
               ) : activeTab === 'SUBMISSIONS' ? (
-                <View style={{ gap: 10 }}>
-                  {/* Submissions Category Switcher Bar */}
-                  <View style={styles.subFilterRow}>
-                    <TouchableOpacity
-                      style={[styles.subFilterChip, submissionSubFilter === 'CROPS' && styles.subFilterChipActive]}
-                      onPress={() => setSubmissionSubFilter('CROPS')}
-                    >
-                      <Text style={[styles.subFilterText, submissionSubFilter === 'CROPS' && styles.subFilterTextActive]}>
-                        🌾 Crops
-                      </Text>
-                      <View style={[styles.subFilterBadge, submissionSubFilter === 'CROPS' ? styles.subFilterBadgeActive : styles.subFilterBadgeInactive]}>
-                        <Text style={[styles.subFilterBadgeText, submissionSubFilter === 'CROPS' ? styles.subFilterBadgeTextActive : styles.subFilterBadgeTextInactive]}>
-                          {pendingCrops?.length ?? 0}
-                        </Text>
+                (() => {
+                  const displayedRows = requestsAuditTab === 'PENDING' ? pendingTableRows : historyTableRows;
+
+                  return (
+                    <View style={[styles.tableCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, shadowColor: tConfig.shadowColor || '#00ff87' }]}>
+                      {/* 1. Requests & Audits: 2 Main Tabs (Pending & History) */}
+                      <View style={[styles.requestsMainTabsRow, { borderBottomColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }]}>
+                        <TouchableOpacity
+                          style={[
+                            styles.requestsMainTabBtn,
+                            {
+                              backgroundColor: requestsAuditTab === 'PENDING'
+                                ? (isLight ? '#ecfdf5' : 'rgba(0, 255, 135, 0.12)')
+                                : (isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.04)'),
+                              borderColor: requestsAuditTab === 'PENDING'
+                                ? (isLight ? '#10b981' : 'rgba(0, 255, 135, 0.4)')
+                                : (isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)'),
+                            },
+                          ]}
+                          onPress={() => {
+                            if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setRequestsAuditTab('PENDING');
+                          }}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons
+                            name="time-outline"
+                            size={16}
+                            color={requestsAuditTab === 'PENDING' ? (isLight ? '#059669' : '#00ff87') : (isLight ? '#64748b' : '#94a3b8')}
+                          />
+                          <Text style={[styles.requestsMainTabText, { color: requestsAuditTab === 'PENDING' ? (isLight ? '#065f46' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') }]}>
+                            Pending Requests
+                          </Text>
+                          <View style={[
+                            styles.requestsMainTabBadge,
+                            {
+                              backgroundColor: requestsAuditTab === 'PENDING'
+                                ? (isLight ? '#10b981' : '#00ff87')
+                                : (isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)'),
+                            },
+                          ]}>
+                            <Text style={[
+                              styles.requestsMainTabBadgeText,
+                              { color: requestsAuditTab === 'PENDING' ? '#ffffff' : (isLight ? '#475569' : '#94a3b8') },
+                            ]}>
+                              {pendingTableRows.length}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.requestsMainTabBtn,
+                            {
+                              backgroundColor: requestsAuditTab === 'HISTORY'
+                                ? (isLight ? '#ecfdf5' : 'rgba(0, 255, 135, 0.12)')
+                                : (isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.04)'),
+                              borderColor: requestsAuditTab === 'HISTORY'
+                                ? (isLight ? '#10b981' : 'rgba(0, 255, 135, 0.4)')
+                                : (isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)'),
+                            },
+                          ]}
+                          onPress={() => {
+                            if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setRequestsAuditTab('HISTORY');
+                          }}
+                          activeOpacity={0.85}
+                        >
+                          <Ionicons
+                            name="file-tray-full-outline"
+                            size={16}
+                            color={requestsAuditTab === 'HISTORY' ? (isLight ? '#059669' : '#00ff87') : (isLight ? '#64748b' : '#94a3b8')}
+                          />
+                          <Text style={[styles.requestsMainTabText, { color: requestsAuditTab === 'HISTORY' ? (isLight ? '#065f46' : '#ffffff') : (isLight ? '#64748b' : '#94a3b8') }]}>
+                            Audit History
+                          </Text>
+                          <View style={[
+                            styles.requestsMainTabBadge,
+                            {
+                              backgroundColor: requestsAuditTab === 'HISTORY'
+                                ? (isLight ? '#10b981' : '#00ff87')
+                                : (isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)'),
+                            },
+                          ]}>
+                            <Text style={[
+                              styles.requestsMainTabBadgeText,
+                              { color: requestsAuditTab === 'HISTORY' ? '#ffffff' : (isLight ? '#475569' : '#94a3b8') },
+                            ]}>
+                              {historyTableRows.length}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
                       </View>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.subFilterChip, submissionSubFilter === 'CALLS' && styles.subFilterChipActive]}
-                      onPress={() => setSubmissionSubFilter('CALLS')}
-                    >
-                      <Text style={[styles.subFilterText, submissionSubFilter === 'CALLS' && styles.subFilterTextActive]}>
-                        📞 Calls
-                      </Text>
-                      <View style={[styles.subFilterBadge, submissionSubFilter === 'CALLS' ? styles.subFilterBadgeActive : styles.subFilterBadgeInactive]}>
-                        <Text style={[styles.subFilterBadgeText, submissionSubFilter === 'CALLS' ? styles.subFilterBadgeTextActive : styles.subFilterBadgeTextInactive]}>
-                          {pendingCallRequests.length}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.subFilterChip, submissionSubFilter === 'FARMERS' && styles.subFilterChipActive]}
-                      onPress={() => setSubmissionSubFilter('FARMERS')}
-                    >
-                      <Text style={[styles.subFilterText, submissionSubFilter === 'FARMERS' && styles.subFilterTextActive]}>
-                        👨‍🌾 Farmers
-                      </Text>
-                      <View style={[styles.subFilterBadge, submissionSubFilter === 'FARMERS' ? styles.subFilterBadgeActive : styles.subFilterBadgeInactive]}>
-                        <Text style={[styles.subFilterBadgeText, submissionSubFilter === 'FARMERS' ? styles.subFilterBadgeTextActive : styles.subFilterBadgeTextInactive]}>
-                          {pendingFarmerRequests.length}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.subFilterChip, submissionSubFilter === 'PROBLEMS' && styles.subFilterChipActive]}
-                      onPress={() => setSubmissionSubFilter('PROBLEMS')}
-                    >
-                      <Text style={[styles.subFilterText, submissionSubFilter === 'PROBLEMS' && styles.subFilterTextActive]}>
-                        ⚠️ Problems
-                      </Text>
-                      <View style={[styles.subFilterBadge, submissionSubFilter === 'PROBLEMS' ? styles.subFilterBadgeActive : styles.subFilterBadgeInactive]}>
-                        <Text style={[styles.subFilterBadgeText, submissionSubFilter === 'PROBLEMS' ? styles.subFilterBadgeTextActive : styles.subFilterBadgeTextInactive]}>
-                          {pendingProblems.length}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* 1. CROPS SUB-FILTER */}
-                  {submissionSubFilter === 'CROPS' ? (
-                    !pendingCrops || pendingCrops.length === 0 ? (
-                      <Text style={styles.emptyText}>No pending crop submissions.</Text>
-                    ) : (
-                      <View style={{ gap: 10 }}>
-                        {pendingCrops.map((crop) => {
-                          const farmer = crop.plot?.farm?.owner;
-                          const locationStr = [farmer?.village, farmer?.district, farmer?.state].filter(Boolean).join(', ');
-
-                          return (
-                            <View key={crop.id} style={styles.reviewCard}>
-                              <View style={styles.reviewCardHeader}>
-                                <View style={{ flex: 1, gap: 2 }}>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                    <Text style={styles.reviewCropTitle}>🌾 {crop.cropName}</Text>
-                                    {crop.variety ? <Text style={styles.reviewCropVariety}>({crop.variety})</Text> : null}
-                                    <View style={styles.pendingBadge}>
-                                      <Ionicons name="notifications" size={10} color="#b45309" />
-                                      <Text style={styles.pendingBadgeText}>CROP REVIEW</Text>
-                                    </View>
-                                  </View>
-                                  <Text style={styles.reviewCropCategory}>
-                                    📂 {crop.category || 'General Crop'} {crop.sowingDate ? `· 📅 Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}
-                                  </Text>
-                                </View>
-                              </View>
-
-                              {/* Farmer & Location Highlight Box */}
-                              <View style={styles.submissionFarmerHighlight}>
-                                <Text style={styles.submissionFarmerText}>
-                                  👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: '#1e40af' }}>{farmer?.name || 'Farmer'}</Text>
-                                  {farmer?.mobile ? <Text style={{ fontFamily: FONT.semiBold, color: '#475569' }}> · 📞 {farmer.mobile}</Text> : null}
-                                </Text>
-                                <Text style={styles.submissionLocText} numberOfLines={1}>
-                                  📍 {crop.plot?.farm?.name} {locationStr ? `· ${locationStr}` : `· ${crop.plot?.name}`}
-                                </Text>
-
-                                {/* Inline Satellite Scan Details & 1-Click Field Inspection */}
-                                <View style={{ backgroundColor: '#eff6ff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginTop: 6, gap: 6 }}>
-                                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                      <Ionicons name="planet" size={15} color="#2563eb" />
-                                      <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>🛰️ ISRO Satellite Health Details</Text>
-                                    </View>
-                                    <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                      <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#15803d' }}>🟢 Live Scan</Text>
-                                    </View>
-                                  </View>
-
-                                  <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                                    <View style={{ backgroundColor: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#dbeafe' }}>
-                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1e40af' }}>🟢 NDVI: 0.82 (Healthy)</Text>
-                                    </View>
-
-                                    <View style={{ backgroundColor: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#dbeafe' }}>
-                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0284c7' }}>💧 Soil Moisture: 48.3%</Text>
-                                    </View>
-
-                                    <View style={{ backgroundColor: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#fee2e2' }}>
-                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#dc2626' }}>🔬 Rust Index: 84%</Text>
-                                    </View>
-                                  </View>
-
-                                  <TouchableOpacity
-                                    style={{
-                                      flexDirection: 'row',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      gap: 6,
-                                      backgroundColor: '#2563eb',
-                                      paddingVertical: 8,
-                                      borderRadius: 8,
-                                      marginTop: 2,
-                                    }}
-                                    activeOpacity={0.85}
-                                    onPress={() => router.push({
-                                      pathname: '/admin/(tabs)/satellite-map',
-                                      params: {
-                                        cropId: crop.id,
-                                        cropName: crop.cropName,
-                                        farmerName: farmer?.name,
-                                        plotName: crop.plot?.farm?.name || crop.plot?.name,
-                                        location: [farmer?.village, farmer?.district].filter(Boolean).join(', ') || crop.plot?.farm?.name || crop.plot?.name || '30.9085° N, 75.8610° E',
-                                      },
-                                    } as any)}
-                                  >
-                                    <Ionicons name="eye-outline" size={14} color="#ffffff" />
-                                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>
-                                      🛰️ Single-Click Field Satellite Inspection
-                                    </Text>
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-
-                              <View style={styles.reviewCardActionRow}>
-                                <TouchableOpacity
-                                  style={styles.fullReviewBtn}
-                                  activeOpacity={0.85}
-                                  onPress={() => setSelectedReviewCrop(crop)}
-                                >
-                                  <Ionicons name="eye-outline" size={14} color="#1d4ed8" />
-                                  <Text style={styles.fullReviewBtnText}>View Full Crop Review 🔍</Text>
-                                </TouchableOpacity>
-
-                                <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                                  <TouchableOpacity
-                                    style={styles.rejectCropBtn}
-                                    activeOpacity={0.85}
-                                    disabled={rejectCrop.isPending || acceptCrop.isPending}
-                                    onPress={() => {
-                                      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                      handleReject(crop.id, crop.cropName);
-                                    }}
-                                  >
-                                    {rejectCrop.isPending ? (
-                                      <ActivityIndicator color="#dc2626" size="small" />
-                                    ) : (
-                                      <Ionicons name="close-circle" size={16} color="#dc2626" />
-                                    )}
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={styles.acceptCropBtn}
-                                    activeOpacity={0.85}
-                                    disabled={acceptCrop.isPending || rejectCrop.isPending}
-                                    onPress={() => {
-                                      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                      acceptCrop.mutate(crop.id);
-                                    }}
-                                  >
-                                    {acceptCrop.isPending ? (
-                                      <ActivityIndicator color="#ffffff" size="small" />
-                                    ) : (
-                                      <>
-                                        <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
-                                        <Text style={styles.acceptCropBtnText}>Accept</Text>
-                                      </>
-                                    )}
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )
-                  ) : null}
-
-                  {/* 2. CALLS SUB-FILTER */}
-                  {submissionSubFilter === 'CALLS' ? (
-                    <CallRequestsPanel requests={callRequests} meta={activeMeta} />
-                  ) : null}
-
-                  {/* 3. FARMERS HIRE REQUESTS SUB-FILTER */}
-                  {submissionSubFilter === 'FARMERS' ? (
-                    pendingFarmerRequests.length === 0 ? (
-                      <Text style={styles.emptyText}>No pending farmer hire requests.</Text>
-                    ) : (
-                      <View style={{ gap: 10 }}>
-                        {pendingFarmerRequests.map((req: any) => {
-                          const farmerObj = req.farmer;
-                          const loc = [farmerObj?.village, farmerObj?.district, farmerObj?.state].filter(Boolean).join(', ');
-
-                          return (
-                            <View key={req.id} style={styles.reviewCard}>
-                              <View style={styles.reviewCardHeader}>
-                                <View style={{ flex: 1, gap: 2 }}>
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                    <Text style={styles.reviewCropTitle}>👨‍🌾 {farmerObj?.name || 'Farmer Hire Request'}</Text>
-                                    <View style={[styles.pendingBadge, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}>
-                                      <Ionicons name="person-add" size={10} color="#b45309" />
-                                      <Text style={[styles.pendingBadgeText, { color: '#b45309' }]}>HIRE REQUEST</Text>
-                                    </View>
-                                  </View>
-                                  <Text style={styles.reviewCropCategory}>
-                                    📞 {farmerObj?.mobile || '—'} {farmerObj?.kingId ? `· KingID: ${farmerObj.kingId}` : ''}
-                                  </Text>
-                                </View>
-                              </View>
-
-                              {loc ? (
-                                <View style={styles.submissionFarmerHighlight}>
-                                  <Text style={styles.submissionLocText}>📍 Location: {loc}</Text>
-                                </View>
-                              ) : null}
-
-                              <View style={{ flexDirection: 'row', gap: 8, marginTop: 6, justifyContent: 'flex-end' }}>
-                                <TouchableOpacity
-                                  style={[styles.rejectCropBtn, { paddingHorizontal: 12, height: 34 }]}
-                                  disabled={rejectAssignment.isPending || acceptAssignment.isPending}
-                                  onPress={() => rejectAssignment.mutate({ id: req.id })}
-                                >
-                                  <Ionicons name="close-circle" size={15} color="#dc2626" />
-                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#dc2626' }}>Reject</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                  style={[styles.acceptCropBtn, { paddingHorizontal: 14, height: 34 }]}
-                                  disabled={acceptAssignment.isPending || rejectAssignment.isPending}
-                                  onPress={() => {
-                                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                    setSelectedCropCareTier((user as any)?.isSeniorDoctor ? 'CROP_DOCTOR_5' : 'CROP_ADVISOR_5');
-                                    setPendingFarmerToConfirm(req);
-                                  }}
-                                >
-                                  <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
-                                  <Text style={styles.acceptCropBtnText}>Confirm & Attach</Text>
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )
-                  ) : null}
-
-                  {/* 4. PROBLEM REPORTS SUB-FILTER */}
-                  {submissionSubFilter === 'PROBLEMS' ? (
-                    <View style={{ gap: 10 }}>
-                      {/* Active Pending Problems */}
-                      {pendingProblems.length === 0 ? (
-                        <Text style={styles.emptyText}>No pending crop problem reports.</Text>
+                      {/* 2. High-Density Responsive Table View */}
+                      {displayedRows.length === 0 ? (
+                        <View style={styles.emptyTableState}>
+                          <Ionicons name="documents-outline" size={32} color={subTextColor} />
+                          <Text style={[styles.emptyTableText, { color: subTextColor }]}>
+                            {requestsAuditTab === 'PENDING' ? 'No pending requests found.' : 'No audit history records found.'}
+                          </Text>
+                        </View>
                       ) : (
-                        <View style={{ gap: 10 }}>
-                          {pendingProblems.map((prob) => {
-                            const isHigh = prob.severity === 'HIGH' || prob.severity === 'CRITICAL';
-                            const isExpanded = expandedProblemId === prob.id;
-                            const photoCount = prob.photos?.length ?? 0;
+                        <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ minWidth: isDesktop ? '100%' : 920 }}>
+                          <View style={{ flex: 1 }}>
+                            {/* Table Header Row */}
+                            <View style={[styles.tableHeaderRow, { backgroundColor: isLight ? '#f1f5f9' : '#03140c', borderBottomColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.15)' }]}>
+                              <Text style={[styles.tableHeaderCell, { width: 140, color: isLight ? '#0f172a' : '#00ff87' }]}>REQUEST TYPE</Text>
+                              <Text style={[styles.tableHeaderCell, { width: 190, color: isLight ? '#0f172a' : '#00ff87' }]}>FARMER & CONTACT</Text>
+                              <Text style={[styles.tableHeaderCell, { flex: 1, minWidth: 220, color: isLight ? '#0f172a' : '#00ff87' }]}>REQUEST DETAILS</Text>
+                              <Text style={[styles.tableHeaderCell, { width: 100, color: isLight ? '#0f172a' : '#00ff87' }]}>DATE</Text>
+                              <Text style={[styles.tableHeaderCell, { width: 110, color: isLight ? '#0f172a' : '#00ff87' }]}>STATUS</Text>
+                              <Text style={[styles.tableHeaderCell, { width: 220, textAlign: 'right', color: isLight ? '#0f172a' : '#00ff87' }]}>ACTIONS</Text>
+                            </View>
 
-                            return (
-                              <View key={prob.id} style={[styles.reviewCard, isHigh && { borderColor: '#fca5a5', backgroundColor: '#fff5f5' }]}>
-                                <TouchableOpacity
-                                  style={styles.reviewCardHeader}
-                                  activeOpacity={0.75}
-                                  onPress={() => {
-                                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    setExpandedProblemId((curr) => (curr === prob.id ? null : prob.id));
-                                  }}
+                            {/* Table Body Rows */}
+                            {displayedRows.map((row, index) => {
+                              const isEven = index % 2 === 0;
+                              return (
+                                <View
+                                  key={row.id}
+                                  style={[
+                                    styles.tableRow,
+                                    {
+                                      backgroundColor: isLight
+                                        ? (isEven ? '#ffffff' : '#f8fafc')
+                                        : (isEven ? '#05190f' : '#071f14'),
+                                      borderBottomColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.05)',
+                                    },
+                                  ]}
                                 >
-                                  <View style={{ flex: 1, gap: 2 }}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                      <Text style={styles.reviewCropTitle}>⚠️ {prob.title}</Text>
-                                      <View style={[styles.pendingBadge, { backgroundColor: isHigh ? '#fef2f2' : '#eff6ff', borderColor: isHigh ? '#fecaca' : '#bfdbfe' }]}>
-                                        <Text style={[styles.pendingBadgeText, { color: isHigh ? '#dc2626' : '#1d4ed8' }]}>
-                                          {prob.severity || 'REPORTED'}
-                                        </Text>
-                                      </View>
-                                    </View>
-                                    <Text style={styles.reviewCropCategory}>
-                                      👨‍🌾 {prob.reportedBy?.name || 'Farmer'} · 🌾 {prob.cropCycle?.cropName || 'Crop Issue'} · 📅 {new Date(prob.createdAt).toLocaleDateString('en-IN')}
-                                      {photoCount > 0 ? ` · 📷 ${photoCount} Photo${photoCount > 1 ? 's' : ''}` : ''}
-                                      {prob.farmerRating ? ` · ⭐ ${prob.farmerRating}/5` : ''}
-                                    </Text>
-                                  </View>
-                                  <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
-                                </TouchableOpacity>
-
-                                {isExpanded ? (
-                                  <>
-                                    {/* Problem Description */}
-                                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginVertical: 4 }}>
-                                      {prob.description}
-                                    </Text>
-
-                                    {/* Disease Photos Attached */}
-                                    {prob.photos && prob.photos.length > 0 ? (
-                                      <View style={{ marginVertical: 4, gap: 4 }}>
-                                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>
-                                          📷 Disease Photos ({prob.photos.length}):
-                                        </Text>
-                                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                                          {prob.photos.map((p, idx) => {
-                                            const fullUrl = resolveMediaUrl(p.photoUrl);
-                                            return (
-                                              <TouchableOpacity
-                                                key={p.id || idx}
-                                                activeOpacity={0.85}
-                                                onPress={() => fullUrl && setSelectedPreviewImage(fullUrl)}
-                                                style={{ position: 'relative', borderRadius: RADIUS.sm, overflow: 'hidden', borderWidth: 1, borderColor: '#cbd5e1' }}
-                                              >
-                                                <Image source={{ uri: fullUrl }} style={{ width: 64, height: 64 }} />
-                                                <View style={{ position: 'absolute', bottom: 3, right: 3, backgroundColor: 'rgba(0,0,0,0.6)', padding: 3, borderRadius: 10 }}>
-                                                  <Ionicons name="expand" size={10} color="#ffffff" />
-                                                </View>
-                                              </TouchableOpacity>
-                                            );
-                                          })}
-                                        </ScrollView>
-                                      </View>
-                                    ) : null}
-
-                                    {/* Farmer Rating & Feedback */}
-                                    {prob.farmerRating ? (
-                                      <View style={{ backgroundColor: '#fffbeb', padding: 8, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fde68a', marginVertical: 4, gap: 3 }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                          {[1, 2, 3, 4, 5].map((star) => (
-                                            <Ionicons
-                                              key={star}
-                                              name={star <= (prob.farmerRating || 0) ? 'star' : 'star-outline'}
-                                              size={14}
-                                              color="#d97706"
-                                            />
-                                          ))}
-                                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b45309', marginLeft: 2 }}>
-                                            Farmer Rating: {prob.farmerRating}/5 Stars
-                                          </Text>
-                                        </View>
-                                        {prob.farmerFeedback ? (
-                                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#92400e', fontStyle: 'italic' }}>
-                                            💬 Feedback: "{prob.farmerFeedback}"
-                                          </Text>
-                                        ) : null}
-                                      </View>
-                                    ) : null}
-
-                                    {/* Reporter Info */}
-                                    <View style={styles.submissionFarmerHighlight}>
-                                      <Text style={styles.submissionFarmerText}>
-                                        👨‍🌾 Reported by: <Text style={{ fontFamily: FONT.bold, color: '#1e40af' }}>{prob.reportedBy?.name || 'Farmer'}</Text>
-                                        {prob.reportedBy?.mobile ? ` (📞 ${prob.reportedBy.mobile})` : ''}
+                                  {/* Type Column */}
+                                  <View style={[styles.tableCell, { width: 140 }]}>
+                                    <View style={[styles.typeBadge, { backgroundColor: `${row.typeColor}18`, borderColor: `${row.typeColor}44` }]}>
+                                      <Ionicons name={row.typeIcon} size={12} color={row.typeColor} />
+                                      <Text style={[styles.typeBadgeText, { color: row.typeColor }]}>
+                                        {row.typeLabel}
                                       </Text>
                                     </View>
+                                  </View>
 
-                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
+                                  {/* Farmer & Contact Column */}
+                                  <View style={[styles.tableCell, { width: 190, gap: 1 }]}>
+                                    <Text style={[styles.tableFarmerName, { color: textColor }]} numberOfLines={1}>
+                                      {row.farmerName}
+                                    </Text>
+                                    {row.farmerMobile ? (
                                       <TouchableOpacity
-                                        style={[styles.acceptCropBtn, { backgroundColor: '#1d4ed8', paddingHorizontal: 14, height: 34 }]}
-                                        onPress={() => setSelectedProblemToRespond(prob)}
+                                        onPress={() => Linking.openURL(`tel:${row.farmerMobile}`)}
+                                        activeOpacity={0.7}
+                                        style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
                                       >
-                                        <Ionicons name="medical-outline" size={15} color="#ffffff" />
-                                        <Text style={styles.acceptCropBtnText}>Respond & Prescribe 💊</Text>
+                                        <Ionicons name="call" size={10} color={isLight ? '#059669' : '#00ff87'} />
+                                        <Text style={[styles.tableFarmerMobile, { color: isLight ? '#047857' : '#00ff87' }]}>{row.farmerMobile}</Text>
+                                        {row.farmerKingId ? <Text style={[styles.tableFarmerKingId, { color: subTextColor }]}>· {row.farmerKingId}</Text> : null}
                                       </TouchableOpacity>
+                                    ) : null}
+                                    {row.location ? (
+                                      <Text style={[styles.tableFarmerLocation, { color: isLight ? '#64748b' : '#94a3b8' }]} numberOfLines={1}>
+                                        📍 {row.location}
+                                      </Text>
+                                    ) : null}
+                                  </View>
+
+                                  {/* Details Column */}
+                                  <View style={[styles.tableCell, { flex: 1, minWidth: 220, gap: 2 }]}>
+                                    <Text style={[styles.tableTitleText, { color: textColor }]} numberOfLines={1}>
+                                      {row.title}
+                                    </Text>
+                                    <Text style={[styles.tableDetailsText, { color: subTextColor }]} numberOfLines={1}>
+                                      {row.details}
+                                    </Text>
+                                  </View>
+
+                                  {/* Date Column */}
+                                  <View style={[styles.tableCell, { width: 100 }]}>
+                                    <Text style={[styles.tableDateText, { color: subTextColor }]}>{row.dateStr}</Text>
+                                  </View>
+
+                                  {/* Status Column */}
+                                  <View style={[styles.tableCell, { width: 110 }]}>
+                                    <View style={[styles.statusBadge, {
+                                      backgroundColor: row.status.includes('ACTIVE') || row.status.includes('Resolved') || row.status.includes('Audited')
+                                        ? 'rgba(16, 185, 129, 0.15)'
+                                        : row.severity === 'HIGH' || row.severity === 'CRITICAL'
+                                        ? 'rgba(239, 68, 68, 0.18)'
+                                        : 'rgba(245, 158, 11, 0.15)',
+                                      borderColor: row.status.includes('ACTIVE') || row.status.includes('Resolved') || row.status.includes('Audited')
+                                        ? 'rgba(16, 185, 129, 0.35)'
+                                        : row.severity === 'HIGH' || row.severity === 'CRITICAL'
+                                        ? 'rgba(239, 68, 68, 0.4)'
+                                        : 'rgba(245, 158, 11, 0.35)',
+                                    }]}>
+                                      <Text style={[styles.statusBadgeText, {
+                                        color: row.status.includes('ACTIVE') || row.status.includes('Resolved') || row.status.includes('Audited')
+                                          ? '#10b981'
+                                          : row.severity === 'HIGH' || row.severity === 'CRITICAL'
+                                          ? '#f87171'
+                                          : '#f59e0b',
+                                      }]}>
+                                        {row.status}
+                                      </Text>
                                     </View>
-                                  </>
-                                ) : null}
-                              </View>
-                            );
-                          })}
-                        </View>
+                                  </View>
+
+                                  {/* Actions Column */}
+                                  <View style={[styles.tableCell, { width: 220, flexDirection: 'row', justifyContent: 'flex-end', gap: 5 }]}>
+                                    {requestsAuditTab === 'PENDING' ? (
+                                      row.type === 'CROPS' ? (
+                                        <>
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#0284c7' }]}
+                                            onPress={() => router.push({
+                                              pathname: '/(partner)/(tabs)/satellite-map',
+                                              params: {
+                                                cropId: row.raw.id,
+                                                cropName: row.raw.cropName,
+                                                farmerName: row.farmerName,
+                                                plotName: row.raw.plot?.farm?.name || row.raw.plot?.name,
+                                                location: row.location || '30.9085° N, 75.8610° E',
+                                              },
+                                            } as any)}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="planet" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Radar</Text>
+                                          </TouchableOpacity>
+
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#2563eb' }]}
+                                            onPress={() => setSelectedReviewCrop(row.raw)}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="eye" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Review</Text>
+                                          </TouchableOpacity>
+
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#059669' }]}
+                                            disabled={acceptCrop.isPending || rejectCrop.isPending}
+                                            onPress={() => acceptCrop.mutate(row.raw.id)}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="checkmark" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Accept</Text>
+                                          </TouchableOpacity>
+
+                                          <TouchableOpacity
+                                            style={[styles.tableIconActionBtn, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.3)' }]}
+                                            disabled={rejectCrop.isPending || acceptCrop.isPending}
+                                            onPress={() => handleReject(row.raw.id, row.raw.cropName)}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="close" size={12} color="#f87171" />
+                                          </TouchableOpacity>
+                                        </>
+                                      ) : row.type === 'CALLS' ? (
+                                        <>
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#10b981' }]}
+                                            onPress={() => Linking.openURL(`tel:${row.farmerMobile}`)}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="call" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Call</Text>
+                                          </TouchableOpacity>
+
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#0284c7' }]}
+                                            onPress={() => {
+                                              setResolvingCallReq(row.raw);
+                                              setResolvingCallComment('');
+                                            }}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="checkmark-done" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Resolve</Text>
+                                          </TouchableOpacity>
+                                        </>
+                                      ) : row.type === 'FARMERS' ? (
+                                        <>
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#059669' }]}
+                                            disabled={acceptAssignment.isPending || rejectAssignment.isPending}
+                                            onPress={() => {
+                                              setSelectedCropCareTier((user as any)?.isSeniorDoctor ? 'CROP_DOCTOR_5' : 'CROP_ADVISOR_5');
+                                              setPendingFarmerToConfirm(row.raw);
+                                            }}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="checkmark" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Confirm</Text>
+                                          </TouchableOpacity>
+
+                                          <TouchableOpacity
+                                            style={[styles.tableIconActionBtn, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.3)' }]}
+                                            disabled={rejectAssignment.isPending || acceptAssignment.isPending}
+                                            onPress={() => rejectAssignment.mutate({ id: row.raw.id })}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="close" size={12} color="#f87171" />
+                                          </TouchableOpacity>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <TouchableOpacity
+                                            style={[styles.tableActionBtn, { backgroundColor: '#e11d48' }]}
+                                            onPress={() => {
+                                              setSelectedProblemToRespond(row.raw);
+                                              setProblemResponseText(row.raw.advisorResponse || '');
+                                              setProblemProductText(row.raw.recommendedProduct || '');
+                                            }}
+                                            activeOpacity={0.8}
+                                          >
+                                            <Ionicons name="medical" size={11} color="#ffffff" />
+                                            <Text style={styles.tableActionBtnText}>Prescribe</Text>
+                                          </TouchableOpacity>
+                                        </>
+                                      )
+                                    ) : (
+                                      /* History Actions */
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.tableActionBtn,
+                                          {
+                                            backgroundColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.08)',
+                                            borderWidth: 1,
+                                            borderColor: isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.2)',
+                                          },
+                                        ]}
+                                        onPress={() => {
+                                          if (row.type === 'CROPS') setSelectedReviewCrop(row.raw);
+                                          else if (row.type === 'PROBLEMS') setSelectedProblemToRespond(row.raw);
+                                          else if (row.type === 'CALLS' && row.raw.resolvedComment) {
+                                            Platform.OS === 'web' ? alert(`Call Summary: ${row.raw.resolvedComment}`) : Alert.alert('Call Summary', row.raw.resolvedComment);
+                                          }
+                                        }}
+                                        activeOpacity={0.8}
+                                      >
+                                        <Ionicons name="eye-outline" size={11} color={isLight ? '#475569' : '#cbd5e1'} />
+                                        <Text style={[styles.tableActionBtnText, { color: isLight ? '#334155' : '#e2e8f0' }]}>View Record</Text>
+                                      </TouchableOpacity>
+                                    )}
+                                  </View>
+                                </View>
+                              );
+                            })}
+                          </View>
+                        </ScrollView>
                       )}
                     </View>
-                  ) : null}
-                </View>
+                  );
+                })()
               ) : activeTab === 'WEATHER' ? (
                 <WeatherAlertsList alerts={weatherAlerts} meta={activeMeta} />
               ) : activeTab === 'NO_SCHEDULE' ? (
                 noScheduleCrops.length === 0 ? (
-                  <Text style={styles.emptyText}>All active crops have valid upcoming schedules! 🎉</Text>
+                  <Text style={[styles.emptyText, { color: subTextColor }]}>All active crops have valid upcoming schedules! 🎉</Text>
                 ) : (
                   <View style={{ gap: 10 }}>
                     <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', backgroundColor: '#fff7ed', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#fed7aa' }}>
@@ -781,17 +1020,17 @@ export const AdvisorDashboardView: React.FC = () => {
                       const isMissing = !crop.assignedSchedule || !crop.assignedSchedule.trim();
 
                       return (
-                        <View key={crop.id} style={[styles.reviewCard, { borderColor: '#fed7aa', backgroundColor: '#fffbf5' }]}>
+                        <View key={crop.id} style={[styles.reviewCard, { borderColor: isLight ? '#fed7aa' : 'rgba(245, 158, 11, 0.3)', backgroundColor: isLight ? '#fffbf5' : cardBg }]}>
                           <View style={styles.reviewCardHeader}>
                             <View style={{ flex: 1, gap: 2 }}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                <Text style={styles.reviewCropTitle}>
+                                <Text style={[styles.reviewCropTitle, { color: textColor }]}>
                                   🌾 {crop.cropName}{' '}
                                   <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
                                     (ID: {crop.cropId || (crop.id.startsWith('CR-') ? crop.id : `CR-${crop.id.slice(0, 6).toUpperCase()}`)})
                                   </Text>
                                 </Text>
-                                {crop.variety ? <Text style={styles.reviewCropVariety}>({crop.variety})</Text> : null}
+                                {crop.variety ? <Text style={[styles.reviewCropVariety, { color: subTextColor }]}>({crop.variety})</Text> : null}
                                 <View style={[styles.pendingBadge, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}>
                                   <Ionicons name="alert-circle" size={10} color="#dc2626" />
                                   <Text style={[styles.pendingBadgeText, { color: '#dc2626' }]}>
@@ -799,19 +1038,19 @@ export const AdvisorDashboardView: React.FC = () => {
                                   </Text>
                                 </View>
                               </View>
-                              <Text style={styles.reviewCropCategory}>
+                              <Text style={[styles.reviewCropCategory, { color: subTextColor }]}>
                                 📂 {crop.category || 'General Crop'} {crop.sowingDate ? `· 📅 Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}
                               </Text>
                             </View>
                           </View>
 
-                          <View style={styles.submissionFarmerHighlight}>
-                            <Text style={styles.submissionFarmerText}>
-                              👨‍🌾 Farmer: <Text style={{ fontFamily: FONT.bold, color: '#1e40af' }}>{farmer?.name || 'Farmer'}</Text>
+                          <View style={[styles.submissionFarmerHighlight, { backgroundColor: isLight ? '#f8fafc' : '#072414', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.2)' }]}>
+                            <Text style={[styles.submissionFarmerText, { color: textColor }]}>
+                              👨‍🌾 Farmer: <Text style={{ fontFamily: FONT.bold, color: isLight ? '#1e40af' : '#60a5fa' }}>{farmer?.name || 'Farmer'}</Text>
                               {farmer?.mobile ? ` (📞 ${farmer.mobile})` : ''}
                             </Text>
                             {crop.plot?.name ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 2 }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor, marginTop: 2 }}>
                                 📍 Plot: {crop.plot.name} {locationStr ? `· ${locationStr}` : ''}
                               </Text>
                             ) : null}
@@ -820,7 +1059,7 @@ export const AdvisorDashboardView: React.FC = () => {
                           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
                             <TouchableOpacity
                               style={[styles.acceptCropBtn, { backgroundColor: theme.primary, paddingHorizontal: 14, height: 34 }]}
-                              onPress={() => router.push('/admin/(tabs)/schedule' as never)}
+                              onPress={() => router.push('/(partner)/(tabs)/schedule' as never)}
                             >
                               <Ionicons name="calendar-outline" size={15} color="#ffffff" />
                               <Text style={styles.acceptCropBtnText}>Assign / Update Schedule 📅</Text>
@@ -834,7 +1073,7 @@ export const AdvisorDashboardView: React.FC = () => {
               ) : activeTab === 'PROBLEMS' ? (
                 <View style={{ gap: 10 }}>
                   {pendingProblems.length === 0 ? (
-                    <Text style={styles.emptyText}>No active pending crop problem reports. All caught up!</Text>
+                    <Text style={[styles.emptyText, { color: subTextColor }]}>No active pending crop problem reports. All caught up!</Text>
                   ) : (
                     <View style={{ gap: 10 }}>
                       {pendingProblems.map((prob) => {
@@ -843,7 +1082,7 @@ export const AdvisorDashboardView: React.FC = () => {
                         const photoCount = prob.photos?.length ?? 0;
 
                         return (
-                          <View key={prob.id} style={[styles.reviewCard, isHigh && { borderColor: '#fca5a5', backgroundColor: '#fff5f5' }]}>
+                          <View key={prob.id} style={[styles.reviewCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isHigh ? (isLight ? '#fca5a5' : 'rgba(239, 68, 68, 0.4)') : (isLight ? '#e2e8f0' : cardBorder) }]}>
                             <TouchableOpacity
                               style={styles.reviewCardHeader}
                               activeOpacity={0.75}
@@ -854,24 +1093,24 @@ export const AdvisorDashboardView: React.FC = () => {
                             >
                               <View style={{ flex: 1, gap: 2 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                                  <Text style={styles.reviewCropTitle}>⚠️ {prob.title}</Text>
+                                  <Text style={[styles.reviewCropTitle, { color: textColor }]}>⚠️ {prob.title}</Text>
                                   <View style={[styles.pendingBadge, { backgroundColor: isHigh ? '#fef2f2' : '#eff6ff', borderColor: isHigh ? '#fecaca' : '#bfdbfe' }]}>
                                     <Text style={[styles.pendingBadgeText, { color: isHigh ? '#dc2626' : '#1d4ed8' }]}>
                                       {prob.severity || 'REPORTED'}
                                     </Text>
                                   </View>
                                 </View>
-                                <Text style={styles.reviewCropCategory}>
+                                <Text style={[styles.reviewCropCategory, { color: subTextColor }]}>
                                   👨‍🌾 {prob.reportedBy?.name || 'Farmer'} · 🌾 {prob.cropCycle?.cropName || 'Crop Issue'} · 📅 {new Date(prob.createdAt).toLocaleDateString('en-IN')}
                                   {photoCount > 0 ? ` · 📷 ${photoCount} Photo${photoCount > 1 ? 's' : ''}` : ''}
                                 </Text>
                               </View>
-                              <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                              <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                             </TouchableOpacity>
 
                             {isExpanded ? (
                               <>
-                                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginVertical: 4 }}>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1', marginVertical: 4 }}>
                                   {prob.description}
                                 </Text>
                                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
@@ -897,42 +1136,107 @@ export const AdvisorDashboardView: React.FC = () => {
                 </View>
               ) : activeTab === 'FEES' ? (
                 <View style={{ gap: 14 }}>
-                  <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' }}>My Earnings & Commission</Text>
-                  
-                  <View style={{ backgroundColor: '#ffffff', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', marginBottom: 8 }}>E-Parchi (Prescription) Calculation Example</Text>
-                    
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#475569' }}>Kisan Ton Fees Aayegi:</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>₹100.00</Text>
-                    </View>
-                    
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>FarmsKing Platform Fee (15%):</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹15.00</Text>
+                  {/* Executive Header */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                    <View style={{ gap: 2 }}>
+                      <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: textColor }}>
+                        Consultation Earnings & Statutory Settlement
+                      </Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: subTextColor }}>
+                        Transparent Digital Agronomy Settlement Architecture · ISO 9001:2015 Audited
+                      </Text>
                     </View>
 
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>+ 18% GST (On Platform Fee):</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.70</Text>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                        backgroundColor: '#10b981',
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: RADIUS.pill,
+                      }}
+                      activeOpacity={0.85}
+                      onPress={() => router.push('/(partner)/(tabs)/wallet' as never)}
+                    >
+                      <Ionicons name="wallet-outline" size={15} color="#ffffff" />
+                      <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                        Open Advisor Wallet (₹{(wallet?.balance ?? 0).toLocaleString('en-IN')})
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* E-Prescription Calculation Card */}
+                  <View style={{ backgroundColor: isLight ? '#ffffff' : cardBg, borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.2, borderColor: isLight ? '#bbf7d0' : cardBorder }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="receipt-outline" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>
+                          E-Prescription & Consultation Settlement Model
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.xs }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>80.3% NET PAYOUT</Text>
+                      </View>
                     </View>
-                    
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>Payment Gateway Fee (2%):</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.00</Text>
-                    </View>
-                    
-                    <View style={{ height: 1, backgroundColor: '#e2e8f0', marginBottom: 8 }} />
-                    
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d' }}>🟢 Tuhade Wallet Vich Aunge:</Text>
-                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d' }}>₹80.30</Text>
+
+                    <View style={{ gap: 8 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1' }}>Farmer Consultation Charge (Set Rate):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>₹100.00</Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>FarmsKing Platform Infrastructure & R&D (15%):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹15.00</Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Statutory GST (18% on Platform Fee):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.70</Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Secure Payment Gateway Processing (2%):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.00</Text>
+                      </View>
+
+                      <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)', marginVertical: 4 }} />
+
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+                          <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>
+                            Net Credited to Advisor Wallet:
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>₹80.30</Text>
+                      </View>
                     </View>
                   </View>
-                  
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                    Note: Eh calculation tuhadi set kitti hui fees (₹100) de aadhar te hai. Platform commission te payment gateway fees automatically cut ho jandi hai.
-                  </Text>
+
+                  {/* Statutory & ISO Disclaimers */}
+                  <View style={{ backgroundColor: isLight ? '#f8fafc' : cardBg, borderRadius: RADIUS.md, padding: 14, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : cardBorder, gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="shield-checkmark" size={15} color="#38bdf8" />
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isLight ? '#0284c7' : '#38bdf8' }}>
+                        Statutory Compliance & Banking Settlement
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor, lineHeight: 16 }}>
+                      All advisory fees are collected digitally via RBI-approved payment gateways (Cashfree / UPI AutoPay) and automatically reconciled under ISO 9001:2015 agronomy quality management protocols. Wallet balances can be withdrawn directly to your verified bank account at any time.
+                    </Text>
+                    <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }} />
+                    <View style={{ gap: 2 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isLight ? '#475569' : '#cbd5e1' }}>
+                        FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                      </Text>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                        Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 · DPDPA 2023 Compliant
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               ) : (
                 <ScheduleList
@@ -946,6 +1250,107 @@ export const AdvisorDashboardView: React.FC = () => {
         </View>
       </ScrollView>
 
+      {/* QUICK CALL RESOLUTION MODAL */}
+      <Modal
+        visible={Boolean(resolvingCallReq)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setResolvingCallReq(null);
+          setResolvingCallComment('');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.proModalCard, { maxWidth: 440, backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderBottomWidth: 1, borderBottomColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }}>
+              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isLight ? '#e0f2fe' : 'rgba(2, 132, 199, 0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="call" size={17} color={isLight ? '#0284c7' : '#38bdf8'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: textColor }}>Resolve Call Request</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                  Farmer: {resolvingCallReq?.farmer?.name || 'Farmer'} {resolvingCallReq?.farmer?.mobile ? `(📞 ${resolvingCallReq.farmer.mobile})` : ''}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ padding: 14, gap: 8 }}>
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: subTextColor }}>
+                Consultation Advice / Call Summary:
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: isLight ? '#f8fafc' : '#0a1a12',
+                  borderWidth: 1,
+                  borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.3)',
+                  borderRadius: RADIUS.sm,
+                  padding: 10,
+                  color: textColor,
+                  fontSize: 12.5,
+                  fontFamily: FONT.regular,
+                  minHeight: 70,
+                  textAlignVertical: 'top',
+                }}
+                placeholder="Enter spray recommendations, advice provided, or outcome..."
+                placeholderTextColor={subTextColor}
+                multiline
+                value={resolvingCallComment}
+                onChangeText={setResolvingCallComment}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 6 }}>
+                <TouchableOpacity
+                  style={{ paddingVertical: 8, paddingHorizontal: 14, borderRadius: RADIUS.xs, backgroundColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.08)' }}
+                  onPress={() => {
+                    setResolvingCallReq(null);
+                    setResolvingCallComment('');
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: subTextColor }}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: RADIUS.xs,
+                    backgroundColor: '#059669',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                    opacity: !resolvingCallComment.trim() ? 0.6 : 1,
+                  }}
+                  disabled={resolveCallMutation.isPending || !resolvingCallComment.trim()}
+                  onPress={async () => {
+                    if (!resolvingCallReq || !resolvingCallComment.trim()) return;
+                    try {
+                      await resolveCallMutation.mutateAsync({
+                        id: resolvingCallReq.id,
+                        comment: resolvingCallComment.trim(),
+                      });
+                      setResolvingCallReq(null);
+                      setResolvingCallComment('');
+                    } catch (err: any) {
+                      const msg = err?.response?.data?.message || err?.message || 'Failed to resolve call';
+                      Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+                    }
+                  }}
+                >
+                  {resolveCallMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done" size={14} color="#ffffff" />
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save & Resolve</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* CROP CARE COUPON ASSIGNMENT & FARMER CONFIRMATION MODAL */}
       <Modal
         visible={!!pendingFarmerToConfirm}
@@ -954,7 +1359,7 @@ export const AdvisorDashboardView: React.FC = () => {
         onRequestClose={() => setPendingFarmerToConfirm(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.proModalCard, { maxWidth: 460 }]}>
+          <View style={[styles.proModalCard, { maxWidth: 460, backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
             <LinearGradient colors={['#1e3a8a', '#1d4ed8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.proModalHeaderBanner}>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={styles.proModalHeaderTag}>CROP CARE VIP PASS PLAN</Text>
@@ -970,12 +1375,12 @@ export const AdvisorDashboardView: React.FC = () => {
             {pendingFarmerToConfirm ? (
               <View style={{ padding: 16, gap: 14 }}>
                 {/* Farmer Highlight */}
-                <View style={[styles.proFarmerStrip, { backgroundColor: '#f8fafc', borderLeftWidth: 3, borderLeftColor: '#2563eb' }]}>
+                <View style={[styles.proFarmerStrip, { backgroundColor: isLight ? '#f8fafc' : '#072414', borderLeftWidth: 3, borderLeftColor: '#2563eb' }]}>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.proFarmerName}>
-                      👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: '#0f172a' }}>{pendingFarmerToConfirm.farmer?.name || 'Farmer'}</Text>
+                      👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: textColor }}>{pendingFarmerToConfirm.farmer?.name || 'Farmer'}</Text>
                     </Text>
-                    <Text style={styles.proFarmerMeta} numberOfLines={1}>
+                    <Text style={[styles.proFarmerMeta, { color: subTextColor }]} numberOfLines={1}>
                       📞 {pendingFarmerToConfirm.farmer?.mobile || 'No Mobile'} {pendingFarmerToConfirm.farmer?.kingId ? `· King ID: ${pendingFarmerToConfirm.farmer.kingId}` : ''}
                     </Text>
                   </View>
@@ -983,10 +1388,10 @@ export const AdvisorDashboardView: React.FC = () => {
 
                 {/* Plan Selection Header */}
                 <View style={{ gap: 4 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: textColor }}>
                     Select "Crop Care" Coupon Plan:
                   </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
                     {(user as any)?.isSeniorDoctor
                       ? 'As a Crop Doctor (Senior Specialist), you have 2 Crop Care plan options:'
                       : 'As a Crop Advisor, assign the 5-Crop Crop Care plan:'}
@@ -1166,7 +1571,7 @@ export const AdvisorDashboardView: React.FC = () => {
         onRequestClose={() => setSelectedReviewCrop(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.proModalCard}>
+          <View style={[styles.proModalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
             {/* Header Banner (Compact) */}
             <LinearGradient colors={['#1e3a8a', '#1d4ed8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.proModalHeaderBanner}>
               <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -1184,12 +1589,12 @@ export const AdvisorDashboardView: React.FC = () => {
             {selectedReviewCrop ? (
               <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, padding: 14 }}>
                 {/* Farmer Identity Strip */}
-                <View style={styles.proFarmerStrip}>
+                <View style={[styles.proFarmerStrip, { backgroundColor: isLight ? '#f8fafc' : '#072414', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
                   <View style={{ flex: 1, gap: 2 }}>
                     <Text style={styles.proFarmerName}>
-                      👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: '#0f172a' }}>{selectedReviewCrop.plot?.farm?.owner?.name || 'Farmer'}</Text>
+                      👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: textColor }}>{selectedReviewCrop.plot?.farm?.owner?.name || 'Farmer'}</Text>
                     </Text>
-                    <Text style={styles.proFarmerMeta} numberOfLines={1}>
+                    <Text style={[styles.proFarmerMeta, { color: subTextColor }]} numberOfLines={1}>
                       📍 {[selectedReviewCrop.plot?.farm?.owner?.village, selectedReviewCrop.plot?.farm?.owner?.district].filter(Boolean).join(', ') || 'Location not specified'}
                       {selectedReviewCrop.plot?.farm?.name ? ` · 🏡 ${selectedReviewCrop.plot.farm.name}` : ''}
                     </Text>
@@ -1207,53 +1612,53 @@ export const AdvisorDashboardView: React.FC = () => {
                 </View>
 
                 {/* Section 1: Crop Specifications Card */}
-                <View style={styles.proCardSection}>
-                  <View style={styles.proCardSectionHeader}>
-                    <Ionicons name="leaf-outline" size={14} color="#15803d" />
-                    <Text style={styles.proCardSectionTitle}>Crop Technical Audit</Text>
+                <View style={[styles.proCardSection, { backgroundColor: isLight ? '#f8fafc' : '#072414', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                  <View style={[styles.proCardSectionHeader, { borderBottomColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }]}>
+                    <Ionicons name="leaf-outline" size={14} color={isLight ? '#15803d' : '#00ff87'} />
+                    <Text style={[styles.proCardSectionTitle, { color: isLight ? '#15803d' : '#00ff87' }]}>Crop Technical Audit</Text>
                   </View>
 
                   <View style={styles.proGridContainer}>
-                    <View style={styles.proGridBox}>
-                      <Text style={styles.proGridLabel}>📅 Sowing Date</Text>
-                      <Text style={styles.proGridVal}>
+                    <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>📅 Sowing Date</Text>
+                      <Text style={[styles.proGridVal, { color: textColor }]}>
                         {selectedReviewCrop.sowingDate ? new Date(selectedReviewCrop.sowingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not specified'}
                       </Text>
                     </View>
 
-                    <View style={styles.proGridBox}>
-                      <Text style={styles.proGridLabel}>📐 Plot & Land Area</Text>
-                      <Text style={styles.proGridVal}>
+                    <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>📐 Plot & Land Area</Text>
+                      <Text style={[styles.proGridVal, { color: textColor }]}>
                         {selectedReviewCrop.plot?.name} ({selectedReviewCrop.area || selectedReviewCrop.plot?.area || '—'} {selectedReviewCrop.plot?.areaUnit || 'ACRE'})
                       </Text>
                     </View>
 
-                    <View style={styles.proGridBox}>
-                      <Text style={styles.proGridLabel}>🌾 Harvesting Type</Text>
-                      <Text style={styles.proGridVal}>
+                    <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>🌾 Harvesting Type</Text>
+                      <Text style={[styles.proGridVal, { color: textColor }]}>
                         {selectedReviewCrop.harvestType === 'CONTINUOUS' ? 'Continuous' : 'One-time'}
                       </Text>
                     </View>
 
-                    <View style={styles.proGridBox}>
-                      <Text style={styles.proGridLabel}>💰 Target Price</Text>
-                      <Text style={styles.proGridVal}>
+                    <View style={[styles.proGridBox, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>💰 Target Price</Text>
+                      <Text style={[styles.proGridVal, { color: textColor }]}>
                         {(selectedReviewCrop as any).pricePerUnit ? `₹${(selectedReviewCrop as any).pricePerUnit} / ${(selectedReviewCrop as any).unit || 'KG'}` : 'Not specified'}
                       </Text>
                     </View>
                   </View>
 
                   {selectedReviewCrop.notes ? (
-                    <View style={styles.proNotesCard}>
-                      <Text style={styles.proGridLabel}>📝 Farmer Special Notes:</Text>
-                      <Text style={styles.proNotesContent}>{selectedReviewCrop.notes}</Text>
+                    <View style={[styles.proNotesCard, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proGridLabel, { color: subTextColor }]}>📝 Farmer Special Notes:</Text>
+                      <Text style={[styles.proNotesContent, { color: textColor }]}>{selectedReviewCrop.notes}</Text>
                     </View>
                   ) : null}
                 </View>
 
                 {/* Section 2: Farmer Land & Soil/Water Profile */}
-                <View style={[styles.proCardSection, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
-                  <View style={styles.proCardSectionHeader}>
+                <View style={[styles.proCardSection, { backgroundColor: isLight ? '#f0fdf4' : '#072414', borderColor: isLight ? '#bbf7d0' : 'rgba(0, 255, 135, 0.15)' }]}>
+                  <View style={[styles.proCardSectionHeader, { borderBottomColor: isLight ? '#bbf7d0' : 'rgba(255, 255, 255, 0.08)' }]}>
                     <Ionicons name="earth-outline" size={14} color="#15803d" />
                     <Text style={[styles.proCardSectionTitle, { color: '#15803d' }]}>
                       Land, Soil & Water Audit
@@ -1261,33 +1666,24 @@ export const AdvisorDashboardView: React.FC = () => {
                   </View>
 
                   <View style={{ gap: 6 }}>
-                    <View style={styles.proHighlightRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="flower-outline" size={14} color="#047857" />
-                        <Text style={styles.proHighlightLabel}>Soil Type:</Text>
-                      </View>
+                    <View style={[styles.proHighlightRow, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proHighlightLabel, { color: subTextColor }]}>🌱 Soil Type:</Text>
                       <Text style={styles.proHighlightValGreen}>
-                        {formatSoil(selectedReviewCrop.plot?.farm?.owner?.soilType || selectedReviewCrop.plot?.soilType || selectedReviewCrop.plot?.farm?.soilType)}
+                        {formatSoil(selectedReviewCrop.plot?.soilType)}
                       </Text>
                     </View>
 
-                    <View style={styles.proHighlightRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="water-outline" size={14} color="#0284c7" />
-                        <Text style={styles.proHighlightLabel}>Water Source:</Text>
-                      </View>
+                    <View style={[styles.proHighlightRow, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proHighlightLabel, { color: subTextColor }]}>💧 Irrigation Source:</Text>
                       <Text style={styles.proHighlightValBlue}>
-                        {formatWater(selectedReviewCrop.plot?.farm?.owner?.waterType || selectedReviewCrop.plot?.waterSource || selectedReviewCrop.plot?.irrigationType || selectedReviewCrop.plot?.farm?.irrigationSource)}
+                        {formatWater(selectedReviewCrop.plot?.waterSource)}
                       </Text>
                     </View>
 
-                    <View style={styles.proHighlightRow}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="funnel-outline" size={14} color="#475569" />
-                        <Text style={styles.proHighlightLabel}>Spray Tank Capacity:</Text>
-                      </View>
+                    <View style={[styles.proHighlightRow, { backgroundColor: isLight ? '#ffffff' : '#0b291a', borderColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)' }]}>
+                      <Text style={[styles.proHighlightLabel, { color: subTextColor }]}>🧪 Water Quality:</Text>
                       <Text style={styles.proHighlightValSlate}>
-                        {selectedReviewCrop.plot?.farm?.owner?.sprayTankSizeL ? `${selectedReviewCrop.plot.farm.owner.sprayTankSizeL} Liters` : 'Not specified'}
+                        {selectedReviewCrop.plot?.waterQuality || 'Normal TDS / Potable'}
                       </Text>
                     </View>
                   </View>
@@ -1330,7 +1726,7 @@ export const AdvisorDashboardView: React.FC = () => {
                       activeOpacity={0.85}
                       onPress={() => {
                         setSelectedReviewCrop(null);
-                        router.push('/admin/(tabs)/satellite-map' as any);
+                        router.push('/(partner)/(tabs)/satellite-map' as any);
                       }}
                     >
                       <Ionicons name="planet-outline" size={16} color="#ffffff" />
@@ -1398,40 +1794,59 @@ export const AdvisorDashboardView: React.FC = () => {
         onRequestClose={() => setSelectedProblemToRespond(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 420, padding: 14 }]}>
+          <View style={[styles.modalCard, { maxWidth: 420, padding: 14, backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>💊 Respond to Problem</Text>
+              <Text style={[styles.modalTitle, { color: textColor }]}>💊 Respond to Problem</Text>
               <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedProblemToRespond(null)}>
-                <Ionicons name="close" size={18} color="#475569" />
+                <Ionicons name="close" size={18} color={subTextColor} />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalHeaderDivider} />
+            <View style={[styles.modalHeaderDivider, { backgroundColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.08)' }]} />
 
             {selectedProblemToRespond ? (
               <View style={{ gap: 10 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
                   Issue: {selectedProblemToRespond.title}
                 </Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
                   Farmer: {selectedProblemToRespond.reportedBy?.name} (📞 {selectedProblemToRespond.reportedBy?.mobile})
                 </Text>
 
                 <View style={{ gap: 4 }}>
-                  <Text style={styles.proGridLabel}>Advisor Solution / Advice:</Text>
+                  <Text style={[styles.proGridLabel, { color: subTextColor }]}>Advisor Solution / Advice:</Text>
                   <TextInput
-                    style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, padding: 8, fontSize: 12, minHeight: 60 }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.25)',
+                      borderRadius: RADIUS.sm,
+                      padding: 8,
+                      fontSize: 12,
+                      minHeight: 60,
+                      backgroundColor: isLight ? '#f8fafc' : '#0a1a12',
+                      color: textColor,
+                    }}
                     multiline
                     placeholder="Enter your expert advice..."
+                    placeholderTextColor={subTextColor}
                     value={problemResponseText}
                     onChangeText={setProblemResponseText}
                   />
                 </View>
 
                 <View style={{ gap: 4 }}>
-                  <Text style={styles.proGridLabel}>Recommended Product / Spray (Optional):</Text>
+                  <Text style={[styles.proGridLabel, { color: subTextColor }]}>Recommended Product / Spray (Optional):</Text>
                   <TextInput
-                    style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, padding: 8, fontSize: 12 }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.25)',
+                      borderRadius: RADIUS.sm,
+                      padding: 8,
+                      fontSize: 12,
+                      backgroundColor: isLight ? '#f8fafc' : '#0a1a12',
+                      color: textColor,
+                    }}
                     placeholder="e.g. Neem Oil 5ml/L or Chlorpyrifos"
+                    placeholderTextColor={subTextColor}
                     value={problemProductText}
                     onChangeText={setProblemProductText}
                   />
@@ -1486,6 +1901,7 @@ function CallRequestsPanel({
   requests: CallRequest[] | undefined;
   meta: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string };
 }) {
+  const { isLight, textColor, subTextColor, cardBg, cardBorder, innerBg } = useExecutiveTheme();
   const resolve = useResolveCallRequest();
   const [subTab, setSubTab] = useState<'PENDING' | 'HISTORY'>('PENDING');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
@@ -1512,11 +1928,11 @@ function CallRequestsPanel({
     <View style={{ gap: 10 }}>
       {/* Category Header with Compact Mini Switch */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 2 }}>
-        <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+        <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: textColor }}>
           📞 Call Requests
         </Text>
 
-        <View style={{ flexDirection: 'row', backgroundColor: '#f8fafc', borderRadius: RADIUS.pill, padding: 2, borderWidth: 1, borderColor: '#cbd5e1' }}>
+        <View style={{ flexDirection: 'row', backgroundColor: isLight ? '#f8fafc' : '#072414', borderRadius: RADIUS.pill, padding: 2, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.2)' }}>
           <TouchableOpacity
             style={[
               { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -1524,11 +1940,11 @@ function CallRequestsPanel({
             ]}
             onPress={() => setSubTab('PENDING')}
           >
-            <Text style={[{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }, subTab === 'PENDING' && { color: '#ffffff' }]}>
+            <Text style={[{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }, subTab === 'PENDING' && { color: '#ffffff' }]}>
               Pending
             </Text>
-            <View style={[{ minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0' }, subTab === 'PENDING' && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
-              <Text style={[{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569' }, subTab === 'PENDING' && { color: '#ffffff' }]}>
+            <View style={[{ minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.1)' }, subTab === 'PENDING' && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+              <Text style={[{ fontSize: 9.5, fontFamily: FONT.extraBold, color: isLight ? '#475569' : '#cbd5e1' }, subTab === 'PENDING' && { color: '#ffffff' }]}>
                 {pending.length}
               </Text>
             </View>
@@ -1541,11 +1957,11 @@ function CallRequestsPanel({
             ]}
             onPress={() => setSubTab('HISTORY')}
           >
-            <Text style={[{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }, subTab === 'HISTORY' && { color: '#ffffff' }]}>
+            <Text style={[{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }, subTab === 'HISTORY' && { color: '#ffffff' }]}>
               History
             </Text>
-            <View style={[{ minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: '#e2e8f0' }, subTab === 'HISTORY' && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
-              <Text style={[{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569' }, subTab === 'HISTORY' && { color: '#ffffff' }]}>
+            <View style={[{ minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', backgroundColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.1)' }, subTab === 'HISTORY' && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+              <Text style={[{ fontSize: 9.5, fontFamily: FONT.extraBold, color: isLight ? '#475569' : '#cbd5e1' }, subTab === 'HISTORY' && { color: '#ffffff' }]}>
                 {history.length}
               </Text>
             </View>
@@ -1554,7 +1970,7 @@ function CallRequestsPanel({
       </View>
 
       {active.length === 0 ? (
-        <Text style={styles.emptyText}>{subTab === 'PENDING' ? 'No pending call requests.' : 'No resolved requests yet.'}</Text>
+        <Text style={[styles.emptyText, { color: subTextColor }]}>{subTab === 'PENDING' ? 'No pending call requests.' : 'No resolved requests yet.'}</Text>
       ) : (
         <ScrollView style={{ maxHeight: 320 }} nestedScrollEnabled showsVerticalScrollIndicator={false}>
           <View style={{ gap: 8 }}>
@@ -1571,44 +1987,44 @@ function CallRequestsPanel({
                   <View
                     key={req.id}
                     style={{
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: isLight ? '#f8fafc' : innerBg,
                       paddingHorizontal: 10,
                       paddingVertical: 8,
                       borderRadius: RADIUS.sm,
                       borderWidth: 1,
-                      borderColor: '#e2e8f0',
+                      borderColor: isLight ? '#e2e8f0' : cardBorder,
                       gap: 4,
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#1e293b' }} numberOfLines={1}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: textColor }} numberOfLines={1}>
                           👨‍🌾 {req.farmer?.name ?? 'Farmer'}
                         </Text>
                         {kingId ? (
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#1d4ed8' : '#38bdf8' }}>
                             🔑 {kingId}
                           </Text>
                         ) : null}
                         {mobile ? (
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: subTextColor }}>
                             · 📞 {mobile}
                           </Text>
                         ) : null}
                       </View>
 
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }}>
                         {new Date(req.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                       </Text>
                     </View>
 
                     {/* Call Summary Box */}
                     {!isGeneric && summaryText ? (
-                      <View style={{ backgroundColor: '#f0fdf4', padding: 6, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 2 }}>
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d', marginBottom: 1 }}>
+                      <View style={{ backgroundColor: isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.08)', padding: 6, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: isLight ? '#bbf7d0' : 'rgba(0, 255, 135, 0.25)', marginTop: 2 }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#15803d' : '#00ff87', marginBottom: 1 }}>
                           📋 Call Summary:
                         </Text>
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#166534', lineHeight: 15 }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isLight ? '#166534' : '#dcfce7', lineHeight: 15 }}>
                           {summaryText}
                         </Text>
                       </View>
@@ -1618,27 +2034,27 @@ function CallRequestsPanel({
               }
 
               return (
-                <View key={req.id} style={[styles.reviewCard, { backgroundColor: '#ffffff' }]}>
+                <View key={req.id} style={[styles.reviewCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <View style={{ flex: 1, gap: 2 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.reviewCropTitle} numberOfLines={1}>
+                        <Text style={[styles.reviewCropTitle, { color: textColor }]} numberOfLines={1}>
                           📞 {req.farmer?.name ?? 'Farmer Call Request'}
                         </Text>
                         {kingId ? (
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isLight ? '#1d4ed8' : '#38bdf8' }}>
                             🔑 {kingId}
                           </Text>
                         ) : null}
                       </View>
                       {mobile ? (
-                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
                           📱 {mobile}
                         </Text>
                       ) : null}
                     </View>
 
-                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: subTextColor }}>
                       {new Date(req.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                     </Text>
                   </View>
@@ -1660,7 +2076,7 @@ function CallRequestsPanel({
                       ) : null}
 
                       <TouchableOpacity
-                        style={[styles.acceptCropBtn, { backgroundColor: isExpanded ? '#475569' : '#1d4ed8', height: 32, paddingHorizontal: 12 }]}
+                        style={[styles.acceptCropBtn, { backgroundColor: isExpanded ? (isLight ? '#64748b' : '#475569') : (isLight ? '#2563eb' : '#1d4ed8'), height: 32, paddingHorizontal: 12 }]}
                         activeOpacity={0.85}
                         onPress={() => {
                           if (isExpanded) {
@@ -1678,11 +2094,11 @@ function CallRequestsPanel({
                     </View>
 
                     {isExpanded ? (
-                      <View style={{ gap: 6, marginTop: 4, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <View style={{ gap: 6, marginTop: 4, backgroundColor: isLight ? '#f8fafc' : innerBg, padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : cardBorder }}>
                         <TextInput
-                          style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.xs, padding: 6, fontSize: 11.5, backgroundColor: '#ffffff', minHeight: 48 }}
+                          style={{ borderWidth: 1, borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.25)', borderRadius: RADIUS.xs, padding: 6, fontSize: 11.5, backgroundColor: isLight ? '#ffffff' : '#0a1a12', color: textColor, minHeight: 48 }}
                           placeholder="Enter call notes / summary..."
-                          placeholderTextColor="#94a3b8"
+                          placeholderTextColor={subTextColor}
                           value={comment}
                           onChangeText={setComment}
                           multiline
@@ -1749,6 +2165,7 @@ function ScheduleTaskRow({
   meta: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string };
   onReminded: () => void;
 }) {
+  const { isLight, textColor, subTextColor } = useExecutiveTheme();
   const remind = useRemindSchedule();
   const [sent, setSent] = useState(false);
 
@@ -1765,18 +2182,18 @@ function ScheduleTaskRow({
   };
 
   return (
-    <View style={[styles.taskRow, { backgroundColor: meta.bg, borderColor: meta.border }]}>
+    <View style={[styles.taskRow, { backgroundColor: isLight ? '#f8fafc' : meta.bg, borderColor: isLight ? '#e2e8f0' : meta.border }]}>
       <View style={{ flex: 1 }}>
         <View style={styles.taskRowTop}>
-          <Text style={styles.taskFarmer} numberOfLines={1}>
+          <Text style={[styles.taskFarmer, { color: textColor }]} numberOfLines={1}>
             👨‍🌾 {item.cropCycle?.plot?.farm?.owner?.name ?? 'Farmer'}
           </Text>
           <Text style={[styles.taskDate, { color: meta.color }]}>
             {new Date(item.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
           </Text>
         </View>
-        <Text style={styles.taskTitle}>{item.title}</Text>
-        <Text style={styles.taskPlot} numberOfLines={1}>
+        <Text style={[styles.taskTitle, { color: isLight ? '#1e293b' : '#e2e8f0' }]}>{item.title}</Text>
+        <Text style={[styles.taskPlot, { color: subTextColor }]} numberOfLines={1}>
           📍 {item.cropCycle?.plot?.name} · 🌾 {item.cropCycle?.cropName}
         </Text>
       </View>
@@ -1819,26 +2236,27 @@ function WeatherAlertsList({
   alerts: FarmerWeatherAlert[] | undefined;
   meta: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string };
 }) {
+  const { isLight, textColor, subTextColor } = useExecutiveTheme();
   if (!alerts || alerts.length === 0) {
-    return <Text style={styles.emptyText}>No farmers currently crossing their weather-alert limits.</Text>;
+    return <Text style={[styles.emptyText, { color: subTextColor }]}>No farmers currently crossing their weather-alert limits.</Text>;
   }
   return (
     <View style={{ gap: 8 }}>
       {alerts.map((alert) => (
-        <View key={alert.farmerId} style={[styles.weatherRow, { backgroundColor: meta.bg, borderColor: meta.border }]}>
+        <View key={alert.farmerId} style={[styles.weatherRow, { backgroundColor: isLight ? '#f0fdf4' : meta.bg, borderColor: isLight ? '#bbf7d0' : meta.border }]}>
           <View style={styles.weatherRowTop}>
-            <Text style={styles.taskFarmer} numberOfLines={1}>👨‍🌾 {alert.farmerName}</Text>
-            <View style={styles.weatherTempPill}>
+            <Text style={[styles.taskFarmer, { color: textColor }]} numberOfLines={1}>👨‍🌾 {alert.farmerName}</Text>
+            <View style={[styles.weatherTempPill, isLight && { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0' }]}>
               <Ionicons name={alert.isRaining ? 'rainy' : 'thermometer-outline'} size={12} color={meta.color} />
               <Text style={[styles.weatherTempText, { color: meta.color }]}>{alert.currentTemperatureC}°C · {alert.condition}</Text>
             </View>
           </View>
-          <Text style={styles.taskPlot} numberOfLines={1}>📍 {alert.locationLabel}</Text>
+          <Text style={[styles.taskPlot, { color: subTextColor }]} numberOfLines={1}>📍 {alert.locationLabel}</Text>
           <View style={styles.weatherChipRow}>
             {alert.triggers.map((trigger) => {
               const t = TRIGGER_META[trigger];
               return (
-                <View key={trigger} style={[styles.weatherChip, { borderColor: t.color }]}>
+                <View key={trigger} style={[styles.weatherChip, { borderColor: t.color, backgroundColor: isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.08)' }]}>
                   <Ionicons name={t.icon} size={11} color={t.color} />
                   <Text style={[styles.weatherChipText, { color: t.color }]}>{t.label(alert)}</Text>
                 </View>
@@ -1855,68 +2273,176 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xxl },
 
-  ultraRosterStrip: {
+  executiveHeroCard: {
+    borderRadius: RADIUS.md,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.30)',
+    gap: 5,
+    ...premiumShadow('#00ff87', 'xs'),
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 0,
+  },
+  heroMainTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+
+  /* KPI Grid */
+  kpiGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  kpiGridDesktop: {
+    flexWrap: 'nowrap',
+  },
+  kpiCard: {
+    flex: 1,
+    minWidth: 110,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#071f14',
+    borderRadius: RADIUS.xs,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.22)',
+    gap: 6,
+  },
+  kpiIconBox: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  kpiContentCol: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+  },
+  kpiValueRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: RADIUS.md,
-    paddingVertical: 7,
-    paddingHorizontal: 10,
-    gap: 6,
+    gap: 4,
   },
-  rosterLeftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
+  kpiTrendBadge: {
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
   },
-  rosterIconBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rosterTitleText: {
-    fontSize: 10,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    letterSpacing: 0.3,
-  },
-  rosterMetricsGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  rosterStatChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: RADIUS.xs,
-  },
-  rosterStatVal: {
-    fontSize: 11.5,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  rosterStatLbl: {
-    fontSize: 9,
+  kpiTrendText: {
+    fontSize: 8.5,
     fontFamily: FONT.bold,
-    color: 'rgba(255,255,255,0.85)',
   },
-  rosterViewAllBtn: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  kpiVal: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: -0.3,
+    lineHeight: 16,
+  },
+  kpiTitle: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+    marginTop: 0.5,
+    lineHeight: 12,
+  },
+  kpiMeta: {
+    fontSize: 8.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+    lineHeight: 10,
   },
 
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, },
+  /* Quick Precision Tools Ribbon */
+  quickToolsContainer: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    gap: 10,
+    ...premiumShadow('#00ff87', 'xs'),
+  },
+  quickToolsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  quickToolsTitle: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 0.4,
+  },
+  quickToolsSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  quickToolsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  quickToolsRowDesktop: {
+    flexWrap: 'nowrap',
+  },
+  quickToolBtn: {
+    flex: 1,
+    minWidth: 150,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#071f14',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.18)',
+  },
+  quickToolBtnCallActive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: '#ef4444',
+  },
+  quickToolIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickToolBtnTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  quickToolBtnMeta: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+
+  sectionCard: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   tabRow: { gap: 6, paddingBottom: 10 },
   tabChip: {
     flexDirection: 'row',
@@ -1925,23 +2451,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.18)',
+    backgroundColor: '#072414',
   },
   tabChipText: { fontSize: 11.5, fontFamily: FONT.bold },
-  tabChipCount: { minWidth: 16, height: 16, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
+  tabChipCount: { minWidth: 16, height: 16, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   tabChipCountActive: { backgroundColor: 'rgba(255,255,255,0.25)' },
   tabChipCountText: { fontSize: 9.5, fontFamily: FONT.extraBold },
-  tabBody: { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 10 },
+  tabBody: { borderTopWidth: 1, borderTopColor: 'rgba(255, 255, 255, 0.08)', paddingTop: 10 },
 
   emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', paddingVertical: 20, textAlign: 'center' },
-  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: RADIUS.md, padding: 11, borderWidth: 1 },
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: RADIUS.md,
+    padding: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.18)',
+    backgroundColor: '#072414',
+  },
   taskRowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskFarmer: { flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  taskFarmer: { flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   taskDate: { fontSize: 11, fontFamily: FONT.extraBold },
-  taskTitle: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#0f172a', marginTop: 3 },
-  taskPlot: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  taskTitle: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#e2e8f0', marginTop: 3 },
+  taskPlot: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   remindBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2068,9 +2603,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   submissionFarmerHighlight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.20)',
     borderRadius: RADIUS.md,
     padding: 7,
     gap: 2,
@@ -2079,18 +2614,21 @@ const styles = StyleSheet.create({
   submissionFarmerText: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   submissionLocText: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   reviewCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 12,
     gap: 10,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   reviewCardHeader: {
     flexDirection: 'row',
@@ -2100,28 +2638,30 @@ const styles = StyleSheet.create({
   reviewCropTitle: {
     fontSize: 14.5,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   reviewCropVariety: {
     fontSize: 13,
     fontFamily: FONT.semiBold,
-    color: '#475569',
+    color: '#94a3b8',
   },
   reviewCropCategory: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   landProfileBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#072414',
     borderRadius: RADIUS.md,
     padding: 10,
     gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   landProfileHeaderTitle: {
     fontSize: 11.5,
     fontFamily: FONT.bold,
-    color: '#1e40af',
+    color: '#00ff87',
   },
   landProfileGrid: {
     gap: 4,
@@ -2134,13 +2674,13 @@ const styles = StyleSheet.create({
   landProfileLabel: {
     fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#475569',
+    color: '#94a3b8',
     width: 130,
   },
   landProfileVal: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#0f172a',
+    color: '#ffffff',
     flex: 1,
   },
   reviewCardActionRow: {
@@ -2229,7 +2769,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(2, 13, 6, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.md,
@@ -2237,11 +2777,13 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 420,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     maxHeight: '90%',
-    ...premiumShadow('#000000', 'md'),
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#00ff87', 'lg'),
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -2251,24 +2793,26 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 15,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   closeBtn: {
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   proModalCard: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     maxHeight: '88%',
-    ...premiumShadow('#000000', 'lg'),
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#00ff87', 'lg'),
   },
   proModalHeaderBanner: {
     paddingHorizontal: 12,
@@ -2314,20 +2858,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#072414',
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   proFarmerName: {
     fontSize: 12,
     fontFamily: FONT.medium,
-    color: '#334155',
+    color: '#ffffff',
   },
   proFarmerMeta: {
     fontSize: 10.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   proCallChip: {
     flexDirection: 'row',
@@ -2344,23 +2890,25 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   proCardSection: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#072414',
     borderRadius: RADIUS.md,
     padding: 8,
     gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   proCardSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
     paddingBottom: 4,
   },
   proCardSectionTitle: {
     fontSize: 11,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#00ff87',
   },
   proGridContainer: {
     flexDirection: 'row',
@@ -2369,49 +2917,53 @@ const styles = StyleSheet.create({
   },
   proGridBox: {
     width: '48%',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#0b291a',
     borderRadius: RADIUS.sm,
     padding: 6,
     gap: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   proGridLabel: {
     fontSize: 9,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#94a3b8',
     textTransform: 'uppercase',
   },
   proGridVal: {
     fontSize: 10.5,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   proNotesCard: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#0b291a',
     borderRadius: RADIUS.sm,
     padding: 6,
     marginTop: 2,
     gap: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   proNotesContent: {
     fontSize: 10.5,
     fontFamily: FONT.medium,
-    color: '#334155',
+    color: '#e2e8f0',
   },
   proHighlightRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#0b291a',
     borderRadius: RADIUS.sm,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.15)',
   },
   proHighlightLabel: {
     fontSize: 10.5,
     fontFamily: FONT.bold,
-    color: '#475569',
+    color: '#cbd5e1',
   },
   proHighlightValGreen: {
     fontSize: 11,
@@ -2462,13 +3014,13 @@ const styles = StyleSheet.create({
   },
   subFilterRow: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#072414',
     borderRadius: RADIUS.md,
     padding: 3,
     gap: 3,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.18)',
   },
   subFilterChip: {
     flex: 1,
@@ -2481,19 +3033,19 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   subFilterChipActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#0d3820',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#00ff87',
     elevation: 2,
-    shadowColor: '#0f172a',
+    shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   subFilterText: {
     fontSize: 10.5,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#94a3b8',
     textAlign: 'center',
   },
   subFilterTextActive: {
@@ -2566,6 +3118,218 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.semiBold,
     color: '#bbf7d0',
+  },
+
+  /* Requests & Audits Unified Table Styles */
+  tableCard: {
+    borderRadius: RADIUS.md,
+    backgroundColor: '#04160c',
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    overflow: 'hidden',
+    padding: 12,
+    gap: 10,
+    ...premiumShadow('#00ff87', 'xs'),
+  },
+  requestsMainTabsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+    paddingBottom: 10,
+  },
+  requestsMainTabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  requestsMainTabBtnActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+  },
+  requestsMainTabText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  requestsMainTabTextActive: {
+    color: '#ffffff',
+  },
+  requestsMainTabBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  requestsMainTabBadgeActive: {
+    backgroundColor: '#00ff87',
+  },
+  requestsMainTabBadgeInactive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  requestsMainTabBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#94a3b8',
+  },
+  requestsMainTabBadgeTextActive: {
+    color: '#04160c',
+  },
+  typeFilterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  typePill: {
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  typePillActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+  },
+  typePillText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  typePillTextActive: {
+    color: '#00ff87',
+    fontFamily: FONT.bold,
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#03140c',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 135, 0.15)',
+  },
+  tableHeaderCell: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 0.5,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: '#05190f',
+  },
+  tableRowEven: {
+    backgroundColor: '#071f14',
+  },
+  tableCell: {
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  typeBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  tableFarmerName: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  tableFarmerMobile: {
+    fontSize: 10.5,
+    fontFamily: FONT.semiBold,
+    color: '#00ff87',
+  },
+  tableFarmerKingId: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  tableFarmerLocation: {
+    fontSize: 9.5,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+  },
+  tableTitleText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#e2e8f0',
+  },
+  tableDetailsText: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+    color: '#94a3b8',
+  },
+  tableDateText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
+  },
+  statusBadgeText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.2,
+  },
+  tableActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    borderRadius: 5,
+  },
+  tableActionBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  tableIconActionBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  emptyTableState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 36,
+    gap: 8,
+  },
+  emptyTableText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
   },
 });
 

@@ -201,6 +201,20 @@ export default function PartnerLoginScreen() {
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
 
+  // Inactivity / 30-minute idle lock alert
+  const [idleTimeoutNotice, setIdleTimeoutNotice] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('farmsking_partner_idle_expired') === '1') {
+          setIdleTimeoutNotice(true);
+          sessionStorage.removeItem('farmsking_partner_idle_expired');
+        }
+      } catch {}
+    }
+  }, []);
+
   // Partner Self-Signup / Status / Rejection Modal State
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
   const [partnerModalMobile, setPartnerModalMobile] = useState('');
@@ -936,6 +950,25 @@ export default function PartnerLoginScreen() {
                 </TouchableOpacity>
               </View>
 
+              {/* 120-Minute Idle Timeout Notice */}
+              {idleTimeoutNotice && (
+                <View style={styles.idleNoticeBox}>
+                  <Ionicons name="time" size={18} color="#f59e0b" style={{ marginTop: 1 }} />
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.idleNoticeTitle}>Partner Session Locked (120 Min Idle)</Text>
+                    <Text style={styles.idleNoticeText}>
+                      Your session expired due to 120 minutes of inactivity. For ISO 27001 data protection, please sign in again.
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setIdleTimeoutNotice(false)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="close" size={16} color="#94a3b8" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Error Banner */}
               {error ? (
                 <View style={styles.errorBox}>
@@ -1664,6 +1697,28 @@ const styles = StyleSheet.create({
   partnerMethodTextActive: {
     color: '#0f172a',
     fontFamily: FONT.extraBold,
+  },
+  idleNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 9,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.45)',
+    borderRadius: RADIUS.md,
+    padding: 11,
+    marginBottom: 12,
+  },
+  idleNoticeTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#fbbf24',
+  },
+  idleNoticeText: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    color: '#fef3c7',
+    lineHeight: 15.5,
   },
   errorBox: {
     flexDirection: 'row',

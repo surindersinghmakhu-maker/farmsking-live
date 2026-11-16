@@ -7,10 +7,12 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { AssignedFarmerLog, getMyAssignedFarmers } from '@/src/api/trainers.api';
 import { getMyWallet } from '@/src/api/wallet.api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export default function TechnicalTrainerDashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [farmers, setFarmers] = useState<AssignedFarmerLog[]>([]);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -55,7 +57,7 @@ export default function TechnicalTrainerDashboardScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f8fafc' : (colors.bg || '#020d06') }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={['#15803d', '#16a34a', '#059669']} style={styles.headerBar}>
         <View style={{ flex: 1 }}>
@@ -88,14 +90,14 @@ export default function TechnicalTrainerDashboardScreen() {
         }
       >
         {/* Wallet Balance Card */}
-        <View style={[styles.walletCard, premiumShadow('#15803d', 'sm')]}>
+        <View style={[styles.walletCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#15803d', 'sm')]}>
           <View style={styles.walletCardHeader}>
             <View style={styles.walletIconBg}>
               <Ionicons name="cash" size={22} color="#15803d" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.walletTitle}>Technical Staff Rewards Wallet</Text>
-              <Text style={styles.walletBalanceText}>₹{walletBalance.toFixed(2)}</Text>
+              <Text style={[styles.walletTitle, { color: isLight ? '#0f172a' : textColor }]}>Technical Staff Rewards Wallet</Text>
+              <Text style={[styles.walletBalanceText, { color: isLight ? '#0f172a' : textColor }]}>₹{walletBalance.toFixed(2)}</Text>
             </View>
             <TouchableOpacity
               style={styles.withdrawBtn}
@@ -110,8 +112,8 @@ export default function TechnicalTrainerDashboardScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Ionicons name="people" size={18} color="#0f172a" />
-          <Text style={styles.sectionTitle}>
+          <Ionicons name="people" size={18} color={isLight ? '#0f172a' : textColor} />
+          <Text style={[styles.sectionTitle, { color: isLight ? '#0f172a' : textColor }]}>
             Assigned Farmers List ({farmers.length})
           </Text>
         </View>
@@ -119,10 +121,10 @@ export default function TechnicalTrainerDashboardScreen() {
         {isLoading ? (
           <ActivityIndicator color="#16a34a" size="large" style={{ marginTop: 20 }} />
         ) : farmers.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <View style={[styles.emptyCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <Ionicons name="checkmark-done-circle-outline" size={42} color="#94a3b8" />
-            <Text style={styles.emptyTitle}>No Pending Welcome Calls</Text>
-            <Text style={styles.emptySub}>
+            <Text style={[styles.emptyTitle, { color: isLight ? '#0f172a' : textColor }]}>No Pending Welcome Calls</Text>
+            <Text style={[styles.emptySub, { color: isLight ? '#64748b' : subTextColor }]}>
               Newly registered farmers in your state/district will appear here automatically.
             </Text>
           </View>
@@ -130,14 +132,14 @@ export default function TechnicalTrainerDashboardScreen() {
           farmers.map((log) => {
             const isVerified = log.status === 'VERIFIED_AND_PAID';
             return (
-              <View key={log.id} style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+              <View key={log.id} style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
                 <View style={styles.farmerCardHeader}>
                   <View style={styles.farmerAvatarBg}>
                     <Ionicons name="person" size={20} color="#15803d" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.farmerName}>{log.farmer.name || 'Farmer'}</Text>
-                    <Text style={styles.farmerMeta}>
+                    <Text style={[styles.farmerName, { color: isLight ? '#0f172a' : textColor }]}>{log.farmer.name || 'Farmer'}</Text>
+                    <Text style={[styles.farmerMeta, { color: isLight ? '#64748b' : subTextColor }]}>
                       📱 {log.farmer.mobile} • {log.farmer.district || log.state || 'Punjab'}
                     </Text>
                     <Text style={styles.farmerDate}>

@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert, Platform } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, firebaseMobileLinkApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, LoginPortalMode, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, apiLogout, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, firebaseMobileLinkApi, sendLoginOtpApi, verifyLoginOtpApi, completeOtpRegistrationApi, firebaseLoginApi, LoginPayload, LoginPortalMode, RegisterPayload, GoogleLoginPayload, CompleteOtpRegistrationPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -207,7 +207,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       disconnectChatSocket();
       queryClient.clear();
 
-      if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
+      // If user is already on auth / login routes, do NOT popup false session expired warnings
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const path = window.location.pathname || '';
+        if (path.includes('/login') || path.includes('/partner-login') || path.includes('/verify-mobile')) {
+          return;
+        }
+      }
+
+      if (msg && (msg.includes('inactivity') || msg.includes('Partner session expired') || msg.includes('Staff/Partner session expired'))) {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage?.setItem('farmsking_partner_idle_expired', '1');
+        }
+        Alert.alert(
+          '🔒 Session Expired (120 Min Inactivity)',
+          'Your session was locked due to 120 minutes of inactivity. For business security and ISO compliance, please sign in again to continue.',
+          [
+            {
+              text: 'Sign In Again',
+              onPress: () => {
+                router.replace('/(auth)/partner-login');
+              },
+            },
+          ]
+        );
+      } else if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
         Alert.alert(
           '⚠️ Active Session Terminated',
           'Your account was logged in on another device. As per maximum 2 device policy, the oldest session was automatically logged out.',
@@ -217,6 +241,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => setUnauthorizedHandler(null);
   }, [queryClient]);
+
+  // 120-Minute Partner/Staff Inactivity / Idle Session Security Manager (Advisors stay permanently logged in)
+  const lastActivityTimeRef = useRef<number>(Date.now());
+  const isAdvisor = Boolean(
+    user && (
+      user.role === 'ADVISOR' ||
+      user.role === 'FARM_ADVISOR' ||
+      user.role === 'GARDEN_ADVISOR' ||
+      Boolean(user.advisorType) ||
+      user.roles?.includes('ADVISOR')
+    )
+  );
+  const isPartner = !isAdvisor && Boolean(isPartnerPortalAccount(user) || loginPortal === 'PARTNER');
+
+  useEffect(() => {
+    if (!user || !isPartner) return;
+
+    lastActivityTimeRef.current = Date.now();
+
+    const handleUserActivity = () => {
+      lastActivityTimeRef.current = Date.now();
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'wheel'];
+      events.forEach((ev) => window.addEventListener(ev, handleUserActivity, { passive: true }));
+
+      const checkInterval = setInterval(() => {
+        const IDLE_TIMEOUT_MS = 120 * 60 * 1000; // 120 minutes (2 hours)
+        const elapsed = Date.now() - lastActivityTimeRef.current;
+        if (elapsed >= IDLE_TIMEOUT_MS) {
+          clearInterval(checkInterval);
+          // Perform idle logout
+          SecureStore.deleteItemAsync(TOKEN_KEY);
+          SecureStore.deleteItemAsync(USER_KEY);
+          SecureStore.deleteItemAsync(PORTAL_KEY);
+          setUser(null);
+          setLoginPortalState(null);
+          disconnectChatSocket();
+          queryClient.clear();
+
+          if (typeof window !== 'undefined') {
+            window.sessionStorage?.setItem('farmsking_partner_idle_expired', '1');
+          }
+
+          Alert.alert(
+            '🔒 Session Expired (120 Min Inactivity)',
+            'You were inactive for 120 minutes. To protect sensitive partner and store financial records under ISO 27001, your session has been safely locked. Please sign in again to continue.',
+            [
+              {
+                text: 'Sign In Again',
+                onPress: () => {
+                  router.replace('/(auth)/partner-login');
+                },
+              },
+            ]
+          );
+        }
+      }, 15000); // Check every 15 seconds
+
+      return () => {
+        events.forEach((ev) => window.removeEventListener(ev, handleUserActivity));
+        clearInterval(checkInterval);
+      };
+    }
+  }, [user?.id, isPartner, queryClient]);
 
   const setLoginPortal = async (portal: LoginPortalMode) => {
     await SecureStore.setItemAsync(PORTAL_KEY, portal);
@@ -228,6 +318,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // so no other account's cached data (parties, wallet, bills...) can flash on screen.
     queryClient.clear();
     disconnectChatSocket();
+    if (typeof window !== 'undefined') {
+      window.sessionStorage?.removeItem('farmsking_partner_idle_expired');
+    }
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(sessionUser));
     if (portal) {
@@ -247,37 +340,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await apiLogin(payload);
         assertPortalAccessMatch(response.user, payload.portal);
         await persistSession(response.accessToken, response.user, payload.portal ?? 'CLIENT');
-
-        if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {
-          const meta = response.sessionMeta;
-          if (meta?.evictedOldest) {
-            Alert.alert(
-              '⚠️ Notice: Old Session Auto Logged Out',
-              'You logged in on a 3rd device. Limit is 2 devices. The oldest active session was automatically logged out.',
-              [{ text: 'OK' }]
-            );
-          } else if (meta?.hasMultipleLogins) {
-            Alert.alert(
-              '⚠️ Multiple Devices Logged In',
-              `Your account is currently logged in on ${meta.totalActiveSessions} devices.\n\nWould you like to auto log out all other devices right now?`,
-              [
-                { text: 'Keep Both', style: 'cancel' },
-                {
-                  text: 'Logout Other Devices',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      const res = await logoutOtherSessions();
-                      Alert.alert('✅ Success', res.message || 'All other active devices logged out successfully.');
-                    } catch (err: any) {
-                      Alert.alert('Error', err.response?.data?.message || 'Could not logout other devices.');
-                    }
-                  },
-                },
-              ]
-            );
-          }
-        }
         return response.user;
       },
       sendLoginOtp: async (mobile, portal) => {
@@ -388,12 +450,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await persistSession(response.accessToken, response.user, 'CLIENT');
       },
       logout: async () => {
+        try {
+          await apiLogout();
+        } catch {}
         await SecureStore.deleteItemAsync(TOKEN_KEY);
         await SecureStore.deleteItemAsync(USER_KEY);
         await SecureStore.deleteItemAsync(PORTAL_KEY);
         try {
           if (Platform.OS === 'web') {
             localStorage.removeItem('farmsking_user_language');
+            window.sessionStorage?.removeItem('farmsking_partner_idle_expired');
           } else {
             await SecureStore.deleteItemAsync('farmsking_user_language');
           }

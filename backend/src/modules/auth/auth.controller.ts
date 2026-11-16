@@ -114,6 +114,12 @@ export class AuthController {
     return this.authService.verifyPartnerSignupOtp(body.mobile, body.otp, this.extractClientMeta(req));
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('partner-apply-session')
+  getPartnerApplySession(@CurrentUser() user: AuthUser) {
+    return this.authService.getPartnerApplySessionForUser(user.id);
+  }
+
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.CREATED)
   @Post('partner-apply')

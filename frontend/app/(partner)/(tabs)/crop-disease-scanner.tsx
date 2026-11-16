@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useCart } from '@/src/store/cart-context';
 import { useAuth } from '@/src/store/auth-context';
 import { recordRealFarmerActivity } from '@/constants/liveFarmerFeed';
 import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export interface AiDiseaseDiagnostic {
   cropName: string;
@@ -225,6 +226,7 @@ export default function CropDiseaseScannerScreen() {
   const router = useRouter();
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -400,15 +402,34 @@ export default function CropDiseaseScannerScreen() {
     });
   };
 
+  const dynStyles = {
+    container: { backgroundColor: isLight ? '#f8fafc' : (colors.bg || '#020d06') },
+    header: {
+      backgroundColor: isLight ? '#ffffff' : cardBg,
+      borderBottomColor: isLight ? '#e2e8f0' : cardBorder,
+    },
+    card: {
+      backgroundColor: isLight ? '#ffffff' : cardBg,
+      borderColor: isLight ? '#e2e8f0' : cardBorder,
+    },
+    text: { color: isLight ? '#0f172a' : textColor },
+    subText: { color: isLight ? '#64748b' : subTextColor },
+    backBtn: { backgroundColor: isLight ? '#f1f5f9' : innerBg },
+    sampleChip: {
+      backgroundColor: isLight ? '#ffffff' : innerBg,
+      borderColor: isLight ? '#cbd5e1' : cardBorder,
+    },
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, dynStyles.container]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
+      <View style={[styles.header, dynStyles.header]}>
+        <TouchableOpacity style={[styles.backBtn, dynStyles.backBtn]} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color={isLight ? '#0f172a' : textColor} />
         </TouchableOpacity>
         <View style={{ alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>ðŸ¤– Universal AI Crop Scanner</Text>
+          <Text style={[styles.headerTitle, dynStyles.text]}>Universal AI Crop Scanner</Text>
           <Text style={{ fontSize: 10, fontFamily: 'Inter_600SemiBold', color: '#16a34a' }}>
             Automatic 1-Step Crop & Disease Identification
           </Text>
@@ -420,18 +441,18 @@ export default function CropDiseaseScannerScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Banner */}
-        <View style={styles.bannerCard}>
+        <View style={[styles.bannerCard, dynStyles.card]}>
           <View style={styles.bannerBadge}>
             <Text style={styles.bannerBadgeText}>âš¡ Automatic Universal AI Scanner</Text>
           </View>
-          <Text style={styles.bannerHeading}>Scan Any Crop / Leaf Photo Directly</Text>
-          <Text style={styles.bannerSub}>
+          <Text style={[styles.bannerHeading, dynStyles.text]}>Scan Any Crop / Leaf Photo Directly</Text>
+          <Text style={[styles.bannerSub, dynStyles.subText]}>
             No crop selection needed! Simply take or upload a photo of any infected crop leaf (Paddy, Wheat, Cotton, Sugarcane, Vegetables, Potato, Mustard, Citrus). AI automatically identifies the crop type and detects fungal, bacterial or insect diseases in 2 seconds.
           </Text>
         </View>
 
         {/* Camera / Upload Box */}
-        <View style={styles.uploadBox}>
+        <View style={[styles.uploadBox, dynStyles.card]}>
           {selectedImage ? (
             <View style={{ width: '100%', alignItems: 'center' }}>
               <Image source={{ uri: selectedImage }} style={styles.previewImage} resizeMode="cover" />
@@ -452,8 +473,8 @@ export default function CropDiseaseScannerScreen() {
               <View style={styles.iconCircle}>
                 <Ionicons name="camera-outline" size={38} color="#15803d" />
               </View>
-              <Text style={styles.placeholderTitle}>Take or Upload Any Leaf Photo</Text>
-              <Text style={styles.placeholderSub}>
+              <Text style={[styles.placeholderTitle, dynStyles.text]}>Take or Upload Any Leaf Photo</Text>
+              <Text style={[styles.placeholderSub, dynStyles.subText]}>
                 Position phone camera close to leaf disease spot or pest damage area for automatic AI scan
               </Text>
             </View>
@@ -474,19 +495,19 @@ export default function CropDiseaseScannerScreen() {
         </View>
 
         {/* Sample Photo Tester Bar */}
-        <View style={styles.sampleBarBox}>
-          <Text style={styles.sampleTitle}>ðŸ’¡ Or Test AI Scan with 1-Tap Sample Leaf Photos:</Text>
+        <View style={[styles.sampleBarBox, dynStyles.card]}>
+          <Text style={[styles.sampleTitle, dynStyles.text]}>💡 Or Test AI Scan with 1-Tap Sample Leaf Photos:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
             {SAMPLE_PHOTOS.map((sample, idx) => (
               <TouchableOpacity
                 key={idx}
-                style={styles.sampleChip}
+                style={[styles.sampleChip, dynStyles.sampleChip]}
                 onPress={() => {
                   runAiScannerInference(sample.url, sample.cropKey);
                 }}
               >
                 <Image source={{ uri: sample.url }} style={{ width: 28, height: 28, borderRadius: 6 }} resizeMode="cover" />
-                <Text style={styles.sampleChipText}>{sample.title}</Text>
+                <Text style={[styles.sampleChipText, dynStyles.text]}>{sample.title}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -494,10 +515,10 @@ export default function CropDiseaseScannerScreen() {
 
         {/* Loading Indicator */}
         {isScanning && (
-          <View style={styles.loadingCard}>
+          <View style={[styles.loadingCard, dynStyles.card]}>
             <ActivityIndicator size="large" color="#15803d" />
-            <Text style={styles.loadingText}>ðŸ¤– AI Model Identifying Crop & Analyzing Leaf Pathogens...</Text>
-            <Text style={styles.loadingSub}>Computer Vision Deep Neural Network Â· Matching ICAR & PAU Advisory Database</Text>
+            <Text style={[styles.loadingText, dynStyles.text]}>Universal AI Model Identifying Crop & Analyzing Leaf Pathogens...</Text>
+            <Text style={[styles.loadingSub, dynStyles.subText]}>Computer Vision Deep Neural Network · Matching ICAR & PAU Advisory Database</Text>
           </View>
         )}
 
@@ -511,7 +532,7 @@ export default function CropDiseaseScannerScreen() {
 
         {/* AI Result Card */}
         {scanResult && (
-          <View style={styles.resultCard}>
+          <View style={[styles.resultCard, dynStyles.card]}>
             <View style={styles.resultHeader}>
               <View style={styles.resultTitleBox}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
@@ -525,9 +546,9 @@ export default function CropDiseaseScannerScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.diseaseName}>{scanResult.diseaseName}</Text>
+                <Text style={[styles.diseaseName, dynStyles.text]}>{scanResult.diseaseName}</Text>
                 <Text style={styles.punjabiDiseaseName}>{scanResult.punjabiName}</Text>
-                <Text style={styles.latinName}>Pathogen: {scanResult.latinName}</Text>
+                <Text style={[styles.latinName, dynStyles.subText]}>Pathogen: {scanResult.latinName}</Text>
               </View>
 
               <View style={styles.confidenceBadge}>
@@ -538,7 +559,7 @@ export default function CropDiseaseScannerScreen() {
 
             {/* Severity Status */}
             <View style={styles.severityRow}>
-              <Text style={styles.severityLabel}>Disease Severity Level:</Text>
+              <Text style={[styles.severityLabel, dynStyles.text]}>Disease Severity Level:</Text>
               <View
                 style={[
                   styles.severityBadge,
@@ -557,12 +578,12 @@ export default function CropDiseaseScannerScreen() {
             </View>
 
             {/* First-Aid Chemical Spray Prescription */}
-            <View style={styles.prescriptionBox}>
+            <View style={[styles.prescriptionBox, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(22, 163, 74, 0.12)' }]}>
               <View style={styles.prescHeader}>
                 <Ionicons name="flask" size={18} color="#15803d" />
                 <Text style={styles.prescTitle}>ðŸ’Š Recommended Chemical First-Aid Spray</Text>
               </View>
-              <Text style={styles.prescText}>{scanResult.firstAidSpray}</Text>
+              <Text style={[styles.prescText, dynStyles.text]}>{scanResult.firstAidSpray}</Text>
               <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>âš™ï¸ Exact Dosage & Spraying Method:</Text>
                 <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>{scanResult.dosageInstructions}</Text>
@@ -580,11 +601,11 @@ export default function CropDiseaseScannerScreen() {
 
             {/* Precautions */}
             <View style={styles.precautionsBox}>
-              <Text style={styles.precTitle}>ðŸ“‹ Key Preventive Agronomist Precautions:</Text>
+              <Text style={[styles.precTitle, dynStyles.text]}>📋 Key Preventive Agronomist Precautions:</Text>
               {scanResult.precautions.map((item, idx) => (
                 <View key={idx} style={styles.precautionItem}>
                   <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
-                  <Text style={styles.precautionText}>{item}</Text>
+                  <Text style={[styles.precautionText, dynStyles.subText]}>{item}</Text>
                 </View>
               ))}
             </View>

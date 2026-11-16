@@ -148,6 +148,43 @@ export declare class AuthService {
         message: string;
     }>;
     private signPartnerUploadToken;
+    getPartnerApplySessionForUser(userId: string): Promise<{
+        success: boolean;
+        mobile: string;
+        partnerUploadToken: string;
+        existingUserSummary: {
+            id: any;
+            kingId: any;
+            name: any;
+            mobile: any;
+            email: any;
+            activeRoles: import(".prisma/client").$Enums.Role[];
+            pincode: any;
+            postOffice: any;
+            village: any;
+            district: any;
+            state: any;
+            photoUrl: any;
+            qualification: any;
+            specialization: any;
+            yearsExperience: any;
+            bio: any;
+            panNumber: any;
+            panDocUrl: any;
+            aadhaarLast4: any;
+            aadhaarDocUrl: any;
+            aadhaarBackUrl: any;
+            gstin: any;
+            gstDocUrl: any;
+            bankAccountHolderName: any;
+            bankAccountNumber: any;
+            bankIfsc: any;
+            upiId: any;
+            chequeDocUrl: any;
+        } | null;
+        existingApplication: any;
+        activePartnerRoles: import(".prisma/client").$Enums.Role[];
+    }>;
     uploadPartnerKycDocument(partnerUploadToken: string, file: {
         buffer?: Buffer;
         mimetype: string;
@@ -194,12 +231,12 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -227,12 +264,12 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -458,12 +495,12 @@ export declare class AuthService {
         message: string;
         email: string | null;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;

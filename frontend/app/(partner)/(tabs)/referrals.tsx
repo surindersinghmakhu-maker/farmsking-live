@@ -8,6 +8,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useMyReferralNetwork } from '@/src/hooks/useReferralNetwork';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.AGENT;
 
@@ -17,6 +18,7 @@ const tap = () => {
 
 export default function ReferralsScreen() {
   const { user } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: network, isLoading } = useMyReferralNetwork();
   const kingId = network?.kingId || user?.kingId || '';
 
@@ -37,7 +39,7 @@ export default function ReferralsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f8fafc' : (colors.bg || '#020d06') }]}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Farm Network & Lifetime Royalties</Text>
         <View style={styles.codeCard}>
@@ -69,7 +71,7 @@ export default function ReferralsScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: isLight ? '#0f172a' : textColor }]}>
           Farm Network ({network?.totalNetworkCount ?? 0} Connected Farmers)
         </Text>
         {isLoading ? (
@@ -77,18 +79,18 @@ export default function ReferralsScreen() {
         ) : !network || (network.directReferrals.length === 0 && network.extendedReferrals.length === 0) ? (
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={40} color="#cbd5e1" />
-            <Text style={styles.emptyText}>Share your King ID link — anyone who joins will be added to your Farm Network & earn you Lifetime Royalties!</Text>
+            <Text style={[styles.emptyText, { color: isLight ? '#64748b' : subTextColor }]}>Share your King ID link — anyone who joins will be added to your Farm Network & earn you Lifetime Royalties!</Text>
           </View>
         ) : (
           <View style={{ gap: 10 }}>
             {network.directReferrals.map((ref) => (
-              <View key={ref.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-                <View style={styles.avatar}>
+              <View key={ref.id} style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
+                <View style={[styles.avatar, { backgroundColor: isLight ? '#f0fdf4' : innerBg }]}>
                   <Ionicons name="person-outline" size={18} color={theme.primary} />
                 </View>
                 <View style={styles.info}>
-                  <Text style={styles.name}>{ref.referredUser.name}</Text>
-                  <Text style={styles.date}>King ID: {ref.referredUser.kingId || '—'} · Level 1 Direct</Text>
+                  <Text style={[styles.name, { color: isLight ? '#0f172a' : textColor }]}>{ref.referredUser.name}</Text>
+                  <Text style={[styles.date, { color: isLight ? '#64748b' : subTextColor }]}>King ID: {ref.referredUser.kingId || '—'} · Level 1 Direct</Text>
                 </View>
                 <View style={styles.levelBadge}>
                   <Text style={styles.levelBadgeText}>1% Share</Text>
@@ -97,16 +99,16 @@ export default function ReferralsScreen() {
             ))}
 
             {network.extendedReferrals.map((ref) => (
-              <View key={ref.id} style={[styles.card, premiumShadow('#0f172a', 'sm'), { opacity: 0.9 }]}>
-                <View style={[styles.avatar, { backgroundColor: '#f1f5f9' }]}>
+              <View key={ref.id} style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1, opacity: 0.9 }, premiumShadow('#0f172a', 'sm')]}>
+                <View style={[styles.avatar, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]}>
                   <Ionicons name="people-outline" size={18} color="#64748b" />
                 </View>
                 <View style={styles.info}>
-                  <Text style={styles.name}>{ref.referredUser.name}</Text>
-                  <Text style={styles.date}>King ID: {ref.referredUser.kingId || '—'} · Level 2 Extended</Text>
+                  <Text style={[styles.name, { color: isLight ? '#0f172a' : textColor }]}>{ref.referredUser.name}</Text>
+                  <Text style={[styles.date, { color: isLight ? '#64748b' : subTextColor }]}>King ID: {ref.referredUser.kingId || '—'} · Level 2 Extended</Text>
                 </View>
-                <View style={[styles.levelBadge, { backgroundColor: '#fef3c7' }]}>
-                  <Text style={[styles.levelBadgeText, { color: '#b45309' }]}>0.5% Share</Text>
+                <View style={[styles.levelBadge, { backgroundColor: isLight ? '#fef3c7' : 'rgba(217, 119, 6, 0.2)' }]}>
+                  <Text style={[styles.levelBadgeText, { color: isLight ? '#b45309' : '#fcd34d' }]}>0.5% Share</Text>
                 </View>
               </View>
             ))}

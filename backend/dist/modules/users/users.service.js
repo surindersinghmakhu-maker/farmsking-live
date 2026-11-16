@@ -467,7 +467,17 @@ let UsersService = class UsersService {
     async deleteMe(user, verification) {
         const dbUser = await this.prisma.user.findUnique({
             where: { id: user.id },
-            select: { id: true, mobile: true, farmMobile: true, email: true, name: true, kingId: true },
+            select: {
+                id: true,
+                mobile: true,
+                farmMobile: true,
+                email: true,
+                name: true,
+                kingId: true,
+                role: true,
+                roles: true,
+                deactivatedRoles: true,
+            },
         });
         if (!dbUser) {
             throw new common_1.NotFoundException('User account not found.');
@@ -520,6 +530,56 @@ let UsersService = class UsersService {
         }
         if (!verified) {
             throw new common_1.BadRequestException('Server-side OTP or Firebase phone verification is required before deleting your account.');
+        }
+        const allRoles = Array.from(new Set([dbUser.role, ...(dbUser.roles || [])]));
+        const currentDeactivatedRoles = dbUser.deactivatedRoles || [];
+        const activeRoles = allRoles.filter((r) => !currentDeactivatedRoles.includes(r));
+        const CLIENT_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.TRADER];
+        const STAFF_ROLES = [client_1.Role.SUPERVISOR, client_1.Role.LABOUR];
+        const PARTNER_ROLES = [client_1.Role.SELLER, client_1.Role.ADVISOR, client_1.Role.AGENT, client_1.Role.NURSERY_OWNER, client_1.Role.TECHNICAL_TRAINER];
+        const ADMIN_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.MANAGER, client_1.Role.OPERATOR, client_1.Role.ACCOUNTANT];
+        const activeStaffRoles = activeRoles.filter((r) => STAFF_ROLES.includes(r));
+        const activePartnerRoles = activeRoles.filter((r) => PARTNER_ROLES.includes(r));
+        const activeAdminRoles = activeRoles.filter((r) => ADMIN_ROLES.includes(r));
+        const activeClientRoles = activeRoles.filter((r) => CLIENT_ROLES.includes(r));
+        const requestedPortal = (verification?.portal || '').toUpperCase();
+        if (requestedPortal === 'STAFF' || (activeStaffRoles.length > 0 && activeClientRoles.length === 0 && activePartnerRoles.length === 0)) {
+            throw new common_1.BadRequestException('Staff accounts (Supervisor / Labour Worker) cannot be deleted directly from the app. Staff attendance, salary, and field operations are managed directly by your employer farmer. Please contact your employer or admin to deactivate your staff role.');
+        }
+        if (requestedPortal === 'ADMIN' || (activeAdminRoles.length > 0 && activeClientRoles.length === 0 && activePartnerRoles.length === 0)) {
+            throw new common_1.BadRequestException('Administrative governance accounts cannot be self-deleted from the mobile app. Please contact FarmsKing Board or Super Administrator.');
+        }
+        if (requestedPortal === 'PARTNER' || (activePartnerRoles.length > 0 && requestedPortal !== 'USER' && requestedPortal !== 'CLIENT')) {
+            const newDeactivatedRoles = Array.from(new Set([...currentDeactivatedRoles, ...activePartnerRoles]));
+            let newPrimaryRole = dbUser.role;
+            if (PARTNER_ROLES.includes(dbUser.role)) {
+                newPrimaryRole = activeClientRoles[0] || client_1.Role.CUSTOMER;
+            }
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    role: newPrimaryRole,
+                    deactivatedRoles: newDeactivatedRoles,
+                    isApproved: false,
+                    profileStatus: 'DEACTIVATED',
+                    specialization: null,
+                    bio: null,
+                    yearsExperience: null,
+                },
+            });
+            return {
+                success: true,
+                mode: 'PARTNER_DEACTIVATED',
+                message: 'Your FarmsKing Partner account has been securely deactivated. Active business listings, consultations, and doctor availability have been suspended. Because your tax invoices, GST sale bills, and agronomy advice records are legally linked to your King ID under statutory compliance rules, historical ledgers remain safely preserved. To settle pending balances, invoices, or reactivate your account, please contact FarmsKing Admin.',
+            };
+        }
+        if (activePartnerRoles.length > 0 || activeStaffRoles.length > 0) {
+            const linkedTypes = [];
+            if (activePartnerRoles.length > 0)
+                linkedTypes.push(`Partner (${activePartnerRoles.join(', ')})`);
+            if (activeStaffRoles.length > 0)
+                linkedTypes.push(`Staff (${activeStaffRoles.join(', ')})`);
+            throw new common_1.BadRequestException(`Your King ID (${dbUser.kingId || 'Active'}) has an active ${linkedTypes.join(' and ')} account linked to this phone number. Deleting this account would disrupt commercial records, bills, and employer audit trails. Please deactivate or close your ${linkedTypes.join(' and ')} account first before deleting your Farmer account.`);
         }
         try {
             const currentBalance = await this.walletService.getBalance(user.id);
@@ -583,7 +643,8 @@ let UsersService = class UsersService {
         this.whatsappGroupSyncService.autoRemoveUser(user.id, dbUser.mobile ?? '', dbUser.name ?? 'User').catch(() => { });
         return {
             success: true,
-            message: 'Your FarmsKing ID and account have been permanently deleted. Your mobile number has been unlinked and your personal information permanently removed, while linked historical records (orders, bills, audit ledger) remain safely preserved.',
+            mode: 'ACCOUNT_DELETED',
+            message: 'Your FarmsKing Client account has been permanently deleted. Your mobile number has been unlinked and freed for new registration, while historical transaction ledgers remain safely preserved under your King ID.',
         };
     }
     async getMyInviteLink(user) {
@@ -1331,7 +1392,7 @@ let UsersService = class UsersService {
         }
         return updated;
     }
-    async updateActiveRoles(caller, id, activeRoles) {
+    async updateActiveRoles(caller, id, activeRoles, advisorType, primaryRole) {
         const user = await this.findActiveOrThrow(id);
         this.assertCanManageTarget(caller, user);
         if (user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN) {
@@ -1360,14 +1421,20 @@ let UsersService = class UsersService {
             ...toDeactivate,
         ];
         let newPrimary = user.role;
-        if (toDeactivate.includes(user.role) ||
+        if (primaryRole && activeRoles.includes(primaryRole)) {
+            newPrimary = primaryRole;
+        }
+        else if (toDeactivate.includes(user.role) ||
             !activeRoles.includes(user.role) ||
             user.role === client_1.Role.CUSTOMER) {
             newPrimary = (0, role_policy_util_1.pickBestPrimaryRole)(activeRoles);
-            if (!newRoles.includes(newPrimary))
-                newRoles.push(newPrimary);
         }
-        const isBrandNewAdvisor = toGrant.includes(client_1.Role.ADVISOR);
+        if (!newRoles.includes(newPrimary))
+            newRoles.push(newPrimary);
+        const isAdvisorActive = activeRoles.includes(client_1.Role.ADVISOR);
+        const finalAdvisorType = isAdvisorActive
+            ? (advisorType || user.advisorType || client_1.AdvisorType.FARM)
+            : null;
         const deactivatingSupervisor = toDeactivate.includes(client_1.Role.SUPERVISOR);
         const updated = await this.prisma.user.update({
             where: { id },
@@ -1375,7 +1442,7 @@ let UsersService = class UsersService {
                 role: newPrimary,
                 roles: newRoles,
                 deactivatedRoles: newDeactivated,
-                ...(isBrandNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
+                advisorType: finalAdvisorType,
                 ...(deactivatingSupervisor ? { employerFarmerId: null, supervisorPermissions: [] } : {}),
             },
             select: SAFE_USER_SELECT,

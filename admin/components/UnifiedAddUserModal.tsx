@@ -611,10 +611,15 @@ export function UnifiedAddUserModal({
               </View>
             ) : step === 2 ? (
               /* STEP 2: Select Role within Category + Mandatory Mobile OTP Verification */
-              <View style={{ gap: 12 }}>
-                <Text style={[styles.sectionLabel, { color: titleCol }]}>
-                  Select Role ({category})
-                </Text>
+              <View style={{ gap: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 1 }}>
+                  <Text style={[styles.sectionLabel, { color: titleCol, fontSize: 11, letterSpacing: 0.5, textTransform: 'uppercase' }]}>
+                    Select Role ({category})
+                  </Text>
+                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: mutedCol }}>
+                    {currentRoles.length} ROLES AVAILABLE
+                  </Text>
+                </View>
                 <View style={styles.roleGrid}>
                   {currentRoles.map((r) => {
                     const active = selectedRole === r.value;
@@ -623,6 +628,7 @@ export function UnifiedAddUserModal({
                         key={r.value}
                         style={[
                           styles.rolePillCard,
+                          isMobile ? styles.rolePillMobile : styles.rolePillDesktop,
                           { backgroundColor: subSurface, borderColor: borderCol },
                           active && styles.rolePillCardActive,
                         ]}
@@ -633,13 +639,22 @@ export function UnifiedAddUserModal({
                           setError(null);
                         }}
                       >
-                        <Ionicons name={r.icon} size={16} color={active ? '#00ff87' : mutedCol} />
-                        <Text style={[styles.rolePillLabel, { color: active ? '#00ff87' : titleCol, flex: 1 }, active && { fontFamily: FONT.bold }]}>
+                        <Ionicons name={r.icon} size={14} color={active ? '#00ff87' : mutedCol} />
+                        <Text
+                          style={[
+                            styles.rolePillLabel,
+                            { color: active ? '#00ff87' : titleCol, flex: 1 },
+                            active && { fontFamily: FONT.bold },
+                          ]}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.85}
+                        >
                           {r.label}
                         </Text>
                         <Ionicons
                           name={active ? 'checkmark-circle' : 'ellipse-outline'}
-                          size={16}
+                          size={14}
                           color={active ? '#00ff87' : 'rgba(148, 163, 184, 0.3)'}
                         />
                       </TouchableOpacity>
@@ -1274,26 +1289,35 @@ const styles = StyleSheet.create({
   roleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 5,
   },
   rolePillCard: {
-    minWidth: 175,
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
+    gap: 6,
+    paddingVertical: 5.5,
+    paddingHorizontal: 8,
     borderRadius: RADIUS.md,
     borderWidth: 1,
   },
+  rolePillDesktop: {
+    flex: 1,
+    minWidth: 108,
+  },
+  rolePillMobile: {
+    width: '48.5%',
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   rolePillCardActive: {
     borderColor: '#00ff87',
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    boxShadow: '0 0 8px rgba(0, 255, 135, 0.16)',
   },
   rolePillLabel: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontFamily: FONT.semiBold,
+    letterSpacing: -0.15,
   },
   otpBox: {
     padding: 12,

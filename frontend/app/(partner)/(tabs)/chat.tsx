@@ -6,6 +6,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, SPACING } from '@/constants/theme';
 import { useConversations, useConversationsPresenceSync } from '@/src/hooks/useChat';
 import { Avatar } from '@/src/components/Avatar';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARM_ADVISOR;
 
@@ -21,12 +22,13 @@ function timeAgo(iso: string): string {
 
 export default function ChatScreen() {
   const router = useRouter();
+  const { colors: tConfig, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: conversations, isLoading } = useConversations();
   useConversationsPresenceSync(true);
   const unreadTotal = (conversations ?? []).reduce((sum, c) => sum + c.unreadCount, 0);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }]}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Chat</Text>
         <Text style={styles.heroSubtitle}>
@@ -43,13 +45,17 @@ export default function ChatScreen() {
           {!conversations || conversations.length === 0 ? (
             <View style={styles.emptyCenter}>
               <Ionicons name="chatbubble-ellipses-outline" size={36} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No conversations yet — they'll appear once you have farmers assigned.</Text>
+              <Text style={[styles.emptyText, { color: subTextColor }]}>No conversations yet — they'll appear once you have farmers assigned.</Text>
             </View>
           ) : (
             conversations.map((c) => (
               <TouchableOpacity
                 key={c.partner.id}
-                style={[styles.row, c.unreadCount > 0 && styles.rowUnread]}
+                style={[
+                  styles.row,
+                  { backgroundColor: isLight ? '#ffffff' : cardBg, borderWidth: 1, borderColor: isLight ? '#f1f5f9' : cardBorder },
+                  c.unreadCount > 0 && { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16,185,129,0.12)', borderColor: isLight ? '#bbf7d0' : 'rgba(16,185,129,0.35)' },
+                ]}
                 activeOpacity={0.7}
                 onPress={() =>
                   router.push({ pathname: '/chat-thread/[userId]', params: { userId: c.partner.id, name: c.partner.name } } as never)
@@ -57,26 +63,26 @@ export default function ChatScreen() {
               >
                 <View>
                   <Avatar uri={c.partner.photoUrl} size={46} />
-                  <View style={[styles.presenceDot, { backgroundColor: c.isOnline ? '#22c55e' : '#cbd5e1' }]} />
+                  <View style={[styles.presenceDot, { backgroundColor: c.isOnline ? '#22c55e' : '#cbd5e1', borderColor: isLight ? '#ffffff' : cardBg }]} />
                 </View>
                 <View style={styles.info}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={styles.name} numberOfLines={1}>{c.partner.name}</Text>
-                    {c.partner.kingId ? <Text style={styles.subMeta} numberOfLines={1}>#{c.partner.kingId}</Text> : null}
+                    <Text style={[styles.name, { color: textColor }]} numberOfLines={1}>{c.partner.name}</Text>
+                    {c.partner.kingId ? <Text style={[styles.subMeta, { color: subTextColor }]} numberOfLines={1}>#{c.partner.kingId}</Text> : null}
                   </View>
-                  <Text style={styles.subMeta} numberOfLines={1}>{c.partner.mobile}</Text>
-                  <Text style={[styles.message, c.unreadCount > 0 && styles.messageUnread]} numberOfLines={1}>
+                  <Text style={[styles.subMeta, { color: subTextColor }]} numberOfLines={1}>{c.partner.mobile}</Text>
+                  <Text style={[styles.message, { color: subTextColor }, c.unreadCount > 0 && { color: textColor, fontFamily: FONT.semiBold }]} numberOfLines={1}>
                     {c.lastMessage?.content ?? 'Say hello 👋'}
                   </Text>
                 </View>
                 <View style={styles.right}>
-                  {c.lastMessage ? <Text style={styles.time}>{timeAgo(c.lastMessage.createdAt)}</Text> : null}
+                  {c.lastMessage ? <Text style={[styles.time, { color: subTextColor }]}>{timeAgo(c.lastMessage.createdAt)}</Text> : null}
                   {c.unreadCount > 0 ? (
                     <View style={styles.unreadBadge}>
                       <Text style={styles.unreadBadgeText}>{c.unreadCount > 9 ? '9+' : c.unreadCount}</Text>
                     </View>
                   ) : (
-                    <Ionicons name="chevron-forward" size={15} color="#e2e8f0" />
+                    <Ionicons name="chevron-forward" size={15} color={subTextColor} />
                   )}
                 </View>
               </TouchableOpacity>

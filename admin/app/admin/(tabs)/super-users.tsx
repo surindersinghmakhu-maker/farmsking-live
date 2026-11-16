@@ -1753,7 +1753,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
       active = active.filter((r) => !['FARMER', 'GARDENER', 'SUPERVISOR', 'LABOUR'].includes(r));
     }
     setSelected(active.includes('CUSTOMER') ? active : [...active, 'CUSTOMER']);
-    setAdvisorType(target.advisorType ?? null);
+    setAdvisorType(active.includes('ADVISOR') ? (target.advisorType || 'FARM') : (target.advisorType ?? null));
   }, [target, isTargetStaff]);
 
   if (!target) return null;
@@ -1769,6 +1769,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     tap();
     setError(null);
 
+    // Rule: Farmer Staff accounts (Supervisor / Labour Worker) are single-role hired staff
     if (FARM_STAFF_ROLES.includes(role)) {
       setSelected((prev) => {
         const exists = prev.includes(role);
@@ -1778,7 +1779,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
         }
         setAdvisorType(null);
         setRuleNote(
-          `${ROLE_LABELS[role]} is a single-role Farmer Staff account — Farmer, Gardener, Agent, Seller, Advisor, and Trader roles have been cleared automatically.`
+          `${ROLE_LABELS[role]} is a single-role Farmer Staff account — other roles have been deselected automatically.`
         );
         return ['CUSTOMER', role];
       });
@@ -1788,18 +1789,40 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     setRuleNote(null);
     setSelected((prev) => {
       const exists = prev.includes(role);
-      const withoutFarmStaff = prev.filter((r) => !FARM_STAFF_ROLES.includes(r));
+      // Remove any farm staff when choosing operational roles
+      let next = prev.filter((r) => !FARM_STAFF_ROLES.includes(r));
+
       if (exists) {
-        return withoutFarmStaff.filter((r) => r !== role);
+        return next.filter((r) => r !== role);
       }
-      // Mutually exclusive: User can only have either Farmer OR Gardener
+
+      // Rule: Farmer vs Gardener mutually exclusive
       if (role === 'FARMER') {
-        return [...withoutFarmStaff.filter((r) => r !== 'GARDENER'), 'FARMER'];
+        next = next.filter((r) => r !== 'GARDENER');
+      } else if (role === 'GARDENER') {
+        next = next.filter((r) => r !== 'FARMER');
       }
-      if (role === 'GARDENER') {
-        return [...withoutFarmStaff.filter((r) => r !== 'FARMER'), 'GARDENER'];
+
+      // Rule: Seller Store is dedicated in partner category (cannot mix with Advisor, Agent, Trader)
+      if (role === 'SELLER') {
+        setAdvisorType(null);
+        next = next.filter((r) => !['ADVISOR', 'AGENT', 'TRADER'].includes(r));
+        setRuleNote('Seller Store is a dedicated partner account — other partner roles have been deselected.');
       }
-      return [...withoutFarmStaff, role];
+
+      // Rule: Trader & Buyer is dedicated (cannot mix with Advisor, Agent, Seller)
+      if (role === 'TRADER') {
+        setAdvisorType(null);
+        next = next.filter((r) => !['ADVISOR', 'AGENT', 'SELLER'].includes(r));
+        setRuleNote('Trader & Buyer is a dedicated trading account — other partner roles have been deselected.');
+      }
+
+      // Rule: Sales Manager (Agent) can combine with Advisor, but NOT with Seller or Trader
+      if (role === 'AGENT') {
+        next = next.filter((r) => !['SELLER', 'TRADER'].includes(r));
+      }
+
+      return [...next, role];
     });
   };
 
@@ -1817,9 +1840,13 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     } else {
       setAdvisorType(type);
       setSelected((prev) => {
-        const withoutFarmStaff = prev.filter((r) => !FARM_STAFF_ROLES.includes(r));
-        return withoutFarmStaff.includes('ADVISOR') ? withoutFarmStaff : [...withoutFarmStaff, 'ADVISOR'];
+        // Advisor can combine with Agent and Farmer/Gardener, but NOT with Farm Staff, Seller, or Trader
+        const next = prev.filter((r) => !FARM_STAFF_ROLES.includes(r) && !['SELLER', 'TRADER'].includes(r));
+        return next.includes('ADVISOR') ? next : [...next, 'ADVISOR'];
       });
+      if (selected.includes('SELLER' as Role) || selected.includes('TRADER' as Role)) {
+        setRuleNote('Advisor accounts cannot mix with Seller Store or Trader & Buyer. Those roles have been deselected.');
+      }
     }
   };
 
@@ -1830,37 +1857,50 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     r === 'ADVISOR' ? (advisorType === 'GARDEN' ? 'Garden Advisor' : 'Farm Advisor') : ROLE_LABELS[r]
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setError(null);
     if (isTargetStaff) {
       setError('Admin Panel staff accounts are strictly single-role only.');
       return;
     }
-    const message = `Confirm role updates for ${target.name}:\n\n${roleLabels.join(', ') || 'Customer (Buyer Only)'}\n\nDo you want to save these changes?`;
-    const doSave = async () => {
-      try {
-        const assignableSelected = Array.from(
-          new Set([
-            ...selected.filter((r) => ASSIGNABLE_CHECKBOX_ROLES.includes(r)),
-            'CUSTOMER' as Role,
-          ])
-        );
-        await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: assignableSelected });
-        if (assignableSelected.includes('ADVISOR') && advisorType) {
-          await updateUser.mutateAsync({ id: target.id, payload: { advisorType } });
-        }
-        onClose();
-      } catch (err: any) {
-        setError(err?.response?.data?.message ?? 'Could not update user roles.');
+    try {
+      const assignableSelected = Array.from(
+        new Set([
+          ...selected.filter((r) => ASSIGNABLE_CHECKBOX_ROLES.includes(r)),
+          'CUSTOMER' as Role,
+        ])
+      );
+
+      // Determine clean primary role matching the user's active assignment
+      let primaryToSet: Role | undefined;
+      if (assignableSelected.includes('ADVISOR') && advisorType) {
+        primaryToSet = 'ADVISOR';
+      } else if (assignableSelected.includes('SELLER' as Role)) {
+        primaryToSet = 'SELLER' as Role;
+      } else if (assignableSelected.includes('AGENT')) {
+        primaryToSet = 'AGENT';
+      } else if (assignableSelected.includes('TRADER' as Role)) {
+        primaryToSet = 'TRADER' as Role;
+      } else if (assignableSelected.includes('SUPERVISOR' as Role)) {
+        primaryToSet = 'SUPERVISOR' as Role;
+      } else if (assignableSelected.includes('LABOUR' as Role)) {
+        primaryToSet = 'LABOUR' as Role;
+      } else if (assignableSelected.includes('GARDENER')) {
+        primaryToSet = 'GARDENER';
+      } else if (assignableSelected.includes('FARMER')) {
+        primaryToSet = 'FARMER';
       }
-    };
-    if (Platform.OS === 'web') {
-      if (confirm(message)) doSave();
-    } else {
-      Alert.alert('Confirm Role Update', message, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: doSave },
-      ]);
+
+      await updateActiveRoles.mutateAsync({
+        id: target.id,
+        activeRoles: assignableSelected,
+        advisorType: assignableSelected.includes('ADVISOR') ? (advisorType || 'FARM') : null,
+        primaryRole: primaryToSet,
+      });
+
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Could not update user roles.');
     }
   };
 
@@ -1943,7 +1983,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
           label: 'Seller Store',
           isChecked: selected.includes('SELLER' as Role),
           isLocked: isTargetStaff,
-          isIncompatible: hasFarmStaffSelected,
+          isIncompatible: hasFarmStaffSelected || selected.includes('ADVISOR') || selected.includes('AGENT') || selected.includes('TRADER' as Role),
           wasEverGranted: (target.roles ?? []).includes('SELLER' as Role),
           onPress: () => toggle('SELLER' as Role),
         },
@@ -1952,8 +1992,8 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
           label: 'Farm Advisor',
           isChecked: advisorType === 'FARM' && selected.includes('ADVISOR'),
           isLocked: isTargetStaff,
-          isIncompatible: hasFarmStaffSelected,
-          wasEverGranted: (target.roles ?? []).includes('ADVISOR') && target.advisorType === 'FARM',
+          isIncompatible: hasFarmStaffSelected || selected.includes('SELLER' as Role) || selected.includes('TRADER' as Role),
+          wasEverGranted: (target.roles ?? []).includes('ADVISOR') && (target.advisorType === 'FARM' || !target.advisorType),
           onPress: () => toggleAdvisorType('FARM'),
         },
         {
@@ -1961,7 +2001,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
           label: 'Garden Advisor',
           isChecked: advisorType === 'GARDEN' && selected.includes('ADVISOR'),
           isLocked: isTargetStaff,
-          isIncompatible: hasFarmStaffSelected,
+          isIncompatible: hasFarmStaffSelected || selected.includes('SELLER' as Role) || selected.includes('TRADER' as Role),
           wasEverGranted: (target.roles ?? []).includes('ADVISOR') && target.advisorType === 'GARDEN',
           onPress: () => toggleAdvisorType('GARDEN'),
         },
@@ -1970,7 +2010,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
           label: 'Trader & Buyer',
           isChecked: selected.includes('TRADER' as Role),
           isLocked: isTargetStaff,
-          isIncompatible: hasFarmStaffSelected,
+          isIncompatible: hasFarmStaffSelected || selected.includes('ADVISOR') || selected.includes('AGENT') || selected.includes('SELLER' as Role),
           wasEverGranted: (target.roles ?? []).includes('TRADER' as Role),
           onPress: () => toggle('TRADER' as Role),
         },
@@ -2132,6 +2172,12 @@ const getRoleTheme = (role: string) => {
       return { border: '#0d9488', bg: '#f0fdfa', text: '#0d9488', darkBg: 'rgba(13, 148, 136, 0.15)', darkBorder: '#0d9488', darkText: '#2dd4bf' };
     case 'AGENT':
       return { border: '#7c3aed', bg: '#faf5ff', text: '#7c3aed', darkBg: 'rgba(124, 58, 237, 0.15)', darkBorder: '#7c3aed', darkText: '#c084fc' };
+    case 'SELLER':
+      return { border: '#10b981', bg: '#ecfdf5', text: '#059669', darkBg: 'rgba(16, 185, 129, 0.15)', darkBorder: '#10b981', darkText: '#34d399' };
+    case 'SUPERVISOR':
+      return { border: '#6366f1', bg: '#eef2ff', text: '#4f46e5', darkBg: 'rgba(99, 102, 241, 0.15)', darkBorder: '#6366f1', darkText: '#a5b4fc' };
+    case 'LABOUR':
+      return { border: '#eab308', bg: '#fefce8', text: '#ca8a04', darkBg: 'rgba(234, 179, 8, 0.15)', darkBorder: '#eab308', darkText: '#fde047' };
     case 'TRADER':
       return { border: '#d97706', bg: '#fffbeb', text: '#d97706', darkBg: 'rgba(217, 119, 6, 0.15)', darkBorder: '#d97706', darkText: '#fbbf24' };
     case 'FARMER':
@@ -2422,32 +2468,56 @@ function UserRow({
 
         {/* Role Tags */}
         <View style={styles.rolesRowCompact}>
-          {activeAssignedRoles.map((r) => {
-            const rTheme = getRoleTheme(r);
-            return (
-              <View
-                key={r}
-                style={[
-                  styles.roleBadgeCompact,
-                  {
-                    backgroundColor: isDeactivated ? 'rgba(239, 68, 68, 0.08)' : (isLight ? rTheme.bg : rTheme.darkBg),
-                    borderColor: isDeactivated ? 'rgba(239, 68, 68, 0.3)' : (isLight ? rTheme.border : rTheme.darkBorder),
-                  },
-                ]}
-              >
-                <Text
+          {activeAssignedRoles
+            .filter((r) => r !== 'CUSTOMER' || activeAssignedRoles.length === 1)
+            .map((r) => {
+              const themeRoleKey =
+                r === 'ADVISOR' ? (user.advisorType === 'GARDEN' ? 'GARDEN_ADVISOR' : 'FARM_ADVISOR') : r;
+              const rTheme = getRoleTheme(themeRoleKey);
+              const label =
+                r === 'ADVISOR'
+                  ? (user.advisorType === 'GARDEN' ? 'Garden Advisor' : 'Farm Advisor')
+                  : r === 'AGENT'
+                  ? 'Sales Manager'
+                  : r === 'SELLER'
+                  ? 'Seller Store'
+                  : r === 'LABOUR'
+                  ? 'Labour Worker'
+                  : r === 'SUPERVISOR'
+                  ? 'Supervisor'
+                  : r === 'TRADER'
+                  ? 'Trader & Buyer'
+                  : r === 'FARMER'
+                  ? 'Farmer'
+                  : r === 'GARDENER'
+                  ? 'Gardener'
+                  : r === 'CUSTOMER'
+                  ? 'Customer'
+                  : ROLE_LABELS[r as Role] || String(r).replace('_', ' ');
+              return (
+                <View
+                  key={r}
                   style={[
-                    styles.roleBadgeTextCompact,
+                    styles.roleBadgeCompact,
                     {
-                      color: isDeactivated ? '#f87171' : (isLight ? rTheme.text : rTheme.darkText),
+                      backgroundColor: isDeactivated ? 'rgba(239, 68, 68, 0.08)' : (isLight ? rTheme.bg : rTheme.darkBg),
+                      borderColor: isDeactivated ? 'rgba(239, 68, 68, 0.3)' : (isLight ? rTheme.border : rTheme.darkBorder),
                     },
                   ]}
                 >
-                  {r.replace('_', ' ')}
-                </Text>
-              </View>
-            );
-          })}
+                  <Text
+                    style={[
+                      styles.roleBadgeTextCompact,
+                      {
+                        color: isDeactivated ? '#f87171' : (isLight ? rTheme.text : rTheme.darkText),
+                      },
+                    ]}
+                  >
+                    {label}
+                  </Text>
+                </View>
+              );
+            })}
         </View>
 
         {/* Joined Date */}

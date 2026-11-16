@@ -24,6 +24,7 @@ import { useUserWeather } from '@/src/hooks/useWeather';
 import { useChatUnreadCount, useConversations, useConversationsPresenceSync } from '@/src/hooks/useChat';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
 import { CropProblem, SprayScheduleItem } from '@/src/types/api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { ScheduleScreen } from './schedule';
 
 type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS' | 'ASSISTANTS';
@@ -246,6 +247,7 @@ function CropCardItem({
   showFarmerInfo?: boolean;
   onOpenActivities?: (row: PlotRow) => void;
 }) {
+  const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const isExpanded = expandedCropCycleId === row.cropCycleId;
   const stageRaw = (row.stage || '').toUpperCase();
   const stageDisplay =
@@ -256,23 +258,23 @@ function CropCardItem({
     row.stage || '🌱 Active Stage';
 
   return (
-    <View style={styles.cropCard}>
+    <View style={[styles.cropCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
       <View style={styles.cropCardHeaderRow}>
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <Text style={styles.cropCardTitle} numberOfLines={1}>
-              📍 {row.plotName} · 🌾 {row.cropName} <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>(ID: {(row.cropCode || (row.cropCycleId.startsWith('C-') ? row.cropCycleId : `C-${row.cropCycleId.slice(0, 6).toUpperCase()}`))})</Text>
+            <Text style={[styles.cropCardTitle, { color: textColor }]} numberOfLines={1}>
+              📍 {row.plotName} · 🌾 {row.cropName} <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isLight ? '#1d4ed8' : '#60a5fa' }}>(ID: {(row.cropCode || (row.cropCycleId.startsWith('C-') ? row.cropCycleId : `C-${row.cropCycleId.slice(0, 6).toUpperCase()}`))})</Text>
             </Text>
-            <View style={{ backgroundColor: '#ecfdf5', borderColor: '#a7f3d0', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
-              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#047857' }}>{stageDisplay}</Text>
+            <View style={{ backgroundColor: isLight ? '#ecfdf5' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#a7f3d0' : 'rgba(16, 185, 129, 0.35)', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isLight ? '#047857' : '#34d399' }}>{stageDisplay}</Text>
             </View>
           </View>
           {showFarmerInfo ? (
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#1e40af' }} numberOfLines={1}>
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#1e40af' : '#93c5fd' }} numberOfLines={1}>
               👨‍🌾 {row.farmerName}{row.farmerMobile ? ` (📞 ${row.farmerMobile})` : ''}{row.farmerState ? ` · 📍 ${row.farmerState}` : ''}
             </Text>
           ) : null}
-          <Text style={styles.plotCardMeta} numberOfLines={1}>
+          <Text style={[styles.plotCardMeta, { color: subTextColor }]} numberOfLines={1}>
             {row.cropCategory}{row.variety && row.variety !== '—' ? ` · ${row.variety}` : ''}
             {row.area ? ` · 📏 ${row.area}` : ''}
             {row.sowingDate ? ` · 📅 Sown: ${new Date(row.sowingDate).toLocaleDateString('en-IN')}` : ''}
@@ -365,6 +367,7 @@ function CropCardItem({
 export default function AdvisorFarmsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { colors: tConfig, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const isGardenAdvisor = (user?.role as string) === 'GARDEN_ADVISOR' || (user as any)?.advisorType === 'GARDEN';
   const [activeTab, setActiveTab] = useState<FarmSubTab>('PLOTS');
   const [expandedFarmerId, setExpandedFarmerId] = useState<string | null>(null);
@@ -656,7 +659,7 @@ export default function AdvisorFarmsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }]}>
       {/* Header */}
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>
@@ -670,25 +673,25 @@ export default function AdvisorFarmsScreen() {
       </LinearGradient>
 
       {/* Top Main Segmented Control: Farms & Crops vs Schedule & Calendar */}
-      <View style={styles.mainTabHeaderContainer}>
+      <View style={[styles.mainTabHeaderContainer, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
         <TouchableOpacity
-          style={[styles.mainTabBtn, mainTab === 'FARMS' && styles.mainTabBtnActive]}
+          style={[styles.mainTabBtn, mainTab === 'FARMS' ? styles.mainTabBtnActive : { backgroundColor: isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.05)' }]}
           activeOpacity={0.85}
           onPress={() => { tap(); setMainTab('FARMS'); }}
         >
           <Ionicons name="leaf" size={15} color={mainTab === 'FARMS' ? '#ffffff' : theme.primary} />
-          <Text style={[styles.mainTabBtnText, mainTab === 'FARMS' && styles.mainTabBtnTextActive]}>
+          <Text style={[styles.mainTabBtnText, mainTab === 'FARMS' ? styles.mainTabBtnTextActive : { color: subTextColor }]}>
             {isGardenAdvisor ? '🪴 Gardens & Plants' : '🌾 Farms & Crops'}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.mainTabBtn, mainTab === 'SCHEDULE' && styles.mainTabBtnActive]}
+          style={[styles.mainTabBtn, mainTab === 'SCHEDULE' ? styles.mainTabBtnActive : { backgroundColor: isLight ? '#f8fafc' : 'rgba(255, 255, 255, 0.05)' }]}
           activeOpacity={0.85}
           onPress={() => { tap(); setMainTab('SCHEDULE'); }}
         >
           <Ionicons name="calendar" size={15} color={mainTab === 'SCHEDULE' ? '#ffffff' : theme.primary} />
-          <Text style={[styles.mainTabBtnText, mainTab === 'SCHEDULE' && styles.mainTabBtnTextActive]}>
+          <Text style={[styles.mainTabBtnText, mainTab === 'SCHEDULE' ? styles.mainTabBtnTextActive : { color: subTextColor }]}>
             📅 Schedule & Calendar
           </Text>
         </TouchableOpacity>
@@ -702,20 +705,20 @@ export default function AdvisorFarmsScreen() {
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           <View style={{ gap: 12 }}>
             {/* View & Grouping Dropdown Selector */}
-            <View style={styles.dropdownSelectorContainer}>
+            <View style={[styles.dropdownSelectorContainer, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
               <Text style={styles.dropdownSelectorHeaderLabel}>View & Filter By:</Text>
               <TouchableOpacity
-                style={styles.dropdownSelectorButton}
+                style={[styles.dropdownSelectorButton, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}
                 activeOpacity={0.8}
                 onPress={() => { tap(); setDropdownOpen(true); }}
               >
                 <View style={styles.dropdownSelectorLeft}>
                   <Ionicons name={currentOption.icon} size={18} color={theme.primary} />
-                  <Text style={styles.dropdownSelectorText} numberOfLines={1}>
+                  <Text style={[styles.dropdownSelectorText, { color: textColor }]} numberOfLines={1}>
                     {currentOption.label}
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
+                <Ionicons name="chevron-down" size={18} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -723,12 +726,12 @@ export default function AdvisorFarmsScreen() {
             {groupByMode === 'FARMER_WISE' ? (
               <>
                 {pendingAssignments && pendingAssignments.length > 0 ? (
-                  <View style={styles.pendingSection}>
+                  <View style={[styles.pendingSection, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.1)', borderColor: isLight ? '#86efac' : 'rgba(16, 185, 129, 0.35)' }]}>
                     <Text style={styles.pendingTitle}>
                       🔔 New {isGardenAdvisor ? 'Garden Care' : 'Farmer'} Hire Requests ({pendingAssignments.length})
                     </Text>
                     {pendingAssignments.map((a) => (
-                      <View key={a.id} style={styles.pendingRow}>
+                      <View key={a.id} style={[styles.pendingRow, { backgroundColor: isLight ? '#ffffff' : innerBg, borderColor: isLight ? '#dcfce7' : cardBorder }]}>
                         <TouchableOpacity
                           style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
                           activeOpacity={0.7}
@@ -741,13 +744,13 @@ export default function AdvisorFarmsScreen() {
                           <InitialsAvatar name={a.farmer?.name ?? 'Farmer'} size={32} />
                           <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                              <Text style={styles.pendingFarmerName} numberOfLines={1}>{a.farmer?.name ?? 'Farmer'}</Text>
+                              <Text style={[styles.pendingFarmerName, { color: textColor }]} numberOfLines={1}>{a.farmer?.name ?? 'Farmer'}</Text>
                               <View style={styles.viewProfileChip}>
                                 <Ionicons name="eye-outline" size={10} color="#15803d" />
                                 <Text style={styles.viewProfileChipText}>Profile</Text>
                               </View>
                             </View>
-                            <Text style={styles.pendingFarmerMeta} numberOfLines={1}>
+                            <Text style={[styles.pendingFarmerMeta, { color: subTextColor }]} numberOfLines={1}>
                               {a.farmer?.kingId ? `🔑 ${a.farmer.kingId} · ` : ''}{a.farmer?.mobile ? `📱 ${a.farmer.mobile}` : ''}
                             </Text>
                           </View>
@@ -783,7 +786,7 @@ export default function AdvisorFarmsScreen() {
                 {farmerGroups.map((group) => {
                   const isExpanded = expandedFarmerId === group.farmerId;
                   return (
-                    <View key={group.farmerId} style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+                    <View key={group.farmerId} style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                       <TouchableOpacity
                         style={styles.farmerCardHeader}
                         activeOpacity={0.75}
@@ -792,7 +795,7 @@ export default function AdvisorFarmsScreen() {
                         <InitialsAvatar name={group.farmerName} size={36} />
                         <View style={{ flex: 1 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={styles.farmerCardName}>{group.farmerName}</Text>
+                            <Text style={[styles.farmerCardName, { color: textColor }]}>{group.farmerName}</Text>
                             <TouchableOpacity
                               style={styles.viewProfileChip}
                               onPress={() => {
@@ -804,14 +807,14 @@ export default function AdvisorFarmsScreen() {
                               <Text style={styles.viewProfileChipText}>Profile</Text>
                             </TouchableOpacity>
                           </View>
-                          <Text style={styles.farmerCardMeta}>
+                          <Text style={[styles.farmerCardMeta, { color: subTextColor }]}>
                             {group.kingId ? `🔑 ${group.kingId} · ` : ''}
                             {group.mobile ? `📱 ${group.mobile}` : ''}
                           </Text>
                           <View
                             style={{
-                              backgroundColor: group.rows.length === 0 ? '#eff6ff' : '#f0fdf4',
-                              borderColor: group.rows.length === 0 ? '#93c5fd' : '#86efac',
+                              backgroundColor: group.rows.length === 0 ? (isLight ? '#eff6ff' : 'rgba(59, 130, 246, 0.15)') : (isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)'),
+                              borderColor: group.rows.length === 0 ? (isLight ? '#93c5fd' : 'rgba(59, 130, 246, 0.35)') : (isLight ? '#86efac' : 'rgba(16, 185, 129, 0.35)'),
                               borderWidth: 1,
                               paddingHorizontal: 7,
                               paddingVertical: 3,
@@ -824,7 +827,7 @@ export default function AdvisorFarmsScreen() {
                               style={{
                                 fontSize: 10.5,
                                 fontFamily: FONT.extraBold,
-                                color: group.rows.length === 0 ? '#2563eb' : '#15803d',
+                                color: group.rows.length === 0 ? (isLight ? '#2563eb' : '#60a5fa') : (isLight ? '#15803d' : '#34d399'),
                               }}
                             >
                               {group.rows.length === 0 ? '🟦 0 Adopted Crops' : `🟩 ${group.rows.length} Adopted Crop${group.rows.length !== 1 ? 's' : ''}`}
@@ -832,7 +835,7 @@ export default function AdvisorFarmsScreen() {
                           </View>
                         </View>
                         <FarmerWeatherChip farmerId={group.farmerId} />
-                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#64748b" />
+                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={subTextColor} />
                       </TouchableOpacity>
 
                       {isExpanded && (
@@ -870,14 +873,14 @@ export default function AdvisorFarmsScreen() {
                   const groupKey = `crop-${cropName}`;
                   const isExpanded = expandedGroupKeys[groupKey] !== false;
                   return (
-                    <View key={cropName} style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+                    <View key={cropName} style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                       <TouchableOpacity
                         style={styles.collapsibleGroupHeader}
                         activeOpacity={0.75}
                         onPress={() => toggleGroupCollapse(groupKey)}
                       >
-                        <Text style={styles.groupHeaderTitle}>🌾 {cropName} ({rows.length} Plot{rows.length !== 1 ? 's' : ''})</Text>
-                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                        <Text style={[styles.groupHeaderTitle, { color: textColor }]}>🌾 {cropName} ({rows.length} Plot{rows.length !== 1 ? 's' : ''})</Text>
+                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                       </TouchableOpacity>
 
                       {isExpanded ? (
@@ -909,14 +912,14 @@ export default function AdvisorFarmsScreen() {
                   const groupKey = `state-${stateName}`;
                   const isExpanded = expandedGroupKeys[groupKey] !== false;
                   return (
-                    <View key={stateName} style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+                    <View key={stateName} style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                       <TouchableOpacity
                         style={styles.collapsibleGroupHeader}
                         activeOpacity={0.75}
                         onPress={() => toggleGroupCollapse(groupKey)}
                       >
-                        <Text style={styles.groupHeaderTitle}>📍 {stateName} ({rows.length} Farm{rows.length !== 1 ? 's' : ''})</Text>
-                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                        <Text style={[styles.groupHeaderTitle, { color: textColor }]}>📍 {stateName} ({rows.length} Farm{rows.length !== 1 ? 's' : ''})</Text>
+                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                       </TouchableOpacity>
 
                       {isExpanded ? (
@@ -948,14 +951,14 @@ export default function AdvisorFarmsScreen() {
                   const groupKey = `date-${groupLabel}`;
                   const isExpanded = expandedGroupKeys[groupKey] !== false;
                   return (
-                    <View key={groupLabel} style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+                    <View key={groupLabel} style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                       <TouchableOpacity
                         style={styles.collapsibleGroupHeader}
                         activeOpacity={0.75}
                         onPress={() => toggleGroupCollapse(groupKey)}
                       >
-                        <Text style={styles.groupHeaderTitle}>📅 {groupLabel} ({rows.length})</Text>
-                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                        <Text style={[styles.groupHeaderTitle, { color: textColor }]}>📅 {groupLabel} ({rows.length})</Text>
+                        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                       </TouchableOpacity>
 
                       {isExpanded ? (
@@ -986,8 +989,8 @@ export default function AdvisorFarmsScreen() {
                 {filteredByStageRows.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="leaf-outline" size={36} color="#cbd5e1" />
-                    <Text style={styles.emptyTitle}>No Crops in Selected Stage</Text>
-                    <Text style={styles.emptySub}>No active crop cycles match this growth stage.</Text>
+                    <Text style={[styles.emptyTitle, { color: textColor }]}>No Crops in Selected Stage</Text>
+                    <Text style={[styles.emptySub, { color: subTextColor }]}>No active crop cycles match this growth stage.</Text>
                   </View>
                 ) : (
                   (() => {
@@ -995,14 +998,14 @@ export default function AdvisorFarmsScreen() {
                     const isExpanded = expandedGroupKeys[groupKey] !== false;
                     const stageLabel = STAGE_RADIO_OPTIONS.find((s) => s.key === selectedStageRadio)?.label || 'Growth Stage';
                     return (
-                      <View style={[styles.farmerCard, premiumShadow('#0f172a', 'sm')]}>
+                      <View style={[styles.farmerCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#f1f5f9' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                         <TouchableOpacity
                           style={styles.collapsibleGroupHeader}
                           activeOpacity={0.75}
                           onPress={() => toggleGroupCollapse(groupKey)}
                         >
-                          <Text style={styles.groupHeaderTitle}>🌱 {stageLabel} ({filteredByStageRows.length})</Text>
-                          <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                          <Text style={[styles.groupHeaderTitle, { color: textColor }]}>🌱 {stageLabel} ({filteredByStageRows.length})</Text>
+                          <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                         </TouchableOpacity>
 
                         {isExpanded ? (
@@ -1049,17 +1052,17 @@ export default function AdvisorFarmsScreen() {
 
       <Modal visible={!!sprayDetailItem} transparent animationType="slide" onRequestClose={() => setSprayDetailItem(null)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <View style={[styles.modalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>🧪 Schedule Detail</Text>
+                <Text style={[styles.modalTitle, { color: textColor }]}>🧪 Schedule Detail</Text>
                 <Text style={styles.modalSub}>{sprayDetailTitle}</Text>
               </View>
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setSprayDetailItem(null)}>
-                <Ionicons name="close" size={20} color="#475569" />
+              <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]} onPress={() => setSprayDetailItem(null)}>
+                <Ionicons name="close" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalHeaderDivider} />
+            <View style={[styles.modalHeaderDivider, { backgroundColor: isLight ? '#f1f5f9' : cardBorder }]} />
 
             {sprayDetailItem ? (
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -1082,20 +1085,20 @@ export default function AdvisorFarmsScreen() {
           activeOpacity={1}
           onPress={() => setDropdownOpen(false)}
         >
-          <TouchableOpacity activeOpacity={1} style={styles.dropdownModalCard}>
+          <TouchableOpacity activeOpacity={1} style={[styles.dropdownModalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={styles.dropdownModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="filter" size={18} color={theme.primary} />
-                <Text style={styles.dropdownModalTitle}>Select View & Filter</Text>
+                <Text style={[styles.dropdownModalTitle, { color: textColor }]}>Select View & Filter</Text>
               </View>
               <TouchableOpacity
-                style={styles.closeBtn}
+                style={[styles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]}
                 onPress={() => setDropdownOpen(false)}
               >
-                <Ionicons name="close" size={18} color="#64748b" />
+                <Ionicons name="close" size={18} color={subTextColor} />
               </TouchableOpacity>
             </View>
-            <View style={styles.modalHeaderDivider} />
+            <View style={[styles.modalHeaderDivider, { backgroundColor: isLight ? '#f1f5f9' : cardBorder }]} />
 
             <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
               <Text style={styles.dropdownSectionTitle}>GENERAL VIEWS</Text>
@@ -1104,7 +1107,7 @@ export default function AdvisorFarmsScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.key}
-                    style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                    style={[styles.dropdownItem, isSelected ? styles.dropdownItemActive : { backgroundColor: isLight ? '#f8fafc' : innerBg }]}
                     onPress={() => {
                       tap();
                       setGroupByMode(opt.groupByMode);
@@ -1113,8 +1116,8 @@ export default function AdvisorFarmsScreen() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : '#475569'} />
-                      <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>
+                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : subTextColor} />
+                      <Text style={[styles.dropdownItemText, isSelected ? styles.dropdownItemTextActive : { color: textColor }]}>
                         {opt.label}
                       </Text>
                     </View>
@@ -1131,7 +1134,7 @@ export default function AdvisorFarmsScreen() {
                 return (
                   <TouchableOpacity
                     key={opt.key}
-                    style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                    style={[styles.dropdownItem, isSelected ? styles.dropdownItemActive : { backgroundColor: isLight ? '#f8fafc' : innerBg }]}
                     onPress={() => {
                       tap();
                       setGroupByMode(opt.groupByMode);
@@ -1140,8 +1143,8 @@ export default function AdvisorFarmsScreen() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : '#475569'} />
-                      <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>
+                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : subTextColor} />
+                      <Text style={[styles.dropdownItemText, isSelected ? styles.dropdownItemTextActive : { color: textColor }]}>
                         {opt.label}
                       </Text>
                     </View>

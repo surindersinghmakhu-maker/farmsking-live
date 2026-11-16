@@ -25,6 +25,7 @@ import { AdvisorReviewCropCycle } from '@/src/types/api';
 import { ItemTemplatesSection } from '@/src/components/ItemTemplatesSection';
 import { QuickAddDoseItemModal } from '@/src/components/QuickAddDoseItemModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const CATEGORY_DISPLAY: Record<string, { name: string; color: string; bg: string }> = {
   FLOWERS: { name: 'Flowers & Floriculture', color: '#e11d48', bg: '#ffe4e6' },
@@ -473,6 +474,7 @@ const formatDateStr = (dateObj: Date): string => {
 
 export function ScheduleScreen() {
   const router = useRouter();
+  const { colors: tConfig, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [activeTab, setActiveTab] = useState<ScheduleTab>('SCHEDULE');
 
   const { data: acceptedCropsRaw } = useAcceptedCropsForAdvisor();
@@ -825,7 +827,7 @@ export function ScheduleScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isLight ? '#f1f5f9' : (tConfig.bg || '#020d06') }]}>
       {/* Top Hero Banner */}
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Advisory Schedules & Templates</Text>
@@ -885,9 +887,9 @@ export function ScheduleScreen() {
         ) : activeTab === 'TEMPLATES' ? (
           /* TEMPLATES TAB (Make & View Templates) */
           <View style={{ gap: 12 }}>
-            <View style={styles.templateHeaderCard}>
+            <View style={[styles.templateHeaderCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.templateHeaderTitle}>Advisory Daywise Templates Library</Text>
+                <Text style={[styles.templateHeaderTitle, { color: textColor }]}>Advisory Daywise Templates Library</Text>
                 <View style={styles.templateHeaderTag}>
                   <Ionicons name="calendar-outline" size={10} color="#64748b" />
                   <Text style={styles.templateHeaderTagText}>Day 1 = Sowing Date</Text>
@@ -906,15 +908,15 @@ export function ScheduleScreen() {
             {templates.map((tpl) => {
               const isCardExpanded = !!expandedSections[`tpl-card-${tpl.id}`];
               return (
-                <View key={tpl.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <View key={tpl.id} style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                   <TouchableOpacity
                     style={styles.tplCompactRow}
                     activeOpacity={0.7}
                     onPress={() => toggleSection(`tpl-card-${tpl.id}`)}
                   >
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.tplName}>📋 {tpl.templateName}</Text>
-                      <Text style={styles.tplCrop}>{tpl.targetCrop} · {tpl.tasks.length} tasks</Text>
+                      <Text style={[styles.tplName, { color: textColor }]}>📋 {tpl.templateName}</Text>
+                      <Text style={[styles.tplCrop, { color: subTextColor }]}>{tpl.targetCrop} · {tpl.tasks.length} tasks</Text>
                     </View>
                     <TouchableOpacity onPress={() => handleEditTemplate(tpl)} style={{ padding: 4 }}>
                       <Ionicons name="create-outline" size={18} color={theme.primary} />
@@ -922,17 +924,17 @@ export function ScheduleScreen() {
                     <TouchableOpacity onPress={() => handleDeleteTemplate(tpl.id)} style={{ padding: 4 }}>
                       <Ionicons name="trash-outline" size={18} color="#dc2626" />
                     </TouchableOpacity>
-                    <Ionicons name={isCardExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#94a3b8" />
+                    <Ionicons name={isCardExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={subTextColor} />
                   </TouchableOpacity>
 
                   {isCardExpanded ? (
                     <View style={styles.dayTasksContainer}>
                       {tpl.tasks.map((task) => (
-                        <View key={task.id} style={styles.dayTaskItem}>
+                        <View key={task.id} style={[styles.dayTaskItem, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
                           <View style={styles.dayPill}>
                             <Text style={styles.dayPillText}>Day {task.dayNumber}</Text>
                           </View>
-                          <Text style={styles.dayTaskTitle}>{task.taskTitle}</Text>
+                          <Text style={[styles.dayTaskTitle, { color: textColor }]}>{task.taskTitle}</Text>
                         </View>
                       ))}
                     </View>
@@ -946,19 +948,19 @@ export function ScheduleScreen() {
           activeFarms.length === 0 ? (
             <View style={styles.emptyCenter}>
               <Ionicons name="calendar-outline" size={42} color="#cbd5e1" />
-              <Text style={styles.emptyTitle}>No Active Farms Yet</Text>
-              <Text style={styles.emptySub}>Farms you've accepted for advisory review will show up here.</Text>
+              <Text style={[styles.emptyTitle, { color: textColor }]}>No Active Farms Yet</Text>
+              <Text style={[styles.emptySub, { color: subTextColor }]}>Farms you've accepted for advisory review will show up here.</Text>
             </View>
           ) : (
             activeFarms.map((farm) => {
               const hasSchedule = !!farm.assignedSchedule && farm.assignedSchedule.trim().length > 0;
 
               return (
-                <View key={farm.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <View key={farm.id} style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }, premiumShadow('#0f172a', 'sm')]}>
                   <View style={styles.cardHeaderRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                      <Text style={styles.plotTitle}>
-                        📍 {farm.fieldName} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {farm.cropId || (farm.id?.startsWith('CR-') ? farm.id : `CR-${farm.id?.slice(0, 6).toUpperCase()}`)})</Text>
+                      <Text style={[styles.plotTitle, { color: textColor }]}>
+                        📍 {farm.fieldName} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>(ID: {farm.cropId || (farm.id?.startsWith('CR-') ? farm.id : `CR-${farm.id?.slice(0, 6).toUpperCase()}`)})</Text>
                       </Text>
                       <View style={[styles.cropBadge, { backgroundColor: farm.categoryBg || '#f0fdf4' }]}>
                         <Text style={[styles.cropBadgeText, { color: farm.categoryColor || '#16a34a' }]}>
@@ -1076,16 +1078,16 @@ export function ScheduleScreen() {
       {/* CROP SCHEDULE EDITOR MODAL (ADD, EDIT, REMOVE ENTRIES & TEMPLATE SELECTION) */}
       <Modal visible={isScheduleModalOpen} transparent animationType="slide" onRequestClose={() => setIsScheduleModalOpen(false)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+          <View style={[styles.modalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, maxHeight: '92%' }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>📅 Edit & Manage Crop Schedule</Text>
+                <Text style={[styles.modalTitle, { color: textColor }]}>📅 Edit & Manage Crop Schedule</Text>
                 <Text style={styles.modalSub}>
                   {selectedFarm?.fieldName} ({selectedFarm?.cropName})
                 </Text>
               </View>
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setIsScheduleModalOpen(false)}>
-                <Ionicons name="close" size={20} color="#475569" />
+              <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]} onPress={() => setIsScheduleModalOpen(false)}>
+                <Ionicons name="close" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -1098,7 +1100,7 @@ export function ScheduleScreen() {
               </View>
 
               {/* Quick Template Picker Grid */}
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
                 Load Template to Auto-Populate (Optional):
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -1107,6 +1109,7 @@ export function ScheduleScreen() {
                     key={tpl.id}
                     style={[
                       styles.templateChipQuick,
+                      { backgroundColor: isLight ? '#f1f5f9' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder },
                       selectedTemplateForAssign?.id === tpl.id && { backgroundColor: theme.primary, borderColor: theme.primary },
                     ]}
                     onPress={() => handlePickTemplateToPopulate(tpl)}
@@ -1114,6 +1117,7 @@ export function ScheduleScreen() {
                     <Text
                       style={[
                         styles.templateChipQuickText,
+                        { color: textColor },
                         selectedTemplateForAssign?.id === tpl.id && { color: '#ffffff' },
                       ]}
                     >
@@ -1125,7 +1129,7 @@ export function ScheduleScreen() {
 
               {/* Daywise Schedule Entries List with Edit, Add & Remove Controls */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: textColor }}>
                   Crop Schedule Daywise Entries ({editingScheduleItems.length}):
                 </Text>
                 <TouchableOpacity style={styles.addEntryBtn} onPress={handleAddScheduleEntryRow}>
@@ -1150,21 +1154,21 @@ export function ScheduleScreen() {
                   : [];
 
                 return (
-                  <View key={item.id || idx} style={[styles.entryRowCard, isPastDate && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', opacity: 0.85 }]}>
+                  <View key={item.id || idx} style={[styles.entryRowCard, { backgroundColor: isLight ? '#ffffff' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }, isPastDate && { backgroundColor: isLight ? '#f8fafc' : 'rgba(255,255,255,0.04)', borderColor: isLight ? '#cbd5e1' : cardBorder, opacity: 0.85 }]}>
                     {isPastDate ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: 'flex-start' }}>
-                        <Ionicons name="lock-closed" size={11} color="#64748b" />
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🔒 Read Only (Past Date - Cannot Edit)</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6, backgroundColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.06)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: 'flex-start' }}>
+                        <Ionicons name="lock-closed" size={11} color={subTextColor} />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }}>🔒 Read Only (Past Date - Cannot Edit)</Text>
                       </View>
                     ) : null}
 
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <View style={{ width: 52 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor, marginBottom: 2 }}>
                           Day #
                         </Text>
                         <TextInput
-                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: isPastDate ? '#64748b' : theme.primary }, isPastDate && { backgroundColor: '#e2e8f0' }]}
+                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: isPastDate ? subTextColor : theme.primary, backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}
                           value={item.dayNumber}
                           onChangeText={(val) => !isPastDate && handleUpdateScheduleEntryRow(item.id, 'dayNumber', val)}
                           keyboardType="numeric"
@@ -1173,25 +1177,25 @@ export function ScheduleScreen() {
                       </View>
 
                       <View style={{ width: 110 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor, marginBottom: 2 }}>
                           Task
                         </Text>
                         <TouchableOpacity
-                          style={[styles.taskPickerBtn, isPastDate && { backgroundColor: '#e2e8f0', borderColor: '#cbd5e1' }]}
+                          style={[styles.taskPickerBtn, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }, isPastDate && { opacity: 0.7 }]}
                           activeOpacity={isPastDate ? 1 : 0.8}
                           disabled={isPastDate}
                           onPress={() => !isPastDate && setActiveTaskPickerRow({ source: 'SCHEDULE', idOrIdx: item.id })}
                         >
-                          <Text style={[styles.taskPickerBtnText, isPastDate && { color: '#64748b' }]} numberOfLines={1}>
+                          <Text style={[styles.taskPickerBtnText, { color: textColor }, isPastDate && { color: subTextColor }]} numberOfLines={1}>
                             {item.taskType || 'Select Task'}
                           </Text>
-                          <Ionicons name="chevron-down" size={12} color={isPastDate ? '#94a3b8' : '#475569'} />
+                          <Ionicons name="chevron-down" size={12} color={subTextColor} />
                         </TouchableOpacity>
                       </View>
 
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor }}>
                             Activity / Dose Item:
                           </Text>
                           <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isPastDate ? '#dc2626' : '#15803d' }}>
@@ -1200,17 +1204,18 @@ export function ScheduleScreen() {
                         </View>
 
                         <TextInput
-                          style={[styles.singleLineInput, isPastDate && { backgroundColor: '#e2e8f0', color: '#64748b' }]}
+                          style={[styles.singleLineInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder, color: textColor }, isPastDate && { opacity: 0.7 }]}
                           value={item.taskTitle}
                           onChangeText={(val) => !isPastDate && handleUpdateScheduleEntryRow(item.id, 'taskTitle', val)}
                           placeholder={isPastDate ? 'Locked (Past Date)' : 'Type to search Dose Items...'}
+                          placeholderTextColor={subTextColor}
                           editable={!isPastDate}
                         />
                       </View>
 
                       {isPastDate ? (
-                        <View style={[styles.removeEntryBtn, { backgroundColor: '#e2e8f0' }]}>
-                          <Ionicons name="lock-closed" size={14} color="#94a3b8" />
+                        <View style={[styles.removeEntryBtn, { backgroundColor: isLight ? '#e2e8f0' : innerBg }]}>
+                          <Ionicons name="lock-closed" size={14} color={subTextColor} />
                         </View>
                       ) : (
                         <TouchableOpacity
@@ -1277,16 +1282,16 @@ export function ScheduleScreen() {
       {/* MAKE NEW TEMPLATE MODAL */}
       <Modal visible={isMakeTemplateModalOpen} transparent animationType="slide" onRequestClose={() => setIsMakeTemplateModalOpen(false)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+          <View style={[styles.modalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, maxHeight: '90%' }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>{editingTemplateId ? '✏️ Edit Schedule Template' : '🛠️ Make Schedule Template'}</Text>
-                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
+                <Text style={[styles.modalTitle, { color: textColor }]}>{editingTemplateId ? '✏️ Edit Schedule Template' : '🛠️ Make Schedule Template'}</Text>
+                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: subTextColor, marginTop: 2 }}>
                   {editingTemplateId ? 'Update daywise tasks for this template' : 'Create daywise tasks (e.g. Day 1, 5, 8, 15...) for any crop name'}
                 </Text>
               </View>
-              <TouchableOpacity style={styles.closeBtn} onPress={() => { setIsMakeTemplateModalOpen(false); setEditingTemplateId(null); }}>
-                <Ionicons name="close" size={20} color="#475569" />
+              <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]} onPress={() => { setIsMakeTemplateModalOpen(false); setEditingTemplateId(null); }}>
+                <Ionicons name="close" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -1300,19 +1305,20 @@ export function ScheduleScreen() {
             </TouchableOpacity>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8 }}>
-              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: textColor }}>
                 Template Name *
               </Text>
               <TextInput
-                style={styles.singleLineInput}
+                style={[styles.singleLineInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder, color: textColor }]}
                 value={newTemplateName}
                 onChangeText={setNewTemplateName}
                 placeholder="e.g. Dutch Rose Spray & Fertilizer Plan"
+                placeholderTextColor={subTextColor}
               />
 
 
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: textColor }}>
                   Daywise Tasks (1, 5, 8...) *
                 </Text>
                 <TouchableOpacity style={styles.addTaskRowBtn} onPress={handleAddTaskRow}>
@@ -1327,14 +1333,14 @@ export function ScheduleScreen() {
                   ? (itemTemplatesForSearch ?? []).filter((t) => t.item.toLowerCase().includes(query)).slice(0, 6)
                   : [];
                 return (
-                  <View key={idx} style={styles.entryRowCard}>
+                  <View key={idx} style={[styles.entryRowCard, { backgroundColor: isLight ? '#ffffff' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
                     <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                       <View style={{ width: 52 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor, marginBottom: 2 }}>
                           Day #
                         </Text>
                         <TextInput
-                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: theme.primary }]}
+                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: theme.primary, backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}
                           value={taskRow.dayNumber}
                           onChangeText={(val) => {
                             const updated = [...newTemplateTasks];
@@ -1342,30 +1348,31 @@ export function ScheduleScreen() {
                             setNewTemplateTasks(updated);
                           }}
                           placeholder="Day"
+                          placeholderTextColor={subTextColor}
                           keyboardType="numeric"
                         />
                       </View>
                       <View style={{ width: 110 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor, marginBottom: 2 }}>
                           Task
                         </Text>
                         <TouchableOpacity
-                          style={styles.taskPickerBtn}
+                          style={[styles.taskPickerBtn, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}
                           activeOpacity={0.8}
                           onPress={() => setActiveTaskPickerRow({ source: 'TEMPLATE', idOrIdx: idx })}
                         >
-                          <Text style={styles.taskPickerBtnText} numberOfLines={1}>
+                          <Text style={[styles.taskPickerBtnText, { color: textColor }]} numberOfLines={1}>
                             {taskRow.taskType || 'Select Task'}
                           </Text>
-                          <Ionicons name="chevron-down" size={12} color="#475569" />
+                          <Ionicons name="chevron-down" size={12} color={subTextColor} />
                         </TouchableOpacity>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor, marginBottom: 2 }}>
                           Activity / Dose Item
                         </Text>
                         <TextInput
-                          style={styles.singleLineInput}
+                          style={[styles.singleLineInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder, color: textColor }]}
                           value={taskRow.taskTitle}
                           onChangeText={(val) => {
                             const updated = [...newTemplateTasks];
@@ -1373,6 +1380,7 @@ export function ScheduleScreen() {
                             setNewTemplateTasks(updated);
                           }}
                           placeholder={`Type to search Dose Items...`}
+                          placeholderTextColor={subTextColor}
                         />
                       </View>
                       <TouchableOpacity
@@ -1387,11 +1395,11 @@ export function ScheduleScreen() {
                     </View>
 
                     {suggestions.length > 0 ? (
-                      <View style={styles.itemSuggestBox}>
+                      <View style={[styles.itemSuggestBox, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
                         {suggestions.map((s) => (
                           <TouchableOpacity
                             key={s.id}
-                            style={styles.itemSuggestRow}
+                            style={[styles.itemSuggestRow, { borderBottomColor: isLight ? '#eef2f7' : cardBorder }]}
                             onPress={() => {
                               tap();
                               const composed = s.dose ? `${s.item} (${s.dose})` : s.item;
@@ -1401,9 +1409,9 @@ export function ScheduleScreen() {
                             }}
                           >
                             <Ionicons name="add-circle-outline" size={14} color={theme.primary} />
-                            <Text style={styles.itemSuggestText}>
+                            <Text style={[styles.itemSuggestText, { color: textColor }]}>
                               {s.item}
-                              {s.dose ? <Text style={styles.itemSuggestDose}> · {s.dose}</Text> : null}
+                              {s.dose ? <Text style={[styles.itemSuggestDose, { color: subTextColor }]}> · {s.dose}</Text> : null}
                             </Text>
                           </TouchableOpacity>
                         ))}
@@ -1413,8 +1421,8 @@ export function ScheduleScreen() {
                     {taskRow.items.length > 0 ? (
                       <View style={styles.itemChipRow}>
                         {taskRow.items.map((it, itemIdx) => (
-                          <View key={itemIdx} style={styles.itemChip}>
-                            <Text style={styles.itemChipText}>{it}</Text>
+                          <View key={itemIdx} style={[styles.itemChip, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(16, 185, 129, 0.15)', borderColor: isLight ? '#bbf7d0' : 'rgba(16, 185, 129, 0.35)' }]}>
+                            <Text style={[styles.itemChipText, { color: isLight ? '#15803d' : '#34d399' }]}>{it}</Text>
                             <TouchableOpacity
                               onPress={() => {
                                 tap();
@@ -1423,7 +1431,7 @@ export function ScheduleScreen() {
                                 setNewTemplateTasks(updated);
                               }}
                             >
-                              <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                              <Ionicons name="close-circle" size={14} color={subTextColor} />
                             </TouchableOpacity>
                           </View>
                         ))}
@@ -1460,11 +1468,11 @@ export function ScheduleScreen() {
         onRequestClose={() => setActiveTaskPickerRow(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.taskPickerModalCard}>
+          <View style={[styles.taskPickerModalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>📋 Select Task Type</Text>
-              <TouchableOpacity style={styles.closeBtn} onPress={() => setActiveTaskPickerRow(null)}>
-                <Ionicons name="close" size={18} color="#64748b" />
+              <Text style={[styles.modalTitle, { color: textColor }]}>📋 Select Task Type</Text>
+              <TouchableOpacity style={[styles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]} onPress={() => setActiveTaskPickerRow(null)}>
+                <Ionicons name="close" size={18} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
@@ -1478,7 +1486,7 @@ export function ScheduleScreen() {
                 return (
                   <TouchableOpacity
                     key={cat}
-                    style={[styles.taskOptionRow, isSelected && styles.taskOptionRowSelected]}
+                    style={[styles.taskOptionRow, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder }, isSelected && styles.taskOptionRowSelected]}
                     onPress={() => handleSelectTaskType(cat)}
                   >
                     <Ionicons
@@ -1500,9 +1508,9 @@ export function ScheduleScreen() {
                           : 'ellipse-outline'
                       }
                       size={16}
-                      color={isSelected ? theme.primary : '#475569'}
+                      color={isSelected ? theme.primary : subTextColor}
                     />
-                    <Text style={[styles.taskOptionText, isSelected && { color: theme.primary, fontFamily: FONT.bold }]}>
+                    <Text style={[styles.taskOptionText, { color: textColor }, isSelected && { color: theme.primary, fontFamily: FONT.bold }]}>
                       {cat}
                     </Text>
                     {isSelected ? <Ionicons name="checkmark-circle" size={16} color={theme.primary} style={{ marginLeft: 'auto' }} /> : null}
@@ -1530,24 +1538,24 @@ export function ScheduleScreen() {
         onRequestClose={() => setIsAddCustomTaskOpen(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.customTaskModalCard}>
-            <Text style={styles.modalTitle}>➕ Add New Task Type</Text>
-            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginVertical: 6 }}>
+          <View style={[styles.customTaskModalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
+            <Text style={[styles.modalTitle, { color: textColor }]}>➕ Add New Task Type</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: subTextColor, marginVertical: 6 }}>
               Enter custom activity name (e.g. Weedicide, Soil Treatment, Pruning)
             </Text>
             <TextInput
-              style={styles.singleLineInput}
+              style={[styles.singleLineInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#cbd5e1' : cardBorder, color: textColor }]}
               placeholder="e.g. Weedicide Spray"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={subTextColor}
               value={customTaskName}
               onChangeText={setCustomTaskName}
             />
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14, justifyContent: 'flex-end' }}>
               <TouchableOpacity
-                style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9' }}
+                style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: isLight ? '#f1f5f9' : innerBg }}
                 onPress={() => setIsAddCustomTaskOpen(false)}
               >
-                <Text style={{ fontSize: 13, fontFamily: FONT.semiBold, color: '#64748b' }}>Cancel</Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.semiBold, color: subTextColor }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: theme.primary }}

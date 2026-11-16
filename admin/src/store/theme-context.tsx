@@ -288,6 +288,7 @@ export interface ExecutiveThemeContextValue {
   executiveTheme: ExecutiveTheme;
   setExecutiveTheme: (theme: ExecutiveTheme) => void;
   colors: ThemeConfig;
+  toggleThemeMode: () => void;
   isDark: boolean;
   isLight: boolean;
   isMedium: boolean;
@@ -338,6 +339,11 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme] || EXECUTIVE_THEME_CONFIG.LIGHT, [executiveTheme]);
+  const toggleThemeMode = () => {
+    const next: ExecutiveTheme = colors.isDark ? 'LIGHT' : 'DARK';
+    setExecutiveTheme(next);
+  };
+
   const isDark = colors.isDark;
   const isLight = themeMode === 'LIGHT';
   const isMedium = themeMode === 'DARK'; // Alias: Parrot & Gold Dark theme
@@ -375,6 +381,7 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
       executiveTheme,
       setExecutiveTheme,
       colors,
+      toggleThemeMode,
       isDark,
       isLight,
       isMedium,

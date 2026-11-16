@@ -34,7 +34,7 @@ const tap = () => {
 
 export const GardenAdvisorDashboardView: React.FC = () => {
   const theme = RoleThemes.GARDEN_ADVISOR;
-  const { colors: tConfig } = useExecutiveTheme();
+  const { colors: tConfig, isDark, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
 
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [tasks, setTasks] = useState<AdvisorTask[]>([
@@ -139,17 +139,17 @@ export const GardenAdvisorDashboardView: React.FC = () => {
         </LinearGradient>
 
         {/* 3 Metrics Row */}
-        <View style={[styles.metricsRow, premiumShadow('#0f172a', 'sm')]}>
+        <View style={[styles.metricsRow, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
           <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Active Gardens</Text>
-            <Text style={styles.metricValue}>{dashboardData?.metrics?.activeGardens ?? 29}</Text>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Active Gardens</Text>
+            <Text style={[styles.metricValue, { color: textColor }]}>{dashboardData?.metrics?.activeGardens ?? 29}</Text>
           </View>
-          <View style={[styles.metricItem, styles.metricBorderLeft]}>
-            <Text style={styles.metricLabel}>Consultations</Text>
-            <Text style={styles.metricValue}>{dashboardData?.metrics?.consultations ?? 76}</Text>
+          <View style={[styles.metricItem, styles.metricBorderLeft, { borderLeftColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Consultations</Text>
+            <Text style={[styles.metricValue, { color: textColor }]}>{dashboardData?.metrics?.consultations ?? 76}</Text>
           </View>
-          <View style={[styles.metricItem, styles.metricBorderLeft]}>
-            <Text style={styles.metricLabel}>Follow-ups</Text>
+          <View style={[styles.metricItem, styles.metricBorderLeft, { borderLeftColor: isLight ? '#e2e8f0' : 'rgba(0, 255, 135, 0.15)' }]}>
+            <Text style={[styles.metricLabel, { color: subTextColor }]}>Follow-ups</Text>
             <Text style={[styles.metricValue, { color: theme.primary }]}>{dashboardData?.metrics?.followUps ?? 21}</Text>
           </View>
         </View>
@@ -176,9 +176,9 @@ export const GardenAdvisorDashboardView: React.FC = () => {
         </View>
 
         {/* Today's Tasks */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
+        <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Today's Advisory Tasks ({completedCount}/{tasks.length})</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Today's Advisory Tasks ({completedCount}/{tasks.length})</Text>
             <TouchableOpacity activeOpacity={0.7} onPress={() => setModalType('TASK')}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>+ New Task</Text>
             </TouchableOpacity>
@@ -189,62 +189,62 @@ export const GardenAdvisorDashboardView: React.FC = () => {
               key={task.id}
               activeOpacity={0.8}
               onPress={() => toggleTask(task.id)}
-              style={[styles.taskItem, task.completed && { opacity: 0.7 }]}
+              style={[styles.taskItem, { borderBottomColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.06)' }, task.completed && { opacity: 0.7 }]}
             >
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => toggleTask(task.id)}
                 style={[
                   styles.checkbox,
-                  task.completed ? { backgroundColor: theme.primary, borderColor: theme.primary } : { borderColor: '#cbd5e1' },
+                  task.completed ? { backgroundColor: theme.primary, borderColor: theme.primary } : { borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.4)' },
                 ]}
               >
                 {task.completed && <Ionicons name="checkmark" size={13} color="#ffffff" />}
               </TouchableOpacity>
 
-              <View style={[styles.taskIconBg, { backgroundColor: task.completed ? '#f1f5f9' : theme.primaryLight }]}>
+              <View style={[styles.taskIconBg, { backgroundColor: task.completed ? (isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.05)') : theme.primaryLight }]}>
                 <Ionicons name={task.icon as any} size={17} color={task.completed ? '#94a3b8' : task.color} />
               </View>
 
               <View style={styles.taskInfo}>
-                <Text style={[styles.taskTitle, task.completed && styles.strikethrough]}>{task.title}</Text>
-                <Text style={styles.taskSubtitle}>{task.client}</Text>
+                <Text style={[styles.taskTitle, { color: textColor }, task.completed && styles.strikethrough]}>{task.title}</Text>
+                <Text style={[styles.taskSubtitle, { color: subTextColor }]}>{task.client}</Text>
               </View>
 
-              <Text style={styles.taskTime}>{task.time}</Text>
+              <Text style={[styles.taskTime, { color: subTextColor }]}>{task.time}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Garden Health Overview */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
+        <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Garden Health Status</Text>
-            <View style={[styles.badgePill, { backgroundColor: '#f0fdf4' }]}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Garden Health Status</Text>
+            <View style={[styles.badgePill, { backgroundColor: isLight ? '#dcfce7' : '#f0fdf4' }]}>
               <Text style={{ color: '#166534', fontFamily: FONT.bold, fontSize: 11.5 }}>29 Total</Text>
             </View>
           </View>
 
           <View style={styles.healthStatsRow}>
-            <View style={[styles.healthBox, { backgroundColor: 'rgba(0, 255, 135, 0.08)', borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.25)' }]}>
-              <Text style={[styles.healthVal, { color: '#00ff87' }]}>{dashboardData?.gardenHealth?.excellent ?? 21}</Text>
-              <Text style={styles.healthSub}>Excellent</Text>
+            <View style={[styles.healthBox, { backgroundColor: isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.08)', borderWidth: 1, borderColor: isLight ? '#bbf7d0' : 'rgba(0, 255, 135, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: isLight ? '#15803d' : '#00ff87' }]}>{dashboardData?.gardenHealth?.excellent ?? 21}</Text>
+              <Text style={[styles.healthSub, { color: subTextColor }]}>Excellent</Text>
             </View>
-            <View style={[styles.healthBox, { backgroundColor: 'rgba(245, 158, 11, 0.08)', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.25)' }]}>
-              <Text style={[styles.healthVal, { color: '#fbbf24' }]}>{dashboardData?.gardenHealth?.attention ?? 6}</Text>
-              <Text style={styles.healthSub}>Attention</Text>
+            <View style={[styles.healthBox, { backgroundColor: isLight ? '#fffbeb' : 'rgba(245, 158, 11, 0.08)', borderWidth: 1, borderColor: isLight ? '#fde68a' : 'rgba(245, 158, 11, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: isLight ? '#b45309' : '#fbbf24' }]}>{dashboardData?.gardenHealth?.attention ?? 6}</Text>
+              <Text style={[styles.healthSub, { color: subTextColor }]}>Attention</Text>
             </View>
-            <View style={[styles.healthBox, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.25)' }]}>
-              <Text style={[styles.healthVal, { color: '#f87171' }]}>{dashboardData?.gardenHealth?.critical ?? 2}</Text>
-              <Text style={styles.healthSub}>Critical</Text>
+            <View style={[styles.healthBox, { backgroundColor: isLight ? '#fef2f2' : 'rgba(239, 68, 68, 0.08)', borderWidth: 1, borderColor: isLight ? '#fecaca' : 'rgba(239, 68, 68, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: isLight ? '#dc2626' : '#f87171' }]}>{dashboardData?.gardenHealth?.critical ?? 2}</Text>
+              <Text style={[styles.healthSub, { color: subTextColor }]}>Critical</Text>
             </View>
           </View>
         </View>
 
         {/* Recent Activities */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
+        <View style={[styles.sectionCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Advisory Activity</Text>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Advisory Activity</Text>
             <TouchableOpacity activeOpacity={0.7}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
             </TouchableOpacity>
@@ -255,13 +255,13 @@ export const GardenAdvisorDashboardView: React.FC = () => {
             { title: 'Pruning Schedule Added', desc: 'Green Valley Lawn', time: '20m ago' },
             { title: 'Recommendation Sent', desc: 'Palm Resort Landscape', time: '1h ago' },
           ]).map((act: any, idx: number) => (
-            <View key={idx} style={styles.activityItem}>
+            <View key={idx} style={[styles.activityItem, { borderBottomColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.04)' }]}>
               <View style={[styles.activityDot, { backgroundColor: theme.accent }]} />
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.actTitle}>{act.title}</Text>
-                <Text style={styles.actDesc}>{act.desc ?? act.detail}</Text>
+                <Text style={[styles.actTitle, { color: textColor }]}>{act.title}</Text>
+                <Text style={[styles.actDesc, { color: subTextColor }]}>{act.desc}</Text>
               </View>
-              <Text style={styles.actTime}>{act.time ?? act.timeAgo}</Text>
+              <Text style={[styles.actTime, { color: subTextColor }]}>{act.time}</Text>
             </View>
           ))}
         </View>
@@ -270,31 +270,33 @@ export const GardenAdvisorDashboardView: React.FC = () => {
       {/* Interactive Modal */}
       <Modal visible={modalType !== null} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#cbd5e1' : cardBorder }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: textColor }]}>
                 {modalType === 'TASK' ? 'Add Advisory Task' : 'Send Garden Recommendation'}
               </Text>
               <TouchableOpacity onPress={() => setModalType(null)}>
-                <Ionicons name="close-circle" size={24} color="#64748b" />
+                <Ionicons name="close-circle" size={24} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.inputLabel}>Client / Garden Name</Text>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>Client / Garden Name</Text>
             <TextInput
-              style={styles.modalInput}
+              style={[styles.modalInput, { backgroundColor: isLight ? '#f8fafc' : '#0a1a12', borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.25)', color: textColor }]}
               placeholder="e.g. Sukhdham Estate"
+              placeholderTextColor={subTextColor}
               value={clientName}
               onChangeText={setClientName}
             />
 
-            <Text style={styles.inputLabel}>
+            <Text style={[styles.inputLabel, { color: subTextColor }]}>
               {modalType === 'TASK' ? 'Task Title' : 'Recommendation Details'}
             </Text>
             <TextInput
-              style={[styles.modalInput, { height: 75, textAlignVertical: 'top' }]}
+              style={[styles.modalInput, { height: 75, textAlignVertical: 'top', backgroundColor: isLight ? '#f8fafc' : '#0a1a12', borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.25)', color: textColor }]}
               multiline
               placeholder={modalType === 'TASK' ? 'e.g. Inspect Marigold Pest Attack' : 'e.g. Apply 5kg Organic Vermicompost this week'}
+              placeholderTextColor={subTextColor}
               value={noteText}
               onChangeText={setNoteText}
             />

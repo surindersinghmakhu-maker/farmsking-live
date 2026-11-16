@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { SprayItemTemplate, SprayType } from '@/src/types/api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import {
   useMySprayItemTemplates,
   useCreateSprayItemTemplate,
@@ -37,6 +38,7 @@ function splitDose(dose: string | undefined | null): { value: string; unit: Dose
 
 /** Advisor's reusable item/dose/alternatives library — quick reference table, add/edit/delete rows. */
 export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
+  const { isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const { data: templates, isLoading } = useMySprayItemTemplates();
   const createTemplate = useCreateSprayItemTemplate();
   const updateTemplate = useUpdateSprayItemTemplate();
@@ -124,11 +126,11 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
   const isSaving = createTemplate.isPending || updateTemplate.isPending;
 
   return (
-    <View style={itemTplStyles.card}>
+    <View style={[itemTplStyles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
       <View style={itemTplStyles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={itemTplStyles.headerTitle}>Dose Items</Text>
-          <Text style={itemTplStyles.headerSub}>Quick-fill library for items, doses, and alternatives.</Text>
+          <Text style={[itemTplStyles.headerTitle, { color: textColor }]}>Dose Items</Text>
+          <Text style={[itemTplStyles.headerSub, { color: subTextColor }]}>Quick-fill library for items, doses, and alternatives.</Text>
         </View>
         <TouchableOpacity style={[itemTplStyles.addBtn, { backgroundColor: themeColor }]} activeOpacity={0.85} onPress={openNew}>
           <Ionicons name="add-circle" size={16} color="#ffffff" />
@@ -139,21 +141,21 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
       {isLoading ? (
         <ActivityIndicator color={themeColor} style={{ marginVertical: 16 }} />
       ) : (templates ?? []).length === 0 ? (
-        <Text style={itemTplStyles.emptyText}>No dose items added yet. Click "+ Add Item" to create.</Text>
+        <Text style={[itemTplStyles.emptyText, { color: subTextColor }]}>No dose items added yet. Click "+ Add Item" to create.</Text>
       ) : (
-        <View style={itemTplStyles.compactList}>
+        <View style={[itemTplStyles.compactList, { borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
           {(templates ?? []).map((tpl, idx) => (
             <View
               key={tpl.id}
-              style={[itemTplStyles.compactRow, idx === (templates ?? []).length - 1 && { borderBottomWidth: 0 }]}
+              style={[itemTplStyles.compactRow, { borderBottomColor: isLight ? '#f1f5f9' : cardBorder }, idx === (templates ?? []).length - 1 && { borderBottomWidth: 0 }]}
             >
               <View style={{ flex: 1 }}>
-                <Text style={itemTplStyles.compactItemText}>
+                <Text style={[itemTplStyles.compactItemText, { color: textColor }]}>
                   {tpl.item}
-                  {tpl.dose ? <Text style={itemTplStyles.compactDoseText}> · {tpl.dose}</Text> : null}
+                  {tpl.dose ? <Text style={[itemTplStyles.compactDoseText, { color: subTextColor }]}> · {tpl.dose}</Text> : null}
                 </Text>
                 {tpl.alternative1 || tpl.alternative2 ? (
-                  <Text style={itemTplStyles.compactAltText}>
+                  <Text style={[itemTplStyles.compactAltText, { color: subTextColor }]}>
                     Alt: {[tpl.alternative1, tpl.alternative2].filter(Boolean).join(', ')}
                   </Text>
                 ) : null}
@@ -173,45 +175,49 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
 
       <Modal visible={isModalOpen} transparent animationType="slide" onRequestClose={() => setIsModalOpen(false)}>
         <View style={itemTplStyles.modalOverlay}>
-          <View style={itemTplStyles.modalCard}>
+          <View style={[itemTplStyles.modalCard, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder }]}>
             <View style={itemTplStyles.modalHeaderRow}>
-              <Text style={itemTplStyles.modalTitle}>{editingId ? '✏️ Edit Dose Item' : '🧪 Add Dose Item'}</Text>
-              <TouchableOpacity style={itemTplStyles.closeBtn} onPress={() => setIsModalOpen(false)}>
-                <Ionicons name="close" size={20} color="#475569" />
+              <Text style={[itemTplStyles.modalTitle, { color: textColor }]}>{editingId ? '✏️ Edit Dose Item' : '🧪 Add Dose Item'}</Text>
+              <TouchableOpacity style={[itemTplStyles.closeBtn, { backgroundColor: isLight ? '#f1f5f9' : innerBg }]} onPress={() => setIsModalOpen(false)}>
+                <Ionicons name="close" size={20} color={subTextColor} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={itemTplStyles.modalLabel}>Item *</Text>
-              <TextInput style={itemTplStyles.modalInput} value={item} onChangeText={setItem} placeholder="e.g. Propiconazole 25% EC" placeholderTextColor="#94a3b8" />
+              <Text style={[itemTplStyles.modalLabel, { color: textColor }]}>Item *</Text>
+              <TextInput style={[itemTplStyles.modalInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder, color: textColor }]} value={item} onChangeText={setItem} placeholder="e.g. Propiconazole 25% EC" placeholderTextColor={subTextColor} />
 
-              <Text style={itemTplStyles.modalLabel}>Category (Spray Type)</Text>
+              <Text style={[itemTplStyles.modalLabel, { color: textColor }]}>Category (Spray Type)</Text>
               <View style={itemTplStyles.chipRow}>
                 {SPRAY_TYPE_OPTIONS.map((opt) => {
                   const isSelected = opt.key === sprayType;
                   return (
                     <TouchableOpacity
                       key={opt.key}
-                      style={[itemTplStyles.chip, isSelected && { backgroundColor: themeColor, borderColor: themeColor }]}
+                      style={[
+                        itemTplStyles.chip,
+                        { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder },
+                        isSelected && { backgroundColor: themeColor, borderColor: themeColor },
+                      ]}
                       onPress={() => {
                         tap();
                         setSprayType(isSelected ? undefined : opt.key);
                       }}
                     >
-                      <Text style={[itemTplStyles.chipText, isSelected && { color: '#fff' }]}>{opt.label}</Text>
+                      <Text style={[itemTplStyles.chipText, { color: textColor }, isSelected && { color: '#fff' }]}>{opt.label}</Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              <Text style={itemTplStyles.modalLabel}>Dose</Text>
+              <Text style={[itemTplStyles.modalLabel, { color: textColor }]}>Dose</Text>
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                 <TextInput
-                  style={[itemTplStyles.modalInput, { width: 70 }]}
+                  style={[itemTplStyles.modalInput, { width: 70, backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder, color: textColor }]}
                   value={dose}
                   onChangeText={setDose}
                   placeholder="2"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={subTextColor}
                   keyboardType="numeric"
                 />
                 <View style={[itemTplStyles.chipRow, { marginVertical: 0, flex: 1 }]}>
@@ -220,24 +226,28 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
                     return (
                       <TouchableOpacity
                         key={u}
-                        style={[itemTplStyles.chip, isSelected && { backgroundColor: themeColor, borderColor: themeColor }]}
+                        style={[
+                          itemTplStyles.chip,
+                          { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder },
+                          isSelected && { backgroundColor: themeColor, borderColor: themeColor },
+                        ]}
                         onPress={() => {
                           tap();
                           setDoseUnit(u);
                         }}
                       >
-                        <Text style={[itemTplStyles.chipText, isSelected && { color: '#fff' }]}>{u}</Text>
+                        <Text style={[itemTplStyles.chipText, { color: textColor }, isSelected && { color: '#fff' }]}>{u}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
               </View>
 
-              <Text style={itemTplStyles.modalLabel}>Alternative 1</Text>
-              <TextInput style={itemTplStyles.modalInput} value={alt1} onChangeText={setAlt1} placeholder="Optional alternative product" placeholderTextColor="#94a3b8" />
+              <Text style={[itemTplStyles.modalLabel, { color: textColor }]}>Alternative 1</Text>
+              <TextInput style={[itemTplStyles.modalInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder, color: textColor }]} value={alt1} onChangeText={setAlt1} placeholder="Optional alternative product" placeholderTextColor={subTextColor} />
 
-              <Text style={itemTplStyles.modalLabel}>Alternative 2</Text>
-              <TextInput style={itemTplStyles.modalInput} value={alt2} onChangeText={setAlt2} placeholder="Optional second alternative" placeholderTextColor="#94a3b8" />
+              <Text style={[itemTplStyles.modalLabel, { color: textColor }]}>Alternative 2</Text>
+              <TextInput style={[itemTplStyles.modalInput, { backgroundColor: isLight ? '#f8fafc' : innerBg, borderColor: isLight ? '#e2e8f0' : cardBorder, color: textColor }]} value={alt2} onChangeText={setAlt2} placeholder="Optional second alternative" placeholderTextColor={subTextColor} />
 
               {error ? <Text style={itemTplStyles.errorText}>{error}</Text> : null}
 

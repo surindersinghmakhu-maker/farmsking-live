@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useRef, ReactNode } from 'react';
 import { Role } from '../types/api';
 import { UserRole } from '@/constants/Colors';
 import { useAuth } from './auth-context';
@@ -119,6 +119,24 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const defaultInitialRole = resolvePortalDefaultRole();
 
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
+  const prevUserIdRef = useRef<string | undefined>(user?.id);
+
+  // Synchronous role sync when user transitions (e.g. login or logout)
+  useEffect(() => {
+    if (!user?.id) {
+      prevUserIdRef.current = undefined;
+      setRoleState('CUSTOMER');
+      return;
+    }
+
+    if (prevUserIdRef.current !== user.id) {
+      // User just logged in or switched account!
+      prevUserIdRef.current = user.id;
+      const defaultRole = resolvePortalDefaultRole();
+      setRoleState(defaultRole);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, loginPortal, assignedRoles]);
 
   useEffect(() => {
     let active = true;
@@ -139,12 +157,17 @@ export function RoleProvider({ children }: { children: ReactNode }) {
             : null;
 
       setRoleState((prev) => {
-        if (prev && assignedRoles.includes(prev) && (!portalAllowed || portalAllowed.includes(prev))) {
-          return prev;
-        }
+        // If savedRole is valid, respect the user's previously chosen preference
         if (savedRole && assignedRoles.includes(savedRole) && (!portalAllowed || portalAllowed.includes(savedRole))) {
           return savedRole;
         }
+
+        // If currently on an active assigned role that is NOT a stale 'CUSTOMER' (when user has FARMER/GARDENER/ADVISOR)
+        const isStaleCustomer = prev === 'CUSTOMER' && (hasFarmerRole || hasGardenerRole || hasAdvisorRole);
+        if (!isStaleCustomer && prev && assignedRoles.includes(prev) && (!portalAllowed || portalAllowed.includes(prev))) {
+          return prev;
+        }
+
         return resolvePortalDefaultRole();
       });
     };

@@ -34,4 +34,14 @@ __decorate([
     (0, class_validator_1.IsIn)(exports.ASSIGNABLE_CHECKBOX_ROLES, { each: true }),
     __metadata("design:type", Array)
 ], UpdateActiveRolesDto.prototype, "activeRoles", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['FARM', 'GARDEN']),
+    __metadata("design:type", Object)
+], UpdateActiveRolesDto.prototype, "advisorType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(exports.ASSIGNABLE_CHECKBOX_ROLES),
+    __metadata("design:type", String)
+], UpdateActiveRolesDto.prototype, "primaryRole", void 0);
 //# sourceMappingURL=update-active-roles.dto.js.map

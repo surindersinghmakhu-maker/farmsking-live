@@ -188,8 +188,17 @@ export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = [
   'TRADER' as Role,
 ];
 
-export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
-  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });
+export async function updateActiveRoles(
+  id: string,
+  activeRoles: Role[],
+  advisorType?: AdvisorType | null,
+  primaryRole?: Role,
+): Promise<AdminUser> {
+  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, {
+    activeRoles,
+    advisorType,
+    primaryRole,
+  });
   return data;
 }
 

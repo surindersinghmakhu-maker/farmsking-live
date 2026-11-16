@@ -503,7 +503,7 @@ export class AuthService {
       cleanMobile,
       cleanMobile,
       15 * 60 * 1000,
-      4,
+      6,
     );
   }
 
@@ -568,6 +568,29 @@ export class AuthService {
 
   private signPartnerUploadToken(mobile: string): string {
     return this.jwtService.sign({ scope: 'PARTNER_KYC_UPLOAD', mobile }, { expiresIn: '30m' });
+  }
+
+  async getPartnerApplySessionForUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+    const cleanMobile = this.normalizeIndianMobile(user.mobile);
+    this.partnerVerifiedMap.set(cleanMobile, Date.now() + 30 * 60 * 1000);
+    const token = this.signPartnerUploadToken(cleanMobile);
+    const activeRoles = getActiveRolesList(user);
+    const latestApp = await this.prisma.partnerApplication?.findFirst({
+      where: { mobile: cleanMobile },
+      orderBy: { createdAt: 'desc' },
+    });
+    return {
+      success: true,
+      mobile: cleanMobile,
+      partnerUploadToken: token,
+      existingUserSummary: this.buildPartnerUserSummary(user),
+      existingApplication: this.sanitizePartnerApplication(latestApp),
+      activePartnerRoles: activeRoles.filter((r) => PARTNER_PORTAL_ROLES.includes(r)),
+    };
   }
 
   async uploadPartnerKycDocument(
@@ -649,31 +672,37 @@ export class AuthService {
       this.assertPartnerEligibilityForExistingUser(existingUser, dto.requestedRole as Role);
     }
 
-    // 3. Statutory KYC & document validation
-    const cleanPan = dto.panNumber?.trim().toUpperCase();
+    // 3. Statutory KYC & document validation (auto-inherits verified KYC if existingUser already on file)
+    const cleanPan = (dto.panNumber?.trim() || existingUser?.panNumber || '').toUpperCase();
     if (!isValidPan(cleanPan)) {
       throw new BadRequestException('Please enter a valid 10-character PAN Number (required for Sec 194-O/194-H/194-J TDS compliance).');
     }
-    if (!dto.panDocUrl?.trim()) {
+    const resolvedPanDocUrl = dto.panDocUrl?.trim() || existingUser?.panDocUrl?.trim() || '';
+    if (!resolvedPanDocUrl) {
       throw new BadRequestException('PAN Card photo/document upload is required.');
     }
 
-    const cleanAadhaarLast4 = dto.aadhaarLast4?.trim();
+    const cleanAadhaarLast4 = dto.aadhaarLast4?.trim() || existingUser?.aadhaarLast4?.trim() || '';
     if (!AADHAAR_LAST4_REGEX.test(cleanAadhaarLast4)) {
       throw new BadRequestException('Please enter the exact last 4 digits of your Aadhaar card.');
     }
-    if (!dto.aadhaarDocUrl?.trim()) {
+    const resolvedAadhaarDocUrl = dto.aadhaarDocUrl?.trim() || existingUser?.aadhaarDocUrl?.trim() || '';
+    if (!resolvedAadhaarDocUrl) {
       throw new BadRequestException('Aadhaar Front document photo upload is required.');
     }
 
-    const cleanIfsc = dto.bankIfsc?.trim().toUpperCase();
-    if (!dto.bankAccountHolderName?.trim() || !dto.bankAccountNumber?.trim() || !IFSC_REGEX.test(cleanIfsc)) {
+    const cleanIfsc = (dto.bankIfsc?.trim() || existingUser?.bankIfsc?.trim() || '').toUpperCase();
+    const resolvedBankHolder = dto.bankAccountHolderName?.trim() || existingUser?.bankAccountHolderName?.trim() || existingUser?.name || '';
+    const resolvedBankNumber = dto.bankAccountNumber?.trim() || existingUser?.bankAccountNumber?.trim() || '';
+    if (!resolvedBankHolder || !resolvedBankNumber || !IFSC_REGEX.test(cleanIfsc)) {
       throw new BadRequestException('Valid Bank Account Holder Name, Account Number, and 11-character IFSC Code are required for payouts.');
     }
-    if (!dto.chequeDocUrl?.trim()) {
+    const resolvedChequeDocUrl = dto.chequeDocUrl?.trim() || existingUser?.chequeDocUrl?.trim() || '';
+    if (!resolvedChequeDocUrl) {
       throw new BadRequestException('Cancelled Cheque or Bank Passbook copy is required.');
     }
-    if (!dto.photoUrl?.trim()) {
+    const resolvedPhotoUrl = dto.photoUrl?.trim() || existingUser?.photoUrl?.trim() || '';
+    if (!resolvedPhotoUrl) {
       throw new BadRequestException('Passport-size profile photo is required.');
     }
 
@@ -760,18 +789,18 @@ export class AuthService {
       yearsExperience: typeof dto.yearsExperience === 'number' ? dto.yearsExperience : null,
       bio: dto.bio?.trim() || null,
       panNumber: cleanPan,
-      panDocUrl: dto.panDocUrl.trim(),
+      panDocUrl: resolvedPanDocUrl,
       aadhaarLast4: cleanAadhaarLast4,
-      aadhaarDocUrl: dto.aadhaarDocUrl.trim(),
-      aadhaarBackUrl: dto.aadhaarBackUrl?.trim() || null,
+      aadhaarDocUrl: resolvedAadhaarDocUrl,
+      aadhaarBackUrl: dto.aadhaarBackUrl?.trim() || existingUser?.aadhaarBackUrl?.trim() || null,
       gstin: cleanGstin,
-      gstDocUrl: dto.gstDocUrl?.trim() || null,
-      bankAccountHolderName: dto.bankAccountHolderName.trim(),
-      bankAccountNumber: dto.bankAccountNumber.trim(),
+      gstDocUrl: dto.gstDocUrl?.trim() || existingUser?.gstDocUrl?.trim() || null,
+      bankAccountHolderName: resolvedBankHolder,
+      bankAccountNumber: resolvedBankNumber,
       bankIfsc: cleanIfsc,
       upiId: dto.upiId?.trim() || null,
-      chequeDocUrl: dto.chequeDocUrl.trim(),
-      photoUrl: dto.photoUrl.trim(),
+      chequeDocUrl: resolvedChequeDocUrl,
+      photoUrl: resolvedPhotoUrl,
       storeName: dto.requestedRole === 'SELLER' || (dto.requestedRole as string) === 'NURSERY_OWNER' ? dto.storeName?.trim() || null : null,
       legalName: dto.requestedRole === 'SELLER' || (dto.requestedRole as string) === 'NURSERY_OWNER' ? dto.legalName?.trim() || null : null,
       sellerType: dto.requestedRole === 'SELLER' ? resolvedSellerType : null,

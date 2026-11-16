@@ -71,6 +71,9 @@ let AuthController = class AuthController {
     verifyPartnerSignupOtp(body, req) {
         return this.authService.verifyPartnerSignupOtp(body.mobile, body.otp, this.extractClientMeta(req));
     }
+    getPartnerApplySession(user) {
+        return this.authService.getPartnerApplySessionForUser(user.id);
+    }
     applyForPartnerRole(dto) {
         return this.authService.applyForPartnerRole(dto);
     }
@@ -223,6 +226,14 @@ __decorate([
     __metadata("design:paramtypes", [otp_dto_1.VerifyMobileOtpDto, Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyPartnerSignupOtp", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('partner-apply-session'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getPartnerApplySession", null);
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),

@@ -75,13 +75,16 @@ export class UsersController {
   @Delete('me')
   deleteMe(
     @CurrentUser() user: AuthUser,
-    @Body() body?: { otp?: string; firebaseIdToken?: string },
+    @Body() body?: { otp?: string; firebaseIdToken?: string; portal?: string },
     @Query('otp') queryOtp?: string,
+    @Query('portal') queryPortal?: string,
     @Headers('x-delete-otp') headerOtp?: string,
+    @Headers('x-portal') headerPortal?: string,
   ) {
     return this.usersService.deleteMe(user, {
       otp: body?.otp || queryOtp || headerOtp,
       firebaseIdToken: body?.firebaseIdToken,
+      portal: body?.portal || queryPortal || headerPortal,
     });
   }
 
@@ -89,13 +92,16 @@ export class UsersController {
   @Post('me/delete')
   deleteMePost(
     @CurrentUser() user: AuthUser,
-    @Body() body?: { otp?: string; firebaseIdToken?: string },
+    @Body() body?: { otp?: string; firebaseIdToken?: string; portal?: string },
     @Query('otp') queryOtp?: string,
+    @Query('portal') queryPortal?: string,
     @Headers('x-delete-otp') headerOtp?: string,
+    @Headers('x-portal') headerPortal?: string,
   ) {
     return this.usersService.deleteMe(user, {
       otp: body?.otp || queryOtp || headerOtp,
       firebaseIdToken: body?.firebaseIdToken,
+      portal: body?.portal || queryPortal || headerPortal,
     });
   }
 
@@ -461,7 +467,7 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Patch(':id/active-roles')
   updateActiveRoles(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateActiveRolesDto) {
-    return this.usersService.updateActiveRoles(user, id, dto.activeRoles);
+    return this.usersService.updateActiveRoles(user, id, dto.activeRoles, dto.advisorType, dto.primaryRole);
   }
 
   @Patch(':id/deactivate')

@@ -18,7 +18,7 @@ export declare class UserSessionService {
         warningMessage?: string;
         evictedOldest: boolean;
     };
-    isValidSession(userId: string, sessionId?: string, tokenIatSec?: number): boolean;
+    isValidSession(userId: string, sessionId?: string, tokenIatSec?: number, isStaffOrPartner?: boolean, isAdvisor?: boolean): boolean;
     touchActivity(userId: string): void;
     touchSession(userId: string, sessionId?: string): void;
     setSocketConnected(userId: string, connected: boolean): void;

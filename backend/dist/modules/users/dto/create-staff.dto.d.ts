@@ -6,4 +6,5 @@ export declare class CreateStaffDto {
     district?: string;
     state?: string;
     preferredLanguage?: string;
+    termsAccepted?: boolean;
 }

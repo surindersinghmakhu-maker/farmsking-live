@@ -20,6 +20,7 @@ import { PartnerApplyDto } from './dto/partner-apply.dto';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import {
   ADMIN_STAFF_ROLES,
+  EXPLICIT_CLIENT_ROLES,
   FARM_STAFF_ROLES,
   PARTNER_PORTAL_ROLES,
   assertRoleCombinationAllowed,
@@ -1282,8 +1283,8 @@ export class AuthService {
       }
     }
 
-    const isDev = process.env.NODE_ENV !== 'production';
-    const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const otpCode = isTestEnv ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
     this.mobileLinkOtpStore.set(user.id, {
       otp: otpCode,
       mobile: cleanMobile,
@@ -1292,23 +1293,18 @@ export class AuthService {
     });
 
     let sent = false;
-    if (!isDev) {
-      try {
-        const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-        sent = Boolean(waRes?.success);
-      } catch {
-        sent = false;
-      }
+    try {
+      const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+      sent = Boolean(waRes?.success);
+    } catch {
+      sent = false;
     }
 
     return {
       success: true,
-      message: isDev
-        ? 'Localhost test mode active. Use code: 123456'
-        : sent
+      message: sent
         ? 'OTP sent via WhatsApp successfully!'
-        : 'OTP generated (WhatsApp bot offline).',
-      devOtp: isDev ? '123456' : undefined,
+        : 'OTP generated. Please verify to complete mobile linking.',
     };
   }
 
@@ -1329,8 +1325,13 @@ export class AuthService {
       throw new BadRequestException('OTP has expired. Please request a new OTP.');
     }
 
-    const isDev = process.env.NODE_ENV !== 'production';
-    if (stored.otp !== dto.otp.trim() && (!isDev || dto.otp.trim() !== '123456')) {
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const expectedBuf = Buffer.from(stored.otp, 'utf8');
+    const providedBuf = Buffer.from(dto.otp.trim(), 'utf8');
+    const isExactMatch = expectedBuf.length === providedBuf.length && crypto.timingSafeEqual(expectedBuf, providedBuf);
+    const isMatch = isExactMatch || (isTestEnv && dto.otp.trim() === '123456');
+
+    if (!isMatch) {
       throw new BadRequestException('Invalid OTP. Please check the 6-digit code and try again.');
     }
 
@@ -2348,34 +2349,43 @@ export class AuthService {
       );
     }
 
-    const isDev = process.env.NODE_ENV !== 'production';
-    const otpCode = isDev ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+    // Strict security guard: Dedicated Admin/Staff accounts cannot use Client login OTP
+    if (user) {
+      const activeRoles = this.getActiveUserRoles(user);
+      const isStaff = activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r));
+      const hasClientRole = activeRoles.some((r) => (EXPLICIT_CLIENT_ROLES as readonly Role[]).includes(r));
+      if (isStaff && !hasClientRole) {
+        throw new ForbiddenException(
+          'This mobile number belongs to a FarmsKing Admin/Staff account. Please sign in via the official Admin Portal at admin.farmsking.in.',
+        );
+      }
+    }
+
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const otpCode = isTestEnv ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
     this.loginOtpStore.set(cleanMobile, {
       otp: otpCode,
       expiresAt: Date.now() + 10 * 60 * 1000,
     });
 
     let waSent = false;
-    if (!isDev) {
-      try {
-        const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-        waSent = Boolean(waResult?.success);
-      } catch {
-        waSent = false;
-      }
+    try {
+      const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+      waSent = Boolean(waResult?.success);
+    } catch {
+      waSent = false;
     }
+
+    const allowDevOtp = isTestEnv || (process.env.ALLOW_DEV_OTP_RESPONSE === 'true' && process.env.NODE_ENV === 'development');
 
     return {
       success: true,
       isNewUser: !user && !existingWorker,
       waSent,
-      message: isDev
-        ? 'Localhost test mode active. Use code: 123456'
-        : waSent
+      message: waSent
         ? 'OTP sent via WhatsApp!'
         : 'Verification code generated. Please verify to continue.',
-      devOtp: isDev ? '123456' : undefined,
-      universalTestOtp: isDev ? '123456' : undefined,
+      devOtp: allowDevOtp ? otpCode : undefined,
     };
   }
 
@@ -2389,11 +2399,9 @@ export class AuthService {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
 
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isTestEnv = process.env.NODE_ENV === 'test';
     const stored = this.loginOtpStore.get(cleanMobile);
-    const isTestCode = isDev && otp.trim() === '123456';
-    const isStoredMatch = Boolean(stored && stored.otp === otp.trim());
-    const isBypassMatch = isTestCode || isStoredMatch;
+    const isTestCode = isTestEnv && otp.trim() === '123456';
 
     if (!stored && !isTestCode) {
       throw new BadRequestException('OTP expired or not requested. Please request a new OTP.');
@@ -2404,7 +2412,12 @@ export class AuthService {
       throw new BadRequestException('OTP has expired. Please request a new OTP.');
     }
 
-    if (!isBypassMatch) {
+    const expected = stored?.otp || (isTestCode ? '123456' : '');
+    const expectedBuf = Buffer.from(expected, 'utf8');
+    const providedBuf = Buffer.from(otp.trim(), 'utf8');
+    const isMatch = expectedBuf.length === providedBuf.length && crypto.timingSafeEqual(expectedBuf, providedBuf);
+
+    if (!isMatch) {
       throw new BadRequestException('Invalid OTP. Please check the 6-digit code.');
     }
 
@@ -2468,6 +2481,7 @@ export class AuthService {
     name?: string;
     role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
     portal?: 'CLIENT' | 'PARTNER';
+    termsAccepted?: boolean;
   }) {
     if (dto.portal === 'PARTNER') {
       throw new ForbiddenException(
@@ -2526,6 +2540,7 @@ export class AuthService {
         roles: assignedRoles,
         passwordHash,
         isPhoneVerified: true,
+        termsAcceptedAt: dto.termsAccepted ? new Date() : undefined,
       },
     });
 

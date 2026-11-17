@@ -41,4 +41,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateSupervisorDto.prototype, "permissions", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateSupervisorDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=create-supervisor.dto.js.map

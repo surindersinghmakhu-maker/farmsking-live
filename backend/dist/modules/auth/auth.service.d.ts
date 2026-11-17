@@ -231,12 +231,12 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -264,12 +264,12 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;
@@ -296,7 +296,6 @@ export declare class AuthService {
     sendMobileLinkOtp(user: AuthUser, mobile: string): Promise<{
         success: boolean;
         message: string;
-        devOtp: string | undefined;
     }>;
     verifyMobileLinkOtp(user: AuthUser, dto: {
         mobile: string;
@@ -406,7 +405,6 @@ export declare class AuthService {
         waSent: boolean;
         message: string;
         devOtp: string | undefined;
-        universalTestOtp: string | undefined;
     }>;
     verifyLoginOtp(mobile: string, otp: string, portal?: 'CLIENT' | 'PARTNER', meta?: {
         ipAddress?: string;
@@ -438,6 +436,7 @@ export declare class AuthService {
         name?: string;
         role: 'CUSTOMER' | 'FARMER' | 'GARDENER';
         portal?: 'CLIENT' | 'PARTNER';
+        termsAccepted?: boolean;
     }): Promise<{
         accessToken: string;
         user: {
@@ -495,12 +494,12 @@ export declare class AuthService {
         message: string;
         email: string | null;
         user: {
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             name: string;
             email: string | null;
             isEmailVerified: boolean;

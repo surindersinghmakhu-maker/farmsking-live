@@ -45,4 +45,5 @@ export declare class AdminCreateUserDto {
     sellerType?: SellerType;
     gstin?: string;
     employerFarmerKingIdOrMobile?: string;
+    termsAccepted?: boolean;
 }

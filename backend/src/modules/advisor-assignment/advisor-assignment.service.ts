@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
-import { AdvisorAssignmentStatus, AdvisorType, FarmerSubscriptionPlan, NotificationType, Role } from '@prisma/client';
+import { AdvisorAssignmentStatus, AdvisorType, CropStatus, FarmerSubscriptionPlan, NotificationType, Role, SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -253,6 +253,15 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         isSeniorDoctor: true,
         seniorDoctorId: true,
         doctorConsultationFee: true,
+        feePerConsultation: true,
+        feePerCropSeason: true,
+        feeVipMonthly: true,
+        monthlyIncludedCrops: true,
+        feeAdditionalCropMonthly: true,
+        specializedCategories: true,
+        specializedCrops: true,
+        qualification: true,
+        profileTitle: true,
         _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: AdvisorAssignmentStatus.ACTIVE } } } },
       },
       orderBy: { createdAt: 'asc' },
@@ -268,6 +277,157 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         ...rStats,
       };
     });
+  }
+
+  /**
+   * Farmer/Gardener: browse matching specialist advisors for a specific crop.
+   * Filters strictly by crop category and crop name specialization, and checks the farmer's active monthly quota.
+   */
+  async listAvailableAdvisorsForCrop(user: AuthUser, cropCycleId: string) {
+    const cropCycle = await this.prisma.cropCycle.findFirst({
+      where: { id: cropCycleId, deletedAt: null },
+      include: {
+        plot: { include: { farm: true } },
+      },
+    });
+    if (!cropCycle) {
+      throw new NotFoundException('Crop cycle not found.');
+    }
+
+    const requiredType = this.roleToAdvisorType(user);
+
+    // 1. Fetch all active advisors of matching type
+    const advisors = await this.prisma.user.findMany({
+      where: {
+        AND: [
+          { OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }] },
+          {
+            OR: [
+              { advisorType: requiredType },
+              ...(requiredType === AdvisorType.FARM ? [{ advisorType: null }] : []),
+            ],
+          },
+        ],
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        kingId: true,
+        name: true,
+        photoUrl: true,
+        specialization: true,
+        bio: true,
+        yearsExperience: true,
+        village: true,
+        district: true,
+        state: true,
+        isSeniorDoctor: true,
+        seniorDoctorId: true,
+        doctorConsultationFee: true,
+        feePerConsultation: true,
+        feePerCropSeason: true,
+        feeVipMonthly: true,
+        monthlyIncludedCrops: true,
+        feeAdditionalCropMonthly: true,
+        specializedCategories: true,
+        specializedCrops: true,
+        qualification: true,
+        profileTitle: true,
+        _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: AdvisorAssignmentStatus.ACTIVE } } } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const ratingMap = await this.getDoctorRatingStats(advisors.map((a) => a.id));
+
+    // 2. Filter advisors based on crop category and crop name matching
+    const matchingAdvisors = advisors.filter((advisor) => {
+      const hasCategories = Array.isArray(advisor.specializedCategories) && advisor.specializedCategories.length > 0;
+      const hasCrops = Array.isArray(advisor.specializedCrops) && advisor.specializedCrops.length > 0;
+
+      // If doctor hasn't set any filters, they are general agronomy advisors (eligible for all)
+      if (!hasCategories && !hasCrops) return true;
+
+      // Check category match
+      let categoryMatch = false;
+      if (hasCategories && cropCycle.category) {
+        categoryMatch = advisor.specializedCategories.includes(cropCycle.category);
+      }
+
+      // Check specific crop name match (case-insensitive substring)
+      let cropNameMatch = false;
+      if (hasCrops && cropCycle.cropName) {
+        const cLower = cropCycle.cropName.toLowerCase();
+        cropNameMatch = advisor.specializedCrops.some((sc) => sc.toLowerCase().includes(cLower) || cLower.includes(sc.toLowerCase()));
+      }
+
+      if (hasCategories && hasCrops) {
+        return categoryMatch || cropNameMatch;
+      }
+      if (hasCategories) return categoryMatch;
+      if (hasCrops) return cropNameMatch;
+      return true;
+    });
+
+    // 3. For each matching advisor, check farmer's active subscription and quota
+    const results = await Promise.all(
+      matchingAdvisors.map(async ({ _count, ...advisor }) => {
+        const rStats = ratingMap.get(advisor.id) ?? { rating: null, ratingCount: 0, ratingLabel: 'No rating till now' };
+
+        // Check if farmer has an active monthly subscription with this advisor
+        const activeSub = await this.prisma.advisorSubscription.findFirst({
+          where: {
+            farmerId: user.id,
+            status: SubscriptionPlanStatus.ACTIVE,
+            endDate: { gt: new Date() },
+            advisorAssignment: { advisorId: advisor.id },
+          },
+          select: { id: true, endDate: true },
+        });
+
+        let quotaStatus: 'INCLUDED_FREE' | 'ADDITIONAL_CROP_FEE' | 'NOT_SUBSCRIBED' = 'NOT_SUBSCRIBED';
+        let freeSlotsRemaining = 0;
+        let activeCropsUnderAdvisor = 0;
+        const maxIncluded = advisor.monthlyIncludedCrops ?? 3;
+
+        if (activeSub) {
+          activeCropsUnderAdvisor = await this.prisma.cropCycle.count({
+            where: {
+              assignedAdvisorId: advisor.id,
+              deletedAt: null,
+              status: { notIn: [CropStatus.COMPLETED, CropStatus.FAILED] },
+            },
+          });
+          freeSlotsRemaining = Math.max(0, maxIncluded - activeCropsUnderAdvisor);
+          quotaStatus = freeSlotsRemaining > 0 ? 'INCLUDED_FREE' : 'ADDITIONAL_CROP_FEE';
+        }
+
+        return {
+          ...advisor,
+          activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
+          ...rStats,
+          quota: {
+            hasActiveMonthlySubscription: !!activeSub,
+            activeSubscriptionId: activeSub?.id ?? null,
+            subscriptionEndDate: activeSub?.endDate ?? null,
+            quotaStatus,
+            monthlyIncludedCrops: maxIncluded,
+            activeCropsUnderAdvisor,
+            freeSlotsRemaining,
+            additionalCropFee: Number(advisor.feeAdditionalCropMonthly ?? 300),
+          },
+        };
+      }),
+    );
+
+    // Sort: advisors where farmer has free slots first, then highest rating
+    results.sort((a, b) => {
+      if (a.quota.quotaStatus === 'INCLUDED_FREE' && b.quota.quotaStatus !== 'INCLUDED_FREE') return -1;
+      if (b.quota.quotaStatus === 'INCLUDED_FREE' && a.quota.quotaStatus !== 'INCLUDED_FREE') return 1;
+      return (b.rating ?? 0) - (a.rating ?? 0);
+    });
+
+    return results;
   }
 
   /** Confirms this advisor currently has an ACTIVE, non-expired assignment to this farmer — used by schedule/problem modules. */

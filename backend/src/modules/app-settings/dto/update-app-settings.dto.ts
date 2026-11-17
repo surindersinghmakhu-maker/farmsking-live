@@ -185,6 +185,12 @@ export class UpdateAppSettingsDto {
   gardenExpertPlatformFeePercent?: number;
 
   @IsOptional()
+  advisorPlatformFeePercent?: number;
+
+  @IsOptional()
+  advisorAdminFeePercent?: number;
+
+  @IsOptional()
   gardenerProCardPrice?: number;
 
   @IsOptional()

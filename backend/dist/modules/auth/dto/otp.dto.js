@@ -27,6 +27,12 @@ __decorate([
     (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
     __metadata("design:type", String)
 ], SendLoginOtpDto.prototype, "portal", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Terms of service accepted' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], SendLoginOtpDto.prototype, "termsAccepted", void 0);
 class VerifyLoginOtpDto {
 }
 exports.VerifyLoginOtpDto = VerifyLoginOtpDto;
@@ -48,6 +54,12 @@ __decorate([
     (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
     __metadata("design:type", String)
 ], VerifyLoginOtpDto.prototype, "portal", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Terms of service accepted' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], VerifyLoginOtpDto.prototype, "termsAccepted", void 0);
 class SendWhatsAppOtpDto {
 }
 exports.SendWhatsAppOtpDto = SendWhatsAppOtpDto;
@@ -154,6 +166,12 @@ __decorate([
     (0, class_validator_1.IsIn)(['CLIENT', 'PARTNER']),
     __metadata("design:type", String)
 ], CompleteOtpRegistrationDto.prototype, "portal", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Terms of service accepted' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CompleteOtpRegistrationDto.prototype, "termsAccepted", void 0);
 class SendMobileOtpDto {
 }
 exports.SendMobileOtpDto = SendMobileOtpDto;

@@ -26,8 +26,8 @@ export declare class CallRequestsController {
         };
         id: string;
         createdAt: Date;
-        farmerId: string;
         status: import(".prisma/client").$Enums.CallRequestStatus;
+        farmerId: string;
         resolvedAt: Date | null;
         advisorId: string;
         resolvedComment: string | null;
@@ -48,8 +48,8 @@ export declare class CallRequestsController {
     } & {
         id: string;
         createdAt: Date;
-        farmerId: string;
         status: import(".prisma/client").$Enums.CallRequestStatus;
+        farmerId: string;
         resolvedAt: Date | null;
         advisorId: string;
         resolvedComment: string | null;
@@ -70,8 +70,8 @@ export declare class CallRequestsController {
     } & {
         id: string;
         createdAt: Date;
-        farmerId: string;
         status: import(".prisma/client").$Enums.CallRequestStatus;
+        farmerId: string;
         resolvedAt: Date | null;
         advisorId: string;
         resolvedComment: string | null;
@@ -92,8 +92,8 @@ export declare class CallRequestsController {
     } & {
         id: string;
         createdAt: Date;
-        farmerId: string;
         status: import(".prisma/client").$Enums.CallRequestStatus;
+        farmerId: string;
         resolvedAt: Date | null;
         advisorId: string;
         resolvedComment: string | null;

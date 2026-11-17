@@ -55,4 +55,9 @@ __decorate([
     (0, class_validator_1.IsIn)(['FARM', 'GARDEN']),
     __metadata("design:type", String)
 ], CreateAssistantDoctorDto.prototype, "advisorType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateAssistantDoctorDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=create-assistant-doctor.dto.js.map

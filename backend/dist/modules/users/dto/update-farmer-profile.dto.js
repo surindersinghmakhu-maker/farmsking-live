@@ -96,4 +96,9 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], UpdateFarmerProfileDto.prototype, "whatsappGroupEnabled", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateFarmerProfileDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=update-farmer-profile.dto.js.map

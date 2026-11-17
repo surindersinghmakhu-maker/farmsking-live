@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, MinLength, IsBoolean } from 'class-validator';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
 export class CreateStaffDto {
@@ -28,4 +28,8 @@ export class CreateStaffDto {
   @IsOptional()
   @IsIn(['en', 'hi', 'pa'])
   preferredLanguage?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

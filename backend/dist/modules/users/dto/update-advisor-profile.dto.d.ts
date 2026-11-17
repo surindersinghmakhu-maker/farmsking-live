@@ -1,4 +1,4 @@
-import { AdvisorType } from '@prisma/client';
+import { AdvisorType, CropCategory } from '@prisma/client';
 export declare class UpdateAdvisorProfileDto {
     photoUrl?: string;
     pincode?: string;
@@ -25,4 +25,11 @@ export declare class UpdateAdvisorProfileDto {
     panDocUrl?: string;
     gstin?: string;
     termsAccepted?: boolean;
+    feePerConsultation?: number;
+    feePerCropSeason?: number;
+    feeVipMonthly?: number;
+    specializedCrops?: string[];
+    monthlyIncludedCrops?: number;
+    feeAdditionalCropMonthly?: number;
+    specializedCategories?: CropCategory[];
 }

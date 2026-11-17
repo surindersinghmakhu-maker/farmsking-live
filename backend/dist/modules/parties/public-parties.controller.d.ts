@@ -45,8 +45,8 @@ export declare class PublicPartiesController {
                 name: string;
                 createdAt: Date;
                 deletedAt: Date | null;
-                address: string | null;
                 ownerId: string;
+                address: string | null;
                 kingId?: undefined;
             } | {
                 id: string;

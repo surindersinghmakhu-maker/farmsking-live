@@ -388,7 +388,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "firebaseMobileLink", null);
 __decorate([
-    (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 15, ttl: 60_000 } }),
     (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -408,7 +408,7 @@ __decorate([
         status: common_1.HttpStatus.BAD_REQUEST,
         description: 'Validation failed on mobile number or password length.',
     }),
-    (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 15, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('register-trader'),
     __param(0, (0, common_1.Body)()),
@@ -417,7 +417,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "registerTrader", null);
 __decorate([
-    (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 10, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),

@@ -898,27 +898,7 @@ export class FarmerPlansService implements OnModuleInit {
       }
     }
 
-    if (!targetAdvisorId) {
-      try {
-        const availableAdvisors = await this.prisma.user.findMany({
-          where: {
-            OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
-            deletedAt: null,
-          },
-          select: {
-            id: true,
-            _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: AdvisorAssignmentStatus.ACTIVE } } } },
-          },
-          orderBy: { createdAt: 'asc' },
-        });
-        if (availableAdvisors.length > 0) {
-          availableAdvisors.sort((a, b) => a._count.advisorAssignmentsAsAdvisor - b._count.advisorAssignmentsAsAdvisor);
-          targetAdvisorId = availableAdvisors[0].id;
-        }
-      } catch {
-        // Ignore load error
-      }
-    }
+    // Decoupled: Do not auto-assign strangers to software subscribers
 
     if (targetAdvisorId) {
       try {
@@ -940,10 +920,7 @@ export class FarmerPlansService implements OnModuleInit {
    * becomes active and crop-sharing unlocks. A rejected request lets the farmer choose again.
    */
   async chooseAdvisor(user: AuthUser, advisorId: string) {
-    const effective = await this.getEffectivePlan(user.id);
-    if (effective.plan === FarmerSubscriptionPlan.FREE) {
-      throw new BadRequestException('Upgrade to the PRO plan to choose your advisor.');
-    }
+    // Decoupled Crop Care: Any farmer can consult an advisor
 
     const advisor = await this.prisma.user.findFirst({
       where: {

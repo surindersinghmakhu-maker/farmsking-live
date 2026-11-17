@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, MinLength, IsBoolean } from 'class-validator';
 import { AdvisorType } from '@prisma/client';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
@@ -32,4 +32,8 @@ export class CreateAdvisorDto {
 
   @IsIn(['FARM', 'GARDEN'])
   advisorType: AdvisorType;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

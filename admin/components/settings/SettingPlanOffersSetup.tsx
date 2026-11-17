@@ -113,6 +113,10 @@ export default function SettingPlanOffersSetup() {
         allowDirectPlatformSales: Boolean(appForm.allowDirectPlatformSales ?? false),
         gardenExpertPlatformFeePercent: Number(appForm.gardenExpertPlatformFeePercent ?? 20.0),
 
+        // Crop Doctor & Farm Advisor Financial Split
+        advisorPlatformFeePercent: Number(appForm.advisorPlatformFeePercent ?? 10.0),
+        advisorAdminFeePercent: Number(appForm.advisorAdminFeePercent ?? 10.0),
+
         // Farmer Referral Rewards
         newUserSignupBonusAmount: Number(appForm.newUserSignupBonusAmount ?? 10),
         referralSignupBonusAmount: Number(appForm.referralSignupBonusAmount ?? 10),
@@ -524,6 +528,28 @@ export default function SettingPlanOffersSetup() {
                   onChangeText={(t) => updateAppField('gardenerVipCardPrice', parseFloat(t) || 0)}
                 />
                 <Text style={styles.fieldHint}>VIP membership with priority doctor appointments</Text>
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Crop Doctor Platform Fee (%)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  keyboardType="numeric"
+                  value={String(appForm.advisorPlatformFeePercent ?? 10.0)}
+                  onChangeText={(t) => updateAppField('advisorPlatformFeePercent', parseFloat(t) || 0)}
+                />
+                <Text style={styles.fieldHint}>Cloud servers, video consultation & NDVI satellite technology fee</Text>
+              </View>
+
+              <View style={styles.fieldItem}>
+                <Text style={[styles.label, { color: textColor }]}>Crop Doctor Admin Fee (%)</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                  keyboardType="numeric"
+                  value={String(appForm.advisorAdminFeePercent ?? 10.0)}
+                  onChangeText={(t) => updateAppField('advisorAdminFeePercent', parseFloat(t) || 0)}
+                />
+                <Text style={styles.fieldHint}>Agronomist quality control, supervision & dispute handling fee</Text>
               </View>
             </View>
           </View>

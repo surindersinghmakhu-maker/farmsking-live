@@ -249,6 +249,14 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "advisorPlatformFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], UpdateAppSettingsDto.prototype, "advisorAdminFeePercent", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
 ], UpdateAppSettingsDto.prototype, "gardenerProCardPrice", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),

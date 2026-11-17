@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsBoolean,
   Matches,
   Max,
   MaxLength,
@@ -246,5 +247,10 @@ export class AdminCreateUserDto {
   @IsOptional()
   @IsString()
   employerFarmerKingIdOrMobile?: string;
+
+  @ApiPropertyOptional({ description: 'Terms of service accepted' })
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }
 

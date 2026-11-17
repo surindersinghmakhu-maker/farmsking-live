@@ -687,27 +687,6 @@ let FarmerPlansService = class FarmerPlansService {
                 targetAdvisorId = coupon.assignedAdvisorId;
             }
         }
-        if (!targetAdvisorId) {
-            try {
-                const availableAdvisors = await this.prisma.user.findMany({
-                    where: {
-                        OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }],
-                        deletedAt: null,
-                    },
-                    select: {
-                        id: true,
-                        _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: client_1.AdvisorAssignmentStatus.ACTIVE } } } },
-                    },
-                    orderBy: { createdAt: 'asc' },
-                });
-                if (availableAdvisors.length > 0) {
-                    availableAdvisors.sort((a, b) => a._count.advisorAssignmentsAsAdvisor - b._count.advisorAssignmentsAsAdvisor);
-                    targetAdvisorId = availableAdvisors[0].id;
-                }
-            }
-            catch {
-            }
-        }
         if (targetAdvisorId) {
             try {
                 await this.advisorAssignmentService.requestSpecificAdvisor(farmerId, targetAdvisorId);
@@ -719,10 +698,6 @@ let FarmerPlansService = class FarmerPlansService {
         return false;
     }
     async chooseAdvisor(user, advisorId) {
-        const effective = await this.getEffectivePlan(user.id);
-        if (effective.plan === client_1.FarmerSubscriptionPlan.FREE) {
-            throw new common_1.BadRequestException('Upgrade to the PRO plan to choose your advisor.');
-        }
         const advisor = await this.prisma.user.findFirst({
             where: {
                 id: advisorId,

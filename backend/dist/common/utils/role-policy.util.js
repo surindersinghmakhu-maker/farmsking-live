@@ -133,8 +133,6 @@ function pickBestPrimaryRole(roles) {
     return unique[0] ?? client_1.Role.CUSTOMER;
 }
 function evaluatePortalEligibility(user, portal) {
-    if (!portal)
-        return { allowed: true };
     if (!user) {
         if (portal === 'PARTNER') {
             return {
@@ -145,7 +143,15 @@ function evaluatePortalEligibility(user, portal) {
         return { allowed: true };
     }
     const activeRoles = getActiveRolesList(user);
-    if (portal === 'CLIENT') {
+    if (!portal || portal === 'CLIENT') {
+        const isStaff = activeRoles.some((r) => exports.ADMIN_STAFF_ROLES.includes(r));
+        const hasExplicitClientRole = activeRoles.some((r) => exports.EXPLICIT_CLIENT_ROLES.includes(r));
+        if (isStaff && !hasExplicitClientRole) {
+            return {
+                allowed: false,
+                reason: 'This account is a dedicated FarmsKing Admin/Staff account. Please sign in via the official Admin Portal at admin.farmsking.in.',
+            };
+        }
         const clientRolesList = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.SUPERVISOR, client_1.Role.LABOUR, client_1.Role.TRADER];
         const hasClientRole = activeRoles.some((r) => clientRolesList.includes(r));
         if (!hasClientRole) {

@@ -51,6 +51,13 @@ model User {
   /// Advisor-only display profile — required (alongside the payout fields below) before an Advisor's wallet can be withdrawn from.
   qualification           String?
   profileTitle            String?
+  feePerConsultation      Decimal?     @db.Decimal(10, 2)
+  feePerCropSeason        Decimal?     @db.Decimal(10, 2)
+  feeVipMonthly           Decimal?     @db.Decimal(10, 2)
+  monthlyIncludedCrops    Int          @default(3)
+  feeAdditionalCropMonthly Decimal?    @db.Decimal(10, 2)
+  specializedCategories   CropCategory[] @default([])
+  specializedCrops        String[]     @default([])
   /// Business Partner / Advisor payout profile — all required before their wallet can be withdrawn from (see WithdrawalsService.create).
   upiId                   String?
   billPrintingAddress     String?
@@ -146,6 +153,7 @@ model User {
   inventoryTransactionsRecorded      InventoryTransaction[]
   irrigationRecordsRecorded          IrrigationRecord[]
   advisorAssignmentsAsAdvisor        AdvisorAssignment[]        @relation("AdvisorAssignmentAdvisor")
+  cropCycleAssignments               CropCycle[]                @relation("CropCycleAssignedAdvisor")
   advisorAssignmentsAsFarmer         AdvisorAssignment[]        @relation("AdvisorAssignmentFarmer")
   advisorAssignmentsCreated          AdvisorAssignment[]        @relation("AdvisorAssignmentAssignedBy")
   callRequestsAsFarmer               CallRequest[]              @relation("CallRequestsFarmer")
@@ -353,6 +361,11 @@ model CropCycle {
   harvestType          CropHarvestType         @default(CONTINUOUS)
   notes                String?
   assignedSchedule     String?                 @db.Text
+  assignedAdvisorId    String?
+  assignedAdvisor      User?                   @relation("CropCycleAssignedAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  hiringModel          HiringModelType?        @default(PER_CROP)
+  subscriptionId       String?
+  subscription         AdvisorSubscription?    @relation("CropCycleSubscription", fields: [subscriptionId], references: [id], onDelete: SetNull)
   advisorReviewStatus  CropAdvisorReviewStatus @default(NONE)
   submittedToAdvisorAt DateTime?
   advisorAcceptedAt    DateTime?
@@ -374,6 +387,8 @@ model CropCycle {
   activitySchedules     CropActivitySchedule[]
 
   @@index([plotId])
+  @@index([assignedAdvisorId])
+  @@index([subscriptionId])
   @@index([cropName])
   @@index([status])
   @@index([plotId, status, deletedAt])

@@ -55,6 +55,8 @@ export declare class AppSettingsController {
         freeTrialDays: number;
         freeTrialPlan: string;
         gardenExpertPlatformFeePercent: number;
+        advisorPlatformFeePercent: number;
+        advisorAdminFeePercent: number;
         gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
         gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
         allowDirectPlatformSales: boolean;
@@ -105,6 +107,8 @@ export declare class AppSettingsController {
         freeTrialDays: number;
         freeTrialPlan: string;
         gardenExpertPlatformFeePercent: number;
+        advisorPlatformFeePercent: number;
+        advisorAdminFeePercent: number;
         gardenerProCardPrice: import("@prisma/client/runtime/library").Decimal;
         gardenerVipCardPrice: import("@prisma/client/runtime/library").Decimal;
         allowDirectPlatformSales: boolean;

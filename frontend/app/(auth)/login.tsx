@@ -34,6 +34,7 @@ import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { PartnerSignupModal } from '@/src/components/PartnerSignupModal';
+import { LegalPoliciesModal, PolicyType } from '@/src/components/LegalPoliciesModal';
 import type { PartnerApplicationDto, PartnerUserSummary } from '@/src/api/auth.api';
 
 if (Platform.OS !== 'web') {
@@ -268,6 +269,8 @@ export default function LoginScreen() {
   const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
   const [newUserName, setNewUserName] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
   const [modalError, setModalError] = useState<string | null>(null);
   const [isCompletingReg, setIsCompletingReg] = useState(false);
 
@@ -1687,12 +1690,7 @@ export default function LoginScreen() {
             </View>
 
             {/* Mandatory Legal & DPDPA 2023 Consent */}
-            <TouchableOpacity
-              onPress={() => {
-                setTermsAccepted((v) => !v);
-                if (modalError) setModalError(null);
-              }}
-              activeOpacity={0.85}
+            <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'flex-start',
@@ -1705,37 +1703,91 @@ export default function LoginScreen() {
                 marginBottom: 14,
               }}
             >
-              <Ionicons
-                name={termsAccepted ? 'checkbox' : 'square-outline'}
-                size={19}
-                color={termsAccepted ? '#10b981' : '#64748b'}
-                style={{ marginTop: 1 }}
-              />
-              <Text style={{ flex: 1, fontSize: 11.5, lineHeight: 16, color: '#cbd5e1' }}>
-                I agree to{' '}
+              <TouchableOpacity
+                onPress={() => {
+                  setTermsAccepted((v) => !v);
+                  if (modalError) setModalError(null);
+                }}
+                activeOpacity={0.7}
+                style={{ marginTop: 1, cursor: 'pointer' as any }}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: termsAccepted }}
+              >
+                <Ionicons
+                  name={termsAccepted ? 'checkbox' : 'square-outline'}
+                  size={19}
+                  color={termsAccepted ? '#10b981' : '#64748b'}
+                />
+              </TouchableOpacity>
+              <Text style={{ flex: 1, fontSize: 11.5, lineHeight: 17, color: '#cbd5e1' }}>
                 <Text
-                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
-                  onPress={() => router.push('/terms' as any)}
+                  onPress={() => {
+                    setTermsAccepted((v) => !v);
+                    if (modalError) setModalError(null);
+                  }}
+                  style={{ cursor: 'pointer' as any }}
+                >
+                  I agree to{' '}
+                </Text>
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline', cursor: 'pointer' as any }}
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    setLegalPolicyType('TERMS_OF_SERVICE');
+                    setShowLegalModal(true);
+                  }}
                 >
                   Terms of Service
                 </Text>
-                ,{' '}
                 <Text
-                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
-                  onPress={() => router.push('/privacy-policy' as any)}
+                  onPress={() => {
+                    setTermsAccepted((v) => !v);
+                    if (modalError) setModalError(null);
+                  }}
+                  style={{ cursor: 'pointer' as any }}
+                >
+                  ,{' '}
+                </Text>
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline', cursor: 'pointer' as any }}
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    setLegalPolicyType('PRIVACY_POLICY');
+                    setShowLegalModal(true);
+                  }}
                 >
                   Privacy Policy
                 </Text>
-                {' '}&amp;{' '}
                 <Text
-                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline' }}
-                  onPress={() => router.push('/refund-policy' as any)}
+                  onPress={() => {
+                    setTermsAccepted((v) => !v);
+                    if (modalError) setModalError(null);
+                  }}
+                  style={{ cursor: 'pointer' as any }}
+                >
+                  {' '}&amp;{' '}
+                </Text>
+                <Text
+                  style={{ color: '#34d399', fontWeight: '700', textDecorationLine: 'underline', cursor: 'pointer' as any }}
+                  onPress={(e) => {
+                    e?.stopPropagation?.();
+                    setLegalPolicyType('REFUND_POLICY');
+                    setShowLegalModal(true);
+                  }}
                 >
                   Refund Policy
                 </Text>
-                {' '}of FARMSKING TECHNOLOGIES PRIVATE LIMITED.
+                <Text
+                  onPress={() => {
+                    setTermsAccepted((v) => !v);
+                    if (modalError) setModalError(null);
+                  }}
+                  style={{ cursor: 'pointer' as any }}
+                >
+                  {' '}of FARMSKING TECHNOLOGIES PRIVATE LIMITED.
+                </Text>
               </Text>
-            </TouchableOpacity>
+            </View>
 
             {/* Confirm & Launch Dashboard */}
             <TouchableOpacity
@@ -1771,6 +1823,12 @@ export default function LoginScreen() {
         initialPartnerUploadToken={partnerUploadToken}
         initialExistingUserSummary={partnerExistingUser}
         initialExistingApplication={partnerExistingApp}
+      />
+
+      <LegalPoliciesModal
+        visible={showLegalModal}
+        initialType={legalPolicyType}
+        onClose={() => setShowLegalModal(false)}
       />
     </KeyboardAvoidingView>
   );

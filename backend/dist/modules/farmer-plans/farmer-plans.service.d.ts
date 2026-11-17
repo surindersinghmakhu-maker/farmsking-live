@@ -479,18 +479,18 @@ export declare class FarmerPlansService implements OnModuleInit {
             name: string;
             specialization: string | null;
         };
-        assignedFarmer: {
-            id: string;
-            kingId: string | null;
-            mobile: string;
-            name: string;
-        } | null;
         assignedAdvisor: {
             id: string;
             kingId: string | null;
             mobile: string;
             name: string;
             specialization: string | null;
+        } | null;
+        assignedFarmer: {
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            name: string;
         } | null;
         usedByFarmer: {
             id: string;
@@ -559,12 +559,12 @@ export declare class FarmerPlansService implements OnModuleInit {
             id: string;
             name: string;
         };
-        assignedFarmer: {
+        assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
-        assignedAdvisor: {
+        assignedFarmer: {
             id: string;
             mobile: string;
             name: string;

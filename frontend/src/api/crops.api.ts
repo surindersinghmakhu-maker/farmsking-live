@@ -84,8 +84,11 @@ export async function deleteCrop(id: string): Promise<void> {
 }
 
 /** Farmer: send a crop to their assigned advisor for review. */
-export async function submitCropToAdvisor(id: string): Promise<CropCycle> {
-  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/submit-to-advisor`);
+export async function submitCropToAdvisor(
+  id: string,
+  payload?: { advisorId?: string; hiringModel?: string; notes?: string },
+): Promise<CropCycle> {
+  const { data } = await apiClient.post<CropCycle>(`/crops/${id}/submit-to-advisor`, payload);
   return data;
 }
 

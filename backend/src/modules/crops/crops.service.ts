@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { AdvisorAssignmentStatus, CropAdvisorReviewStatus, CropCycleStage, CropStatus, FarmerSubscriptionPlan, NotificationType, Role } from '@prisma/client';
+import { AdvisorAssignmentStatus, CropAdvisorReviewStatus, CropCycleStage, CropStatus, FarmerSubscriptionPlan, HiringModelType, NotificationType, Role, SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlotsService } from '../plots/plots.service';
 import {
@@ -16,6 +16,7 @@ import { generateUniqueCropId } from '../../common/utils/crop-id.util';
 import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
+import { SubmitCropToAdvisorDto } from './dto/submit-crop-to-advisor.dto';
 
 const DATE_FIELDS = ['sowingDate', 'transplantDate', 'expectedHarvestDate', 'actualHarvestDate'] as const;
 
@@ -163,7 +164,26 @@ export class CropsService {
           deletedAt: null,
           plotId: { in: plotIds },
         },
-        include: { plot: true },
+        include: {
+          plot: true,
+          assignedAdvisor: {
+            select: {
+              id: true,
+              kingId: true,
+              name: true,
+              photoUrl: true,
+              mobile: true,
+              specialization: true,
+              qualification: true,
+              profileTitle: true,
+              feePerConsultation: true,
+              feePerCropSeason: true,
+              feeVipMonthly: true,
+              monthlyIncludedCrops: true,
+              feeAdditionalCropMonthly: true,
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -307,26 +327,57 @@ export class CropsService {
     return this.prisma.cropCycle.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 
-  /** Farmer sends a crop to their assigned advisor for review. */
-  async submitToAdvisor(user: AuthUser, id: string) {
-    await this.findOneOrThrow(user, id);
+  /** Farmer sends a crop to a certified crop doctor / advisor for review and adoption. */
+  async submitToAdvisor(user: AuthUser, id: string, dto?: SubmitCropToAdvisorDto) {
+    const cropCycle = await this.findOneOrThrow(user, id);
 
-    const assignment = await this.prisma.advisorAssignment.findFirst({
-      where: { farmerId: user.id, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
-    });
-    if (!assignment) {
-      throw new BadRequestException('You need an assigned advisor before submitting a crop for review.');
+    let targetAdvisorId = dto?.advisorId;
+    if (!targetAdvisorId) {
+      const assignment = await this.prisma.advisorAssignment.findFirst({
+        where: { farmerId: user.id, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+      });
+      if (assignment) {
+        targetAdvisorId = assignment.advisorId;
+      }
     }
 
-    // ── Check Advisor capacity limit (Advisor Lite: 5 crops max, Advisor Plus: 10 crops max) ──
+    if (!targetAdvisorId) {
+      throw new BadRequestException('Please select a certified Crop Doctor to adopt and supervise this crop.');
+    }
+
+    // Verify advisor exists and is active
+    const advisor = await this.prisma.user.findFirst({
+      where: { id: targetAdvisorId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        specializedCategories: true,
+        specializedCrops: true,
+      },
+    });
+    if (!advisor) {
+      throw new NotFoundException('Selected Crop Doctor / Advisor was not found.');
+    }
+
+    // Agronomic specialization matching check
+    if (advisor.specializedCategories && advisor.specializedCategories.length > 0 && cropCycle.category) {
+      if (!advisor.specializedCategories.includes(cropCycle.category)) {
+        throw new BadRequestException(
+          `Doctor ${advisor.name} specializes in other crop categories and does not accept ${cropCycle.category} crops.`,
+        );
+      }
+    }
+
+    // Check Advisor capacity limit (Advisor Lite: 5 crops max, Advisor Plus: 10 crops max)
     const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
-      where: { advisorId: assignment.advisorId },
+      where: { advisorId: targetAdvisorId },
     });
     const advisorPlan = advisorPlanRec?.plan ?? 'LITE';
     const advisorMaxCrops = advisorPlan === 'PLUS' ? 10 : 5;
 
     const currentAdvisorActiveCrops = await this.prisma.cropCycle.count({
       where: {
+        assignedAdvisorId: targetAdvisorId,
         deletedAt: null,
         status: { notIn: [CropStatus.COMPLETED, CropStatus.FAILED] },
         advisorReviewStatus: { in: [CropAdvisorReviewStatus.PENDING, CropAdvisorReviewStatus.ACCEPTED] },
@@ -335,13 +386,27 @@ export class CropsService {
 
     if (currentAdvisorActiveCrops >= advisorMaxCrops) {
       throw new ForbiddenException(
-        `ਇਸ ਐਡਵਾਈਜ਼ਰ ਦੇ ਪਲਾਨ (${advisorPlan === 'PLUS' ? 'Advisor Plus' : 'Advisor Lite'}) ਅਨੁਸਾਰ ਇੱਕ ਸਮੇਂ ਸਿਰਫ਼ ${advisorMaxCrops} ਫਸਲਾਂ ਹੀ ਰਿਵਿਊ ਅਧੀਨ ਰੱਖੀਆਂ ਜਾ ਸਕਦੀਆਂ ਹਨ।`,
+        `Doctor ${advisor.name} has reached their current active capacity limit of ${advisorMaxCrops} crops. Please choose another doctor or try again later.`,
       );
     }
+
+    // Check active monthly subscription for quota linking
+    const activeSub = await this.prisma.advisorSubscription.findFirst({
+      where: {
+        farmerId: user.id,
+        status: SubscriptionPlanStatus.ACTIVE,
+        endDate: { gt: new Date() },
+        advisorAssignment: { advisorId: targetAdvisorId },
+      },
+      select: { id: true },
+    });
 
     const updated = await this.prisma.cropCycle.update({
       where: { id },
       data: {
+        assignedAdvisorId: targetAdvisorId,
+        hiringModel: dto?.hiringModel ?? HiringModelType.PER_CROP,
+        subscriptionId: activeSub ? activeSub.id : undefined,
         advisorReviewStatus: CropAdvisorReviewStatus.PENDING,
         submittedToAdvisorAt: new Date(),
         advisorAcceptedAt: null,
@@ -349,10 +414,10 @@ export class CropsService {
     });
 
     await this.notificationsService.create(
-      assignment.advisorId,
+      targetAdvisorId,
       NotificationType.SYSTEM,
-      'New crop submitted for review',
-      `${user.name} sent "${updated.cropName}" for your review. Accept it to add it to your roster.`,
+      'New crop adoption request',
+      `${user.name} sent "${updated.cropName}" for your professional supervision. Accept to add it to your roster.`,
       { cropCycleId: updated.id, farmerId: user.id },
     );
 
@@ -368,7 +433,12 @@ export class CropsService {
 
     return this.prisma.cropCycle.update({
       where: { id },
-      data: { advisorReviewStatus: CropAdvisorReviewStatus.NONE, submittedToAdvisorAt: null, advisorAcceptedAt: null },
+      data: {
+        advisorReviewStatus: CropAdvisorReviewStatus.NONE,
+        assignedAdvisorId: null,
+        submittedToAdvisorAt: null,
+        advisorAcceptedAt: null,
+      },
     });
   }
 
@@ -385,13 +455,52 @@ export class CropsService {
       throw new BadRequestException('This crop has not been submitted for review.');
     }
 
-    await this.assertAdvanceProfileComplete(cropCycle.plot.farm.ownerId);
-    await this.advisorAssignmentService.assertAdvisorAssignedToFarmer(user.id, cropCycle.plot.farm.ownerId);
+    const farmerId = cropCycle.plot.farm.ownerId;
+    if (cropCycle.assignedAdvisorId && cropCycle.assignedAdvisorId !== user.id) {
+      throw new ForbiddenException('This crop adoption request was submitted to another advisor.');
+    }
 
-    return this.prisma.cropCycle.update({
-      where: { id },
-      data: { advisorReviewStatus: CropAdvisorReviewStatus.ACCEPTED, advisorAcceptedAt: new Date() },
+    await this.assertAdvanceProfileComplete(farmerId);
+
+    // Ensure AdvisorAssignment record exists for general relations (chat, VOIP call, etc.)
+    const existingAssignment = await this.prisma.advisorAssignment.findFirst({
+      where: { advisorId: user.id, farmerId, deletedAt: null },
     });
+    if (!existingAssignment) {
+      await this.prisma.advisorAssignment.create({
+        data: {
+          advisorId: user.id,
+          farmerId,
+          status: AdvisorAssignmentStatus.ACTIVE,
+          startDate: new Date(),
+          notes: `Auto-linked on crop adoption for "${cropCycle.cropName}"`,
+        },
+      });
+    } else if (existingAssignment.status !== AdvisorAssignmentStatus.ACTIVE) {
+      await this.prisma.advisorAssignment.update({
+        where: { id: existingAssignment.id },
+        data: { status: AdvisorAssignmentStatus.ACTIVE, startDate: new Date() },
+      });
+    }
+
+    const updated = await this.prisma.cropCycle.update({
+      where: { id },
+      data: {
+        assignedAdvisorId: user.id,
+        advisorReviewStatus: CropAdvisorReviewStatus.ACCEPTED,
+        advisorAcceptedAt: new Date(),
+      },
+    });
+
+    await this.notificationsService.create(
+      farmerId,
+      NotificationType.SYSTEM,
+      'Crop adopted by Doctor',
+      `Doctor ${user.name} accepted "${cropCycle.cropName}". Your personalized advisory schedule will be published shortly.`,
+      { cropCycleId: updated.id, advisorId: user.id },
+    );
+
+    return updated;
   }
 
   /** Sets/updates the day-wise advisory schedule text for an accepted crop — the assigned advisor writes the plan; the owning farmer can mark individual tasks done/skipped on it. */
@@ -495,38 +604,49 @@ export class CropsService {
     if (cropCycle.advisorReviewStatus !== CropAdvisorReviewStatus.PENDING) {
       throw new BadRequestException('This crop has not been submitted for review.');
     }
-    await this.advisorAssignmentService.assertAdvisorAssignedToFarmer(user.id, cropCycle.plot.farm.ownerId);
+
+    const farmerId = cropCycle.plot.farm.ownerId;
+    if (cropCycle.assignedAdvisorId && cropCycle.assignedAdvisorId !== user.id) {
+      throw new ForbiddenException('This crop adoption request was submitted to another advisor.');
+    }
 
     const updated = await this.prisma.cropCycle.update({
       where: { id },
-      data: { advisorReviewStatus: CropAdvisorReviewStatus.NONE, submittedToAdvisorAt: null, advisorAcceptedAt: null },
+      data: {
+        advisorReviewStatus: CropAdvisorReviewStatus.NONE,
+        assignedAdvisorId: null,
+        submittedToAdvisorAt: null,
+        advisorAcceptedAt: null,
+      },
     });
 
     await this.notificationsService.create(
-      cropCycle.plot.farm.ownerId,
+      farmerId,
       NotificationType.SYSTEM,
-      'Crop submission rejected',
-      `Your advisor did not accept "${cropCycle.cropName}" for review${reason ? `: ${reason}.` : '.'} Please review and resubmit.`,
+      'Crop submission declined',
+      `Doctor ${user.name} was unable to accept "${cropCycle.cropName}" for review${reason ? `: ${reason}.` : '.'} Please review and select another specialist.`,
       { cropCycleId: id, advisorId: user.id },
     );
 
     return updated;
   }
 
-  /** Advisor's list of crops pending their review, across all currently-assigned farmers. */
+  /** Advisor's list of crops pending their review, across all currently-assigned farmers and direct crop adoptions. */
   async listPendingForAdvisor(user: AuthUser) {
     const assignments = await this.prisma.advisorAssignment.findMany({
       where: { advisorId: user.id, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
       select: { farmerId: true },
     });
     const farmerIds = assignments.map((a) => a.farmerId);
-    if (farmerIds.length === 0) return [];
 
     return this.prisma.cropCycle.findMany({
       where: {
         deletedAt: null,
         advisorReviewStatus: CropAdvisorReviewStatus.PENDING,
-        plot: { farm: { ownerId: { in: farmerIds } } },
+        OR: [
+          { assignedAdvisorId: user.id },
+          ...(farmerIds.length > 0 ? [{ plot: { farm: { ownerId: { in: farmerIds } } }, assignedAdvisorId: null }] : []),
+        ],
       },
       include: {
         plot: {
@@ -557,20 +677,22 @@ export class CropsService {
     });
   }
 
-  /** Advisor's list of crops they've already accepted, across all currently-assigned farmers. */
+  /** Advisor's list of crops they've already accepted, across all currently-assigned farmers and direct crop adoptions. */
   async listAcceptedForAdvisor(user: AuthUser) {
     const assignments = await this.prisma.advisorAssignment.findMany({
       where: { advisorId: user.id, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
       select: { farmerId: true },
     });
     const farmerIds = assignments.map((a) => a.farmerId);
-    if (farmerIds.length === 0) return [];
 
     return this.prisma.cropCycle.findMany({
       where: {
         deletedAt: null,
         advisorReviewStatus: CropAdvisorReviewStatus.ACCEPTED,
-        plot: { farm: { ownerId: { in: farmerIds } } },
+        OR: [
+          { assignedAdvisorId: user.id },
+          ...(farmerIds.length > 0 ? [{ plot: { farm: { ownerId: { in: farmerIds } } }, assignedAdvisorId: null }] : []),
+        ],
       },
       include: {
         plot: {

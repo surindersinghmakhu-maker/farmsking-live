@@ -43,6 +43,14 @@ export function useAvailableAdvisors(enabled: boolean = true) {
   });
 }
 
+export function useAvailableAdvisorsForCrop(cropCycleId?: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['advisor-assignments', 'available-for-crop', cropCycleId],
+    queryFn: () => advisorAssignmentsApi.listAvailableAdvisorsForCrop(cropCycleId!),
+    enabled: enabled && !!cropCycleId,
+  });
+}
+
 /** Advisor nudges a formerly-assigned (now inactive) farmer to renew their membership. */
 export function useSendRenewalReminder() {
   return useMutation({

@@ -253,7 +253,7 @@ export class AuthController {
     return this.authService.firebaseMobileLink(user, dto);
   }
 
-  @Throttle({ default: { limit: 1000, ttl: 60_000 } })
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -280,14 +280,14 @@ export class AuthController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Validation failed on mobile number or password length.',
   })
-  @Throttle({ default: { limit: 1000, ttl: 60_000 } })
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('register-trader')
   registerTrader(@Body() dto: RegisterTraderDto) {
     return this.authService.registerTrader(dto);
   }
 
-  @Throttle({ default: { limit: 1000, ttl: 60_000 } })
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() dto: LoginDto) {

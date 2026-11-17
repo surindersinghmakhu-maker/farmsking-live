@@ -136,7 +136,26 @@ let CropsService = class CropsService {
                     deletedAt: null,
                     plotId: { in: plotIds },
                 },
-                include: { plot: true },
+                include: {
+                    plot: true,
+                    assignedAdvisor: {
+                        select: {
+                            id: true,
+                            kingId: true,
+                            name: true,
+                            photoUrl: true,
+                            mobile: true,
+                            specialization: true,
+                            qualification: true,
+                            profileTitle: true,
+                            feePerConsultation: true,
+                            feePerCropSeason: true,
+                            feeVipMonthly: true,
+                            monthlyIncludedCrops: true,
+                            feeAdditionalCropMonthly: true,
+                        },
+                    },
+                },
                 orderBy: { createdAt: 'desc' },
             });
             if (user.role === client_1.Role.FARMER) {
@@ -256,38 +275,74 @@ let CropsService = class CropsService {
         await this.findOneOrThrow(user, id);
         return this.prisma.cropCycle.update({ where: { id }, data: { deletedAt: new Date() } });
     }
-    async submitToAdvisor(user, id) {
-        await this.findOneOrThrow(user, id);
-        const assignment = await this.prisma.advisorAssignment.findFirst({
-            where: { farmerId: user.id, status: client_1.AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+    async submitToAdvisor(user, id, dto) {
+        const cropCycle = await this.findOneOrThrow(user, id);
+        let targetAdvisorId = dto?.advisorId;
+        if (!targetAdvisorId) {
+            const assignment = await this.prisma.advisorAssignment.findFirst({
+                where: { farmerId: user.id, status: client_1.AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+            });
+            if (assignment) {
+                targetAdvisorId = assignment.advisorId;
+            }
+        }
+        if (!targetAdvisorId) {
+            throw new common_1.BadRequestException('Please select a certified Crop Doctor to adopt and supervise this crop.');
+        }
+        const advisor = await this.prisma.user.findFirst({
+            where: { id: targetAdvisorId, deletedAt: null },
+            select: {
+                id: true,
+                name: true,
+                specializedCategories: true,
+                specializedCrops: true,
+            },
         });
-        if (!assignment) {
-            throw new common_1.BadRequestException('You need an assigned advisor before submitting a crop for review.');
+        if (!advisor) {
+            throw new common_1.NotFoundException('Selected Crop Doctor / Advisor was not found.');
+        }
+        if (advisor.specializedCategories && advisor.specializedCategories.length > 0 && cropCycle.category) {
+            if (!advisor.specializedCategories.includes(cropCycle.category)) {
+                throw new common_1.BadRequestException(`Doctor ${advisor.name} specializes in other crop categories and does not accept ${cropCycle.category} crops.`);
+            }
         }
         const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
-            where: { advisorId: assignment.advisorId },
+            where: { advisorId: targetAdvisorId },
         });
         const advisorPlan = advisorPlanRec?.plan ?? 'LITE';
         const advisorMaxCrops = advisorPlan === 'PLUS' ? 10 : 5;
         const currentAdvisorActiveCrops = await this.prisma.cropCycle.count({
             where: {
+                assignedAdvisorId: targetAdvisorId,
                 deletedAt: null,
                 status: { notIn: [client_1.CropStatus.COMPLETED, client_1.CropStatus.FAILED] },
                 advisorReviewStatus: { in: [client_1.CropAdvisorReviewStatus.PENDING, client_1.CropAdvisorReviewStatus.ACCEPTED] },
             },
         });
         if (currentAdvisorActiveCrops >= advisorMaxCrops) {
-            throw new common_1.ForbiddenException(`ਇਸ ਐਡਵਾਈਜ਼ਰ ਦੇ ਪਲਾਨ (${advisorPlan === 'PLUS' ? 'Advisor Plus' : 'Advisor Lite'}) ਅਨੁਸਾਰ ਇੱਕ ਸਮੇਂ ਸਿਰਫ਼ ${advisorMaxCrops} ਫਸਲਾਂ ਹੀ ਰਿਵਿਊ ਅਧੀਨ ਰੱਖੀਆਂ ਜਾ ਸਕਦੀਆਂ ਹਨ।`);
+            throw new common_1.ForbiddenException(`Doctor ${advisor.name} has reached their current active capacity limit of ${advisorMaxCrops} crops. Please choose another doctor or try again later.`);
         }
+        const activeSub = await this.prisma.advisorSubscription.findFirst({
+            where: {
+                farmerId: user.id,
+                status: client_1.SubscriptionPlanStatus.ACTIVE,
+                endDate: { gt: new Date() },
+                advisorAssignment: { advisorId: targetAdvisorId },
+            },
+            select: { id: true },
+        });
         const updated = await this.prisma.cropCycle.update({
             where: { id },
             data: {
+                assignedAdvisorId: targetAdvisorId,
+                hiringModel: dto?.hiringModel ?? client_1.HiringModelType.PER_CROP,
+                subscriptionId: activeSub ? activeSub.id : undefined,
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.PENDING,
                 submittedToAdvisorAt: new Date(),
                 advisorAcceptedAt: null,
             },
         });
-        await this.notificationsService.create(assignment.advisorId, client_1.NotificationType.SYSTEM, 'New crop submitted for review', `${user.name} sent "${updated.cropName}" for your review. Accept it to add it to your roster.`, { cropCycleId: updated.id, farmerId: user.id });
+        await this.notificationsService.create(targetAdvisorId, client_1.NotificationType.SYSTEM, 'New crop adoption request', `${user.name} sent "${updated.cropName}" for your professional supervision. Accept to add it to your roster.`, { cropCycleId: updated.id, farmerId: user.id });
         return updated;
     }
     async cancelSubmission(user, id) {
@@ -297,7 +352,12 @@ let CropsService = class CropsService {
         }
         return this.prisma.cropCycle.update({
             where: { id },
-            data: { advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE, submittedToAdvisorAt: null, advisorAcceptedAt: null },
+            data: {
+                advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE,
+                assignedAdvisorId: null,
+                submittedToAdvisorAt: null,
+                advisorAcceptedAt: null,
+            },
         });
     }
     async acceptByAdvisor(user, id) {
@@ -311,12 +371,41 @@ let CropsService = class CropsService {
         if (cropCycle.advisorReviewStatus !== client_1.CropAdvisorReviewStatus.PENDING) {
             throw new common_1.BadRequestException('This crop has not been submitted for review.');
         }
-        await this.assertAdvanceProfileComplete(cropCycle.plot.farm.ownerId);
-        await this.advisorAssignmentService.assertAdvisorAssignedToFarmer(user.id, cropCycle.plot.farm.ownerId);
-        return this.prisma.cropCycle.update({
-            where: { id },
-            data: { advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED, advisorAcceptedAt: new Date() },
+        const farmerId = cropCycle.plot.farm.ownerId;
+        if (cropCycle.assignedAdvisorId && cropCycle.assignedAdvisorId !== user.id) {
+            throw new common_1.ForbiddenException('This crop adoption request was submitted to another advisor.');
+        }
+        await this.assertAdvanceProfileComplete(farmerId);
+        const existingAssignment = await this.prisma.advisorAssignment.findFirst({
+            where: { advisorId: user.id, farmerId, deletedAt: null },
         });
+        if (!existingAssignment) {
+            await this.prisma.advisorAssignment.create({
+                data: {
+                    advisorId: user.id,
+                    farmerId,
+                    status: client_1.AdvisorAssignmentStatus.ACTIVE,
+                    startDate: new Date(),
+                    notes: `Auto-linked on crop adoption for "${cropCycle.cropName}"`,
+                },
+            });
+        }
+        else if (existingAssignment.status !== client_1.AdvisorAssignmentStatus.ACTIVE) {
+            await this.prisma.advisorAssignment.update({
+                where: { id: existingAssignment.id },
+                data: { status: client_1.AdvisorAssignmentStatus.ACTIVE, startDate: new Date() },
+            });
+        }
+        const updated = await this.prisma.cropCycle.update({
+            where: { id },
+            data: {
+                assignedAdvisorId: user.id,
+                advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
+                advisorAcceptedAt: new Date(),
+            },
+        });
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, 'Crop adopted by Doctor', `Doctor ${user.name} accepted "${cropCycle.cropName}". Your personalized advisory schedule will be published shortly.`, { cropCycleId: updated.id, advisorId: user.id });
+        return updated;
     }
     async updateAssignedSchedule(user, id, assignedSchedule) {
         const cropCycle = await this.prisma.cropCycle.findFirst({
@@ -396,12 +485,20 @@ let CropsService = class CropsService {
         if (cropCycle.advisorReviewStatus !== client_1.CropAdvisorReviewStatus.PENDING) {
             throw new common_1.BadRequestException('This crop has not been submitted for review.');
         }
-        await this.advisorAssignmentService.assertAdvisorAssignedToFarmer(user.id, cropCycle.plot.farm.ownerId);
+        const farmerId = cropCycle.plot.farm.ownerId;
+        if (cropCycle.assignedAdvisorId && cropCycle.assignedAdvisorId !== user.id) {
+            throw new common_1.ForbiddenException('This crop adoption request was submitted to another advisor.');
+        }
         const updated = await this.prisma.cropCycle.update({
             where: { id },
-            data: { advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE, submittedToAdvisorAt: null, advisorAcceptedAt: null },
+            data: {
+                advisorReviewStatus: client_1.CropAdvisorReviewStatus.NONE,
+                assignedAdvisorId: null,
+                submittedToAdvisorAt: null,
+                advisorAcceptedAt: null,
+            },
         });
-        await this.notificationsService.create(cropCycle.plot.farm.ownerId, client_1.NotificationType.SYSTEM, 'Crop submission rejected', `Your advisor did not accept "${cropCycle.cropName}" for review${reason ? `: ${reason}.` : '.'} Please review and resubmit.`, { cropCycleId: id, advisorId: user.id });
+        await this.notificationsService.create(farmerId, client_1.NotificationType.SYSTEM, 'Crop submission declined', `Doctor ${user.name} was unable to accept "${cropCycle.cropName}" for review${reason ? `: ${reason}.` : '.'} Please review and select another specialist.`, { cropCycleId: id, advisorId: user.id });
         return updated;
     }
     async listPendingForAdvisor(user) {
@@ -410,13 +507,14 @@ let CropsService = class CropsService {
             select: { farmerId: true },
         });
         const farmerIds = assignments.map((a) => a.farmerId);
-        if (farmerIds.length === 0)
-            return [];
         return this.prisma.cropCycle.findMany({
             where: {
                 deletedAt: null,
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.PENDING,
-                plot: { farm: { ownerId: { in: farmerIds } } },
+                OR: [
+                    { assignedAdvisorId: user.id },
+                    ...(farmerIds.length > 0 ? [{ plot: { farm: { ownerId: { in: farmerIds } } }, assignedAdvisorId: null }] : []),
+                ],
             },
             include: {
                 plot: {
@@ -452,13 +550,14 @@ let CropsService = class CropsService {
             select: { farmerId: true },
         });
         const farmerIds = assignments.map((a) => a.farmerId);
-        if (farmerIds.length === 0)
-            return [];
         return this.prisma.cropCycle.findMany({
             where: {
                 deletedAt: null,
                 advisorReviewStatus: client_1.CropAdvisorReviewStatus.ACCEPTED,
-                plot: { farm: { ownerId: { in: farmerIds } } },
+                OR: [
+                    { assignedAdvisorId: user.id },
+                    ...(farmerIds.length > 0 ? [{ plot: { farm: { ownerId: { in: farmerIds } } }, assignedAdvisorId: null }] : []),
+                ],
             },
             include: {
                 plot: {

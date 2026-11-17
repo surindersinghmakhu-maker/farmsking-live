@@ -31,6 +31,7 @@ import { RenewModal } from '@/src/components/RenewPlanCard';
 import { useFarmerPlan, useChooseAdvisor } from '@/src/hooks/useFarmerPlan';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
+import { CropDoctorAdoptionModal } from '@/src/components/CropDoctorAdoptionModal';
 import { resolveMediaUrl } from '@/src/api/client';
 import { AvailableAdvisor, CropProblem, SprayScheduleItem } from '@/src/types/api';
 import { useChatUnreadCount } from '@/src/hooks/useChat';
@@ -68,6 +69,8 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
   const [isReviewSectionExpanded, setIsReviewSectionExpanded] = useState(false);
+  const [adoptionTargetCrop, setAdoptionTargetCrop] = useState<any | null>(null);
+  const [isSecondOpinionMode, setIsSecondOpinionMode] = useState<boolean>(false);
 
   const handleCancelHireRequest = async () => {
     tap();
@@ -376,28 +379,62 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
           {headerComponent}
           <View style={styles.body}>
             <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(0, 255, 135, 0.15)' : '#dcfce7' }]}>
-              <Ionicons name="school-outline" size={40} color={isDark ? '#00ff87' : '#15803d'} />
+              <Ionicons name="shield-checkmark" size={40} color={isDark ? '#00ff87' : '#15803d'} />
             </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>{t('proPlanRequired', 'PRO Software Plan Required')}</Text>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>Pan-India Crop Doctor Hub</Text>
             <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
-              {t('proPlanStep1', 'Step 1: Activate the PRO Software Plan to unlock Expert Advisor hiring and personalized consultations.')}
+              Adopt certified agronomists and plant pathology doctors for your crops. Select from pay-per-prescription SOS diagnosis, 120-day crop season care, or monthly retainers.
             </Text>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-              <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={handleHire}>
-                <LinearGradient colors={isDark ? ['#00ff87', '#059669'] : ['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
-                  <Ionicons name="person-add" size={18} color="#fff" />
-                  <Text style={styles.hireBtnText}>{t('hireDoctor', 'Hire Doctor/Advisor')}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%', maxWidth: 500 }}>
               <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsCropCareModalOpen(true)}>
-                <View style={[styles.hireBtn, { backgroundColor: '#16a34a' }]}>
-                  <Ionicons name="qr-code-outline" size={18} color="#fff" />
-                  <Text style={styles.hireBtnText}>{t('getPlanCoupon', 'Get Plan Coupon')}</Text>
-                </View>
+                <LinearGradient colors={isDark ? ['#00ff87', '#059669'] : ['#16a34a', '#15803d']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
+                  <Ionicons name="medical" size={18} color="#fff" />
+                  <Text style={styles.hireBtnText}>View Doctor Packages</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* If farmer has crops, display their crops with 1-click Adopt Doctor button */}
+          {(myCrops ?? []).length > 0 && (
+            <View style={{ paddingHorizontal: SPACING.lg, marginTop: 20 }}>
+              <Text style={[styles.progressTitle, { color: colors.text, marginBottom: 12 }]}>Your Registered Crops ({myCrops?.length ?? 0})</Text>
+              <View style={{ gap: 10 }}>
+                {(myCrops ?? []).map((crop) => (
+                  <View key={crop.id} style={[styles.cropShareItem, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderColor: colors.cardBorder }]}>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.cropSharePlot, { color: colors.text }]}>{crop.plot?.name || 'Plot'}</Text>
+                        <Text style={[styles.cropShareName, { color: colors.primary }]}>🌾 {crop.cropName}</Text>
+                        {crop.category ? (
+                          <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.12)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                            <Text style={{ fontSize: 10, fontWeight: '700', color: '#38bdf8' }}>{crop.category}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.cropShareMeta, { color: colors.textMuted }]}>
+                        {crop.variety ? `Variety: ${crop.variety} · ` : ''}Stage: {crop.stage}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[styles.shareBtn, { backgroundColor: colors.primary }]}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        setAdoptionTargetCrop(crop);
+                        setIsSecondOpinionMode(false);
+                      }}
+                    >
+                      <Ionicons name="person-add-outline" size={14} color="#ffffff" />
+                      <Text style={styles.shareBtnText}>Adopt Doctor</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </ScrollView>
       )}
 
@@ -408,9 +445,9 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
             <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(0, 255, 135, 0.15)' : '#dcfce7' }]}>
               <Ionicons name="people-outline" size={40} color={isDark ? '#00ff87' : '#15803d'} />
             </View>
-            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>{t('chooseAdvisor', 'Choose Your Advisor')}</Text>
+            <Text style={[styles.title, { color: isDark ? '#ffffff' : '#0f172a' }]}>{t('chooseAdvisor', 'Choose Your Crop Doctor')}</Text>
             <Text style={[styles.description, { color: isDark ? colors.textMuted : '#334155' }]}>
-              {t('chooseAdvisor', 'Your Pro plan comes with an advisor — choose one from below.')}
+              {t('chooseAdvisor', 'Certified Pan-India Crop Care Specialists — Choose an agronomist below to consult.')}
             </Text>
           </View>
 
@@ -953,6 +990,50 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                           accentColor={colors.primary}
                           onViewDetail={(item) => openSprayItemDetail(item, `${crop.plot.name} (${crop.cropName})`)}
                         />
+
+                        {/* Doctor Badge & Second Opinion Option */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0', flexWrap: 'wrap', gap: 8 }}>
+                          {crop.assignedAdvisor ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Ionicons name="shield-checkmark" size={14} color="#00ff87" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#00ff87' : '#059669' }}>
+                                Supervised by Dr. {crop.assignedAdvisor.name} {crop.assignedAdvisor.specialization ? `(${crop.assignedAdvisor.specialization})` : ''}
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Ionicons name="shield-checkmark" size={14} color="#00ff87" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#00ff87' : '#059669' }}>
+                                Supervised by {advisorName}
+                              </Text>
+                            </View>
+                          )}
+
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 5,
+                              backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#f0f9ff',
+                              paddingHorizontal: 10,
+                              paddingVertical: 5,
+                              borderRadius: RADIUS.md,
+                              borderWidth: 1,
+                              borderColor: isDark ? 'rgba(56, 189, 248, 0.3)' : '#bae6fd',
+                            }}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                              tap();
+                              setAdoptionTargetCrop(crop);
+                              setIsSecondOpinionMode(true);
+                            }}
+                          >
+                            <Ionicons name="search" size={13} color={isDark ? '#38bdf8' : '#0284c7'} />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0284c7' }}>
+                              Get Second Opinion
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                     );
                   })
@@ -1021,28 +1102,49 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
                             </View>
 
                             {advStatus === 'NONE' && (
-                              <TouchableOpacity
-                                style={[styles.shareBtn, { backgroundColor: colors.primary }]}
-                                activeOpacity={0.8}
-                                disabled={submittingCropId === crop.id}
-                                onPress={() => handleRequestAdvisorReview(crop.id, label)}
-                              >
-                                {submittingCropId === crop.id ? (
-                                  <ActivityIndicator color="#ffffff" size="small" />
-                                ) : (
-                                  <>
-                                    <Ionicons name="person-add-outline" size={14} color="#ffffff" />
-                                    <Text style={styles.shareBtnText}>Request Advisor</Text>
-                                  </>
-                                )}
-                              </TouchableOpacity>
+                              <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+                                <TouchableOpacity
+                                  style={[styles.shareBtn, { backgroundColor: colors.primary }]}
+                                  activeOpacity={0.8}
+                                  onPress={() => {
+                                    tap();
+                                    setAdoptionTargetCrop(crop);
+                                    setIsSecondOpinionMode(false);
+                                  }}
+                                >
+                                  <Ionicons name="person-add-outline" size={14} color="#ffffff" />
+                                  <Text style={styles.shareBtnText}>Adopt Doctor</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                  style={[
+                                    styles.shareBtn,
+                                    {
+                                      backgroundColor: isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe',
+                                      borderWidth: 1,
+                                      borderColor: isDark ? 'rgba(56, 189, 248, 0.4)' : '#38bdf8',
+                                    },
+                                  ]}
+                                  activeOpacity={0.8}
+                                  onPress={() => {
+                                    tap();
+                                    setAdoptionTargetCrop(crop);
+                                    setIsSecondOpinionMode(true);
+                                  }}
+                                >
+                                  <Ionicons name="medkit-outline" size={14} color={isDark ? '#38bdf8' : '#0284c7'} />
+                                  <Text style={[styles.shareBtnText, { color: isDark ? '#38bdf8' : '#0284c7' }]}>Instant SOS</Text>
+                                </TouchableOpacity>
+                              </View>
                             )}
 
                             {advStatus === 'PENDING' && (
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                 <View style={styles.pendingBadge}>
                                   <Ionicons name="time-outline" size={13} color="#d97706" />
-                                  <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
+                                  <Text style={styles.pendingBadgeText}>
+                                    ⏳ Awaiting {crop.assignedAdvisor?.name ? `Dr. ${crop.assignedAdvisor.name}` : 'Doctor'}
+                                  </Text>
                                 </View>
                                 <TouchableOpacity
                                   style={styles.cancelPendingBtn}
@@ -1524,6 +1626,15 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
 
       <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} tiers={['PRO']} />
       <CropCarePlanModal visible={isCropCareModalOpen} onClose={() => setIsCropCareModalOpen(false)} />
+      <CropDoctorAdoptionModal
+        visible={!!adoptionTargetCrop}
+        crop={adoptionTargetCrop}
+        isSecondOpinion={isSecondOpinionMode}
+        onClose={() => {
+          setAdoptionTargetCrop(null);
+          setIsSecondOpinionMode(false);
+        }}
+      />
     </View>
   );
 }

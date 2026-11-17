@@ -5,4 +5,5 @@ export declare class CreateSupervisorDto {
     name: string;
     password?: string;
     permissions?: SupervisorPermission[];
+    termsAccepted?: boolean;
 }

@@ -53,6 +53,16 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.listAvailableAdvisors(user);
   }
 
+  /** Farmer/Gardener: browse matching specialist advisors for a specific crop, checking category matching and quota status. */
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('available-for-crop/:cropCycleId')
+  listAvailableAdvisorsForCrop(
+    @CurrentUser() user: AuthUser,
+    @Param('cropCycleId') cropCycleId: string,
+  ) {
+    return this.advisorAssignmentService.listAvailableAdvisorsForCrop(user, cropCycleId);
+  }
+
   @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('choose-advisor/:advisorId')
   requestSpecificAdvisor(

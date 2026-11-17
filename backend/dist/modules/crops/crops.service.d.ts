@@ -6,6 +6,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
+import { SubmitCropToAdvisorDto } from './dto/submit-crop-to-advisor.dto';
 export declare class CropsService {
     private readonly prisma;
     private readonly plotsService;
@@ -23,8 +24,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -36,6 +39,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -55,6 +59,21 @@ export declare class CropsService {
             irrigationType: string | null;
             waterSource: string | null;
         };
+        assignedAdvisor: {
+            id: string;
+            kingId: string | null;
+            mobile: string;
+            name: string;
+            photoUrl: string | null;
+            specialization: string | null;
+            qualification: string | null;
+            profileTitle: string | null;
+            feePerConsultation: import("@prisma/client/runtime/library").Decimal | null;
+            feePerCropSeason: import("@prisma/client/runtime/library").Decimal | null;
+            feeVipMonthly: import("@prisma/client/runtime/library").Decimal | null;
+            monthlyIncludedCrops: number;
+            feeAdditionalCropMonthly: import("@prisma/client/runtime/library").Decimal | null;
+        } | null;
     } & {
         id: string;
         createdAt: Date;
@@ -64,8 +83,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -77,6 +98,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -90,8 +112,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -103,6 +127,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -155,8 +180,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -168,6 +195,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -213,8 +241,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -226,6 +256,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -271,8 +302,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -284,6 +317,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -297,8 +331,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -310,6 +346,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -323,8 +360,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -336,11 +375,12 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
-    submitToAdvisor(user: AuthUser, id: string): Promise<{
+    submitToAdvisor(user: AuthUser, id: string, dto?: SubmitCropToAdvisorDto): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;
@@ -349,8 +389,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -362,6 +404,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -375,8 +418,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -388,6 +433,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -401,8 +447,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -414,6 +462,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -427,8 +476,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -440,6 +491,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -454,8 +506,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -467,6 +521,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -510,8 +565,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -523,6 +580,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
@@ -566,8 +624,10 @@ export declare class CropsService {
         notes: string | null;
         unit: string | null;
         plotId: string;
+        assignedAdvisorId: string | null;
         area: number | null;
         category: import(".prisma/client").$Enums.CropCategory | null;
+        subscriptionId: string | null;
         cropId: string | null;
         cropName: string;
         variety: string | null;
@@ -579,6 +639,7 @@ export declare class CropsService {
         stage: import(".prisma/client").$Enums.CropCycleStage;
         harvestType: import(".prisma/client").$Enums.CropHarvestType;
         assignedSchedule: string | null;
+        hiringModel: import(".prisma/client").$Enums.HiringModelType | null;
         advisorReviewStatus: import(".prisma/client").$Enums.CropAdvisorReviewStatus;
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;

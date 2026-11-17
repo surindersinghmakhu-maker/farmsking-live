@@ -1910,6 +1910,7 @@ export class UsersService implements OnModuleInit {
         ...(dto.seniorDoctorId !== undefined ? { seniorDoctorId: dto.seniorDoctorId } : {}),
         ...(dto.doctorConsultationFee !== undefined ? { doctorConsultationFee: dto.doctorConsultationFee } : {}),
         ...(dto.employerFarmerId !== undefined ? { employerFarmerId: dto.employerFarmerId } : {}),
+        ...(dto.termsAccepted ? { termsAcceptedAt: new Date() } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,
@@ -2246,6 +2247,7 @@ export class UsersService implements OnModuleInit {
         ...(dto.farmAddress !== undefined ? { farmAddress: dto.farmAddress } : {}),
         ...(dto.farmMobile !== undefined ? { farmMobile: dto.farmMobile } : {}),
         ...(dto.whatsappGroupEnabled !== undefined ? { whatsappGroupEnabled: dto.whatsappGroupEnabled } : {}),
+        ...(dto.termsAccepted ? { termsAcceptedAt: new Date() } : {}),
       },
       select: SAFE_USER_SELECT,
     });
@@ -2313,6 +2315,13 @@ export class UsersService implements OnModuleInit {
         ...(dto.panDocUrl !== undefined ? { panDocUrl: dto.panDocUrl } : {}),
         ...(dto.gstin !== undefined ? { gstin: dto.gstin } : {}),
         ...(dto.termsAccepted ? { termsAcceptedAt: new Date(), privacyPolicyVersion: '2026.11' } : {}),
+        ...(dto.feePerConsultation !== undefined ? { feePerConsultation: dto.feePerConsultation } : {}),
+        ...(dto.feePerCropSeason !== undefined ? { feePerCropSeason: dto.feePerCropSeason } : {}),
+        ...(dto.feeVipMonthly !== undefined ? { feeVipMonthly: dto.feeVipMonthly } : {}),
+        ...(dto.monthlyIncludedCrops !== undefined ? { monthlyIncludedCrops: dto.monthlyIncludedCrops } : {}),
+        ...(dto.feeAdditionalCropMonthly !== undefined ? { feeAdditionalCropMonthly: dto.feeAdditionalCropMonthly } : {}),
+        ...(dto.specializedCategories !== undefined ? { specializedCategories: dto.specializedCategories } : {}),
+        ...(dto.specializedCrops !== undefined ? { specializedCrops: dto.specializedCrops } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,
@@ -2330,6 +2339,13 @@ export class UsersService implements OnModuleInit {
         bankAccountNumber: true,
         bankIfsc: true,
         bankAccountHolderName: true,
+        feePerConsultation: true,
+        feePerCropSeason: true,
+        feeVipMonthly: true,
+        monthlyIncludedCrops: true,
+        feeAdditionalCropMonthly: true,
+        specializedCategories: true,
+        specializedCrops: true,
       },
     });
   }
@@ -3670,8 +3686,8 @@ export class UsersService implements OnModuleInit {
     const cleanMobile = this.normalizeAdminCreateMobile(mobile);
     const availability = await this.checkAdminCreateMobileAvailability(cleanMobile, category);
 
-    const isDev = process.env.NODE_ENV !== 'production';
-    const otpCode = isDev ? '123456' : randomInt(100000, 1000000).toString();
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const otpCode = isTestEnv ? '123456' : randomInt(100000, 1000000).toString();
     const key = `${caller.id}:${cleanMobile}`;
     this.adminCreateOtpStore.set(key, {
       otp: otpCode,
@@ -3680,7 +3696,7 @@ export class UsersService implements OnModuleInit {
     });
 
     let waSent = false;
-    if (!isDev && this.whatsappBotService) {
+    if (this.whatsappBotService) {
       try {
         const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
         waSent = Boolean(waRes?.success);
@@ -3695,12 +3711,10 @@ export class UsersService implements OnModuleInit {
       waSent,
       isExistingUser: availability.isExistingUser,
       existingUser: availability.existingUser,
-      message: isDev
-        ? 'Localhost test mode active. Use verification code: 123456'
-        : waSent
-          ? `6-digit verification OTP sent to ${cleanMobile} via WhatsApp.`
-          : '6-digit verification OTP generated for onboarding.',
-      devOtp: isDev ? otpCode : undefined,
+      message: waSent
+        ? `6-digit verification OTP sent to ${cleanMobile} via WhatsApp.`
+        : '6-digit verification OTP generated for onboarding.',
+      devOtp: isTestEnv ? otpCode : undefined,
       expiresInSeconds: 600,
     };
   }
@@ -3710,7 +3724,7 @@ export class UsersService implements OnModuleInit {
     const key = `${caller.id}:${cleanMobile}`;
     const stored = this.adminCreateOtpStore.get(key);
     const provided = (otp || '').trim();
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isTestEnv = process.env.NODE_ENV === 'test';
 
     if (!stored) {
       throw new BadRequestException('OTP not requested or expired. Please click Send OTP first.');
@@ -3727,7 +3741,7 @@ export class UsersService implements OnModuleInit {
     const expectedBuf = Buffer.from(stored.otp, 'utf8');
     const providedBuf = Buffer.from(provided, 'utf8');
     const isExactMatch = expectedBuf.length === providedBuf.length && timingSafeEqual(expectedBuf, providedBuf);
-    const isMatch = isExactMatch || (isDev && provided === '123456');
+    const isMatch = isExactMatch || (isTestEnv && provided === '123456');
 
     if (!isMatch) {
       stored.attempts += 1;

@@ -21,6 +21,7 @@ import { useRedeemFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/use
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors } from '@/src/hooks/useAdvisorAssignments';
 import { useAuth } from '@/src/store/auth-context';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import QRCode from 'react-native-qrcode-svg';
 
 import { previewFarmerPlanCoupon, FarmerPlanCouponPreview } from '@/src/api/farmerPlans.api';
@@ -52,7 +53,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const [tabMode, setTabMode] = useState<'FEATURES' | 'BUY'>('FEATURES');
   const [selectedPlanKey, setSelectedPlanKey] = useState<'SILVER' | 'GOLD' | 'ROYAL'>('GOLD');
   const [selectedAdvisorId, setSelectedAdvisorId] = useState<string | null>(null);
-  const [landTier, setLandTier] = useState<'SMALL' | 'LARGE'>('SMALL'); // < 5 Acres vs >= 5 Acres
+  const [selectedPackage, setSelectedPackage] = useState<'PRESCRIPTION' | 'SEASON' | 'VIP'>('SEASON');
   const [isFreeTrialMode, setIsFreeTrialMode] = useState<boolean>(false);
   const [isAutoDebit, setIsAutoDebit] = useState<boolean>(false); // Auto-Debit (UPI Mandate) vs Manual Recharge
   const [utrInput, setUtrInput] = useState('');
@@ -62,12 +63,22 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState<string | null>(null);
 
-  const baseAdvisorFee = isFreeTrialMode ? 0 : (landTier === 'SMALL' ? 500 : 1000);
-  const platformFee = 99;
-  const gstAmount = 17.82; // 18% GST on ₹99
-  const totalPayable = isFreeTrialMode ? 116.82 : Math.round((baseAdvisorFee + platformFee + gstAmount) * 100) / 100;
-  const adminCommission = isFreeTrialMode ? 0 : Math.round(baseAdvisorFee * 0.10);
-  const doctorNetPayout = isFreeTrialMode ? 0 : (baseAdvisorFee - adminCommission);
+  const selectedAdv = availableAdvisors.find((a) => a.id === selectedAdvisorId);
+  const { data: appSettings } = useAppSettings();
+  const platformFeePercent = appSettings?.advisorPlatformFeePercent ?? 10.0;
+  const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
+  const doctorPayoutPercent = Math.max(0, 100 - (platformFeePercent + adminFeePercent));
+
+  const packageBaseFee = selectedPackage === 'PRESCRIPTION'
+    ? (Number(selectedAdv?.feePerConsultation) || 199)
+    : selectedPackage === 'SEASON'
+    ? (Number(selectedAdv?.feePerCropSeason) || 1499)
+    : (Number(selectedAdv?.feeVipMonthly) || 4999);
+
+  const totalPayable = isFreeTrialMode ? 0 : packageBaseFee;
+  const platformFee = Math.round(totalPayable * (platformFeePercent / 100));
+  const adminFee = Math.round(totalPayable * (adminFeePercent / 100));
+  const doctorNetPayout = Math.max(0, totalPayable - (platformFee + adminFee));
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) {
@@ -436,59 +447,99 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                       Continuous seed-to-harvest crop monitoring & personalized spray schedules
                     </Text>
 
-                    {/* Land-Based Pricing Tier Selector */}
+                    {/* 3 Pan-India Advisory Packages */}
                     <View style={{ gap: 6, marginTop: 4 }}>
                       <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
-                        1. Select Farm Land Size (Land-Based Pricing):
+                        1. Select Crop Care Advisory Package:
                       </Text>
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <View style={{ gap: 8 }}>
+                        {/* Package 1: SOS Consultation */}
                         <TouchableOpacity
                           style={[
                             styles.planOptionCard,
                             {
-                              flex: 1,
-                              padding: 10,
-                              backgroundColor: isDark ? (landTier === 'SMALL' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (landTier === 'SMALL' ? '#f0fdf4' : '#ffffff'),
-                              borderColor: isDark ? (landTier === 'SMALL' ? '#00ff87' : 'rgba(255, 255, 255, 0.08)') : (landTier === 'SMALL' ? '#16a34a' : '#cbd5e1'),
+                              padding: 12,
+                              backgroundColor: isDark ? (selectedPackage === 'PRESCRIPTION' ? 'rgba(56, 189, 248, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (selectedPackage === 'PRESCRIPTION' ? '#f0f9ff' : '#ffffff'),
+                              borderColor: isDark ? (selectedPackage === 'PRESCRIPTION' ? '#38bdf8' : 'rgba(255, 255, 255, 0.08)') : (selectedPackage === 'PRESCRIPTION' ? '#0284c7' : '#cbd5e1'),
                             }
                           ]}
                           activeOpacity={0.88}
-                          onPress={() => { tap(); setLandTier('SMALL'); }}
+                          onPress={() => { tap(); setSelectedPackage('PRESCRIPTION'); }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>Small Farmer</Text>
-                            <Ionicons name={landTier === 'SMALL' ? 'radio-button-on' : 'radio-button-off'} size={18} color={landTier === 'SMALL' ? '#16a34a' : '#94a3b8'} />
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0284c7' }}>1. Pay Per Prescription (Instant SOS)</Text>
+                              <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>SINGLE CALL</Text>
+                              </View>
+                            </View>
+                            <Ionicons name={selectedPackage === 'PRESCRIPTION' ? 'radio-button-on' : 'radio-button-off'} size={18} color={selectedPackage === 'PRESCRIPTION' ? '#0284c7' : '#94a3b8'} />
                           </View>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
-                            &lt; 5 Acres Land
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
+                            Instant emergency leaf scan diagnosis & digital spray prescription
                           </Text>
                           <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
-                            ₹500 <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/month Base</Text>
+                            ₹{Number(selectedAdv?.feePerConsultation) || 99} <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/ One-Time Consultation</Text>
                           </Text>
                         </TouchableOpacity>
 
+                        {/* Package 2: Full Crop Season */}
                         <TouchableOpacity
                           style={[
                             styles.planOptionCard,
                             {
-                              flex: 1,
-                              padding: 10,
-                              backgroundColor: isDark ? (landTier === 'LARGE' ? 'rgba(217, 119, 6, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (landTier === 'LARGE' ? '#fffbeb' : '#ffffff'),
-                              borderColor: isDark ? (landTier === 'LARGE' ? '#fbbf24' : 'rgba(255, 255, 255, 0.08)') : (landTier === 'LARGE' ? '#d97706' : '#cbd5e1'),
+                              padding: 12,
+                              backgroundColor: isDark ? (selectedPackage === 'SEASON' ? 'rgba(16, 185, 129, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (selectedPackage === 'SEASON' ? '#f0fdf4' : '#ffffff'),
+                              borderColor: isDark ? (selectedPackage === 'SEASON' ? '#00ff87' : 'rgba(255, 255, 255, 0.08)') : (selectedPackage === 'SEASON' ? '#16a34a' : '#cbd5e1'),
                             }
                           ]}
                           activeOpacity={0.88}
-                          onPress={() => { tap(); setLandTier('LARGE'); }}
+                          onPress={() => { tap(); setSelectedPackage('SEASON'); }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#d97706' }}>Large Farmer</Text>
-                            <Ionicons name={landTier === 'LARGE' ? 'radio-button-on' : 'radio-button-off'} size={18} color={landTier === 'LARGE' ? '#d97706' : '#94a3b8'} />
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' }}>2. Per Crop Season Supervision</Text>
+                              <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>MOST POPULAR</Text>
+                              </View>
+                            </View>
+                            <Ionicons name={selectedPackage === 'SEASON' ? 'radio-button-on' : 'radio-button-off'} size={18} color={selectedPackage === 'SEASON' ? '#16a34a' : '#94a3b8'} />
                           </View>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
-                            ≥ 5 Acres Land
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
+                            Complete 120-day seed-to-harvest spray schedule & weather audits
                           </Text>
                           <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
-                            ₹1,000 <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/month Base</Text>
+                            ₹{Number(selectedAdv?.feePerCropSeason) || 499} <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/ Full Crop Cycle</Text>
+                          </Text>
+                        </TouchableOpacity>
+
+                        {/* Package 3: VIP Farm Care */}
+                        <TouchableOpacity
+                          style={[
+                            styles.planOptionCard,
+                            {
+                              padding: 12,
+                              backgroundColor: isDark ? (selectedPackage === 'VIP' ? 'rgba(124, 58, 237, 0.14)' : 'rgba(255, 255, 255, 0.03)') : (selectedPackage === 'VIP' ? '#f5f3ff' : '#ffffff'),
+                              borderColor: isDark ? (selectedPackage === 'VIP' ? '#a78bfa' : 'rgba(255, 255, 255, 0.08)') : (selectedPackage === 'VIP' ? '#7c3aed' : '#cbd5e1'),
+                            }
+                          ]}
+                          activeOpacity={0.88}
+                          onPress={() => { tap(); setSelectedPackage('VIP'); }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#7c3aed' }}>3. VIP Farm Care (Field Visits)</Text>
+                              <View style={{ backgroundColor: '#ede9fe', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#6d28d9' }}>VIP RETAINER</Text>
+                              </View>
+                            </View>
+                            <Ionicons name={selectedPackage === 'VIP' ? 'radio-button-on' : 'radio-button-off'} size={18} color={selectedPackage === 'VIP' ? '#7c3aed' : '#94a3b8'} />
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', marginTop: 2 }}>
+                            Large farms & orchards: periodic physical field visits & direct calls
+                          </Text>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a', marginTop: 4 }}>
+                            ₹{Number(selectedAdv?.feeVipMonthly) || 1999} <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/ Month</Text>
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -611,41 +662,36 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                       </View>
                     </View>
 
-                    {/* Post-Trial Monthly Breakdown & Revenue Share Card */}
+                    {/* Transparent Financial Breakdown & Settlement */}
                     <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0', gap: 6 }}>
                       <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
-                        📊 Monthly Financial Breakdown & Settlement:
+                        📊 Transparent Financial Breakdown & Fee Settlement:
                       </Text>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>Advisor Base Fee:</Text>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>Doctor Consultation Fee:</Text>
                         <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>
-                          {isFreeTrialMode ? '₹0 (Waived for Trial)' : `₹${baseAdvisorFee}`}
+                          ₹{packageBaseFee}
                         </Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>FarmsKing Platform Fee:</Text>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>₹{platformFee}</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>GST (18% on ₹99):</Text>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? '#ffffff' : '#0f172a' }}>₹{gstAmount}</Text>
                       </View>
                       <View style={{ height: 1, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0', marginVertical: 2 }} />
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a' }}>Total Monthly Charge:</Text>
-                        <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#16a34a' }}>₹{totalPayable}</Text>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: isDark ? '#ffffff' : '#0f172a' }}>Total Amount Payable:</Text>
+                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#16a34a' }}>₹{totalPayable}</Text>
                       </View>
 
                       {/* Revenue split transparency */}
-                      <View style={{ backgroundColor: isDark ? 'rgba(0, 255, 135, 0.08)' : '#ecfdf5', padding: 8, borderRadius: 6, marginTop: 4, gap: 2 }}>
+                      <View style={{ backgroundColor: isDark ? 'rgba(0, 255, 135, 0.08)' : '#ecfdf5', padding: 8, borderRadius: 6, marginTop: 4, gap: 3 }}>
                         <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#166534' }}>
-                          REVENUE SHARE ALLOCATION:
+                          SETTLEMENT ALLOCATION:
                         </Text>
                         <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#14532d' }}>
-                          • FarmsKing Retains: ₹{platformFee} Platform Fee + 10% Commission ({isFreeTrialMode ? '₹0' : `₹${adminCommission}`})
+                          • Doctor Net Payout ({doctorPayoutPercent.toFixed(0)}%): ₹{doctorNetPayout} (Guaranteed directly to Doctor Wallet)
                         </Text>
                         <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#14532d' }}>
-                          • Doctor Net Payout: {isFreeTrialMode ? '₹0 during free trial' : `₹${doctorNetPayout} (90% of base fee credited to Doctor Wallet)`}
+                          • Platform Technology Fee ({platformFeePercent.toFixed(0)}%): ₹{platformFee} (Live video/audio calls & satellite NDVI)
+                        </Text>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#14532d' }}>
+                          • Admin & Governance Fee ({adminFeePercent.toFixed(0)}%): ₹{adminFee} (Agronomist audit, quality & compliance)
                         </Text>
                       </View>
                     </View>

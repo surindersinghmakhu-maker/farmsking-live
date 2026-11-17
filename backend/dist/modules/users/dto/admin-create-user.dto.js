@@ -276,4 +276,10 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], AdminCreateUserDto.prototype, "employerFarmerKingIdOrMobile", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Terms of service accepted' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], AdminCreateUserDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=admin-create-user.dto.js.map

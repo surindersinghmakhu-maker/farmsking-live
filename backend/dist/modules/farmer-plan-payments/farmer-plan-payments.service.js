@@ -212,16 +212,23 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
         const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted);
         const totalAmount = Number(request.amount || 0);
         if (totalAmount > 0) {
-            const platformFee = Math.round(totalAmount * 0.10);
-            const netShare = totalAmount - platformFee;
+            const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+            const platformFeePercent = appSettings?.advisorPlatformFeePercent ?? 10.0;
+            const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
+            const platformFee = Math.round(totalAmount * (platformFeePercent / 100));
+            const adminFee = Math.round(totalAmount * (adminFeePercent / 100));
+            const doctorAdvisorPayout = Math.max(0, totalAmount - (platformFee + adminFee));
             if (request.selectedDoctorId && request.selectedAdvisorId) {
-                const advisorCut = Math.round(netShare * 0.50);
-                const doctorCut = netShare - advisorCut;
-                await this.walletService.credit(request.selectedAdvisorId, advisorCut, `Advisor commission for ${request.targetPlan} plan by ${request.farmer.name}`);
-                await this.walletService.credit(request.selectedDoctorId, doctorCut, `Senior Doctor share for ${request.targetPlan} plan by ${request.farmer.name}`);
+                const advisorCut = Math.round(doctorAdvisorPayout * 0.50);
+                const doctorCut = doctorAdvisorPayout - advisorCut;
+                await this.walletService.credit(request.selectedAdvisorId, advisorCut, `Advisor consultation share (Net: ₹${advisorCut}, Platform Fee: ${platformFeePercent}%, Admin Fee: ${adminFeePercent}%) for ${request.targetPlan} plan by ${request.farmer.name}`);
+                await this.walletService.credit(request.selectedDoctorId, doctorCut, `Doctor consultation share (Net: ₹${doctorCut}, Platform Fee: ${platformFeePercent}%, Admin Fee: ${adminFeePercent}%) for ${request.targetPlan} plan by ${request.farmer.name}`);
             }
             else if (request.selectedDoctorId) {
-                await this.walletService.credit(request.selectedDoctorId, netShare, `Doctor share for ${request.targetPlan} plan by ${request.farmer.name}`);
+                await this.walletService.credit(request.selectedDoctorId, doctorAdvisorPayout, `Crop Doctor consultation payout (Net: ₹${doctorAdvisorPayout}, Platform Fee: ${platformFeePercent}%, Admin Fee: ${adminFeePercent}%) for ${request.targetPlan} plan by ${request.farmer.name}`);
+            }
+            else if (request.selectedAdvisorId) {
+                await this.walletService.credit(request.selectedAdvisorId, doctorAdvisorPayout, `Farm Advisor consultation payout (Net: ₹${doctorAdvisorPayout}, Platform Fee: ${platformFeePercent}%, Admin Fee: ${adminFeePercent}%) for ${request.targetPlan} plan by ${request.farmer.name}`);
             }
         }
         const updated = await this.prisma.farmerPlanPaymentRequest.update({

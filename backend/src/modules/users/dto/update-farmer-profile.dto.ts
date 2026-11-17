@@ -67,4 +67,8 @@ export class UpdateFarmerProfileDto {
   @IsOptional()
   @IsBoolean()
   whatsappGroupEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

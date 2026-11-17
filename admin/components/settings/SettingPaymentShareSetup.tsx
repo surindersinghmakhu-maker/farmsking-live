@@ -27,6 +27,7 @@ import {
 
 type PaymentShareCategoryFilter =
   | 'ALL'
+  | 'CROP_DOCTOR_FEES'
   | 'REWARDS'
   | 'WALLET_FEES'
   | 'ECOMMERCE_RULES';
@@ -163,6 +164,7 @@ const ALL_SYSTEM_ROLES: RoleOption[] = [
 
 const PAYMENT_SHARE_PILLS: PaymentShareCategoryPill[] = [
   { key: 'ALL', label: 'All Share Rules', icon: 'cash-outline' },
+  { key: 'CROP_DOCTOR_FEES', label: 'Crop Doctor Financial Split', icon: 'medkit-outline' },
   { key: 'REWARDS', label: 'Referral & Welcome Rewards', icon: 'gift-outline' },
   { key: 'WALLET_FEES', label: 'Wallet TDS & Role Withdrawals', icon: 'wallet-outline' },
   { key: 'ECOMMERCE_RULES', label: 'AgriStore Marketplace Rules', icon: 'cart-outline' },
@@ -340,6 +342,10 @@ export default function SettingPaymentShareSetup() {
         referralOfferSchemeName: appForm.referralOfferSchemeName || '',
         referralOfferExpiryDate: appForm.referralOfferExpiryDate || '',
 
+        // Crop Doctor & Farm Advisor Financial Split
+        advisorPlatformFeePercent: Number(appForm.advisorPlatformFeePercent ?? 10.0),
+        advisorAdminFeePercent: Number(appForm.advisorAdminFeePercent ?? 10.0),
+
         // Wallet TDS & Fees
         walletTaxEnabled: Boolean(appForm.walletTaxEnabled ?? true),
         withdrawalPlatformFeePercent: Number(appForm.withdrawalPlatformFeePercent ?? 2.0),
@@ -453,6 +459,96 @@ export default function SettingPaymentShareSetup() {
 
       {/* Cards Grid */}
       <View style={[styles.grid, isDesktop && styles.gridDesktop]}>
+        {/* 0. Crop Doctor & Advisor Financial Split */}
+        {isVisible('CROP_DOCTOR_FEES') && (() => {
+          const platFee = Number(appForm.advisorPlatformFeePercent ?? 10.0);
+          const admFee = Number(appForm.advisorAdminFeePercent ?? 10.0);
+          const netDoctorPayout = Math.max(0, 100 - (platFee + admFee));
+
+          return (
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardFull]}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.iconBox, { backgroundColor: '#dcfce7' }]}>
+                  <Ionicons name="medkit" size={20} color="#059669" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <Text style={[styles.cardTitle, { color: textColor }]}>Crop Doctor & Advisor Financial Split</Text>
+                    <View style={{ backgroundColor: '#05966915', borderColor: '#05966940', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#059669' }}>DOCTOR AUTONOMOUS PRICING</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.cardSub, { color: subTextColor }]}>
+                    Separate Platform and Admin management fees deducted from Doctor & Advisor consultations
+                  </Text>
+                </View>
+              </View>
+
+              {/* Informative Banner */}
+              <View style={{ backgroundColor: isLight ? '#f0fdf4' : '#062d1a', borderColor: '#05966930', borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 16 }}>
+                <Text style={{ fontSize: 13, color: isLight ? '#166534' : '#6ee7b7', lineHeight: 19 }}>
+                  🌾 <Text style={{ fontWeight: '700' }}>Doctor Sets Fee Autonomously</Text>: Verified Crop Doctors and Farm Advisors decide their own consultation fees (Pay Per Prescription, Per Season, VIP Visit) on their dashboard. Admin configures the separate Platform & Admin split percentages below.
+                </Text>
+              </View>
+
+              {/* Live Revenue Split Breakdown Strip */}
+              <View style={{ backgroundColor: innerBg, borderColor: cardBorder, borderWidth: 1, borderRadius: 12, padding: 14, marginBottom: 18 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: subTextColor, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                  Real-Time Fee Distribution Breakdown
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 12, flexWrap: 'wrap' }}>
+                  <View style={{ flex: 1, minWidth: 140, backgroundColor: isLight ? '#ecfdf5' : '#022c22', padding: 10, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: '#10b981' }}>
+                    <Text style={{ fontSize: 11, color: subTextColor }}>Doctor Net Payout</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#10b981' }}>{netDoctorPayout.toFixed(1)}%</Text>
+                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 2 }}>Credited directly to Doctor Wallet</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 140, backgroundColor: isLight ? '#eff6ff' : '#0f172a', padding: 10, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: '#3b82f6' }}>
+                    <Text style={{ fontSize: 11, color: subTextColor }}>Platform Infrastructure Fee</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#3b82f6' }}>{platFee.toFixed(1)}%</Text>
+                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 2 }}>Cloud, WebRTC & NDVI Satellites</Text>
+                  </View>
+                  <View style={{ flex: 1, minWidth: 140, backgroundColor: isLight ? '#faf5ff' : '#1e1b4b', padding: 10, borderRadius: 8, borderLeftWidth: 3, borderLeftColor: '#8b5cf6' }}>
+                    <Text style={{ fontSize: 11, color: subTextColor }}>Admin & Operations Fee</Text>
+                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#8b5cf6' }}>{admFee.toFixed(1)}%</Text>
+                    <Text style={{ fontSize: 11, color: subTextColor, marginTop: 2 }}>Agronomy verification & compliance</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.fieldsGrid}>
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Platform Infrastructure Fee (%)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.advisorPlatformFeePercent ?? 10.0)}
+                    onChangeText={(t) => updateAppField('advisorPlatformFeePercent', parseFloat(t) || 0)}
+                  />
+                  <Text style={styles.fieldHint}>Technology platform fee for video/audio servers, database & SMS gateway</Text>
+                </View>
+
+                <View style={styles.fieldItem}>
+                  <Text style={[styles.label, { color: textColor }]}>Admin & Management Fee (%)</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: innerBg, borderColor: cardBorder, color: textColor }]}
+                    keyboardType="numeric"
+                    value={String(appForm.advisorAdminFeePercent ?? 10.0)}
+                    onChangeText={(t) => updateAppField('advisorAdminFeePercent', parseFloat(t) || 0)}
+                  />
+                  <Text style={styles.fieldHint}>Institutional operations fee for agronomist auditing & quality resolution</Text>
+                </View>
+              </View>
+
+              {/* FarmsKing Royalty Guarantee */}
+              <View style={{ marginTop: 12, padding: 10, backgroundColor: isLight ? '#f8fafc' : '#0b1120', borderRadius: 8, borderColor: cardBorder, borderWidth: 1 }}>
+                <Text style={{ fontSize: 11, color: subTextColor, lineHeight: 16 }}>
+                  🛡️ <Text style={{ fontWeight: '700', color: textColor }}>Statutory Royalty Rule</Text>: All partner commissions, franchise royalties, and referral bonuses are disbursed solely from FarmsKing's Platform & Admin share ({((platFee + admFee)).toFixed(1)}%). The Doctor's net payout ({netDoctorPayout.toFixed(1)}%) is strictly guaranteed without dilution.
+                </Text>
+              </View>
+            </View>
+          );
+        })()}
+
         {/* 1. Referral & Welcome Rewards */}
         {isVisible('REWARDS') && (
           <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, isDesktop && styles.cardHalf]}>
@@ -1119,6 +1215,9 @@ const styles = StyleSheet.create({
   },
   cardHalf: {
     width: '49%',
+  },
+  cardFull: {
+    width: '100%',
   },
   cardHeader: {
     flexDirection: 'row',

@@ -51,6 +51,12 @@ export async function listAvailableAdvisors(): Promise<AvailableAdvisor[]> {
   return data;
 }
 
+/** Farmer: browse matching specialist advisors for a specific crop with category filter and quota status. */
+export async function listAvailableAdvisorsForCrop(cropCycleId: string): Promise<AvailableAdvisor[]> {
+  const { data } = await apiClient.get<AvailableAdvisor[]>(`/advisor-assignments/available-for-crop/${cropCycleId}`);
+  return data;
+}
+
 export async function chooseAdvisor(advisorId: string, cropId?: string): Promise<AdvisorAssignment> {
   const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/choose-advisor/${advisorId}`, { cropId });
   return data;

@@ -83,6 +83,10 @@ export interface User {
   bio?: string | null;
   yearsExperience?: number | null;
   advisorType?: AdvisorType | null;
+  feePerConsultation?: number | null;
+  feePerCropSeason?: number | null;
+  feeVipMonthly?: number | null;
+  specializedCrops?: string[] | null;
   employerFarmerId?: string | null;
   employerFarmer?: {
     id: string;
@@ -175,6 +179,10 @@ export interface AdminUser {
   preferredLanguage: string;
   photoUrl?: string | null;
   advisorType?: AdvisorType | null;
+  feePerConsultation?: number | null;
+  feePerCropSeason?: number | null;
+  feeVipMonthly?: number | null;
+  specializedCrops?: string[] | null;
   operatorPermissions?: OperatorPermission[];
   createdAt: string;
   deletedAt?: string | null;
@@ -187,6 +195,10 @@ export interface AdminUser {
   isSeniorDoctor?: boolean;
   seniorDoctorId?: string | null;
   doctorConsultationFee?: number | null;
+  feePerConsultation?: number | null;
+  feePerCropSeason?: number | null;
+  feeVipMonthly?: number | null;
+  specializedCrops?: string[] | null;
   // Farmer-only
   sprayTankSizeL?: SprayTankSizeL | null;
   soilType?: SoilType | null;
@@ -324,9 +336,28 @@ export interface AvailableAdvisor {
   isSeniorDoctor?: boolean | null;
   seniorDoctorId?: string | null;
   doctorConsultationFee?: number | null;
+  feePerConsultation?: number | null;
+  feePerCropSeason?: number | null;
+  feeVipMonthly?: number | null;
+  monthlyIncludedCrops?: number;
+  feeAdditionalCropMonthly?: number | null;
+  specializedCategories?: string[];
+  specializedCrops?: string[];
+  qualification?: string | null;
+  profileTitle?: string | null;
   rating?: number | null;
   ratingCount?: number;
   ratingLabel?: string;
+  quota?: {
+    hasActiveMonthlySubscription: boolean;
+    activeSubscriptionId?: string | null;
+    subscriptionEndDate?: string | null;
+    quotaStatus: 'INCLUDED_FREE' | 'ADDITIONAL_CROP_FEE' | 'NOT_SUBSCRIBED';
+    monthlyIncludedCrops: number;
+    activeCropsUnderAdvisor: number;
+    freeSlotsRemaining: number;
+    additionalCropFee: number;
+  };
 }
 
 export interface AdvisorSubscription {
@@ -388,6 +419,24 @@ export interface CropCycle {
   harvestType?: 'ONE_TIME' | 'CONTINUOUS';
   notes?: string | null;
   assignedSchedule?: string | null;
+  assignedAdvisorId?: string | null;
+  hiringModel?: 'PAY_PER_CONSULTATION' | 'PER_CROP' | 'MONTHLY_SUBSCRIPTION' | null;
+  subscriptionId?: string | null;
+  assignedAdvisor?: {
+    id: string;
+    kingId?: string | null;
+    name: string;
+    photoUrl?: string | null;
+    mobile?: string | null;
+    specialization?: string | null;
+    qualification?: string | null;
+    profileTitle?: string | null;
+    feePerConsultation?: number | null;
+    feePerCropSeason?: number | null;
+    feeVipMonthly?: number | null;
+    monthlyIncludedCrops?: number;
+    feeAdditionalCropMonthly?: number | null;
+  } | null;
   advisorReviewStatus?: 'NONE' | 'PENDING' | 'ACCEPTED';
   submittedToAdvisorAt?: string | null;
   advisorAcceptedAt?: string | null;

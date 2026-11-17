@@ -50,6 +50,8 @@ export interface AppSettings {
   advisorCertificationFee?: number;
   advisorCertificationDiscount?: number;
   gardenExpertPlatformFeePercent?: number;
+  advisorPlatformFeePercent?: number;
+  advisorAdminFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
   allowDirectPlatformSales?: boolean;
@@ -114,6 +116,8 @@ export interface UpdateAppSettingsPayload {
   advisorCertificationFee?: number;
   advisorCertificationDiscount?: number;
   gardenExpertPlatformFeePercent?: number;
+  advisorPlatformFeePercent?: number;
+  advisorAdminFeePercent?: number;
   gardenerProCardPrice?: number;
   gardenerVipCardPrice?: number;
   allowDirectPlatformSales?: boolean;

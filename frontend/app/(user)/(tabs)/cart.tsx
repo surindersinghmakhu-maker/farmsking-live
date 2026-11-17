@@ -27,6 +27,7 @@ import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAddresses, useSetDefaultAddress } from '@/src/hooks/useAddresses';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import AddAddressModal from '@/src/components/AddAddressModal';
+import { LegalPoliciesModal, PolicyType } from '@/src/components/LegalPoliciesModal';
 
 const tap = () => {
   if (Platform.OS !== 'web') {
@@ -52,6 +53,8 @@ export default function CartScreen() {
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState<string | null>(null);
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number } | null>(null);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
 
   // Address & modal state
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -593,9 +596,35 @@ export default function CartScreen() {
               <View style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10 }}>
                 <Text style={{ fontSize: 11.5, lineHeight: 16, color: '#475569' }}>
                   By confirming your order with <Text style={{ fontWeight: '700', color: '#0f172a' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>, you agree to our{' '}
-                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/terms')}>Terms of Service</Text>,{' '}
-                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/refund-policy')}>Refund Policy</Text> (5–7 working days via Cashfree / Razorpay / PhonePe), and{' '}
-                  <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/shipping-policy')}>Shipping Policy</Text>.
+                  <Text
+                    style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                    onPress={() => {
+                      setLegalPolicyType('TERMS_OF_SERVICE');
+                      setLegalModalVisible(true);
+                    }}
+                  >
+                    Terms of Service
+                  </Text>
+                  ,{' '}
+                  <Text
+                    style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                    onPress={() => {
+                      setLegalPolicyType('REFUND_POLICY');
+                      setLegalModalVisible(true);
+                    }}
+                  >
+                    Refund Policy
+                  </Text>{' '}
+                  (5–7 working days via Cashfree / Razorpay / PhonePe), and{' '}
+                  <Text
+                    style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                    onPress={() => {
+                      setLegalPolicyType('SHIPPING_POLICY');
+                      setLegalModalVisible(true);
+                    }}
+                  >
+                    Shipping Policy
+                  </Text>.
                 </Text>
               </View>
 
@@ -633,6 +662,12 @@ export default function CartScreen() {
           setSelectedAddressId(newAddr.id);
           setDeliveryAddress(composeAddress(newAddr));
         }}
+      />
+
+      <LegalPoliciesModal
+        visible={legalModalVisible}
+        initialType={legalPolicyType}
+        onClose={() => setLegalModalVisible(false)}
       />
     </ScrollView>
   );

@@ -12,10 +12,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -28,10 +28,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -49,10 +49,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -62,10 +62,7 @@ export declare class CropActivitySchedulesController {
     })[]>;
     findTodayForAdvisor(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
-            id: string;
             plot: {
-                id: string;
-                name: string;
                 farm: {
                     id: string;
                     name: string;
@@ -75,7 +72,10 @@ export declare class CropActivitySchedulesController {
                         name: string;
                     };
                 };
+                id: string;
+                name: string;
             };
+            id: string;
             cropName: string;
         };
     } & {
@@ -83,10 +83,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -96,10 +96,7 @@ export declare class CropActivitySchedulesController {
     })[]>;
     findUpcomingForAdvisor(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
-            id: string;
             plot: {
-                id: string;
-                name: string;
                 farm: {
                     id: string;
                     name: string;
@@ -109,7 +106,10 @@ export declare class CropActivitySchedulesController {
                         name: string;
                     };
                 };
+                id: string;
+                name: string;
             };
+            id: string;
             cropName: string;
         };
     } & {
@@ -117,10 +117,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -130,10 +130,7 @@ export declare class CropActivitySchedulesController {
     })[]>;
     findDelayedForAdvisor(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
-            id: string;
             plot: {
-                id: string;
-                name: string;
                 farm: {
                     id: string;
                     name: string;
@@ -143,7 +140,10 @@ export declare class CropActivitySchedulesController {
                         name: string;
                     };
                 };
+                id: string;
+                name: string;
             };
+            id: string;
             cropName: string;
         };
     } & {
@@ -151,10 +151,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -167,10 +167,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -183,10 +183,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -199,10 +199,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;
@@ -215,10 +215,10 @@ export declare class CropActivitySchedulesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        notes: string | null;
+        description: string | null;
         title: string;
         status: import(".prisma/client").$Enums.ActivityStatus;
-        description: string | null;
+        notes: string | null;
         cropCycleId: string;
         scheduledDate: Date;
         createdByAdvisorId: string;

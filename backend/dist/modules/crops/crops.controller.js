@@ -24,6 +24,7 @@ const create_crop_dto_1 = require("./dto/create-crop.dto");
 const update_crop_dto_1 = require("./dto/update-crop.dto");
 const reject_crop_dto_1 = require("./dto/reject-crop.dto");
 const update_crop_schedule_dto_1 = require("./dto/update-crop-schedule.dto");
+const submit_crop_to_advisor_dto_1 = require("./dto/submit-crop-to-advisor.dto");
 let CropsController = class CropsController {
     constructor(cropsService) {
         this.cropsService = cropsService;
@@ -37,8 +38,8 @@ let CropsController = class CropsController {
     listAcceptedForAdvisor(user) {
         return this.cropsService.listAcceptedForAdvisor(user);
     }
-    submitToAdvisor(user, id) {
-        return this.cropsService.submitToAdvisor(user, id);
+    submitToAdvisor(user, id, dto) {
+        return this.cropsService.submitToAdvisor(user, id, dto);
     }
     cancelSubmission(user, id) {
         return this.cropsService.cancelSubmission(user, id);
@@ -102,8 +103,9 @@ __decorate([
     (0, common_1.Post)(':id/submit-to-advisor'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, submit_crop_to_advisor_dto_1.SubmitCropToAdvisorDto]),
     __metadata("design:returntype", void 0)
 ], CropsController.prototype, "submitToAdvisor", null);
 __decorate([

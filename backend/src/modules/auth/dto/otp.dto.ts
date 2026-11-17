@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail, Matches } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, IsOptional, IsEmail, Matches, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendLoginOtpDto {
@@ -11,6 +11,11 @@ export class SendLoginOtpDto {
   @IsOptional()
   @IsIn(['CLIENT', 'PARTNER'])
   portal?: 'CLIENT' | 'PARTNER';
+
+  @ApiPropertyOptional({ description: 'Terms of service accepted' })
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }
 
 export class VerifyLoginOtpDto {
@@ -28,6 +33,11 @@ export class VerifyLoginOtpDto {
   @IsOptional()
   @IsIn(['CLIENT', 'PARTNER'])
   portal?: 'CLIENT' | 'PARTNER';
+
+  @ApiPropertyOptional({ description: 'Terms of service accepted' })
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }
 
 export class SendWhatsAppOtpDto {
@@ -114,6 +124,11 @@ export class CompleteOtpRegistrationDto {
   @IsOptional()
   @IsIn(['CLIENT', 'PARTNER'])
   portal?: 'CLIENT' | 'PARTNER';
+
+  @ApiPropertyOptional({ description: 'Terms of service accepted' })
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }
 
 export class SendMobileOtpDto {

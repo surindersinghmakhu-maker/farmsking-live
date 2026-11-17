@@ -54,4 +54,9 @@ __decorate([
     (0, class_validator_1.IsIn)(['FARM', 'GARDEN']),
     __metadata("design:type", String)
 ], CreateAdvisorDto.prototype, "advisorType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateAdvisorDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=create-advisor.dto.js.map

@@ -44,6 +44,7 @@ model AdvisorSubscription {
   deletedAt    DateTime?
 
   advisorAssignment AdvisorAssignment?
+  cropCycles        CropCycle[]           @relation("CropCycleSubscription")
   paymentRequests   PlanPaymentRequest[]
 
   @@index([farmerId])

@@ -233,6 +233,10 @@ export interface UpdateAdvisorProfilePayload {
   state?: string;
   advisorType?: AdvisorType;
   notificationsEnabled?: boolean;
+  feePerConsultation?: number;
+  feePerCropSeason?: number;
+  feeVipMonthly?: number;
+  specializedCrops?: string[];
 }
 
 export async function updateMyAdvisorProfile(payload: UpdateAdvisorProfilePayload) {

@@ -16,4 +16,5 @@ export declare class UpdateFarmerProfileDto {
     farmAddress?: string;
     farmMobile?: string;
     whatsappGroupEnabled?: boolean;
+    termsAccepted?: boolean;
 }

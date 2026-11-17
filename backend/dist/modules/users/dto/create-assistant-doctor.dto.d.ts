@@ -8,4 +8,5 @@ export declare class CreateAssistantDoctorDto {
     qualification?: string;
     profileTitle?: string;
     advisorType?: AdvisorType;
+    termsAccepted?: boolean;
 }

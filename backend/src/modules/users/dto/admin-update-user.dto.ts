@@ -148,4 +148,8 @@ export class AdminUpdateUserDto {
   @IsOptional()
   @IsString()
   employerFarmerId?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

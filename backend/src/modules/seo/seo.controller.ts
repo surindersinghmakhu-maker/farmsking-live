@@ -1,7 +1,10 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { SeoService } from './seo.service';
-import type { SeoSubmissionReport } from './seo.service';
 
 @ApiTags('SEO & AI Search Engine Automation')
 @Controller('seo')
@@ -14,8 +17,10 @@ export class SeoController {
     return this.seoService.getStatus();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('submit')
-  @ApiOperation({ summary: 'Trigger instant SEO & AI Search IndexNow submission' })
+  @ApiOperation({ summary: 'Trigger instant SEO & AI Search IndexNow submission (Admin only)' })
   async triggerSubmission(): Promise<any> {
     const report = await this.seoService.submitAllUrls();
     return {

@@ -1,5 +1,5 @@
-import { IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, Matches, Min } from 'class-validator';
-import { AdvisorType } from '@prisma/client';
+import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Min } from 'class-validator';
+import { AdvisorType, CropCategory } from '@prisma/client';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
 export class UpdateAdvisorProfileDto {
@@ -103,4 +103,37 @@ export class UpdateAdvisorProfileDto {
   @IsOptional()
   @IsBoolean()
   termsAccepted?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  feePerConsultation?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  feePerCropSeason?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  feeVipMonthly?: number;
+
+  @IsOptional()
+  @IsArray()
+  specializedCrops?: string[];
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  monthlyIncludedCrops?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  feeAdditionalCropMonthly?: number;
+
+  @IsOptional()
+  @IsArray()
+  specializedCategories?: CropCategory[];
 }

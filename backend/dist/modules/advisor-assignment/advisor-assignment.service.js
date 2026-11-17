@@ -226,6 +226,15 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 isSeniorDoctor: true,
                 seniorDoctorId: true,
                 doctorConsultationFee: true,
+                feePerConsultation: true,
+                feePerCropSeason: true,
+                feeVipMonthly: true,
+                monthlyIncludedCrops: true,
+                feeAdditionalCropMonthly: true,
+                specializedCategories: true,
+                specializedCrops: true,
+                qualification: true,
+                profileTitle: true,
                 _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: client_1.AdvisorAssignmentStatus.ACTIVE } } } },
             },
             orderBy: { createdAt: 'asc' },
@@ -239,6 +248,132 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 ...rStats,
             };
         });
+    }
+    async listAvailableAdvisorsForCrop(user, cropCycleId) {
+        const cropCycle = await this.prisma.cropCycle.findFirst({
+            where: { id: cropCycleId, deletedAt: null },
+            include: {
+                plot: { include: { farm: true } },
+            },
+        });
+        if (!cropCycle) {
+            throw new common_1.NotFoundException('Crop cycle not found.');
+        }
+        const requiredType = this.roleToAdvisorType(user);
+        const advisors = await this.prisma.user.findMany({
+            where: {
+                AND: [
+                    { OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }] },
+                    {
+                        OR: [
+                            { advisorType: requiredType },
+                            ...(requiredType === client_1.AdvisorType.FARM ? [{ advisorType: null }] : []),
+                        ],
+                    },
+                ],
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+                kingId: true,
+                name: true,
+                photoUrl: true,
+                specialization: true,
+                bio: true,
+                yearsExperience: true,
+                village: true,
+                district: true,
+                state: true,
+                isSeniorDoctor: true,
+                seniorDoctorId: true,
+                doctorConsultationFee: true,
+                feePerConsultation: true,
+                feePerCropSeason: true,
+                feeVipMonthly: true,
+                monthlyIncludedCrops: true,
+                feeAdditionalCropMonthly: true,
+                specializedCategories: true,
+                specializedCrops: true,
+                qualification: true,
+                profileTitle: true,
+                _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: client_1.AdvisorAssignmentStatus.ACTIVE } } } },
+            },
+            orderBy: { createdAt: 'asc' },
+        });
+        const ratingMap = await this.getDoctorRatingStats(advisors.map((a) => a.id));
+        const matchingAdvisors = advisors.filter((advisor) => {
+            const hasCategories = Array.isArray(advisor.specializedCategories) && advisor.specializedCategories.length > 0;
+            const hasCrops = Array.isArray(advisor.specializedCrops) && advisor.specializedCrops.length > 0;
+            if (!hasCategories && !hasCrops)
+                return true;
+            let categoryMatch = false;
+            if (hasCategories && cropCycle.category) {
+                categoryMatch = advisor.specializedCategories.includes(cropCycle.category);
+            }
+            let cropNameMatch = false;
+            if (hasCrops && cropCycle.cropName) {
+                const cLower = cropCycle.cropName.toLowerCase();
+                cropNameMatch = advisor.specializedCrops.some((sc) => sc.toLowerCase().includes(cLower) || cLower.includes(sc.toLowerCase()));
+            }
+            if (hasCategories && hasCrops) {
+                return categoryMatch || cropNameMatch;
+            }
+            if (hasCategories)
+                return categoryMatch;
+            if (hasCrops)
+                return cropNameMatch;
+            return true;
+        });
+        const results = await Promise.all(matchingAdvisors.map(async ({ _count, ...advisor }) => {
+            const rStats = ratingMap.get(advisor.id) ?? { rating: null, ratingCount: 0, ratingLabel: 'No rating till now' };
+            const activeSub = await this.prisma.advisorSubscription.findFirst({
+                where: {
+                    farmerId: user.id,
+                    status: client_1.SubscriptionPlanStatus.ACTIVE,
+                    endDate: { gt: new Date() },
+                    advisorAssignment: { advisorId: advisor.id },
+                },
+                select: { id: true, endDate: true },
+            });
+            let quotaStatus = 'NOT_SUBSCRIBED';
+            let freeSlotsRemaining = 0;
+            let activeCropsUnderAdvisor = 0;
+            const maxIncluded = advisor.monthlyIncludedCrops ?? 3;
+            if (activeSub) {
+                activeCropsUnderAdvisor = await this.prisma.cropCycle.count({
+                    where: {
+                        assignedAdvisorId: advisor.id,
+                        deletedAt: null,
+                        status: { notIn: [client_1.CropStatus.COMPLETED, client_1.CropStatus.FAILED] },
+                    },
+                });
+                freeSlotsRemaining = Math.max(0, maxIncluded - activeCropsUnderAdvisor);
+                quotaStatus = freeSlotsRemaining > 0 ? 'INCLUDED_FREE' : 'ADDITIONAL_CROP_FEE';
+            }
+            return {
+                ...advisor,
+                activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
+                ...rStats,
+                quota: {
+                    hasActiveMonthlySubscription: !!activeSub,
+                    activeSubscriptionId: activeSub?.id ?? null,
+                    subscriptionEndDate: activeSub?.endDate ?? null,
+                    quotaStatus,
+                    monthlyIncludedCrops: maxIncluded,
+                    activeCropsUnderAdvisor,
+                    freeSlotsRemaining,
+                    additionalCropFee: Number(advisor.feeAdditionalCropMonthly ?? 300),
+                },
+            };
+        }));
+        results.sort((a, b) => {
+            if (a.quota.quotaStatus === 'INCLUDED_FREE' && b.quota.quotaStatus !== 'INCLUDED_FREE')
+                return -1;
+            if (b.quota.quotaStatus === 'INCLUDED_FREE' && a.quota.quotaStatus !== 'INCLUDED_FREE')
+                return 1;
+            return (b.rating ?? 0) - (a.rating ?? 0);
+        });
+        return results;
     }
     async assertAdvisorAssignedToFarmer(advisorId, farmerId) {
         const assignment = await this.prisma.advisorAssignment.findFirst({

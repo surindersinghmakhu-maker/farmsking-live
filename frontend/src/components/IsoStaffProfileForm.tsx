@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { apiClient } from '../api/client';
+import { LegalPoliciesModal, PolicyType } from './LegalPoliciesModal';
 
 interface IsoStaffProfileFormProps {
   user: any;
@@ -26,6 +27,8 @@ export const IsoStaffProfileForm: React.FC<IsoStaffProfileFormProps> = ({ user, 
   const [aadhaarLast4, setAadhaarLast4] = useState(user?.aadhaarLast4 || '');
   const [aadhaarDocUrl, setAadhaarDocUrl] = useState(user?.aadhaarDocUrl || '');
   const [termsAccepted, setTermsAccepted] = useState(Boolean(user?.termsAcceptedAt));
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
   const [submitting, setSubmitting] = useState(false);
 
   const pickKycPhoto = async (setter: (v: string) => void) => {
@@ -290,19 +293,50 @@ export const IsoStaffProfileForm: React.FC<IsoStaffProfileFormProps> = ({ user, 
           onChangeText={(t) => setBankIfsc(t.toUpperCase())}
         />
 
-        <TouchableOpacity
-          onPress={() => setTermsAccepted((v) => !v)}
-          activeOpacity={0.85}
+        <View
           style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginTop: 16, padding: 12, backgroundColor: '#0f172a', borderRadius: 10, borderWidth: 1, borderColor: termsAccepted ? '#16a34a' : '#334155' }}
         >
-          <Ionicons name={termsAccepted ? 'checkbox' : 'square-outline'} size={20} color={termsAccepted ? '#16a34a' : '#64748b'} />
+          <TouchableOpacity
+            onPress={() => setTermsAccepted((v) => !v)}
+            activeOpacity={0.7}
+            style={{ cursor: 'pointer' as any }}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: termsAccepted }}
+          >
+            <Ionicons name={termsAccepted ? 'checkbox' : 'square-outline'} size={20} color={termsAccepted ? '#16a34a' : '#64748b'} />
+          </TouchableOpacity>
           <Text style={{ flex: 1, color: '#cbd5e1', fontSize: 12, lineHeight: 17 }}>
-            I confirm that my KYC, PAN &amp; Bank details are genuine, consent to statutory Income Tax TDS deduction (Sec 194-J/194-H; 20% under Sec 206AA if PAN is invalid), and accept{' '}
-            <Text style={{ color: '#38bdf8', textDecorationLine: 'underline' }} onPress={() => router.push('/terms' as any)}>Terms</Text>
-            {' '}&amp;{' '}
-            <Text style={{ color: '#38bdf8', textDecorationLine: 'underline' }} onPress={() => router.push('/privacy-policy' as any)}>Privacy Policy</Text>.
+            <Text onPress={() => setTermsAccepted((v) => !v)} style={{ cursor: 'pointer' as any }}>
+              I confirm that my KYC, PAN &amp; Bank details are genuine, consent to statutory Income Tax TDS deduction (Sec 194-J/194-H; 20% under Sec 206AA if PAN is invalid), and accept{' '}
+            </Text>
+            <Text
+              style={{ color: '#38bdf8', textDecorationLine: 'underline', cursor: 'pointer' as any }}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+                setLegalPolicyType('TERMS_OF_SERVICE');
+                setLegalModalVisible(true);
+              }}
+            >
+              Terms
+            </Text>
+            <Text onPress={() => setTermsAccepted((v) => !v)} style={{ cursor: 'pointer' as any }}>
+              {' '}&amp;{' '}
+            </Text>
+            <Text
+              style={{ color: '#38bdf8', textDecorationLine: 'underline', cursor: 'pointer' as any }}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+                setLegalPolicyType('PRIVACY_POLICY');
+                setLegalModalVisible(true);
+              }}
+            >
+              Privacy Policy
+            </Text>
+            <Text onPress={() => setTermsAccepted((v) => !v)} style={{ cursor: 'pointer' as any }}>
+              .
+            </Text>
           </Text>
-        </TouchableOpacity>
+        </View>
 
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={submitting}>
           {submitting ? (
@@ -312,6 +346,12 @@ export const IsoStaffProfileForm: React.FC<IsoStaffProfileFormProps> = ({ user, 
           )}
         </TouchableOpacity>
       </View>
+
+      <LegalPoliciesModal
+        visible={legalModalVisible}
+        initialType={legalPolicyType}
+        onClose={() => setLegalModalVisible(false)}
+      />
     </ScrollView>
   );
 };

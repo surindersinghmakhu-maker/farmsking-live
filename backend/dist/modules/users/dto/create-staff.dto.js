@@ -49,4 +49,9 @@ __decorate([
     (0, class_validator_1.IsIn)(['en', 'hi', 'pa']),
     __metadata("design:type", String)
 ], CreateStaffDto.prototype, "preferredLanguage", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateStaffDto.prototype, "termsAccepted", void 0);
 //# sourceMappingURL=create-staff.dto.js.map

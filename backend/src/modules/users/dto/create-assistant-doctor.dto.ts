@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, MinLength, IsBoolean } from 'class-validator';
 import { AdvisorType } from '@prisma/client';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
@@ -33,4 +33,8 @@ export class CreateAssistantDoctorDto {
   @IsOptional()
   @IsIn(['FARM', 'GARDEN'])
   advisorType?: AdvisorType;
+
+  @IsOptional()
+  @IsBoolean()
+  termsAccepted?: boolean;
 }

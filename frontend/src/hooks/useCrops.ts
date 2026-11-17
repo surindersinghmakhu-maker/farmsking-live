@@ -71,11 +71,16 @@ export function useDeleteCrop() {
 export function useSubmitCropToAdvisor() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => cropsApi.submitCropToAdvisor(id),
+    mutationFn: (param: string | { id: string; payload?: { advisorId?: string; hiringModel?: string; notes?: string } }) => {
+      const id = typeof param === 'string' ? param : param.id;
+      const payload = typeof param === 'string' ? undefined : param.payload;
+      return cropsApi.submitCropToAdvisor(id, payload);
+    },
     onSuccess: (crop) => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'plot', crop.plotId] });
       queryClient.invalidateQueries({ queryKey: ['crops', crop.id] });
       queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
     },
   });
 }

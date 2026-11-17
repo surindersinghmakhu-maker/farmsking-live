@@ -10,6 +10,7 @@ import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
 import { RejectCropDto } from './dto/reject-crop.dto';
 import { UpdateCropScheduleDto } from './dto/update-crop-schedule.dto';
+import { SubmitCropToAdvisorDto } from './dto/submit-crop-to-advisor.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(
@@ -57,8 +58,12 @@ export class CropsController {
 
   @Roles(Role.FARMER)
   @Post(':id/submit-to-advisor')
-  submitToAdvisor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.cropsService.submitToAdvisor(user, id);
+  submitToAdvisor(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto?: SubmitCropToAdvisorDto,
+  ) {
+    return this.cropsService.submitToAdvisor(user, id, dto);
   }
 
   @Roles(Role.FARMER)

@@ -18,6 +18,7 @@ import { FONT, RADIUS } from '@/constants/theme';
 import { resolveMediaUrl } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
 import { useAuth } from '@/src/store/auth-context';
+import { LegalPoliciesModal } from './LegalPoliciesModal';
 import {
   PartnerApplicationDto,
   PartnerUserSummary,
@@ -238,6 +239,7 @@ export function PartnerSignupModal({
   const [chequeDocUrl, setChequeDocUrl] = useState('');
   const [gstDocUrl, setGstDocUrl] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showLegalModal, setShowLegalModal] = useState(false);
 
   const applyPrefillFromServer = (
     userSummary: PartnerUserSummary | null,
@@ -781,7 +783,8 @@ export function PartnerSignupModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <>
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.dialog}>
           {/* Top Header */}
@@ -1490,22 +1493,38 @@ export function PartnerSignupModal({
                 </View>
 
                 {/* Statutory Terms Acceptance */}
-                <TouchableOpacity
-                  style={styles.termsRow}
-                  activeOpacity={0.8}
-                  onPress={() => setTermsAccepted(!termsAccepted)}
-                >
-                  <Ionicons
-                    name={termsAccepted ? 'checkbox' : 'square-outline'}
-                    size={22}
-                    color={termsAccepted ? '#00ff87' : '#94a3b8'}
-                  />
+                <View style={styles.termsRow}>
+                  <TouchableOpacity
+                    onPress={() => setTermsAccepted(!termsAccepted)}
+                    activeOpacity={0.7}
+                    style={{ cursor: 'pointer' as any }}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: termsAccepted }}
+                  >
+                    <Ionicons
+                      name={termsAccepted ? 'checkbox' : 'square-outline'}
+                      size={22}
+                      color={termsAccepted ? '#00ff87' : '#94a3b8'}
+                    />
+                  </TouchableOpacity>
                   <Text style={styles.termsText}>
-                    I confirm that the statutory details and documents provided are accurate. I accept the{' '}
-                    <Text style={{ color: '#00ff87', fontFamily: FONT.bold }}>FarmsKing Partner Terms of Service</Text>{' '}
-                    and acknowledge Section 194-O / 194-H Income Tax TDS compliance deductions.
+                    <Text onPress={() => setTermsAccepted(!termsAccepted)} style={{ cursor: 'pointer' as any }}>
+                      I confirm that the statutory details and documents provided are accurate. I accept the{' '}
+                    </Text>
+                    <Text
+                      style={{ color: '#00ff87', fontFamily: FONT.bold, textDecorationLine: 'underline', cursor: 'pointer' as any }}
+                      onPress={(e) => {
+                        e?.stopPropagation?.();
+                        setShowLegalModal(true);
+                      }}
+                    >
+                      FarmsKing Partner Terms of Service
+                    </Text>
+                    <Text onPress={() => setTermsAccepted(!termsAccepted)} style={{ cursor: 'pointer' as any }}>
+                      {' '}and acknowledge Section 194-O / 194-H Income Tax TDS compliance deductions.
+                    </Text>
                   </Text>
-                </TouchableOpacity>
+                </View>
               </View>
             )}
 
@@ -1739,6 +1758,13 @@ export function PartnerSignupModal({
         </View>
       </View>
     </Modal>
+
+      <LegalPoliciesModal
+        visible={showLegalModal}
+        initialType="TERMS_OF_SERVICE"
+        onClose={() => setShowLegalModal(false)}
+      />
+    </>
   );
 }
 

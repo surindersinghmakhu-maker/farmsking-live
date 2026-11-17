@@ -26,6 +26,7 @@ import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyWallet } from '@/src/hooks/useWallet';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'FEES';
@@ -129,6 +130,10 @@ export const AdvisorDashboardView: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { data: wallet } = useMyWallet();
+  const { data: appSettings } = useAppSettings();
+  const platformFeePercent = appSettings?.advisorPlatformFeePercent ?? 10.0;
+  const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
+  const doctorPayoutPercent = Math.max(0, 100 - (platformFeePercent + adminFeePercent));
   const { data: farmerStats } = useFarmerStats();
   const stats = farmerStats ?? { total: 0, active: 0, inactive: 0 };
 
@@ -154,16 +159,7 @@ export const AdvisorDashboardView: React.FC = () => {
   const pendingProblems = (assignedProblems ?? []).filter((p) => p.status === 'REPORTED' || p.status === 'UNDER_REVIEW');
   const resolvedProblems = (assignedProblems ?? []).filter((p) => p.status !== 'REPORTED' && p.status !== 'UNDER_REVIEW');
 
-  const { data: appSettings } = useQuery({
-    queryKey: ['app-settings'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/app-settings');
-      return data;
-    },
-    staleTime: 15_000,
-    refetchInterval: 30_000,
-  });
-  const isGroupVoiceCallEnabled = appSettings?.groupVoiceCallEnabled ?? true;
+  const isGroupVoiceCallEnabled = (appSettings as any)?.groupVoiceCallEnabled ?? true;
 
   const voiceCallHook = useGroupVoiceCall();
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
@@ -1173,33 +1169,28 @@ export const AdvisorDashboardView: React.FC = () => {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Ionicons name="receipt-outline" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
                         <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>
-                          E-Prescription & Consultation Settlement Model
+                          Pan-India Advisory Settlement Model ({doctorPayoutPercent.toFixed(0)}% Net Payout)
                         </Text>
                       </View>
                       <View style={{ backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.xs }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>80.3% NET PAYOUT</Text>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>{doctorPayoutPercent.toFixed(1)}% GUARANTEED PAYOUT</Text>
                       </View>
                     </View>
 
                     <View style={{ gap: 8 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1' }}>Farmer Consultation Charge (Set Rate):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>₹100.00</Text>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: isLight ? '#334155' : '#cbd5e1' }}>Total Farmer Consultation Charge (Base):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>100%</Text>
                       </View>
 
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>FarmsKing Platform Infrastructure & R&D (15%):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹15.00</Text>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#3b82f6' }}>Technology Platform Fee ({platformFeePercent.toFixed(1)}%):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#3b82f6' }}>- {platformFeePercent.toFixed(1)}%</Text>
                       </View>
 
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Statutory GST (18% on Platform Fee):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.70</Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#ef4444' }}>Secure Payment Gateway Processing (2%):</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.00</Text>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#8b5cf6' }}>Admin & Operations Fee ({adminFeePercent.toFixed(1)}%):</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#8b5cf6' }}>- {adminFeePercent.toFixed(1)}%</Text>
                       </View>
 
                       <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)', marginVertical: 4 }} />
@@ -1208,10 +1199,26 @@ export const AdvisorDashboardView: React.FC = () => {
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Ionicons name="checkmark-circle" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
                           <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>
-                            Net Credited to Advisor Wallet:
+                            Net Credited to Doctor Wallet:
                           </Text>
                         </View>
-                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>₹80.30</Text>
+                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isLight ? '#15803d' : '#00ff87' }}>{doctorPayoutPercent.toFixed(1)}% Net</Text>
+                      </View>
+                    </View>
+
+                    {/* 3 Revenue Stream Indicators */}
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                      <View style={{ flex: 1, minWidth: 160, backgroundColor: isLight ? '#f8fafc' : '#04160c', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)' }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' }}>1. SOS Prescriptions</Text>
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor, marginTop: 2 }}>Instant Calls & Leaf Scans</Text>
+                      </View>
+                      <View style={{ flex: 1, minWidth: 160, backgroundColor: isLight ? '#f8fafc' : '#04160c', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)' }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' }}>2. Crop Season Plan</Text>
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor, marginTop: 2 }}>120-Day Sowing to Harvest</Text>
+                      </View>
+                      <View style={{ flex: 1, minWidth: 160, backgroundColor: isLight ? '#f8fafc' : '#04160c', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)' }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' }}>3. VIP Farm Care</Text>
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor, marginTop: 2 }}>Monthly Large Farm Audits</Text>
                       </View>
                     </View>
                   </View>

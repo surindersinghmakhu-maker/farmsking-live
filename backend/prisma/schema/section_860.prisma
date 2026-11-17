@@ -149,6 +149,10 @@ model AppSetting {
   gardenerProCardPrice           Decimal  @default(299.00) @db.Decimal(12, 2)
   gardenerVipCardPrice           Decimal  @default(999.00) @db.Decimal(12, 2)
 
+  /// Crop Doctor & Farm Advisor Financial Split (Admin Configurable)
+  advisorPlatformFeePercent      Float    @default(10.0)
+  advisorAdminFeePercent         Float    @default(10.0)
+
   /// Platform TDS/fee deducted on wallet withdrawal (%) — Indian standard: 2% TDS (Sec 194N)
   withdrawalPlatformFeePercent  Float   @default(2.0)
   /// GST on platform service fee for wallet payout — 18% as per Indian GST rules

@@ -119,7 +119,7 @@ export declare class WalletController {
             amount: number;
             reason: string;
             createdAt: Date;
-            category: "WELCOME" | "REFERRAL_SIGNUP" | "REFERRAL_PLAN" | "OTHER";
+            category: "OTHER" | "WELCOME" | "REFERRAL_SIGNUP" | "REFERRAL_PLAN";
             user: {
                 id: string;
                 kingId: string | null;

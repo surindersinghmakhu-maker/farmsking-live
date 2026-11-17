@@ -45,6 +45,9 @@ let AdvisorAssignmentController = class AdvisorAssignmentController {
     listAvailableAdvisors(user) {
         return this.advisorAssignmentService.listAvailableAdvisors(user);
     }
+    listAvailableAdvisorsForCrop(user, cropCycleId) {
+        return this.advisorAssignmentService.listAvailableAdvisorsForCrop(user, cropCycleId);
+    }
     requestSpecificAdvisor(user, advisorId, body) {
         return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId, body?.cropId);
     }
@@ -127,6 +130,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "listAvailableAdvisors", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('available-for-crop/:cropCycleId'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('cropCycleId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "listAvailableAdvisorsForCrop", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('choose-advisor/:advisorId'),

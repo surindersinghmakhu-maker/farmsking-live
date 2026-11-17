@@ -49,6 +49,8 @@ export declare class UpdateAppSettingsDto {
     freeTrialDays?: number;
     freeTrialPlan?: string;
     gardenExpertPlatformFeePercent?: number;
+    advisorPlatformFeePercent?: number;
+    advisorAdminFeePercent?: number;
     gardenerProCardPrice?: number;
     gardenerVipCardPrice?: number;
     allowDirectPlatformSales?: boolean;

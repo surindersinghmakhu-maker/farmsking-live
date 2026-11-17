@@ -163,8 +163,6 @@ export function evaluatePortalEligibility(
   user: { role: Role; roles?: Role[] | null; deactivatedRoles?: Role[] | null } | null,
   portal?: 'CLIENT' | 'PARTNER',
 ): { allowed: boolean; reason?: string } {
-  if (!portal) return { allowed: true };
-
   if (!user) {
     if (portal === 'PARTNER') {
       return {
@@ -178,7 +176,18 @@ export function evaluatePortalEligibility(
 
   const activeRoles = getActiveRolesList(user);
 
-  if (portal === 'CLIENT') {
+  // Security Guard: Dedicated Admin/Staff accounts cannot enter via Client portal or unspecified portal
+  if (!portal || portal === 'CLIENT') {
+    const isStaff = activeRoles.some((r) => ADMIN_STAFF_ROLES.includes(r));
+    const hasExplicitClientRole = activeRoles.some((r) => EXPLICIT_CLIENT_ROLES.includes(r));
+    if (isStaff && !hasExplicitClientRole) {
+      return {
+        allowed: false,
+        reason:
+          'This account is a dedicated FarmsKing Admin/Staff account. Please sign in via the official Admin Portal at admin.farmsking.in.',
+      };
+    }
+
     const clientRolesList: Role[] = [Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.SUPERVISOR, Role.LABOUR, Role.TRADER];
     const hasClientRole = activeRoles.some((r) => clientRolesList.includes(r));
     if (!hasClientRole) {

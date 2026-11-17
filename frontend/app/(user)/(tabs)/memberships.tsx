@@ -306,9 +306,9 @@ export default function MembershipsScreen() {
               style={[styles.tabItem, activeTab === 'FARMER_SOFTWARE' && styles.tabItemActive]}
               onPress={() => { tap(); setActiveTab('FARMER_SOFTWARE'); }}
             >
-              <Ionicons name="ticket" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
+              <Ionicons name="book-outline" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
               <Text style={[styles.tabText, activeTab === 'FARMER_SOFTWARE' && styles.tabTextActive]}>
-                🎫 VIP Pass Scheme
+                Farmer Plan (Records & Accounts)
               </Text>
             </TouchableOpacity>
 
@@ -316,9 +316,9 @@ export default function MembershipsScreen() {
               style={[styles.tabItem, activeTab === 'CROP_CARE' && styles.tabItemActive]}
               onPress={() => { tap(); setActiveTab('CROP_CARE'); }}
             >
-              <Ionicons name="medical" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
+              <Ionicons name="medkit-outline" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
               <Text style={[styles.tabText, activeTab === 'CROP_CARE' && styles.tabTextActive]}>
-                🩺 Crop Care
+                Crop Care (Doctor Consultation)
               </Text>
             </TouchableOpacity>
           </View>
@@ -762,21 +762,21 @@ export default function MembershipsScreen() {
               </Text>
             </View>
 
-            {/* 2-COLUMN RESPONSIVE ADVISORY PACKAGES GRID */}
+            {/* 3-COLUMN RESPONSIVE ADVISORY PACKAGES GRID */}
             <View
               style={{
                 flexDirection: isDesktop ? 'row' : 'column',
-                gap: 16,
+                gap: 12,
                 alignItems: isDesktop ? 'stretch' : 'center',
                 width: '100%',
                 marginTop: 6,
               }}
             >
-              {/* Advisory Package 1: 5-Crop Advisory */}
+              {/* Advisory Package 1: Pay Per Prescription */}
               <View
                 style={[
                   styles.planCard,
-                  isDesktop ? { flex: 1, minWidth: 280, justifyContent: 'space-between' } : { width: '100%' },
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
                   { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: '#0284c7', borderWidth: 1.5 },
                   premiumShadow(isDark ? 'transparent' : '#000000', 'sm'),
                 ]}
@@ -784,15 +784,15 @@ export default function MembershipsScreen() {
                 <View>
                   <View style={styles.planHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.planTitle, { color: '#0284c7' }]}>🩺 5-Crop Care Advisory</Text>
-                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹499 <Text style={styles.planPeriod}>/ Full Crop Season</Text></Text>
+                      <Text style={[styles.planTitle, { color: '#0284c7' }]}>🩺 Pay Per Prescription</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹99 <Text style={styles.planPeriod}>/ Single Consultation</Text></Text>
                     </View>
                   </View>
                   <View style={styles.featureList}>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ 1-on-1 Assigned Crop Care Doctor 👨‍⚕️</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Up to 5 Crop Plots Monitored 🌾</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Stage-wise Spray & Fertilizer Schedules 💊</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Direct Phone & Chat Advisory 📞</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Emergency Leaf Scan Diagnosis</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Direct Doctor Call Verification</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Digital E-Prescription with Dosage</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Permanent Passbook Record</Text>
                   </View>
                 </View>
                 <View style={{ marginTop: 'auto', paddingTop: 10 }}>
@@ -800,35 +800,71 @@ export default function MembershipsScreen() {
                     style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
                     onPress={() => setIsCropCareModalOpen(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>Subscribe 5-Crop Care Advisory 🩺</Text>
+                    <Text style={styles.upgradeBtnText}>Book SOS Consultation 📞</Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Advisory Package 2: 10-Crop VIP Advisory */}
+              {/* Advisory Package 2: Full Crop Season */}
               <View
                 style={[
                   styles.planCard,
-                  isDesktop ? { flex: 1, minWidth: 280, justifyContent: 'space-between' } : { width: '100%' },
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
+                  { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: '#16a34a', borderWidth: 1.5 },
+                  premiumShadow(isDark ? 'transparent' : '#000000', 'sm'),
+                ]}
+              >
+                <View style={[styles.vipTag, { backgroundColor: '#16a34a' }]}>
+                  <Text style={styles.vipTagText}>🌟 MOST POPULAR</Text>
+                </View>
+                <View>
+                  <View style={styles.planHeader}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.planTitle, { color: '#16a34a' }]}>🌾 Per Crop Season</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹499 <Text style={styles.planPeriod}>/ Full Season (120 Days)</Text></Text>
+                    </View>
+                  </View>
+                  <View style={styles.featureList}>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ 120-Day Sowing to Harvest Plan</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Stage-wise Spray & Fertilizer Calendar</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Weather Alert & Disease Warnings</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Unlimited Crop Chat & Q&A</Text>
+                  </View>
+                </View>
+                <View style={{ marginTop: 'auto', paddingTop: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Subscribe Season Plan 🌾</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Advisory Package 3: VIP Farm Care */}
+              <View
+                style={[
+                  styles.planCard,
+                  isDesktop ? { flex: 1, minWidth: 220, justifyContent: 'space-between' } : { width: '100%' },
                   { borderColor: '#7c3aed', borderWidth: 2, backgroundColor: isDark ? colors.cardBg : '#ffffff' },
                   premiumShadow('#7c3aed', 'sm'),
                 ]}
               >
                 <View style={[styles.vipTag, { backgroundColor: '#7c3aed' }]}>
-                  <Text style={styles.vipTagText}>🌟 VIP FULL FARM ADVISORY</Text>
+                  <Text style={styles.vipTagText}>👑 VIP FULL FARM CARE</Text>
                 </View>
                 <View>
                   <View style={styles.planHeader}>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.planTitle, { color: '#7c3aed' }]}>🩺 10-Crop VIP Advisory 👑</Text>
-                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹999 <Text style={styles.planPeriod}>/ Full Crop Season</Text></Text>
+                      <Text style={[styles.planTitle, { color: '#7c3aed' }]}>👑 VIP Farm Care</Text>
+                      <Text style={[styles.planPrice, { color: isDark ? '#ffffff' : '#0f172a' }]}>₹1,999 <Text style={styles.planPeriod}>/ Month Retainer</Text></Text>
                     </View>
                   </View>
                   <View style={styles.featureList}>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Up to 10 Crop Plots Monitored Daily 🌾</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ High-Resolution ISRO Satellite Health Sync 🛰️</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Direct Audio/Video Doctor Calls 📹</Text>
-                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Emergency Disease Diagnosis & Visit Support 🚑</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Multi-Crop Field & Plot Monitoring</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Physical Farm Inspection & Visit</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Soil & Water Lab Report Audits</Text>
+                    <Text style={[styles.featureItem, { color: isDark ? '#cbd5e1' : '#334155' }]}>✓ Priority 24/7 Agronomist Hotline</Text>
                   </View>
                 </View>
                 <View style={{ marginTop: 'auto', paddingTop: 10 }}>
@@ -836,7 +872,7 @@ export default function MembershipsScreen() {
                     style={[styles.upgradeBtn, { backgroundColor: '#7c3aed' }]}
                     onPress={() => setIsCropCareModalOpen(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>Subscribe 10-Crop VIP Advisory 🌟</Text>
+                    <Text style={styles.upgradeBtnText}>Subscribe VIP Farm Care 👑</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -850,7 +886,7 @@ export default function MembershipsScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: isDark ? '#061a0e' : '#ffffff', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#cbd5e1', borderWidth: 1 }]}>
             <View style={styles.modalHeaderRow}>
-              <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🩺 Available Crop Care Doctors</Text>
+              <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🩺 Certified Crop Doctors & Agronomists</Text>
               <TouchableOpacity onPress={() => setIsChoosingAdvisor(false)}>
                 <Ionicons name="close-circle" size={24} color="#64748b" />
               </TouchableOpacity>
@@ -859,15 +895,30 @@ export default function MembershipsScreen() {
               {availableAdvisors.length === 0 ? (
                 <Text style={styles.emptyText}>No crop care doctors available right now.</Text>
               ) : (
-                availableAdvisors.map((adv) => (
+                availableAdvisors.map((adv: any) => (
                   <View key={adv.id} style={styles.advisorItemRow}>
                     <View style={styles.doctorAvatarCircleSmall}>
                       <Ionicons name="person" size={18} color="#0284c7" />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.advisorName, { color: isDark ? '#ffffff' : '#0f172a' }]}>{adv.name}</Text>
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={[styles.advisorName, { color: isDark ? '#ffffff' : '#0f172a' }]}>{adv.name}</Text>
+                        {adv.qualification ? (
+                          <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>{adv.qualification}</Text>
+                          </View>
+                        ) : null}
+                      </View>
                       <Text style={[styles.advisorSub, { color: isDark ? colors.textMuted : '#334155' }]}>
-                        {adv.specialization || 'Specialized Farm Doctor'} · ⭐ {adv.ratingLabel || (adv.rating ? `${adv.rating} ★ (${adv.ratingCount || 1})` : 'No rating till now')} · 📍 {adv.district || 'Local Region'}
+                        {adv.specialization || 'Crop Protection Specialist'} · ⭐ {adv.ratingLabel || (adv.rating ? `${adv.rating} ★ (${adv.ratingCount || 1})` : 'Certified')} · 📍 {adv.district || 'Pan-India'}
+                      </Text>
+                      {adv.specializedCrops && adv.specializedCrops.length > 0 ? (
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#16a34a' }}>
+                          Crops: {adv.specializedCrops.slice(0, 4).join(', ')}{adv.specializedCrops.length > 4 ? '...' : ''}
+                        </Text>
+                      ) : null}
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0284c7' }}>
+                        Fee: ₹{Number(adv.feePerConsultation) || 99} SOS · ₹{Number(adv.feePerCropSeason) || 499} Season
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -875,7 +926,7 @@ export default function MembershipsScreen() {
                       disabled={chooseAdvisor.isPending}
                       onPress={() => handleInitiateAdvisorRequest(adv)}
                     >
-                      <Text style={styles.chooseBtnText}>Assign 🩺</Text>
+                      <Text style={styles.chooseBtnText}>Consult 🩺</Text>
                     </TouchableOpacity>
                   </View>
                 ))

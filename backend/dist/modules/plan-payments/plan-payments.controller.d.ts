@@ -21,9 +21,9 @@ export declare class PlanPaymentsController {
                 updatedAt: Date;
                 isActive: boolean;
                 description: string | null;
+                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
                 billingCycle: string;
-                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
@@ -72,9 +72,9 @@ export declare class PlanPaymentsController {
                 updatedAt: Date;
                 isActive: boolean;
                 description: string | null;
+                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
                 billingCycle: string;
-                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
@@ -124,9 +124,9 @@ export declare class PlanPaymentsController {
                 updatedAt: Date;
                 isActive: boolean;
                 description: string | null;
+                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
                 billingCycle: string;
-                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
@@ -176,9 +176,9 @@ export declare class PlanPaymentsController {
                 updatedAt: Date;
                 isActive: boolean;
                 description: string | null;
+                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
                 billingCycle: string;
-                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
@@ -229,9 +229,9 @@ export declare class PlanPaymentsController {
                     updatedAt: Date;
                     isActive: boolean;
                     description: string | null;
+                    hiringModel: import(".prisma/client").$Enums.HiringModelType;
                     price: import("@prisma/client/runtime/library").Decimal;
                     billingCycle: string;
-                    hiringModel: import(".prisma/client").$Enums.HiringModelType;
                     planType: import(".prisma/client").$Enums.FarmerPlanType;
                     maxFarms: number;
                 };
@@ -283,9 +283,9 @@ export declare class PlanPaymentsController {
                 updatedAt: Date;
                 isActive: boolean;
                 description: string | null;
+                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
                 billingCycle: string;
-                hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };

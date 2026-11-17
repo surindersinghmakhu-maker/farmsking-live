@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ScrollView,
@@ -6,11 +6,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FONT, RADIUS } from '@/constants/theme';
 
-export type PolicyType = 'PRIVACY_POLICY' | 'TERMS_OF_SERVICE';
+export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY' | 'REFUND_POLICY' | 'SHIPPING_POLICY';
 
 interface LegalPoliciesModalProps {
   visible: boolean;
@@ -20,59 +21,92 @@ interface LegalPoliciesModalProps {
 
 export function LegalPoliciesModal({
   visible,
-  initialType = 'PRIVACY_POLICY',
+  initialType = 'TERMS_OF_SERVICE',
   onClose,
 }: LegalPoliciesModalProps) {
   const [activeTab, setActiveTab] = useState<PolicyType>(initialType);
+  const { height } = useWindowDimensions();
 
-  // Keep state synced with prop when opening
-  React.useEffect(() => {
-    if (visible) {
+  useEffect(() => {
+    if (visible && initialType) {
       setActiveTab(initialType);
     }
   }, [visible, initialType]);
+
+  const getHeaderTitle = () => {
+    switch (activeTab) {
+      case 'TERMS_OF_SERVICE':
+        return 'Terms of Service & User Agreement';
+      case 'PRIVACY_POLICY':
+        return 'Privacy Policy & Data Protection';
+      case 'REFUND_POLICY':
+        return 'Refund, Return & Cancellation Policy';
+      case 'SHIPPING_POLICY':
+        return 'Shipping & Pan-India Delivery Policy';
+    }
+  };
+
+  const getHeaderIcon = () => {
+    switch (activeTab) {
+      case 'TERMS_OF_SERVICE':
+        return 'document-text';
+      case 'PRIVACY_POLICY':
+        return 'shield-checkmark';
+      case 'REFUND_POLICY':
+        return 'receipt';
+      case 'SHIPPING_POLICY':
+        return 'cube';
+    }
+  };
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.card}>
-          {/* Header */}
+        {/* Backdrop tap to close */}
+        <TouchableOpacity
+          style={styles.backdropTouchable}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+
+        {/* Modal Card */}
+        <View style={[styles.card, { maxHeight: Math.min(height * 0.9, 740) }]}>
+          {/* Header with Title and Prominent Close [X] Button */}
           <View style={styles.header}>
-            <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text style={styles.title}>
-                {activeTab === 'PRIVACY_POLICY' ? '🛡️ Privacy Policy & Data Protection' : '📜 Terms of Service & User Agreement'}
-              </Text>
-              <Text style={styles.updatedSub}>
-                Updated September 2026 · FarmsKing Agriculture Platform
-              </Text>
+            <View style={styles.headerTitleWrap}>
+              <View style={styles.iconBadge}>
+                <Ionicons name={getHeaderIcon()} size={18} color="#10b981" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.title} numberOfLines={1}>
+                  {getHeaderTitle()}
+                </Text>
+                <Text style={styles.updatedSub} numberOfLines={1}>
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                </Text>
+              </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
-              <Ionicons name="close-circle" size={26} color="#64748b" />
+
+            {/* Explicit Close [X] Button */}
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Close Dialog"
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Ionicons name="close" size={20} color="#f8fafc" />
             </TouchableOpacity>
           </View>
 
           {/* Toggle Tabs */}
           <View style={styles.tabBar}>
-            <TouchableOpacity
-              style={[styles.tabBtn, activeTab === 'PRIVACY_POLICY' && styles.tabBtnActive]}
-              onPress={() => setActiveTab('PRIVACY_POLICY')}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="shield-checkmark"
-                size={15}
-                color={activeTab === 'PRIVACY_POLICY' ? '#16a34a' : '#64748b'}
-              />
-              <Text style={[styles.tabText, activeTab === 'PRIVACY_POLICY' && styles.tabTextActive]}>
-                Privacy Policy
-              </Text>
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.tabBtn, activeTab === 'TERMS_OF_SERVICE' && styles.tabBtnActive]}
               onPress={() => setActiveTab('TERMS_OF_SERVICE')}
@@ -80,113 +114,219 @@ export function LegalPoliciesModal({
             >
               <Ionicons
                 name="document-text"
-                size={15}
-                color={activeTab === 'TERMS_OF_SERVICE' ? '#16a34a' : '#64748b'}
+                size={14}
+                color={activeTab === 'TERMS_OF_SERVICE' ? '#10b981' : '#94a3b8'}
               />
               <Text style={[styles.tabText, activeTab === 'TERMS_OF_SERVICE' && styles.tabTextActive]}>
-                Terms of Service
+                Terms
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'PRIVACY_POLICY' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('PRIVACY_POLICY')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="shield-checkmark"
+                size={14}
+                color={activeTab === 'PRIVACY_POLICY' ? '#10b981' : '#94a3b8'}
+              />
+              <Text style={[styles.tabText, activeTab === 'PRIVACY_POLICY' && styles.tabTextActive]}>
+                Privacy
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'REFUND_POLICY' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('REFUND_POLICY')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="receipt"
+                size={14}
+                color={activeTab === 'REFUND_POLICY' ? '#10b981' : '#94a3b8'}
+              />
+              <Text style={[styles.tabText, activeTab === 'REFUND_POLICY' && styles.tabTextActive]}>
+                Refunds
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'SHIPPING_POLICY' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('SHIPPING_POLICY')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="cube"
+                size={14}
+                color={activeTab === 'SHIPPING_POLICY' ? '#10b981' : '#94a3b8'}
+              />
+              <Text style={[styles.tabText, activeTab === 'SHIPPING_POLICY' && styles.tabTextActive]}>
+                Shipping
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Scrollable Content */}
-          <ScrollView showsVerticalScrollIndicator={false} style={styles.bodyScroll}>
-            {activeTab === 'PRIVACY_POLICY' ? (
-              <View style={{ gap: 14 }}>
-                <View>
-                  <Text style={styles.head}>1. Information We Collect</Text>
+          {/* Scrollable Policy Body */}
+          <ScrollView
+            showsVerticalScrollIndicator={true}
+            style={styles.bodyScroll}
+            contentContainerStyle={styles.bodyScrollContent}
+          >
+            {/* 1. TERMS OF SERVICE */}
+            {activeTab === 'TERMS_OF_SERVICE' && (
+              <View style={styles.sectionWrap}>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>1. Acceptance of Terms & Platform Scope</Text>
                   <Text style={styles.bodyText}>
-                    FarmsKing collects essential account information to provide localized smart farming services:{"\n"}
-                    • <Text style={styles.boldText}>Account Credentials:</Text> Mobile number, full name, unique King ID, postal PIN code, and security credentials.{"\n"}
-                    • <Text style={styles.boldText}>Farm & Agricultural Data:</Text> Land area, soil type, irrigation sources, crop rotation history, spray schedules, and worker attendance ledgers.{"\n"}
-                    • <Text style={styles.boldText}>Location Details:</Text> PIN code, district, state, and village data for accurate daily mandi prices, weather forecasts, and satellite monitoring.
+                    By accessing, registering, browsing, or using the FarmsKing platform (Web & Mobile applications), you agree to be legally bound by these Terms of Service. FarmsKing is an agricultural technology platform operated by <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> (CIN: U01100PB2026PTC063294), providing digital farm management records, live mandi rates, AI crop diagnostic recommendations, AgriStore e-commerce marketplace, and verified agronomy consultations.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>2. Permissions & Media Data</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>2. User Account Security & KYC Obligations</Text>
                   <Text style={styles.bodyText}>
-                    • <Text style={styles.boldText}>Camera & Storage:</Text> Crop photos uploaded for AI disease diagnosis, expert crop doctor consulting, and profile identification.{"\n"}
-                    • <Text style={styles.boldText}>Microphone & Audio Stream:</Text> Used solely during active doctor voice consultations. Audio is never recorded in the background.{"\n"}
-                    • <Text style={styles.boldText}>Device & Notification:</Text> Push notifications for urgent weather alerts, mandi price updates, and order status tracking.
+                    • You agree to provide accurate, verified information during account onboarding (Mobile number, King ID, Farm Acreage, and Postal PIN code).{'\n'}
+                    • Account credentials and OTP codes are strictly confidential. You are solely responsible for activities performed under your registered account.{'\n'}
+                    • Any fraudulent crop listings, counterfeit inputs, or unauthorized account tampering will result in immediate suspension and blacklisting.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>3. How Data Is Protected & Used</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>3. E-Commerce Marketplace & Direct Sales</Text>
                   <Text style={styles.bodyText}>
-                    • All data transmission is encrypted using 256-bit SSL/TLS HTTPS protocols.{"\n"}
-                    • <Text style={styles.boldText}>No Third-Party Data Sale:</Text> FarmsKing does not sell, lease, or monetize your personal or farm data to advertising networks.{"\n"}
-                    • <Text style={styles.boldText}>Authorized Integrations:</Text> Secure payment processors (Cashfree, Razorpay, UPI) and SMS OTP partners handle authorized transactions only.
+                    • FarmsKing operates as an agricultural marketplace connecting farmers with certified seed companies, bio-fertilizer manufacturers, and equipment vendors.{'\n'}
+                    • All listed inputs comply with statutory Fertilizer Control Order (FCO), Seed Act, and Insecticides Act regulations.{'\n'}
+                    • Payments processed via verified gateways (Cashfree, Razorpay, UPI) are escrow-protected under FarmsKing Buyer Protection guidelines.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>4. User Rights & Account Deletion</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>4. Crop Advisory & Plant Pathology Disclaimer</Text>
                   <Text style={styles.bodyText}>
-                    In compliance with Google Play Developer Policy, you hold complete control over your account and personal data:{"\n"}
-                    • <Text style={styles.boldText}>In-App Instant Account Deletion:</Text> Initiate complete account deletion anytime inside the app under Account Settings ➔ Delete Account.{"\n"}
-                    • Upon confirmation, all active personal data, wallet ledgers, and profile records are immediately soft-deleted and permanently purged from active server nodes. You may also email privacy@farmsking.com for data removal requests.
+                    • AI Crop Doctor and agronomist consultation recommendations are advisory in nature based on submitted imagery, symptom logs, and regional weather data.{'\n'}
+                    • Farmers are advised to observe label instructions, application dosages, and local university agronomy guidelines before spraying chemical products.
+                  </Text>
+                </View>
+
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>5. Safe Harbor Protection & Governance</Text>
+                  <Text style={styles.bodyText}>
+                    These terms are governed by the laws of India and subject to intermediary protections under Section 79 of the Information Technology Act, 2000. All legal disputes are subject to the exclusive jurisdiction of the competent courts in Punjab, India.
                   </Text>
                 </View>
               </View>
-            ) : (
-              <View style={{ gap: 14 }}>
-                <View>
-                  <Text style={styles.head}>1. Acceptance of Terms & Platform Services</Text>
+            )}
+
+            {/* 2. PRIVACY POLICY */}
+            {activeTab === 'PRIVACY_POLICY' && (
+              <View style={styles.sectionWrap}>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>1. Information We Collect</Text>
                   <Text style={styles.bodyText}>
-                    By registering, logging in, or accessing FarmsKing Agriculture Platform (via Mobile App or Web), you agree to be bound by these Terms of Service. FarmsKing provides digital agricultural management tools, mandi price updates, AI crop disease scanning, AgriStore marketplace, and digital farm ledgers.
+                    In compliance with the Digital Personal Data Protection Act (DPDPA 2023), FarmsKing collects only essential data needed to provide agricultural services:{'\n'}
+                    • <Text style={styles.boldText}>Identity & Contact:</Text> Mobile number, Name, King ID, and Village/District/PIN code.{'\n'}
+                    • <Text style={styles.boldText}>Farm & Agronomy Records:</Text> Land acreage, crop rotation history, soil test results, and spray records.{'\n'}
+                    • <Text style={styles.boldText}>Media Uploads:</Text> High-resolution crop photos uploaded for AI leaf disease diagnostics and doctor consultations.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>2. User Account Responsibility & Security</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>2. Data Security & Storage Standards</Text>
                   <Text style={styles.bodyText}>
-                    • Users are responsible for maintaining the confidentiality of their login mobile number, password, and King ID.{"\n"}
-                    • You agree to provide true, accurate, and current information during registration and seller store setup.{"\n"}
-                    • Misuse of the platform, fraudulent crop listings, fake buyer inquiries, or unauthorized access attempts will result in instant account suspension.
+                    • All server traffic is secured using 256-bit SSL/TLS end-to-end encryption.{'\n'}
+                    • <Text style={styles.boldText}>Zero Third-Party Data Sale:</Text> FarmsKing never sells, rents, or monetizes farmer personal or agricultural data to unauthorized third parties or ad brokers.{'\n'}
+                    • Financial transactions are processed exclusively through RBI-authorized payment aggregators (Cashfree, Razorpay) with PCI-DSS Level 1 compliance.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>3. AgriStore Marketplace & Buyer-Seller Transactions</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>3. Instant In-App Account & Data Deletion</Text>
                   <Text style={styles.bodyText}>
-                    • FarmsKing acts as an agricultural marketplace platform connecting farmers, sellers, dealers, and agricultural advisors.{"\n"}
-                    • All listed items (seeds, fertilizers, equipment, crops) must comply with Indian statutory laws, FCO guidelines, and quality standards.{"\n"}
-                    • Direct sales between buyers and sellers are subject to mutual verification. Platform order payments processed via verified payment gateways (Cashfree/Razorpay) are protected under FarmsKing buyer protection terms.
+                    You maintain complete ownership of your personal data:{'\n'}
+                    • You may trigger complete account deletion directly in the app via <Text style={styles.boldText}>Account Settings ➔ Delete Account</Text>.{'\n'}
+                    • Upon confirmed deletion, your profile records, stored farm photos, and active ledgers are permanently purged from active production servers. You may also contact privacy@farmsking.com for data access or erasure requests.
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* 3. REFUND POLICY */}
+            {activeTab === 'REFUND_POLICY' && (
+              <View style={styles.sectionWrap}>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>1. Return & Refund Eligibility Window</Text>
+                  <Text style={styles.bodyText}>
+                    Under the Consumer Protection (E-Commerce) Rules 2020, FarmsKing provides transparent refund and return procedures:{'\n'}
+                    • <Text style={styles.boldText}>Return Window:</Text> Return requests for eligible agricultural products must be raised within 7 calendar days of delivery.{'\n'}
+                    • <Text style={styles.boldText}>Condition:</Text> Products must remain unused, unopened, and in their original tamper-evident packaging with company batch codes intact.{'\n'}
+                    • <Text style={styles.boldText}>Damaged / Defective Items:</Text> If a shipment arrives damaged or with broken seals, report within 48 hours with package photos for immediate replacement or full refund.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>4. Advisory & AI Disease Diagnosis Disclaimer</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>2. Refund Processing SLA (5 to 7 Working Days)</Text>
                   <Text style={styles.bodyText}>
-                    • AI Crop Doctor and specialist advisory recommendations are provided as agricultural decision support tools.{"\n"}
-                    • Farmers are advised to follow local agricultural university spray guidelines and package dosage instructions before applying chemical sprays.
+                    • Once returned goods are inspected and verified at the seller fulfillment hub, refunds are initiated immediately.{'\n'}
+                    • The refund amount is credited back to the original source method (UPI, NetBanking, Credit/Debit Card) within <Text style={styles.boldText}>5 to 7 working days</Text> as per banking gateway protocols.{'\n'}
+                    • For Cash-on-Delivery (COD) orders, refunds are credited directly to your verified FarmsKing Wallet or provided bank UPI account.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>5. Wallet, Royalties & Rewards Terms</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>3. Order Cancellations & Advisory Services</Text>
                   <Text style={styles.bodyText}>
-                    • FarmsKing wallet credits, registration welcome bonuses, and advisory commissions are non-transferable reward points credited for legitimate platform engagement.{"\n"}
-                    • Fraudulent attempts to generate duplicate accounts or exploit invite bonuses will result in forfeiture of wallet balance and permanent IP blacklisting.
+                    • Orders may be cancelled with 100% full refund at any time before dispatch from the supplier warehouse.{'\n'}
+                    • <Text style={styles.boldText}>Crop Advisory Plans:</Text> Digital consultation fees are fully refundable if the assigned agronomist fails to provide a prescription within the committed SLA window.
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* 4. SHIPPING POLICY */}
+            {activeTab === 'SHIPPING_POLICY' && (
+              <View style={styles.sectionWrap}>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>1. Order Dispatch & Packaging Standards</Text>
+                  <Text style={styles.bodyText}>
+                    • Orders placed before 2:00 PM IST on working days (Monday through Saturday) are packed and dispatched within <Text style={styles.boldText}>24 to 48 business hours</Text>.{'\n'}
+                    • Agri-inputs (seeds, bio-nutrients, equipment) are packaged in moisture-proof, tamper-evident containers meeting pan-India agricultural transport safety protocols.
                   </Text>
                 </View>
 
-                <View>
-                  <Text style={styles.head}>6. Governance & Jurisdiction</Text>
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>2. Delivery Timelines & Logistics Partners</Text>
                   <Text style={styles.bodyText}>
-                    These terms are governed by the laws of India and subject to Section 79 of the Information Technology Act, 2000 (Safe Harbor Intermediary Protections).
+                    • Delivery typically takes <Text style={styles.boldText}>3 to 7 working days</Text> depending on village / PIN code accessibility.{'\n'}
+                    • We partner with certified tier-1 logistics carriers including Blue Dart, Delhivery, DTDC, and India Post Speed Post for rural reach.{'\n'}
+                    • Real-time SMS and King ID live tracking links are dispatched immediately upon shipment handover.
+                  </Text>
+                </View>
+
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>3. Delivery Inquiries & Support</Text>
+                  <Text style={styles.bodyText}>
+                    For any delivery delays or transit inquiries, contact FarmsKing Support via WhatsApp or email at support@farmsking.com quoting your Order ID.
                   </Text>
                 </View>
               </View>
             )}
           </ScrollView>
 
-          {/* Footer Action */}
-          <TouchableOpacity style={styles.acceptBtn} onPress={onClose} activeOpacity={0.85}>
-            <Text style={styles.acceptBtnText}>I Have Read & Accept</Text>
-          </TouchableOpacity>
+          {/* Footer Action Button */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.closeActionBtn}
+              onPress={onClose}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Close and return to form"
+            >
+              <Ionicons name="checkmark-circle" size={18} color="#ffffff" style={{ marginRight: 6 }} />
+              <Text style={styles.closeActionBtnText}>I Have Read & Understand · Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -196,50 +336,90 @@ export function LegalPoliciesModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(9, 14, 23, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 14,
+    padding: 16,
+    zIndex: 999999,
+  },
+  backdropTouchable: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999999,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    width: '100%',
-    maxWidth: 480,
-    maxHeight: '88%',
+    backgroundColor: '#0f172a',
+    borderRadius: RADIUS.xl || 16,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: '#334155',
+    width: '100%',
+    maxWidth: 620,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    elevation: 25,
+    zIndex: 1000000,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    paddingBottom: 10,
+    borderBottomColor: '#1e293b',
+  },
+  headerTitleWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginRight: 10,
+  },
+  iconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
-    fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+    letterSpacing: -0.2,
   },
   updatedSub: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
     marginTop: 2,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#475569',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderRadius: RADIUS.md,
+    backgroundColor: '#090e17',
     padding: 4,
-    marginVertical: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#1e293b',
     gap: 4,
   },
   tabBtn: {
@@ -247,55 +427,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: RADIUS.sm,
+    gap: 5,
+    paddingVertical: 7,
+    borderRadius: 7,
   },
   tabBtnActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   tabText: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   tabTextActive: {
-    color: '#16a34a',
+    color: '#10b981',
   },
   bodyScroll: {
-    marginVertical: 4,
-    paddingRight: 4,
+    flexGrow: 1,
+    paddingHorizontal: 18,
+    marginTop: 4,
+  },
+  bodyScrollContent: {
+    paddingBottom: 16,
+  },
+  sectionWrap: {
+    gap: 14,
+  },
+  sectionBlock: {
+    backgroundColor: 'rgba(30, 41, 59, 0.45)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.6)',
+    padding: 12,
   },
   head: {
-    fontSize: 13.5,
-    fontFamily: FONT.extraBold,
-    color: '#0f172a',
-    marginBottom: 4,
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+    marginBottom: 6,
   },
   bodyText: {
     fontSize: 12,
     fontFamily: FONT.medium,
-    color: '#334155',
+    color: '#cbd5e1',
     lineHeight: 18,
   },
   boldText: {
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#f8fafc',
   },
-  acceptBtn: {
-    backgroundColor: '#16a34a',
-    borderRadius: RADIUS.md,
-    paddingVertical: 12,
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#1e293b',
+    backgroundColor: '#0f172a',
+  },
+  closeActionBtn: {
+    backgroundColor: '#10b981',
+    borderRadius: RADIUS.md || 10,
+    paddingVertical: 11,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
+    justifyContent: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  acceptBtnText: {
+  closeActionBtnText: {
     color: '#ffffff',
-    fontSize: 13.5,
-    fontFamily: FONT.extraBold,
+    fontSize: 13,
+    fontFamily: FONT.bold,
   },
 });

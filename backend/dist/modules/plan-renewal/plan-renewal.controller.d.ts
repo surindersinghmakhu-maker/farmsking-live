@@ -19,12 +19,12 @@ export declare class PlanRenewalController {
         bonusDayApplied: boolean;
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
-        assignedFarmer: {
+        assignedAdvisor: {
             id: string;
             mobile: string;
             name: string;
         } | null;
-        assignedAdvisor: {
+        assignedFarmer: {
             id: string;
             mobile: string;
             name: string;

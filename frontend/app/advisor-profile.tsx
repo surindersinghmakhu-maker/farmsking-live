@@ -9,17 +9,51 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateAdvisorProfile } from '@/src/hooks/useAdvisorProfile';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { resolveMediaUrl } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
 
 const theme = RoleThemes.FARM_ADVISOR;
 
+const CROP_CATEGORIES = [
+  { key: 'FLOWERS', label: '🌸 Flowers & Floriculture' },
+  { key: 'VEGETABLES', label: '🥦 Vegetables' },
+  { key: 'FRUITS', label: '🍎 Fruits & Orchards' },
+  { key: 'GRAINS', label: '🌾 Grains & Cereals' },
+  { key: 'PULSES', label: '🌱 Pulses & Legumes' },
+  { key: 'SPICES', label: '🌶️ Spices' },
+  { key: 'CASH_CROP', label: '🎋 Cash Crops' },
+  { key: 'OTHER', label: '🌿 Other Crops' },
+];
+
+const PAN_INDIA_CROPS = [
+  'Wheat',
+  'Paddy & Basmati',
+  'Cotton',
+  'Sugarcane',
+  'Potato',
+  'Mustard & Rapeseed',
+  'Maize & Corn',
+  'Soybean',
+  'Pulses & Chickpea',
+  'Vegetables & Chillies',
+  'Fruits & Orchards',
+  'Marigold (Genda)',
+  'Rose & Floriculture',
+  'Kinnow & Citrus',
+];
+
 export default function AdvisorProfileScreen() {
   const router = useRouter();
   const { user, updateUser, refreshUser } = useAuth();
   const updateProfile = useUpdateAdvisorProfile();
+  const { data: appSettings } = useAppSettings();
   const certRef = React.useRef<View>(null);
+
+  const platformFeePercent = appSettings?.advisorPlatformFeePercent ?? 10.0;
+  const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
+  const doctorPayoutPercent = Math.max(0, 100 - (platformFeePercent + adminFeePercent));
 
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
@@ -35,6 +69,13 @@ export default function AdvisorProfileScreen() {
   const setSpecialization = specializationState[1];
   const [bio, setBio] = useState(user?.bio ?? '');
   const [yearsExperience, setYearsExperience] = useState(user?.yearsExperience?.toString() ?? '');
+  const [feePerConsultation, setFeePerConsultation] = useState((user as any)?.feePerConsultation?.toString() ?? '99');
+  const [feePerCropSeason, setFeePerCropSeason] = useState((user as any)?.feePerCropSeason?.toString() ?? '499');
+  const [feeVipMonthly, setFeeVipMonthly] = useState((user as any)?.feeVipMonthly?.toString() ?? '1999');
+  const [monthlyIncludedCrops, setMonthlyIncludedCrops] = useState((user as any)?.monthlyIncludedCrops?.toString() ?? '3');
+  const [feeAdditionalCropMonthly, setFeeAdditionalCropMonthly] = useState((user as any)?.feeAdditionalCropMonthly?.toString() ?? '300');
+  const [specializedCategories, setSpecializedCategories] = useState<string[]>((user as any)?.specializedCategories ?? ['GRAINS', 'VEGETABLES']);
+  const [specializedCrops, setSpecializedCrops] = useState<string[]>((user as any)?.specializedCrops ?? ['Wheat', 'Paddy & Basmati']);
   const [email, setEmail] = useState(user?.email ?? '');
   const [village, setVillage] = useState(user?.village ?? '');
   const [pincode, setPincode] = useState(user?.pincode ?? '');
@@ -116,6 +157,13 @@ export default function AdvisorProfileScreen() {
         district: district.trim() || undefined,
         state: state.trim() || undefined,
         notificationsEnabled,
+        feePerConsultation: feePerConsultation ? Number(feePerConsultation) : undefined,
+        feePerCropSeason: feePerCropSeason ? Number(feePerCropSeason) : undefined,
+        feeVipMonthly: feeVipMonthly ? Number(feeVipMonthly) : undefined,
+        monthlyIncludedCrops: monthlyIncludedCrops ? Number(monthlyIncludedCrops) : 3,
+        feeAdditionalCropMonthly: feeAdditionalCropMonthly ? Number(feeAdditionalCropMonthly) : 300,
+        specializedCategories: specializedCategories as any,
+        specializedCrops,
       });
       setSaved(true);
     } catch (err: any) {
@@ -241,6 +289,222 @@ export default function AdvisorProfileScreen() {
         />
       </View>
 
+      {/* Agronomic Categories Matching */}
+      <View style={styles.section}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={styles.sectionLabel}>Agronomic Categories Specialization</Text>
+          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: theme.primary }}>
+            {specializedCategories.length} Selected
+          </Text>
+        </View>
+        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
+          Choose categories where you offer consultations. Farmers can only adopt you for crops in these categories:
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+          {CROP_CATEGORIES.map((cat) => {
+            const isSelected = specializedCategories.includes(cat.key);
+            return (
+              <TouchableOpacity
+                key={cat.key}
+                style={[
+                  styles.cropChip,
+                  isSelected && styles.cropChipSelected,
+                ]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (isSelected) {
+                    setSpecializedCategories((prev) => prev.filter((c) => c !== cat.key));
+                  } else {
+                    setSpecializedCategories((prev) => [...prev, cat.key]);
+                  }
+                }}
+              >
+                <Ionicons
+                  name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
+                  size={14}
+                  color={isSelected ? '#ffffff' : '#64748b'}
+                />
+                <Text style={[styles.cropChipText, isSelected && styles.cropChipTextSelected]}>
+                  {cat.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Pan-India Crop Specializations */}
+      <View style={styles.section}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={styles.sectionLabel}>Pan-India Crop Specializations</Text>
+          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: theme.primary }}>
+            {specializedCrops.length} Selected
+          </Text>
+        </View>
+        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
+          Select crops where you provide expert spray schedules and disease diagnosis:
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+          {PAN_INDIA_CROPS.map((crop) => {
+            const isSelected = specializedCrops.includes(crop);
+            return (
+              <TouchableOpacity
+                key={crop}
+                style={[
+                  styles.cropChip,
+                  isSelected && styles.cropChipSelected,
+                ]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (isSelected) {
+                    setSpecializedCrops((prev) => prev.filter((c) => c !== crop));
+                  } else {
+                    setSpecializedCrops((prev) => [...prev, crop]);
+                  }
+                }}
+              >
+                <Ionicons
+                  name={isSelected ? 'checkmark-circle' : 'add-circle-outline'}
+                  size={14}
+                  color={isSelected ? '#ffffff' : '#64748b'}
+                />
+                <Text style={[styles.cropChipText, isSelected && styles.cropChipTextSelected]}>
+                  {crop}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* 3-Tier Advisory Packages & Transparent Fee Settings */}
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Advisory Consultation Packages & Pricing</Text>
+        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
+          Set your professional advisory rates. You receive guaranteed {doctorPayoutPercent.toFixed(0)}% net payout directly into your wallet:
+        </Text>
+
+        <View style={styles.priceCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.priceCardTitle}>1. Pay Per Prescription (Instant SOS)</Text>
+              <Text style={styles.priceCardSub}>Single leaf scan diagnosis & phone consultation</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>₹</Text>
+              <TextInput
+                style={styles.priceInput}
+                keyboardType="numeric"
+                value={feePerConsultation}
+                onChangeText={setFeePerConsultation}
+                placeholder="99"
+              />
+            </View>
+          </View>
+          <View style={styles.payoutSplitRow}>
+            <Text style={styles.payoutSplitDoctor}>
+              Doctor Net ({doctorPayoutPercent.toFixed(0)}%): ₹{Math.round(Number(feePerConsultation || 0) * (doctorPayoutPercent / 100))}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.payoutSplitPlatform}>
+                Platform ({platformFeePercent.toFixed(0)}%): ₹{Math.round(Number(feePerConsultation || 0) * (platformFeePercent / 100))}
+              </Text>
+              <Text style={[styles.payoutSplitPlatform, { color: '#8b5cf6' }]}>
+                Admin ({adminFeePercent.toFixed(0)}%): ₹{Math.round(Number(feePerConsultation || 0) * (adminFeePercent / 100))}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.priceCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.priceCardTitle}>2. Per Crop Season Supervision</Text>
+              <Text style={styles.priceCardSub}>120-day complete spray schedule from sowing to harvest</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>₹</Text>
+              <TextInput
+                style={styles.priceInput}
+                keyboardType="numeric"
+                value={feePerCropSeason}
+                onChangeText={setFeePerCropSeason}
+                placeholder="499"
+              />
+            </View>
+          </View>
+          <View style={styles.payoutSplitRow}>
+            <Text style={styles.payoutSplitDoctor}>
+              Doctor Net ({doctorPayoutPercent.toFixed(0)}%): ₹{Math.round(Number(feePerCropSeason || 0) * (doctorPayoutPercent / 100))}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.payoutSplitPlatform}>
+                Platform ({platformFeePercent.toFixed(0)}%): ₹{Math.round(Number(feePerCropSeason || 0) * (platformFeePercent / 100))}
+              </Text>
+              <Text style={[styles.payoutSplitPlatform, { color: '#8b5cf6' }]}>
+                Admin ({adminFeePercent.toFixed(0)}%): ₹{Math.round(Number(feePerCropSeason || 0) * (adminFeePercent / 100))}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.priceCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.priceCardTitle}>3. VIP Farm Care (Monthly Retainer)</Text>
+              <Text style={styles.priceCardSub}>Large farms & orchards: periodic field audits & direct calls</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>₹</Text>
+              <TextInput
+                style={styles.priceInput}
+                keyboardType="numeric"
+                value={feeVipMonthly}
+                onChangeText={setFeeVipMonthly}
+                placeholder="1999"
+              />
+            </View>
+          </View>
+          <View style={styles.payoutSplitRow}>
+            <Text style={styles.payoutSplitDoctor}>
+              Doctor Net ({doctorPayoutPercent.toFixed(0)}%): ₹{Math.round(Number(feeVipMonthly || 0) * (doctorPayoutPercent / 100))}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={styles.payoutSplitPlatform}>
+                Platform ({platformFeePercent.toFixed(0)}%): ₹{Math.round(Number(feeVipMonthly || 0) * (platformFeePercent / 100))}
+              </Text>
+              <Text style={[styles.payoutSplitPlatform, { color: '#8b5cf6' }]}>
+                Admin ({adminFeePercent.toFixed(0)}%): ₹{Math.round(Number(feeVipMonthly || 0) * (adminFeePercent / 100))}
+              </Text>
+            </View>
+          </View>
+
+          {/* Monthly Plan Quota Settings */}
+          <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#e2e8f0', flexDirection: 'row', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569', marginBottom: 4 }}>Included Crops Quota</Text>
+              <TextInput
+                style={[styles.input, { paddingVertical: 8, fontSize: 13 }]}
+                keyboardType="numeric"
+                value={monthlyIncludedCrops}
+                onChangeText={setMonthlyIncludedCrops}
+                placeholder="3"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569', marginBottom: 4 }}>Extra Crop Fee (₹/mo)</Text>
+              <TextInput
+                style={[styles.input, { paddingVertical: 8, fontSize: 13 }]}
+                keyboardType="numeric"
+                value={feeAdditionalCropMonthly}
+                onChangeText={setFeeAdditionalCropMonthly}
+                placeholder="300"
+              />
+            </View>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Contact Details</Text>
         <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#94a3b8" value={email} onChangeText={setEmail} />
@@ -363,4 +627,82 @@ const styles = StyleSheet.create({
   savedText: { color: '#16a34a', fontFamily: FONT.bold, fontSize: 13 },
   saveButton: { backgroundColor: theme.primary, borderRadius: RADIUS.lg, paddingVertical: 16, alignItems: 'center' },
   saveButtonText: { fontSize: 15, fontFamily: FONT.bold, color: '#ffffff' },
+
+  cropChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.2,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
+  },
+  cropChipSelected: {
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
+  },
+  cropChipText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#334155',
+  },
+  cropChipTextSelected: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+  },
+
+  priceCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    gap: 10,
+  },
+  priceCardTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  priceCardSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  priceInput: {
+    width: 80,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+    backgroundColor: '#f8fafc',
+    textAlign: 'right',
+  },
+  payoutSplitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  payoutSplitDoctor: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  payoutSplitPlatform: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
 });

@@ -12,6 +12,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SeoController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const client_1 = require("@prisma/client");
+const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
+const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const seo_service_1 = require("./seo.service");
 let SeoController = class SeoController {
     constructor(seoService) {
@@ -39,8 +43,10 @@ __decorate([
     __metadata("design:returntype", Object)
 ], SeoController.prototype, "getStatus", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Post)('submit'),
-    (0, swagger_1.ApiOperation)({ summary: 'Trigger instant SEO & AI Search IndexNow submission' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Trigger instant SEO & AI Search IndexNow submission (Admin only)' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

@@ -15,10 +15,10 @@ export declare class ChatController {
         lastMessage: {
             id: string;
             createdAt: Date;
+            senderId: string;
             isRead: boolean;
             readAt: Date | null;
             content: string;
-            senderId: string;
             receiverId: string;
         } | null;
         unreadCount: number;
@@ -30,10 +30,10 @@ export declare class ChatController {
     getMessages(user: AuthUser, userId: string): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;
-        senderId: string;
         receiverId: string;
     }[]>;
     isUserOnline(userId: string): {
@@ -42,19 +42,19 @@ export declare class ChatController {
     getMessagesBetweenAsAdmin(userAId: string, userBId: string): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;
-        senderId: string;
         receiverId: string;
     }[]>;
     sendMessage(user: AuthUser, dto: SendMessageDto): Promise<{
         id: string;
         createdAt: Date;
+        senderId: string;
         isRead: boolean;
         readAt: Date | null;
         content: string;
-        senderId: string;
         receiverId: string;
     }>;
 }

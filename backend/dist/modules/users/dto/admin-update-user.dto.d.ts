@@ -35,4 +35,5 @@ export declare class AdminUpdateUserDto {
     seniorDoctorId?: string | null;
     doctorConsultationFee?: number | null;
     employerFarmerId?: string | null;
+    termsAccepted?: boolean;
 }

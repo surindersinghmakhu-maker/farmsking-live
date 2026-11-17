@@ -8,4 +8,5 @@ export declare class CreateAdvisorDto {
     state?: string;
     preferredLanguage?: string;
     advisorType: AdvisorType;
+    termsAccepted?: boolean;
 }

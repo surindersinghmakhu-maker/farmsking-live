@@ -57,6 +57,7 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 import { ProductReviewsSection } from '@/src/components/ProductReviewsSection';
 import { CustomerTrustStrip } from '@/src/components/CustomerTrustStrip';
+import { LegalPoliciesModal, PolicyType } from '@/src/components/LegalPoliciesModal';
 
 const theme = RoleThemes.CUSTOMER;
 
@@ -642,6 +643,8 @@ export default function ShopScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   // 2-Step Checkout Wizard Step State
   const [checkoutStep, setCheckoutStep] = useState<1 | 2>(1);
+  const [legalModalVisible, setLegalModalVisible] = useState(false);
+  const [legalPolicyType, setLegalPolicyType] = useState<PolicyType>('TERMS_OF_SERVICE');
 
   const discountAmount = appliedDiscount?.amount ?? 0;
   const deliveryFeeAmount = (subtotal || 0) >= 999 ? 0 : 100;
@@ -3230,9 +3233,35 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10 }}>
                       <Text style={{ fontSize: 11, lineHeight: 16, color: '#475569' }}>
                         By placing this order with <Text style={{ fontWeight: '700', color: '#0f172a' }}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>, you agree to our{' '}
-                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/terms')}>Terms of Service</Text>,{' '}
-                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/refund-policy')}>Refund Policy</Text> (5–7 working days gateway refunds), and{' '}
-                        <Text style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }} onPress={() => router.push('/shipping-policy')}>Shipping Policy</Text>.
+                        <Text
+                          style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                          onPress={() => {
+                            setLegalPolicyType('TERMS_OF_SERVICE');
+                            setLegalModalVisible(true);
+                          }}
+                        >
+                          Terms of Service
+                        </Text>
+                        ,{' '}
+                        <Text
+                          style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                          onPress={() => {
+                            setLegalPolicyType('REFUND_POLICY');
+                            setLegalModalVisible(true);
+                          }}
+                        >
+                          Refund Policy
+                        </Text>{' '}
+                        (5–7 working days gateway refunds), and{' '}
+                        <Text
+                          style={{ color: '#059669', fontWeight: '700', textDecorationLine: 'underline' }}
+                          onPress={() => {
+                            setLegalPolicyType('SHIPPING_POLICY');
+                            setLegalModalVisible(true);
+                          }}
+                        >
+                          Shipping Policy
+                        </Text>.
                       </Text>
                     </View>
 
@@ -3463,6 +3492,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           </View>
         </View>
       </Modal>
+
+      <LegalPoliciesModal
+        visible={legalModalVisible}
+        initialType={legalPolicyType}
+        onClose={() => setLegalModalVisible(false)}
+      />
 
       {/* Add New SKU Product Modal */}
       <Modal visible={isAddProductModalOpen} transparent animationType="fade" onRequestClose={() => setIsAddProductModalOpen(false)}>
@@ -4859,6 +4894,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           </View>
         </View>
       </Modal>
+
+      <LegalPoliciesModal
+        visible={legalModalVisible}
+        initialType={legalPolicyType}
+        onClose={() => setLegalModalVisible(false)}
+      />
 
       {/* 📷 UPDATE PRODUCT PHOTO MODAL (BROWSE + AI SAMPLE GALLERY) */}
       {editingPhotoProduct && (

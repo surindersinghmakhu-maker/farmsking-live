@@ -93,4 +93,56 @@ export async function adminRejectDoctorChange(id: string, reason?: string): Prom
   return data;
 }
 
+export async function getMyAdvisorPlans(): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>('/advisor-assignments/plans/my-plans');
+  return data;
+}
+
+export async function saveAdvisorPlan(dto: {
+  planType: 'VIP_MONTHLY' | 'PER_CROP' | 'CONSULTATION';
+  price: number;
+  callRequestLimit?: number;
+  inAppCallLimit?: number;
+  videoCallAllowed?: boolean;
+  videoCallLimit?: number;
+  chatEnabled?: boolean;
+}): Promise<any> {
+  const { data } = await apiClient.post<any>('/advisor-assignments/plans', dto);
+  return data;
+}
+
+export async function getDoctorApprovedPlans(advisorId: string): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>(`/advisor-assignments/plans/doctor/${advisorId}`);
+  return data;
+}
+
+export async function scheduleGroupCall(dto: {
+  title: string;
+  scheduledAt: string;
+  targetAudienceType?: string;
+  targetPlanType?: string;
+  targetCropName?: string;
+  invitedFarmerIds?: string[];
+  alertMessage?: string;
+}): Promise<any> {
+  const { data } = await apiClient.post<any>('/voice-call/schedule', dto);
+  return data;
+}
+
+export async function sendGroupCallAlert(callId: string, message?: string): Promise<any> {
+  const { data } = await apiClient.post<any>(`/voice-call/${callId}/send-alert`, { message });
+  return data;
+}
+
+export async function getAdvisorGroupEvents(): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>('/voice-call/advisor/events');
+  return data;
+}
+
+export async function getFarmerGroupInvitations(): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>('/voice-call/farmer/invitations');
+  return data;
+}
+
+
 

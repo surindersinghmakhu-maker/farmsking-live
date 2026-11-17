@@ -28,6 +28,7 @@ import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { resolveMediaUrl } from '@/src/api/client';
 import { useCreateProduct, useProducts, useProductReviews, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
 import {
@@ -2965,48 +2966,52 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                     {/* 🎟️ & 🧾 STEP 1: DISCOUNT COUPON & BILL SUMMARY */}
                     <View style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#bbf7d0', borderLeftWidth: 5, borderLeftColor: '#15803d', gap: 12 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
-                        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#b45309', alignItems: 'center', justifyContent: 'center' }}>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
-                        </View>
-                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>🎟️ Have a Discount Coupon?</Text>
-                      </View>
+                      {/* Coupon Section — Isolated when ENABLE_COUPON_SYSTEM is false */}
+                      {ENABLE_COUPON_SYSTEM ? (
+                        <>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
+                            <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#b45309', alignItems: 'center', justifyContent: 'center' }}>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
+                            </View>
+                            <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>🎟️ Have a Discount Coupon?</Text>
+                          </View>
 
-                      {/* Coupon Section */}
-                      {appliedDiscount ? (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', paddingVertical: 8, paddingHorizontal: 10 }}>
-                          <Ionicons name="pricetag" size={16} color="#16a34a" />
-                          <Text style={{ flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>
-                            Discount Code '{appliedDiscount.code}' Applied — Savings: ₹{appliedDiscount.amount.toLocaleString('en-IN')}
-                          </Text>
-                          <TouchableOpacity onPress={handleRemoveCoupon}>
-                            <Ionicons name="close-circle" size={18} color="#94a3b8" />
-                          </TouchableOpacity>
-                        </View>
-                      ) : (
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                          <TextInput
-                            style={[styles.modalInput, { flex: 1, height: 40, textTransform: 'uppercase', fontFamily: FONT.bold, fontSize: 12.5 }]}
-                            placeholder="Enter coupon code (e.g. KISAAN50)"
-                            placeholderTextColor="#94a3b8"
-                            autoCapitalize="characters"
-                            value={couponCode}
-                            onChangeText={setCouponCode}
-                          />
-                          <TouchableOpacity
-                            style={{ backgroundColor: '#15803d', paddingHorizontal: 16, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' }}
-                            disabled={!couponCode.trim() || couponPreview.isPending}
-                            onPress={handleApplyCoupon}
-                          >
-                            {couponPreview.isPending ? (
-                              <ActivityIndicator color="#ffffff" size="small" />
-                            ) : (
-                              <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>Apply Code</Text>
-                            )}
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                      {couponError ? <Text style={{ color: '#dc2626', fontSize: 11.5, fontFamily: FONT.medium }}>{couponError}</Text> : null}
+                          {appliedDiscount ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', paddingVertical: 8, paddingHorizontal: 10 }}>
+                              <Ionicons name="pricetag" size={16} color="#16a34a" />
+                              <Text style={{ flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>
+                                Discount Code '{appliedDiscount.code}' Applied — Savings: ₹{appliedDiscount.amount.toLocaleString('en-IN')}
+                              </Text>
+                              <TouchableOpacity onPress={handleRemoveCoupon}>
+                                <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                              </TouchableOpacity>
+                            </View>
+                          ) : (
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                              <TextInput
+                                style={[styles.modalInput, { flex: 1, height: 40, textTransform: 'uppercase', fontFamily: FONT.bold, fontSize: 12.5 }]}
+                                placeholder="Enter coupon code (e.g. KISAAN50)"
+                                placeholderTextColor="#94a3b8"
+                                autoCapitalize="characters"
+                                value={couponCode}
+                                onChangeText={setCouponCode}
+                              />
+                              <TouchableOpacity
+                                style={{ backgroundColor: '#15803d', paddingHorizontal: 16, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' }}
+                                disabled={!couponCode.trim() || couponPreview.isPending}
+                                onPress={handleApplyCoupon}
+                              >
+                                {couponPreview.isPending ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>Apply Code</Text>
+                                )}
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                          {couponError ? <Text style={{ color: '#dc2626', fontSize: 11.5, fontFamily: FONT.medium }}>{couponError}</Text> : null}
+                        </>
+                      ) : null}
 
                       {/* Live Bill Summary Breakdown */}
                       <View style={{ gap: 6, marginTop: 4, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>

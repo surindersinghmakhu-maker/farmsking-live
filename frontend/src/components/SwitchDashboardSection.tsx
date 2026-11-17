@@ -48,10 +48,16 @@ const tap = () => {
  */
 type ExtraRow = { key: string; label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void };
 
-export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] } = {}) {
+export function SwitchDashboardSection({
+  extraRows,
+  allowAddPartnerRole,
+}: {
+  extraRows?: ExtraRow[];
+  allowAddPartnerRole?: boolean;
+} = {}) {
   const router = useRouter();
   const { role, setRole, assignedRoles } = useRole();
-  const { user, updateUser, setLoginPortal } = useAuth();
+  const { user, updateUser, setLoginPortal, loginPortal } = useAuth();
   const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const becomeFarmer = useBecomeFarmer();
   const becomeGardener = useBecomeGardener();
@@ -67,6 +73,13 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
     existingApplication: any;
   } | null>(null);
   const [loadingPartnerSession, setLoadingPartnerSession] = useState(false);
+
+  // Only show "+ Add Another Partner Role" in Partner login, never in Client login
+  const isPartnerLogin =
+    allowAddPartnerRole ??
+    (loginPortal === 'PARTNER' ||
+      (loginPortal !== 'CLIENT' &&
+        (PARTNER_PORTAL_UI_ROLES.includes(role as any) || role === 'SELLER' || role === 'AGENT')));
 
   const isFarmStaff = assignedRoles.some((r) => r === 'SUPERVISOR' || r === 'LABOUR');
   if (isFarmStaff) {
@@ -328,37 +341,39 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
         </View>
       ) : null}
 
-      {/* + Add Another Role Card */}
-      <TouchableOpacity
-        style={[
-          styles.addRoleCard,
-          {
-            backgroundColor: isLight ? '#ffffff' : '#04160c',
-            borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.28)',
-          },
-          premiumShadow(isLight ? '#000000' : '#00ff87', 'sm'),
-        ]}
-        activeOpacity={0.85}
-        disabled={loadingPartnerSession}
-        onPress={handleOpenAddRole}
-      >
-        <View style={[styles.iconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.14)' }]}>
-          {loadingPartnerSession ? (
-            <ActivityIndicator size="small" color="#16a34a" />
-          ) : (
-            <Ionicons name="add-circle" size={20} color="#16a34a" />
-          )}
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.rowLabel, { color: isLight ? '#0f172a' : '#ffffff' }]}>
-            + Add Another Partner Role
-          </Text>
-          <Text style={[styles.rowSub, { color: isLight ? '#64748b' : '#94a3b8' }]}>
-            Expand your profile: Seller, Crop Doctor, Nursery, or Agent with 1-click KYC reuse
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={isLight ? '#94a3b8' : '#64748b'} />
-      </TouchableOpacity>
+      {/* + Add Another Role Card — Strictly visible ONLY in Partner login, never in Client login */}
+      {isPartnerLogin ? (
+        <TouchableOpacity
+          style={[
+            styles.addRoleCard,
+            {
+              backgroundColor: isLight ? '#ffffff' : '#04160c',
+              borderColor: isLight ? '#cbd5e1' : 'rgba(0, 255, 135, 0.28)',
+            },
+            premiumShadow(isLight ? '#000000' : '#00ff87', 'sm'),
+          ]}
+          activeOpacity={0.85}
+          disabled={loadingPartnerSession}
+          onPress={handleOpenAddRole}
+        >
+          <View style={[styles.iconBg, { backgroundColor: isLight ? '#dcfce7' : 'rgba(0, 255, 135, 0.14)' }]}>
+            {loadingPartnerSession ? (
+              <ActivityIndicator size="small" color="#16a34a" />
+            ) : (
+              <Ionicons name="add-circle" size={20} color="#16a34a" />
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.rowLabel, { color: isLight ? '#0f172a' : '#ffffff' }]}>
+              + Add Another Partner Role
+            </Text>
+            <Text style={[styles.rowSub, { color: isLight ? '#64748b' : '#94a3b8' }]}>
+              Expand your profile: Seller, Crop Doctor, Nursery, or Agent with 1-click KYC reuse
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={isLight ? '#94a3b8' : '#64748b'} />
+        </TouchableOpacity>
+      ) : null}
 
       <PartnerSignupModal
         visible={isPartnerSignupOpen}

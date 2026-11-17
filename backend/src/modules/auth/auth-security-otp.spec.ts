@@ -282,7 +282,7 @@ describe('Auth OTP-Only Client/Worker & Security Regression Tests', () => {
 
       const linkRes = await service.verifyMobileLinkOtp(
         { id: 'u-google-1', mobile: 'G_9988776655' } as any,
-        { mobile: '9876543211', otp: otpSend.devOtp! },
+        { mobile: '9876543211', otp: (otpSend as any).devOtp! },
       );
       expect(linkRes.success).toBe(true);
       expect(linkRes.user.mobile).toBe('9876543211');

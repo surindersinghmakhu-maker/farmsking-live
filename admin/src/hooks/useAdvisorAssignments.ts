@@ -124,3 +124,33 @@ export function useAdminRejectDoctorChange() {
   });
 }
 
+export function usePendingAdvisorPlans() {
+  return useQuery({
+    queryKey: ['advisor-assignments', 'pending-plans'],
+    queryFn: advisorAssignmentsApi.getPendingAdvisorPlans,
+  });
+}
+
+export function useAdminApproveAdvisorPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, modifications }: { id: string; modifications?: any }) =>
+      advisorAssignmentsApi.adminApproveAdvisorPlan(id, modifications),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
+export function useAdminRejectAdvisorPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      advisorAssignmentsApi.adminRejectAdvisorPlan(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
+

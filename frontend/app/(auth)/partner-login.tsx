@@ -466,10 +466,11 @@ export default function PartnerLoginScreen() {
           return;
         }
         setOtpSent(true);
-        setDevOtp(otpRes?.devOtp || '123456');
-        setOtpDigits(['', '', '', '', '', '']);
+        const codeToFill = String(otpRes?.devOtp || '123456').slice(0, 6);
+        setDevOtp(codeToFill);
+        setOtpDigits(codeToFill.split(''));
         setResendTimer(60);
-        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
       } catch (err: any) {
         if (!applyStructuredPartnerError(err, cleanNum)) {
           const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
@@ -1137,24 +1138,6 @@ export default function PartnerLoginScreen() {
               ) : (
                 /* ── PARTNER MOBILE OTP SIGN IN ── */
                 <>
-                  {isLocalhost && (
-                    <View style={styles.devBanner}>
-                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="construct" size={14} color="#f59e0b" />
-                        <Text style={styles.devBannerSubtitle}>
-                          Local Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={autoFillDevOtp}
-                        style={styles.autoFillBtn}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.autoFillBtnText}>Auto-Fill 123456</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
                   <View style={styles.inputSection}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                       <Text style={styles.fieldLabel}>Registered Partner Mobile</Text>
@@ -1258,19 +1241,6 @@ export default function PartnerLoginScreen() {
                             Code sent to +91 {mobile.slice(0, 5)} {mobile.slice(5)}
                           </Text>
                         </View>
-                        {devOtp && (
-                          <TouchableOpacity
-                            onPress={() => {
-                              const digits = devOtp.split('');
-                              setOtpDigits(digits);
-                              handleOtpLogin(devOtp);
-                            }}
-                            style={styles.quickFillButton}
-                          >
-                            <Ionicons name="flash" size={11} color="#fbbf24" />
-                            <Text style={styles.quickFillText}>Fill {devOtp}</Text>
-                          </TouchableOpacity>
-                        )}
                       </View>
 
                       {/* 6 Segmented OTP Cells */}

@@ -963,4 +963,223 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
     return { success: true };
   }
+
+  /**
+   * Advisor creates or updates their custom advisory plan.
+   * Plan is set to PENDING_APPROVAL and must be approved by Admin before becoming live.
+   */
+  async createOrUpdateAdvisorPlan(advisorUser: AuthUser, dto: any) {
+    const existing = await this.prisma.advisorPlan.findFirst({
+      where: {
+        advisorId: advisorUser.id,
+        hiringModel: dto.hiringModel,
+      },
+    });
+
+    let plan;
+    if (existing) {
+      plan = await this.prisma.advisorPlan.update({
+        where: { id: existing.id },
+        data: {
+          name: dto.name,
+          description: dto.description,
+          price: dto.price,
+          billingCycle: dto.billingCycle || 'MONTHLY',
+          callRequestLimit: dto.callRequestLimit ?? 5,
+          inAppCallLimit: dto.inAppCallLimit ?? 3,
+          videoCallAllowed: dto.videoCallAllowed ?? false,
+          videoCallLimit: dto.videoCallLimit ?? 0,
+          chatEnabled: dto.chatEnabled ?? true,
+          approvalStatus: 'PENDING_APPROVAL',
+          adminNotes: null,
+          isActive: true,
+        },
+      });
+    } else {
+      plan = await this.prisma.advisorPlan.create({
+        data: {
+          advisorId: advisorUser.id,
+          name: dto.name,
+          description: dto.description,
+          hiringModel: dto.hiringModel,
+          price: dto.price,
+          billingCycle: dto.billingCycle || 'MONTHLY',
+          callRequestLimit: dto.callRequestLimit ?? 5,
+          inAppCallLimit: dto.inAppCallLimit ?? 3,
+          videoCallAllowed: dto.videoCallAllowed ?? false,
+          videoCallLimit: dto.videoCallLimit ?? 0,
+          chatEnabled: dto.chatEnabled ?? true,
+          approvalStatus: 'PENDING_APPROVAL',
+          isActive: true,
+        },
+      });
+    }
+
+    // Notify Super Admins & Admins
+    const admins = await this.prisma.user.findMany({
+      where: {
+        OR: [{ role: Role.ADMIN }, { role: Role.SUPER_ADMIN }],
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    for (const admin of admins) {
+      await this.notificationsService.create(
+        admin.id,
+        NotificationType.SYSTEM,
+        'Advisor Plan Pending Approval 📋',
+        `Doctor ${advisorUser.name} submitted a ${dto.hiringModel} plan (${dto.name} - ₹${dto.price}) for Admin review and approval.`,
+        { planId: plan.id, advisorId: advisorUser.id, type: 'ADVISOR_PLAN_PENDING' },
+      ).catch(() => {});
+    }
+
+    return plan;
+  }
+
+  /**
+   * Advisor gets all their created plans with approval statuses
+   */
+  async getMyAdvisorPlans(advisorUser: AuthUser) {
+    return this.prisma.advisorPlan.findMany({
+      where: { advisorId: advisorUser.id },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Public/Farmer: get approved active plans of a doctor
+   */
+  async getDoctorApprovedPlans(advisorId: string) {
+    return this.prisma.advisorPlan.findMany({
+      where: {
+        advisorId,
+        approvalStatus: 'APPROVED',
+        isActive: true,
+      },
+      orderBy: { price: 'asc' },
+    });
+  }
+
+  /**
+   * Admin: get all pending advisor plan submissions
+   */
+  async getPendingAdvisorPlansForAdmin() {
+    const plans = await this.prisma.advisorPlan.findMany({
+      where: { approvalStatus: 'PENDING_APPROVAL' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const advisorIds = [...new Set(plans.map((p) => p.advisorId).filter(Boolean))] as string[];
+    const advisors = await this.prisma.user.findMany({
+      where: { id: { in: advisorIds } },
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        kingId: true,
+        specialization: true,
+        photoUrl: true,
+      },
+    });
+    const advMap = new Map(advisors.map((a) => [a.id, a]));
+
+    return plans.map((p) => ({
+      ...p,
+      advisor: p.advisorId ? advMap.get(p.advisorId) : null,
+    }));
+  }
+
+  /**
+   * Admin: Approve advisor plan with optional modifications
+   */
+  async adminApproveAdvisorPlan(adminUser: AuthUser, planId: string, modifications?: any) {
+    const plan = await this.prisma.advisorPlan.findUnique({
+      where: { id: planId },
+    });
+    if (!plan) {
+      throw new NotFoundException('Advisor plan not found.');
+    }
+
+    const updated = await this.prisma.advisorPlan.update({
+      where: { id: planId },
+      data: {
+        approvalStatus: 'APPROVED',
+        isActive: true,
+        reviewedById: adminUser.id,
+        reviewedAt: new Date(),
+        adminNotes: modifications?.adminNotes ?? plan.adminNotes,
+        ...(modifications?.price !== undefined ? { price: modifications.price } : {}),
+        ...(modifications?.callRequestLimit !== undefined ? { callRequestLimit: modifications.callRequestLimit } : {}),
+        ...(modifications?.inAppCallLimit !== undefined ? { inAppCallLimit: modifications.inAppCallLimit } : {}),
+        ...(modifications?.videoCallAllowed !== undefined ? { videoCallAllowed: modifications.videoCallAllowed } : {}),
+        ...(modifications?.videoCallLimit !== undefined ? { videoCallLimit: modifications.videoCallLimit } : {}),
+        ...(modifications?.chatEnabled !== undefined ? { chatEnabled: modifications.chatEnabled } : {}),
+      },
+    });
+
+    // Notify Advisor
+    if (plan.advisorId) {
+      // Sync fee to user profile
+      const userUpdate: any = {};
+      if (plan.hiringModel === 'MONTHLY_SUBSCRIPTION') {
+        userUpdate.feeVipMonthly = updated.price;
+      } else if (plan.hiringModel === 'PER_CROP') {
+        userUpdate.feePerCropSeason = updated.price;
+      } else if (plan.hiringModel === 'PAY_PER_CONSULTATION') {
+        userUpdate.feePerConsultation = updated.price;
+      }
+      if (Object.keys(userUpdate).length > 0) {
+        await this.prisma.user.update({
+          where: { id: plan.advisorId },
+          data: userUpdate,
+        }).catch(() => {});
+      }
+
+      await this.notificationsService.create(
+        plan.advisorId,
+        NotificationType.SYSTEM,
+        'Plan Approved by Admin ✅',
+        `Your advisory plan "${updated.name}" has been approved by FarmsKing Admin and is now LIVE for farmers to subscribe.`,
+        { planId: updated.id, type: 'ADVISOR_PLAN_APPROVED' },
+      ).catch(() => {});
+    }
+
+    return updated;
+  }
+
+  /**
+   * Admin: Reject advisor plan with reason
+   */
+  async adminRejectAdvisorPlan(adminUser: AuthUser, planId: string, reason?: string) {
+    const plan = await this.prisma.advisorPlan.findUnique({
+      where: { id: planId },
+    });
+    if (!plan) {
+      throw new NotFoundException('Advisor plan not found.');
+    }
+
+    const updated = await this.prisma.advisorPlan.update({
+      where: { id: planId },
+      data: {
+        approvalStatus: 'REJECTED',
+        isActive: false,
+        reviewedById: adminUser.id,
+        reviewedAt: new Date(),
+        adminNotes: reason || 'Plan rejected by admin.',
+      },
+    });
+
+    if (plan.advisorId) {
+      await this.notificationsService.create(
+        plan.advisorId,
+        NotificationType.SYSTEM,
+        'Plan Rejected by Admin ❌',
+        `Your advisory plan "${plan.name}" was rejected by Admin. Reason: ${reason || 'Does not meet platform guidelines.'}`,
+        { planId: plan.id, type: 'ADVISOR_PLAN_REJECTED' },
+      ).catch(() => {});
+    }
+
+    return updated;
+  }
 }

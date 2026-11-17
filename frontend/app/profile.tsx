@@ -135,8 +135,16 @@ export default function ProfileScreen() {
     setProfileDevOtp(null);
     try {
       const res = await sendMobileLinkOtp(num);
-      if (res.devOtp) {
+      const isLocalhostEnv =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname.includes('192.168.'));
+      if (res?.devOtp && isLocalhostEnv) {
         setProfileDevOtp(res.devOtp);
+        setOtpCode(String(res.devOtp));
+      } else {
+        setOtpCode('');
       }
       setIsOtpModalOpen(true);
       Alert.alert('📲 OTP Sent', res.message || 'Verification OTP code has been sent to your new mobile number!');
@@ -1257,20 +1265,6 @@ export default function ProfileScreen() {
                   Enter the 6-digit verification code sent to: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>+91 {userMobile}</Text>
                 </Text>
 
-                {/* Dev Mode Auto-Fill Helper (Localhost / Testing Only) */}
-                {(profileDevOtp || (typeof window !== 'undefined' && window.location.hostname === 'localhost')) ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ecfdf5', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#a7f3d0', marginBottom: 12 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#047857' }}>
-                      Test Code: {profileDevOtp || '123456'}
-                    </Text>
-                    <TouchableOpacity
-                      style={{ backgroundColor: '#10b981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 }}
-                      onPress={() => setOtpCode(profileDevOtp || '123456')}
-                    >
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Auto-Fill</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
 
                 <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
                 <TextInput

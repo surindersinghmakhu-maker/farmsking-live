@@ -239,7 +239,8 @@ export default function MoreScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          <SwitchDashboardSection />
+          {/* Dashboard Switcher — Partner add-role card enabled in Partner login */}
+          <SwitchDashboardSection allowAddPartnerRole={true} />
 
           {/* 🌾 FARMER / REGULAR USER MORE MENU */}
           
@@ -384,7 +385,7 @@ export default function MoreScreen() {
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.rowLabel, dynStyles.rowLabel]}>🩺 Crops Care Plan</Text>
-                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Specialist Doctor Advisory & Coupon Offers</Text>
+                        <Text style={[styles.rowSubLabel, dynStyles.rowSubLabel]}>Specialist Doctor Advisory & Care Plans</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color={isLight ? '#cbd5e1' : 'rgba(255,255,255,0.3)'} />
                     </TouchableOpacity>

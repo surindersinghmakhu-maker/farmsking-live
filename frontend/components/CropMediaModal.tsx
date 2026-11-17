@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import { FONT, RADIUS } from '@/constants/theme';
 import { useCrops, CropGpsData } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
 import {
@@ -28,9 +29,11 @@ import {
   CropMediaHistoryBatch,
   deleteRemovedMediaStoreRecords,
   detectMediaCaptureSource,
+  downloadCropPhoto,
   fetchCropMediaFromStore,
   fetchCropRemarkFromStore,
   formatMediaTimestamp,
+  getCalendarWeekRange,
   isLocalGpsMediaActive,
   MAX_REMARK_CHARS,
   MEDIA_DISPLAY_DAYS,
@@ -308,9 +311,8 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
 
   // Take live photo via real camera (tagged LIVE; never silently falls back to gallery)
   const handleTakePhotoLive = async () => {
-    if (isActiveCycleLocked) return;
     if (photos.length >= 6) {
-      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos.');
+      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos in Crop Gallery.');
       return;
     }
     setErrorMessage(null);
@@ -349,9 +351,8 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
 
   // Pick photos from gallery (tagged UPLOADED)
   const handlePickPhotoLibrary = async () => {
-    if (isActiveCycleLocked) return;
     if (photos.length >= 6) {
-      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos.');
+      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos in Crop Gallery.');
       return;
     }
     setErrorMessage(null);
@@ -407,7 +408,6 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
 
   // Remove photo
   const handleRemovePhoto = (index: number) => {
-    if (isActiveCycleLocked) return;
     const removedUri = photos[index];
     setPhotos((prev) => prev.filter((_, i) => i !== index));
     if (removedUri) {
@@ -422,7 +422,6 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
 
   // Shoot live video ONLY (camera capture; gallery video uploads disabled)
   const handleStartShootVideo = async () => {
-    if (isActiveCycleLocked) return;
     setErrorMessage(null);
     if (Platform.OS === 'web') {
       setShowWebVideoRecorder(true);
@@ -454,13 +453,6 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
     photos.length > 0 || Boolean(videoUri) || Boolean(audioUri) || remarksText.trim().length > 0;
 
   const handleSaveMedia = async () => {
-    if (isActiveCycleLocked) {
-      Alert.alert(
-        'Active 7-Day Display Locked',
-        `Saved media is currently displayed for ${daysRemaining} more day(s). Fresh uploads unlock automatically after 7 days; older records remain permanently inside Crop Activities.`,
-      );
-      return;
-    }
     if (!hasAnythingToSave) {
       const msg = 'Please add at least 1 photo, live video, voice audio, or written remark before saving.';
       setErrorMessage(msg);
@@ -472,7 +464,8 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
     setIsSaving(true);
     try {
       const nowIso = new Date().toISOString();
-      const expiresIso = new Date(Date.now() + MEDIA_DISPLAY_MS).toISOString();
+      const currentCalWeek = getCalendarWeekRange();
+      const expiresIso = currentCalWeek.weekEndSaturday.toISOString();
 
       const uploadedPhotoUrls: string[] = [];
       for (let i = 0; i < photos.length; i++) {
@@ -524,6 +517,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
       );
 
       if (cropId) {
+        const effectiveExpiry = (isActiveCycleLocked && expiresAtIso) ? expiresAtIso : expiresIso;
         const updatedGps: CropGpsData = currentGps
           ? {
               ...currentGps,
@@ -532,7 +526,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               fieldAudio: finalAudioUrl,
               farmerRemarks: trimmedRemarks || undefined,
               mediaCycleSavedAt: nowIso,
-              mediaDisplayExpiresAt: expiresIso,
+              mediaDisplayExpiresAt: effectiveExpiry,
               saveMediaToCropRecord: saveToCropRecord,
               updatedAt: nowIso,
             }
@@ -541,14 +535,14 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               centerLng: 75.8610,
               corners: [],
               areaAcres: 1,
-              locationText: 'Crop Field Media Recorded',
+              locationText: 'Crop Gallery Recorded',
               isLocked: false,
               fieldPhotos: uploadedPhotoUrls,
               fieldVideo: finalVideoUrl,
               fieldAudio: finalAudioUrl,
               farmerRemarks: trimmedRemarks || undefined,
               mediaCycleSavedAt: nowIso,
-              mediaDisplayExpiresAt: expiresIso,
+              mediaDisplayExpiresAt: effectiveExpiry,
               saveMediaToCropRecord: saveToCropRecord,
               updatedAt: nowIso,
             };
@@ -566,12 +560,12 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
             await addCropActivity(cropId, {
               cropId,
               type: 'NOTE',
-              title: 'Crop Record Media & Remarks Saved',
+              title: isActiveCycleLocked && daysRemaining > 0 ? 'Crop Gallery Updated' : 'Crop Gallery Saved',
               date: formatMediaTimestamp(nowIso).dateStr,
               quantity: summaryParts.join(', '),
               notes: trimmedRemarks
-                ? `Remarks: "${trimmedRemarks}". Display window: ${MEDIA_DISPLAY_DAYS} days (archived permanently in Crop Activities thereafter).`
-                : `Saved ${summaryParts.join(', ')} to Crop Record (${MEDIA_DISPLAY_DAYS}-day active display + permanent archive in Crop Activities).`,
+                ? `Remarks: "${trimmedRemarks}". Display window: ${daysRemaining > 0 ? daysRemaining : MEDIA_DISPLAY_DAYS} days remaining (archived permanently in Crop Activities thereafter).`
+                : `Saved ${summaryParts.join(', ')} to Crop Gallery (${daysRemaining > 0 ? daysRemaining : MEDIA_DISPLAY_DAYS}-day active display + permanent archive in Crop Activities).`,
             });
           } catch {
             // Activity note failure should not block media save confirmation
@@ -580,11 +574,12 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
       }
 
       if (onSaved) onSaved(uploadedPhotoUrls, finalVideoUrl);
+      const isCycleUpdate = Boolean(isActiveCycleLocked && daysRemaining > 0);
       Alert.alert(
-        saveToCropRecord ? 'Saved to Crop Record (7-Day Display)' : 'Media & Remarks Saved',
-        saveToCropRecord
-          ? `${uploadedPhotoUrls.length} photo(s)${finalVideoUrl ? ', 1 live video' : ''}${finalAudioUrl ? ', 1 voice note' : ''}${trimmedRemarks ? ', and written remarks' : ''} saved to Crop Record. Visible on display for ${MEDIA_DISPLAY_DAYS} days, then archived permanently in Crop Activities.`
-          : `${uploadedPhotoUrls.length} photo(s)${finalVideoUrl ? ', 1 live video' : ''}${finalAudioUrl ? ', 1 voice note' : ''}${trimmedRemarks ? ', and written remarks' : ''} saved securely.`,
+        isCycleUpdate ? 'Crop Gallery Updated' : 'Saved to Crop Gallery (7-Day Display)',
+        isCycleUpdate
+          ? `Crop Gallery updated with ${uploadedPhotoUrls.length} photo(s)${finalVideoUrl ? ', 1 live video' : ''}${finalAudioUrl ? ', 1 voice note' : ''}${trimmedRemarks ? ', and written remarks' : ''}. Active on display for ${daysRemaining} more day(s).`
+          : `${uploadedPhotoUrls.length} photo(s)${finalVideoUrl ? ', 1 live video' : ''}${finalAudioUrl ? ', 1 voice note' : ''}${trimmedRemarks ? ', and written remarks' : ''} saved to Crop Gallery (7-day active display + permanent archive in Crop Activities).`,
       );
       onClose();
     } catch (err: any) {
@@ -599,12 +594,9 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
     }
   };
 
-  const dayOfCycle = isActiveCycleLocked
-    ? Math.min(MEDIA_DISPLAY_DAYS, Math.max(1, MEDIA_DISPLAY_DAYS - daysRemaining + 1))
-    : 0;
-  const cycleProgressPct = isActiveCycleLocked
-    ? Math.min(100, Math.max(14, Math.round((dayOfCycle / MEDIA_DISPLAY_DAYS) * 100)))
-    : 0;
+  const currentCalWeek = getCalendarWeekRange();
+  const dayOfCycle = currentCalWeek.dayNumber; // 1 to 7 (Sunday = 1, Saturday = 7)
+  const cycleProgressPct = Math.min(100, Math.max(14, Math.round((dayOfCycle / MEDIA_DISPLAY_DAYS) * 100)));
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -612,23 +604,36 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
         <View style={styles.card}>
           {/* PREMIUM DARK OBSIDIAN HEADER + MODULE TABS */}
           <LinearGradient
-            colors={['#090e17', '#0f172a', '#052e16']}
+            colors={['#090e17', '#0f172a', '#062817']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
           >
+            {/* STATUTORY & ISO COMPLIANCE STRIP */}
+            <View style={styles.modalCorporateStrip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
+                <Ionicons name="shield-checkmark" size={11} color="#4ade80" />
+                <Text style={styles.modalCorporateText} numberOfLines={1}>
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · ISO 9001 & ISO 27001 VERIFIED
+                </Text>
+              </View>
+              <View style={styles.modalIcarBadge}>
+                <Text style={styles.modalIcarText}>ICAR ALIGNED</Text>
+              </View>
+            </View>
+
             <View style={styles.header}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, flex: 1 }}>
                 <View style={styles.headerIconCircle}>
-                  <Ionicons name="film" size={20} color="#4ade80" />
+                  <Ionicons name="images" size={20} color="#4ade80" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <Text style={styles.headerTitle}>Media Record</Text>
+                    <Text style={styles.headerTitle}>Crop Gallery</Text>
                     <View
                       style={[
                         styles.headerStatusPill,
-                        isActiveCycleLocked
+                        daysRemaining > 0
                           ? { backgroundColor: 'rgba(22, 163, 74, 0.25)', borderColor: 'rgba(74, 222, 128, 0.5)' }
                           : { backgroundColor: 'rgba(245, 158, 11, 0.22)', borderColor: 'rgba(251, 191, 36, 0.45)' },
                       ]}
@@ -636,14 +641,14 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                       <Text
                         style={[
                           styles.headerStatusPillText,
-                          { color: isActiveCycleLocked ? '#4ade80' : '#fbbf24' },
+                          { color: daysRemaining > 0 ? '#4ade80' : '#fbbf24' },
                         ]}
                       >
-                        {isActiveCycleLocked
+                        {daysRemaining > 0
                           ? `ACTIVE · ${daysRemaining}D LEFT`
                           : hasExpiredArchive
-                            ? 'NEW RECORD UNLOCKED'
-                            : '7-DAY RECORD'}
+                            ? 'NEW UPLOAD UNLOCKED'
+                            : 'NEW 7-DAY UPLOAD'}
                       </Text>
                     </View>
                   </View>
@@ -658,7 +663,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            {/* BUILT-IN TAB SWITCHER: CURRENT RECORD (7 DAYS) vs PAST RECORDS ARCHIVE */}
+            {/* BUILT-IN TAB SWITCHER: ACTIVE GALLERY (7 DAYS) vs PAST GALLERY (ARCHIVE) */}
             <View style={styles.modalTabRow}>
               <TouchableOpacity
                 style={[styles.modalTabBtn, activeTab === 'CURRENT' && styles.modalTabBtnActive]}
@@ -666,7 +671,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                 onPress={() => setActiveTab('CURRENT')}
               >
                 <Ionicons
-                  name={isActiveCycleLocked ? 'eye' : 'add-circle'}
+                  name={daysRemaining > 0 ? 'eye' : 'add-circle'}
                   size={14}
                   color={activeTab === 'CURRENT' ? '#04160c' : '#cbd5e1'}
                 />
@@ -676,7 +681,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     activeTab === 'CURRENT' && styles.modalTabTextActive,
                   ]}
                 >
-                  {isActiveCycleLocked ? 'Current Record (7 Days)' : 'New Media Record'}
+                  {daysRemaining > 0 ? 'Active Gallery (7 Days)' : 'New Gallery Upload'}
                 </Text>
               </TouchableOpacity>
 
@@ -696,7 +701,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     activeTab === 'ARCHIVE' && styles.modalTabTextActive,
                   ]}
                 >
-                  Past Records ({pastBatches.length})
+                  Past Gallery ({pastBatches.length})
                 </Text>
               </TouchableOpacity>
             </View>
@@ -711,7 +716,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               {isLoadingMedia && (
                 <View style={styles.loadingMediaBanner}>
                   <ActivityIndicator size="small" color="#15803d" />
-                  <Text style={styles.loadingMediaText}>Loading Media Record...</Text>
+                  <Text style={styles.loadingMediaText}>Loading Crop Gallery...</Text>
                 </View>
               )}
 
@@ -756,12 +761,12 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                           <Ionicons name="shield-checkmark" size={17} color="#15803d" />
                           <Text style={styles.activeCycleTitle}>
-                            Active Media Record · {daysRemaining} Day{daysRemaining === 1 ? '' : 's'} Left
+                            Sunday to Saturday Cycle · Day {dayOfCycle}/7 ({currentCalWeek.dayName})
                           </Text>
                         </View>
                         <View style={styles.activeDaysPill}>
                           <Text style={styles.activeDaysPillText}>
-                            DAY {dayOfCycle} OF {MEDIA_DISPLAY_DAYS}
+                            DAY {dayOfCycle} OF 7 ({currentCalWeek.dayName.toUpperCase()})
                           </Text>
                         </View>
                       </View>
@@ -769,9 +774,10 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                         <View style={[styles.modalProgressFill, { width: `${cycleProgressPct}%` }]} />
                       </View>
                       <Text style={styles.activeCycleDesc}>
-                        Visible on display until{' '}
-                        {expiresAtIso ? formatMediaTimestamp(expiresAtIso).dateStr : `${MEDIA_DISPLAY_DAYS} days`}.
-                        After 7 days, this record moves to Past Records and you can add a New Media Record.
+                        Week of {currentCalWeek.dateLabel}. Sunday is Day 1 of the weekly cycle. Display active until Saturday midnight ({currentCalWeek.daysRemaining} day{currentCalWeek.daysRemaining === 1 ? '' : 's'} remaining this week).
+                        {photos.length < 6
+                          ? ` You can add ${6 - photos.length} more photo(s), or update video, audio and remarks anytime.`
+                          : ' 6 photos saved. You can inspect, download, or replace them anytime.'}
                       </Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 }}>
                         <TouchableOpacity
@@ -803,11 +809,11 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Ionicons name="refresh-circle" size={18} color="#b45309" />
                         <Text style={styles.expiredArchiveTitle}>
-                          7 Days Complete · Ready for New Media Record
+                          7 Days Complete · Ready for New Gallery Upload
                         </Text>
                       </View>
                       <Text style={styles.expiredArchiveDesc}>
-                        Your last Media Record is saved in Past Records ({pastBatches.length}). You can add a fresh record below for the next 7 days.
+                        Your last Crop Gallery is saved in Past Gallery ({pastBatches.length}). You can add fresh photos/video below for the next 7 days.
                       </Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                         <TouchableOpacity
@@ -841,43 +847,71 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                         <View style={styles.stepTagGreen}>
                           <Text style={styles.stepTagText}>STEP 1</Text>
                         </View>
-                        <Text style={styles.sectionHeading}>Crop Photos (Up to 6)</Text>
+                        <Text style={styles.sectionHeading}>Crop Field Photos</Text>
                       </View>
                       <View style={styles.countBadge}>
-                        <Text style={styles.countBadgeText}>{photos.length} / 6 Added</Text>
+                        <Text style={styles.countBadgeText}>{photos.length} / 6 Photos Added</Text>
                       </View>
                     </View>
 
                     <Text style={styles.sectionSub}>
-                      Take clear photos of leaves or crop field, or choose from gallery. Each photo automatically gets date, time, farmer, and plot stamp.
+                      Take live photos of your crop leaves, stem, or field, or choose from phone gallery. Each photo is watermarked automatically with date, time, your name, and plot location.
                     </Text>
+
+                    {photos.length === 0 && (
+                      <View style={{
+                        backgroundColor: '#fffbeb',
+                        borderWidth: 1,
+                        borderColor: '#fde68a',
+                        borderRadius: 10,
+                        padding: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        marginBottom: 6,
+                      }}>
+                        <Ionicons name="images-outline" size={18} color="#d97706" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>
+                            No Photo Preview for Current Week
+                          </Text>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#b45309' }}>
+                            No photos uploaded yet for the week of {currentCalWeek.dateLabel} (Sunday to Saturday). Add up to 6 field photos below.
+                          </Text>
+                        </View>
+                      </View>
+                    )}
 
                     {/* PHOTO ACTION BUTTONS */}
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       <TouchableOpacity
                         style={[
                           styles.actionBtnGreen,
-                          (photos.length >= 6 || isActiveCycleLocked) && { opacity: 0.45 },
+                          photos.length >= 6 && { opacity: 0.45 },
                         ]}
                         activeOpacity={0.85}
-                        disabled={photos.length >= 6 || isActiveCycleLocked}
+                        disabled={photos.length >= 6}
                         onPress={handleTakePhotoLive}
                       >
                         <Ionicons name="camera" size={16} color="#ffffff" />
-                        <Text style={styles.actionBtnText}>Take Live Photo</Text>
+                        <Text style={styles.actionBtnText}>
+                          {photos.length >= 6 ? 'Photos Limit (6/6)' : 'Take Live Photo'}
+                        </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         style={[
                           styles.actionBtnOutline,
-                          (photos.length >= 6 || isActiveCycleLocked) && { opacity: 0.45 },
+                          photos.length >= 6 && { opacity: 0.45 },
                         ]}
                         activeOpacity={0.85}
-                        disabled={photos.length >= 6 || isActiveCycleLocked}
+                        disabled={photos.length >= 6}
                         onPress={handlePickPhotoLibrary}
                       >
                         <Ionicons name="folder-open" size={16} color="#2563eb" />
-                        <Text style={styles.actionBtnOutlineText}>From Gallery</Text>
+                        <Text style={styles.actionBtnOutlineText}>
+                          {photos.length >= 6 ? 'Limit Reached' : 'From Gallery'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
 
@@ -907,25 +941,44 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                                   >
                                     <Ionicons name="eye" size={13} color="#ffffff" />
                                   </TouchableOpacity>
-                                  {!isActiveCycleLocked && (
-                                    <TouchableOpacity
-                                      style={styles.deleteBtn}
-                                      onPress={() => handleRemovePhoto(slotIdx)}
-                                      accessibilityLabel={`Delete Photo ${slotIdx + 1}`}
-                                    >
-                                      <Ionicons name="trash" size={12} color="#ffffff" />
-                                    </TouchableOpacity>
-                                  )}
+                                  <TouchableOpacity
+                                    style={styles.downloadSmallBtn}
+                                    onPress={() =>
+                                      downloadCropPhoto(
+                                        resolvedPhotoUri,
+                                        `crop_${cropName.toLowerCase().replace(/\s+/g, '_')}_p${slotIdx + 1}.jpg`,
+                                      )
+                                    }
+                                    accessibilityLabel={`Download Photo ${slotIdx + 1}`}
+                                  >
+                                    <Ionicons name="download-outline" size={13} color="#ffffff" />
+                                  </TouchableOpacity>
+                                  <TouchableOpacity
+                                    style={styles.deleteBtn}
+                                    onPress={() => handleRemovePhoto(slotIdx)}
+                                    accessibilityLabel={`Delete Photo ${slotIdx + 1}`}
+                                  >
+                                    <Ionicons name="trash" size={12} color="#ffffff" />
+                                  </TouchableOpacity>
                                 </View>
                               </View>
                             </View>
                           );
                         }
                         return (
-                          <View key={slotIdx} style={styles.emptySlot}>
-                            <Ionicons name="image-outline" size={22} color="#94a3b8" />
-                            <Text style={styles.emptySlotText}>No Photo</Text>
-                          </View>
+                          <TouchableOpacity
+                            key={slotIdx}
+                            style={styles.emptySlot}
+                            activeOpacity={0.8}
+                            onPress={handleTakePhotoLive}
+                            accessibilityLabel={`Add photo slot ${slotIdx + 1}`}
+                          >
+                            <View style={styles.emptySlotCircle}>
+                              <Ionicons name="camera" size={18} color="#15803d" />
+                            </View>
+                            <Text style={styles.emptySlotText}>+ Add Photo</Text>
+                            <Text style={styles.emptySlotSub}>Slot #{slotIdx + 1}</Text>
+                          </TouchableOpacity>
                         );
                       })}
                     </View>
@@ -952,13 +1005,12 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     </View>
 
                     <Text style={styles.sectionSub}>
-                      Record a quick live camera video up to 60 seconds showing your field. You can play and check it anytime.
+                      Record a quick live camera video (up to 60 seconds) showing your crop field and leaf health. Recorded live with real-time watermark.
                     </Text>
 
                     <TouchableOpacity
-                      style={[styles.actionBtnRed, isActiveCycleLocked && { opacity: 0.45 }]}
+                      style={styles.actionBtnRed}
                       activeOpacity={0.85}
-                      disabled={isActiveCycleLocked}
                       onPress={handleStartShootVideo}
                     >
                       <Ionicons name="radio-button-on" size={16} color="#ffffff" />
@@ -975,13 +1027,20 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                         farmerName={effectiveFarmerName}
                         recordedAt={videoRecordedAt}
                         height={220}
-                        onRemove={isActiveCycleLocked ? undefined : () => setVideoUri(null)}
+                        onRemove={() => setVideoUri(null)}
                       />
                     ) : (
-                      <View style={styles.noVideoBox}>
-                        <Ionicons name="videocam-off-outline" size={22} color="#94a3b8" />
-                        <Text style={styles.noVideoText}>No Video Recorded</Text>
-                      </View>
+                      <TouchableOpacity
+                        style={styles.noVideoBox}
+                        activeOpacity={0.8}
+                        onPress={handleStartShootVideo}
+                      >
+                        <View style={styles.noVideoCircle}>
+                          <Ionicons name="videocam" size={20} color="#dc2626" />
+                        </View>
+                        <Text style={styles.noVideoText}>Tap to Record 60-Second Live Video</Text>
+                        <Text style={styles.noVideoSub}>Watermarked with date, time, and plot coordinates</Text>
+                      </TouchableOpacity>
                     )}
                   </View>
 
@@ -998,50 +1057,52 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     farmerName={effectiveFarmerName}
                     fieldName={fieldName}
                     cropName={cropName}
-                    readOnly={isActiveCycleLocked}
+                    readOnly={false}
                   />
 
-                  {/* SAVE TO MEDIA RECORD (7-DAY ACTIVE DISPLAY) OPTION */}
-                  {!isActiveCycleLocked && (
-                    <TouchableOpacity
-                      style={styles.recordOptionCard}
-                      activeOpacity={0.85}
-                      onPress={() => setSaveToCropRecord((prev) => !prev)}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                        <View
-                          style={[
-                            styles.recordCheckbox,
-                            saveToCropRecord && styles.recordCheckboxChecked,
-                          ]}
-                        >
-                          {saveToCropRecord ? (
-                            <Ionicons name="checkmark" size={14} color="#ffffff" />
-                          ) : null}
-                        </View>
-                        <View style={{ flex: 1, gap: 2 }}>
-                          <Text style={styles.recordOptionTitle}>
-                            Save as Media Record ({MEDIA_DISPLAY_DAYS}-Day Display)
-                          </Text>
-                          <Text style={styles.recordOptionDesc}>
-                            Stays visible for {MEDIA_DISPLAY_DAYS} days, then moves to Past Records and Crop Activities so you can add a new Media Record.
-                          </Text>
-                        </View>
+                  {/* SAVE TO CROP GALLERY (7-DAY ACTIVE DISPLAY) OPTION */}
+                  <TouchableOpacity
+                    style={styles.recordOptionCard}
+                    activeOpacity={0.85}
+                    onPress={() => setSaveToCropRecord((prev) => !prev)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
+                      <View
+                        style={[
+                          styles.recordCheckbox,
+                          saveToCropRecord && styles.recordCheckboxChecked,
+                        ]}
+                      >
+                        {saveToCropRecord ? (
+                          <Ionicons name="checkmark" size={14} color="#ffffff" />
+                        ) : null}
                       </View>
-                    </TouchableOpacity>
-                  )}
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <Text style={styles.recordOptionTitle}>
+                          {isActiveCycleLocked && daysRemaining > 0
+                            ? `Keep Saved in Active Crop Gallery (${daysRemaining}d Left)`
+                            : `Save as Crop Gallery (${MEDIA_DISPLAY_DAYS}-Day Display)`}
+                        </Text>
+                        <Text style={styles.recordOptionDesc}>
+                          {isActiveCycleLocked && daysRemaining > 0
+                            ? `Keeps this record active on display for ${daysRemaining} more days. You can update photos, video, audio or remarks anytime.`
+                            : `Stays visible on display for ${MEDIA_DISPLAY_DAYS} days, then automatically archives into Past Gallery and Crop Activities.`}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
                 </>
               ) : (
-                /* TAB 2: PAST MEDIA RECORDS (PERMANENT ARCHIVE) */
+                /* TAB 2: PAST CROP GALLERY (PERMANENT ARCHIVE) */
                 <View style={{ gap: 14 }}>
                   <View style={styles.archiveIntroCard}>
                     <Ionicons name="archive" size={18} color="#0284c7" />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.archiveIntroTitle}>
-                        Past Media Records ({pastBatches.length})
+                        Past Crop Gallery ({pastBatches.length})
                       </Text>
                       <Text style={styles.archiveIntroSub}>
-                        Every saved 7-day Media Record stays permanently here. Older records remain safe even after a new record starts.
+                        Every saved 7-day Crop Gallery stays permanently here. Older records remain safe even after a new record starts.
                       </Text>
                     </View>
                   </View>
@@ -1049,9 +1110,9 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                   {pastBatches.length === 0 ? (
                     <View style={styles.emptyArchiveCard}>
                       <Ionicons name="images-outline" size={32} color="#94a3b8" />
-                      <Text style={styles.emptyArchiveTitle}>No Past Media Records Yet</Text>
+                      <Text style={styles.emptyArchiveTitle}>No Past Crop Gallery Yet</Text>
                       <Text style={styles.emptyArchiveSub}>
-                        Save your first Media Record under the New Media Record tab. It will appear here automatically.
+                        Save your first upload under the New Gallery Upload tab. It will appear here automatically.
                       </Text>
                     </View>
                   ) : (
@@ -1105,19 +1166,33 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                                     <Text style={styles.photoSlotCaption}>
                                       Photo #{idx + 1} · {photoItem.source}
                                     </Text>
-                                    <TouchableOpacity
-                                      style={styles.inspectBtn}
-                                      onPress={() =>
-                                        setArchivePreviewPhoto({
-                                          url: resolvedP,
-                                          source: photoItem.source,
-                                          label: `Photo #${idx + 1} · ${batch.dateLabel}`,
-                                        })
-                                      }
-                                      accessibilityLabel={`Inspect Archived Photo ${idx + 1}`}
-                                    >
-                                      <Ionicons name="eye" size={13} color="#ffffff" />
-                                    </TouchableOpacity>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                      <TouchableOpacity
+                                        style={styles.inspectBtn}
+                                        onPress={() =>
+                                          setArchivePreviewPhoto({
+                                            url: resolvedP,
+                                            source: photoItem.source,
+                                            label: `Photo #${idx + 1} · ${batch.dateLabel}`,
+                                          })
+                                        }
+                                        accessibilityLabel={`Inspect Archived Photo ${idx + 1}`}
+                                      >
+                                        <Ionicons name="eye" size={13} color="#ffffff" />
+                                      </TouchableOpacity>
+                                      <TouchableOpacity
+                                        style={styles.downloadSmallBtn}
+                                        onPress={() =>
+                                          downloadCropPhoto(
+                                            resolvedP,
+                                            `archive_${cropName.toLowerCase().replace(/\s+/g, '_')}_p${idx + 1}.jpg`,
+                                          )
+                                        }
+                                        accessibilityLabel={`Download Archived Photo ${idx + 1}`}
+                                      >
+                                        <Ionicons name="download-outline" size={13} color="#ffffff" />
+                                      </TouchableOpacity>
+                                    </View>
                                   </View>
                                 </View>
                               );
@@ -1158,6 +1233,14 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                   )}
                 </View>
               )}
+
+              {/* INSTITUTIONAL TRUST & ISO AUDIT NOTE */}
+              <View style={styles.institutionalTrustStrip}>
+                <Ionicons name="shield-checkmark" size={14} color="#16a34a" />
+                <Text style={styles.institutionalTrustText}>
+                  Verified Digital Agronomy Record · Protected by ISO 27001 Data Security Standards.
+                </Text>
+              </View>
             </View>
           </ScrollView>
 
@@ -1170,45 +1253,16 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
             </TouchableOpacity>
 
             {activeTab === 'ARCHIVE' ? (
-              !isActiveCycleLocked ? (
-                <TouchableOpacity
-                  style={styles.footerSaveBtn}
-                  activeOpacity={0.85}
-                  onPress={() => setActiveTab('CURRENT')}
-                >
-                  <Ionicons name="add-circle" size={16} color="#ffffff" />
-                  <Text style={styles.footerSaveText}>Add New Media Record</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.footerSaveBtn, { backgroundColor: '#0f172a' }]}
-                  activeOpacity={0.85}
-                  onPress={() => setActiveTab('CURRENT')}
-                >
-                  <Ionicons name="eye" size={16} color="#4ade80" />
-                  <Text style={styles.footerSaveText}>Back to Active Display</Text>
-                </TouchableOpacity>
-              )
-            ) : isActiveCycleLocked ? (
-              onOpenActivities ? (
-                <TouchableOpacity
-                  style={styles.footerSaveBtn}
-                  activeOpacity={0.85}
-                  onPress={onOpenActivities}
-                >
-                  <Ionicons name="calendar-outline" size={16} color="#ffffff" />
-                  <Text style={styles.footerSaveText}>
-                    Open Crop Activities ({daysRemaining}d Display Left)
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={[styles.footerSaveBtn, { backgroundColor: '#64748b' }]}>
-                  <Ionicons name="lock-closed" size={15} color="#ffffff" />
-                  <Text style={styles.footerSaveText}>
-                    Active for {daysRemaining} Day(s) · New Record Unlocks After 7d
-                  </Text>
-                </View>
-              )
+              <TouchableOpacity
+                style={styles.footerSaveBtn}
+                activeOpacity={0.85}
+                onPress={() => setActiveTab('CURRENT')}
+              >
+                <Ionicons name={daysRemaining > 0 ? 'eye' : 'add-circle'} size={16} color="#ffffff" />
+                <Text style={styles.footerSaveText}>
+                  {daysRemaining > 0 ? 'Back to Active Gallery' : 'Add New Gallery Upload'}
+                </Text>
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 style={[
@@ -1226,10 +1280,12 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                 )}
                 <Text style={styles.footerSaveText}>
                   {isSaving
-                    ? 'Saving Media Record...'
-                    : saveToCropRecord
-                      ? 'Save Media Record (7-Day Display)'
-                      : 'Save Media & Remarks'}
+                    ? 'Saving Crop Gallery...'
+                    : daysRemaining > 0
+                      ? `Update Crop Gallery (${daysRemaining}d Left)`
+                      : saveToCropRecord
+                        ? 'Save to Crop Gallery (7-Day Display)'
+                        : 'Save Media & Remarks'}
                 </Text>
               </TouchableOpacity>
             )}
@@ -1285,15 +1341,36 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                 </Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.inspectDoneBtn}
-                onPress={() => {
-                  setPreviewingPhotoIndex(null);
-                  setArchivePreviewPhoto(null);
-                }}
-              >
-                <Text style={styles.inspectDoneBtnText}>Done</Text>
-              </TouchableOpacity>
+              <View style={styles.inspectFooterRow}>
+                <TouchableOpacity
+                  style={styles.inspectDownloadBtn}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    const urlToDownload = archivePreviewPhoto
+                      ? archivePreviewPhoto.url
+                      : resolveCropMediaDisplayUri(photos[previewingPhotoIndex ?? 0]) ||
+                        photos[previewingPhotoIndex ?? 0];
+                    downloadCropPhoto(
+                      urlToDownload,
+                      `farmsking_${cropName.toLowerCase().replace(/\s+/g, '_')}_photo.jpg`,
+                    );
+                  }}
+                >
+                  <Ionicons name="download-outline" size={16} color="#ffffff" />
+                  <Text style={styles.inspectDownloadBtnText}>Download Photo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.inspectDoneBtn}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setPreviewingPhotoIndex(null);
+                    setArchivePreviewPhoto(null);
+                  }}
+                >
+                  <Text style={styles.inspectDoneBtnText}>Done</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -1336,19 +1413,49 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 920,
     maxHeight: '94%',
     backgroundColor: '#ffffff',
     borderRadius: 22,
     padding: 0,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.35)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    elevation: 14,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 28,
+    elevation: 16,
+  },
+  modalCorporateStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingBottom: 8,
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalCorporateText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#86efac',
+    letterSpacing: 0.3,
+  },
+  modalIcarBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.35)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  modalIcarText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#7dd3fc',
+    letterSpacing: 0.4,
   },
   headerGradient: {
     paddingHorizontal: 18,
@@ -1679,45 +1786,90 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  downloadSmallBtn: {
+    backgroundColor: '#0284c7',
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptySlot: {
     width: '31%',
     height: 189,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#cbd5e1',
+    borderColor: '#86efac',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(22, 163, 74, 0.04)',
+    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
   },
-  emptySlotText: {
-    fontSize: 10.5,
-    color: '#64748b',
-    fontWeight: '700',
-  },
-  noVideoBox: {
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    borderStyle: 'dashed',
-    backgroundColor: '#f8fafc',
-    paddingVertical: 18,
+  emptySlotCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    borderWidth: 1,
+    borderColor: '#86efac',
+    marginBottom: 2,
+  },
+  emptySlotText: {
+    fontSize: 11,
+    color: '#15803d',
+    fontWeight: '800',
+  },
+  emptySlotSub: {
+    fontSize: 9.5,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  noVideoBox: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#fca5a5',
+    borderStyle: 'dashed',
+    backgroundColor: '#fff5f5',
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
     marginTop: 4,
+    cursor: Platform.OS === 'web' ? 'pointer' : undefined,
+  },
+  noVideoCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    marginBottom: 2,
   },
   noVideoText: {
-    fontSize: 11.5,
-    color: '#64748b',
-    fontWeight: '700',
+    fontSize: 12,
+    color: '#b91c1c',
+    fontWeight: '800',
+  },
+  noVideoSub: {
+    fontSize: 10.5,
+    color: '#7f1d1d',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   inspectMetaBar: {
     backgroundColor: 'rgba(15, 23, 42, 0.9)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    marginVertical: 8,
     borderWidth: 1,
     borderColor: '#334155',
   },
@@ -2034,16 +2186,57 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     letterSpacing: 0.5,
   },
+  inspectFooterRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  inspectDownloadBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#0284c7',
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  inspectDownloadBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
   inspectDoneBtn: {
+    flex: 1,
     backgroundColor: '#16a34a',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   inspectDoneBtnText: {
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '800',
+  },
+  institutionalTrustStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginTop: 6,
+  },
+  institutionalTrustText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#64748b',
+    fontWeight: '600',
+    lineHeight: 15,
   },
   activeCycleBanner: {
     backgroundColor: '#f0fdf4',

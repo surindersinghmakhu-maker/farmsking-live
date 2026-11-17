@@ -810,31 +810,27 @@ export default function FarmListScreen() {
           </View>
         </View>
 
-        {/* Row 2: 4-KPI Glass Strip */}
+        {/* Row 2: 4-KPI Text-Fit Compact Strip */}
         <View style={{ flexDirection: 'row', gap: 6 }}>
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
-            <Ionicons name="leaf" size={14} color={isDark ? '#4ade80' : '#16a34a'} />
-            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', lineHeight: 22 }}>{activeCropFields.length}</Text>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Active Crops</Text>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(22,163,74,0.06)', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.2)', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d', lineHeight: 18 }}>{activeCropFields.length}</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.6)' : '#374151', textAlign: 'center' }}>Active Crops</Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
-            <Ionicons name="checkmark-done-circle" size={14} color={isDark ? '#34d399' : '#059669'} />
-            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: isDark ? '#34d399' : '#059669', lineHeight: 22 }}>{cropHistory.length}</Text>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Completed Cycles</Text>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(22,163,74,0.06)', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.2)', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: isDark ? '#34d399' : '#059669', lineHeight: 18 }}>{cropHistory.length}</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.6)' : '#374151', textAlign: 'center' }}>Completed Cycles</Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
-            <Ionicons name="medical" size={14} color={activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#64748b' : '#94a3b8')} />
-            <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#64748b' : '#94a3b8'), textAlign: 'center' }} numberOfLines={1}>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(22,163,74,0.06)', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.2)', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: activeAdvisor ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#64748b' : '#94a3b8'), lineHeight: 18, textAlign: 'center' }} numberOfLines={1}>
               {activeAdvisor ? activeAdvisor.name.split(' ')[0] : 'None'}
             </Text>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Crop Doctor</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.6)' : '#374151', textAlign: 'center' }}>Crop Doctor</Text>
           </View>
-          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(22,163,74,0.08)', borderRadius: 11, padding: 8, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.22)', alignItems: 'center', gap: 2 }}>
-            <Ionicons name="cash" size={14} color={isDark ? '#fbbf24' : '#d97706'} />
-            <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: isDark ? '#fbbf24' : '#d97706', lineHeight: 20, textAlign: 'center' }} numberOfLines={1}>
+          <View style={{ flex: 1, backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(22,163,74,0.06)', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 6, borderWidth: 1, borderColor: isDark ? 'rgba(0,255,135,0.18)' : 'rgba(22,163,74,0.2)', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isDark ? '#fbbf24' : '#d97706', lineHeight: 18, textAlign: 'center' }} numberOfLines={1}>
               {'₹'}{revenueDisplay}
             </Text>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.5)' : '#374151', textAlign: 'center' }}>Total Revenue</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? 'rgba(255,255,255,0.6)' : '#374151', textAlign: 'center' }}>Total Revenue</Text>
           </View>
         </View>
 
@@ -880,7 +876,7 @@ export default function FarmListScreen() {
             onPress={() => { tap(); setActiveSubTab('MEDIA_RECORDS'); }}
           >
             <Ionicons
-              name="film"
+              name="images"
               size={15}
               color={activeSubTab === 'MEDIA_RECORDS' ? (isDark ? '#04160c' : '#ffffff') : (isDark ? '#94a3b8' : '#64748b')}
             />
@@ -892,7 +888,7 @@ export default function FarmListScreen() {
                 fontFamily: FONT.extraBold,
               }
             ]}>
-              Media Records
+              Crop Gallery
             </Text>
           </TouchableOpacity>
 
@@ -1199,7 +1195,7 @@ export default function FarmListScreen() {
                         ) : null}
 
                         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
-                          {/* Button 1 (Green - Left): Media Record Module */}
+                          {/* Button 1 (Green - Left): Crop Gallery Module */}
                           {(() => {
                             const hasActiveMedia = isLocalGpsMediaActive(cropGps);
                             const mediaDaysLeft = hasActiveMedia
@@ -1229,12 +1225,12 @@ export default function FarmListScreen() {
                                   setShowCropMediaModal(true);
                                 }}
                               >
-                                <Ionicons name="film" size={14} color="#ffffff" />
+                                <Ionicons name="images" size={14} color="#ffffff" />
                                 <Text
                                   style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}
                                   numberOfLines={1}
                                 >
-                                  {mediaDaysLeft > 0 ? `Media Record (${mediaDaysLeft}d Left)` : 'Media Record'}
+                                  {mediaDaysLeft > 0 ? `Crop Gallery (${mediaDaysLeft}d Left)` : 'Crop Gallery'}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -1495,7 +1491,7 @@ export default function FarmListScreen() {
           }
         />
       ) : activeSubTab === 'MEDIA_RECORDS' ? (
-        /* DEDICATED MEDIA RECORD MODULE VIEW */
+        /* DEDICATED CROP GALLERY MODULE VIEW */
         <MediaRecordHubView
           headerComponent={renderHeroHeader()}
           crops={activeCropFields}
@@ -1571,41 +1567,244 @@ export default function FarmListScreen() {
         </View>
       </Modal>
 
-      {/* UPDATE STAGE PICKER MODAL */}
+      {/* UPDATE STAGE PICKER MODAL (SUPER-PREMIUM) */}
       <Modal visible={stagePickerVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.warningModalCard}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeaderTitle}>Update Stage — {stagePickerCrop?.cropName}</Text>
+        <View style={{
+          flex: 1,
+          backgroundColor: isDark ? 'rgba(0, 0, 0, 0.78)' : 'rgba(15, 23, 42, 0.65)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 16,
+        }}>
+          <View style={{
+            width: '100%',
+            maxWidth: 440,
+            backgroundColor: isDark ? '#090e17' : '#ffffff',
+            borderRadius: 18,
+            borderWidth: 1.2,
+            borderColor: isDark ? 'rgba(74, 222, 128, 0.28)' : '#e2e8f0',
+            padding: 20,
+            gap: 14,
+            ...premiumShadow(isDark ? '#000000' : '#0f172a', 'lg'),
+          }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  backgroundColor: isDark ? 'rgba(74, 222, 128, 0.14)' : '#ecfdf5',
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(74, 222, 128, 0.3)' : '#a7f3d0',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <Ionicons name="trending-up" size={19} color={isDark ? '#4ade80' : '#16a34a'} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontSize: 16,
+                    fontFamily: FONT.extraBold,
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    letterSpacing: -0.2,
+                  }}>
+                    Update Crop Stage
+                  </Text>
+                  <Text style={{
+                    fontSize: 11.5,
+                    fontFamily: FONT.medium,
+                    color: isDark ? '#94a3b8' : '#64748b',
+                    marginTop: 1,
+                  }} numberOfLines={1}>
+                    {stagePickerCrop?.cropName} {stagePickerCrop?.variety ? `(${stagePickerCrop.variety})` : ''}
+                  </Text>
+                </View>
+              </View>
+
               <TouchableOpacity
                 onPress={() => {
+                  tap();
                   setStagePickerVisible(false);
                   setStagePickerCrop(null);
                 }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                <Ionicons name="close" size={20} color="#475569" />
+                <Ionicons name="close" size={18} color={isDark ? '#94a3b8' : '#64748b'} />
               </TouchableOpacity>
             </View>
 
-            {stagePickerCrop &&
-              STAGE_PICKER_OPTIONS.filter((st) => STAGE_ORDER[st.key] > STAGE_ORDER[stagePickerCrop.stage]).map((st) => (
-                <TouchableOpacity
-                  key={st.key}
-                  style={styles.stagePickerRow}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    setStagePickerVisible(false);
-                    if (stagePickerCrop) {
-                      requestCropStageChange(stagePickerCrop, stagePickerCrop.stage, st.key);
-                    }
-                    setStagePickerCrop(null);
-                  }}
-                >
-                  <View style={[styles.stagePickerDot, { backgroundColor: st.color }]} />
-                  <Text style={styles.stagePickerLabel}>{st.label}</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                </TouchableOpacity>
-              ))}
+            {/* Current Stage Strip */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+              borderWidth: 1,
+              borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+              borderRadius: 10,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#94a3b8' : '#64748b' }}>
+                  Current Active Stage:
+                </Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: isDark ? '#4ade80' : '#15803d' }}>
+                  {stagePickerCrop ? (STAGE_META[stagePickerCrop.stage]?.label || stagePickerCrop.stage) : ''}
+                </Text>
+              </View>
+              <View style={{
+                backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7',
+                paddingHorizontal: 7,
+                paddingVertical: 2,
+                borderRadius: 6,
+              }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? '#fbbf24' : '#b45309' }}>
+                  1-Way Next
+                </Text>
+              </View>
+            </View>
+
+            {/* Instruction Prompt */}
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? '#cbd5e1' : '#475569', lineHeight: 16 }}>
+              Select the next agronomic phase for this crop. Life cycle progression follows standard ICAR protocol:
+            </Text>
+
+            {/* Stage Options List */}
+            <View style={{ gap: 8 }}>
+              {stagePickerCrop &&
+                STAGE_PICKER_OPTIONS.filter((st) => STAGE_ORDER[st.key] > STAGE_ORDER[stagePickerCrop.stage]).map((st) => {
+                  const stageDesc =
+                    st.key === 'VEGETATIVE'
+                      ? 'Active leaf, shoot & foliage development'
+                      : st.key === 'FLOWERING'
+                      ? 'Bloom initiation, bud growth & pollinator care'
+                      : st.key === 'HARVESTING'
+                      ? 'Yield collection, cutting & crop packing'
+                      : 'Final harvest sale record & season audit';
+
+                  const stageIcon =
+                    st.key === 'VEGETATIVE'
+                      ? 'leaf'
+                      : st.key === 'FLOWERING'
+                      ? 'flower'
+                      : st.key === 'HARVESTING'
+                      ? 'cut'
+                      : 'checkmark-done-circle';
+
+                  return (
+                    <TouchableOpacity
+                      key={st.key}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: 12,
+                        borderRadius: 12,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff',
+                        borderWidth: 1.2,
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                        gap: 12,
+                        ...premiumShadow(colors.shadowColor, 'xs'),
+                      }}
+                      activeOpacity={0.82}
+                      onPress={() => {
+                        tap();
+                        setStagePickerVisible(false);
+                        if (stagePickerCrop) {
+                          requestCropStageChange(stagePickerCrop, stagePickerCrop.stage, st.key);
+                        }
+                        setStagePickerCrop(null);
+                      }}
+                    >
+                      <View style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
+                        borderWidth: 1,
+                        borderColor: st.color,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Ionicons name={stageIcon as any} size={18} color={st.color} />
+                      </View>
+
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{
+                            fontSize: 13.5,
+                            fontFamily: FONT.extraBold,
+                            color: isDark ? '#ffffff' : '#0f172a',
+                          }}>
+                            {st.label}
+                          </Text>
+                        </View>
+                        <Text style={{
+                          fontSize: 10.5,
+                          fontFamily: FONT.medium,
+                          color: isDark ? '#94a3b8' : '#64748b',
+                        }}>
+                          {stageDesc}
+                        </Text>
+                      </View>
+
+                      <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 3,
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f1f5f9',
+                        paddingHorizontal: 8,
+                        paddingVertical: 5,
+                        borderRadius: RADIUS.pill,
+                        borderWidth: 1,
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                      }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: st.color }}>
+                          Select
+                        </Text>
+                        <Ionicons name="chevron-forward" size={13} color={st.color} />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+            </View>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingVertical: 10,
+                borderRadius: 10,
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1',
+                marginTop: 2,
+              }}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
+                setStagePickerVisible(false);
+                setStagePickerCrop(null);
+              }}
+            >
+              <Text style={{
+                fontSize: 12.5,
+                fontFamily: FONT.bold,
+                color: isDark ? '#94a3b8' : '#475569',
+              }}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -2165,7 +2364,7 @@ export default function FarmListScreen() {
         }}
       />
 
-      {/* Dedicated Media Record Module Modal */}
+      {/* Dedicated Crop Gallery Module Modal */}
       <CropMediaModal
         visible={showCropMediaModal}
         cropId={selectedCropForMedia?.id}

@@ -8,7 +8,17 @@ import { RoleHeader } from './RoleHeader';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useFarmerStats, useFarmersList, useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
+import {
+  useFarmerStats,
+  useFarmersList,
+  useAcceptAssignment,
+  useRejectAssignment,
+  useMyAdvisorPlans,
+  useSaveAdvisorPlan,
+  useScheduleGroupCall,
+  useSendGroupCallAlert,
+  useAdvisorGroupEvents,
+} from '@/src/hooks/useAdvisorAssignments';
 import {
   useAdvisorDelayedSchedule,
   useAdvisorTodaySchedule,
@@ -388,6 +398,48 @@ export const AdvisorDashboardView: React.FC = () => {
     PROBLEMS: isLoadingProblems,
     FEES: false,
   };
+
+  const { data: myPlans = [], refetch: refetchMyPlans } = useMyAdvisorPlans();
+  const savePlanMutation = useSaveAdvisorPlan();
+  const { data: groupEvents = [], refetch: refetchGroupEvents } = useAdvisorGroupEvents();
+  const scheduleGroupCallMutation = useScheduleGroupCall();
+  const sendGroupAlertMutation = useSendGroupCallAlert();
+
+  const [planForm, setPlanForm] = useState<Record<string, any>>({
+    VIP_MONTHLY: { price: 299, callRequestLimit: 5, inAppCallLimit: 3, videoCallAllowed: false, videoCallLimit: 0, chatEnabled: true },
+    PER_CROP: { price: 499, callRequestLimit: 10, inAppCallLimit: 5, videoCallAllowed: true, videoCallLimit: 2, chatEnabled: true },
+    CONSULTATION: { price: 150, callRequestLimit: 1, inAppCallLimit: 1, videoCallAllowed: false, videoCallLimit: 0, chatEnabled: true },
+  });
+
+  const [groupCallForm, setGroupCallForm] = useState({
+    title: '',
+    scheduledAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16),
+    targetAudienceType: 'ALL_FARMERS',
+    targetCropName: '',
+    alertMessage: '',
+  });
+
+  // Sync loaded plans into form
+  React.useEffect(() => {
+    if (myPlans && myPlans.length > 0) {
+      const updated = { ...planForm };
+      myPlans.forEach((p: any) => {
+        if (p.planType) {
+          updated[p.planType] = {
+            price: p.price,
+            callRequestLimit: p.callRequestLimit ?? 5,
+            inAppCallLimit: p.inAppCallLimit ?? 3,
+            videoCallAllowed: p.videoCallAllowed ?? false,
+            videoCallLimit: p.videoCallLimit ?? 0,
+            chatEnabled: p.chatEnabled ?? true,
+            approvalStatus: p.approvalStatus,
+            adminNotes: p.adminNotes,
+          };
+        }
+      });
+      setPlanForm(updated);
+    }
+  }, [myPlans]);
 
   const defaultTab = useMemo<TabKey>(() => TAB_ORDER.find((k) => counts[k] > 0) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
   const [activeTab, setActiveTab] = useState<TabKey>(defaultTab);
@@ -1221,6 +1273,306 @@ export const AdvisorDashboardView: React.FC = () => {
                         <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor, marginTop: 2 }}>Monthly Large Farm Audits</Text>
                       </View>
                     </View>
+                  </View>
+
+                  {/* ADVISOR PLAN CUSTOMIZATION & ENTITLEMENTS (ADMIN APPROVAL WORKFLOW) */}
+                  <View style={{ backgroundColor: isLight ? '#ffffff' : cardBg, borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.2, borderColor: isLight ? '#bbf7d0' : cardBorder, gap: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="options-outline" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+                        <View>
+                          <Text style={{ fontSize: 14.5, fontFamily: FONT.extraBold, color: textColor }}>
+                            Customize Your Consultation Plans & Entitlements
+                          </Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                            Decide your advisory fee, call quotas, video permissions, and chat access. All plans are verified by Admin before going live.
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#38bdf8' }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#38bdf8' }}>Admin Review Gate</Text>
+                      </View>
+                    </View>
+
+                    {/* 3 Configurable Plans */}
+                    {(['VIP_MONTHLY', 'PER_CROP', 'CONSULTATION'] as const).map((pType) => {
+                      const cur = planForm[pType] || { price: 299, callRequestLimit: 5, inAppCallLimit: 3, videoCallAllowed: false, videoCallLimit: 0, chatEnabled: true };
+                      const label = pType === 'VIP_MONTHLY' ? 'Monthly Farm Subscription' : pType === 'PER_CROP' ? 'Full Crop Season Plan (120 Days)' : 'Instant 2nd Opinion / Consultation';
+                      const badgeColor = cur.approvalStatus === 'APPROVED' ? '#10b981' : cur.approvalStatus === 'REJECTED' ? '#ef4444' : '#f59e0b';
+                      const badgeText = cur.approvalStatus === 'APPROVED' ? '✓ LIVE & APPROVED' : cur.approvalStatus === 'REJECTED' ? '✕ REJECTED' : '⏳ PENDING ADMIN REVIEW';
+
+                      return (
+                        <View key={pType} style={{ backgroundColor: isLight ? '#f8fafc' : 'rgba(255,255,255,0.03)', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)', gap: 10 }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                            <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: textColor }}>{label}</Text>
+                            <View style={{ backgroundColor: `${badgeColor}22`, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: badgeColor }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: badgeColor }}>{badgeText}</Text>
+                            </View>
+                          </View>
+
+                          {cur.adminNotes && (
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: 6, borderRadius: 6 }}>
+                              Admin Note: {cur.adminNotes}
+                            </Text>
+                          )}
+
+                          {/* Grid Controls */}
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                            {/* Advisor Fee */}
+                            <View style={{ flex: 1, minWidth: 100, gap: 3 }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }}>Your Fee (₹)</Text>
+                              <TextInput
+                                style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                                keyboardType="numeric"
+                                value={String(cur.price ?? '')}
+                                onChangeText={(t) => setPlanForm((prev) => ({ ...prev, [pType]: { ...cur, price: Number(t) || 0 } }))}
+                              />
+                            </View>
+
+                            {/* Call Request Quota */}
+                            <View style={{ flex: 1, minWidth: 100, gap: 3 }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }}>Call Requests</Text>
+                              <TextInput
+                                style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                                keyboardType="numeric"
+                                value={String(cur.callRequestLimit ?? '')}
+                                onChangeText={(t) => setPlanForm((prev) => ({ ...prev, [pType]: { ...cur, callRequestLimit: Number(t) || 0 } }))}
+                              />
+                            </View>
+
+                            {/* In-App VoIP Call Quota */}
+                            <View style={{ flex: 1, minWidth: 100, gap: 3 }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: subTextColor }}>In-App VoIP Calls</Text>
+                              <TextInput
+                                style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                                keyboardType="numeric"
+                                value={String(cur.inAppCallLimit ?? '')}
+                                onChangeText={(t) => setPlanForm((prev) => ({ ...prev, [pType]: { ...cur, inAppCallLimit: Number(t) || 0 } }))}
+                              />
+                            </View>
+
+                            {/* Video Call Toggle */}
+                            <TouchableOpacity
+                              style={{ flex: 1, minWidth: 100, backgroundColor: cur.videoCallAllowed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: cur.videoCallAllowed ? '#10b981' : '#ef4444', borderRadius: 6, padding: 6, justifyContent: 'center', alignItems: 'center' }}
+                              onPress={() => setPlanForm((prev) => ({ ...prev, [pType]: { ...cur, videoCallAllowed: !cur.videoCallAllowed } }))}
+                            >
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor }}>Video Call</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: cur.videoCallAllowed ? '#10b981' : '#ef4444' }}>
+                                {cur.videoCallAllowed ? '✓ ALLOWED' : '✕ OFF'}
+                              </Text>
+                            </TouchableOpacity>
+
+                            {/* Chat Access Toggle */}
+                            <TouchableOpacity
+                              style={{ flex: 1, minWidth: 100, backgroundColor: cur.chatEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.1)', borderWidth: 1, borderColor: cur.chatEnabled ? '#10b981' : '#ef4444', borderRadius: 6, padding: 6, justifyContent: 'center', alignItems: 'center' }}
+                              onPress={() => setPlanForm((prev) => ({ ...prev, [pType]: { ...cur, chatEnabled: !cur.chatEnabled } }))}
+                            >
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: subTextColor }}>Chat Access</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: cur.chatEnabled ? '#10b981' : '#ef4444' }}>
+                                {cur.chatEnabled ? '✓ ACTIVE' : '✕ MUTED'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Submit Button */}
+                          <TouchableOpacity
+                            style={{ backgroundColor: isLight ? '#16a34a' : '#10b981', paddingVertical: 8, borderRadius: 6, alignItems: 'center', marginTop: 2 }}
+                            disabled={savePlanMutation.isPending}
+                            onPress={async () => {
+                              try {
+                                await savePlanMutation.mutateAsync({
+                                  planType: pType,
+                                  price: Number(cur.price) || 0,
+                                  callRequestLimit: Number(cur.callRequestLimit) || 0,
+                                  inAppCallLimit: Number(cur.inAppCallLimit) || 0,
+                                  videoCallAllowed: Boolean(cur.videoCallAllowed),
+                                  videoCallLimit: Number(cur.videoCallLimit) || 0,
+                                  chatEnabled: Boolean(cur.chatEnabled),
+                                });
+                                refetchMyPlans();
+                                const alertMsg = 'Plan submitted! It has been sent to Admin for review and will be live once approved.';
+                                if (Platform.OS === 'web') alert(alertMsg);
+                                else Alert.alert('Submitted for Approval', alertMsg);
+                              } catch (err: any) {
+                                const errM = err?.response?.data?.message || 'Could not save plan.';
+                                if (Platform.OS === 'web') alert(errM);
+                                else Alert.alert('Error', errM);
+                              }
+                            }}
+                          >
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                              Submit {label} for Admin Approval
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+
+                  {/* DOCTOR LIVE GROUP CALL EVENT SCHEDULER & BROADCAST ALERTS */}
+                  <View style={{ backgroundColor: isLight ? '#ffffff' : cardBg, borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.2, borderColor: isLight ? '#bbf7d0' : cardBorder, gap: 14 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="radio-outline" size={20} color="#3b82f6" />
+                        <View>
+                          <Text style={{ fontSize: 14.5, fontFamily: FONT.extraBold, color: textColor }}>
+                            Schedule Doctor Live Group Call & Broadcast Alerts
+                          </Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor }}>
+                            Host interactive live audio sessions with your farmers. Send instant notification alerts with join link.
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#3b82f6' }}>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#3b82f6' }}>Live Audio Rooms</Text>
+                      </View>
+                    </View>
+
+                    {/* Schedule Form */}
+                    <View style={{ gap: 8, backgroundColor: isLight ? '#f8fafc' : 'rgba(255,255,255,0.03)', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)' }}>
+                      <View style={{ gap: 3 }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: subTextColor }}>Session Title / Topic</Text>
+                        <TextInput
+                          style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontFamily: FONT.medium, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                          placeholder="e.g. Weekly Wheat Disease Advisory & Spray Planning"
+                          placeholderTextColor="#94a3b8"
+                          value={groupCallForm.title}
+                          onChangeText={(t) => setGroupCallForm((prev) => ({ ...prev, title: t }))}
+                        />
+                      </View>
+
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                        <View style={{ flex: 1, minWidth: 160, gap: 3 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: subTextColor }}>Scheduled Date & Time (YYYY-MM-DD HH:mm)</Text>
+                          <TextInput
+                            style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontFamily: FONT.medium, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                            value={groupCallForm.scheduledAt}
+                            onChangeText={(t) => setGroupCallForm((prev) => ({ ...prev, scheduledAt: t }))}
+                          />
+                        </View>
+
+                        <View style={{ flex: 1, minWidth: 160, gap: 3 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: subTextColor }}>Target Farmer Audience</Text>
+                          <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
+                            {[
+                              { key: 'ALL_FARMERS', label: 'All My Farmers' },
+                              { key: 'PLAN_MEMBERS', label: 'Plan Members' },
+                              { key: 'CROP_SPECIAL', label: 'Specific Crop' },
+                            ].map((aud) => (
+                              <TouchableOpacity
+                                key={aud.key}
+                                style={{ flex: 1, backgroundColor: groupCallForm.targetAudienceType === aud.key ? '#3b82f6' : (isLight ? '#ffffff' : '#1e293b'), paddingVertical: 6, borderRadius: 6, alignItems: 'center', borderWidth: 1, borderColor: groupCallForm.targetAudienceType === aud.key ? '#3b82f6' : (isLight ? '#cbd5e1' : '#475569') }}
+                                onPress={() => setGroupCallForm((prev) => ({ ...prev, targetAudienceType: aud.key }))}
+                              >
+                                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: groupCallForm.targetAudienceType === aud.key ? '#ffffff' : subTextColor }}>
+                                  {aud.label}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
+                      </View>
+
+                      {groupCallForm.targetAudienceType === 'CROP_SPECIAL' && (
+                        <View style={{ gap: 3 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: subTextColor }}>Crop Filter (e.g. Wheat, Mustard, Paddy)</Text>
+                          <TextInput
+                            style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontFamily: FONT.medium, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                            placeholder="Enter crop name"
+                            placeholderTextColor="#94a3b8"
+                            value={groupCallForm.targetCropName}
+                            onChangeText={(t) => setGroupCallForm((prev) => ({ ...prev, targetCropName: t }))}
+                          />
+                        </View>
+                      )}
+
+                      <View style={{ gap: 3 }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: subTextColor }}>Custom Broadcast Alert Notification Text</Text>
+                        <TextInput
+                          style={{ backgroundColor: isLight ? '#ffffff' : '#0f172a', color: textColor, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, fontFamily: FONT.medium, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155' }}
+                          placeholder="e.g. Join our live discussion today on pest control in crops."
+                          placeholderTextColor="#94a3b8"
+                          value={groupCallForm.alertMessage}
+                          onChangeText={(t) => setGroupCallForm((prev) => ({ ...prev, alertMessage: t }))}
+                        />
+                      </View>
+
+                      {/* Action Button */}
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#2563eb', paddingVertical: 10, borderRadius: 6, alignItems: 'center', marginTop: 4 }}
+                        disabled={scheduleGroupCallMutation.isPending}
+                        onPress={async () => {
+                          if (!groupCallForm.title.trim()) {
+                            alert('Please enter a session title.');
+                            return;
+                          }
+                          try {
+                            const res = await scheduleGroupCallMutation.mutateAsync({
+                              title: groupCallForm.title.trim(),
+                              scheduledAt: new Date(groupCallForm.scheduledAt).toISOString(),
+                              targetAudienceType: groupCallForm.targetAudienceType,
+                              targetCropName: groupCallForm.targetCropName || undefined,
+                              alertMessage: groupCallForm.alertMessage || undefined,
+                            });
+                            // Automatically broadcast alert
+                            if (res?.id) {
+                              await sendGroupAlertMutation.mutateAsync({ callId: res.id, message: groupCallForm.alertMessage });
+                            }
+                            refetchGroupEvents();
+                            setGroupCallForm({
+                              title: '',
+                              scheduledAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16),
+                              targetAudienceType: 'ALL_FARMERS',
+                              targetCropName: '',
+                              alertMessage: '',
+                            });
+                            const msg = '🎉 Group Consultation scheduled & notification alerts broadcasted to selected farmers!';
+                            if (Platform.OS === 'web') alert(msg);
+                            else Alert.alert('Success', msg);
+                          } catch (err: any) {
+                            const errM = err?.response?.data?.message || 'Could not schedule group call.';
+                            if (Platform.OS === 'web') alert(errM);
+                            else Alert.alert('Error', errM);
+                          }
+                        }}
+                      >
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                          🎙️ Schedule Event & Broadcast Alert to Farmers
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Previously Scheduled Events List */}
+                    {groupEvents && groupEvents.length > 0 && (
+                      <View style={{ gap: 8 }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: textColor }}>
+                          Scheduled Live Sessions ({groupEvents.length})
+                        </Text>
+                        {groupEvents.slice(0, 5).map((ev: any) => (
+                          <View key={ev.id} style={{ backgroundColor: isLight ? '#f1f5f9' : '#0f172a', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                            <View style={{ flex: 1, minWidth: 180 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: textColor }}>{ev.title}</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: subTextColor, marginTop: 1 }}>
+                                {ev.scheduledAt ? new Date(ev.scheduledAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'Instant'} · Audience: {ev.targetAudienceType}
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}
+                              onPress={async () => {
+                                try {
+                                  await sendGroupAlertMutation.mutateAsync({ callId: ev.id });
+                                  alert('Alert re-sent to farmers successfully!');
+                                } catch (e: any) {
+                                  alert(e?.message || 'Could not send alert');
+                                }
+                              }}
+                            >
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>🔔 Re-send Alert</Text>
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                    )}
                   </View>
 
                   {/* Statutory & ISO Disclaimers */}

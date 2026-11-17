@@ -235,7 +235,7 @@ __decorate([
 ], MediaStoreController.prototype, "deleteMedia", null);
 exports.MediaStoreController = MediaStoreController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Controller)('media-store'),
+    (0, common_1.Controller)(['crop-gallery', 'media-store']),
     __metadata("design:paramtypes", [media_store_service_1.MediaStoreService])
 ], MediaStoreController);
 //# sourceMappingURL=media-store.controller.js.map

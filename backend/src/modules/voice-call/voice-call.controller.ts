@@ -7,11 +7,40 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { VoiceCallService } from './voice-call.service';
 import { StartGroupCallDto } from './dto/start-group-call.dto';
+import { ScheduleGroupCallDto, SendGroupAlertDto } from './dto/schedule-group-call.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('voice-call')
 export class VoiceCallController {
   constructor(private readonly voiceCallService: VoiceCallService) {}
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('schedule')
+  scheduleGroupCall(@CurrentUser() user: AuthUser, @Body() dto: ScheduleGroupCallDto) {
+    return this.voiceCallService.scheduleGroupCall(user, dto);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/send-alert')
+  sendGroupCallAlert(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: SendGroupAlertDto,
+  ) {
+    return this.voiceCallService.sendGroupCallAlert(user, id, dto?.message);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('advisor/events')
+  getAdvisorGroupEvents(@CurrentUser() user: AuthUser) {
+    return this.voiceCallService.getAdvisorGroupEvents(user);
+  }
+
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER)
+  @Get('farmer/invitations')
+  getFarmerGroupInvitations(@CurrentUser() user: AuthUser) {
+    return this.voiceCallService.getFarmerGroupInvitations(user);
+  }
 
   @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.GARDENER, Role.OPERATOR, Role.CUSTOMER, Role.AGENT, Role.LABOUR)
   @Post('start')

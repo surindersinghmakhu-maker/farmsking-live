@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { useInitiateFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
@@ -372,25 +373,27 @@ export default function MembershipsScreen() {
                 </View>
               </View>
 
-              {/* Quick Coupon Code Redeemer Card */}
-              <View style={[styles.couponCard, { flex: 1, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
-                <Text style={[styles.cardHeaderTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Have a Discount Coupon?</Text>
-                <Text style={[styles.cardHeaderSub, { color: isDark ? colors.textMuted : '#334155' }]}>Redeem promo keys or coupon cards for instant discount</Text>
-                <View style={styles.couponInputRow}>
-                  <TextInput
-                    style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1', borderWidth: 1 }]}
-                    placeholder="Enter Coupon Code (e.g. FARMS2026)"
-                    placeholderTextColor="#94a3b8"
-                    value={couponCodeInput}
-                    onChangeText={setCouponCodeInput}
-                    autoCapitalize="characters"
-                  />
-                  <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
-                    <Text style={styles.applyBtnText}>Apply</Text>
-                  </TouchableOpacity>
+              {/* Quick Coupon Code Redeemer Card — Isolated when ENABLE_COUPON_SYSTEM is false */}
+              {ENABLE_COUPON_SYSTEM ? (
+                <View style={[styles.couponCard, { flex: 1, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1 }, premiumShadow(isDark ? 'transparent' : '#0f172a', 'sm')]}>
+                  <Text style={[styles.cardHeaderTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Have a Discount Coupon?</Text>
+                  <Text style={[styles.cardHeaderSub, { color: isDark ? colors.textMuted : '#334155' }]}>Redeem promo keys or coupon cards for instant discount</Text>
+                  <View style={styles.couponInputRow}>
+                    <TextInput
+                      style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1', borderWidth: 1 }]}
+                      placeholder="Enter Coupon Code (e.g. FARMS2026)"
+                      placeholderTextColor="#94a3b8"
+                      value={couponCodeInput}
+                      onChangeText={setCouponCodeInput}
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
+                      <Text style={styles.applyBtnText}>Apply</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
                 </View>
-                {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
-              </View>
+              ) : null}
             </View>
 
             {/* Software Plan Pricing Cards Header */}
@@ -740,7 +743,7 @@ export default function MembershipsScreen() {
                     style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
                     onPress={() => setIsCropCareModalOpen(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>Crops Care Plan & Coupon 🩺</Text>
+                    <Text style={styles.upgradeBtnText}>Crops Care Plan 🩺</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}

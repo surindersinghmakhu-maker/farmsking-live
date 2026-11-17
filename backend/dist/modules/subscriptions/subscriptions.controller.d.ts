@@ -11,11 +11,21 @@ export declare class SubscriptionsController {
         updatedAt: Date;
         isActive: boolean;
         description: string | null;
+        adminNotes: string | null;
+        reviewedById: string | null;
+        reviewedAt: Date | null;
+        advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
+        chatEnabled: boolean;
         billingCycle: string;
         planType: import(".prisma/client").$Enums.FarmerPlanType;
         maxFarms: number;
+        callRequestLimit: number;
+        inAppCallLimit: number;
+        videoCallAllowed: boolean;
+        videoCallLimit: number;
+        approvalStatus: string;
     }[]>;
     create(user: AuthUser, dto: CreateSubscriptionDto): Promise<{
         advisorAssignment: {
@@ -45,11 +55,21 @@ export declare class SubscriptionsController {
             updatedAt: Date;
             isActive: boolean;
             description: string | null;
+            adminNotes: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
+            advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
+            chatEnabled: boolean;
             billingCycle: string;
             planType: import(".prisma/client").$Enums.FarmerPlanType;
             maxFarms: number;
+            callRequestLimit: number;
+            inAppCallLimit: number;
+            videoCallAllowed: boolean;
+            videoCallLimit: number;
+            approvalStatus: string;
         };
         id: string;
         createdAt: Date;
@@ -97,11 +117,21 @@ export declare class SubscriptionsController {
             updatedAt: Date;
             isActive: boolean;
             description: string | null;
+            adminNotes: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
+            advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
+            chatEnabled: boolean;
             billingCycle: string;
             planType: import(".prisma/client").$Enums.FarmerPlanType;
             maxFarms: number;
+            callRequestLimit: number;
+            inAppCallLimit: number;
+            videoCallAllowed: boolean;
+            videoCallLimit: number;
+            approvalStatus: string;
         };
     } & {
         id: string;

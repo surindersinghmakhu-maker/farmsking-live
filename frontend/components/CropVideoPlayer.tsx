@@ -217,7 +217,7 @@ export const CropVideoPlayer: React.FC<CropVideoPlayerProps> = ({
 
         {/* BOTTOM WATERMARK: DATE, TIME, FARMER NAME, PLOT NAME */}
         <View style={styles.bottomWatermarkRow}>
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.watermarkDateTime} numberOfLines={1}>
               Date: {timestamp.dateStr}  ·  Time: {timestamp.timeStr}
             </Text>
@@ -1038,13 +1038,14 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   watermarkDateTime: {
-    fontSize: 10,
+    fontSize: 10.5,
+    lineHeight: 15,
     fontWeight: '700',
     color: '#fde047',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   watermarkMeta: {
     fontSize: 10.5,
+    lineHeight: 15,
     color: '#ffffff',
     fontWeight: '700',
   },

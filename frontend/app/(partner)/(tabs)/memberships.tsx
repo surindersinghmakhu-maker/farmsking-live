@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
@@ -227,25 +228,27 @@ export default function MembershipsScreen() {
                 </View>
               </View>
 
-              {/* Quick Coupon Code Redeemer Card */}
-              <View style={[styles.couponCard, dynStyles.card, { flex: 1 }, premiumShadow('#0f172a', 'sm')]}>
-                <Text style={[styles.cardHeaderTitle, dynStyles.text]}>🎟️ Have a Discount Coupon?</Text>
-                <Text style={[styles.cardHeaderSub, dynStyles.subText]}>Redeem promo keys or coupon cards for instant discount</Text>
-                <View style={styles.couponInputRow}>
-                  <TextInput
-                    style={[styles.couponInput, dynStyles.input]}
-                    placeholder="Enter Coupon Code (e.g. FARMS2026)"
-                    placeholderTextColor="#94a3b8"
-                    value={couponCodeInput}
-                    onChangeText={setCouponCodeInput}
-                    autoCapitalize="characters"
-                  />
-                  <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
-                    <Text style={styles.applyBtnText}>Apply</Text>
-                  </TouchableOpacity>
+              {/* Quick Coupon Code Redeemer Card — Isolated when ENABLE_COUPON_SYSTEM is false */}
+              {ENABLE_COUPON_SYSTEM ? (
+                <View style={[styles.couponCard, dynStyles.card, { flex: 1 }, premiumShadow('#0f172a', 'sm')]}>
+                  <Text style={[styles.cardHeaderTitle, dynStyles.text]}>🎟️ Have a Discount Coupon?</Text>
+                  <Text style={[styles.cardHeaderSub, dynStyles.subText]}>Redeem promo keys or coupon cards for instant discount</Text>
+                  <View style={styles.couponInputRow}>
+                    <TextInput
+                      style={[styles.couponInput, dynStyles.input]}
+                      placeholder="Enter Coupon Code (e.g. FARMS2026)"
+                      placeholderTextColor="#94a3b8"
+                      value={couponCodeInput}
+                      onChangeText={setCouponCodeInput}
+                      autoCapitalize="characters"
+                    />
+                    <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
+                      <Text style={styles.applyBtnText}>Apply</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
                 </View>
-                {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
-              </View>
+              ) : null}
             </View>
 
             {/* Software Plan Pricing Cards Header */}
@@ -512,7 +515,7 @@ export default function MembershipsScreen() {
                     style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
                     onPress={() => setIsCropCareModalOpen(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>Crops Care Plan & Coupon 🩺</Text>
+                    <Text style={styles.upgradeBtnText}>Crops Care Plan 🩺</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}

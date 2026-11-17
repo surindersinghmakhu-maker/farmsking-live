@@ -6,16 +6,23 @@ enum GroupVoiceCallStatus {
 }
 
 model GroupVoiceCall {
-  id          String               @id @default(uuid())
-  title       String
-  channelName String               @unique
-  hostId      String
-  host        User                 @relation("VoiceCallHost", fields: [hostId], references: [id], onDelete: Cascade)
-  status      GroupVoiceCallStatus @default(ACTIVE)
-  startedAt   DateTime             @default(now())
-  endedAt     DateTime?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  id                 String               @id @default(uuid())
+  title              String
+  channelName        String               @unique
+  hostId             String
+  host               User                 @relation("VoiceCallHost", fields: [hostId], references: [id], onDelete: Cascade)
+  status             GroupVoiceCallStatus @default(ACTIVE)
+  scheduledAt        DateTime?
+  targetAudienceType String               @default("ALL_FARMERS")
+  targetPlanType     String?
+  targetCropName     String?
+  invitedFarmerIds   String[]             @default([])
+  alertSentAt        DateTime?
+  alertMessage       String?
+  startedAt          DateTime             @default(now())
+  endedAt            DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   participants GroupVoiceCallParticipant[]
 

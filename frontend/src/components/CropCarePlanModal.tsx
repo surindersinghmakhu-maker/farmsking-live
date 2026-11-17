@@ -18,6 +18,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useRedeemFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors } from '@/src/hooks/useAdvisorAssignments';
 import { useAuth } from '@/src/store/auth-context';
@@ -258,127 +259,131 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
               </View>
             ) : (
               <>
-                {/* 1. APPLY CROP CARE COUPON SECTION */}
-                <View style={[styles.couponSectionCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
-                  <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Apply Crops Care Coupon</Text>
-                  <Text style={[styles.sectionSub, { color: isDark ? colors.textMuted : '#334155' }]}>Enter your doctor or partner coupon code below:</Text>
-                  <View style={styles.inputRow}>
-                    <TextInput
-                      style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1', borderWidth: 1 }]}
-                      placeholder="ENTER CROP CARE CODE (e.g. DOCTOR100)"
-                      placeholderTextColor="#94a3b8"
-                      value={couponInput}
-                      onChangeText={setCouponInput}
-                      autoCapitalize="characters"
-                    />
-                    <TouchableOpacity
-                      style={styles.applyBtn}
-                      onPress={handleApplyCoupon}
-                      disabled={isPreviewLoading}
-                    >
-                      {isPreviewLoading ? (
-                        <ActivityIndicator color="#ffffff" size="small" />
-                      ) : (
-                        <Text style={styles.applyBtnText}>Check Code</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  {couponStatus ? <Text style={styles.statusText}>{couponStatus}</Text> : null}
-                  {submitSuccessMsg ? <Text style={[styles.statusText, { color: '#0284c7' }]}>{submitSuccessMsg}</Text> : null}
-                </View>
-
-                {/* COUPON CONFIRMATION PREVIEW CARD */}
-                {previewData ? (
-                  <View style={[styles.confirmBox, { backgroundColor: isDark ? '#04160c' : '#f0fdf4', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#86efac' }]}>
-                    <View style={styles.confirmHeader}>
-                      <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-                      <Text style={[styles.confirmHeaderTitle, { color: isDark ? '#ffffff' : '#166534' }]}>Coupon Details Confirmation</Text>
+                {/* 1. APPLY CROP CARE COUPON SECTION — Isolated when ENABLE_COUPON_SYSTEM is false */}
+                {ENABLE_COUPON_SYSTEM ? (
+                  <>
+                    <View style={[styles.couponSectionCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
+                      <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🎟️ Apply Crops Care Coupon</Text>
+                      <Text style={[styles.sectionSub, { color: isDark ? colors.textMuted : '#334155' }]}>Enter your doctor or partner coupon code below:</Text>
+                      <View style={styles.inputRow}>
+                        <TextInput
+                          style={[styles.couponInput, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#f1f5f9', color: isDark ? '#ffffff' : '#0f172a', borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1', borderWidth: 1 }]}
+                          placeholder="ENTER CROP CARE CODE (e.g. DOCTOR100)"
+                          placeholderTextColor="#94a3b8"
+                          value={couponInput}
+                          onChangeText={setCouponInput}
+                          autoCapitalize="characters"
+                        />
+                        <TouchableOpacity
+                          style={styles.applyBtn}
+                          onPress={handleApplyCoupon}
+                          disabled={isPreviewLoading}
+                        >
+                          {isPreviewLoading ? (
+                            <ActivityIndicator color="#ffffff" size="small" />
+                          ) : (
+                            <Text style={styles.applyBtnText}>Check Code</Text>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                      {couponStatus ? <Text style={styles.statusText}>{couponStatus}</Text> : null}
+                      {submitSuccessMsg ? <Text style={[styles.statusText, { color: '#0284c7' }]}>{submitSuccessMsg}</Text> : null}
                     </View>
 
-                    <View style={styles.confirmRow}>
-                      <View style={styles.planPill}>
-                        <Text style={styles.planPillText}>{previewData.plan} PLAN</Text>
-                      </View>
-                      <Text style={styles.confirmPrice}>MRP: ₹{previewData.price ?? 1999}</Text>
-                    </View>
-
-                    <View style={styles.validityBox}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="calendar-outline" size={15} color="#0284c7" />
-                        <Text style={styles.validityText}>
-                          Validity: <Text style={{ fontFamily: FONT.bold }}>{previewData.daysGranted} Days</Text>
-                        </Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                        <Ionicons name="time-outline" size={15} color="#16a34a" />
-                        <Text style={styles.validityText}>
-                          Valid Till: <Text style={{ fontFamily: FONT.bold, color: '#166534' }}>{new Date(previewData.newEndDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Doctor Details (Name & Specialization ONLY) */}
-                    <View style={[styles.doctorCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
-                      <View style={styles.doctorIconBg}>
-                        <Text style={{ fontSize: 16 }}>🩺</Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.doctorRoleTag}>SENIOR CROP DOCTOR</Text>
-                        <Text style={[styles.doctorNameText, { color: isDark ? '#ffffff' : '#0f172a' }]}>{previewData.doctor?.name || 'Dr. Specialist Doctor'}</Text>
-                        <Text style={styles.doctorSpecText}>{previewData.doctor?.specialization || 'Crop Protection & Advisory Specialist'}</Text>
-                      </View>
-                    </View>
-
-                    {/* Advisor Details (Name & Specialization ONLY, if assigned) */}
-                    {previewData.advisor ? (
-                      <View style={[styles.doctorCard, { marginTop: 6, backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
-                        <View style={[styles.doctorIconBg, { backgroundColor: '#e0f2fe' }]}>
-                          <Text style={{ fontSize: 16 }}>👨‍⚕️</Text>
+                    {/* COUPON CONFIRMATION PREVIEW CARD */}
+                    {previewData ? (
+                      <View style={[styles.confirmBox, { backgroundColor: isDark ? '#04160c' : '#f0fdf4', borderColor: isDark ? 'rgba(0, 255, 135, 0.25)' : '#86efac' }]}>
+                        <View style={styles.confirmHeader}>
+                          <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                          <Text style={[styles.confirmHeaderTitle, { color: isDark ? '#ffffff' : '#166534' }]}>Coupon Details Confirmation</Text>
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.doctorRoleTag, { color: '#0284c7' }]}>JUNIOR CROP ADVISOR</Text>
-                          <Text style={styles.doctorNameText}>{previewData.advisor.name}</Text>
-                          <Text style={styles.doctorSpecText}>{previewData.advisor.specialization}</Text>
+
+                        <View style={styles.confirmRow}>
+                          <View style={styles.planPill}>
+                            <Text style={styles.planPillText}>{previewData.plan} PLAN</Text>
+                          </View>
+                          <Text style={styles.confirmPrice}>MRP: ₹{previewData.price ?? 1999}</Text>
+                        </View>
+
+                        <View style={styles.validityBox}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="calendar-outline" size={15} color="#0284c7" />
+                            <Text style={styles.validityText}>
+                              Validity: <Text style={{ fontFamily: FONT.bold }}>{previewData.daysGranted} Days</Text>
+                            </Text>
+                          </View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                            <Ionicons name="time-outline" size={15} color="#16a34a" />
+                            <Text style={styles.validityText}>
+                              Valid Till: <Text style={{ fontFamily: FONT.bold, color: '#166534' }}>{new Date(previewData.newEndDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Doctor Details (Name & Specialization ONLY) */}
+                        <View style={[styles.doctorCard, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#ffffff', borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
+                          <View style={styles.doctorIconBg}>
+                            <Text style={{ fontSize: 16 }}>🩺</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.doctorRoleTag}>SENIOR CROP DOCTOR</Text>
+                            <Text style={[styles.doctorNameText, { color: isDark ? '#ffffff' : '#0f172a' }]}>{previewData.doctor?.name || 'Dr. Specialist Doctor'}</Text>
+                            <Text style={styles.doctorSpecText}>{previewData.doctor?.specialization || 'Crop Protection & Advisory Specialist'}</Text>
+                          </View>
+                        </View>
+
+                        {/* Advisor Details (Name & Specialization ONLY, if assigned) */}
+                        {previewData.advisor ? (
+                          <View style={[styles.doctorCard, { marginTop: 6, backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
+                            <View style={[styles.doctorIconBg, { backgroundColor: '#e0f2fe' }]}>
+                              <Text style={{ fontSize: 16 }}>👨‍⚕️</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={[styles.doctorRoleTag, { color: '#0284c7' }]}>JUNIOR CROP ADVISOR</Text>
+                              <Text style={styles.doctorNameText}>{previewData.advisor.name}</Text>
+                              <Text style={styles.doctorSpecText}>{previewData.advisor.specialization}</Text>
+                            </View>
+                          </View>
+                        ) : null}
+
+                        {/* Features List */}
+                        <View style={{ marginTop: 10 }}>
+                          <Text style={[styles.confirmSectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🌟 Included Plan Features:</Text>
+                          {(previewData.features || [
+                            '360° VIP Specialist Doctor Advisory',
+                            'Direct Phone & Chat Advisory with Doctor',
+                            'Customized Crop Spray & Fertilization Schedules',
+                            'Disease Diagnostic Prescriptions & Remedies',
+                          ]).map((feat, idx) => (
+                            <View key={idx} style={styles.featRow}>
+                              <Ionicons name="checkmark-circle-outline" size={14} color="#16a34a" />
+                              <Text style={[styles.featText, { color: isDark ? '#cbd5e1' : '#334155' }]}>{feat}</Text>
+                            </View>
+                          ))}
+                        </View>
+
+                        <View style={styles.confirmActionRow}>
+                          <TouchableOpacity
+                            style={[styles.confirmActionBtn, { flex: 1, backgroundColor: '#16a34a' }]}
+                            onPress={handleConfirmRedeem}
+                            disabled={redeemCoupon.isPending}
+                          >
+                            {redeemCoupon.isPending ? (
+                              <ActivityIndicator color="#ffffff" size="small" />
+                            ) : (
+                              <Text style={styles.confirmActionBtnText}>Confirm & Activate Plan</Text>
+                            )}
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.confirmActionBtn, { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]}
+                            onPress={() => setPreviewData(null)}
+                          >
+                            <Text style={[styles.confirmActionBtnText, { color: '#475569' }]}>Cancel</Text>
+                          </TouchableOpacity>
                         </View>
                       </View>
                     ) : null}
-
-                    {/* Features List */}
-                    <View style={{ marginTop: 10 }}>
-                      <Text style={[styles.confirmSectionTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>🌟 Included Plan Features:</Text>
-                      {(previewData.features || [
-                        '360° VIP Specialist Doctor Advisory',
-                        'Direct Phone & Chat Advisory with Doctor',
-                        'Customized Crop Spray & Fertilization Schedules',
-                        'Disease Diagnostic Prescriptions & Remedies',
-                      ]).map((feat, idx) => (
-                        <View key={idx} style={styles.featRow}>
-                          <Ionicons name="checkmark-circle-outline" size={14} color="#16a34a" />
-                          <Text style={[styles.featText, { color: isDark ? '#cbd5e1' : '#334155' }]}>{feat}</Text>
-                        </View>
-                      ))}
-                    </View>
-
-                    <View style={styles.confirmActionRow}>
-                      <TouchableOpacity
-                        style={[styles.confirmActionBtn, { flex: 1, backgroundColor: '#16a34a' }]}
-                        onPress={handleConfirmRedeem}
-                        disabled={redeemCoupon.isPending}
-                      >
-                        {redeemCoupon.isPending ? (
-                          <ActivityIndicator color="#ffffff" size="small" />
-                        ) : (
-                          <Text style={styles.confirmActionBtnText}>Confirm & Activate Plan</Text>
-                        )}
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.confirmActionBtn, { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]}
-                        onPress={() => setPreviewData(null)}
-                      >
-                        <Text style={[styles.confirmActionBtnText, { color: '#475569' }]}>Cancel</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
+                  </>
                 ) : null}
 
                 {/* 2 TABS BELOW APPLY COUPON BUTTON */}
@@ -399,7 +404,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                   >
                     <Ionicons name="cart" size={14} color={tabMode === 'BUY' ? (isDark ? '#00ff87' : '#0f172a') : (isDark ? '#94a3b8' : '#64748b')} />
                     <Text style={[styles.tabNavText, tabMode === 'BUY' && (isDark ? { color: '#00ff87' } : styles.tabNavTextActive)]}>
-                      🛒 Buy Coupon
+                      🛒 Choose Plan
                     </Text>
                   </TouchableOpacity>
                 </View>

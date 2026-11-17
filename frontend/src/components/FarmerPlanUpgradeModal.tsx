@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '../hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '../constants/featureFlags';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '../hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors, useMyAdvisor } from '../hooks/useAdvisorAssignments';
 import { useAppSettings } from '../hooks/useAppSettings';
@@ -715,10 +716,12 @@ export function FarmerPlanUpgradeModal({
                   </Text>
                 </TouchableOpacity>
 
-              <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('REDEEM_CODE')}>
-                <Ionicons name="key-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>Have a coupon code? Enter code</Text>
-              </TouchableOpacity>
+              {ENABLE_COUPON_SYSTEM ? (
+                <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('REDEEM_CODE')}>
+                  <Ionicons name="key-outline" size={14} color={theme.primary} />
+                  <Text style={styles.seePlansBtnText}>Have a coupon code? Enter code</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           ) : (
             /* REDEEM CODE / UPGRADE MEMBERSHIP FLOW: Enter Coupon Code */
@@ -1150,9 +1153,11 @@ function UpiUpgradeFlow({
         <TouchableOpacity onPress={onPickDifferentPlan}>
           <Text style={styles.seePlansBtnText}>Pick a different plan</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onSwitchToCode}>
-          <Text style={styles.seePlansBtnText}>Have a coupon code?</Text>
-        </TouchableOpacity>
+        {ENABLE_COUPON_SYSTEM ? (
+          <TouchableOpacity onPress={onSwitchToCode}>
+            <Text style={styles.seePlansBtnText}>Have a coupon code?</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );

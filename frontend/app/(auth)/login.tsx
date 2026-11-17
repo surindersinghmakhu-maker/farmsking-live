@@ -540,10 +540,11 @@ export default function LoginScreen() {
           return;
         }
         setOtpSent(true);
-        setDevOtp(otpRes?.devOtp || '123456');
-        setOtpDigits(['', '', '', '', '', '']);
+        const codeToFill = String(otpRes?.devOtp || '123456').slice(0, 6);
+        setDevOtp(codeToFill);
+        setOtpDigits(codeToFill.split(''));
         setResendTimer(60);
-        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
       } catch (err: any) {
         if (!applyStructuredPartnerError(err, cleanNum)) {
           const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
@@ -1292,25 +1293,6 @@ export default function LoginScreen() {
               </View>
             ) : (
               <>
-                {/* Localhost Testing Mode Banner: Strictly shown only on Localhost */}
-                {isLocalhost && (
-                  <View style={styles.devBanner}>
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="construct" size={14} color="#10b981" />
-                      <Text style={styles.devBannerSubtitle}>
-                        Local Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>123456</Text>
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={autoFillDevOtp}
-                      style={styles.autoFillBtn}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.autoFillBtnText}>Auto-Fill 123456</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
                 {/* ── STEP 1: Mobile Number Input ── */}
                 <View style={styles.inputSection}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
@@ -1433,16 +1415,6 @@ export default function LoginScreen() {
                       <Text style={styles.otpInfoText}>
                         OTP sent to <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
                       </Text>
-                      {isLocalhost && (
-                        <TouchableOpacity
-                          onPress={autoFillDevOtp}
-                          style={styles.quickFillButton}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons name="flash" size={12} color="#10b981" />
-                          <Text style={styles.quickFillText}>Fill 123456</Text>
-                        </TouchableOpacity>
-                      )}
                     </View>
 
                     <Text style={styles.fieldLabel}>Enter 6-Digit OTP</Text>

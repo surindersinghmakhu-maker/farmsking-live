@@ -77,36 +77,73 @@ export function CropDoctorAdoptionModal({
   }, [selectedDoctor, isSecondOpinion]);
 
   const pricingBreakdown = useMemo(() => {
-    if (!selectedDoctor) return { totalFee: 0, doctorPayout: 0, platformFee: 0, adminFee: 0 };
+    if (!selectedDoctor) {
+      return {
+        advisorFee: 0,
+        farmsKingAdvisorCut: 0,
+        advisorNetPayout: 0,
+        platformFee: 0,
+        gstTax: 0,
+        totalPayable: 0,
+      };
+    }
 
-    let total = 0;
+    let baseAdvisorFee = 0;
     if (selectedPlanModel === 'INCLUDED_FREE') {
-      total = 0;
+      baseAdvisorFee = 0;
     } else if (selectedPlanModel === 'ADDITIONAL_CROP') {
-      total = selectedDoctor.quota?.additionalCropFee || 300;
+      baseAdvisorFee = Number(selectedDoctor.quota?.additionalCropFee || 300);
     } else if (selectedPlanModel === 'PER_CROP') {
-      total = Number(selectedDoctor.feePerCropSeason || 500);
+      baseAdvisorFee = Number(selectedDoctor.feePerCropSeason || 500);
     } else if (selectedPlanModel === 'MONTHLY_SUBSCRIPTION') {
-      total = Number(selectedDoctor.feeVipMonthly || 1000);
+      baseAdvisorFee = Number(selectedDoctor.feeVipMonthly || 1000);
     } else if (selectedPlanModel === 'PAY_PER_CONSULTATION') {
-      total = Number(selectedDoctor.feePerConsultation || 149);
+      baseAdvisorFee = Number(selectedDoctor.feePerConsultation || 149);
     }
 
-    if (total === 0) {
-      return { totalFee: 0, doctorPayout: 0, platformFee: 0, adminFee: 0 };
+    if (baseAdvisorFee === 0) {
+      return {
+        advisorFee: 0,
+        farmsKingAdvisorCut: 0,
+        advisorNetPayout: 0,
+        platformFee: 0,
+        gstTax: 0,
+        totalPayable: 0,
+      };
     }
 
-    const platformShare = Math.round((total * platformFeePercent) / 100);
-    const adminShare = Math.round((total * adminFeePercent) / 100);
-    const doctorPayout = total - (platformShare + adminShare);
+    // 1. Base Doctor Consultation Fee decided by the certified advisor
+    const advisorFee = baseAdvisorFee;
+
+    // 2. Internal FarmsKing Share (20% commission on advisor fee)
+    // STRICT TECHNICAL & PRIVACY RULE: Confidential between FarmsKing and Advisor.
+    // Farmer NEVER sees this 20% cut — farmer only sees the official Doctor Advisory Fee.
+    const FARMSKING_COMMISSION_PERCENT = appSettings?.advisorAdminFeePercent ?? 20.0;
+    const farmsKingAdvisorCut = Math.round((advisorFee * FARMSKING_COMMISSION_PERCENT) / 100);
+    const advisorNetPayout = advisorFee - farmsKingAdvisorCut;
+
+    // 3. Platform & Secure Cloud Storage Infrastructure Fee (10% of advisor fee)
+    // Fair, legitimate infrastructure charge covering encrypted leaf photo/video storage & telemetry bandwidth.
+    const PLATFORM_INFRA_FEE_PERCENT = 10.0;
+    const platformFee = Math.max(1, Math.round((advisorFee * PLATFORM_INFRA_FEE_PERCENT) / 100));
+
+    // 4. Statutory GST (18% Govt. Tax on digital cloud infrastructure service)
+    // Official government compliance establishing legal corporate standing.
+    const GST_RATE_PERCENT = 18.0;
+    const gstTax = Math.max(1, Math.round((platformFee * GST_RATE_PERCENT) / 100));
+
+    // 5. Total Amount Payable by Farmer
+    const totalPayable = advisorFee + platformFee + gstTax;
 
     return {
-      totalFee: total,
-      doctorPayout,
-      platformFee: platformShare,
-      adminFee: adminShare,
+      advisorFee,
+      farmsKingAdvisorCut, // Internal only
+      advisorNetPayout,    // Internal only
+      platformFee,
+      gstTax,
+      totalPayable,
     };
-  }, [selectedDoctor, selectedPlanModel, platformFeePercent, adminFeePercent]);
+  }, [selectedDoctor, selectedPlanModel, appSettings]);
 
   const handleSubmit = async () => {
     if (!crop || !selectedDoctor) return;
@@ -150,17 +187,39 @@ export function CropDoctorAdoptionModal({
       <View style={styles.backdrop}>
         <View style={styles.modalCard}>
           {/* Header */}
-          <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.header}>
+          <LinearGradient colors={['#090e17', '#0f172a', '#062817']} style={styles.header}>
+            {/* STATUTORY & ISO INSTITUTIONAL BANNER */}
+            <View style={styles.modalCorporateStrip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
+                <Ionicons name="shield-checkmark" size={11} color="#4ade80" />
+                <Text style={styles.modalCorporateText} numberOfLines={1}>
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                </Text>
+              </View>
+              <View style={styles.modalIcarBadge}>
+                <Text style={styles.modalIcarText}>ISO 9001 & 27001 AUDITED</Text>
+              </View>
+            </View>
+
             <View style={styles.headerTitleRow}>
               <View style={styles.headerIconBox}>
                 <Ionicons name={isSecondOpinion ? 'medkit' : 'shield-checkmark'} size={20} color="#00ff87" />
               </View>
               <View style={styles.headerTextCol}>
-                <Text style={styles.headerTitle}>
-                  {isSecondOpinion ? 'Get Second Opinion' : 'Adopt Certified Crop Doctor'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <Text style={styles.headerTitle}>
+                    {isSecondOpinion ? 'Get Second Opinion' : 'Adopt Certified Crop Doctor'}
+                  </Text>
+                  {isSecondOpinion ? (
+                    <View style={styles.secondOpinionPill}>
+                      <Text style={styles.secondOpinionPillText}>INDEPENDENT AUDIT</Text>
+                    </View>
+                  ) : null}
+                </View>
                 <Text style={styles.headerSubtitle}>
-                  Specialized agronomic supervision for {crop.cropName}
+                  {isSecondOpinion
+                    ? `Independent plant pathology review, prescription spray chart & direct consultation for ${crop.cropName}`
+                    : `Specialized certified agronomic supervision for ${crop.cropName}`}
                 </Text>
               </View>
               <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
@@ -394,33 +453,85 @@ export function CropDoctorAdoptionModal({
                       </View>
                     </TouchableOpacity>
 
-                    {/* Statutory Financial Transparency Breakdown */}
+                    {/* ITEMIZED STATUTORY BILLING & LEGAL INVOICE BREAKDOWN */}
                     <View style={styles.statutoryCard}>
                       <View style={styles.statutoryHeaderRow}>
-                        <Ionicons name="receipt-outline" size={14} color="#94a3b8" />
-                        <Text style={styles.statutoryTitle}>Statutory Fee Breakdown (ISO 9001 Compliance)</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="receipt" size={14} color="#4ade80" />
+                          <Text style={styles.statutoryTitle}>Itemized Statutory Fee Breakdown</Text>
+                        </View>
+                        <View style={styles.statutoryIcarPill}>
+                          <Ionicons name="shield-checkmark" size={10} color="#38bdf8" />
+                          <Text style={styles.statutoryIcarText}>ISO 9001 & 27001 COMPLIANT</Text>
+                        </View>
                       </View>
 
+                      {/* LINE 1: DOCTOR ADVISORY FEE */}
                       <View style={styles.statutoryRow}>
-                        <Text style={styles.statutoryLabel}>Doctor Consultation Share (80%)</Text>
-                        <Text style={styles.statutoryVal}>₹{pricingBreakdown.doctorPayout}</Text>
+                        <View style={{ flex: 1, paddingRight: 10 }}>
+                          <Text style={styles.statutoryLabel}>
+                            {isSecondOpinion ? 'Doctor Second Opinion Consultation Fee' : 'Certified Doctor Agronomy Fee'}
+                          </Text>
+                          <Text style={styles.statutorySub}>
+                            Professional advisory fee decided by Dr. {selectedDoctor.name}
+                          </Text>
+                        </View>
+                        <Text style={styles.statutoryVal}>₹{pricingBreakdown.advisorFee}</Text>
                       </View>
 
+                      {/* LINE 2: SECURE CLOUD STORAGE & PLATFORM INFRASTRUCTURE FEE (10%) */}
                       <View style={styles.statutoryRow}>
-                        <Text style={styles.statutoryLabel}>Platform & Telemetry Infrastructure (10%)</Text>
+                        <View style={{ flex: 1, paddingRight: 10 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Text style={styles.statutoryLabel}>
+                              Secure Cloud Server & Diagnostic Storage (10%)
+                            </Text>
+                            <View style={styles.mandatoryPill}>
+                              <Text style={styles.mandatoryPillText}>Mandatory</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.statutorySub}>
+                            Encrypted leaf photo/video storage, high-speed telemetry & 24/7 server infrastructure
+                          </Text>
+                        </View>
                         <Text style={styles.statutoryVal}>₹{pricingBreakdown.platformFee}</Text>
                       </View>
 
+                      {/* LINE 3: STATUTORY GST (18%) */}
                       <View style={styles.statutoryRow}>
-                        <Text style={styles.statutoryLabel}>Admin Quality Audit & Agronomy Governance (10%)</Text>
-                        <Text style={styles.statutoryVal}>₹{pricingBreakdown.adminFee}</Text>
+                        <View style={{ flex: 1, paddingRight: 10 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Text style={styles.statutoryLabel}>
+                              Statutory GST (18% Govt. Tax)
+                            </Text>
+                            <View style={styles.govtTaxPill}>
+                              <Text style={styles.govtTaxPillText}>CGST 9% + SGST 9%</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.statutorySub}>
+                            Government of India recognized tax invoice with SAC code generated under statutory law
+                          </Text>
+                        </View>
+                        <Text style={styles.statutoryVal}>₹{pricingBreakdown.gstTax}</Text>
                       </View>
 
                       <View style={styles.statutoryDivider} />
 
+                      {/* TOTAL AMOUNT PAYABLE */}
                       <View style={styles.statutoryTotalRow}>
-                        <Text style={styles.statutoryTotalLabel}>Total Amount Payable</Text>
-                        <Text style={styles.statutoryTotalVal}>₹{pricingBreakdown.totalFee}</Text>
+                        <View>
+                          <Text style={styles.statutoryTotalLabel}>Total Amount Payable</Text>
+                          <Text style={styles.statutoryTotalSub}>All statutory taxes & secure cloud hosting included</Text>
+                        </View>
+                        <Text style={styles.statutoryTotalVal}>₹{pricingBreakdown.totalPayable}</Text>
+                      </View>
+
+                      {/* INSTITUTIONAL CORPORATE TRUST FOOTNOTE */}
+                      <View style={styles.statutoryFooterStrip}>
+                        <Ionicons name="business" size={11} color="#86efac" />
+                        <Text style={styles.statutoryFooterText}>
+                          FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294 · B2C LEGAL INVOICE
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -449,9 +560,11 @@ export function CropDoctorAdoptionModal({
                 <>
                   <Ionicons name="send" size={16} color="#090e17" />
                   <Text style={styles.submitBtnText}>
-                    {pricingBreakdown.totalFee === 0
+                    {pricingBreakdown.totalPayable === 0
                       ? 'Adopt with Active Plan (₹0)'
-                      : `Send Request • ₹${pricingBreakdown.totalFee}`}
+                      : isSecondOpinion
+                        ? `Confirm Second Opinion • ₹${pricingBreakdown.totalPayable}`
+                        : `Confirm Consultation • ₹${pricingBreakdown.totalPayable}`}
                   </Text>
                 </>
               )}
@@ -891,61 +1004,179 @@ const styles = StyleSheet.create({
     color: '#64748b',
     marginTop: 2,
   },
+  modalCorporateStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingBottom: 8,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalCorporateText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: '#86efac',
+    letterSpacing: 0.3,
+  },
+  modalIcarBadge: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.35)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  modalIcarText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#7dd3fc',
+    letterSpacing: 0.4,
+  },
+  secondOpinionPill: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.45)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  secondOpinionPillText: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#fbbf24',
+    letterSpacing: 0.5,
+  },
   statutoryCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
     borderRadius: RADIUS.lg,
     padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
     marginTop: 18,
+    gap: 8,
   },
   statutoryHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
   statutoryTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#f8fafc',
+    letterSpacing: 0.3,
+  },
+  statutoryIcarPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  statutoryIcarText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#38bdf8',
+    letterSpacing: 0.3,
   },
   statutoryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 3,
+    alignItems: 'flex-start',
+    paddingVertical: 4,
   },
   statutoryLabel: {
-    fontSize: 11,
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#e2e8f0',
+  },
+  statutorySub: {
+    fontSize: 10,
     color: '#94a3b8',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  mandatoryPill: {
+    backgroundColor: 'rgba(22, 163, 74, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.4)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  mandatoryPillText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#4ade80',
+    letterSpacing: 0.3,
+  },
+  govtTaxPill: {
+    backgroundColor: 'rgba(56, 189, 248, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.4)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  govtTaxPillText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#7dd3fc',
+    letterSpacing: 0.3,
   },
   statutoryVal: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   statutoryDivider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    marginVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 4,
   },
   statutoryTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 2,
   },
   statutoryTotalLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '800',
     color: '#ffffff',
   },
+  statutoryTotalSub: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
   statutoryTotalVal: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#00ff87',
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#4ade80',
+  },
+  statutoryFooterStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 8,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  statutoryFooterText: {
+    fontSize: 8.5,
+    fontWeight: '700',
+    color: '#86efac',
+    letterSpacing: 0.2,
+    flex: 1,
   },
   footer: {
     flexDirection: 'row',

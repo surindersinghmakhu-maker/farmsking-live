@@ -9,6 +9,8 @@ import { AdvisorAssignmentService } from './advisor-assignment.service';
 import { CreateAdvisorAssignmentDto } from './dto/create-advisor-assignment.dto';
 import { ListFarmersQueryDto } from './dto/list-farmers-query.dto';
 import { RejectAssignmentDto } from './dto/reject-assignment.dto';
+import { CreateAdvisorPlanDto } from './dto/create-advisor-plan.dto';
+import { AdminApprovePlanDto, AdminRejectPlanDto } from './dto/admin-review-plan.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('advisor-assignments')
@@ -129,5 +131,51 @@ export class AdvisorAssignmentController {
   @Post('farmers/:farmerId/renewal-reminder')
   sendRenewalReminder(@CurrentUser() user: AuthUser, @Param('farmerId') farmerId: string) {
     return this.advisorAssignmentService.sendRenewalReminder(user, farmerId);
+  }
+
+  // ─── Advisor Custom Plans & Admin Review Workflow ─────────────
+
+  @Roles(Role.ADVISOR)
+  @Post('plans')
+  createOrUpdateAdvisorPlan(@CurrentUser() user: AuthUser, @Body() dto: CreateAdvisorPlanDto) {
+    return this.advisorAssignmentService.createOrUpdateAdvisorPlan(user, dto);
+  }
+
+  @Roles(Role.ADVISOR)
+  @Get('plans/my-plans')
+  getMyAdvisorPlans(@CurrentUser() user: AuthUser) {
+    return this.advisorAssignmentService.getMyAdvisorPlans(user);
+  }
+
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN, Role.ADVISOR)
+  @Get('plans/doctor/:advisorId')
+  getDoctorApprovedPlans(@Param('advisorId') advisorId: string) {
+    return this.advisorAssignmentService.getDoctorApprovedPlans(advisorId);
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('plans/admin/pending')
+  getPendingAdvisorPlansForAdmin() {
+    return this.advisorAssignmentService.getPendingAdvisorPlansForAdmin();
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('plans/:id/admin-approve')
+  adminApproveAdvisorPlan(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto?: AdminApprovePlanDto,
+  ) {
+    return this.advisorAssignmentService.adminApproveAdvisorPlan(user, id, dto);
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('plans/:id/admin-reject')
+  adminRejectAdvisorPlan(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto?: AdminRejectPlanDto,
+  ) {
+    return this.advisorAssignmentService.adminRejectAdvisorPlan(user, id, dto?.reason);
   }
 }

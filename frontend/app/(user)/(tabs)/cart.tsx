@@ -22,6 +22,7 @@ import { useCart } from '@/src/store/cart-context';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { useCreateOrder, useInitiateCashfreePayment } from '@/src/hooks/useOrders';
 import { useCouponPreview } from '@/src/hooks/useCoupons';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAddresses, useSetDefaultAddress } from '@/src/hooks/useAddresses';
@@ -306,50 +307,52 @@ export default function CartScreen() {
         {/* 🧾 Bill Summary, Coupons, Address & Checkout */}
         {items.length > 0 && (
           <View style={styles.checkoutWrapper}>
-            {/* 🎟️ Discount Coupon Box */}
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons name="pricetag-outline" size={18} color="#15803d" />
-                <Text style={styles.sectionTitle}>Apply Discount Coupon</Text>
-              </View>
+            {/* 🎟️ Discount Coupon Box — Isolated when ENABLE_COUPON_SYSTEM is false */}
+            {ENABLE_COUPON_SYSTEM ? (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="pricetag-outline" size={18} color="#15803d" />
+                  <Text style={styles.sectionTitle}>Apply Discount Coupon</Text>
+                </View>
 
-              {appliedDiscount ? (
-                <View style={styles.appliedCouponPill}>
-                  <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <Text style={styles.appliedCouponText}>
-                    Code <Text style={{ fontFamily: FONT.extraBold }}>'{appliedDiscount.code}'</Text> applied — ₹
-                    {appliedDiscount.amount} Off
-                  </Text>
-                  <TouchableOpacity onPress={handleRemoveCoupon}>
-                    <Ionicons name="close-circle" size={20} color="#94a3b8" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.couponInputRow}>
-                  <TextInput
-                    style={styles.couponInput}
-                    placeholder="Enter Coupon Code (e.g. KISAAN50)"
-                    placeholderTextColor="#94a3b8"
-                    autoCapitalize="characters"
-                    value={couponCode}
-                    onChangeText={setCouponCode}
-                  />
-                  <TouchableOpacity
-                    style={styles.applyCouponBtn}
-                    activeOpacity={0.8}
-                    disabled={!couponCode.trim() || couponPreview.isPending}
-                    onPress={handleApplyCoupon}
-                  >
-                    {couponPreview.isPending ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <Text style={styles.applyCouponBtnText}>Apply</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-              {couponError ? <Text style={styles.couponErrorText}>{couponError}</Text> : null}
-            </View>
+                {appliedDiscount ? (
+                  <View style={styles.appliedCouponPill}>
+                    <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                    <Text style={styles.appliedCouponText}>
+                      Code <Text style={{ fontFamily: FONT.extraBold }}>'{appliedDiscount.code}'</Text> applied — ₹
+                      {appliedDiscount.amount} Off
+                    </Text>
+                    <TouchableOpacity onPress={handleRemoveCoupon}>
+                      <Ionicons name="close-circle" size={20} color="#94a3b8" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.couponInputRow}>
+                    <TextInput
+                      style={styles.couponInput}
+                      placeholder="Enter Coupon Code (e.g. KISAAN50)"
+                      placeholderTextColor="#94a3b8"
+                      autoCapitalize="characters"
+                      value={couponCode}
+                      onChangeText={setCouponCode}
+                    />
+                    <TouchableOpacity
+                      style={styles.applyCouponBtn}
+                      activeOpacity={0.8}
+                      disabled={!couponCode.trim() || couponPreview.isPending}
+                      onPress={handleApplyCoupon}
+                    >
+                      {couponPreview.isPending ? (
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      ) : (
+                        <Text style={styles.applyCouponBtnText}>Apply</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {couponError ? <Text style={styles.couponErrorText}>{couponError}</Text> : null}
+              </View>
+            ) : null}
 
             {/* 📍 Delivery Destination Address Box */}
             <View style={styles.card}>

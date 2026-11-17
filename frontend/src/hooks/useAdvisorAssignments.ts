@@ -137,3 +137,64 @@ export function useAdminRejectDoctorChange() {
   });
 }
 
+export function useMyAdvisorPlans() {
+  return useQuery({
+    queryKey: ['advisor-assignments', 'my-plans'],
+    queryFn: advisorAssignmentsApi.getMyAdvisorPlans,
+  });
+}
+
+export function useSaveAdvisorPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: advisorAssignmentsApi.saveAdvisorPlan,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments', 'my-plans'] });
+    },
+  });
+}
+
+export function useDoctorApprovedPlans(advisorId?: string) {
+  return useQuery({
+    queryKey: ['advisor-assignments', 'doctor-plans', advisorId],
+    queryFn: () => advisorAssignmentsApi.getDoctorApprovedPlans(advisorId!),
+    enabled: Boolean(advisorId),
+  });
+}
+
+export function useScheduleGroupCall() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: advisorAssignmentsApi.scheduleGroupCall,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group-calls'] });
+    },
+  });
+}
+
+export function useSendGroupCallAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ callId, message }: { callId: string; message?: string }) =>
+      advisorAssignmentsApi.sendGroupCallAlert(callId, message),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group-calls'] });
+    },
+  });
+}
+
+export function useAdvisorGroupEvents() {
+  return useQuery({
+    queryKey: ['group-calls', 'advisor-events'],
+    queryFn: advisorAssignmentsApi.getAdvisorGroupEvents,
+  });
+}
+
+export function useFarmerGroupInvitations() {
+  return useQuery({
+    queryKey: ['group-calls', 'farmer-invitations'],
+    queryFn: advisorAssignmentsApi.getFarmerGroupInvitations,
+  });
+}
+
+

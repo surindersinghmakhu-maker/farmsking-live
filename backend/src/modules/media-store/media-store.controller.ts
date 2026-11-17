@@ -76,7 +76,7 @@ function inferExtFromMime(mimetype?: string): string {
 }
 
 @UseGuards(JwtAuthGuard)
-@Controller('media-store')
+@Controller(['crop-gallery', 'media-store'])
 export class MediaStoreController {
   constructor(private readonly mediaStoreService: MediaStoreService) {}
 

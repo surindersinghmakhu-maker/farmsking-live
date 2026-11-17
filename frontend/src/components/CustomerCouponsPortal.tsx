@@ -21,6 +21,7 @@ import { useAvailablePromotions, useCouponPreview } from '@/src/hooks/useCoupons
 import { useMyReferralNetwork } from '@/src/hooks/useReferralNetwork';
 import { useRedeemBasicPlanCoupon } from '@/src/hooks/useBasicPlanCoupons';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -139,56 +140,70 @@ export const CustomerCouponsPortal: React.FC<CustomerCouponsPortalProps> = ({
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Section 1: Real Backend Coupon & Plan Key Verifier */}
-        <View style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
-          <Text style={[styles.cardTitle, { color: isLight ? '#0f172a' : textColor }]}>Verify Promo Code or Redeem Plan Key</Text>
-          <Text style={[styles.cardSub, { color: isLight ? '#64748b' : subTextColor }]}>
-            Enter a FarmsKing store promo code, partner invite code, or pre-paid plan pass key:
-          </Text>
+        {/* Section 1: Real Backend Coupon & Plan Key Verifier — Isolated when ENABLE_COUPON_SYSTEM is false */}
+        {ENABLE_COUPON_SYSTEM ? (
+          <View style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
+            <Text style={[styles.cardTitle, { color: isLight ? '#0f172a' : textColor }]}>Verify Promo Code or Redeem Plan Key</Text>
+            <Text style={[styles.cardSub, { color: isLight ? '#64748b' : subTextColor }]}>
+              Enter a FarmsKing store promo code, partner invite code, or pre-paid plan pass key:
+            </Text>
 
-          <View style={styles.inputRow}>
-            <TextInput
-              style={[styles.input, { backgroundColor: isLight ? '#f1f5f9' : innerBg, color: isLight ? '#0f172a' : textColor }]}
-              placeholder="ENTER CODE"
-              placeholderTextColor="#94a3b8"
-              value={inputCode}
-              onChangeText={setInputCode}
-              autoCapitalize="characters"
-            />
-            <TouchableOpacity
-              style={[styles.submitBtn, isChecking && { opacity: 0.7 }]}
-              disabled={isChecking}
-              onPress={handleVerifyOrRedeem}
-            >
-              {isChecking ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Verify</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={[styles.input, { backgroundColor: isLight ? '#f1f5f9' : innerBg, color: isLight ? '#0f172a' : textColor }]}
+                placeholder="ENTER CODE"
+                placeholderTextColor="#94a3b8"
+                value={inputCode}
+                onChangeText={setInputCode}
+                autoCapitalize="characters"
+              />
+              <TouchableOpacity
+                style={[styles.submitBtn, isChecking && { opacity: 0.7 }]}
+                disabled={isChecking}
+                onPress={handleVerifyOrRedeem}
+              >
+                {isChecking ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
+                    <Text style={styles.submitBtnText}>Verify</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
 
-          {status.type ? (
-            <View
-              style={[
-                styles.statusBox,
-                { backgroundColor: status.type === 'SUCCESS' ? '#ecfdf5' : '#fef2f2' },
-              ]}
-            >
-              <Text
+            {status.type ? (
+              <View
                 style={[
-                  styles.statusText,
-                  { color: status.type === 'SUCCESS' ? '#047857' : '#dc2626' },
+                  styles.statusBox,
+                  { backgroundColor: status.type === 'SUCCESS' ? '#ecfdf5' : '#fef2f2' },
                 ]}
               >
-                {status.message}
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: status.type === 'SUCCESS' ? '#047857' : '#dc2626' },
+                  ]}
+                >
+                  {status.message}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <View style={[styles.card, { backgroundColor: isLight ? '#ffffff' : cardBg, borderColor: isLight ? '#e2e8f0' : cardBorder, borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <Ionicons name="shield-checkmark" size={18} color="#0284c7" />
+              <Text style={[styles.cardTitle, { color: isLight ? '#0f172a' : textColor, marginBottom: 0 }]}>
+                Coupon Engine Isolated
               </Text>
             </View>
-          ) : null}
-        </View>
+            <Text style={[styles.cardSub, { color: isLight ? '#64748b' : subTextColor }]}>
+              The coupon redemption and promo voucher system is currently dormant and set aside by administrative policy. All transactions, memberships, and doctor advisory services continue directly at official platform pricing.
+            </Text>
+          </View>
+        )}
 
         {/* Section 2: Share King ID Referral Rewards */}
         {kingId ? (

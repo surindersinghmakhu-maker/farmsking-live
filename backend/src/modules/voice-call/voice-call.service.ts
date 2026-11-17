@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -10,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { StartGroupCallDto } from './dto/start-group-call.dto';
+import { ScheduleGroupCallDto, SendGroupAlertDto } from './dto/schedule-group-call.dto';
 
 @Injectable()
 export class VoiceCallService {
@@ -286,5 +288,162 @@ export class VoiceCallService {
     });
 
     return activeCall;
+  }
+
+  /**
+   * Schedule a group call event (Doctor/Advisor)
+   */
+  async scheduleGroupCall(advisor: AuthUser, dto: ScheduleGroupCallDto) {
+    const channelName = `fk_group_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const scheduledDate = new Date(dto.scheduledAt);
+
+    const call = await this.prisma.groupVoiceCall.create({
+      data: {
+        title: dto.title,
+        channelName,
+        hostId: advisor.id,
+        status: GroupVoiceCallStatus.ACTIVE,
+        scheduledAt: scheduledDate,
+        targetAudienceType: dto.targetAudienceType || 'ALL_FARMERS',
+        targetPlanType: dto.targetPlanType || null,
+        targetCropName: dto.targetCropName || null,
+        invitedFarmerIds: dto.invitedFarmerIds || [],
+        alertMessage: dto.alertMessage || null,
+      },
+    });
+
+    return call;
+  }
+
+  /**
+   * Trigger alert/broadcast notification for scheduled group call to selected farmers
+   */
+  async sendGroupCallAlert(advisor: AuthUser, callId: string, customMessage?: string) {
+    const call = await this.prisma.groupVoiceCall.findUnique({
+      where: { id: callId },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Group call not found.');
+    }
+
+    if (call.hostId !== advisor.id && advisor.role !== Role.ADMIN && advisor.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only the host or admin can send alerts for this call.');
+    }
+
+    // Determine target farmer IDs
+    let targetFarmerIds: string[] = [];
+
+    if (call.targetAudienceType === 'SPECIFIC_FARMERS' && call.invitedFarmerIds?.length) {
+      targetFarmerIds = call.invitedFarmerIds;
+    } else if (call.targetAudienceType === 'CROP_SPECIAL' && call.targetCropName) {
+      const crops = await this.prisma.cropCycle.findMany({
+        where: {
+          cropName: { contains: call.targetCropName, mode: 'insensitive' },
+          assignedAdvisorId: advisor.id,
+        },
+        include: {
+          plot: { include: { farm: { select: { ownerId: true } } } },
+        },
+      });
+      targetFarmerIds = Array.from(new Set(crops.map((c) => c.plot.farm.ownerId)));
+    } else {
+      // Find all farmers currently assigned to this advisor via subscription or crop
+      const assignments = await this.prisma.advisorAssignment.findMany({
+        where: { advisorId: advisor.id, status: 'ACTIVE' },
+        select: { farmerId: true },
+      });
+      const cropAssignments = await this.prisma.cropCycle.findMany({
+        where: { assignedAdvisorId: advisor.id },
+        include: {
+          plot: { include: { farm: { select: { ownerId: true } } } },
+        },
+      });
+      const ids = new Set([
+        ...assignments.map((a) => a.farmerId),
+        ...cropAssignments.map((c) => c.plot.farm.ownerId),
+      ]);
+      targetFarmerIds = Array.from(ids);
+    }
+
+    const scheduledTimeStr = call.scheduledAt
+      ? new Date(call.scheduledAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+      : 'shortly';
+
+    const message = customMessage || call.alertMessage || `Dr. ${advisor.name} scheduled a group consultation session "${call.title}" on ${scheduledTimeStr}. Join to get live crop advice.`;
+
+    // Create notifications for target farmers
+    if (targetFarmerIds.length > 0) {
+      await this.prisma.notification.createMany({
+        data: targetFarmerIds.map((farmerId) => ({
+          userId: farmerId,
+          type: 'ADVISOR_MESSAGE',
+          title: `📞 Live Group Consultation: ${call.title}`,
+          body: message,
+          data: {
+            type: 'GROUP_CALL',
+            callId: call.id,
+            channelName: call.channelName,
+            scheduledAt: call.scheduledAt?.toISOString(),
+          },
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // Update alertSentAt timestamp on the call
+    const updated = await this.prisma.groupVoiceCall.update({
+      where: { id: callId },
+      data: {
+        alertSentAt: new Date(),
+        alertMessage: message,
+      },
+    });
+
+    return {
+      success: true,
+      notifiedFarmerCount: targetFarmerIds.length,
+      alertSentAt: updated.alertSentAt,
+      callId: updated.id,
+    };
+  }
+
+  /**
+   * Get all group call events scheduled/hosted by this advisor
+   */
+  async getAdvisorGroupEvents(advisor: AuthUser) {
+    return this.prisma.groupVoiceCall.findMany({
+      where: { hostId: advisor.id },
+      include: {
+        participants: {
+          include: {
+            user: { select: { id: true, name: true, mobile: true, village: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+  }
+
+  /**
+   * Get group call invitations for a farmer
+   */
+  async getFarmerGroupInvitations(farmer: AuthUser) {
+    return this.prisma.groupVoiceCall.findMany({
+      where: {
+        status: GroupVoiceCallStatus.ACTIVE,
+        OR: [
+          { targetAudienceType: 'ALL_FARMERS' },
+          { invitedFarmerIds: { has: farmer.id } },
+          { host: { advisorAssignmentsAsAdvisor: { some: { farmerId: farmer.id, status: 'ACTIVE' } } } },
+        ],
+      },
+      include: {
+        host: { select: { id: true, name: true, kingId: true, photoUrl: true, specialization: true } },
+      },
+      orderBy: { scheduledAt: 'asc' },
+      take: 20,
+    });
   }
 }

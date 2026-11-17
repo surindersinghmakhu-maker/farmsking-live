@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
+import { ENABLE_COUPON_SYSTEM } from '@/src/constants/featureFlags';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import {
   useMyAdvisor,
@@ -25,6 +26,9 @@ import {
   usePendingDoctorChanges,
   useAdminApproveDoctorChange,
   useAdminRejectDoctorChange,
+  usePendingAdvisorPlans,
+  useAdminApproveAdvisorPlan,
+  useAdminRejectAdvisorPlan,
 } from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
@@ -76,6 +80,10 @@ export default function MembershipsScreen() {
   const { data: pendingDoctorChanges = [], refetch: refetchPendingChanges } = usePendingDoctorChanges();
   const approveChangeMutation = useAdminApproveDoctorChange();
   const rejectChangeMutation = useAdminRejectDoctorChange();
+  const { data: pendingAdvisorPlans = [], refetch: refetchPendingPlans } = usePendingAdvisorPlans();
+  const approveAdvisorPlanMutation = useAdminApproveAdvisorPlan();
+  const rejectAdvisorPlanMutation = useAdminRejectAdvisorPlan();
+  const [editingPlanEdits, setEditingPlanEdits] = useState<Record<string, any>>({});
   const { cropFields } = useCrops();
 
   const [activeTab, setActiveTab] = useState<'FARMER_SOFTWARE' | 'CROP_CARE'>('FARMER_SOFTWARE');
@@ -261,25 +269,27 @@ export default function MembershipsScreen() {
               </View>
             </View>
 
-            {/* Quick Coupon Code Redeemer Card */}
-            <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-              <Text style={styles.cardHeaderTitle}>🎟️ Have a Discount Coupon?</Text>
-              <Text style={styles.cardHeaderSub}>Redeem promo keys or coupon cards for instant discount</Text>
-              <View style={styles.couponInputRow}>
-                <TextInput
-                  style={styles.couponInput}
-                  placeholder="Enter Coupon Code (e.g. FARMS2026)"
-                  placeholderTextColor="#94a3b8"
-                  value={couponCodeInput}
-                  onChangeText={setCouponCodeInput}
-                  autoCapitalize="characters"
-                />
-                <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
-                  <Text style={styles.applyBtnText}>Apply</Text>
-                </TouchableOpacity>
+            {/* Quick Coupon Code Redeemer Card — Isolated when ENABLE_COUPON_SYSTEM is false */}
+            {ENABLE_COUPON_SYSTEM ? (
+              <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
+                <Text style={styles.cardHeaderTitle}>🎟️ Have a Discount Coupon?</Text>
+                <Text style={styles.cardHeaderSub}>Redeem promo keys or coupon cards for instant discount</Text>
+                <View style={styles.couponInputRow}>
+                  <TextInput
+                    style={styles.couponInput}
+                    placeholder="Enter Coupon Code (e.g. FARMS2026)"
+                    placeholderTextColor="#94a3b8"
+                    value={couponCodeInput}
+                    onChangeText={setCouponCodeInput}
+                    autoCapitalize="characters"
+                  />
+                  <TouchableOpacity style={styles.applyBtn} onPress={handleApplyCoupon}>
+                    <Text style={styles.applyBtnText}>Apply</Text>
+                  </TouchableOpacity>
+                </View>
+                {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
               </View>
-              {appliedCouponNotice ? <Text style={styles.noticeText}>{appliedCouponNotice}</Text> : null}
-            </View>
+            ) : null}
 
             {/* Software Plan Pricing Cards */}
             <Text style={styles.sectionHeaderTitle}>SELECT VIP PASS SCHEME</Text>
@@ -381,6 +391,224 @@ export default function MembershipsScreen() {
         ) : (
           /* 2. DOCTOR CROP CARE MEMBERSHIPS PART */
           <View style={{ gap: 14 }}>
+            {/* Admin Advisor Custom Plans Pending Review Queue */}
+            {pendingAdvisorPlans && pendingAdvisorPlans.length > 0 ? (
+              <View style={[styles.statusCard, { backgroundColor: '#090e17', borderColor: '#f59e0b', borderWidth: 1.5, gap: 12 }, premiumShadow('#f59e0b', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="shield-checkmark" size={20} color="#f59e0b" />
+                    <View>
+                      <Text style={{ fontSize: 14.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                        Advisor Plans Pending Admin Approval ({pendingAdvisorPlans.length})
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                        Review, modify entitlements/fees, and publish doctor consultation plans
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#f59e0b' }}>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#f59e0b' }}>Mandatory Review</Text>
+                  </View>
+                </View>
+
+                {pendingAdvisorPlans.map((planItem: any) => {
+                  const edits = editingPlanEdits[planItem.id] || {
+                    price: planItem.price,
+                    callRequestLimit: planItem.callRequestLimit ?? 5,
+                    inAppCallLimit: planItem.inAppCallLimit ?? 3,
+                    videoCallAllowed: planItem.videoCallAllowed ?? false,
+                    videoCallLimit: planItem.videoCallLimit ?? 0,
+                    chatEnabled: planItem.chatEnabled ?? true,
+                  };
+
+                  const curPrice = Number(edits.price) || 0;
+                  const storagePlatformFee = Math.round(curPrice * 0.10);
+                  const gst = Math.round(storagePlatformFee * 0.18);
+                  const totalFarmerPayable = curPrice + storagePlatformFee + gst;
+
+                  return (
+                    <View key={planItem.id} style={{ backgroundColor: '#0f172a', padding: 14, borderRadius: RADIUS.md, borderWidth: 1.2, borderColor: '#334155', gap: 10 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 6 }}>
+                        <View style={{ flex: 1, minWidth: 200 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                              Dr. {planItem.advisor?.name || 'Advisor'}
+                            </Text>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#38bdf8' }}>
+                              ({planItem.advisor?.kingId || 'ID: FK-DOC'})
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                            Plan Type: <Text style={{ color: '#4ade80', fontFamily: FONT.bold }}>{planItem.planType?.replace('_', ' ')}</Text> · Specialization: {planItem.advisor?.specialization || 'Agronomist'}
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: 'rgba(56, 189, 248, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#38bdf8' }}>
+                            {planItem.approvalStatus || 'PENDING_APPROVAL'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Quota & Pricing Controls Grid */}
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, backgroundColor: 'rgba(255,255,255,0.03)', padding: 10, borderRadius: 8 }}>
+                        {/* Advisor Proposed Base Fee */}
+                        <View style={{ flex: 1, minWidth: 120, gap: 3 }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>Advisor Base Fee (₹)</Text>
+                          <TextInput
+                            style={{ backgroundColor: '#1e293b', color: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: '#475569' }}
+                            keyboardType="numeric"
+                            value={String(edits.price)}
+                            onChangeText={(val) => {
+                              setEditingPlanEdits((prev) => ({
+                                ...prev,
+                                [planItem.id]: { ...edits, price: Number(val) || 0 },
+                              }));
+                            }}
+                          />
+                        </View>
+
+                        {/* Call Requests Quota */}
+                        <View style={{ flex: 1, minWidth: 110, gap: 3 }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>Call Requests</Text>
+                          <TextInput
+                            style={{ backgroundColor: '#1e293b', color: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: '#475569' }}
+                            keyboardType="numeric"
+                            value={String(edits.callRequestLimit)}
+                            onChangeText={(val) => {
+                              setEditingPlanEdits((prev) => ({
+                                ...prev,
+                                [planItem.id]: { ...edits, callRequestLimit: Number(val) || 0 },
+                              }));
+                            }}
+                          />
+                        </View>
+
+                        {/* In-App Calls Quota */}
+                        <View style={{ flex: 1, minWidth: 110, gap: 3 }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>In-App VoIP Calls</Text>
+                          <TextInput
+                            style={{ backgroundColor: '#1e293b', color: '#ffffff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, fontSize: 13, fontFamily: FONT.bold, borderWidth: 1, borderColor: '#475569' }}
+                            keyboardType="numeric"
+                            value={String(edits.inAppCallLimit)}
+                            onChangeText={(val) => {
+                              setEditingPlanEdits((prev) => ({
+                                ...prev,
+                                [planItem.id]: { ...edits, inAppCallLimit: Number(val) || 0 },
+                              }));
+                            }}
+                          />
+                        </View>
+
+                        {/* Video Call Allowed Toggle */}
+                        <TouchableOpacity
+                          style={{ flex: 1, minWidth: 110, backgroundColor: edits.videoCallAllowed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)', borderWidth: 1, borderColor: edits.videoCallAllowed ? '#10b981' : '#ef4444', borderRadius: 6, padding: 6, justifyContent: 'center', alignItems: 'center' }}
+                          onPress={() => {
+                            setEditingPlanEdits((prev) => ({
+                              ...prev,
+                              [planItem.id]: { ...edits, videoCallAllowed: !edits.videoCallAllowed },
+                            }));
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>Video Call</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: edits.videoCallAllowed ? '#4ade80' : '#f87171' }}>
+                            {edits.videoCallAllowed ? '✓ ENABLED' : '✕ DISABLED'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {/* Chat Allowed Toggle */}
+                        <TouchableOpacity
+                          style={{ flex: 1, minWidth: 110, backgroundColor: edits.chatEnabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.15)', borderWidth: 1, borderColor: edits.chatEnabled ? '#10b981' : '#ef4444', borderRadius: 6, padding: 6, justifyContent: 'center', alignItems: 'center' }}
+                          onPress={() => {
+                            setEditingPlanEdits((prev) => ({
+                              ...prev,
+                              [planItem.id]: { ...edits, chatEnabled: !edits.chatEnabled },
+                            }));
+                          }}
+                        >
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>In-App Chat</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: edits.chatEnabled ? '#4ade80' : '#f87171' }}>
+                            {edits.chatEnabled ? '✓ ACTIVE' : '✕ OFF'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {/* Statutory Fee Breakdown Preview */}
+                      <View style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: 10, borderRadius: 8, gap: 4 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>Advisor Base Fee:</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>₹{curPrice}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#38bdf8' }}>Secure Storage & Cloud Platform Fee (10%):</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#38bdf8' }}>₹{storagePlatformFee}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#fbbf24' }}>Statutory GST (18% on platform fee):</Text>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#fbbf24' }}>₹{gst}</Text>
+                        </View>
+                        <View style={{ height: 1, backgroundColor: '#334155', marginVertical: 2 }} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#4ade80' }}>Total Farmer Payable:</Text>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#4ade80' }}>₹{totalFarmerPayable}</Text>
+                        </View>
+                      </View>
+
+                      {/* Admin Action Buttons */}
+                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                        <TouchableOpacity
+                          style={{ flex: 1, backgroundColor: '#10b981', paddingVertical: 10, borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
+                          disabled={approveAdvisorPlanMutation.isPending}
+                          onPress={async () => {
+                            try {
+                              await approveAdvisorPlanMutation.mutateAsync({
+                                id: planItem.id,
+                                modifications: edits,
+                              });
+                              refetchPendingPlans();
+                              if (Platform.OS === 'web') alert('Advisor plan approved & published successfully!');
+                              else Alert.alert('Success', 'Advisor plan approved & published successfully!');
+                            } catch (err: any) {
+                              const msg = err?.response?.data?.message || 'Could not approve advisor plan.';
+                              if (Platform.OS === 'web') alert(msg);
+                              else Alert.alert('Error', msg);
+                            }
+                          }}
+                        >
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                            ✓ Approve & Publish Plan
+                          </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={{ flex: 1, backgroundColor: '#dc2626', paddingVertical: 10, borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
+                          disabled={rejectAdvisorPlanMutation.isPending}
+                          onPress={async () => {
+                            try {
+                              await rejectAdvisorPlanMutation.mutateAsync({
+                                id: planItem.id,
+                                reason: 'Pricing or entitlement rejected by administrator. Please revise.',
+                              });
+                              refetchPendingPlans();
+                              if (Platform.OS === 'web') alert('Advisor plan rejected.');
+                              else Alert.alert('Rejected', 'Advisor plan rejected.');
+                            } catch (err: any) {
+                              const msg = err?.response?.data?.message || 'Could not reject advisor plan.';
+                              if (Platform.OS === 'web') alert(msg);
+                              else Alert.alert('Error', msg);
+                            }
+                          }}
+                        >
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                            ✕ Reject / Discard
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            ) : null}
+
             {/* Admin Doctor Change Review Queue */}
             {pendingDoctorChanges && pendingDoctorChanges.length > 0 ? (
               <View style={[styles.statusCard, { backgroundColor: '#1e1b4b', borderColor: '#6366f1', borderWidth: 1.5, gap: 10 }, premiumShadow('#6366f1', 'sm')]}>
@@ -550,7 +778,7 @@ export default function MembershipsScreen() {
                     style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
                     onPress={() => setIsCropCareModalOpen(true)}
                   >
-                    <Text style={styles.upgradeBtnText}>Crops Care Plan & Coupon 🩺</Text>
+                    <Text style={styles.upgradeBtnText}>Crops Care Plan 🩺</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}

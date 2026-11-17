@@ -377,7 +377,7 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                 { key: 'SPRAY', label: 'Sprays', icon: 'flask-outline' },
                 { key: 'FERTILIZER', label: 'Fertilizers', icon: 'leaf-outline' },
                 { key: 'HARVEST', label: 'Harvest Weight', icon: 'scale-outline' },
-                { key: 'MEDIA', label: `Media Records (${totalArchivedPhotos})`, icon: 'film-outline' },
+                { key: 'MEDIA', label: `Crop Gallery (${totalArchivedPhotos})`, icon: 'images-outline' },
               ].map((f) => {
                 const isSelected = activeFilter === f.key;
                 return (
@@ -482,10 +482,10 @@ export const CropActivitiesModal: React.FC<CropActivitiesModalProps> = ({
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.sectionTitle, { color: textColor }]}>
-                      Media Records Archive (7-Day Active & Past)
+                      Crop Gallery Archive (7-Day Active & Past)
                     </Text>
                     <Text style={{ fontSize: 10.5, fontFamily: FONT.regular, color: subTextColor, marginTop: 2 }}>
-                      Every Media Record stays on display for 7 days and remains permanently here afterward.
+                      Every Crop Gallery upload stays on display for 7 days and remains permanently here afterward.
                     </Text>
                   </View>
                   {onOpenMediaModal && (

@@ -87,4 +87,20 @@ export async function adminRejectDoctorChange(id: string, reason?: string): Prom
   return data;
 }
 
+export async function getPendingAdvisorPlans(): Promise<any[]> {
+  const { data } = await apiClient.get<any[]>('/advisor-assignments/plans/admin/pending');
+  return data;
+}
+
+export async function adminApproveAdvisorPlan(id: string, modifications?: any): Promise<any> {
+  const { data } = await apiClient.post<any>(`/advisor-assignments/plans/${id}/admin-approve`, modifications || {});
+  return data;
+}
+
+export async function adminRejectAdvisorPlan(id: string, reason?: string): Promise<any> {
+  const { data } = await apiClient.post<any>(`/advisor-assignments/plans/${id}/admin-reject`, { reason });
+  return data;
+}
+
+
 

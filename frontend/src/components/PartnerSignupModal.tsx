@@ -418,9 +418,22 @@ export function PartnerSignupModal({
     try {
       const res = await sendPartnerOtpApi(clean);
       setOtpSent(true);
-      setOtpDigits(['', '', '', '', '', '']);
-      setDevOtp(res.devOtp ? String(res.devOtp) : null);
-      setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+      const isLocalhostEnv =
+        Platform.OS === 'web' &&
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' ||
+          window.location.hostname === '127.0.0.1' ||
+          window.location.hostname.includes('192.168.'));
+      if (isLocalhostEnv && res.devOtp) {
+        const code = String(res.devOtp).slice(0, 6);
+        setDevOtp(code);
+        setOtpDigits(code.split(''));
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 250);
+      } else {
+        setDevOtp(null);
+        setOtpDigits(['', '', '', '', '', '']);
+        setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Unable to send OTP.';
       setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
@@ -1007,18 +1020,9 @@ export function PartnerSignupModal({
                           </View>
 
                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                            {devOtp ? (
-                              <View style={styles.devPill}>
-                                <Text style={styles.devPillText}>Local Server OTP: {devOtp}</Text>
-                                <TouchableOpacity onPress={() => handleAutoFillDevOtp(devOtp)}>
-                                  <Text style={styles.devFillText}>Auto-Fill & Verify</Text>
-                                </TouchableOpacity>
-                              </View>
-                            ) : (
-                              <Text style={{ fontSize: 11, color: '#94a3b8', fontFamily: FONT.medium }}>
-                                Enter 6-digit code received on +91 {mobile}
-                              </Text>
-                            )}
+                            <Text style={{ fontSize: 11, color: '#94a3b8', fontFamily: FONT.medium }}>
+                              Enter 6-digit code received on +91 {mobile}
+                            </Text>
 
                             {busyOtp && (
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

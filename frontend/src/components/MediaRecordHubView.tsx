@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Platform,
   ScrollView,
   StyleSheet,
@@ -20,8 +21,10 @@ import {
   fetchCropMediaFromStore,
   fetchCropRemarkFromStore,
   formatMediaTimestamp,
+  getCalendarWeekRange,
   isLocalGpsMediaActive,
   MEDIA_DISPLAY_DAYS,
+  resolveCropMediaDisplayUri,
 } from '@/src/utils/crop-media';
 
 interface MediaRecordHubViewProps {
@@ -36,8 +39,10 @@ interface CropRecordStatus {
   isActiveCycle: boolean;
   daysRemaining: number;
   expiresAt: string | null;
+  activePhotos: string[];
   activePhotoCount: number;
   hasActiveVideo: boolean;
+  activeVideoUrl: string | null;
   hasActiveAudio: boolean;
   hasActiveRemark: boolean;
   totalBatches: number;
@@ -86,12 +91,15 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
             gps.fieldAudio ||
             gps.farmerRemarks),
       );
+      const localPhotos = localActive ? gps?.fieldPhotos || [] : [];
       initial[c.id] = {
         isActiveCycle: localActive && days > 0 && gps?.saveMediaToCropRecord !== false,
         daysRemaining: days,
         expiresAt: gps?.mediaDisplayExpiresAt || null,
-        activePhotoCount: localActive ? gps?.fieldPhotos?.length || 0 : 0,
+        activePhotos: localPhotos,
+        activePhotoCount: localPhotos.length,
         hasActiveVideo: localActive && Boolean(gps?.fieldVideo),
+        activeVideoUrl: localActive ? gps?.fieldVideo || null : null,
         hasActiveAudio: localActive && Boolean(gps?.fieldAudio),
         hasActiveRemark: localActive && Boolean(gps?.farmerRemarks?.trim()),
         totalBatches: hadPrior ? 1 : 0,
@@ -130,14 +138,21 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
               (localActive && gps?.saveMediaToCropRecord !== false)) &&
             remDays > 0;
 
+          const resolvedPhotos = activeFlag
+            ? (mediaRes.photos.length > 0 ? mediaRes.photos : (localActive ? gps?.fieldPhotos || [] : []))
+            : [];
+          const resolvedVideo = activeFlag
+            ? (mediaRes.video || (localActive ? gps?.fieldVideo || null : null))
+            : null;
+
           const status: CropRecordStatus = {
             isActiveCycle: activeFlag,
             daysRemaining: activeFlag ? remDays : 0,
             expiresAt: expiry,
-            activePhotoCount: activeFlag
-              ? mediaRes.photos.length || (localActive ? gps?.fieldPhotos?.length || 0 : 0)
-              : 0,
+            activePhotos: resolvedPhotos,
+            activePhotoCount: activeFlag ? resolvedPhotos.length : 0,
             hasActiveVideo: activeFlag && (Boolean(mediaRes.video) || (localActive && Boolean(gps?.fieldVideo))),
+            activeVideoUrl: resolvedVideo,
             hasActiveAudio: activeFlag && (Boolean(mediaRes.audio) || (localActive && Boolean(gps?.fieldAudio))),
             hasActiveRemark:
               activeFlag &&
@@ -188,105 +203,46 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
       {headerComponent}
 
       <View style={styles.container}>
-        {/* PREMIUM OBSIDIAN MEDIA RECORD OVERVIEW CARD */}
+        {/* SLEEK CROP GALLERY OVERVIEW CARD */}
         <LinearGradient
-          colors={['#090e17', '#0f172a', '#052e16']}
+          colors={['#090e17', '#0f172a', '#062817']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
         >
-          <View style={styles.heroTopRow}>
-            <View style={{ flex: 1, gap: 4 }}>
-              <View style={styles.modulePillRow}>
-                <View style={styles.modulePill}>
-                  <Ionicons name="film" size={12} color="#4ade80" />
-                  <Text style={styles.modulePillText}>MEDIA RECORD MODULE</Text>
-                </View>
-                <View style={styles.cycleRulePill}>
-                  <Ionicons name="shield-checkmark" size={11} color="#93c5fd" />
-                  <Text style={styles.cycleRulePillText}>7-DAY DISPLAY · SAFE ARCHIVE</Text>
-                </View>
-              </View>
-              <Text style={styles.heroTitle}>Crop Media Records</Text>
-              <Text style={styles.heroSubtitle}>
-                Save crop photos, live video, voice notes, and feedback in one simple record. Every record stays visible for 7 days, then moves safely to Past Records so you can add a new Media Record.
-              </Text>
+          <View style={{ gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+              <Text style={styles.heroTitle}>Crop Gallery</Text>
+              {(() => {
+                const cw = getCalendarWeekRange();
+                return (
+                  <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.2)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#4ade80' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#4ade80', letterSpacing: 0.4 }}>
+                      SUNDAY TO SATURDAY CYCLE · DAY {cw.dayNumber}/7 ({cw.dayName.toUpperCase()})
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
-          </View>
-
-          {/* 3-STEP EASY GUIDE */}
-          <View style={styles.stepsGrid}>
-            <View style={styles.stepBox}>
-              <View style={styles.stepNumBadge}>
-                <Text style={styles.stepNumText}>1</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.stepTitle}>Add Media Record</Text>
-                <Text style={styles.stepDesc}>
-                  Up to 6 photos, 1-min live video, 1-min voice note, and 150-char text note.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.stepBox}>
-              <View style={styles.stepNumBadge}>
-                <Text style={styles.stepNumText}>2</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.stepTitle}>7-Day Active Display</Text>
-                <Text style={styles.stepDesc}>
-                  Photos, video, and voice stay visible cleanly on display for {MEDIA_DISPLAY_DAYS} full days.
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.stepBox}>
-              <View style={[styles.stepNumBadge, { backgroundColor: '#f59e0b' }]}>
-                <Text style={styles.stepNumText}>3</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.stepTitle}>New Record After 7 Days</Text>
-                <Text style={styles.stepDesc}>
-                  After 7 days, old media saves in Past Records and new Media Record unlocks automatically.
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* KPI STRIP */}
-          <View style={styles.kpiRow}>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiNumber}>{crops.length}</Text>
-              <Text style={styles.kpiLabel}>Active Crops</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiNumber, { color: '#4ade80' }]}>{summary.activeRecords}</Text>
-              <Text style={styles.kpiLabel}>Active 7-Day Records</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiNumber, { color: '#fbbf24' }]}>{summary.readyForNew}</Text>
-              <Text style={styles.kpiLabel}>Ready for New Record</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiNumber, { color: '#38bdf8' }]}>{summary.totalBatches}</Text>
-              <Text style={styles.kpiLabel}>Saved Total Batches</Text>
-            </View>
+            <Text style={styles.heroSubtitle}>
+              Upload up to 6 clear field photos with auto date & plot watermark. Active on display for 7 days (Sunday Day 1 to Saturday Day 7). If no photos are uploaded in any week, that week is left empty with No Photo Preview.
+            </Text>
           </View>
         </LinearGradient>
 
         {/* SECTION HEADING */}
         <View style={styles.sectionHeaderRow}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Ionicons name="albums" size={18} color={isDark ? '#4ade80' : '#15803d'} />
+            <Ionicons name="images" size={18} color={isDark ? '#4ade80' : '#15803d'} />
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Your Crops Media Records ({crops.length})
+              Your Crops Gallery ({crops.length})
             </Text>
           </View>
           {isLoadingStatuses ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <ActivityIndicator size="small" color="#16a34a" />
               <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: subTextColor }}>
-                Syncing records...
+                Syncing gallery...
               </Text>
             </View>
           ) : null}
@@ -297,30 +253,31 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
             <Ionicons name="leaf-outline" size={34} color={subTextColor} />
             <Text style={[styles.emptyHubTitle, { color: textColor }]}>No Active Crops Found</Text>
             <Text style={[styles.emptyHubSub, { color: subTextColor }]}>
-              Add a crop first in the Active Crops tab, then you can create 7-day Media Records for each plot.
+              Add a crop first in the Active Crops tab, then you can create 7-day Crop Gallery uploads for each plot.
             </Text>
           </View>
         ) : (
           <View style={styles.cardsGrid}>
             {crops.map((crop) => {
+              const cw = getCalendarWeekRange();
               const st = statusMap[crop.id] || {
                 isActiveCycle: false,
                 daysRemaining: 0,
                 expiresAt: null,
+                activePhotos: [],
                 activePhotoCount: 0,
                 hasActiveVideo: false,
+                activeVideoUrl: null,
                 hasActiveAudio: false,
                 hasActiveRemark: false,
                 totalBatches: 0,
                 pastBatchCount: 0,
                 latestSavedAt: null,
               };
-              const dayOfCycle = st.isActiveCycle
-                ? Math.min(MEDIA_DISPLAY_DAYS, Math.max(1, MEDIA_DISPLAY_DAYS - st.daysRemaining + 1))
-                : 0;
-              const progressPct = st.isActiveCycle
-                ? Math.min(100, Math.max(14, Math.round((dayOfCycle / MEDIA_DISPLAY_DAYS) * 100)))
-                : 0;
+
+              const hasUploadedPhotosThisWeek = Boolean(st.activePhotos && st.activePhotos.length > 0);
+              const dayOfCycle = cw.dayNumber; // Sunday is 1, Saturday is 7
+              const progressPct = Math.min(100, Math.max(14, Math.round((dayOfCycle / 7) * 100)));
 
               return (
                 <View
@@ -329,12 +286,12 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                     styles.cropRecordCard,
                     {
                       backgroundColor: cardBg,
-                      borderColor: st.isActiveCycle
+                      borderColor: hasUploadedPhotosThisWeek
                         ? isDark
                           ? 'rgba(74, 222, 128, 0.35)'
                           : '#86efac'
                         : cardBorder,
-                      ...premiumShadow(st.isActiveCycle ? '#16a34a' : '#000000', 'xs'),
+                      ...premiumShadow(hasUploadedPhotosThisWeek ? '#16a34a' : '#000000', 'xs'),
                     },
                   ]}
                 >
@@ -349,88 +306,138 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                       </Text>
                     </View>
 
-                    {st.isActiveCycle ? (
+                    {hasUploadedPhotosThisWeek ? (
                       <View style={styles.statusPillActive}>
                         <Ionicons name="checkmark-circle" size={12} color="#15803d" />
                         <Text style={styles.statusPillActiveText}>
-                          Active · {st.daysRemaining}d Left
+                          Active · Day {dayOfCycle}/7 ({cw.dayName})
                         </Text>
                       </View>
                     ) : (
-                      <View style={styles.statusPillReady}>
-                        <Ionicons name="add-circle" size={12} color="#b45309" />
-                        <Text style={styles.statusPillReadyText}>New Record Ready</Text>
+                      <View style={[styles.statusPillReady, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9', borderColor: cardBorder }]}>
+                        <Ionicons name="calendar-outline" size={12} color={subTextColor} />
+                        <Text style={[styles.statusPillReadyText, { color: subTextColor }]}>
+                          Week Day {dayOfCycle}/7 ({cw.dayName})
+                        </Text>
                       </View>
                     )}
                   </View>
 
-                  {/* 7-DAY CYCLE TRACKER BAR */}
+                  {/* SUNDAY TO SATURDAY CYCLE TRACKER BAR */}
                   <View
                     style={[
                       styles.cycleBox,
                       { backgroundColor: innerBg, borderColor: cardBorder },
                     ]}
                   >
-                    {st.isActiveCycle ? (
-                      <>
-                        <View style={styles.cycleLabelRow}>
-                          <Text style={[styles.cycleLabel, { color: '#15803d' }]}>
-                            Day {dayOfCycle} of {MEDIA_DISPLAY_DAYS} Active Display
-                          </Text>
-                          <Text style={[styles.cycleDateText, { color: subTextColor }]}>
-                            {st.expiresAt
-                              ? `New unlocks ${formatMediaTimestamp(st.expiresAt).dateStr}`
-                              : `${st.daysRemaining} day(s) remaining`}
-                          </Text>
-                        </View>
-                        <View style={styles.progressTrack}>
-                          <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
-                        </View>
-                        <View style={styles.contentsChipsRow}>
-                          <View style={styles.contentChip}>
-                            <Ionicons name="images" size={11} color="#15803d" />
-                            <Text style={styles.contentChipText}>{st.activePhotoCount}/6 Photos</Text>
-                          </View>
-                          <View style={styles.contentChip}>
-                            <Ionicons name="videocam" size={11} color={st.hasActiveVideo ? '#dc2626' : '#64748b'} />
-                            <Text style={styles.contentChipText}>
-                              {st.hasActiveVideo ? 'Video Ready' : 'No Video'}
-                            </Text>
-                          </View>
-                          <View style={styles.contentChip}>
-                            <Ionicons name="mic" size={11} color={st.hasActiveAudio ? '#0284c7' : '#64748b'} />
-                            <Text style={styles.contentChipText}>
-                              {st.hasActiveAudio ? 'Voice Note' : 'No Voice'}
-                            </Text>
-                          </View>
-                          {st.hasActiveRemark ? (
-                            <View style={styles.contentChip}>
-                              <Ionicons name="chatbox-ellipses" size={11} color="#7c3aed" />
-                              <Text style={styles.contentChipText}>Text Note</Text>
-                            </View>
-                          ) : null}
-                        </View>
-                      </>
-                    ) : (
-                      <>
-                        <View style={styles.cycleLabelRow}>
-                          <Text style={[styles.cycleLabel, { color: isDark ? '#fbbf24' : '#b45309' }]}>
-                            {st.totalBatches > 0
-                              ? '7 Days Finished · New Record Unlocked'
-                              : 'No Media Record Yet'}
-                          </Text>
-                          {st.totalBatches > 0 ? (
-                            <Text style={[styles.cycleDateText, { color: subTextColor }]}>
-                              {st.totalBatches} past record(s) saved
-                            </Text>
-                          ) : null}
-                        </View>
-                        <Text style={[styles.readyExplainText, { color: subTextColor }]}>
-                          Upload fresh crop photos, live video, voice note, or remarks. It will stay on display for {MEDIA_DISPLAY_DAYS} days.
+                    <View style={styles.cycleLabelRow}>
+                      <Text style={[styles.cycleLabel, { color: hasUploadedPhotosThisWeek ? '#15803d' : (isDark ? '#38bdf8' : '#0284c7') }]}>
+                        Day {dayOfCycle} of 7 ({cw.dayName}) · Week of {cw.dateLabel}
+                      </Text>
+                      <Text style={[styles.cycleDateText, { color: subTextColor }]}>
+                        {cw.daysRemaining} day(s) left in cycle
+                      </Text>
+                    </View>
+                    <View style={styles.progressTrack}>
+                      <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: hasUploadedPhotosThisWeek ? '#16a34a' : '#0284c7' }]} />
+                    </View>
+                    <View style={styles.contentsChipsRow}>
+                      <View style={styles.contentChip}>
+                        <Ionicons name="images" size={11} color={hasUploadedPhotosThisWeek ? '#15803d' : subTextColor} />
+                        <Text style={styles.contentChipText}>{st.activePhotoCount}/6 Photos</Text>
+                      </View>
+                      <View style={styles.contentChip}>
+                        <Ionicons name="videocam" size={11} color={st.hasActiveVideo ? '#dc2626' : subTextColor} />
+                        <Text style={styles.contentChipText}>
+                          {st.hasActiveVideo ? 'Video Ready' : 'No Video'}
                         </Text>
-                      </>
-                    )}
+                      </View>
+                      <View style={styles.contentChip}>
+                        <Ionicons name="mic" size={11} color={st.hasActiveAudio ? '#0284c7' : subTextColor} />
+                        <Text style={styles.contentChipText}>
+                          {st.hasActiveAudio ? 'Voice Note' : 'No Voice'}
+                        </Text>
+                      </View>
+                      {st.hasActiveRemark ? (
+                        <View style={styles.contentChip}>
+                          <Ionicons name="chatbox-ellipses" size={11} color="#7c3aed" />
+                          <Text style={styles.contentChipText}>Text Note</Text>
+                        </View>
+                      ) : null}
+                    </View>
                   </View>
+
+                  {/* ACTIVE PHOTOS PREVIEW STRIP (WHEN SAVED) OR NO PHOTO PREVIEW */}
+                  {hasUploadedPhotosThisWeek ? (
+                    <View style={styles.cardPhotoStrip}>
+                      {st.activePhotos.slice(0, 6).map((photoUrl, pIdx) => {
+                        const resolved = resolveCropMediaDisplayUri(photoUrl) || photoUrl;
+                        return (
+                          <TouchableOpacity
+                            key={`hub_p_${crop.id}_${pIdx}`}
+                            style={styles.cardPhotoThumbWrap}
+                            activeOpacity={0.85}
+                            onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
+                          >
+                            <Image
+                              source={{ uri: resolved }}
+                              style={styles.cardPhotoThumbImg}
+                              resizeMode="cover"
+                            />
+                            <View style={styles.cardPhotoThumbBadge}>
+                              <Text style={styles.cardPhotoThumbBadgeText}>#{pIdx + 1}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {st.activePhotos.length < 6 ? (
+                        <TouchableOpacity
+                          style={styles.cardAddPhotoSlot}
+                          activeOpacity={0.8}
+                          onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
+                        >
+                          <Ionicons name="camera-outline" size={16} color="#15803d" />
+                          <Text style={styles.cardAddPhotoSlotText}>+ Add</Text>
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                  ) : (
+                    /* NO PHOTO PREVIEW: SHOWN WHEN WEEK HAS NO UPLOADS */
+                    <View
+                      style={[
+                        styles.cardEmptyPrompt,
+                        { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 12 },
+                      ]}
+                    >
+                      <View style={[styles.cardEmptyPromptIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }]}>
+                        <Ionicons name="images-outline" size={18} color={subTextColor} />
+                      </View>
+                      <View style={{ flex: 1, gap: 1 }}>
+                        <Text style={[styles.cardEmptyPromptTitle, { color: textColor }]}>
+                          No Photo Preview
+                        </Text>
+                        <Text style={[styles.cardEmptyPromptSub, { color: subTextColor }]}>
+                          No pictures uploaded for this week ({cw.dateLabel}). Sunday is Day 1 of the 7-day cycle.
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#16a34a',
+                          paddingHorizontal: 12,
+                          paddingVertical: 7,
+                          borderRadius: 6,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
+                      >
+                        <Ionicons name="camera" size={13} color="#ffffff" />
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>+ Upload</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
 
                   {/* ACTION BUTTONS */}
                   <View style={styles.cardActionsRow}>
@@ -448,7 +455,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                         color="#ffffff"
                       />
                       <Text style={styles.primaryCardBtnText}>
-                        {st.isActiveCycle ? 'Open Media Record' : 'Add New Media Record'}
+                        {st.isActiveCycle ? 'Open Crop Gallery' : 'Add to Crop Gallery'}
                       </Text>
                     </TouchableOpacity>
 
@@ -465,7 +472,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                     >
                       <Ionicons name="archive-outline" size={14} color={textColor} />
                       <Text style={[styles.secondaryCardBtnText, { color: textColor }]}>
-                        Past Records ({st.totalBatches})
+                        Past Gallery ({st.totalBatches})
                       </Text>
                     </TouchableOpacity>
 
@@ -506,139 +513,23 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   heroCard: {
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.25)',
-    gap: 14,
-  },
-  heroTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  modulePillRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 4,
-  },
-  modulePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(22, 163, 74, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(74, 222, 128, 0.45)',
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  modulePillText: {
-    fontSize: 10,
-    fontFamily: FONT.extraBold,
-    color: '#4ade80',
-    letterSpacing: 0.6,
-  },
-  cycleRulePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(147, 197, 253, 0.35)',
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  cycleRulePillText: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#bfdbfe',
-    letterSpacing: 0.4,
+    borderRadius: 14,
+    padding: 13,
+    borderWidth: 1.2,
+    borderColor: 'rgba(74, 222, 128, 0.28)',
+    gap: 9,
   },
   heroTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   heroSubtitle: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: FONT.medium,
     color: '#cbd5e1',
     lineHeight: 18,
-  },
-  stepsGrid: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  stepBox: {
-    flex: 1,
-    minWidth: 210,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 11,
-  },
-  stepNumBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#16a34a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNumText: {
-    fontSize: 12,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  stepTitle: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    color: '#ffffff',
-    marginBottom: 2,
-  },
-  stepDesc: {
-    fontSize: 11,
-    fontFamily: FONT.regular,
-    color: '#94a3b8',
-    lineHeight: 15,
-  },
-  kpiRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  kpiCard: {
-    flex: 1,
-    minWidth: 130,
-    backgroundColor: 'rgba(15, 23, 42, 0.72)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    gap: 2,
-  },
-  kpiNumber: {
-    fontSize: 20,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  kpiLabel: {
-    fontSize: 10.5,
-    fontFamily: FONT.semiBold,
-    color: '#94a3b8',
-    textAlign: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -829,5 +720,85 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  cardPhotoStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+    paddingVertical: 2,
+  },
+  cardPhotoThumbWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(74, 222, 128, 0.45)',
+    backgroundColor: '#090e17',
+    position: 'relative',
+  },
+  cardPhotoThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  cardPhotoThumbBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: 'rgba(15, 23, 42, 0.88)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  cardPhotoThumbBadgeText: {
+    fontSize: 7.5,
+    fontFamily: FONT.extraBold,
+    color: '#4ade80',
+  },
+  cardAddPhotoSlot: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#16a34a',
+    borderStyle: 'dashed',
+    backgroundColor: 'rgba(22, 163, 74, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  cardAddPhotoSlotText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  cardEmptyPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  cardEmptyPromptIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardEmptyPromptTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  cardEmptyPromptSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.regular,
+    lineHeight: 14,
+  },
 });
+
+export const CropGalleryHubView = MediaRecordHubView;
+export type CropGalleryHubViewProps = MediaRecordHubViewProps;
 

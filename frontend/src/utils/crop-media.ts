@@ -24,6 +24,9 @@ export interface MediaStoreRecord {
   createdAt?: string;
 }
 
+export type CropGalleryRecord = MediaStoreRecord;
+export type CropGalleryBatch = CropMediaHistoryBatch;
+
 export interface CropRemarkHistoryEntry {
   id: string;
   remarksText: string;
@@ -160,34 +163,93 @@ export function resolveCropMediaDisplayUri(uri?: string | null): string | undefi
 }
 
 /**
- * Checks whether a timestamped record is still within its 7-day active display window.
+ * Sunday is strictly Day 1, Saturday is Day 7.
+ * Calculates the current or reference calendar week's Sunday (Day 1 00:00:00) and Saturday (Day 7 23:59:59.999).
+ */
+export function getCalendarWeekRange(refDate: Date | string | number = new Date()): {
+  weekStartSunday: Date;
+  weekEndSaturday: Date;
+  dayNumber: number; // 1 (Sunday) to 7 (Saturday)
+  dayName: string;
+  daysRemaining: number; // 7 (Sunday) down to 1 (Saturday)
+  dateLabel: string;
+  weekKey: string;
+} {
+  const d = new Date(refDate);
+  const safeDate = Number.isNaN(d.getTime()) ? new Date() : d;
+  const dayIndex = safeDate.getDay(); // 0 is Sunday, 6 is Saturday
+  const dayNumber = dayIndex + 1; // 1 is Sunday (Day 1), 7 is Saturday (Day 7)
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayName = dayNames[dayIndex] || 'Sunday';
+
+  const sunday = new Date(safeDate);
+  sunday.setDate(safeDate.getDate() - dayIndex);
+  sunday.setHours(0, 0, 0, 0);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  saturday.setHours(23, 59, 59, 999);
+
+  const nowMs = Date.now();
+  const satMs = saturday.getTime();
+  const daysRemaining = satMs >= nowMs ? Math.max(1, Math.ceil((satMs - nowMs) / (24 * 60 * 60 * 1000))) : 0;
+
+  const startFmt = sunday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const endFmt = saturday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dateLabel = `${startFmt} – ${endFmt}`;
+  const weekKey = sunday.toISOString().slice(0, 10);
+
+  return {
+    weekStartSunday: sunday,
+    weekEndSaturday: saturday,
+    dayNumber,
+    dayName,
+    daysRemaining,
+    dateLabel,
+    weekKey,
+  };
+}
+
+/**
+ * Checks whether a timestamped record is still within the active Sunday to Saturday calendar week cycle.
  */
 export function isRecordWithinDisplayWindow(
   createdAt?: string | null,
   expiresAt?: string | null,
   nowMs: number = Date.now(),
 ): boolean {
-  if (expiresAt) {
-    const expMs = new Date(expiresAt).getTime();
-    if (!Number.isNaN(expMs)) return expMs > nowMs;
-  }
   if (createdAt) {
     const createdMs = new Date(createdAt).getTime();
-    if (!Number.isNaN(createdMs)) return createdMs + MEDIA_DISPLAY_MS > nowMs;
+    if (!Number.isNaN(createdMs)) {
+      const currentWeek = getCalendarWeekRange(new Date(nowMs));
+      return createdMs >= currentWeek.weekStartSunday.getTime() && createdMs <= currentWeek.weekEndSaturday.getTime();
+    }
+  }
+  if (expiresAt) {
+    const expMs = new Date(expiresAt).getTime();
+    if (!Number.isNaN(expMs)) return expMs >= nowMs;
   }
   return false;
 }
 
 export function computeDaysRemaining(expiresAt?: string | null, createdAt?: string | null): number {
-  const nowMs = Date.now();
-  let expMs = 0;
-  if (expiresAt) {
-    expMs = new Date(expiresAt).getTime();
-  } else if (createdAt) {
-    expMs = new Date(createdAt).getTime() + MEDIA_DISPLAY_MS;
+  const currentWeek = getCalendarWeekRange();
+  if (createdAt) {
+    const recWeek = getCalendarWeekRange(createdAt);
+    if (recWeek.weekKey === currentWeek.weekKey) {
+      return currentWeek.daysRemaining;
+    }
+    return 0;
   }
-  if (!expMs || Number.isNaN(expMs) || expMs <= nowMs) return 0;
-  return Math.max(1, Math.ceil((expMs - nowMs) / (24 * 60 * 60 * 1000)));
+  if (expiresAt) {
+    const expMs = new Date(expiresAt).getTime();
+    const nowMs = Date.now();
+    if (expMs && !Number.isNaN(expMs) && expMs > nowMs) {
+      return Math.max(1, Math.ceil((expMs - nowMs) / (24 * 60 * 60 * 1000)));
+    }
+  }
+  return currentWeek.daysRemaining;
 }
 
 /**
@@ -220,11 +282,11 @@ export function isLocalGpsMediaActive(gps?: {
 }
 
 /**
- * Fetches saved photos, live video, and voice feedback audio for a crop from Backend Media Store.
+ * Fetches saved photos, live video, and voice feedback audio for a crop from Crop Gallery.
  * Returns active (<= 7 days) items for display plus raw history so Crop Activities preserves all uploads permanently.
  */
 export async function fetchCropMediaFromStore(cropId: string): Promise<HydratedCropMedia> {
-  const res = await apiClient.get<MediaStoreRecord[]>(`/media-store/crop/${encodeURIComponent(cropId)}`);
+  const res = await apiClient.get<MediaStoreRecord[]>(`/crop-gallery/crop/${encodeURIComponent(cropId)}`);
   const rows = Array.isArray(res.data) ? res.data : [];
 
   const photos: string[] = [];
@@ -318,7 +380,7 @@ export async function fetchCropMediaFromStore(cropId: string): Promise<HydratedC
 export async function fetchCropRemarkFromStore(cropId: string): Promise<CropRemarkResponse> {
   try {
     const res = await apiClient.get<CropRemarkResponse>(
-      `/media-store/crop/${encodeURIComponent(cropId)}/remark`,
+      `/crop-gallery/crop/${encodeURIComponent(cropId)}/remark`,
     );
     const data = res.data;
     return {
@@ -354,9 +416,9 @@ export function buildCropActivityMediaBatches(
   const ensureBatch = (dateIso: string, expiresIso?: string | null) => {
     const parsed = new Date(dateIso || Date.now());
     const safeDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-    const key = safeDate.toISOString().slice(0, 10);
-    const fallbackExp = new Date(safeDate.getTime() + MEDIA_DISPLAY_MS).toISOString();
-    const effectiveExp = expiresIso || fallbackExp;
+    const weekInfo = getCalendarWeekRange(safeDate);
+    const key = weekInfo.weekKey;
+    const effectiveExp = expiresIso || weekInfo.weekEndSaturday.toISOString();
     const active = isRecordWithinDisplayWindow(safeDate.toISOString(), effectiveExp, nowMs);
 
     const existing = batches.get(key);
@@ -373,11 +435,7 @@ export function buildCropActivityMediaBatches(
 
     const batch: CropMediaHistoryBatch = {
       batchKey: key,
-      dateLabel: safeDate.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
+      dateLabel: `Week of ${weekInfo.dateLabel} (Sun–Sat)`,
       savedAt: safeDate.toISOString(),
       expiresAt: effectiveExp,
       isActiveDisplay: active,
@@ -432,19 +490,19 @@ export function buildCropActivityMediaBatches(
 }
 
 /**
- * Saves farmer's written crop remarks (max 150 chars) to Backend Media Store.
+ * Saves farmer's written crop remarks (max 150 chars) to Crop Gallery.
  */
 export async function saveCropRemarkToStore(cropId: string, remarksText: string): Promise<string> {
   const clean = String(remarksText || '').trim().slice(0, MAX_REMARK_CHARS);
   const res = await apiClient.put<CropRemarkResponse>(
-    `/media-store/crop/${encodeURIComponent(cropId)}/remark`,
+    `/crop-gallery/crop/${encodeURIComponent(cropId)}/remark`,
     { remarksText: clean },
   );
   return String(res.data?.remarksText || clean).slice(0, MAX_REMARK_CHARS);
 }
 
 /**
- * Merges backend Media Store URLs with valid locally cached URLs without duplicates or stale dead URIs.
+ * Merges backend Crop Gallery URLs with valid locally cached URLs without duplicates or stale dead URIs.
  */
 export function mergeCropMediaLists(
   backendPhotos: string[],
@@ -511,7 +569,7 @@ function inferFilenameFromMime(baseName: string, mimeType?: string): string {
 }
 
 /**
- * Uploads a single photo, video, or voice audio URI (`data:`, `blob:`, `file:`, `content:`) to Backend Media Store
+ * Uploads a single photo, video, or voice audio URI (`data:`, `blob:`, `file:`, `content:`) to Crop Gallery
  * and returns a permanent resolved URL. Throws on upload error so invalid/blank URLs are never saved.
  */
 export async function uploadSingleCropMedia(
@@ -546,7 +604,7 @@ export async function uploadSingleCropMedia(
   if (trimmed.startsWith('data:')) {
     const ext = options.mediaType === 'VIDEO' ? 'mp4' : options.mediaType === 'AUDIO' ? 'webm' : 'jpg';
     const res = await apiClient.post(
-      '/media-store/upload-base64',
+      '/crop-gallery/upload-base64',
       {
         dataUri: trimmed,
         cropId: options.cropId || undefined,
@@ -557,7 +615,7 @@ export async function uploadSingleCropMedia(
     );
     const fileUrl = res.data?.fileUrl;
     if (!fileUrl) {
-      throw new Error('Media Store upload did not return a file URL.');
+      throw new Error('Crop Gallery upload did not return a file URL.');
     }
     return resolveCropMediaDisplayUri(fileUrl) || fileUrl;
   }
@@ -626,7 +684,7 @@ export async function uploadSingleCropMedia(
   }
   formData.append('mediaType', options.mediaType);
 
-  const uploadRes = await apiClient.post('/media-store/upload', formData, {
+  const uploadRes = await apiClient.post('/crop-gallery/upload', formData, {
     timeout: 180000,
     headers: { 'Content-Type': undefined as any },
   });
@@ -639,7 +697,7 @@ export async function uploadSingleCropMedia(
 }
 
 /**
- * Deletes removed Media Store records in the background without blocking UX if a record is already missing.
+ * Deletes removed Crop Gallery records in the background without blocking UX if a record is already missing.
  */
 export async function deleteRemovedMediaStoreRecords(
   previousUrls: string[],
@@ -660,7 +718,7 @@ export async function deleteRemovedMediaStoreRecords(
   if (idsToDelete.size === 0) return;
 
   await Promise.allSettled(
-    Array.from(idsToDelete).map((id) => apiClient.delete(`/media-store/${encodeURIComponent(id)}`)),
+    Array.from(idsToDelete).map((id) => apiClient.delete(`/crop-gallery/${encodeURIComponent(id)}`)),
   );
 }
 
@@ -761,42 +819,62 @@ export function drawWatermarkOnCanvas(
   }
   ctx.restore();
 
-  // 4. Bottom Dark Backdrop with Date, Time, Farmer Name & Plot Name
-  let infoFontSize = Math.max(14, Math.round(minDim * 0.025));
+  // 4. Bottom Solid Dark Backdrop with Date, Time, Farmer Name & Plot Name
+  // Guaranteed zero vertical overlap: uses textBaseline = 'top' with explicit lineHeight and verticalGap
+  const baseFontSize = Math.max(13, Math.min(22, Math.round(minDim * 0.024)));
+  const padX = Math.max(16, Math.round(minDim * 0.028));
+  const padY = Math.max(10, Math.round(minDim * 0.016));
+  const maxContentW = Math.max(120, width - padX * 2);
+
+  // Truncate helper if text is wider than available canvas width
+  const fitText = (text: string, fontSpec: string, maxW: number): string => {
+    ctx.font = fontSpec;
+    if (ctx.measureText(text).width <= maxW) return text;
+    let truncated = text;
+    while (truncated.length > 4 && ctx.measureText(`${truncated}…`).width > maxW) {
+      truncated = truncated.slice(0, -1);
+    }
+    return `${truncated}…`;
+  };
+
   const cleanFarmer = (farmerName || 'Farmer').trim();
   const cleanPlot = (plotName || 'Field Plot').trim();
-  const line1 = `Date: ${dateStr}   Time: ${timeStr}`;
-  const line2 = `Farmer: ${cleanFarmer}   |   Plot: ${cleanPlot}`;
+  const rawLine1 = `Date: ${dateStr}   ·   Time: ${timeStr}`;
+  const rawLine2 = `Farmer: ${cleanFarmer}   |   Plot: ${cleanPlot}`;
 
-  // Scale down font slightly on narrow portrait images so details never clip off screen
-  ctx.font = `700 ${infoFontSize}px sans-serif`;
-  const maxTextWidth = width - pad * 2;
-  const longestWidth = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width);
-  if (longestWidth > maxTextWidth && maxTextWidth > 120) {
-    infoFontSize = Math.max(11, Math.floor(infoFontSize * (maxTextWidth / longestWidth)));
-  }
+  const fontLine1 = `700 ${baseFontSize}px sans-serif`;
+  const fontLine2 = `600 ${baseFontSize}px sans-serif`;
 
-  const lineGap = Math.round(infoFontSize * 1.45);
-  const stripH = Math.max(66, Math.round(lineGap * 2.55));
+  const line1 = fitText(rawLine1, fontLine1, maxContentW);
+  const line2 = fitText(rawLine2, fontLine2, maxContentW);
+
+  const lineHeight = Math.round(baseFontSize * 1.45);
+  const verticalGap = Math.max(6, Math.round(baseFontSize * 0.35));
+  const stripH = padY * 2 + lineHeight * 2 + verticalGap;
   const stripY = height - stripH;
 
-  const botGrad = ctx.createLinearGradient(0, stripY - 14, 0, height);
-  botGrad.addColorStop(0, 'rgba(9, 14, 23, 0)');
-  botGrad.addColorStop(0.25, 'rgba(9, 14, 23, 0.84)');
-  botGrad.addColorStop(1, 'rgba(9, 14, 23, 0.94)');
-  ctx.fillStyle = botGrad;
-  ctx.fillRect(0, stripY - 14, width, stripH + 14);
+  // Dark background strip with crisp neon green top border for 100% legibility on any image
+  ctx.save();
+  ctx.fillStyle = 'rgba(9, 14, 23, 0.88)';
+  ctx.fillRect(0, stripY, width, stripH);
 
+  ctx.fillStyle = '#10b981';
+  ctx.fillRect(0, stripY, width, 2);
+
+  // Line 1: Date & Time in High-Contrast Yellow
+  const yLine1 = stripY + padY;
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-
-  ctx.font = `700 ${infoFontSize}px monospace`;
+  ctx.textBaseline = 'top';
+  ctx.font = fontLine1;
   ctx.fillStyle = '#fde047';
-  ctx.fillText(line1, pad, height - pad - lineGap);
+  ctx.fillText(line1, padX, yLine1);
 
-  ctx.font = `700 ${infoFontSize}px sans-serif`;
+  // Line 2: Farmer & Plot in Crisp White (Guaranteed separated by lineHeight + verticalGap)
+  const yLine2 = yLine1 + lineHeight + verticalGap;
+  ctx.font = fontLine2;
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(line2, pad, height - pad);
+  ctx.fillText(line2, padX, yLine2);
+  ctx.restore();
 }
 
 /**
@@ -917,3 +995,40 @@ export function pickWebMediaFiles(accept: 'image/*', multiple = false): Promise<
     input.click();
   });
 }
+
+/**
+ * Triggers safe browser or device download for watermarked crop photo.
+ */
+export async function downloadCropPhoto(
+  uri: string,
+  filename = 'farmsking_crop_photo.jpg',
+): Promise<void> {
+  const resolved = resolveCropMediaDisplayUri(uri) || uri;
+  if (!resolved) return;
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
+    try {
+      const res = await fetch(resolved);
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      window.open(resolved, '_blank');
+    }
+  } else {
+    try {
+      if (typeof window !== 'undefined' && window.open) {
+        window.open(resolved, '_blank');
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+

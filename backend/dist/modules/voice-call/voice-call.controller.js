@@ -21,9 +21,22 @@ const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const voice_call_service_1 = require("./voice-call.service");
 const start_group_call_dto_1 = require("./dto/start-group-call.dto");
+const schedule_group_call_dto_1 = require("./dto/schedule-group-call.dto");
 let VoiceCallController = class VoiceCallController {
     constructor(voiceCallService) {
         this.voiceCallService = voiceCallService;
+    }
+    scheduleGroupCall(user, dto) {
+        return this.voiceCallService.scheduleGroupCall(user, dto);
+    }
+    sendGroupCallAlert(user, id, dto) {
+        return this.voiceCallService.sendGroupCallAlert(user, id, dto?.message);
+    }
+    getAdvisorGroupEvents(user) {
+        return this.voiceCallService.getAdvisorGroupEvents(user);
+    }
+    getFarmerGroupInvitations(user) {
+        return this.voiceCallService.getFarmerGroupInvitations(user);
     }
     startGroupCall(user, dto) {
         return this.voiceCallService.startGroupCall(user, dto);
@@ -39,6 +52,41 @@ let VoiceCallController = class VoiceCallController {
     }
 };
 exports.VoiceCallController = VoiceCallController;
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('schedule'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, schedule_group_call_dto_1.ScheduleGroupCallDto]),
+    __metadata("design:returntype", void 0)
+], VoiceCallController.prototype, "scheduleGroupCall", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)(':id/send-alert'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, schedule_group_call_dto_1.SendGroupAlertDto]),
+    __metadata("design:returntype", void 0)
+], VoiceCallController.prototype, "sendGroupCallAlert", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('advisor/events'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], VoiceCallController.prototype, "getAdvisorGroupEvents", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER),
+    (0, common_1.Get)('farmer/invitations'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], VoiceCallController.prototype, "getFarmerGroupInvitations", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.GARDENER, client_1.Role.OPERATOR, client_1.Role.CUSTOMER, client_1.Role.AGENT, client_1.Role.LABOUR),
     (0, common_1.Post)('start'),

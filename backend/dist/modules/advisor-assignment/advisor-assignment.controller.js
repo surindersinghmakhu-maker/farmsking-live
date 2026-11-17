@@ -23,6 +23,8 @@ const advisor_assignment_service_1 = require("./advisor-assignment.service");
 const create_advisor_assignment_dto_1 = require("./dto/create-advisor-assignment.dto");
 const list_farmers_query_dto_1 = require("./dto/list-farmers-query.dto");
 const reject_assignment_dto_1 = require("./dto/reject-assignment.dto");
+const create_advisor_plan_dto_1 = require("./dto/create-advisor-plan.dto");
+const admin_review_plan_dto_1 = require("./dto/admin-review-plan.dto");
 let AdvisorAssignmentController = class AdvisorAssignmentController {
     constructor(advisorAssignmentService) {
         this.advisorAssignmentService = advisorAssignmentService;
@@ -77,6 +79,24 @@ let AdvisorAssignmentController = class AdvisorAssignmentController {
     }
     sendRenewalReminder(user, farmerId) {
         return this.advisorAssignmentService.sendRenewalReminder(user, farmerId);
+    }
+    createOrUpdateAdvisorPlan(user, dto) {
+        return this.advisorAssignmentService.createOrUpdateAdvisorPlan(user, dto);
+    }
+    getMyAdvisorPlans(user) {
+        return this.advisorAssignmentService.getMyAdvisorPlans(user);
+    }
+    getDoctorApprovedPlans(advisorId) {
+        return this.advisorAssignmentService.getDoctorApprovedPlans(advisorId);
+    }
+    getPendingAdvisorPlansForAdmin() {
+        return this.advisorAssignmentService.getPendingAdvisorPlansForAdmin();
+    }
+    adminApproveAdvisorPlan(user, id, dto) {
+        return this.advisorAssignmentService.adminApproveAdvisorPlan(user, id, dto);
+    }
+    adminRejectAdvisorPlan(user, id, dto) {
+        return this.advisorAssignmentService.adminRejectAdvisorPlan(user, id, dto?.reason);
     }
 };
 exports.AdvisorAssignmentController = AdvisorAssignmentController;
@@ -229,6 +249,58 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], AdvisorAssignmentController.prototype, "sendRenewalReminder", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, common_1.Post)('plans'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_advisor_plan_dto_1.CreateAdvisorPlanDto]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "createOrUpdateAdvisorPlan", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR),
+    (0, common_1.Get)('plans/my-plans'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "getMyAdvisorPlans", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.CUSTOMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.ADVISOR),
+    (0, common_1.Get)('plans/doctor/:advisorId'),
+    __param(0, (0, common_1.Param)('advisorId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "getDoctorApprovedPlans", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('plans/admin/pending'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "getPendingAdvisorPlansForAdmin", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('plans/:id/admin-approve'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, admin_review_plan_dto_1.AdminApprovePlanDto]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "adminApproveAdvisorPlan", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('plans/:id/admin-reject'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, admin_review_plan_dto_1.AdminRejectPlanDto]),
+    __metadata("design:returntype", void 0)
+], AdvisorAssignmentController.prototype, "adminRejectAdvisorPlan", null);
 exports.AdvisorAssignmentController = AdvisorAssignmentController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.Controller)('advisor-assignments'),

@@ -7,17 +7,27 @@ enum HiringModelType {
 }
 
 model AdvisorPlan {
-  id           String          @id @default(uuid())
-  name         String
-  description  String?
-  price        Decimal         @db.Decimal(12, 2)
-  billingCycle String          @default("MONTHLY")
-  hiringModel  HiringModelType @default(MONTHLY_SUBSCRIPTION)
-  planType     FarmerPlanType  @default(WITH_ADVISOR)
-  maxFarms     Int             @default(10)
-  isActive     Boolean         @default(true)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id                String          @id @default(uuid())
+  advisorId         String?
+  name              String
+  description       String?
+  price             Decimal         @db.Decimal(12, 2)
+  billingCycle      String          @default("MONTHLY")
+  hiringModel       HiringModelType @default(MONTHLY_SUBSCRIPTION)
+  planType          FarmerPlanType  @default(WITH_ADVISOR)
+  maxFarms          Int             @default(10)
+  callRequestLimit  Int             @default(5)
+  inAppCallLimit    Int             @default(3)
+  videoCallAllowed  Boolean         @default(false)
+  videoCallLimit    Int             @default(0)
+  chatEnabled       Boolean         @default(true)
+  approvalStatus    String          @default("APPROVED") // PENDING_APPROVAL, APPROVED, REJECTED
+  adminNotes        String?
+  reviewedById      String?
+  reviewedAt        DateTime?
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   subscriptions AdvisorSubscription[]
 

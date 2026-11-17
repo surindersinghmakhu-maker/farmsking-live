@@ -64,6 +64,7 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const { data: subscription, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const { data: myAdvisor } = useMyAdvisor();
   const { data: myPendingRequest } = useMyPendingRequest();
+  const { data: myCrops } = useMyCrops();
   const cancelPendingRequest = useCancelPendingRequest();
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -88,7 +89,11 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const { plan, limits } = useFarmerPlan();
   const advisorIncluded = limits?.advisorIncluded ?? (plan === 'SILVER' || plan === 'GOLD' || plan === 'ROYAL');
 
-  const hireStatus: HireStatus = myAdvisor
+  const hasActiveCropAdvisor = useMemo(() => {
+    return (myCrops ?? []).some((c) => c.advisorReviewStatus === 'ACCEPTED' && c.assignedAdvisor);
+  }, [myCrops]);
+
+  const hireStatus: HireStatus = (myAdvisor || hasActiveCropAdvisor)
     ? 'ACTIVE'
     : myPendingRequest
       ? 'AWAITING_ADVISOR'
@@ -128,20 +133,22 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const [callRequestError, setCallRequestError] = useState<string | null>(null);
   const isCallRequestPending = !!pendingCallRequest;
 
-  const handleRequestCall = async () => {
+  const handleRequestCall = async (targetAdvisorId?: string) => {
     tap();
     setCallRequestError(null);
     try {
-      await requestCall.mutateAsync();
+      await requestCall.mutateAsync(targetAdvisorId ? { advisorId: targetAdvisorId } : undefined);
       refetchPendingCallRequest();
     } catch (err: any) {
       setCallRequestError(err?.response?.data?.message ?? 'Could not send the request.');
     }
   };
 
-  const handleVoipCall = () => {
+  const handleVoipCall = (name?: string, id?: string) => {
     tap();
-    const notice = `🔒 100% In-App VOIP Protected: Connecting securely to Doctor ${advisorName} (King ID: ${advisorKingId}). No direct mobile numbers are shared to safeguard privacy.`;
+    const docName = name || advisorName;
+    const docId = id || advisorKingId;
+    const notice = `🔒 100% In-App VOIP Protected: Connecting securely to Doctor ${docName} (King ID: ${docId}). No direct mobile numbers are shared to safeguard privacy.`;
     if (Platform.OS === 'web') alert(notice);
     else Alert.alert('FarmsKing In-App VOIP', notice);
   };
@@ -173,7 +180,74 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
   const [isUploadingProblemPhoto, setIsUploadingProblemPhoto] = useState(false);
   const [selectedRealCropId, setSelectedRealCropId] = useState<string>('');
 
-  const { data: myCrops } = useMyCrops();
+  // Active advisors who currently have a plan with this farmer
+  const activeAdvisors = useMemo(() => {
+    const list: Array<{
+      id: string;
+      name: string;
+      kingId: string;
+      specialization: string;
+      photoUrl: string;
+      rating?: any;
+      ratingLabel?: string;
+      ratingCount?: number;
+      isPrimary?: boolean;
+      supervisedCrops: Array<{ id: string; name: string; plotName?: string }>;
+    }> = [];
+
+    const seenIds = new Set<string>();
+
+    // 1. Primary assigned advisor if active and plan is valid
+    if (myAdvisor?.advisor && myAdvisor.status === 'ACTIVE' && subMetrics.status !== 'EXPIRED') {
+      const adv = myAdvisor.advisor;
+      seenIds.add(adv.id);
+      list.push({
+        id: adv.id,
+        name: adv.name,
+        kingId: adv.kingId || 'FK-DOC-701',
+        specialization: adv.specialization || 'Farm Advisor',
+        photoUrl: resolveMediaUrl(adv.photoUrl) || FALLBACK_ADVISOR.avatarUrl,
+        rating: adv.rating,
+        ratingLabel: adv.ratingLabel || 'No rating till now',
+        ratingCount: adv.ratingCount,
+        isPrimary: true,
+        supervisedCrops: [],
+      });
+    }
+
+    // 2. Advisors assigned to active accepted crops
+    (myCrops || []).forEach((c) => {
+      if (c.advisorReviewStatus === 'ACCEPTED' && c.assignedAdvisor) {
+        const adv = c.assignedAdvisor;
+        const cropInfo = {
+          id: c.id,
+          name: c.cropName || 'Crop',
+          plotName: c.plot?.name,
+        };
+
+        const existing = list.find((item) => item.id === adv.id);
+        if (existing) {
+          existing.supervisedCrops.push(cropInfo);
+        } else if (!seenIds.has(adv.id)) {
+          seenIds.add(adv.id);
+          list.push({
+            id: adv.id,
+            name: adv.name,
+            kingId: adv.kingId || (adv.id ? `FK-DOC-${adv.id.slice(0, 4).toUpperCase()}` : 'FK-DOC-701'),
+            specialization: adv.specialization || 'Crop Doctor',
+            photoUrl: resolveMediaUrl(adv.photoUrl) || FALLBACK_ADVISOR.avatarUrl,
+            rating: (adv as any).rating,
+            ratingLabel: (adv as any).ratingLabel || 'No rating till now',
+            ratingCount: (adv as any).ratingCount,
+            isPrimary: false,
+            supervisedCrops: [cropInfo],
+          });
+        }
+      }
+    });
+
+    return list;
+  }, [myAdvisor, subMetrics.status, myCrops]);
   const createCropProblem = useCreateCropProblem();
   const { data: myCropProblems } = useMyCropProblems();
   const rateCropProblem = useRateCropProblem();
@@ -601,268 +675,230 @@ export function CropDoctorCareView({ headerComponent }: { headerComponent?: Reac
         <ScrollView style={styles.activeScroll} contentContainerStyle={[styles.activeContent, { paddingBottom: 160, paddingHorizontal: 0, paddingTop: 0 }]} showsVerticalScrollIndicator={false}>
           {headerComponent}
           <View style={{ paddingHorizontal: SPACING.lg, gap: SPACING.md }}>
-            {/* Hired Advisor Card */}
-          <View style={[styles.advisorCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
-            <View style={styles.advisorHeaderRow}>
-              <View style={{ position: 'relative' }}>
-                <View style={[styles.advisorAvatarRing, { borderColor: isDark ? 'rgba(0, 255, 135, 0.4)' : colors.cardBorder }]}>
-                  <Image source={{ uri: advisorAvatarUrl }} style={styles.advisorAvatar} />
-                </View>
-                <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: colors.cardBg, borderRadius: 9, padding: 1 }}>
-                  <Ionicons name="checkmark-circle" size={17} color="#10b981" />
-                </View>
-              </View>
-
-              <View style={{ flex: 1 }}>
-                <View style={styles.advisorNameRow}>
-                  <Text style={[styles.advisorName, { color: colors.text }]} numberOfLines={1}>{advisorName}</Text>
-                  <Text style={[styles.advisorMobileInline, { color: colors.textMuted }]}>· ID: {advisorKingId}</Text>
-                  {subMetrics.status === 'ACTIVE' ? <View style={styles.onlineDot} /> : null}
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
-                  <View style={[styles.advisorRoleBadge, { backgroundColor: colors.primaryLight, borderColor: colors.cardBorder, borderWidth: 1 }]}>
-                    <Ionicons name="school-outline" size={11} color={colors.primary} />
-                    <Text style={[styles.advisorRoleBadgeText, { color: colors.primary }]}>{advisorSpec}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fef9c3', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(234, 179, 8, 0.3)' : '#fde047' }}>
-                    <Ionicons name="star" size={11} color="#eab308" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: isDark ? '#fef08a' : '#854d0e' }}>
-                      {myAdvisor?.advisor?.ratingLabel || (myAdvisor?.advisor?.rating ? `${myAdvisor.advisor.rating} ★ (${myAdvisor.advisor.ratingCount || 1})` : 'No rating till now')}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#f0f9ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(56, 189, 248, 0.25)' : '#bae6fd' }}>
-                    <Ionicons name="shield-checkmark" size={10} color="#0284c7" />
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
-                      VoIP Protected
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.advisorDivider, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : colors.cardBorder }]} />
-
-            {/* Advisor Direct Contact Action Bar (Themed) */}
-            <View style={[styles.advisorActionRow, { gap: 8 }]}>
-              {/* Call Request Button */}
-              <TouchableOpacity
-                style={[
-                  styles.advisorActionBtn,
-                  styles.advisorActionBtnFill,
-                  {
-                    backgroundColor: isCallRequestPending
-                      ? (isDark ? 'rgba(16, 185, 129, 0.16)' : '#ecfdf5')
-                      : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
-                    borderColor: isCallRequestPending ? '#10b981' : colors.cardBorder,
-                    borderWidth: 1,
-                    borderRadius: RADIUS.md,
-                    paddingVertical: 9,
-                  },
-                ]}
-                activeOpacity={0.85}
-                disabled={requestCall.isPending || isCallRequestPending}
-                onPress={handleRequestCall}
-              >
-                {requestCall.isPending ? (
-                  <ActivityIndicator color={colors.primary} size="small" />
-                ) : (
-                  <>
-                    <Ionicons
-                      name="call"
-                      size={15}
-                      color={isCallRequestPending ? '#10b981' : colors.primary}
-                    />
-                    <Text
-                      style={[
-                        styles.advisorActionBtnText,
-                        { color: isCallRequestPending ? '#10b981' : colors.text },
-                      ]}
-                    >
-                      {isCallRequestPending ? 'Requested' : 'Call Request'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* In-App VoIP Call Button */}
-              <TouchableOpacity
-                style={[
-                  styles.advisorActionBtn,
-                  styles.advisorActionBtnFill,
-                  {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
-                    borderColor: colors.cardBorder,
-                    borderWidth: 1,
-                    borderRadius: RADIUS.md,
-                    paddingVertical: 9,
-                  },
-                ]}
-                activeOpacity={0.85}
-                onPress={handleVoipCall}
-              >
-                <Ionicons name="headset" size={15} color={colors.primary} />
-                <Text style={[styles.advisorActionBtnText, { color: colors.text }]}>
-                  In-App Call
-                </Text>
-              </TouchableOpacity>
-
-              {/* Chat Button */}
-              <TouchableOpacity
-                style={[
-                  styles.advisorActionBtn,
-                  styles.advisorActionBtnFill,
-                  {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
-                    borderColor: colors.cardBorder,
-                    borderWidth: 1,
-                    borderRadius: RADIUS.md,
-                    paddingVertical: 9,
-                  },
-                ]}
-                activeOpacity={0.85}
-                onPress={() =>
-                  myAdvisor?.advisor &&
-                  router.push({
-                    pathname: '/chat-thread/[userId]',
-                    params: { userId: myAdvisor.advisor.id, name: myAdvisor.advisor.name },
-                  } as never)
-                }
-              >
-                <View style={{ position: 'relative' }}>
-                  <Ionicons name="chatbubble-ellipses" size={15} color={colors.primary} />
-                  {chatUnread && chatUnread.count > 0 ? <View style={styles.advisorActionDot} /> : null}
-                </View>
-                <Text style={[styles.advisorActionBtnText, { color: colors.text }]}>
-                  Chat
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Instant Consultation Telemetry Banner (Tier 2) */}
+            {/* SECTION HEADING: YOUR FARMSKING CERTIFIED ADVISOR / DOCTORS */}
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginTop: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
-              borderRadius: RADIUS.md,
-              borderWidth: 1,
-              borderColor: colors.cardBorder,
+              marginBottom: 2,
+              marginTop: 4,
             }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="flash" size={13} color="#eab308" />
-                <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: colors.textMuted }}>
-                  Instant Advisory (Tier 2):
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: colors.primaryLight,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                }}>
+                  <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
+                </View>
+                <View>
+                  <Text style={{
+                    fontSize: 15,
+                    fontFamily: FONT.extraBold,
+                    color: colors.text,
+                    letterSpacing: -0.2,
+                  }}>
+                    Your FarmsKing Certified Advisor / Doctors
+                  </Text>
+                  <Text style={{
+                    fontSize: 11,
+                    fontFamily: FONT.medium,
+                    color: colors.textMuted,
+                  }}>
+                    Currently active advisors supervising your farm & crops
+                  </Text>
+                </View>
+              </View>
+              <View style={{
+                backgroundColor: colors.primaryLight,
+                paddingHorizontal: 9,
+                paddingVertical: 3,
+                borderRadius: RADIUS.pill,
+                borderWidth: 1,
+                borderColor: colors.cardBorder,
+              }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: colors.primary }}>
+                  {activeAdvisors.length} Active
                 </Text>
               </View>
-              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: colors.primary }}>
-                ₹{doctorConsultFee}/call · 100% In-App
-              </Text>
             </View>
 
+            {/* LIST OF ADVISORS WITH CURRENTLY ACTIVE PLANS */}
+            {activeAdvisors.length > 0 ? (
+              activeAdvisors.map((adv) => (
+                <View
+                  key={adv.id}
+                  style={[
+                    styles.advisorCard,
+                    { backgroundColor: colors.cardBg, borderColor: colors.cardBorder },
+                    premiumShadow(colors.shadowColor, 'sm'),
+                  ]}
+                >
+                  <View style={styles.advisorHeaderRow}>
+                    <View style={{ position: 'relative' }}>
+                      <View style={[styles.advisorAvatarRing, { borderColor: isDark ? 'rgba(0, 255, 135, 0.4)' : colors.cardBorder }]}>
+                        <Image source={{ uri: adv.photoUrl }} style={styles.advisorAvatar} />
+                      </View>
+                      <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: colors.cardBg, borderRadius: 9, padding: 1 }}>
+                        <Ionicons name="checkmark-circle" size={17} color="#10b981" />
+                      </View>
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <View style={styles.advisorNameRow}>
+                        <Text style={[styles.advisorName, { color: colors.text }]} numberOfLines={1}>{adv.name}</Text>
+                        <Text style={[styles.advisorMobileInline, { color: colors.textMuted }]}>· ID: {adv.kingId}</Text>
+                        <View style={styles.onlineDot} />
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                        <View style={[styles.advisorRoleBadge, { backgroundColor: colors.primaryLight, borderColor: colors.cardBorder, borderWidth: 1 }]}>
+                          <Ionicons name="school-outline" size={11} color={colors.primary} />
+                          <Text style={[styles.advisorRoleBadgeText, { color: colors.primary }]}>{adv.specialization}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fef9c3', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(234, 179, 8, 0.3)' : '#fde047' }}>
+                          <Ionicons name="star" size={11} color="#eab308" />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: isDark ? '#fef08a' : '#854d0e' }}>
+                            {adv.ratingLabel || (adv.rating ? `${adv.rating} ★` : 'No rating till now')}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(56, 189, 248, 0.12)' : '#f0f9ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(56, 189, 248, 0.25)' : '#bae6fd' }}>
+                          <Ionicons name="shield-checkmark" size={10} color="#0284c7" />
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
+                            VoIP Protected
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Supervised crops pill if any */}
+                  {adv.supervisedCrops.length > 0 && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: colors.textMuted }}>Supervised Crops:</Text>
+                      {adv.supervisedCrops.map((c) => (
+                        <View key={c.id} style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: colors.cardBorder }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: colors.primary }}>
+                            🌾 {c.name} {c.plotName ? `(${c.plotName})` : ''}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  <View style={[styles.advisorDivider, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : colors.cardBorder }]} />
+
+                  {/* Advisor Direct Contact Action Bar (Themed) */}
+                  <View style={[styles.advisorActionRow, { gap: 8 }]}>
+                    {/* Call Request Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.advisorActionBtn,
+                        styles.advisorActionBtnFill,
+                        {
+                          backgroundColor: isCallRequestPending
+                            ? (isDark ? 'rgba(16, 185, 129, 0.16)' : '#ecfdf5')
+                            : (isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc'),
+                          borderColor: isCallRequestPending ? '#10b981' : colors.cardBorder,
+                          borderWidth: 1,
+                          borderRadius: RADIUS.md,
+                          paddingVertical: 9,
+                        },
+                      ]}
+                      activeOpacity={0.85}
+                      disabled={requestCall.isPending || isCallRequestPending}
+                      onPress={() => handleRequestCall(adv.id)}
+                    >
+                      {requestCall.isPending ? (
+                        <ActivityIndicator color={colors.primary} size="small" />
+                      ) : (
+                        <>
+                          <Ionicons
+                            name="call"
+                            size={15}
+                            color={isCallRequestPending ? '#10b981' : colors.primary}
+                          />
+                          <Text
+                            style={[
+                              styles.advisorActionBtnText,
+                              { color: isCallRequestPending ? '#10b981' : colors.text },
+                            ]}
+                          >
+                            {isCallRequestPending ? 'Requested' : 'Call Request'}
+                          </Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+
+                    {/* In-App VoIP Call Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.advisorActionBtn,
+                        styles.advisorActionBtnFill,
+                        {
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                          borderColor: colors.cardBorder,
+                          borderWidth: 1,
+                          borderRadius: RADIUS.md,
+                          paddingVertical: 9,
+                        },
+                      ]}
+                      activeOpacity={0.85}
+                      onPress={() => handleVoipCall(adv.name, adv.kingId)}
+                    >
+                      <Ionicons name="headset" size={15} color={colors.primary} />
+                      <Text style={[styles.advisorActionBtnText, { color: colors.text }]}>
+                        In-App Call
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Chat Button */}
+                    <TouchableOpacity
+                      style={[
+                        styles.advisorActionBtn,
+                        styles.advisorActionBtnFill,
+                        {
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                          borderColor: colors.cardBorder,
+                          borderWidth: 1,
+                          borderRadius: RADIUS.md,
+                          paddingVertical: 9,
+                        },
+                      ]}
+                      activeOpacity={0.85}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/chat-thread/[userId]',
+                          params: { userId: adv.id, name: adv.name },
+                        } as never)
+                      }
+                    >
+                      <View style={{ position: 'relative' }}>
+                        <Ionicons name="chatbubble-ellipses" size={15} color={colors.primary} />
+                        {chatUnread && chatUnread.count > 0 ? <View style={styles.advisorActionDot} /> : null}
+                      </View>
+                      <Text style={[styles.advisorActionBtnText, { color: colors.text }]}>
+                        Chat
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View style={[styles.advisorCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, padding: 20, alignItems: 'center', gap: 6 }]}>
+                <Ionicons name="alert-circle-outline" size={24} color={colors.textMuted} />
+                <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: colors.text }}>No Active Advisor Plan</Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: colors.textMuted, textAlign: 'center' }}>
+                  You do not have any currently active advisor plan.
+                </Text>
+              </View>
+            )}
+
             {callRequestError ? <Text style={styles.callRequestError}>{callRequestError}</Text> : null}
-
-            {/* Crops Care Plan & Coupon Button */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: colors.cardBg,
-                borderWidth: 1.5,
-                borderColor: colors.cardBorder,
-                borderRadius: RADIUS.lg,
-                padding: 12,
-                marginTop: 10,
-                ...premiumShadow(colors.shadowColor, 'sm'),
-              }}
-              activeOpacity={0.88}
-              onPress={() => {
-                tap();
-                setIsCropCareModalOpen(true);
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="medical" size={20} color={colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: colors.text }}>🩺 {t('cropCareSchedule', 'Crops Care Plan & Coupon')}</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 1 }}>
-                    {t('viewCropPlan', 'View Crop Care features, 5/10 crop advisory & buy/redeem coupon')}
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-            </TouchableOpacity>
-
-            {/* Agri Doctor Video Call Button (Disabled) */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: colors.cardBg,
-                borderWidth: 1.5,
-                borderColor: colors.cardBorder,
-                borderRadius: RADIUS.lg,
-                padding: 12,
-                marginTop: 10,
-                opacity: 0.65,
-              }}
-              activeOpacity={1}
-              disabled={true}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="videocam" size={20} color={colors.textMuted} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: colors.text }}>{t('contactAdvisor', 'Agri Doctor Call')}</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 1 }}>
-                    1-Tap Video Consultation (Coming Soon)
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="lock-closed" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            {/* Dose Schedule Button */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: colors.cardBg,
-                borderWidth: 1.5,
-                borderColor: colors.cardBorder,
-                borderRadius: RADIUS.lg,
-                padding: 12,
-                marginTop: 10,
-                ...premiumShadow(colors.shadowColor, 'sm'),
-              }}
-              activeOpacity={0.88}
-              onPress={() => {
-                tap();
-                router.push('/dose');
-              }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="flask" size={20} color="#d97706" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: colors.text }}>Dose Schedule</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: colors.textMuted, marginTop: 1 }}>
-                    View your active crop care schedules
-                  </Text>
-                </View>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
 
           {/* RENEWAL ALERT BANNER */}
           {subMetrics.status !== 'ACTIVE' && (

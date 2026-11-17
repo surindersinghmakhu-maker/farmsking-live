@@ -72,6 +72,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
             await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_uploadedById_idx" ON "media_store"("uploadedById");`);
             await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_cropId_idx" ON "media_store"("cropId");`);
             await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "media_store_provider_idx" ON "media_store"("provider");`);
+            await this.$executeRawUnsafe(`CREATE OR REPLACE VIEW "crop_gallery" AS SELECT * FROM "media_store";`);
 
             await this.$executeRawUnsafe(`
               CREATE TABLE IF NOT EXISTS "crop_remarks" (

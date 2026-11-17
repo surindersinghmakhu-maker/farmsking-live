@@ -486,6 +486,7 @@ __decorate([
 __decorate([
     (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
     (0, common_1.Post)('api/request-account-deletion'),
+    (0, common_1.Post)('request-account-deletion'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

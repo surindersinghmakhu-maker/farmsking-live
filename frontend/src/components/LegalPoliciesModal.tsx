@@ -213,9 +213,22 @@ export function LegalPoliciesModal({
                 </View>
 
                 <View style={styles.sectionBlock}>
-                  <Text style={styles.head}>5. Safe Harbor Protection & Governance</Text>
+                  <Text style={styles.head}>5. Non-NBFC Digital Record-Keeping Disclaimer</Text>
                   <Text style={styles.bodyText}>
-                    These terms are governed by the laws of India and subject to intermediary protections under Section 79 of the Information Technology Act, 2000. All legal disputes are subject to the exclusive jurisdiction of the competent courts in Punjab, India.
+                    • FarmsKing Bahi-Khata, Khatavani logs, and commission agent (Arhtiya) interest calculators are purely digital arithmetic record-keeping utilities designed for personal farm accounting.{'\n'}
+                    • <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> is an agricultural technology software company and is NOT a bank, Non-Banking Financial Company (NBFC), moneylender, or deposit-taking entity under the Reserve Bank of India (RBI) Act.
+                  </Text>
+                </View>
+
+                <View style={styles.sectionBlock}>
+                  <Text style={styles.head}>6. Safe Harbor Protection & Grievance Redressal</Text>
+                  <Text style={styles.bodyText}>
+                    • These terms are governed by the laws of India and subject to intermediary protections under Section 79 of the Information Technology Act, 2000.{'\n'}
+                    • <Text style={styles.boldText}>Statutory Grievance Officer (IT Rules 2021 &amp; E-Commerce Rules 2020):</Text>{'\n'}
+                    Name: Grievance Redressal Officer, FARMSKING TECHNOLOGIES PRIVATE LIMITED{'\n'}
+                    Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India{'\n'}
+                    Email: <Text style={styles.boldText}>grievance@farmsking.in</Text> · Helpline: <Text style={styles.boldText}>+91 95776-22000</Text>{'\n'}
+                    Response SLA: Acknowledgment within 24 business hours; resolution within 15 days. All legal matters subject to exclusive jurisdiction of courts in Punjab, India.
                   </Text>
                 </View>
               </View>
@@ -248,7 +261,7 @@ export function LegalPoliciesModal({
                   <Text style={styles.bodyText}>
                     You maintain complete ownership of your personal data:{'\n'}
                     • You may trigger complete account deletion directly in the app via <Text style={styles.boldText}>Account Settings ➔ Delete Account</Text>.{'\n'}
-                    • Upon confirmed deletion, your profile records, stored farm photos, and active ledgers are permanently purged from active production servers. You may also contact privacy@farmsking.com for data access or erasure requests.
+                    • Upon confirmed deletion, your profile records, stored farm photos, and active ledgers are permanently purged from active production servers. You may also contact privacy@farmsking.in for data access or erasure requests.
                   </Text>
                 </View>
               </View>
@@ -309,7 +322,7 @@ export function LegalPoliciesModal({
                 <View style={styles.sectionBlock}>
                   <Text style={styles.head}>3. Delivery Inquiries & Support</Text>
                   <Text style={styles.bodyText}>
-                    For any delivery delays or transit inquiries, contact FarmsKing Support via WhatsApp or email at support@farmsking.com quoting your Order ID.
+                    For any delivery delays or transit inquiries, contact FarmsKing Support via WhatsApp or email at support@farmsking.in quoting your Order ID.
                   </Text>
                 </View>
               </View>

@@ -314,6 +314,7 @@ export class AppController {
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('api/request-account-deletion')
+  @Post('request-account-deletion')
   async requestAccountDeletion(@Body() body: { mobile?: string; password?: string; reason?: string }) {
     if (!body.mobile || body.mobile.trim().length !== 10) {
       throw new BadRequestException('Please provide a valid 10-digit mobile number.');

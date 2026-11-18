@@ -10,7 +10,9 @@ git --work-tree="$TARGET" --git-dir="$GIT_DIR" checkout -f main
 echo '📦 Updating Backend...'
 cd "$TARGET/backend" || exit 1
 npm install --legacy-peer-deps --silent
+npx prisma db push --skip-generate >/dev/null 2>&1 || true
 npx prisma generate >/dev/null 2>&1 || true
+npx tsc -p tsconfig.build.json >/dev/null 2>&1 || true
 pm2 restart farmsking-backend || pm2 start dist/main.js --name farmsking-backend
 
 echo '⚡ Syncing Pre-built Frontend & Admin Web Dist...'

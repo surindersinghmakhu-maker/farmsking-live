@@ -311,7 +311,7 @@ export interface ExecutiveThemeContextValue {
   innerBg: string;
 }
 
-const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
+export const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
 
 const getInitialTheme = (): ExecutiveTheme => {
   if (typeof window !== 'undefined') {

@@ -15,7 +15,6 @@ export declare class AppSettingsService {
     requestAdminActionOtp(admin: AuthUser): Promise<{
         success: boolean;
         deliveredVia: string[];
-        mobile: string | undefined;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;

@@ -737,20 +737,6 @@ export class ComplianceService {
   getStatutoryDocumentsCatalog() {
     return [
       {
-        id: 'doc-flex-board-nov-2026',
-        date: '18/11/2026',
-        orderDate: '2026-11-18',
-        title: 'Official Corporate Office Flex Board Design (Section 12(3))',
-        category: 'Statutory Board',
-        authority: 'Ministry of Corporate Affairs (Companies Act 2013)',
-        referenceNo: 'CIN: U62013PB2026PTC070389 | PAN: AAHCF3566C',
-        status: 'READY TO PRINT',
-        fileSize: '554 KB',
-        fileName: '15_OFFICIAL_CORPORATE_FLEX_BOARD_REGISTERED_OFFICE.html',
-        downloadKey: 'corporate-flex-board',
-        remarks: 'Official registered office nameboard design matching CA drafting with verified logo, CIN, PAN, TAN, Registered Office & contact numbers for flex printing and MCA / GST site photo verification.',
-      },
-      {
         id: 'doc-coi-nov-2026',
         date: '18/11/2026',
         orderDate: '2026-11-18',
@@ -875,7 +861,6 @@ export class ComplianceService {
     if (!base) return null;
 
     const keyMap: Record<string, string> = {
-      'corporate-flex-board': path.join(base, '01_Company_Registration_MCA', '15_OFFICIAL_CORPORATE_FLEX_BOARD_REGISTERED_OFFICE.html'),
       'certificate-of-incorporation': path.join(base, '01_Company_Registration_MCA', '14_OFFICIAL_CERTIFICATE_OF_INCORPORATION_MCA.pdf'),
       'spice-part-b-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', 'SPICE + Part B_AC7349109 signed.pdf'),
       'inc-33-emoa-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', 'INC-33_1-28403906940 signed.pdf'),

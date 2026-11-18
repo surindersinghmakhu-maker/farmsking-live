@@ -123,7 +123,6 @@ export declare class AppSettingsController {
     requestAdminActionOtp(user: AuthUser): Promise<{
         success: boolean;
         deliveredVia: string[];
-        mobile: string | undefined;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;

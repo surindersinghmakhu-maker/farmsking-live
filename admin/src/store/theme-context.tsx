@@ -300,7 +300,7 @@ export interface ExecutiveThemeContextValue {
   innerBg: string;
 }
 
-const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
+export const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
 
 export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
   const [executiveTheme, setExecutiveThemeState] = useState<ExecutiveTheme>('LIGHT');

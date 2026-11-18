@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Image, ImageStyle, Platform, StyleProp, useWindowDimensions, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { resolveMediaUrl } from '@/src/api/client';
+import { ExecutiveThemeContext } from '@/src/store/theme-context';
 
 const LOGO_HD = require('@/assets/images/farmsking_logo_hd.png');
 const LOGO_DARK = require('@/assets/images/farmsking_logo_dark.png');
@@ -68,9 +69,11 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const { width: viewportWidth } = useWindowDimensions();
   const { data: settings } = useAppSettings();
+  const themeContext = useContext(ExecutiveThemeContext);
 
   const [imageError, setImageError] = useState(false);
-  const isDarkMode = dark || isNight;
+  const isContextDark = themeContext ? !!(themeContext.isDark || (themeContext as any).themeMode === 'DARK' || !themeContext.isLight) : false;
+  const isDarkMode = dark || isNight || isContextDark;
   const isEmblemMode =
     round ||
     useGoldRing ||
@@ -86,7 +89,7 @@ export function BrandLogo({
     setImageError(false);
   }, [logoUri]);
 
-  // Optimal bundled master asset: 1254x1254 Emblem or 1600x533 Wide Banner
+  // Optimal bundled master asset: 1254x1254 Emblem or 1600x461 Wide Banner
   const bundledAsset = isEmblemMode
     ? LOGO_FAVICON
     : isDarkMode
@@ -111,15 +114,20 @@ export function BrandLogo({
 
   // Compute responsive dimensions:
   // - Emblem / Round / Favicon: Strictly 1:1 square / circle
-  // - Wide Brand Banner: Natural 3.0 ratio (1600:533)
+  // - Wide Brand Banner: Natural 3.47 ratio (1600:461)
   const finalHeight = height ?? size ?? 36;
-  const defaultAspectRatio = isEmblemMode ? 1.0 : (aspectRatio ?? 3.0);
+  const defaultAspectRatio = isEmblemMode ? 1.0 : (aspectRatio ?? 3.47);
   const finalWidth = width ?? (typeof finalHeight === 'number' ? Math.round(finalHeight * defaultAspectRatio) : finalHeight);
   const finalBorderRadius = round
     ? (typeof finalHeight === 'number' ? finalHeight / 2 : 18)
     : isEmblemMode
     ? (typeof finalHeight === 'number' ? Math.round(finalHeight * 0.22) : 8)
     : 0;
+
+  // Theme-adaptive contrast filter
+  const adaptiveFilter = isDarkMode
+    ? 'drop-shadow(0 2px 8px rgba(34, 197, 94, 0.28)) drop-shadow(0 1px 4px rgba(249, 115, 22, 0.35))'
+    : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08))';
 
   return (
     <Image
@@ -134,6 +142,8 @@ export function BrandLogo({
             imageRendering: '-webkit-optimize-contrast',
             WebkitBackfaceVisibility: 'hidden',
             transform: 'translateZ(0)',
+            filter: adaptiveFilter,
+            transition: 'filter 0.3s ease',
           } as any) : {}),
         }, 
         style as StyleProp<ImageStyle>

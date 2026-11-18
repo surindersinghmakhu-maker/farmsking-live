@@ -49,32 +49,15 @@ export class AppSettingsService {
 
     const isDev = process.env.NODE_ENV !== 'production';
     const channels: string[] = [];
-    let dbAdminMobile: string | undefined = undefined;
 
-    // Deliver 6-digit Step-Up 2FA OTP via SMS, WhatsApp & Email to admin's login credentials
+    // Deliver 6-digit Step-Up 2FA OTP via configured WhatsApp / Email channels using lazy ModuleRef (avoids circular module init)
     try {
       const dbAdmin = await this.prisma.user.findUnique({
         where: { id: admin.id },
         select: { mobile: true, email: true },
       });
-      dbAdminMobile = dbAdmin?.mobile;
 
       if (dbAdmin?.mobile && this.moduleRef) {
-        // 1. Text SMS Dispatch to Admin's login mobile
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { SmsService } = require('../sms/sms.service');
-          const smsSvc = this.moduleRef.get(SmsService, { strict: false });
-          if (smsSvc?.sendTextMessage) {
-            const smsText = `FarmsKing Admin Security: Your 6-digit Step-Up authorization code is ${otpCode}. Valid for 5 minutes. Do not share.`;
-            const smsRes = await smsSvc.sendTextMessage(dbAdmin.mobile, smsText, 'ADMIN_STEPUP_OTP');
-            if (smsRes?.success) channels.push('SMS');
-          }
-        } catch (smsErr: any) {
-          console.warn(`Admin Step-Up SMS dispatch error: ${smsErr?.message}`);
-        }
-
-        // 2. WhatsApp Dispatch to Admin's login mobile
         try {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { WhatsappBotService } = require('../whatsapp/whatsapp.service');
@@ -99,19 +82,14 @@ export class AppSettingsService {
       }
     } catch {}
 
-    const maskedMobile = dbAdminMobile
-      ? `${dbAdminMobile.slice(0, 2)}******${dbAdminMobile.slice(-4)}`
-      : undefined;
-
     return {
       success: true,
       deliveredVia: channels,
-      mobile: maskedMobile,
       message:
         channels.length > 0
-          ? `Admin Step-Up 2FA code sent via ${channels.join(' & ')} to mobile +91 ${maskedMobile}.`
+          ? `Admin Step-Up 2FA code sent via ${channels.join(' & ')}.`
           : isDev
-          ? `Local development mode: Admin Step-Up 2FA code generated for +91 ${maskedMobile || 'Admin Mobile'}.`
+          ? 'Local development mode: Admin Step-Up 2FA code generated.'
           : 'Admin authorization code generated for critical change confirmation.',
       devOtp: isDev ? otpCode : undefined,
       expiresInSeconds: 300,

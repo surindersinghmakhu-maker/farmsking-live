@@ -85,10 +85,8 @@ export class ComplianceController {
       throw new NotFoundException('Statutory document file not found.');
     }
     const filename = path.basename(filePath);
-    const ext = path.extname(filePath).toLowerCase();
-    const contentType = ext === '.html' ? 'text/html; charset=utf-8' : 'application/pdf';
     const disposition = forceDownload === '1' ? 'attachment' : 'inline';
-    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
     const stream = fs.createReadStream(filePath);
     stream.pipe(res);

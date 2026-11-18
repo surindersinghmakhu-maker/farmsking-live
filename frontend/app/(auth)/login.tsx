@@ -530,110 +530,33 @@ export default function LoginScreen() {
     const activePortal = portalMode;
     setOtpSending(true);
 
-    if (isLocalhost) {
-      // 💻 LOCALHOST ONLY: Enforce strict portal match before opening OTP screen
-      try {
-        const otpRes = await sendLoginOtp(cleanNum, activePortal);
-        if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
-          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-          setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
-          return;
-        }
-        setOtpSent(true);
-        const codeToFill = String(otpRes?.devOtp || '123456').slice(0, 6);
-        setDevOtp(codeToFill);
+    try {
+      // 🛡️ ULTRA-ROBUST DIRECT SERVER OTP ENGINE (Both Localhost & Live Production)
+      const otpRes = await sendLoginOtp(cleanNum, activePortal);
+      if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
+        setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+        setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
+        return;
+      }
+      setConfirmationResult(null); // Direct server OTP verification
+      setOtpSent(true);
+      const codeToFill = otpRes?.devOtp ? String(otpRes.devOtp).slice(0, 6) : null;
+      setDevOtp(codeToFill);
+      if (codeToFill) {
         setOtpDigits(codeToFill.split(''));
-        setResendTimer(60);
         setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } catch (err: any) {
-        if (!applyStructuredPartnerError(err, cleanNum)) {
-          const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
-          setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
-        }
-      } finally {
-        setOtpSending(false);
-      }
-    } else {
-      // 🚀 LIVE PRODUCTION: Real Firebase Phone Auth SMS with Backend Fallback
-      try {
-        if (typeof window !== 'undefined') {
-          const el = getFreshDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-          (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(
-            auth,
-            el,
-            { size: 'invisible' }
-          );
-        }
-
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          `+91${cleanNum}`,
-          (window as any).recaptchaVerifierLogin
-        );
-
-        setConfirmationResult(confirmation);
-        setOtpSent(true);
-        setDevOtp(null);
-        setOtpDigits(['', '', '', '', '', '']); // Always empty on live for real SMS input
-        setResendTimer(60);
+      } else {
+        setOtpDigits(['', '', '', '', '', '']);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-      } catch (err: any) {
-        console.warn('[Firebase Phone Auth error, initiating fallback]:', err);
-
-        // 🛡️ ULTRA-ROBUST LIVE FALLBACK:
-        // If Firebase throws auth/internal-error, quota limits, or reCAPTCHA errors,
-        // instantly dispatch verification OTP via backend so valid users are NEVER blocked!
-        try {
-          const fallbackRes = await sendLoginOtp(cleanNum, activePortal);
-          if (activePortal === 'PARTNER' && fallbackRes?.isNewUser) {
-            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
-            return;
-          }
-          setConfirmationResult(null); // Indicates backend OTP verification
-          setOtpSent(true);
-          const fallbackCode = fallbackRes?.devOtp ? String(fallbackRes.devOtp).slice(0, 6) : null;
-          setDevOtp(fallbackCode);
-          if (fallbackCode) {
-            setOtpDigits(fallbackCode.split(''));
-            setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-          } else {
-            setOtpDigits(['', '', '', '', '', '']);
-            setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-          }
-          setResendTimer(60);
-          return;
-        } catch (backendErr: any) {
-          console.warn('[Backend OTP fallback error]:', backendErr);
-          if (applyStructuredPartnerError(backendErr, cleanNum)) {
-            return;
-          }
-          const backendStatus = backendErr?.response?.status;
-          const backendMsg = backendErr?.response?.data?.message;
-          if (backendStatus && backendStatus < 500 && backendMsg) {
-            setError(Array.isArray(backendMsg) ? backendMsg.join(', ') : String(backendMsg));
-            return;
-          }
-        }
-
-        clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-
-        let msg = 'Failed to send verification code. Please try again.';
-        if (err?.code === 'auth/invalid-phone-number') {
-          msg = 'Invalid mobile number format. Please check the 10-digit number.';
-        } else if (err?.code === 'auth/too-many-requests') {
-          msg = 'Too many requests. Please wait a few moments before retrying.';
-        } else if (err?.code === 'auth/quota-exceeded') {
-          msg = 'Daily SMS quota reached. Please use Google Sign-In or contact support.';
-        } else if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
-          msg = 'Verification service was refreshed. Please tap Continue again.';
-        } else if (err?.message) {
-          msg = err.message;
-        }
-        setError(msg);
-      } finally {
-        setOtpSending(false);
       }
+      setResendTimer(60);
+    } catch (err: any) {
+      if (!applyStructuredPartnerError(err, cleanNum)) {
+        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
+        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      }
+    } finally {
+      setOtpSending(false);
     }
   };
 

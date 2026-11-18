@@ -457,102 +457,33 @@ export default function PartnerLoginScreen() {
     }
     setOtpSending(true);
 
-    if (isLocalhost) {
-      try {
-        const otpRes = await sendLoginOtp(cleanNum, 'PARTNER');
-        if (otpRes?.isNewUser) {
-          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-          setError('Mobile number is not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please apply below or contact support.');
-          return;
-        }
-        setOtpSent(true);
-        const codeToFill = String(otpRes?.devOtp || '123456').slice(0, 6);
-        setDevOtp(codeToFill);
+    try {
+      // 🛡️ ULTRA-ROBUST DIRECT SERVER OTP ENGINE (Both Localhost & Live Production)
+      const otpRes = await sendLoginOtp(cleanNum, 'PARTNER');
+      if (otpRes?.isNewUser) {
+        setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+        setError('Mobile number is not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please apply below or contact support.');
+        return;
+      }
+      setConfirmationResult(null); // Direct server OTP verification
+      setOtpSent(true);
+      const codeToFill = otpRes?.devOtp ? String(otpRes.devOtp).slice(0, 6) : null;
+      setDevOtp(codeToFill);
+      if (codeToFill) {
         setOtpDigits(codeToFill.split(''));
-        setResendTimer(60);
         setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } catch (err: any) {
-        if (!applyStructuredPartnerError(err, cleanNum)) {
-          const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
-          setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
-        }
-      } finally {
-        setOtpSending(false);
-      }
-    } else {
-      try {
-        if (typeof window !== 'undefined') {
-          const el = getFreshDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartnerLogin');
-          (window as any).recaptchaVerifierPartnerLogin = new RecaptchaVerifier(
-            auth,
-            el,
-            { size: 'invisible' }
-          );
-        }
-
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          `+91${cleanNum}`,
-          (window as any).recaptchaVerifierPartnerLogin
-        );
-
-        setConfirmationResult(confirmation);
-        setOtpSent(true);
-        setDevOtp(null);
+      } else {
         setOtpDigits(['', '', '', '', '', '']);
-        setResendTimer(60);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-      } catch (err: any) {
-        console.warn('[Firebase Phone Auth error, initiating fallback]:', err);
-
-        try {
-          const fallbackRes = await sendLoginOtp(cleanNum, 'PARTNER');
-          if (fallbackRes?.isNewUser) {
-            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-            setError('Mobile number is not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please apply below or contact support.');
-            return;
-          }
-          setConfirmationResult(null);
-          setOtpSent(true);
-          const fallbackCode = fallbackRes?.devOtp ? String(fallbackRes.devOtp).slice(0, 6) : null;
-          setDevOtp(fallbackCode);
-          if (fallbackCode) {
-            setOtpDigits(fallbackCode.split(''));
-            setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-          } else {
-            setOtpDigits(['', '', '', '', '', '']);
-            setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-          }
-          setResendTimer(60);
-          return;
-        } catch (backendErr: any) {
-          if (applyStructuredPartnerError(backendErr, cleanNum)) {
-            return;
-          }
-          const backendStatus = backendErr?.response?.status;
-          const backendMsg = backendErr?.response?.data?.message;
-          if (backendStatus && backendStatus < 500 && backendMsg) {
-            setError(Array.isArray(backendMsg) ? backendMsg.join(', ') : String(backendMsg));
-            return;
-          }
-        }
-
-        clearDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartnerLogin');
-
-        let msg = 'Failed to send verification code. Please try again.';
-        if (err?.code === 'auth/invalid-phone-number') {
-          msg = 'Invalid mobile number format. Please check the 10-digit number.';
-        } else if (err?.code === 'auth/too-many-requests') {
-          msg = 'Too many requests. Please wait a few moments before retrying.';
-        } else if (err?.code === 'auth/quota-exceeded') {
-          msg = 'Daily SMS quota reached. Please use King ID & Password or contact support.';
-        } else if (err?.message) {
-          msg = err.message;
-        }
-        setError(msg);
-      } finally {
-        setOtpSending(false);
       }
+      setResendTimer(60);
+    } catch (err: any) {
+      if (!applyStructuredPartnerError(err, cleanNum)) {
+        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
+        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      }
+    } finally {
+      setOtpSending(false);
     }
   };
 

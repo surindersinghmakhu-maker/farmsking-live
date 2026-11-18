@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Party, LabourWorker } from '@/src/types/api';
 import { apiClient } from '@/src/api/client';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -67,6 +68,7 @@ export function PartyPicker({
   hideLabel = false,
   inlineAddButton = false,
 }: PartyPickerProps) {
+  const { colors, isDark } = useExecutiveTheme();
   const [text, setText] = useState(selectedParty?.name ?? '');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -275,7 +277,7 @@ export function PartyPicker({
     <View style={{ gap: 4 }}>
       {!hideLabel && (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={styles.label}>{label}</Text>
+          <Text style={[styles.label, { color: isDark ? colors.text : '#0f172a' }]}>{label}</Text>
           {!inlineAddButton && (
             <TouchableOpacity
               style={[styles.addBtn, { borderColor: accentColor }]}
@@ -298,9 +300,9 @@ export function PartyPicker({
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
+          style={[styles.input, { flex: 1, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
           placeholder={placeholder}
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
           value={text}
           onChangeText={(value) => {
             setText(value);
@@ -330,19 +332,22 @@ export function PartyPicker({
       </View>
 
       {isDropdownOpen && (
-        <View style={[styles.dropdown, premiumShadow('#000000', 'sm')]}>
+        <View style={[styles.dropdown, { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1' }, premiumShadow('#000000', 'sm')]}>
           {/* Quick Filter Tabs inside Dropdown */}
-          <View style={styles.filterTabRow}>
+          <View style={[styles.filterTabRow, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderBottomColor: isDark ? colors.cardBorder : '#e2e8f0' }]}>
             {(['ALL', 'PARTY', 'LABOUR'] as const).map((t) => (
               <TouchableOpacity
                 key={t}
-                style={[styles.filterChip, filterType === t && styles.filterChipActive]}
+                style={[
+                  styles.filterChip,
+                  { backgroundColor: isDark ? (filterType === t ? colors.primary : '#1e293b') : (filterType === t ? '#0f172a' : 'transparent') },
+                ]}
                 onPressIn={() => {
                   tap();
                   setFilterType(t);
                 }}
               >
-                <Text style={[styles.filterChipText, filterType === t && styles.filterChipTextActive]}>
+                <Text style={[styles.filterChipText, { color: filterType === t ? '#ffffff' : (isDark ? colors.textMuted : '#64748b') }]}>
                   {t === 'ALL' ? 'All Parties' : t === 'PARTY' ? '🏪 Dealers/Buyers' : '👷 Labour Workers'}
                 </Text>
               </TouchableOpacity>
@@ -351,7 +356,7 @@ export function PartyPicker({
 
           {filteredMatches.length === 0 ? (
             <View style={styles.emptyDropdown}>
-              <Text style={styles.emptyDropdownText}>No matching party or worker found</Text>
+              <Text style={[styles.emptyDropdownText, { color: isDark ? colors.textMuted : '#94a3b8' }]}>No matching party or worker found</Text>
             </View>
           ) : (
             <ScrollView style={styles.dropdownScroll} nestedScrollEnabled keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
@@ -360,23 +365,23 @@ export function PartyPicker({
                 return (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.dropdownRow}
+                    style={[styles.dropdownRow, { borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9' }]}
                     activeOpacity={0.7}
                     onPressIn={() => selectUnifiedItem(item)}
                   >
-                    <View style={[styles.iconBg, { backgroundColor: isLabour ? '#eff6ff' : '#f0fdf4' }]}>
-                      <Ionicons name={isLabour ? 'person' : 'business'} size={14} color={isLabour ? '#2563eb' : '#16a34a'} />
+                    <View style={[styles.iconBg, { backgroundColor: isLabour ? (isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff') : (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') }]}>
+                      <Ionicons name={isLabour ? 'person' : 'business'} size={14} color={isLabour ? '#38bdf8' : '#22c55e'} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.dropdownRowText}>{item.name}</Text>
-                        <View style={[styles.typeTag, { backgroundColor: isLabour ? '#dbeafe' : '#dcfce7' }]}>
-                          <Text style={[styles.typeTagText, { color: isLabour ? '#1d4ed8' : '#15803d' }]}>
+                        <Text style={[styles.dropdownRowText, { color: isDark ? colors.text : '#0f172a' }]}>{item.name}</Text>
+                        <View style={[styles.typeTag, { backgroundColor: isLabour ? (isDark ? 'rgba(37, 99, 235, 0.3)' : '#dbeafe') : (isDark ? 'rgba(22, 163, 74, 0.3)' : '#dcfce7') }]}>
+                          <Text style={[styles.typeTagText, { color: isLabour ? (isDark ? '#93c5fd' : '#1d4ed8') : (isDark ? '#86efac' : '#15803d') }]}>
                             {isLabour ? 'Labour Worker' : 'Dealer / Party'}
                           </Text>
                         </View>
                       </View>
-                      {item.mobile ? <Text style={styles.dropdownSubText}>📱 {item.mobile}</Text> : null}
+                      {item.mobile ? <Text style={[styles.dropdownSubText, { color: isDark ? colors.textMuted : '#64748b' }]}>📱 {item.mobile}</Text> : null}
                     </View>
                   </TouchableOpacity>
                 );
@@ -384,8 +389,8 @@ export function PartyPicker({
             </ScrollView>
           )}
 
-          <TouchableOpacity style={styles.dropdownCloseRow} onPressIn={() => setIsDropdownOpen(false)}>
-            <Text style={styles.dropdownCloseText}>Close Search</Text>
+          <TouchableOpacity style={[styles.dropdownCloseRow, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderTopWidth: 1, borderTopColor: isDark ? colors.cardBorder : '#e2e8f0' }]} onPressIn={() => setIsDropdownOpen(false)}>
+            <Text style={[styles.dropdownCloseText, { color: isDark ? colors.text : '#64748b' }]}>Close Search</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -393,24 +398,24 @@ export function PartyPicker({
       {/* Add New Party Modal with Auto-Fill by Mobile Number */}
       <Modal visible={isAddOpen} transparent animationType="fade" onRequestClose={() => setIsAddOpen(false)}>
         <View style={styles.overlay}>
-          <View style={[styles.card, premiumShadow('#000000', 'lg')]}>
-            <Text style={styles.cardTitle}>Add New Party / Dealer / Buyer</Text>
+          <View style={[styles.card, { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderWidth: 1.5 }, premiumShadow('#000000', 'lg')]}>
+            <Text style={[styles.cardTitle, { color: isDark ? colors.text : '#0f172a' }]}>Add New Party / Dealer / Buyer</Text>
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={styles.label}>Party Mobile</Text>
+              <Text style={[styles.label, { color: isDark ? colors.text : '#0f172a' }]}>Party Mobile</Text>
               {isVerified ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(22, 163, 74, 0.25)' : '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
                   <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>👑 King ID Active</Text>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#86efac' : '#15803d' }}>👑 King ID Active</Text>
                 </View>
               ) : (
                 <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff', borderWidth: 1, borderColor: isDark ? 'rgba(37, 99, 235, 0.4)' : '#bfdbfe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}
                   onPress={handleSendOtp}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="shield-checkmark-outline" size={13} color="#2563eb" />
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#2563eb' }}>Verify / Send OTP</Text>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? '#93c5fd' : '#2563eb' }}>Verify / Send OTP</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -419,11 +424,11 @@ export function PartyPicker({
               <TextInput
                 style={[
                   styles.input,
-                  { flex: 1 },
-                  isVerified && { backgroundColor: '#f1f5f9', color: '#475569', borderColor: '#cbd5e1' },
+                  { flex: 1, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' },
+                  isVerified && { backgroundColor: isDark ? '#1e293b' : '#f1f5f9', color: isDark ? '#94a3b8' : '#475569', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                 ]}
                 placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={newMobile}
                 onChangeText={handleMobileChange}
                 keyboardType="phone-pad"
@@ -434,18 +439,18 @@ export function PartyPicker({
             </View>
 
             {otpNotice ? (
-              <View style={[styles.autoNoticeBox, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+              <View style={[styles.autoNoticeBox, { backgroundColor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff', borderColor: isDark ? 'rgba(37, 99, 235, 0.35)' : '#bfdbfe' }]}>
                 <Ionicons name="information-circle-outline" size={14} color="#2563eb" />
-                <Text style={[styles.autoNoticeText, { color: '#1d4ed8' }]}>{otpNotice}</Text>
+                <Text style={[styles.autoNoticeText, { color: isDark ? '#93c5fd' : '#1d4ed8' }]}>{otpNotice}</Text>
               </View>
             ) : null}
 
             {showOtpInput && !isVerified ? (
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, alignItems: 'center' }}>
                 <TextInput
-                  style={[styles.input, { flex: 1, height: 38 }]}
+                  style={[styles.input, { flex: 1, height: 38, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                   placeholder="Enter 4-digit OTP"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                   keyboardType="numeric"
                   maxLength={4}
                   value={otpCode}
@@ -464,16 +469,16 @@ export function PartyPicker({
             ) : null}
 
             {isVerified && kingId ? (
-              <View style={[styles.autoNoticeBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', marginTop: 6 }]}>
+              <View style={[styles.autoNoticeBox, { backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4', borderColor: isDark ? 'rgba(22, 163, 74, 0.35)' : '#bbf7d0', marginTop: 6 }]}>
                 <Ionicons name="key-outline" size={16} color="#16a34a" />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#15803d' }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: isDark ? '#86efac' : '#15803d' }}>
                     👑 King ID Active: {kingId}
                   </Text>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#166534', marginTop: 1 }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#4ade80' : '#166534', marginTop: 1 }}>
                     Username: {newMobile} | Password: {newMobile}
                   </Text>
-                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#475569', marginTop: 2 }}>
+                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569', marginTop: 2 }}>
                     Worker can login using this mobile number to view farmer-wise work details & change password anytime.
                   </Text>
                 </View>
@@ -481,22 +486,22 @@ export function PartyPicker({
             ) : null}
 
             {autoFoundNotice ? (
-              <View style={styles.autoNoticeBox}>
+              <View style={[styles.autoNoticeBox, { backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4', borderColor: isDark ? 'rgba(22, 163, 74, 0.35)' : '#bbf7d0' }]}>
                 <Ionicons name="sparkles" size={14} color="#16a34a" />
-                <Text style={styles.autoNoticeText}>{autoFoundNotice}</Text>
+                <Text style={[styles.autoNoticeText, { color: isDark ? '#86efac' : '#15803d' }]}>{autoFoundNotice}</Text>
               </View>
             ) : null}
 
-            <Text style={[styles.label, { marginTop: 10 }]}>Party Name *</Text>
+            <Text style={[styles.label, { marginTop: 10, color: isDark ? colors.text : '#0f172a' }]}>Party Name *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
               placeholder="e.g. Bathinda Mandi Merchant / Dealer"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
               value={newName}
               onChangeText={setNewName}
             />
 
-            <Text style={[styles.label, { marginTop: 10 }]}>Party Type *</Text>
+            <Text style={[styles.label, { marginTop: 10, color: isDark ? colors.text : '#0f172a' }]}>Party Type *</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
               {PARTY_TYPES.map((pt) => {
                 const isSelected = partyType === pt.id;
@@ -505,15 +510,15 @@ export function PartyPicker({
                     key={pt.id}
                     style={[
                       styles.filterChip,
-                      { paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isSelected ? pt.color : '#cbd5e1' },
-                      isSelected ? { backgroundColor: pt.color } : { backgroundColor: '#f8fafc' },
+                      { paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isSelected ? pt.color : (isDark ? colors.cardBorder : '#cbd5e1') },
+                      isSelected ? { backgroundColor: pt.color } : { backgroundColor: isDark ? '#0b1329' : '#f8fafc' },
                     ]}
                     onPress={() => {
                       tap();
                       setPartyType(pt.id);
                     }}
                   >
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#475569' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : (isDark ? colors.text : '#475569') }}>
                       {pt.label}
                     </Text>
                   </TouchableOpacity>
@@ -521,18 +526,18 @@ export function PartyPicker({
               })}
             </View>
 
-            <Text style={[styles.label, { marginTop: 10 }]}>Address *</Text>
+            <Text style={[styles.label, { marginTop: 10, color: isDark ? colors.text : '#0f172a' }]}>Address *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
               placeholder="e.g. Grain Market, Bathinda"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
               value={newAddress}
               onChangeText={setNewAddress}
             />
 
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAddOpen(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+              <TouchableOpacity style={[styles.cancelBtn, { backgroundColor: isDark ? '#1e293b' : '#f1f5f9', borderColor: isDark ? colors.cardBorder : '#cbd5e1' }]} onPress={() => setIsAddOpen(false)}>
+                <Text style={[styles.cancelBtnText, { color: isDark ? colors.text : '#475569' }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.saveBtn, { backgroundColor: accentColor, opacity: canCreate ? 1 : 0.6 }]}

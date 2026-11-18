@@ -2713,21 +2713,21 @@ export default function RecordsScreen() {
                         {showSaleDatePicker && (
                           <View style={{ position: 'relative', zIndex: 999 }}>
                             <TouchableOpacity style={{ position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any, top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }} onPress={() => setShowSaleDatePicker(false)} activeOpacity={1} />
-                            <View style={{ position: 'absolute', top: 0, right: 0, zIndex: 1000, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', padding: 12, width: 260, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
+                            <View style={{ position: 'absolute', top: 0, right: 0, zIndex: 1000, backgroundColor: isDark ? colors.cardBg : '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', padding: 12, width: 260, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
                               {/* Month/Year Navigation */}
                               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                                 <TouchableOpacity onPress={() => shiftCalMonth(-1)} style={{ padding: 4 }}>
-                                  <Ionicons name="chevron-back" size={18} color="#475569" />
+                                  <Ionicons name="chevron-back" size={18} color={isDark ? colors.text : '#475569'} />
                                 </TouchableOpacity>
-                                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{calMonthNames[calData.month]} {calData.year}</Text>
+                                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{calMonthNames[calData.month]} {calData.year}</Text>
                                 <TouchableOpacity onPress={() => shiftCalMonth(1)} style={{ padding: 4 }}>
-                                  <Ionicons name="chevron-forward" size={18} color="#475569" />
+                                  <Ionicons name="chevron-forward" size={18} color={isDark ? colors.text : '#475569'} />
                                 </TouchableOpacity>
                               </View>
                               {/* Day Names Header */}
                               <View style={{ flexDirection: 'row', marginBottom: 4 }}>
                                 {calDayNames.map((dn) => (
-                                  <Text key={dn} style={{ flex: 1, textAlign: 'center', fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>{dn}</Text>
+                                  <Text key={dn} style={{ flex: 1, textAlign: 'center', fontSize: 10, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#94a3b8' }}>{dn}</Text>
                                 ))}
                               </View>
                               {/* Day Grid */}
@@ -2746,7 +2746,7 @@ export default function RecordsScreen() {
                                       onPress={() => selectCalDay(day)}
                                       style={{ width: '14.28%', height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, backgroundColor: isSelected ? '#16a34a' : 'transparent' }}
                                     >
-                                      <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#ffffff' : '#334155' }}>{day}</Text>
+                                      <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#ffffff' : (isDark ? colors.text : '#334155') }}>{day}</Text>
                                     </TouchableOpacity>
                                   );
                                 })}
@@ -2754,7 +2754,7 @@ export default function RecordsScreen() {
                               {/* Today Button */}
                               <TouchableOpacity
                                 onPress={() => { setSaleDate(todayIso()); setShowSaleDatePicker(false); }}
-                                style={{ marginTop: 8, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 5, borderRadius: RADIUS.pill, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }}
+                                style={{ marginTop: 8, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 5, borderRadius: RADIUS.pill, backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4', borderWidth: 1, borderColor: isDark ? 'rgba(22, 163, 74, 0.4)' : '#bbf7d0' }}
                               >
                                 <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>Today</Text>
                               </TouchableOpacity>
@@ -2763,30 +2763,30 @@ export default function RecordsScreen() {
                         )}
 
                         {/* Payment Mode & Party Picker Bar (Responsive!) */}
-                        <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 10 }}>
+                        <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', marginBottom: 10 }}>
                           <View style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: 8 }}>
                             {/* Payment Mode Toggles */}
                             <View style={{ flexDirection: 'row', gap: 4 }}>
                               <TouchableOpacity
-                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10 }, paymentMode === 'CASH' && styles.paymentModeChipActive]}
+                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10, backgroundColor: paymentMode === 'CASH' ? '#16a34a' : (isDark ? '#0b1329' : '#f1f5f9'), borderColor: paymentMode === 'CASH' ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1') }]}
                                 onPress={() => {
                                   tap();
                                   setPaymentMode('CASH');
                                   setSelectedParty(null);
                                 }}
                               >
-                                <Ionicons name="cash-outline" size={13} color={paymentMode === 'CASH' ? '#fff' : '#475569'} />
-                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5 }, paymentMode === 'CASH' && styles.paymentModeChipTextActive]}>Cash</Text>
+                                <Ionicons name="cash-outline" size={13} color={paymentMode === 'CASH' ? '#fff' : (isDark ? colors.text : '#475569')} />
+                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5, color: paymentMode === 'CASH' ? '#fff' : (isDark ? colors.text : '#475569') }]}>Cash</Text>
                               </TouchableOpacity>
                               <TouchableOpacity
-                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10 }, paymentMode === 'PARTY' && styles.paymentModeChipActive]}
+                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10, backgroundColor: paymentMode === 'PARTY' ? '#16a34a' : (isDark ? '#0b1329' : '#f1f5f9'), borderColor: paymentMode === 'PARTY' ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1') }]}
                                 onPress={() => {
                                   tap();
                                   setPaymentMode('PARTY');
                                 }}
                               >
-                                <Ionicons name="people-outline" size={13} color={paymentMode === 'PARTY' ? '#fff' : '#475569'} />
-                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5 }, paymentMode === 'PARTY' && styles.paymentModeChipTextActive]}>Party</Text>
+                                <Ionicons name="people-outline" size={13} color={paymentMode === 'PARTY' ? '#fff' : (isDark ? colors.text : '#475569')} />
+                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5, color: paymentMode === 'PARTY' ? '#fff' : (isDark ? colors.text : '#475569') }]}>Party</Text>
                               </TouchableOpacity>
                             </View>
 
@@ -2808,16 +2808,16 @@ export default function RecordsScreen() {
                             ) : (
                               <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 6 }}>
                                 <TextInput
-                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38 }]}
+                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                                   placeholder="Buyer Name (Optional)"
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                   value={cashBuyerName}
                                   onChangeText={setCashBuyerName}
                                 />
                                 <TextInput
-                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38 }]}
+                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                                   placeholder="Buyer Mobile (Optional)"
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                   keyboardType="phone-pad"
                                   maxLength={10}
                                   value={cashBuyerMobile}
@@ -2829,8 +2829,8 @@ export default function RecordsScreen() {
                         </View>
 
                         {/* Product Entry Box — Responsive Mobile & Desktop Layout */}
-                        <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10, zIndex: 50 }}>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155', marginBottom: 6 }}>📦 Add Item</Text>
+                        <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', marginBottom: 10, zIndex: 50 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.text : '#334155', marginBottom: 6 }}>📦 Add Item</Text>
 
                           {isMobile ? (
                             <View style={{ gap: 8 }}>
@@ -2842,28 +2842,28 @@ export default function RecordsScreen() {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     borderWidth: 1.5,
-                                    borderColor: isCropDropdownOpen ? '#16a34a' : '#cbd5e1',
+                                    borderColor: isCropDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                                     borderRadius: RADIUS.md,
                                     paddingHorizontal: 10,
                                     height: 40,
-                                    backgroundColor: '#f8fafc',
+                                    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
                                   }}
                                   onPress={() => { tap(); setIsCropDropdownOpen((prev) => !prev); }}
                                   activeOpacity={0.8}
                                 >
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                                     <Ionicons name="cube-outline" size={16} color="#16a34a" />
-                                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: selectedFarmerCrop ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: selectedFarmerCrop ? (isDark ? colors.text : '#0f172a') : (isDark ? '#64748b' : '#94a3b8') }} numberOfLines={1}>
                                       {selectedFarmerCrop ? `${selectedFarmerCrop.cropName} (${selectedFarmerCrop.unit})` : 'Select Product / Crop'}
                                     </Text>
                                   </View>
-                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748b" />
+                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={16} color={isDark ? colors.textMuted : '#64748b'} />
                                 </TouchableOpacity>
 
                                 {isCropDropdownOpen && (
                                   <View style={{
                                     marginTop: 6,
-                                    backgroundColor: '#ffffff',
+                                    backgroundColor: isDark ? colors.cardBg : '#ffffff',
                                     borderRadius: RADIUS.md,
                                     borderWidth: 1.5,
                                     borderColor: '#16a34a',
@@ -2882,9 +2882,9 @@ export default function RecordsScreen() {
                                             paddingVertical: 9,
                                             borderRadius: RADIUS.sm,
                                             marginBottom: 3,
-                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#f8fafc',
+                                            backgroundColor: crop.id === selectedCropId ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? '#0b1329' : '#f8fafc'),
                                             borderWidth: 1,
-                                            borderColor: crop.id === selectedCropId ? '#bbf7d0' : '#e2e8f0',
+                                            borderColor: crop.id === selectedCropId ? '#16a34a' : (isDark ? colors.cardBorder : '#e2e8f0'),
                                           }}
                                           onPress={() => {
                                             tap();
@@ -2895,16 +2895,16 @@ export default function RecordsScreen() {
                                           <View style={{ flex: 1 }}>
                                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                                               <Ionicons name="leaf-outline" size={15} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
-                                              <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
+                                              <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                                                 {crop.cropName}
                                               </Text>
                                             </View>
-                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', marginLeft: 21 }}>
                                               {crop.area} • {crop.unit}/unit
                                             </Text>
                                           </View>
-                                          <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, maxWidth: 100 }}>
-                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                          <View style={{ backgroundColor: isDark ? 'rgba(37, 99, 235, 0.25)' : '#eff6ff', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, maxWidth: 100 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#93c5fd' : '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
                                           </View>
                                         </TouchableOpacity>
                                       ))}
@@ -2917,9 +2917,9 @@ export default function RecordsScreen() {
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <View style={{ flex: 1 }}>
                                   <TextInput
-                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                                     placeholder={`QTY (${selectedFarmerCrop?.unit || 'Kg'})`}
-                                    placeholderTextColor="#94a3b8"
+                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                     keyboardType="numeric"
                                     value={saleQuantity}
                                     onChangeText={setSaleQuantity}
@@ -2927,9 +2927,9 @@ export default function RecordsScreen() {
                                 </View>
                                 <View style={{ flex: 1 }}>
                                   <TextInput
-                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                                     placeholder="RATE (₹)"
-                                    placeholderTextColor="#94a3b8"
+                                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                     keyboardType="numeric"
                                     value={saleRate}
                                     onChangeText={setSaleRate}
@@ -2938,15 +2938,15 @@ export default function RecordsScreen() {
                                 <View style={{
                                   flex: 1.2,
                                   height: 38,
-                                  backgroundColor: '#f0fdf4',
+                                  backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
                                   borderWidth: 1,
-                                  borderColor: '#bbf7d0',
+                                  borderColor: isDark ? 'rgba(22, 163, 74, 0.35)' : '#bbf7d0',
                                   borderRadius: RADIUS.md,
                                   justifyContent: 'center',
                                   alignItems: 'center',
                                   paddingHorizontal: 2,
                                 }}>
-                                  <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#15803d' }}>AMOUNT</Text>
+                                  <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: isDark ? '#86efac' : '#15803d' }}>AMOUNT</Text>
                                   <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
                                     ₹{((Number(saleQuantity) || 0) * (Number(saleRate) || 0)).toLocaleString('en-IN')}
                                   </Text>
@@ -2981,18 +2981,18 @@ export default function RecordsScreen() {
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
                                     borderWidth: 1.5,
-                                    borderColor: isCropDropdownOpen ? '#16a34a' : '#cbd5e1',
+                                    borderColor: isCropDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                                     borderRadius: RADIUS.md,
                                     paddingHorizontal: 8,
                                     height: 38,
-                                    backgroundColor: '#f8fafc',
+                                    backgroundColor: isDark ? '#0b1329' : '#f8fafc',
                                   }}
                                   onPress={() => { tap(); setIsCropDropdownOpen((prev) => !prev); }}
                                 >
-                                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: selectedFarmerCrop ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: selectedFarmerCrop ? (isDark ? colors.text : '#0f172a') : (isDark ? '#64748b' : '#94a3b8') }} numberOfLines={1}>
                                     {selectedFarmerCrop ? selectedFarmerCrop.cropName : 'Select Product'}
                                   </Text>
-                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? colors.textMuted : '#64748b'} />
                                 </TouchableOpacity>
 
                                 {isCropDropdownOpen && (
@@ -3002,7 +3002,7 @@ export default function RecordsScreen() {
                                     left: 0,
                                     right: 0,
                                     zIndex: 100,
-                                    backgroundColor: '#ffffff',
+                                    backgroundColor: isDark ? colors.cardBg : '#ffffff',
                                     borderRadius: RADIUS.md,
                                     borderWidth: 1.5,
                                     borderColor: '#16a34a',
@@ -3021,8 +3021,10 @@ export default function RecordsScreen() {
                                             paddingHorizontal: 10,
                                             paddingVertical: 8,
                                             borderBottomWidth: 1,
-                                            borderBottomColor: '#f1f5f9',
-                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#ffffff',
+                                            borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
+                                            backgroundColor: crop.id === selectedCropId 
+                                              ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') 
+                                              : (isDark ? colors.cardBg : '#ffffff'),
                                           }}
                                           onPress={() => {
                                             tap();
@@ -3031,14 +3033,14 @@ export default function RecordsScreen() {
                                           }}
                                         >
                                           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a', flex: 1 }}>
+                                            <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : (isDark ? colors.text : '#0f172a'), flex: 1 }}>
                                               🌾 {crop.cropName}
                                             </Text>
-                                            <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
-                                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                            <View style={{ backgroundColor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
+                                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#60a5fa' : '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
                                             </View>
                                           </View>
-                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#94a3b8', marginTop: 2 }}>
                                             {crop.area} • {crop.unit}/unit
                                           </Text>
                                         </TouchableOpacity>
@@ -3051,9 +3053,9 @@ export default function RecordsScreen() {
                               {/* 2. Quantity Input */}
                               <View style={{ flex: 1 }}>
                                 <TextInput
-                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                                   placeholder={`QTY (${selectedFarmerCrop?.unit || 'Kg'})`}
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                   keyboardType="numeric"
                                   value={saleQuantity}
                                   onChangeText={setSaleQuantity}
@@ -3063,9 +3065,9 @@ export default function RecordsScreen() {
                               {/* 3. Rate Input */}
                               <View style={{ flex: 1 }}>
                                 <TextInput
-                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                                   placeholder="RATE (₹)"
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                   keyboardType="numeric"
                                   value={saleRate}
                                   onChangeText={setSaleRate}
@@ -3076,16 +3078,16 @@ export default function RecordsScreen() {
                               <View style={{
                                 flex: 1.2,
                                 height: 38,
-                                backgroundColor: '#f0fdf4',
+                                backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4',
                                 borderWidth: 1,
-                                borderColor: '#bbf7d0',
+                                borderColor: isDark ? '#15803d' : '#bbf7d0',
                                 borderRadius: RADIUS.md,
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 paddingHorizontal: 2,
                               }}>
-                                <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#15803d' }}>AMOUNT</Text>
-                                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
+                                <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: isDark ? '#4ade80' : '#15803d' }}>AMOUNT</Text>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: isDark ? '#86efac' : '#16a34a' }} numberOfLines={1}>
                                   ₹{((Number(saleQuantity) || 0) * (Number(saleRate) || 0)).toLocaleString('en-IN')}
                                 </Text>
                               </View>
@@ -3114,19 +3116,19 @@ export default function RecordsScreen() {
 
                         {/* Cart Table with Column-aligned Totals! */}
                         {saleItems.length > 0 && (
-                          <View style={[styles.cartTable, { marginTop: 4, marginBottom: 10 }]}>
-                            <View style={[styles.cartHeaderRow, { paddingVertical: 5 }]}>
-                              <Text style={[styles.cartHeaderCell, { flex: 1.8, fontSize: 10 }]}>PRODUCT</Text>
-                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right' }]}>QTY</Text>
-                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right' }]}>RATE</Text>
-                              <Text style={[styles.cartHeaderCell, { flex: 1.2, fontSize: 10, textAlign: 'right' }]}>AMOUNT</Text>
+                          <View style={[styles.cartTable, { marginTop: 4, marginBottom: 10, borderColor: isDark ? colors.cardBorder : '#e2e8f0', backgroundColor: isDark ? colors.cardBg : '#ffffff' }]}>
+                            <View style={[styles.cartHeaderRow, { paddingVertical: 5, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9' }]}>
+                              <Text style={[styles.cartHeaderCell, { flex: 1.8, fontSize: 10, color: isDark ? colors.textMuted : '#64748b' }]}>PRODUCT</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right', color: isDark ? colors.textMuted : '#64748b' }]}>QTY</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right', color: isDark ? colors.textMuted : '#64748b' }]}>RATE</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1.2, fontSize: 10, textAlign: 'right', color: isDark ? colors.textMuted : '#64748b' }]}>AMOUNT</Text>
                               <View style={{ width: 20 }} />
                             </View>
                             {saleItems.map((item) => (
-                              <View key={item.id} style={[styles.cartRow, { paddingVertical: 5 }]}>
-                                <Text style={[styles.cartCell, { flex: 1.8, fontFamily: FONT.bold, fontSize: 11.5 }]}>{item.cropName}</Text>
-                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right' }]}>{item.qty} {item.unit}</Text>
-                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right' }]}>₹{item.rate}</Text>
+                              <View key={item.id} style={[styles.cartRow, { paddingVertical: 5, borderTopColor: isDark ? colors.cardBorder : '#f1f5f9' }]}>
+                                <Text style={[styles.cartCell, { flex: 1.8, fontFamily: FONT.bold, fontSize: 11.5, color: isDark ? colors.text : '#0f172a' }]}>{item.cropName}</Text>
+                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right', color: isDark ? colors.text : '#0f172a' }]}>{item.qty} {item.unit}</Text>
+                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right', color: isDark ? colors.text : '#0f172a' }]}>₹{item.rate}</Text>
                                 <Text style={[styles.cartCell, { flex: 1.2, fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }]}>₹{item.amount.toLocaleString('en-IN')}</Text>
                                 <TouchableOpacity onPress={() => onRemoveCartItem(item.id)} style={{ width: 20, alignItems: 'center' }}>
                                   <Ionicons name="close-circle" size={15} color="#dc2626" />
@@ -3134,9 +3136,9 @@ export default function RecordsScreen() {
                               </View>
                             ))}
                             {/* Summary Footer Row - Totals strictly under their respective columns! */}
-                            <View style={[styles.cartTotalsRow, { paddingVertical: 6, flexDirection: 'row', alignItems: 'center' }]}>
-                              <Text style={[styles.cartTotalsLabel, { flex: 1.8, fontSize: 11 }]}>Items Total: {totalCartItems}</Text>
-                              <Text style={[styles.cartTotalsLabel, { flex: 1, fontSize: 11, color: '#0f172a', textAlign: 'right' }]}>Qty: {totalCartQty}</Text>
+                            <View style={[styles.cartTotalsRow, { paddingVertical: 6, flexDirection: 'row', alignItems: 'center', backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderTopColor: isDark ? colors.cardBorder : '#e2e8f0' }]}>
+                              <Text style={[styles.cartTotalsLabel, { flex: 1.8, fontSize: 11, color: isDark ? colors.textMuted : '#334155' }]}>Items Total: {totalCartItems}</Text>
+                              <Text style={[styles.cartTotalsLabel, { flex: 1, fontSize: 11, color: isDark ? colors.text : '#0f172a', textAlign: 'right' }]}>Qty: {totalCartQty}</Text>
                               <View style={{ flex: 1 }} />
                               <Text style={[styles.cartTotalsValue, { flex: 1.2, fontSize: 12.5, textAlign: 'right' }]}>Total: {formatInr(totalCartAmount)}</Text>
                               <View style={{ width: 20 }} />
@@ -3146,32 +3148,32 @@ export default function RecordsScreen() {
 
                         {/* Billing Calculation Section */}
                         {saleItems.length > 0 && (
-                          <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, padding: 10, marginBottom: 10 }}>
+                          <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', borderRadius: RADIUS.md, padding: 10, marginBottom: 10 }}>
                             {/* Top Row: Sale Amount, Discount (-), Delivery (+) */}
                             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                                Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{formatInr(totalCartAmount)}</Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b' }}>
+                                Sale Amount: <Text style={{ fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{formatInr(totalCartAmount)}</Text>
                               </Text>
 
                               {/* Discount & Delivery inline */}
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef2f2', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#fecaca' }}>
-                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#dc2626' }}>Discount (-)</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(220, 38, 38, 0.15)' : '#fef2f2', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: isDark ? '#7f1d1d' : '#fecaca' }}>
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#f87171' : '#dc2626' }}>Discount (-)</Text>
                                   <TextInput
-                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626', padding: 0, width: 42, textAlign: 'right' }}
+                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#f87171' : '#dc2626', padding: 0, width: 42, textAlign: 'right' }}
                                     placeholder="0"
-                                    placeholderTextColor="#fca5a5"
+                                    placeholderTextColor={isDark ? '#ef4444' : '#fca5a5'}
                                     keyboardType="numeric"
                                     value={saleDiscount}
                                     onChangeText={setSaleDiscount}
                                   />
                                 </View>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#eff6ff', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#bfdbfe' }}>
-                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#2563eb' }}>Delivery (+)</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: isDark ? '#1e3a8a' : '#bfdbfe' }}>
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? '#60a5fa' : '#2563eb' }}>Delivery (+)</Text>
                                   <TextInput
-                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: '#2563eb', padding: 0, width: 42, textAlign: 'right' }}
+                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#60a5fa' : '#2563eb', padding: 0, width: 42, textAlign: 'right' }}
                                     placeholder="0"
-                                    placeholderTextColor="#93c5fd"
+                                    placeholderTextColor={isDark ? '#3b82f6' : '#93c5fd'}
                                     keyboardType="numeric"
                                     value={saleDelivery}
                                     onChangeText={setSaleDelivery}
@@ -3180,13 +3182,13 @@ export default function RecordsScreen() {
                               </View>
                             </View>
 
-                            <View style={{ borderTopWidth: 1, borderTopColor: '#cbd5e1', borderStyle: 'dashed', marginBottom: 8 }} />
+                            <View style={{ borderTopWidth: 1, borderTopColor: isDark ? colors.cardBorder : '#cbd5e1', borderStyle: 'dashed', marginBottom: 8 }} />
 
                             {/* Net Sale Amount & Previous Balance Breakdown */}
-                            <View style={{ backgroundColor: '#fff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8 }}>
+                            <View style={{ backgroundColor: isDark ? colors.cardBg : '#fff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', marginBottom: 8 }}>
                               <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
-                                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>Net Sale Amount:</Text>
-                                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#334155' }}>Net Sale Amount:</Text>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>
                                   {formatInr(totalCartAmount - (Number(saleDiscount) || 0) + (Number(saleDelivery) || 0))}
                                 </Text>
                               </View>
@@ -3198,7 +3200,7 @@ export default function RecordsScreen() {
                                 </View>
                               )}
 
-                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 4, marginTop: 2 }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: isDark ? colors.cardBorder : '#f1f5f9', paddingTop: 4, marginTop: 2 }}>
                                 <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
                                   {paymentMode === 'CASH' ? 'Cash Received:' : 'Net Receivable Amount:'}
                                 </Text>
@@ -3211,15 +3213,13 @@ export default function RecordsScreen() {
                               </View>
                             </View>
 
-                            {/* Received Amount Input: [Label Left] [Radio Cash/UPI Middle] [TextInput Right Aligned] */}
+                            {/* Received Amount Input */}
                             {paymentMode === 'PARTY' ? (
                               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 8 }}>
-                                {/* 1. Label on left */}
-                                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>
+                                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#334155' }}>
                                   Amount Received Now (₹)
                                 </Text>
 
-                                {/* 2. Cash / UPI Radio Options in middle */}
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                   <TouchableOpacity
                                     style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
@@ -3232,13 +3232,13 @@ export default function RecordsScreen() {
                                     <Ionicons
                                       name={amountReceivedMode === 'CASH' ? 'radio-button-on' : 'radio-button-off'}
                                       size={14}
-                                      color={amountReceivedMode === 'CASH' ? '#16a34a' : '#94a3b8'}
+                                      color={amountReceivedMode === 'CASH' ? '#16a34a' : (isDark ? '#64748b' : '#94a3b8')}
                                     />
                                     <Text
                                       style={{
                                         fontSize: 11,
                                         fontFamily: amountReceivedMode === 'CASH' ? FONT.bold : FONT.medium,
-                                        color: amountReceivedMode === 'CASH' ? '#16a34a' : '#64748b',
+                                        color: amountReceivedMode === 'CASH' ? '#16a34a' : (isDark ? colors.textMuted : '#64748b'),
                                       }}
                                     >
                                       Cash
@@ -3256,13 +3256,13 @@ export default function RecordsScreen() {
                                     <Ionicons
                                       name={amountReceivedMode === 'UPI' ? 'radio-button-on' : 'radio-button-off'}
                                       size={14}
-                                      color={amountReceivedMode === 'UPI' ? '#0284c7' : '#94a3b8'}
+                                      color={amountReceivedMode === 'UPI' ? '#0284c7' : (isDark ? '#64748b' : '#94a3b8')}
                                     />
                                     <Text
                                       style={{
                                         fontSize: 11,
                                         fontFamily: amountReceivedMode === 'UPI' ? FONT.bold : FONT.medium,
-                                        color: amountReceivedMode === 'UPI' ? '#0284c7' : '#64748b',
+                                        color: amountReceivedMode === 'UPI' ? '#0284c7' : (isDark ? colors.textMuted : '#64748b'),
                                       }}
                                     >
                                       UPI
@@ -3270,25 +3270,24 @@ export default function RecordsScreen() {
                                   </TouchableOpacity>
                                 </View>
 
-                                {/* 3. Right-aligned TextInput on right */}
                                 <TextInput
                                   style={{
                                     flex: 1,
                                     maxWidth: 110,
                                     borderWidth: 1,
-                                    borderColor: '#cbd5e1',
+                                    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                                     borderRadius: RADIUS.md,
                                     paddingHorizontal: 8,
                                     paddingVertical: 4,
                                     fontSize: 12.5,
                                     fontFamily: FONT.bold,
-                                    color: '#0f172a',
-                                    backgroundColor: '#fff',
+                                    color: isDark ? colors.text : '#0f172a',
+                                    backgroundColor: isDark ? colors.cardBg : '#fff',
                                     height: 34,
                                     textAlign: 'right',
                                   }}
                                   placeholder="0"
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                   keyboardType="numeric"
                                   value={amountReceived}
                                   onChangeText={setAmountReceived}
@@ -3299,7 +3298,7 @@ export default function RecordsScreen() {
                             {/* Remaining Balance Row */}
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTopWidth: 1.5, borderTopColor: '#16a34a', marginBottom: 6 }}>
                               <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#16a34a' }}>Remaining Balance</Text>
-                              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: paymentMode === 'CASH' ? '#16a34a' : '#0f172a' }}>
+                              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: paymentMode === 'CASH' ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                                 {paymentMode === 'CASH'
                                   ? '₹0'
                                   : formatInr(
@@ -3312,11 +3311,11 @@ export default function RecordsScreen() {
 
                             {/* Description Field */}
                             <View style={{ marginTop: 2 }}>
-                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginBottom: 3 }}>Description</Text>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b', marginBottom: 3 }}>Description</Text>
                               <TextInput
-                                style={{ borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 5, fontSize: 12, fontFamily: FONT.medium, color: '#0f172a', backgroundColor: '#fff', minHeight: 34 }}
+                                style={{ borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 5, fontSize: 12, fontFamily: FONT.medium, color: isDark ? colors.text : '#0f172a', backgroundColor: isDark ? colors.cardBg : '#fff', minHeight: 34 }}
                                 placeholder="Add note / description..."
-                                placeholderTextColor="#94a3b8"
+                                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                 value={saleDescription}
                                 onChangeText={setSaleDescription}
                                 multiline
@@ -3336,9 +3335,9 @@ export default function RecordsScreen() {
                               style={{
                                 height: 38,
                                 paddingHorizontal: 10,
-                                backgroundColor: '#fef2f2',
+                                backgroundColor: isDark ? 'rgba(220, 38, 38, 0.15)' : '#fef2f2',
                                 borderWidth: 1,
-                                borderColor: '#fecaca',
+                                borderColor: isDark ? '#7f1d1d' : '#fecaca',
                                 borderRadius: RADIUS.md,
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -3353,8 +3352,8 @@ export default function RecordsScreen() {
                             </TouchableOpacity>
                           )}
 
-                          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 9, flex: editingBillId ? undefined : 1 }]} onPress={() => setShowSaleForm(false)}>
-                            <Text style={[styles.secondaryButtonText, { fontSize: 12.5 }]}>Cancel</Text>
+                          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 9, flex: editingBillId ? undefined : 1, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9' }]} onPress={() => setShowSaleForm(false)}>
+                            <Text style={[styles.secondaryButtonText, { fontSize: 12.5, color: isDark ? colors.text : '#475569' }]}>Cancel</Text>
                           </TouchableOpacity>
                           <TouchableOpacity style={[styles.primaryButtonWrap, { flex: editingBillId ? 1.5 : 1 }]} onPress={onSaveSale} disabled={isSavingSale} activeOpacity={0.85}>
                             <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.primaryButton, { paddingVertical: 9 }]}>
@@ -3374,8 +3373,8 @@ export default function RecordsScreen() {
                       <ScrollView showsVerticalScrollIndicator={false}>
                         <View style={{ alignItems: 'center', paddingVertical: 10 }}>
                           <Ionicons name="checkmark-circle" size={40} color="#16a34a" />
-                          <Text style={styles.savedTitle}>{wasEditingBill ? 'Bill Updated ✅' : 'Sale Saved ✅'}</Text>
-                          <Text style={styles.savedSub}>{wasEditingBill ? 'Bill successfully updated. Same Bill # preserved.' : 'Preview the bill below, then share it as an image.'}</Text>
+                          <Text style={[styles.savedTitle, isDark && { color: colors.text }]}>{wasEditingBill ? 'Bill Updated ✅' : 'Sale Saved ✅'}</Text>
+                          <Text style={[styles.savedSub, isDark && { color: colors.textMuted }]}>{wasEditingBill ? 'Bill successfully updated. Same Bill # preserved.' : 'Preview the bill below, then share it as an image.'}</Text>
 
                           {savedInvoice && (
                             <View style={{ marginTop: 12 }}>
@@ -3431,14 +3430,14 @@ export default function RecordsScreen() {
                               <Text style={{ color: '#16a34a', fontFamily: FONT.bold, fontSize: 13 }}>➕ New Sale</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9', alignItems: 'center' }}
                               onPress={() => {
                                 setShowSaleForm(false);
                                 resetSaleForm();
                               }}
                               activeOpacity={0.8}
                             >
-                              <Text style={{ color: '#64748b', fontFamily: FONT.bold, fontSize: 13 }}>✕ Close</Text>
+                              <Text style={{ color: isDark ? colors.textMuted : '#64748b', fontFamily: FONT.bold, fontSize: 13 }}>✕ Close</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -3459,9 +3458,9 @@ export default function RecordsScreen() {
                 }}
               >
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+                  <View style={[styles.modalCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, { maxHeight: '92%' }]}>
                     <View style={[styles.modalHeaderRow, { justifyContent: 'space-between' }]}>
-                      <Text style={styles.formTitle}>Bill Preview</Text>
+                      <Text style={[styles.formTitle, isDark && { color: colors.text }]}>Bill Preview</Text>
                       <TouchableOpacity
                         onPress={() => {
                           setBillPreviewVisible(false);
@@ -3770,29 +3769,29 @@ export default function RecordsScreen() {
                       {/* ROW 1: EXPENSE DATE & EXPENSE CATEGORY SIDE-BY-SIDE */}
                       <View style={{ flexDirection: 'row', gap: 8, zIndex: 1000 }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.label}>Expense Date *</Text>
+                          <Text style={[styles.label, isDark && { color: colors.text }]}>Expense Date *</Text>
                           <TextInput
-                            style={[styles.input, { height: 40 }]}
+                            style={[styles.input, { height: 40, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                             placeholder="YYYY-MM-DD"
-                            placeholderTextColor="#94a3b8"
+                            placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                             value={expenseDate}
                             onChangeText={setExpenseDate}
                           />
                         </View>
 
                         <View style={{ flex: 1.2, position: 'relative', zIndex: 1000 }}>
-                          <Text style={styles.label}>Expense Category *</Text>
+                          <Text style={[styles.label, isDark && { color: colors.text }]}>Expense Category *</Text>
                           <TouchableOpacity
                             style={{
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               borderWidth: 1,
-                              borderColor: isExpenseCategoryDropdownOpen ? '#dc2626' : '#cbd5e1',
+                              borderColor: isExpenseCategoryDropdownOpen ? '#dc2626' : (isDark ? colors.cardBorder : '#cbd5e1'),
                               borderRadius: RADIUS.md,
                               paddingHorizontal: 8,
                               height: 40,
-                              backgroundColor: '#f8fafc',
+                              backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                             }}
                             onPress={() => { tap(); setIsExpenseCategoryDropdownOpen((prev) => !prev); }}
                             activeOpacity={0.8}
@@ -3803,14 +3802,14 @@ export default function RecordsScreen() {
                                 size={15}
                                 color="#dc2626"
                               />
-                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
                                 {(() => {
                                   const selected = displayCategories.find((c) => c.id === categoryId);
                                   return selected ? selected.labelEn : 'Select Category';
                                 })()}
                               </Text>
                             </View>
-                            <Ionicons name={isExpenseCategoryDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                            <Ionicons name={isExpenseCategoryDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? colors.textMuted : '#64748b'} />
                           </TouchableOpacity>
 
                           {/* Floating Overlay Dropdown Menu List */}
@@ -3823,7 +3822,7 @@ export default function RecordsScreen() {
                                 right: 0,
                                 zIndex: 9999,
                                 elevation: 12,
-                                backgroundColor: '#ffffff',
+                                backgroundColor: isDark ? colors.cardBg : '#ffffff',
                                 borderRadius: RADIUS.md,
                                 borderWidth: 1.5,
                                 borderColor: '#dc2626',
@@ -3846,9 +3845,9 @@ export default function RecordsScreen() {
                                         paddingVertical: 8,
                                         borderRadius: RADIUS.sm,
                                         marginBottom: 2,
-                                        backgroundColor: isSelected ? '#fef2f2' : '#f8fafc',
+                                        backgroundColor: isSelected ? (isDark ? 'rgba(220, 38, 38, 0.2)' : '#fef2f2') : (isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc'),
                                         borderWidth: 1,
-                                        borderColor: isSelected ? '#fecaca' : '#e2e8f0',
+                                        borderColor: isSelected ? '#dc2626' : (isDark ? colors.cardBorder : '#e2e8f0'),
                                       }}
                                       onPress={() => {
                                         tap();
@@ -3857,8 +3856,8 @@ export default function RecordsScreen() {
                                       }}
                                     >
                                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                                        <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#dc2626' : '#475569'} />
-                                        <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#dc2626' : '#0f172a' }}>
+                                        <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#dc2626' : (isDark ? colors.textMuted : '#475569')} />
+                                        <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#dc2626' : (isDark ? colors.text : '#0f172a') }}>
                                           {cat.labelEn}
                                         </Text>
                                       </View>
@@ -3874,11 +3873,11 @@ export default function RecordsScreen() {
 
                       {/* ROW 2: ACTIVITY DETAILS & SPRAY REMARKS */}
                       <View>
-                        <Text style={styles.label}>Activity Details / Spray Remarks *</Text>
+                        <Text style={[styles.label, isDark && { color: colors.text }]}>Activity Details / Spray Remarks *</Text>
                         <TextInput
-                          style={[styles.input, { height: 38 }]}
+                          style={[styles.input, { height: 38, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                           placeholder="e.g. Spray Name (Coragen 60ml/acre), Canal water 3 hrs, Family labour..."
-                          placeholderTextColor="#94a3b8"
+                          placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                           value={notes}
                           onChangeText={setNotes}
                         />
@@ -3887,18 +3886,18 @@ export default function RecordsScreen() {
                       {/* ROW 3: EXPENSE AMOUNT WITH QUICK ₹0 FREE ACTIVITY PILL & CASH / UPI RADIOS */}
                       <View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                          <Text style={[styles.label, { marginBottom: 0 }]}>Expense Amount (₹) *</Text>
+                          <Text style={[styles.label, isDark && { color: colors.text }, { marginBottom: 0 }]}>Expense Amount (₹) *</Text>
                           <TouchableOpacity
                             style={{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 4,
-                              backgroundColor: amount === '0' ? '#16a34a' : '#f0fdf4',
+                              backgroundColor: amount === '0' ? '#16a34a' : (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4'),
                               paddingVertical: 3,
                               paddingHorizontal: 8,
                               borderRadius: RADIUS.pill,
                               borderWidth: 1,
-                              borderColor: amount === '0' ? '#15803d' : '#86efac',
+                              borderColor: amount === '0' ? '#15803d' : (isDark ? '#16a34a' : '#86efac'),
                             }}
                             activeOpacity={0.8}
                             onPress={() => {
@@ -3910,19 +3909,19 @@ export default function RecordsScreen() {
                             }}
                           >
                             <Ionicons name="sparkles" size={11} color={amount === '0' ? '#ffffff' : '#16a34a'} />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: amount === '0' ? '#ffffff' : '#15803d' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: amount === '0' ? '#ffffff' : (isDark ? '#4ade80' : '#15803d') }}>
                               ₹0 Free Activity
                             </Text>
                           </TouchableOpacity>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           {/* Amount Input Box */}
-                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: amount === '0' ? '#16a34a' : '#cbd5e1', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10, height: 42 }}>
+                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: amount === '0' ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'), borderRadius: RADIUS.md, backgroundColor: isDark ? colors.cardBg : '#ffffff', paddingHorizontal: 10, height: 42 }}>
                             <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: amount === '0' ? '#16a34a' : '#dc2626', marginRight: 6 }}>₹</Text>
                             <TextInput
-                              style={{ flex: 1, fontSize: 15, fontFamily: FONT.bold, color: '#0f172a', padding: 0 }}
+                              style={{ flex: 1, fontSize: 15, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', padding: 0 }}
                               placeholder="e.g. 0 for free spray / 2500"
-                              placeholderTextColor="#94a3b8"
+                              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                               keyboardType="numeric"
                               value={amount}
                               onChangeText={setAmount}
@@ -3934,7 +3933,9 @@ export default function RecordsScreen() {
                             <TouchableOpacity
                               style={[
                                 styles.modePill,
-                                expensePaymentMode === 'CASH' && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                expensePaymentMode === 'CASH'
+                                  ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
+                                  : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                 { height: 42, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
                               ]}
                               activeOpacity={0.8}
@@ -3945,7 +3946,7 @@ export default function RecordsScreen() {
                             >
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <Ionicons name="cash-outline" size={13} color={expensePaymentMode === 'CASH' ? '#fff' : '#16a34a'} />
-                                <Text style={[styles.modePillText, { fontSize: 11.5 }, expensePaymentMode === 'CASH' && { color: '#fff', fontFamily: FONT.bold }]}>
+                                <Text style={[styles.modePillText, { fontSize: 11.5, color: expensePaymentMode === 'CASH' ? '#fff' : (isDark ? colors.textMuted : '#475569') }, expensePaymentMode === 'CASH' && { fontFamily: FONT.bold }]}>
                                   Cash
                                 </Text>
                               </View>
@@ -3954,7 +3955,9 @@ export default function RecordsScreen() {
                             <TouchableOpacity
                               style={[
                                 styles.modePill,
-                                expensePaymentMode === 'UPI' && { backgroundColor: '#0284c7', borderColor: '#0369a1' },
+                                expensePaymentMode === 'UPI'
+                                  ? { backgroundColor: '#0284c7', borderColor: '#0369a1' }
+                                  : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                 { height: 42, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
                               ]}
                               activeOpacity={0.8}
@@ -3965,7 +3968,7 @@ export default function RecordsScreen() {
                             >
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <Ionicons name="qr-code-outline" size={13} color={expensePaymentMode === 'UPI' ? '#fff' : '#0284c7'} />
-                                <Text style={[styles.modePillText, { fontSize: 11.5 }, expensePaymentMode === 'UPI' && { color: '#fff', fontFamily: FONT.bold }]}>
+                                <Text style={[styles.modePillText, { fontSize: 11.5, color: expensePaymentMode === 'UPI' ? '#fff' : (isDark ? colors.textMuted : '#475569') }, expensePaymentMode === 'UPI' && { fontFamily: FONT.bold }]}>
                                   UPI
                                 </Text>
                               </View>
@@ -3975,9 +3978,9 @@ export default function RecordsScreen() {
 
                         {/* 0 Expense Notice */}
                         {amount === '0' && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: isDark ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: isDark ? '#15803d' : '#bbf7d0' }}>
                             <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#15803d' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: isDark ? '#86efac' : '#15803d' }}>
                               0 Expense activity saved to Crop Lifecycle History & Statement Report.
                             </Text>
                           </View>
@@ -3987,12 +3990,14 @@ export default function RecordsScreen() {
                       {/* ROW 3: RECIPIENT / PAID TO */}
                       <View style={{ gap: 8 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={[styles.label, { marginBottom: 0 }]}>Paid To / Recipient *</Text>
+                          <Text style={[styles.label, isDark && { color: colors.text }, { marginBottom: 0 }]}>Paid To / Recipient *</Text>
                           <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap' }}>
                             <TouchableOpacity
                               style={[
                                 styles.modePill,
-                                expenseRecipientType === 'CASH' && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                expenseRecipientType === 'CASH'
+                                  ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
+                                  : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                 { paddingVertical: 4, paddingHorizontal: 7 },
                               ]}
                               onPress={() => {
@@ -4003,13 +4008,15 @@ export default function RecordsScreen() {
                               }}
                             >
                               <Ionicons name="cash" size={12} color={expenseRecipientType === 'CASH' ? '#fff' : '#16a34a'} />
-                              <Text style={[styles.modePillText, expenseRecipientType === 'CASH' && { color: '#fff' }]}>Direct / Cash</Text>
+                              <Text style={[styles.modePillText, { color: expenseRecipientType === 'CASH' ? '#fff' : (isDark ? colors.textMuted : '#475569') }]}>Direct / Cash</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                               style={[
                                 styles.modePill,
-                                expenseRecipientType === 'SUPPLIER' && { backgroundColor: '#dc2626', borderColor: '#b91c1c' },
+                                expenseRecipientType === 'SUPPLIER'
+                                  ? { backgroundColor: '#dc2626', borderColor: '#b91c1c' }
+                                  : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                 { paddingVertical: 4, paddingHorizontal: 7 },
                               ]}
                               onPress={() => {
@@ -4019,7 +4026,7 @@ export default function RecordsScreen() {
                               }}
                             >
                               <Ionicons name="business" size={12} color={expenseRecipientType === 'SUPPLIER' ? '#fff' : '#dc2626'} />
-                              <Text style={[styles.modePillText, expenseRecipientType === 'SUPPLIER' && { color: '#fff' }]}>Supplier / Party</Text>
+                              <Text style={[styles.modePillText, { color: expenseRecipientType === 'SUPPLIER' ? '#fff' : (isDark ? colors.textMuted : '#475569') }]}>Supplier / Party</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -4041,9 +4048,9 @@ export default function RecordsScreen() {
                         ) : (
                           <View style={{ marginTop: 2 }}>
                             <TextInput
-                              style={[styles.input, { height: 38 }]}
+                              style={[styles.input, { height: 38, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                               placeholder="Vendor / Shop Name (Optional)"
-                              placeholderTextColor="#94a3b8"
+                              placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                               value={vendorName}
                               onChangeText={setVendorName}
                             />
@@ -4052,8 +4059,8 @@ export default function RecordsScreen() {
                       </View>
 
                       {/* ROW 4: PLOT / LAND SELECTOR */}
-                      <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Location / Plot Selection *</Text>
+                      <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0' }}>
+                        <Text style={[styles.label, isDark && { color: colors.text }, { marginBottom: 6 }]}>Expense Location / Plot Selection *</Text>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                           {activeCrops.map((c, index) => {
                             const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
@@ -4064,7 +4071,9 @@ export default function RecordsScreen() {
                                 key={c.id}
                                 style={[
                                   styles.categoryChip,
-                                  isSelected && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                  isSelected
+                                    ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
+                                    : { backgroundColor: isDark ? colors.cardBg : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' },
                                   { paddingVertical: 6, paddingHorizontal: 10 },
                                 ]}
                                 activeOpacity={0.8}
@@ -4075,7 +4084,7 @@ export default function RecordsScreen() {
                                 }}
                               >
                                 <Ionicons name="location" size={13} color={isSelected ? '#fff' : '#16a34a'} />
-                                <Text style={[styles.categoryChipText, isSelected && { color: '#fff', fontFamily: FONT.bold }]}>
+                                <Text style={[styles.categoryChipText, { color: isSelected ? '#fff' : (isDark ? colors.text : '#475569') }, isSelected && { fontFamily: FONT.bold }]}>
                                   {chipTitle}
                                 </Text>
                               </TouchableOpacity>
@@ -4085,7 +4094,9 @@ export default function RecordsScreen() {
                           <TouchableOpacity
                             style={[
                               styles.categoryChip,
-                              expenseCropType === 'OTHER' && { backgroundColor: '#475569', borderColor: '#334155' },
+                              expenseCropType === 'OTHER'
+                                ? { backgroundColor: '#475569', borderColor: '#334155' }
+                                : { backgroundColor: isDark ? colors.cardBg : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' },
                               { paddingVertical: 6, paddingHorizontal: 10 },
                             ]}
                             activeOpacity={0.8}
@@ -4095,8 +4106,8 @@ export default function RecordsScreen() {
                               setExpenseCropId(undefined);
                             }}
                           >
-                            <Ionicons name="grid-outline" size={13} color={expenseCropType === 'OTHER' ? '#fff' : '#475569'} />
-                            <Text style={[styles.categoryChipText, expenseCropType === 'OTHER' && { color: '#fff', fontFamily: FONT.bold }]}>
+                            <Ionicons name="grid-outline" size={13} color={expenseCropType === 'OTHER' ? '#fff' : (isDark ? colors.textMuted : '#475569')} />
+                            <Text style={[styles.categoryChipText, { color: expenseCropType === 'OTHER' ? '#fff' : (isDark ? colors.text : '#475569') }, expenseCropType === 'OTHER' && { fontFamily: FONT.bold }]}>
                               General / Entire Farm
                             </Text>
                           </TouchableOpacity>
@@ -4110,13 +4121,13 @@ export default function RecordsScreen() {
                       {/* Action Buttons */}
                       <View style={[styles.formActions, { marginTop: 6 }]}>
                         <TouchableOpacity
-                          style={styles.secondaryButton}
+                          style={[styles.secondaryButton, isDark && { backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}
                           onPress={() => {
                             setShowExpenseForm(false);
                             setExpenseError(null);
                           }}
                         >
-                          <Text style={styles.secondaryButtonText}>Cancel</Text>
+                          <Text style={[styles.secondaryButtonText, isDark && { color: colors.text }]}>Cancel</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.primaryButtonWrap}
@@ -4390,7 +4401,7 @@ export default function RecordsScreen() {
 
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginVertical: 6 }}>
                           <TouchableOpacity
-                            style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4', borderWidth: 1, borderColor: isDark ? '#15803d' : '#bbf7d0', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
                             onPress={() => {
                               tap();
                               setShowFullStatementModal(true);
@@ -4403,53 +4414,55 @@ export default function RecordsScreen() {
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? colors.cardBg : '#f8fafc', borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
                             onPress={() => {
                               tap();
                               setStatementSortAsc(!statementSortAsc);
                             }}
                           >
                             <Ionicons name="swap-vertical" size={14} color="#0284c7" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isDark ? '#38bdf8' : '#0369a1' }}>
                               {statementSortAsc ? '🔼 Seq (#1 -> #N)' : '🔽 Newest First'}
                             </Text>
                           </TouchableOpacity>
                         </View>
 
                         {statement.balance !== 0 && isPaymentFormOpen ? (
-                          <View style={{ gap: 8, marginBottom: 8, backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                          <View style={{ gap: 8, marginBottom: 8, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1' }}>
                             {/* Party / Account Name (Read Only) */}
                             <View style={{ gap: 4 }}>
-                              <Text style={styles.label}>Party / Account Name *</Text>
-                              <View style={[styles.input, { backgroundColor: '#f1f5f9', height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 }]}>
-                                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{statement.party.name}</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.sm }}>
-                                  <Ionicons name="lock-closed" size={11} color="#64748b" />
-                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                              <Text style={[styles.label, isDark && { color: colors.text }]}>Party / Account Name *</Text>
+                              <View style={[styles.input, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', borderColor: isDark ? colors.cardBorder : '#e2e8f0', height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 }]}>
+                                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>{statement.party.name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.sm }}>
+                                  <Ionicons name="lock-closed" size={11} color={isDark ? colors.textMuted : '#64748b'} />
+                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b' }}>Read Only</Text>
                                 </View>
                               </View>
                             </View>
 
                             {/* Amount (₹) & Inline Cash/UPI Radio */}
                             <View style={{ gap: 4 }}>
-                              <Text style={styles.label}>
+                              <Text style={[styles.label, isDark && { color: colors.text }]}>
                                 {statement.balance >= 0 ? 'Received Amount (₹) *' : 'Paid Amount (₹) *'}
                               </Text>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                                 <TextInput
-                                  style={[styles.input, { flex: 1, height: 40 }]}
+                                  style={[styles.input, { flex: 1, height: 40, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                                   keyboardType="numeric"
                                   value={paymentAmount}
                                   onChangeText={setPaymentAmount}
                                   placeholder="e.g. 5000"
-                                  placeholderTextColor="#94a3b8"
+                                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                                 />
 
                                 <View style={{ flexDirection: 'row', gap: 6 }}>
                                   <TouchableOpacity
                                     style={[
                                       styles.modePill,
-                                      inlinePaymentMode === 'CASH' && styles.modePillCashActive,
+                                      inlinePaymentMode === 'CASH'
+                                        ? styles.modePillCashActive
+                                        : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                       { height: 40 }
                                     ]}
                                     activeOpacity={0.8}
@@ -4463,13 +4476,15 @@ export default function RecordsScreen() {
                                       size={14}
                                       color={inlinePaymentMode === 'CASH' ? '#ffffff' : '#16a34a'}
                                     />
-                                    <Text style={[styles.modePillText, inlinePaymentMode === 'CASH' && styles.modePillTextActive]}>Cash</Text>
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'CASH' ? styles.modePillTextActive : { color: isDark ? colors.textMuted : '#475569' }]}>Cash</Text>
                                   </TouchableOpacity>
 
                                   <TouchableOpacity
                                     style={[
                                       styles.modePill,
-                                      inlinePaymentMode === 'UPI' && styles.modePillUpiActive,
+                                      inlinePaymentMode === 'UPI'
+                                        ? styles.modePillUpiActive
+                                        : { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                                       { height: 40 }
                                     ]}
                                     activeOpacity={0.8}
@@ -4483,7 +4498,7 @@ export default function RecordsScreen() {
                                       size={14}
                                       color={inlinePaymentMode === 'UPI' ? '#ffffff' : '#2563eb'}
                                     />
-                                    <Text style={[styles.modePillText, inlinePaymentMode === 'UPI' && styles.modePillTextActive]}>UPI/Online</Text>
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'UPI' ? styles.modePillTextActive : { color: isDark ? colors.textMuted : '#475569' }]}>UPI/Online</Text>
                                   </TouchableOpacity>
                                 </View>
                               </View>
@@ -4491,21 +4506,21 @@ export default function RecordsScreen() {
 
                             {/* Description / Note */}
                             <View style={{ gap: 4 }}>
-                              <Text style={styles.label}>Description</Text>
+                              <Text style={[styles.label, isDark && { color: colors.text }]}>Description</Text>
                               <TextInput
-                                style={[styles.input, { height: 40 }]}
+                                style={[styles.input, { height: 40, backgroundColor: isDark ? colors.cardBg : '#f8fafc', color: isDark ? colors.text : '#0f172a', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }]}
                                 value={paymentNote}
                                 onChangeText={setPaymentNote}
                                 placeholder="e.g. Land Rent, Advance, Bill payment..."
-                                placeholderTextColor="#94a3b8"
+                                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                               />
                             </View>
 
                             {paymentError ? <Text style={styles.errorText}>{paymentError}</Text> : null}
 
                             <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                              <TouchableOpacity style={styles.secondaryButton} onPress={() => setIsPaymentFormOpen(false)}>
-                                <Text style={styles.secondaryButtonText}>Cancel</Text>
+                              <TouchableOpacity style={[styles.secondaryButton, isDark && { backgroundColor: 'rgba(255, 255, 255, 0.08)' }]} onPress={() => setIsPaymentFormOpen(false)}>
+                                <Text style={[styles.secondaryButtonText, isDark && { color: colors.text }]}>Cancel</Text>
                               </TouchableOpacity>
                               <TouchableOpacity
                                 style={[styles.primaryButtonWrap, { borderRadius: RADIUS.md }]}
@@ -4532,8 +4547,8 @@ export default function RecordsScreen() {
                         ) : null}
 
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 6 }}>
-                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
-                            <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
+                          <View style={{ borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: isDark ? '#1e293b' : '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
                               <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#fbbf24' }}>Sr.</Text>
                               <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
                               <Text style={{ width: 62, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
@@ -4545,16 +4560,16 @@ export default function RecordsScreen() {
 
                             {statementLedgerRows.length === 0 ? (
                               <View style={{ padding: 16, alignItems: 'center' }}>
-                                <Text style={styles.emptyText}>No ledger entries yet.</Text>
+                                <Text style={[styles.emptyText, isDark && { color: colors.textMuted }]}>No ledger entries yet.</Text>
                               </View>
                             ) : (
                               statementLedgerRows.map((row, idx) => (
-                                <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                                <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? (isDark ? colors.cardBg : '#ffffff') : (isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc'), borderBottomWidth: 1, borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9', alignItems: 'center' }}>
                                   <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
                                     {row.entryNo || `#${row.srNo}`}
                                   </Text>
 
-                                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' }}>
                                     {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                   </Text>
 
@@ -4582,17 +4597,17 @@ export default function RecordsScreen() {
                                             });
                                           }
                                         }}
-                                        style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                        style={{ backgroundColor: isDark ? 'rgba(37, 99, 235, 0.2)' : '#eff6ff', borderWidth: 1, borderColor: isDark ? '#1e40af' : '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 2 }}
                                       >
-                                        <Ionicons name="document-text-outline" size={10} color="#1d4ed8" />
-                                        <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                                        <Ionicons name="document-text-outline" size={10} color={isDark ? '#60a5fa' : '#1d4ed8'} />
+                                        <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: isDark ? '#60a5fa' : '#1d4ed8' }}>{row.billNo}</Text>
                                       </TouchableOpacity>
                                     ) : (
                                       <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
                                     )}
                                   </View>
 
-                                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={2}>
+                                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={2}>
                                     {row.reason}
                                   </Text>
 
@@ -4629,9 +4644,9 @@ export default function RecordsScreen() {
                 }}
               >
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+                  <View style={[styles.modalCard, isDark && { backgroundColor: colors.cardBg, borderColor: colors.cardBorder, borderWidth: 1 }, { maxHeight: '92%' }]}>
                     <View style={[styles.modalHeaderRow, { justifyContent: 'space-between' }]}>
-                      <Text style={styles.formTitle}>Payment Receipt</Text>
+                      <Text style={[styles.formTitle, isDark && { color: colors.text }]}>Payment Receipt</Text>
                       <TouchableOpacity
                         onPress={() => {
                           setPaymentReceiptVisible(false);

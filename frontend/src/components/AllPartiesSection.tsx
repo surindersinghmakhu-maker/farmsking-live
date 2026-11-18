@@ -503,14 +503,14 @@ export function AllPartiesSection() {
       <Modal visible={showEditModal} transparent animationType="fade" onRequestClose={() => setShowEditModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { borderRadius: 24, padding: 18 }]}>
-            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 12 }}>
+            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a', marginBottom: 12 }}>
               Edit Party / Dealer / Buyer Details
             </Text>
 
             <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {/* Party Mobile Label & Verify Button Row */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>Party Mobile</Text>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>Party Mobile</Text>
                 {editIsVerified ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
                     <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
@@ -518,7 +518,7 @@ export function AllPartiesSection() {
                   </View>
                 ) : (
                   <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(2, 132, 199, 0.15)' : '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
                     disabled={isSendingPartyOtp}
                     onPress={() => sendPartyOtpRequest(editMobile, setEditShowOtpInput, setEditOtpNotice)}
                     activeOpacity={0.8}
@@ -534,7 +534,7 @@ export function AllPartiesSection() {
               <TextInput
                 style={styles.pillInput}
                 placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={editMobile}
                 onChangeText={setEditMobile}
                 keyboardType="phone-pad"
@@ -552,7 +552,7 @@ export function AllPartiesSection() {
                   <TextInput
                     style={[styles.pillInput, { flex: 1, height: 38 }]}
                     placeholder="Enter 4-digit OTP"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     maxLength={4}
                     value={editOtpCode}
@@ -570,18 +570,18 @@ export function AllPartiesSection() {
                 </View>
               ) : null}
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 4 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 4 }}>
                 Party Name *
               </Text>
               <TextInput
                 style={styles.pillInput}
                 placeholder="e.g. Bathinda Mandi Merchant / Dealer"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={editName}
                 onChangeText={setEditName}
               />
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 6 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 6 }}>
                 Party Type *
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -614,13 +614,13 @@ export function AllPartiesSection() {
                 })}
               </View>
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 4 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 4 }}>
                 Address *
               </Text>
               <TextInput
                 style={styles.pillInput}
                 placeholder="e.g. Grain Market, Bathinda"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={editAddress}
                 onChangeText={setEditAddress}
               />
@@ -659,14 +659,14 @@ export function AllPartiesSection() {
       <Modal visible={showCreateModal} transparent animationType="fade" onRequestClose={() => setShowCreateModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { borderRadius: 24, padding: 18 }]}>
-            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 12 }}>
+            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: isDark ? colors.text : '#0f172a', marginBottom: 12 }}>
               Add New Party / Dealer / Buyer
             </Text>
 
             <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {/* Party Mobile Label & Verify Button Row */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>Party Mobile</Text>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>Party Mobile</Text>
                 {isVerified ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
                     <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
@@ -674,7 +674,7 @@ export function AllPartiesSection() {
                   </View>
                 ) : (
                   <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: isDark ? 'rgba(2, 132, 199, 0.15)' : '#ffffff', borderWidth: 1.5, borderColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill }}
                     disabled={isSendingPartyOtp}
                     onPress={() => sendPartyOtpRequest(newMobile, setShowOtpInput, setOtpNotice)}
                     activeOpacity={0.8}
@@ -690,7 +690,7 @@ export function AllPartiesSection() {
               <TextInput
                 style={styles.pillInput}
                 placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={newMobile}
                 onChangeText={setNewMobile}
                 keyboardType="phone-pad"
@@ -708,7 +708,7 @@ export function AllPartiesSection() {
                   <TextInput
                     style={[styles.pillInput, { flex: 1, height: 38 }]}
                     placeholder="Enter 4-digit OTP"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     maxLength={4}
                     value={otpCode}
@@ -726,18 +726,18 @@ export function AllPartiesSection() {
                 </View>
               ) : null}
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 4 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 4 }}>
                 Party Name *
               </Text>
               <TextInput
                 style={styles.pillInput}
                 placeholder="e.g. Bathinda Mandi Merchant / Dealer"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={newName}
                 onChangeText={setNewName}
               />
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 6 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 6 }}>
                 Party Type *
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -770,14 +770,16 @@ export function AllPartiesSection() {
                 })}
               </View>
 
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 10, marginBottom: 4 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a', marginTop: 10, marginBottom: 4 }}>
                 Address *
               </Text>
               <TextInput
                 style={styles.pillInput}
                 placeholder="e.g. Grain Market, Bathinda"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={newAddress}
+                onChangeText={setNewAddress}
+              />
                 onChangeText={setNewAddress}
               />
             </ScrollView>

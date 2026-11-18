@@ -748,12 +748,12 @@ export function LabourManagementSection() {
                     <TouchableOpacity
                       key={r.key}
                       style={[
-                        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
+                        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#cbd5e1', backgroundColor: isDark ? colors.cardBg : '#f8fafc' },
                         isSelected && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
                       ]}
                       onPress={() => setWorkerRelation(r.key)}
                     >
-                      <Text style={[{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569' }, isSelected && { color: '#ffffff', fontFamily: FONT.bold }]}>
+                      <Text style={[{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#475569' }, isSelected && { color: '#ffffff', fontFamily: FONT.bold }]}>
                         {r.label}
                       </Text>
                     </TouchableOpacity>
@@ -768,7 +768,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 500"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     value={workerDefaultRate}
                     onChangeText={setWorkerDefaultRate}
@@ -784,19 +784,19 @@ export function LabourManagementSection() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: isAddUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderColor: isAddUnitDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                       borderRadius: RADIUS.md,
                       paddingHorizontal: 8,
                       height: 40,
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsAddUnitDropdownOpen((prev) => !prev)}
                   >
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
                       {workerDefaultUnit}
                     </Text>
-                    <Ionicons name={isAddUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                    <Ionicons name={isAddUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color={isDark ? colors.textMuted : '#64748b'} />
                   </TouchableOpacity>
 
                   {/* Dropdown Options */}
@@ -808,10 +808,10 @@ export function LabourManagementSection() {
                         left: 0,
                         right: 0,
                         zIndex: 1000,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: isDark ? colors.cardBg : '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                         maxHeight: 180,
                         elevation: 10,
                         shadowColor: '#000',
@@ -836,15 +836,15 @@ export function LabourManagementSection() {
                               paddingHorizontal: 10,
                               paddingVertical: 8,
                               borderBottomWidth: 1,
-                              borderBottomColor: '#f1f5f9',
-                              backgroundColor: workerDefaultUnit === u ? '#f0fdf4' : '#ffffff',
+                              borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
+                              backgroundColor: workerDefaultUnit === u ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? colors.cardBg : '#ffffff'),
                             }}
                             onPress={() => {
                               setWorkerDefaultUnit(u);
                               setIsAddUnitDropdownOpen(false);
                             }}
                           >
-                            <Text style={{ fontSize: 11.5, fontFamily: workerDefaultUnit === u ? FONT.bold : FONT.regular, color: workerDefaultUnit === u ? '#16a34a' : '#334155' }}>
+                            <Text style={{ fontSize: 11.5, fontFamily: workerDefaultUnit === u ? FONT.bold : FONT.regular, color: workerDefaultUnit === u ? '#16a34a' : (isDark ? colors.text : '#334155') }}>
                               {u}
                             </Text>
                           </TouchableOpacity>
@@ -923,22 +923,22 @@ export function LabourManagementSection() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: isWorkerDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderColor: isWorkerDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                       borderRadius: RADIUS.md,
                       paddingHorizontal: 8,
                       height: 40,
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsWorkerDropdownOpen((prev) => !prev)}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                       <Ionicons name="person-circle-outline" size={16} color="#16a34a" />
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: selectedWorkerForWork ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: selectedWorkerForWork ? (isDark ? colors.text : '#0f172a') : (isDark ? '#64748b' : '#94a3b8') }} numberOfLines={1}>
                         {selectedWorkerForWork ? selectedWorkerForWork.name : 'Select Worker'}
                       </Text>
                     </View>
-                    <Ionicons name={isWorkerDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                    <Ionicons name={isWorkerDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? colors.textMuted : '#64748b'} />
                   </TouchableOpacity>
 
                   {/* Worker Search Dropdown Overlay */}
@@ -950,10 +950,10 @@ export function LabourManagementSection() {
                         left: 0,
                         right: 0,
                         zIndex: 1000,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: isDark ? colors.cardBg : '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                         maxHeight: 220,
                         elevation: 10,
                         shadowColor: '#000',
@@ -967,16 +967,17 @@ export function LabourManagementSection() {
                         style={{
                           height: 36,
                           borderWidth: 1,
-                          borderColor: '#cbd5e1',
+                          borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                           borderRadius: RADIUS.sm,
                           paddingHorizontal: 8,
                           fontSize: 12,
                           fontFamily: FONT.medium,
-                          backgroundColor: '#f8fafc',
+                          color: isDark ? colors.text : '#0f172a',
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
                           marginBottom: 6,
                         }}
                         placeholder="Type & search worker..."
-                        placeholderTextColor="#94a3b8"
+                        placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                         value={workerSearchText}
                         onChangeText={setWorkerSearchText}
                         autoFocus
@@ -984,7 +985,7 @@ export function LabourManagementSection() {
 
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: 160 }}>
                         {filteredWorkersForSearch.length === 0 ? (
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', paddingVertical: 10 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', textAlign: 'center', paddingVertical: 10 }}>
                             No matching worker found
                           </Text>
                         ) : (
@@ -1000,7 +1001,7 @@ export function LabourManagementSection() {
                                   paddingHorizontal: 8,
                                   paddingVertical: 7,
                                   borderRadius: RADIUS.sm,
-                                  backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                                  backgroundColor: isSelected ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? colors.cardBg : '#ffffff'),
                                   marginBottom: 2,
                                 }}
                                 onPress={() => {
@@ -1013,8 +1014,8 @@ export function LabourManagementSection() {
                                 }}
                               >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                                  <Ionicons name="person" size={13} color={isSelected ? '#16a34a' : '#64748b'} />
-                                  <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#15803d' : '#0f172a' }}>
+                                  <Ionicons name="person" size={13} color={isSelected ? '#16a34a' : (isDark ? colors.textMuted : '#64748b')} />
+                                  <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                                     {w.name} {w.mobile ? `(${w.mobile})` : ''}
                                   </Text>
                                 </View>
@@ -1034,7 +1035,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={[styles.input, { height: 40 }]}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     value={workDate}
                     onChangeText={setWorkDate}
                   />
@@ -1042,7 +1043,7 @@ export function LabourManagementSection() {
               </View>
 
               {/* ROW 2: SELECT CROP (ONLY ACTIVE CROPS + OTHER CHIP) */}
-              <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12 }}>
+              <View style={{ backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isDark ? colors.cardBorder : '#e2e8f0', marginBottom: 12 }}>
                 <Text style={[styles.label, { marginBottom: 6 }]}>Select Crop</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                   {activeCrops.map((c) => {
@@ -1081,7 +1082,7 @@ export function LabourManagementSection() {
                       setWorkCropId(undefined);
                     }}
                   >
-                    <Ionicons name="grid-outline" size={13} color={!workCropId ? '#fff' : '#475569'} />
+                    <Ionicons name="grid-outline" size={13} color={!workCropId ? '#fff' : (isDark ? colors.textMuted : '#475569')} />
                     <Text style={[styles.pickerChipText, !workCropId && styles.pickerChipTextActive]}>
                       Other / General Farm
                     </Text>
@@ -1098,22 +1099,22 @@ export function LabourManagementSection() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     borderWidth: 1,
-                    borderColor: isWorkTypeDropdownOpen ? '#16a34a' : '#cbd5e1',
+                    borderColor: isWorkTypeDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                     borderRadius: RADIUS.md,
                     paddingHorizontal: 8,
                     height: 40,
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                   }}
                   activeOpacity={0.8}
                   onPress={() => setIsWorkTypeDropdownOpen((prev) => !prev)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                     <Ionicons name="construct-outline" size={15} color="#16a34a" />
-                    <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                    <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
                       {workType}
                     </Text>
                   </View>
-                  <Ionicons name={isWorkTypeDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                  <Ionicons name={isWorkTypeDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? colors.textMuted : '#64748b'} />
                 </TouchableOpacity>
 
                 {/* Work Type Dropdown Overlay */}
@@ -1125,10 +1126,10 @@ export function LabourManagementSection() {
                       left: 0,
                       right: 0,
                       zIndex: 1000,
-                      backgroundColor: '#ffffff',
+                      backgroundColor: isDark ? colors.cardBg : '#ffffff',
                       borderRadius: RADIUS.md,
                       borderWidth: 1.5,
-                      borderColor: '#cbd5e1',
+                      borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                       maxHeight: 200,
                       elevation: 10,
                       shadowColor: '#000',
@@ -1160,8 +1161,8 @@ export function LabourManagementSection() {
                               paddingHorizontal: 10,
                               paddingVertical: 8,
                               borderBottomWidth: 1,
-                              borderBottomColor: '#f1f5f9',
-                              backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                              borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
+                              backgroundColor: isSelected ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? colors.cardBg : '#ffffff'),
                             }}
                             onPress={() => {
                               tap();
@@ -1169,7 +1170,7 @@ export function LabourManagementSection() {
                               setIsWorkTypeDropdownOpen(false);
                             }}
                           >
-                            <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : '#0f172a' }}>
+                            <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                               {t}
                             </Text>
                             {isSelected && <Ionicons name="checkmark" size={14} color="#16a34a" />}
@@ -1188,7 +1189,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={[styles.input, { height: 40 }]}
                     placeholder="e.g. 1"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     value={workQty}
                     onChangeText={setWorkQty}
@@ -1204,19 +1205,19 @@ export function LabourManagementSection() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: isUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderColor: isUnitDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                       borderRadius: RADIUS.md,
                       paddingHorizontal: 8,
                       height: 40,
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsUnitDropdownOpen((prev) => !prev)}
                   >
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }} numberOfLines={1}>
                       {workUnit}
                     </Text>
-                    <Ionicons name={isUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                    <Ionicons name={isUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color={isDark ? colors.textMuted : '#64748b'} />
                   </TouchableOpacity>
 
                   {/* Unit Dropdown Overlay */}
@@ -1228,10 +1229,10 @@ export function LabourManagementSection() {
                         left: 0,
                         right: 0,
                         zIndex: 1000,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: isDark ? colors.cardBg : '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                         maxHeight: 180,
                         elevation: 10,
                         shadowColor: '#000',
@@ -1261,8 +1262,8 @@ export function LabourManagementSection() {
                                 paddingHorizontal: 8,
                                 paddingVertical: 7,
                                 borderBottomWidth: 1,
-                                borderBottomColor: '#f1f5f9',
-                                backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                                borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9',
+                                backgroundColor: isSelected ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? colors.cardBg : '#ffffff'),
                               }}
                               onPress={() => {
                                 tap();
@@ -1270,7 +1271,7 @@ export function LabourManagementSection() {
                                 setIsUnitDropdownOpen(false);
                               }}
                             >
-                              <Text style={{ fontSize: 11.5, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : '#0f172a' }}>
+                              <Text style={{ fontSize: 11.5, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                                 {u}
                               </Text>
                               {isSelected && <Ionicons name="checkmark" size={13} color="#16a34a" />}
@@ -1287,7 +1288,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={[styles.input, { height: 40 }]}
                     placeholder="e.g. 500"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     value={workRate}
                     onChangeText={setWorkRate}
@@ -1308,7 +1309,7 @@ export function LabourManagementSection() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Wheat sowing field 2"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={workNotes}
                 onChangeText={setWorkNotes}
               />
@@ -1356,22 +1357,22 @@ export function LabourManagementSection() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: isPaymentWorkerDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderColor: isPaymentWorkerDropdownOpen ? '#16a34a' : (isDark ? colors.cardBorder : '#cbd5e1'),
                       borderRadius: RADIUS.md,
                       paddingHorizontal: 8,
                       height: 40,
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: isDark ? colors.cardBg : '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsPaymentWorkerDropdownOpen((prev) => !prev)}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                       <Ionicons name="person-circle-outline" size={16} color="#16a34a" />
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: selectedWorkerForPayment ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: selectedWorkerForPayment ? (isDark ? colors.text : '#0f172a') : (isDark ? '#64748b' : '#94a3b8') }} numberOfLines={1}>
                         {selectedWorkerForPayment ? selectedWorkerForPayment.name : 'Select Worker'}
                       </Text>
                     </View>
-                    <Ionicons name={isPaymentWorkerDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                    <Ionicons name={isPaymentWorkerDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color={isDark ? colors.textMuted : '#64748b'} />
                   </TouchableOpacity>
 
                   {/* Worker Search Dropdown Overlay */}
@@ -1383,10 +1384,10 @@ export function LabourManagementSection() {
                         left: 0,
                         right: 0,
                         zIndex: 1000,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: isDark ? colors.cardBg : '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                         maxHeight: 220,
                         elevation: 10,
                         shadowColor: '#000',
@@ -1400,16 +1401,17 @@ export function LabourManagementSection() {
                         style={{
                           height: 36,
                           borderWidth: 1,
-                          borderColor: '#cbd5e1',
+                          borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                           borderRadius: RADIUS.sm,
                           paddingHorizontal: 8,
                           fontSize: 12,
                           fontFamily: FONT.medium,
-                          backgroundColor: '#f8fafc',
+                          color: isDark ? colors.text : '#0f172a',
+                          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
                           marginBottom: 6,
                         }}
                         placeholder="Type & search worker..."
-                        placeholderTextColor="#94a3b8"
+                        placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                         value={paymentWorkerSearchText}
                         onChangeText={setPaymentWorkerSearchText}
                         autoFocus
@@ -1417,7 +1419,7 @@ export function LabourManagementSection() {
 
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled" style={{ maxHeight: 160 }}>
                         {filteredWorkersForPaymentSearch.length === 0 ? (
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', paddingVertical: 10 }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: isDark ? colors.textMuted : '#64748b', textAlign: 'center', paddingVertical: 10 }}>
                             No matching worker found
                           </Text>
                         ) : (
@@ -1434,7 +1436,7 @@ export function LabourManagementSection() {
                                   paddingHorizontal: 8,
                                   paddingVertical: 7,
                                   borderRadius: RADIUS.sm,
-                                  backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                                  backgroundColor: isSelected ? (isDark ? 'rgba(22, 163, 74, 0.2)' : '#f0fdf4') : (isDark ? colors.cardBg : '#ffffff'),
                                   marginBottom: 2,
                                 }}
                                 onPress={() => {
@@ -1446,8 +1448,8 @@ export function LabourManagementSection() {
                                 }}
                               >
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                                  <Ionicons name="person" size={13} color={isSelected ? '#16a34a' : '#64748b'} />
-                                  <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#15803d' : '#0f172a' }}>
+                                  <Ionicons name="person" size={13} color={isSelected ? '#16a34a' : (isDark ? colors.textMuted : '#64748b')} />
+                                  <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#16a34a' : (isDark ? colors.text : '#0f172a') }}>
                                     {w.name} {pending > 0 ? `(₹${pending})` : ''}
                                   </Text>
                                 </View>
@@ -1467,7 +1469,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={[styles.input, { height: 40 }]}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     value={paymentDate}
                     onChangeText={setPaymentDate}
                   />
@@ -1481,7 +1483,7 @@ export function LabourManagementSection() {
                   <TextInput
                     style={[styles.input, { height: 40 }]}
                     placeholder="e.g. 1000"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                     keyboardType="numeric"
                     value={paymentAmount}
                     onChangeText={setPaymentAmount}
@@ -1531,7 +1533,7 @@ export function LabourManagementSection() {
               <TextInput
                 style={[styles.input, { height: 38 }]}
                 placeholder="e.g. Weekly advance settlement"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={paymentNotes}
                 onChangeText={setPaymentNotes}
               />

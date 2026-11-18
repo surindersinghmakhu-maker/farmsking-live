@@ -584,23 +584,50 @@ export default function LoginScreen() {
       setResendTimer(60);
       setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
     } catch (err: any) {
-      console.warn('[Firebase Phone OTP Error]:', err?.code, err?.message);
+      console.warn('[Firebase Phone OTP Error, attempting Server OTP Fallback]:', err?.code, err?.message);
       await resetRecaptcha();
-      let errorMsg = 'Failed to send SMS text OTP. Please try again.';
-      if (err?.code === 'auth/invalid-phone-number') {
-        errorMsg = 'Invalid mobile number. Please check and enter a valid 10-digit Indian mobile number.';
-      } else if (err?.code === 'auth/too-many-requests') {
-        errorMsg = 'Too many SMS requests. Please wait a few moments before requesting another SMS.';
-      } else if (err?.code === 'auth/quota-exceeded') {
-        errorMsg = 'Daily SMS quota reached. Please try again shortly or use master bypass code.';
-      } else if (err?.code === 'auth/unauthorized-domain') {
-        errorMsg = 'Domain not authorized in Firebase Console. Please add farmsking.in to Firebase Authorized Domains.';
-      } else if (err?.code === 'auth/captcha-check-failed') {
-        errorMsg = 'Security verification failed. Please refresh the page and try again.';
-      } else if (err?.message) {
-        errorMsg = err.message;
+
+      // Seamless Server-Side OTP Fallback (Works on mobile browsers, local IPs, and when Firebase reCAPTCHA fails)
+      try {
+        const serverRes = await sendLoginOtp(cleanNum, activePortal);
+        setConfirmationResult(null);
+        setOtpSent(true);
+        if (serverRes?.devOtp) {
+          setDevOtp(serverRes.devOtp);
+        } else {
+          setDevOtp(null);
+        }
+        setOtpDigits(['', '', '', '', '', '']);
+        setResendTimer(60);
+        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+        return;
+      } catch (serverErr: any) {
+        console.warn('[Server OTP Fallback Error]:', serverErr);
+        if (applyStructuredPartnerError(serverErr, cleanNum)) {
+          return;
+        }
+        let errorMsg = 'Failed to send SMS text OTP. Please try again.';
+        if (serverErr?.response?.data?.message) {
+          errorMsg = Array.isArray(serverErr.response.data.message)
+            ? serverErr.response.data.message.join(', ')
+            : String(serverErr.response.data.message);
+        } else if (serverErr?.message) {
+          errorMsg = serverErr.message;
+        } else if (err?.code === 'auth/invalid-phone-number') {
+          errorMsg = 'Invalid mobile number. Please check and enter a valid 10-digit Indian mobile number.';
+        } else if (err?.code === 'auth/too-many-requests') {
+          errorMsg = 'Too many SMS requests. Please wait a few moments before requesting another SMS.';
+        } else if (err?.code === 'auth/quota-exceeded') {
+          errorMsg = 'Daily SMS quota reached. Please try again shortly or use master bypass code.';
+        } else if (err?.code === 'auth/unauthorized-domain') {
+          errorMsg = 'Domain not authorized in Firebase Console. Please add farmsking.in to Firebase Authorized Domains.';
+        } else if (err?.code === 'auth/captcha-check-failed') {
+          errorMsg = 'Security verification failed. Please refresh the page and try again.';
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+        setError(errorMsg);
       }
-      setError(errorMsg);
     } finally {
       setOtpSending(false);
     }

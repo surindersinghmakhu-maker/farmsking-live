@@ -21,6 +21,7 @@ import { useCreateLabourPayment } from '@/src/hooks/useLabour';
 import { Party } from '@/src/types/api';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { formatInr } from '@/src/utils/formatInr';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -52,6 +53,7 @@ export function PaymentVoucherModal({
   onSuccess,
 }: PaymentVoucherModalProps) {
   const queryClient = useQueryClient();
+  const { colors, isDark } = useExecutiveTheme();
   const [voucherType, setVoucherType] = useState<VoucherType>(initialType);
 
   // Selected Parties
@@ -339,15 +341,15 @@ export function PaymentVoucherModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: isDark ? colors.cardBg : '#ffffff', borderColor: isDark ? colors.cardBorder : '#e2e8f0', borderWidth: 1.5 }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: isDark ? colors.cardBorder : '#f1f5f9' }]}>
             <View style={{ flex: 1, paddingRight: 8 }}>
-              <Text style={styles.title}>{headerInfo.title}</Text>
-              <Text style={styles.subtitle}>{headerInfo.subtitle}</Text>
+              <Text style={[styles.title, { color: isDark ? colors.text : '#0f172a' }]}>{headerInfo.title}</Text>
+              <Text style={[styles.subtitle, { color: isDark ? colors.textMuted : '#64748b' }]}>{headerInfo.subtitle}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#64748b" />
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
+              <Ionicons name="close" size={20} color={isDark ? colors.text : '#64748b'} />
             </TouchableOpacity>
           </View>
 
@@ -355,43 +357,43 @@ export function PaymentVoucherModal({
           {!lockType && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll}>
               <TouchableOpacity
-                style={[styles.tabChip, voucherType === 'RECEIPT_IN' && styles.tabReceiptActive]}
+                style={[styles.tabChip, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }, voucherType === 'RECEIPT_IN' && styles.tabReceiptActive]}
                 onPress={() => handleVoucherTypeChange('RECEIPT_IN')}
               >
                 <Ionicons name="arrow-down-circle" size={14} color={voucherType === 'RECEIPT_IN' ? '#fff' : '#16a34a'} />
-                <Text style={[styles.tabText, voucherType === 'RECEIPT_IN' && styles.tabTextActive]}>Payment In</Text>
+                <Text style={[styles.tabText, { color: isDark ? colors.text : '#475569' }, voucherType === 'RECEIPT_IN' && styles.tabTextActive]}>Payment In</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.tabChip, voucherType === 'PAYMENT_OUT' && styles.tabPaymentActive]}
+                style={[styles.tabChip, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }, voucherType === 'PAYMENT_OUT' && styles.tabPaymentActive]}
                 onPress={() => handleVoucherTypeChange('PAYMENT_OUT')}
               >
                 <Ionicons name="arrow-up-circle" size={14} color={voucherType === 'PAYMENT_OUT' ? '#fff' : '#dc2626'} />
-                <Text style={[styles.tabText, voucherType === 'PAYMENT_OUT' && styles.tabTextActive]}>Payment Out</Text>
+                <Text style={[styles.tabText, { color: isDark ? colors.text : '#475569' }, voucherType === 'PAYMENT_OUT' && styles.tabTextActive]}>Payment Out</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.tabChip, voucherType === 'ACCOUNT_TRANSFER' && styles.tabTransferActive]}
+                style={[styles.tabChip, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }, voucherType === 'ACCOUNT_TRANSFER' && styles.tabTransferActive]}
                 onPress={() => handleVoucherTypeChange('ACCOUNT_TRANSFER')}
               >
                 <Ionicons name="swap-horizontal" size={14} color={voucherType === 'ACCOUNT_TRANSFER' ? '#fff' : '#2563eb'} />
-                <Text style={[styles.tabText, voucherType === 'ACCOUNT_TRANSFER' && styles.tabTextActive]}>Account Transfer</Text>
+                <Text style={[styles.tabText, { color: isDark ? colors.text : '#475569' }, voucherType === 'ACCOUNT_TRANSFER' && styles.tabTextActive]}>Account Transfer</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.tabChip, voucherType === 'DIRECT_INCOME' && styles.tabIncomeActive]}
+                style={[styles.tabChip, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }, voucherType === 'DIRECT_INCOME' && styles.tabIncomeActive]}
                 onPress={() => handleVoucherTypeChange('DIRECT_INCOME')}
               >
                 <Ionicons name="trending-up" size={14} color={voucherType === 'DIRECT_INCOME' ? '#fff' : '#059669'} />
-                <Text style={[styles.tabText, voucherType === 'DIRECT_INCOME' && styles.tabTextActive]}>Party Income</Text>
+                <Text style={[styles.tabText, { color: isDark ? colors.text : '#475569' }, voucherType === 'DIRECT_INCOME' && styles.tabTextActive]}>Party Income</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.tabChip, voucherType === 'DIRECT_EXPENSE' && styles.tabExpenseActive]}
+                style={[styles.tabChip, { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#e2e8f0' }, voucherType === 'DIRECT_EXPENSE' && styles.tabExpenseActive]}
                 onPress={() => handleVoucherTypeChange('DIRECT_EXPENSE')}
               >
                 <Ionicons name="trending-down" size={14} color={voucherType === 'DIRECT_EXPENSE' ? '#fff' : '#c2410c'} />
-                <Text style={[styles.tabText, voucherType === 'DIRECT_EXPENSE' && styles.tabTextActive]}>Party Expense</Text>
+                <Text style={[styles.tabText, { color: isDark ? colors.text : '#475569' }, voucherType === 'DIRECT_EXPENSE' && styles.tabTextActive]}>Party Expense</Text>
               </TouchableOpacity>
             </ScrollView>
           )}
@@ -400,23 +402,23 @@ export function PaymentVoucherModal({
             {/* Source Party Picker / Locked Read-Only Party Box */}
             {lockParty && sourceParty ? (
               <View style={{ marginTop: 12 }}>
-                <Text style={styles.label}>Party / Account Name *</Text>
+                <Text style={[styles.label, { color: isDark ? colors.text : '#334155' }]}>Party / Account Name *</Text>
                 <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     borderWidth: 1,
-                    borderColor: '#cbd5e1',
+                    borderColor: isDark ? colors.cardBorder : '#cbd5e1',
                     borderRadius: RADIUS.md,
                     paddingHorizontal: 12,
                     height: 40,
-                    backgroundColor: '#f1f5f9',
+                    backgroundColor: isDark ? '#0b1329' : '#f1f5f9',
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Ionicons name="person-circle" size={20} color="#16a34a" />
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isDark ? colors.text : '#0f172a' }}>
                       {sourceParty.name}
                     </Text>
                   </View>
@@ -425,14 +427,14 @@ export function PaymentVoucherModal({
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 4,
-                      backgroundColor: '#e2e8f0',
+                      backgroundColor: isDark ? '#1e293b' : '#e2e8f0',
                       paddingHorizontal: 6,
                       paddingVertical: 3,
                       borderRadius: RADIUS.sm,
                     }}
                   >
-                    <Ionicons name="lock-closed" size={12} color="#64748b" />
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                    <Ionicons name="lock-closed" size={12} color={isDark ? colors.textMuted : '#64748b'} />
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isDark ? colors.textMuted : '#64748b' }}>Read Only</Text>
                   </View>
                 </View>
               </View>
@@ -477,8 +479,8 @@ export function PaymentVoucherModal({
 
             {/* Live Balance Summary */}
             {sourceParty && (
-              <View style={styles.balanceBox}>
-                <Text style={styles.balanceText}>
+              <View style={[styles.balanceBox, { backgroundColor: isDark ? 'rgba(22, 163, 74, 0.12)' : '#f0fdf4', borderColor: isDark ? 'rgba(22, 163, 74, 0.35)' : '#bbf7d0' }]}>
+                <Text style={[styles.balanceText, { color: isDark ? '#86efac' : '#166534' }]}>
                   {sourceParty.name} Current Balance:{' '}
                   <Text style={{ fontFamily: FONT.bold }}>
                     {sourceBalance > 0
@@ -488,9 +490,9 @@ export function PaymentVoucherModal({
                         : '₹0 (Settled)'}
                   </Text>
                 </Text>
-                <Text style={[styles.balanceText, { marginTop: 4 }]}>
+                <Text style={[styles.balanceText, { marginTop: 4, color: isDark ? '#86efac' : '#166534' }]}>
                   ➔ New Balance:{' '}
-                  <Text style={{ fontFamily: FONT.extraBold, color: calculatedSourceNet >= 0 ? '#16a34a' : '#dc2626' }}>
+                  <Text style={{ fontFamily: FONT.extraBold, color: calculatedSourceNet >= 0 ? '#16a34a' : '#ef4444' }}>
                     {calculatedSourceNet > 0
                       ? `${formatInr(calculatedSourceNet)} (Receivable)`
                       : calculatedSourceNet < 0
@@ -499,7 +501,7 @@ export function PaymentVoucherModal({
                   </Text>
                 </Text>
                 {voucherType === 'ACCOUNT_TRANSFER' && targetParty && (
-                  <Text style={[styles.balanceText, { marginTop: 4 }]}>
+                  <Text style={[styles.balanceText, { marginTop: 4, color: isDark ? '#86efac' : '#166534' }]}>
                     {targetParty.name} Current Balance:{' '}
                     <Text style={{ fontFamily: FONT.bold }}>
                       {targetBalance > 0
@@ -509,7 +511,7 @@ export function PaymentVoucherModal({
                           : '₹0 (Settled)'}
                     </Text>
                     {' ➔ '}New Balance:{' '}
-                    <Text style={{ fontFamily: FONT.extraBold, color: calculatedTargetNet >= 0 ? '#16a34a' : '#dc2626' }}>
+                    <Text style={{ fontFamily: FONT.extraBold, color: calculatedTargetNet >= 0 ? '#16a34a' : '#ef4444' }}>
                       {calculatedTargetNet > 0
                         ? `${formatInr(calculatedTargetNet)} (Receivable)`
                         : calculatedTargetNet < 0
@@ -523,15 +525,15 @@ export function PaymentVoucherModal({
 
             {/* Amount Field & Inline Radio Buttons */}
             <View style={{ marginTop: 12 }}>
-              <Text style={styles.label}>
+              <Text style={[styles.label, { color: isDark ? colors.text : '#334155' }]}>
                 {voucherType === 'PAYMENT_OUT' ? 'Paid Amount (₹) *' : 'Received Amount (₹) *'}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {/* Compact Text Input Box */}
                 <TextInput
-                  style={[styles.input, { flex: 1 }]}
+                  style={[styles.input, { flex: 1, backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                   placeholder="e.g. 5000"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                   keyboardType="numeric"
                   value={amount}
                   onChangeText={setAmount}
@@ -542,6 +544,7 @@ export function PaymentVoucherModal({
                   <TouchableOpacity
                     style={[
                       styles.modePill,
+                      { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                       paymentMode === 'CASH' && styles.modePillCashActive,
                     ]}
                     activeOpacity={0.8}
@@ -555,12 +558,13 @@ export function PaymentVoucherModal({
                       size={14}
                       color={paymentMode === 'CASH' ? '#ffffff' : '#16a34a'}
                     />
-                    <Text style={[styles.modePillText, paymentMode === 'CASH' && styles.modePillTextActive]}>Cash</Text>
+                    <Text style={[styles.modePillText, { color: isDark ? colors.text : '#475569' }, paymentMode === 'CASH' && styles.modePillTextActive]}>Cash</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[
                       styles.modePill,
+                      { backgroundColor: isDark ? '#0b1329' : '#f8fafc', borderColor: isDark ? colors.cardBorder : '#cbd5e1' },
                       paymentMode === 'UPI' && styles.modePillUpiActive,
                     ]}
                     activeOpacity={0.8}
@@ -574,7 +578,7 @@ export function PaymentVoucherModal({
                       size={14}
                       color={paymentMode === 'UPI' ? '#ffffff' : '#2563eb'}
                     />
-                    <Text style={[styles.modePillText, paymentMode === 'UPI' && styles.modePillTextActive]}>UPI/Online</Text>
+                    <Text style={[styles.modePillText, { color: isDark ? colors.text : '#475569' }, paymentMode === 'UPI' && styles.modePillTextActive]}>UPI/Online</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -582,11 +586,11 @@ export function PaymentVoucherModal({
 
             {/* Note / Description */}
             <View style={{ marginTop: 12 }}>
-              <Text style={styles.label}>Description</Text>
+              <Text style={[styles.label, { color: isDark ? colors.text : '#334155' }]}>Description</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: isDark ? '#0b1329' : '#ffffff', borderColor: isDark ? colors.cardBorder : '#cbd5e1', color: isDark ? '#ffffff' : '#0f172a' }]}
                 placeholder="e.g. Land Rent, Advance, Bill payment..."
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={isDark ? '#64748b' : '#94a3b8'}
                 value={note}
                 onChangeText={setNote}
               />
@@ -598,8 +602,12 @@ export function PaymentVoucherModal({
 
           {/* Action Row */}
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+            <TouchableOpacity
+              style={[styles.cancelBtn, { backgroundColor: isDark ? '#1e293b' : '#f1f5f9', borderColor: isDark ? colors.cardBorder : '#cbd5e1' }]}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.cancelBtnText, { color: isDark ? colors.text : '#475569' }]}>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity

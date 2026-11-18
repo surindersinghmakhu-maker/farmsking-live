@@ -1521,27 +1521,44 @@ export default function FarmListScreen() {
               <Ionicons name="warning" size={32} color="#d97706" />
             </View>
 
-            <Text style={styles.warningTitle}>Stage Change Warning ⚠️</Text>
+            <Text style={styles.warningTitle}>
+              {pendingStageUpdate?.targetStage === 'COMPLETED'
+                ? 'Complete Crop Cycle 🌾'
+                : 'Stage Change Warning ⚠️'}
+            </Text>
             <Text style={styles.warningDesc}>
-              Are you sure you want to change the stage of <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{pendingStageUpdate?.cropName}</Text> to{' '}
-              <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>
-                {pendingStageUpdate ? STAGE_LABELS[pendingStageUpdate.targetStage] : ''}
-              </Text>?
+              {pendingStageUpdate?.targetStage === 'COMPLETED'
+                ? `Are you sure you want to mark ${pendingStageUpdate?.cropName} as Completed? This finishes the active season and moves all records to Past History.`
+                : `Are you sure you want to change the stage of ${pendingStageUpdate?.cropName} to ${pendingStageUpdate ? STAGE_LABELS[pendingStageUpdate.targetStage] : ''}?`}
             </Text>
 
-            <View style={styles.warningHighlightBox}>
-              <Ionicons name="lock-closed" size={16} color="#b45309" />
-              <View style={{ flex: 1, gap: 3 }}>
-                <Text style={styles.warningHighlightText}>
-                  ⚠️ Note: Once advanced to the next stage, you CANNOT revert to previous stages!
-                </Text>
-                {pendingStageUpdate?.currentStage === 'PLANTATION' ? (
-                  <Text style={[styles.warningHighlightText, { color: '#dc2626', fontFamily: FONT.bold }]}>
-                    🔒 Notice: After leaving Plantation stage, crop specifications (Edit Crop Details) can no longer be modified!
+            {pendingStageUpdate?.targetStage === 'COMPLETED' ? (
+              <View style={[styles.warningHighlightBox, { backgroundColor: '#fef2f2', borderColor: '#fca5a5' }]}>
+                <Ionicons name="videocam-off" size={18} color="#dc2626" />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.warningHighlightText, { color: '#b91c1c', fontFamily: FONT.bold }]}>
+                    ⚠️ Field Videos Will Be Deleted Permanently
                   </Text>
-                ) : null}
+                  <Text style={[styles.warningHighlightText, { color: '#991b1b', fontSize: 11 }]}>
+                    To optimize storage, all 60-second live field videos will be removed upon completion. Your verified live photos, doctor advice, and harvest bahi-khata records will remain preserved forever in Past History.
+                  </Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.warningHighlightBox}>
+                <Ionicons name="lock-closed" size={16} color="#b45309" />
+                <View style={{ flex: 1, gap: 3 }}>
+                  <Text style={styles.warningHighlightText}>
+                    ⚠️ Note: Once advanced to the next stage, you CANNOT revert to previous stages!
+                  </Text>
+                  {pendingStageUpdate?.currentStage === 'PLANTATION' ? (
+                    <Text style={[styles.warningHighlightText, { color: '#dc2626', fontFamily: FONT.bold }]}>
+                      🔒 Notice: After leaving Plantation stage, crop specifications (Edit Crop Details) can no longer be modified!
+                    </Text>
+                  ) : null}
+                </View>
+              </View>
+            )}
 
             <View style={styles.modalActionRow}>
               <TouchableOpacity
@@ -1560,7 +1577,9 @@ export default function FarmListScreen() {
                 onPress={confirmCropStageChange}
               >
                 <Ionicons name="arrow-forward-circle" size={18} color="#ffffff" />
-                <Text style={styles.confirmSaleText}>Yes, Change Stage</Text>
+                <Text style={styles.confirmSaleText}>
+                  {pendingStageUpdate?.targetStage === 'COMPLETED' ? 'Yes, Complete Crop' : 'Yes, Change Stage'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1886,11 +1905,16 @@ export default function FarmListScreen() {
                     </Text>
                   </View>
                 ) : (
-                  <View style={styles.warningHighlightBox}>
-                    <Ionicons name="alert-circle" size={16} color="#b45309" />
-                    <Text style={styles.warningHighlightText}>
-                      ⚠️ Seasonal One-Time Sale: Confirming this sale completes the crop cycle and moves it to Completed History.
-                    </Text>
+                  <View style={[styles.warningHighlightBox, { backgroundColor: '#fef2f2', borderColor: '#fca5a5' }]}>
+                    <Ionicons name="videocam-off" size={16} color="#dc2626" />
+                    <View style={{ flex: 1, gap: 2 }}>
+                      <Text style={[styles.warningHighlightText, { color: '#b91c1c', fontFamily: FONT.bold }]}>
+                        ⚠️ Seasonal One-Time Sale: Completes Crop & Moves to History
+                      </Text>
+                      <Text style={[styles.warningHighlightText, { color: '#991b1b', fontSize: 11 }]}>
+                        Field videos will be permanently deleted to save storage upon completion. Verified live photos and harvest accounts will remain safely preserved in Past History.
+                      </Text>
+                    </View>
                   </View>
                 )}
 

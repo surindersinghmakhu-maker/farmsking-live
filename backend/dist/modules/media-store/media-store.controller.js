@@ -125,6 +125,9 @@ let MediaStoreController = class MediaStoreController {
     async archiveCropMedia(user, cropId, retentionDays) {
         return this.mediaStoreService.archiveCropMedia(user, cropId, retentionDays || 30);
     }
+    async purgeCropVideos(user, cropId) {
+        return this.mediaStoreService.purgeCropVideos(user, cropId);
+    }
     async deleteMedia(user, id) {
         return this.mediaStoreService.deleteMedia(id, user);
     }
@@ -225,6 +228,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Number]),
     __metadata("design:returntype", Promise)
 ], MediaStoreController.prototype, "archiveCropMedia", null);
+__decorate([
+    (0, common_1.Post)('purge-videos/:cropId'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('cropId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], MediaStoreController.prototype, "purgeCropVideos", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

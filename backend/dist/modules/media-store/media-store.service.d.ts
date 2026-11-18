@@ -63,6 +63,9 @@ export declare class MediaStoreService {
     archiveCropMedia(user: AuthUser, cropId: string, retentionDays?: number): Promise<{
         updatedCount: number;
     }>;
+    purgeCropVideos(user: AuthUser, cropId: string): Promise<{
+        deletedVideosCount: number;
+    }>;
     deleteMedia(id: string, user: AuthUser): Promise<{
         success: boolean;
     }>;

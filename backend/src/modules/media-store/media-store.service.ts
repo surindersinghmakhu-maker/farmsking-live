@@ -386,6 +386,39 @@ export class MediaStoreService {
   }
 
   /**
+   * Purge heavy field videos and voice audio notes upon crop completion to preserve server storage
+   */
+  async purgeCropVideos(user: AuthUser, cropId: string): Promise<{ deletedVideosCount: number }> {
+    await this.assertCropAccess(user, cropId);
+
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `SELECT "id", "provider", "storagePath" FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`,
+      cropId,
+    );
+
+    for (const v of rows) {
+      if (v.provider === 'LOCAL' && v.storagePath) {
+        const localFile = path.resolve(process.cwd(), 'uploads', v.storagePath);
+        if (localFile.startsWith(path.resolve(process.cwd(), 'uploads')) && fs.existsSync(localFile)) {
+          try {
+            fs.unlinkSync(localFile);
+          } catch {
+            // ignore unlink error
+          }
+        }
+      }
+    }
+
+    const delResult = await this.prisma.$executeRawUnsafe(
+      `DELETE FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`,
+      cropId,
+    );
+
+    this.logger.log(`[MediaStore] Purged ${delResult} field video(s) and audio(s) for completed crop ${cropId}`);
+    return { deletedVideosCount: Number(delResult) };
+  }
+
+  /**
    * Delete or remove a single media record
    */
   async deleteMedia(id: string, user: AuthUser): Promise<{ success: boolean }> {

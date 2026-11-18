@@ -8,6 +8,7 @@ import { useMyCrops } from '@/src/hooks/useCrops';
 import * as farmsApi from '@/src/api/farms.api';
 import * as plotsApi from '@/src/api/plots.api';
 import * as cropsApi from '@/src/api/crops.api';
+import { purgeCropVideosFromStore } from '@/src/utils/crop-media';
 import { AreaUnit as RealAreaUnit, CropCategory as RealCropCategory, MyCropCycle } from '@/src/types/api';
 
 export type CropStage = 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
@@ -755,7 +756,15 @@ export function useCrops(): CropsContextValue {
   };
 
   const updateCropStage = async (id: string, targetStage: CropStage) => {
-    await cropsApi.updateCrop(id, { stage: normalizeStage(targetStage) });
+    const normalized = normalizeStage(targetStage);
+    if (normalized === 'COMPLETED') {
+      try {
+        await purgeCropVideosFromStore(id);
+      } catch {
+        // non-blocking video purge
+      }
+    }
+    await cropsApi.updateCrop(id, { stage: normalized });
     await invalidateCrops();
   };
 
@@ -791,6 +800,11 @@ export function useCrops(): CropsContextValue {
     ]);
 
     if (crop.harvestType === 'ONE_TIME') {
+      try {
+        await purgeCropVideosFromStore(cropId);
+      } catch {
+        // non-blocking video purge
+      }
       await cropsApi.updateCrop(cropId, { stage: 'COMPLETED' });
       await invalidateCrops();
     }

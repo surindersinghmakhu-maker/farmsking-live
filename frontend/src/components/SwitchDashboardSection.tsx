@@ -76,10 +76,9 @@ export function SwitchDashboardSection({
 
   // Only show "+ Add Another Partner Role" in Partner login, never in Client login
   const isPartnerLogin =
-    allowAddPartnerRole ??
-    (loginPortal === 'PARTNER' ||
-      (loginPortal !== 'CLIENT' &&
-        (PARTNER_PORTAL_UI_ROLES.includes(role as any) || role === 'SELLER' || role === 'AGENT')));
+    allowAddPartnerRole !== undefined
+      ? Boolean(allowAddPartnerRole)
+      : loginPortal === 'PARTNER';
 
   const isFarmStaff = assignedRoles.some((r) => r === 'SUPERVISOR' || r === 'LABOUR');
   if (isFarmStaff) {

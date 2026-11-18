@@ -221,6 +221,14 @@ export class MediaStoreController {
   }
 
   /**
+   * Purge heavy field videos upon crop completion to preserve server storage
+   */
+  @Post('purge-videos/:cropId')
+  async purgeCropVideos(@CurrentUser() user: AuthUser, @Param('cropId') cropId: string) {
+    return this.mediaStoreService.purgeCropVideos(user, cropId);
+  }
+
+  /**
    * Delete media record
    */
   @Delete(':id')

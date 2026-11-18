@@ -44,6 +44,9 @@ export declare class MediaStoreController {
     archiveCropMedia(user: AuthUser, cropId: string, retentionDays?: number): Promise<{
         updatedCount: number;
     }>;
+    purgeCropVideos(user: AuthUser, cropId: string): Promise<{
+        deletedVideosCount: number;
+    }>;
     deleteMedia(user: AuthUser, id: string): Promise<{
         success: boolean;
     }>;

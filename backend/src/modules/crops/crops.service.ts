@@ -1,4 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AdvisorAssignmentStatus, CropAdvisorReviewStatus, CropCycleStage, CropStatus, FarmerSubscriptionPlan, HiringModelType, NotificationType, Role, SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlotsService } from '../plots/plots.service';
@@ -312,7 +314,12 @@ export class CropsService {
     }
 
     const { sowingDate, transplantDate, expectedHarvestDate, actualHarvestDate, ...rest } = dto;
-    return this.prisma.cropCycle.update({
+    const isNowCompleted =
+      dto.stage === CropCycleStage.COMPLETED ||
+      dto.status === CropStatus.COMPLETED ||
+      dto.status === CropStatus.DEACTIVE;
+
+    const updated = await this.prisma.cropCycle.update({
       where: { id },
       data: {
         ...rest,
@@ -320,6 +327,48 @@ export class CropsService {
         ...toDateFields(dto),
       },
     });
+
+    if (isNowCompleted) {
+      await this.purgeCropVideos(id);
+    }
+
+    return updated;
+  }
+
+  /**
+   * Automatically purges heavy 60-second field videos and voice audio notes upon crop completion
+   * to preserve server storage, while permanently retaining verified live photos, written remarks & financial records.
+   */
+  async purgeCropVideos(cropId: string): Promise<number> {
+    try {
+      const rows: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT "id", "provider", "storagePath" FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`,
+        cropId,
+      );
+
+      for (const row of rows) {
+        if (row.provider === 'LOCAL' && row.storagePath) {
+          const localFile = path.resolve(process.cwd(), 'uploads', row.storagePath);
+          if (localFile.startsWith(path.resolve(process.cwd(), 'uploads')) && fs.existsSync(localFile)) {
+            try {
+              fs.unlinkSync(localFile);
+            } catch {
+              // ignore file unlink failure
+            }
+          }
+        }
+      }
+
+      const delResult = await this.prisma.$executeRawUnsafe(
+        `DELETE FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`,
+        cropId,
+      );
+
+      return Number(delResult);
+    } catch (err: any) {
+      console.warn(`[CropsService] Failed to purge field videos and audio for completed crop ${cropId}:`, err?.message);
+      return 0;
+    }
   }
 
   async remove(user: AuthUser, id: string) {

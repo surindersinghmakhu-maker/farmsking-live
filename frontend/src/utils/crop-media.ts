@@ -723,6 +723,22 @@ export async function deleteRemovedMediaStoreRecords(
 }
 
 /**
+ * Purges heavy 60-second field videos when a crop cycle is completed,
+ * while permanently preserving verified live photos, remarks & financial history.
+ */
+export async function purgeCropVideosFromStore(cropId: string): Promise<number> {
+  try {
+    const res = await apiClient.post<{ deletedVideosCount: number }>(
+      `/crop-gallery/purge-videos/${encodeURIComponent(cropId)}`,
+    );
+    return res.data?.deletedVideosCount ?? 0;
+  } catch (err: any) {
+    console.warn(`[crop-media] purgeCropVideosFromStore error for crop ${cropId}:`, err?.message);
+    return 0;
+  }
+}
+
+/**
  * Draws a clean FarmsKing watermark onto any HTML5 canvas (shared by Photo stamping and Live Video recording):
  * - Top-Left: "● LIVE" (for camera capture) OR "UPLOADED" (for gallery upload)
  * - Top-Right: FarmsKing Favicon icon

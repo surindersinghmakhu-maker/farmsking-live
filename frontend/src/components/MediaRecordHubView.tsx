@@ -210,23 +210,23 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
         >
-          <View style={{ gap: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+            <View style={{ gap: 2 }}>
               <Text style={styles.heroTitle}>Crop Gallery</Text>
-              {(() => {
-                const cw = getCalendarWeekRange();
-                return (
-                  <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.2)', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#4ade80' }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#4ade80', letterSpacing: 0.4 }}>
-                      SUNDAY TO SATURDAY CYCLE · DAY {cw.dayNumber}/7 ({cw.dayName.toUpperCase()})
-                    </Text>
-                  </View>
-                );
-              })()}
+              <Text style={styles.heroSubtitle}>
+                7-Day Field Photo & Video Records (Sunday–Saturday)
+              </Text>
             </View>
-            <Text style={styles.heroSubtitle}>
-              Upload up to 6 clear field photos with auto date & plot watermark. Active on display for 7 days (Sunday Day 1 to Saturday Day 7). If no photos are uploaded in any week, that week is left empty with No Photo Preview.
-            </Text>
+            {(() => {
+              const cw = getCalendarWeekRange();
+              return (
+                <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.18)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#4ade80' }}>
+                  <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#4ade80', letterSpacing: 0.3 }}>
+                    CYCLE DAY {cw.dayNumber}/7 ({cw.dayName.toUpperCase()})
+                  </Text>
+                </View>
+              );
+            })()}
           </View>
         </LinearGradient>
 
@@ -332,38 +332,29 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                   >
                     <View style={styles.cycleLabelRow}>
                       <Text style={[styles.cycleLabel, { color: hasUploadedPhotosThisWeek ? '#15803d' : (isDark ? '#38bdf8' : '#0284c7') }]}>
-                        Day {dayOfCycle} of 7 ({cw.dayName}) · Week of {cw.dateLabel}
+                        Day {dayOfCycle}/7 ({cw.dayName}) · {cw.daysRemaining}d left
                       </Text>
-                      <Text style={[styles.cycleDateText, { color: subTextColor }]}>
-                        {cw.daysRemaining} day(s) left in cycle
-                      </Text>
+                      <View style={styles.contentsChipsRow}>
+                        <View style={styles.contentChip}>
+                          <Ionicons name="images" size={10} color={hasUploadedPhotosThisWeek ? '#15803d' : subTextColor} />
+                          <Text style={styles.contentChipText}>{st.activePhotoCount}/5 Photos</Text>
+                        </View>
+                        <View style={styles.contentChip}>
+                          <Ionicons name="videocam" size={10} color={st.hasActiveVideo ? '#dc2626' : subTextColor} />
+                          <Text style={styles.contentChipText}>
+                            {st.hasActiveVideo ? 'Video' : 'No Vid'}
+                          </Text>
+                        </View>
+                        <View style={styles.contentChip}>
+                          <Ionicons name="mic" size={10} color={st.hasActiveAudio ? '#0284c7' : subTextColor} />
+                          <Text style={styles.contentChipText}>
+                            {st.hasActiveAudio ? 'Voice' : 'No Voice'}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                     <View style={styles.progressTrack}>
                       <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: hasUploadedPhotosThisWeek ? '#16a34a' : '#0284c7' }]} />
-                    </View>
-                    <View style={styles.contentsChipsRow}>
-                      <View style={styles.contentChip}>
-                        <Ionicons name="images" size={11} color={hasUploadedPhotosThisWeek ? '#15803d' : subTextColor} />
-                        <Text style={styles.contentChipText}>{st.activePhotoCount}/6 Photos</Text>
-                      </View>
-                      <View style={styles.contentChip}>
-                        <Ionicons name="videocam" size={11} color={st.hasActiveVideo ? '#dc2626' : subTextColor} />
-                        <Text style={styles.contentChipText}>
-                          {st.hasActiveVideo ? 'Video Ready' : 'No Video'}
-                        </Text>
-                      </View>
-                      <View style={styles.contentChip}>
-                        <Ionicons name="mic" size={11} color={st.hasActiveAudio ? '#0284c7' : subTextColor} />
-                        <Text style={styles.contentChipText}>
-                          {st.hasActiveAudio ? 'Voice Note' : 'No Voice'}
-                        </Text>
-                      </View>
-                      {st.hasActiveRemark ? (
-                        <View style={styles.contentChip}>
-                          <Ionicons name="chatbox-ellipses" size={11} color="#7c3aed" />
-                          <Text style={styles.contentChipText}>Text Note</Text>
-                        </View>
-                      ) : null}
                     </View>
                   </View>
 
@@ -396,45 +387,30 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                           activeOpacity={0.8}
                           onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
                         >
-                          <Ionicons name="camera-outline" size={16} color="#15803d" />
+                          <Ionicons name="camera-outline" size={14} color="#15803d" />
                           <Text style={styles.cardAddPhotoSlotText}>+ Add</Text>
                         </TouchableOpacity>
                       ) : null}
                     </View>
                   ) : (
-                    /* NO PHOTO PREVIEW: SHOWN WHEN WEEK HAS NO UPLOADS */
+                    /* COMPACT EMPTY PROMPT */
                     <View
                       style={[
                         styles.cardEmptyPrompt,
-                        { borderColor: cardBorder, backgroundColor: innerBg, paddingVertical: 12 },
+                        { borderColor: cardBorder, backgroundColor: innerBg },
                       ]}
                     >
-                      <View style={[styles.cardEmptyPromptIcon, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }]}>
-                        <Ionicons name="images-outline" size={18} color={subTextColor} />
-                      </View>
-                      <View style={{ flex: 1, gap: 1 }}>
-                        <Text style={[styles.cardEmptyPromptTitle, { color: textColor }]}>
-                          No Photo Preview
-                        </Text>
-                        <Text style={[styles.cardEmptyPromptSub, { color: subTextColor }]}>
-                          No pictures uploaded for this week ({cw.dateLabel}). Sunday is Day 1 of the 7-day cycle.
-                        </Text>
-                      </View>
+                      <Ionicons name="images-outline" size={16} color={subTextColor} />
+                      <Text style={[styles.cardEmptyPromptTitle, { color: textColor, flex: 1 }]}>
+                        No photos uploaded this week
+                      </Text>
                       <TouchableOpacity
-                        style={{
-                          backgroundColor: '#16a34a',
-                          paddingHorizontal: 12,
-                          paddingVertical: 7,
-                          borderRadius: 6,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
+                        style={styles.cardUploadMiniBtn}
                         activeOpacity={0.85}
                         onPress={() => onOpenMediaRecord(crop, 'CURRENT')}
                       >
-                        <Ionicons name="camera" size={13} color="#ffffff" />
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>+ Upload</Text>
+                        <Ionicons name="camera" size={12} color="#ffffff" />
+                        <Text style={styles.cardUploadMiniBtnText}>+ Upload</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -451,11 +427,11 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                     >
                       <Ionicons
                         name={st.isActiveCycle ? 'eye' : 'add-circle'}
-                        size={15}
+                        size={14}
                         color="#ffffff"
                       />
                       <Text style={styles.primaryCardBtnText}>
-                        {st.isActiveCycle ? 'Open Crop Gallery' : 'Add to Crop Gallery'}
+                        {st.isActiveCycle ? 'Open Gallery' : 'Add to Gallery'}
                       </Text>
                     </TouchableOpacity>
 
@@ -470,9 +446,9 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                       activeOpacity={0.85}
                       onPress={() => onOpenMediaRecord(crop, 'ARCHIVE')}
                     >
-                      <Ionicons name="archive-outline" size={14} color={textColor} />
+                      <Ionicons name="archive-outline" size={13} color={textColor} />
                       <Text style={[styles.secondaryCardBtnText, { color: textColor }]}>
-                        Past Gallery ({st.totalBatches})
+                        Past Archive ({st.totalBatches})
                       </Text>
                     </TouchableOpacity>
 
@@ -489,7 +465,7 @@ export const MediaRecordHubView: React.FC<MediaRecordHubViewProps> = ({
                         onPress={() => onOpenCropActivities(crop)}
                         accessibilityLabel={`Open Crop Activities for ${crop.cropName}`}
                       >
-                        <Ionicons name="calendar-outline" size={15} color="#0284c7" />
+                        <Ionicons name="calendar-outline" size={14} color="#0284c7" />
                       </TouchableOpacity>
                     ) : null}
                   </View>
@@ -513,23 +489,23 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   heroCard: {
-    borderRadius: 14,
-    padding: 13,
+    borderRadius: 12,
+    padding: 10,
     borderWidth: 1.2,
     borderColor: 'rgba(74, 222, 128, 0.28)',
-    gap: 9,
+    gap: 6,
   },
   heroTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: -0.2,
   },
   heroSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.medium,
     color: '#cbd5e1',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -539,40 +515,40 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 15.5,
+    fontSize: 14.5,
     fontFamily: FONT.extraBold,
   },
   emptyHubBox: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 28,
+    padding: 24,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   emptyHubTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT.bold,
   },
   emptyHubSub: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.regular,
     textAlign: 'center',
     maxWidth: 420,
-    lineHeight: 17,
+    lineHeight: 16,
   },
   cardsGrid: {
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
     flexWrap: 'wrap',
-    gap: 14,
+    gap: 12,
   },
   cropRecordCard: {
     width: Platform.OS === 'web' ? '48.8%' : '100%',
     minWidth: 290,
     flexGrow: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 15,
-    gap: 12,
+    padding: 12,
+    gap: 10,
   },
   cropCardHeader: {
     flexDirection: 'row',
@@ -581,11 +557,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cropTitle: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontFamily: FONT.extraBold,
   },
   cropSub: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.medium,
   },
   statusPillActive: {
@@ -595,12 +571,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#dcfce7',
     borderWidth: 1,
     borderColor: '#86efac',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   statusPillActiveText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.extraBold,
     color: '#15803d',
   },
@@ -611,20 +587,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef3c7',
     borderWidth: 1,
     borderColor: '#fde68a',
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
   },
   statusPillReadyText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.extraBold,
     color: '#b45309',
   },
   cycleBox: {
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    padding: 11,
-    gap: 8,
+    padding: 9,
+    gap: 6,
   },
   cycleLabelRow: {
     flexDirection: 'row',
@@ -634,15 +610,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cycleLabel: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.extraBold,
   },
   cycleDateText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.semiBold,
   },
   progressTrack: {
-    height: 7,
+    height: 5,
     borderRadius: 999,
     backgroundColor: 'rgba(148, 163, 184, 0.25)',
     overflow: 'hidden',
@@ -655,20 +631,19 @@ const styles = StyleSheet.create({
   contentsChipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 2,
+    gap: 5,
   },
   contentChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: 'rgba(148, 163, 184, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: 5,
   },
   contentChipText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#475569',
   },
@@ -688,12 +663,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   primaryCardBtnText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
@@ -703,19 +678,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
     borderWidth: 1,
   },
   secondaryCardBtnText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
   },
   iconOnlyBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -723,14 +698,14 @@ const styles = StyleSheet.create({
   cardPhotoStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     flexWrap: 'wrap',
     paddingVertical: 2,
   },
   cardPhotoThumbWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 10,
+    width: 46,
+    height: 46,
+    borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(74, 222, 128, 0.45)',
@@ -746,56 +721,71 @@ const styles = StyleSheet.create({
     bottom: 2,
     right: 2,
     backgroundColor: 'rgba(15, 23, 42, 0.88)',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
     paddingVertical: 1,
     borderRadius: 3,
   },
   cardPhotoThumbBadgeText: {
-    fontSize: 7.5,
+    fontSize: 7,
     fontFamily: FONT.extraBold,
     color: '#4ade80',
   },
   cardAddPhotoSlot: {
-    width: 52,
-    height: 52,
-    borderRadius: 10,
-    borderWidth: 1.5,
+    width: 46,
+    height: 46,
+    borderRadius: 8,
+    borderWidth: 1.2,
     borderColor: '#16a34a',
     borderStyle: 'dashed',
     backgroundColor: 'rgba(22, 163, 74, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
+    gap: 1,
   },
   cardAddPhotoSlotText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: FONT.bold,
     color: '#15803d',
   },
   cardEmptyPrompt: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 10,
-    borderRadius: 10,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     borderWidth: 1,
   },
   cardEmptyPromptIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardEmptyPromptTitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
   },
   cardEmptyPromptSub: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.regular,
     lineHeight: 14,
+  },
+  cardUploadMiniBtn: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  cardUploadMiniBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
 });
 

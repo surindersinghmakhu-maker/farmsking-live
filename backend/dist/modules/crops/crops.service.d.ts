@@ -351,6 +351,7 @@ export declare class CropsService {
         submittedToAdvisorAt: Date | null;
         advisorAcceptedAt: Date | null;
     }>;
+    purgeCropVideos(cropId: string): Promise<number>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
         createdAt: Date;

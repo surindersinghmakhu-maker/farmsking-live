@@ -245,6 +245,19 @@ export function CropCompletionReviewModal({
               </View>
             )}
 
+            {/* VIDEO STORAGE POLICY ON COMPLETION */}
+            <View style={styles.videoPurgeNoticeCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="videocam-off" size={16} color="#dc2626" />
+                <Text style={styles.videoPurgeNoticeTitle}>
+                  Video Storage Policy on Completion
+                </Text>
+              </View>
+              <Text style={styles.videoPurgeNoticeText}>
+                All 60-second field videos for this crop will be permanently deleted to save storage. Verified live photos and complete financial records will remain preserved forever in Past History.
+              </Text>
+            </View>
+
             {/* ACTION BUTTON */}
             <TouchableOpacity
               style={[styles.submitBtn, isSubmitting && { opacity: 0.6 }]}
@@ -441,5 +454,25 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
+  },
+  videoPurgeNoticeCard: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    borderRadius: RADIUS.md,
+    padding: 11,
+    gap: 4,
+    marginTop: 4,
+  },
+  videoPurgeNoticeTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#b91c1c',
+  },
+  videoPurgeNoticeText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#991b1b',
+    lineHeight: 15,
   },
 });

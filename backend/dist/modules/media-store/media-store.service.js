@@ -268,6 +268,25 @@ let MediaStoreService = MediaStoreService_1 = class MediaStoreService {
         this.logger.log(`[MediaStore] Crop ${cropId} media archived with ${retentionDays}-day retention policy.`);
         return { updatedCount: Number(result) };
     }
+    async purgeCropVideos(user, cropId) {
+        await this.assertCropAccess(user, cropId);
+        const rows = await this.prisma.$queryRawUnsafe(`SELECT "id", "provider", "storagePath" FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`, cropId);
+        for (const v of rows) {
+            if (v.provider === 'LOCAL' && v.storagePath) {
+                const localFile = path.resolve(process.cwd(), 'uploads', v.storagePath);
+                if (localFile.startsWith(path.resolve(process.cwd(), 'uploads')) && fs.existsSync(localFile)) {
+                    try {
+                        fs.unlinkSync(localFile);
+                    }
+                    catch {
+                    }
+                }
+            }
+        }
+        const delResult = await this.prisma.$executeRawUnsafe(`DELETE FROM "media_store" WHERE "cropId" = $1 AND ("mediaType" IN ('VIDEO', 'AUDIO') OR "mimeType" LIKE 'video/%' OR "mimeType" LIKE 'audio/%')`, cropId);
+        this.logger.log(`[MediaStore] Purged ${delResult} field video(s) and audio(s) for completed crop ${cropId}`);
+        return { deletedVideosCount: Number(delResult) };
+    }
     async deleteMedia(id, user) {
         const rows = await this.prisma.$queryRawUnsafe(`SELECT * FROM "media_store" WHERE "id" = $1 LIMIT 1`, id);
         const existing = rows?.[0];

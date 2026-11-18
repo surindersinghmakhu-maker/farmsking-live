@@ -100,6 +100,8 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
   } | null>(null);
   const [showWebPhotoCamera, setShowWebPhotoCamera] = useState(false);
   const [showWebVideoRecorder, setShowWebVideoRecorder] = useState(false);
+  const [slotPickerTarget, setSlotPickerTarget] = useState<number | null>(null);
+  const [previewingVideo, setPreviewingVideo] = useState(false);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,6 +114,8 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
       setErrorMessage(null);
       setPreviewingPhotoIndex(null);
       setArchivePreviewPhoto(null);
+      setPreviewingVideo(false);
+      setSlotPickerTarget(null);
       setShowWebPhotoCamera(false);
       setShowWebVideoRecorder(false);
       return;
@@ -309,10 +313,10 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, cropId]);
 
-  // Take live photo via real camera (tagged LIVE; never silently falls back to gallery)
+  // Take live photo via real camera (tagged LIVE; allowed for slots 1 to 5)
   const handleTakePhotoLive = async () => {
-    if (photos.length >= 6) {
-      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos in Crop Gallery.');
+    if (photos.length >= 5) {
+      Alert.alert('Limit Reached', 'You can save a maximum of 5 crop photos in Crop Gallery.');
       return;
     }
     setErrorMessage(null);
@@ -341,20 +345,24 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
           plotName: fieldName,
           cropName,
         });
-        setPhotos((prev) => [...prev, stamped].slice(0, 6));
+        setPhotos((prev) => [...prev, stamped].slice(0, 5));
         setPhotoSources((prev) => ({ ...prev, [stamped]: 'LIVE' }));
       }
     } catch {
-      setErrorMessage('Camera could not open on this device. Use "From Gallery" for saved photos.');
+      setErrorMessage('Camera could not open on this device. Use "From Gallery" for top 3 photos.');
     }
   };
 
-  // Pick photos from gallery (tagged UPLOADED)
+  // Pick photos from gallery (tagged UPLOADED; allowed ONLY for top 3 slots)
   const handlePickPhotoLibrary = async () => {
-    if (photos.length >= 6) {
-      Alert.alert('Limit Reached', 'You can save a maximum of 6 crop photos in Crop Gallery.');
+    if (photos.length >= 3) {
+      Alert.alert(
+        'Live Camera Required',
+        'Gallery upload is only allowed for the first 3 photos (Slots 1 to 3). Photos 4 and 5 must strictly be captured live on the field via camera.',
+      );
       return;
     }
+    const maxAllowedFromGallery = 3 - photos.length;
     setErrorMessage(null);
     const stampGalleryUri = (uri: string) =>
       stampWatermarkOnImage(uri, {
@@ -368,14 +376,14 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsMultipleSelection: true,
-        selectionLimit: 6 - photos.length,
+        selectionLimit: maxAllowedFromGallery,
         quality: 0.85,
       });
       if (!result.canceled && result.assets) {
         const stampedList = await Promise.all(
-          result.assets.slice(0, 6 - photos.length).map((a) => stampGalleryUri(a.uri)),
+          result.assets.slice(0, maxAllowedFromGallery).map((a) => stampGalleryUri(a.uri)),
         );
-        setPhotos((prev) => [...prev, ...stampedList].slice(0, 6));
+        setPhotos((prev) => [...prev, ...stampedList].slice(0, 3));
         setPhotoSources((prev) => {
           const next = { ...prev };
           stampedList.forEach((u) => {
@@ -389,9 +397,9 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
         const picked = await pickWebMediaFiles('image/*', true);
         if (picked.length > 0) {
           const stampedList = await Promise.all(
-            picked.slice(0, 6 - photos.length).map((u) => stampGalleryUri(u)),
+            picked.slice(0, maxAllowedFromGallery).map((u) => stampGalleryUri(u)),
           );
-          setPhotos((prev) => [...prev, ...stampedList].slice(0, 6));
+          setPhotos((prev) => [...prev, ...stampedList].slice(0, 3));
           setPhotoSources((prev) => {
             const next = { ...prev };
             stampedList.forEach((u) => {
@@ -406,18 +414,101 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
     }
   };
 
-  // Remove photo
-  const handleRemovePhoto = (index: number) => {
-    const removedUri = photos[index];
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
-    if (removedUri) {
-      setPhotoSources((prev) => {
-        const next = { ...prev };
-        delete next[removedUri];
-        return next;
-      });
+  // Confirm and delete photo with auto-sync if already saved
+  const confirmDeletePhoto = (index: number) => {
+    const photoNumber = index + 1;
+    const msg = `Are you sure you want to delete Photo #${photoNumber} from Crop Gallery?`;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm(msg);
+      if (confirmed) {
+        handleRemovePhoto(index);
+      }
+      return;
     }
-    if (previewingPhotoIndex === index) setPreviewingPhotoIndex(null);
+
+    Alert.alert(
+      'Delete Photo',
+      msg,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => handleRemovePhoto(index),
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  // Remove photo with optional immediate store sync
+  const handleRemovePhoto = async (index: number) => {
+    const removedUri = photos[index];
+    if (!removedUri) return;
+    const nextPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(nextPhotos);
+    setPhotoSources((prev) => {
+      const next = { ...prev };
+      delete next[removedUri];
+      return next;
+    });
+    if (previewingPhotoIndex === index) {
+      setPreviewingPhotoIndex(null);
+    } else if (previewingPhotoIndex !== null && previewingPhotoIndex > index) {
+      setPreviewingPhotoIndex(previewingPhotoIndex - 1);
+    }
+
+    // If active cycle is saved in crop GPS data, sync the deletion to storage immediately
+    if (cropId && (isActiveCycleLocked || currentGps?.fieldPhotos?.includes(removedUri))) {
+      try {
+        const nowIso = new Date().toISOString();
+        if (currentGps) {
+          const updatedGps: CropGpsData = {
+            ...currentGps,
+            fieldPhotos: nextPhotos,
+            updatedAt: nowIso,
+          };
+          saveCropGpsData(cropId, updatedGps);
+        }
+        await deleteRemovedMediaStoreRecords(
+          [removedUri],
+          [],
+          recordsByUrlRef.current,
+        );
+        onSaved?.(nextPhotos, videoUri || undefined);
+      } catch (err) {
+        console.warn('[CropMediaModal] Failed to sync photo deletion:', err);
+      }
+    }
+  };
+
+  // Confirm and delete live field video
+  const confirmDeleteVideo = () => {
+    const msg = 'Are you sure you want to delete the Live Video from Crop Gallery?';
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm(msg)) {
+        setVideoUri(null);
+        setPreviewingVideo(false);
+      }
+      return;
+    }
+    Alert.alert(
+      'Delete Live Video',
+      msg,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            setVideoUri(null);
+            setPreviewingVideo(false);
+          },
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   // Shoot live video ONLY (camera capture; gallery video uploads disabled)
@@ -598,6 +689,191 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
   const dayOfCycle = currentCalWeek.dayNumber; // 1 to 7 (Sunday = 1, Saturday = 7)
   const cycleProgressPct = Math.min(100, Math.max(14, Math.round((dayOfCycle / MEDIA_DISPLAY_DAYS) * 100)));
 
+  const renderSlotCard = (slotIdx: number) => {
+    const photoUri = photos[slotIdx];
+    const isTop3 = slotIdx < 3;
+    if (photoUri) {
+      const resolvedPhotoUri = resolveCropMediaDisplayUri(photoUri) || photoUri;
+      const detectedSource = photoSources[photoUri] || detectMediaCaptureSource(photoUri);
+      const isLive = detectedSource === 'LIVE';
+
+      return (
+        <View key={slotIdx} style={styles.photoThumbCard}>
+          <TouchableOpacity
+            style={styles.photoImageWrap}
+            activeOpacity={0.9}
+            onPress={() => setPreviewingPhotoIndex(slotIdx)}
+          >
+            <Image source={{ uri: resolvedPhotoUri }} style={styles.photoThumbImg} resizeMode="cover" />
+            <View style={[styles.cardSourceBadge, isLive ? styles.cardSourceBadgeLive : styles.cardSourceBadgeUploaded]}>
+              <Ionicons name={isLive ? 'camera' : 'folder-open'} size={9} color="#ffffff" />
+              <Text style={styles.cardSourceBadgeText}>{isLive ? 'LIVE' : 'UP'}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.cardCornerDeleteBtn}
+              activeOpacity={0.8}
+              onPress={() => confirmDeletePhoto(slotIdx)}
+              accessibilityLabel={`Delete photo ${slotIdx + 1}`}
+            >
+              <Ionicons name="trash" size={11} color="#ffffff" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+
+          <View style={styles.photoActionFooter}>
+            <Text style={styles.photoSlotCaption}>Photo #{slotIdx + 1}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity
+                style={styles.inspectBtn}
+                onPress={() => setPreviewingPhotoIndex(slotIdx)}
+                accessibilityLabel={`Inspect Photo ${slotIdx + 1}`}
+              >
+                <Ionicons name="eye" size={11} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.downloadSmallBtn}
+                onPress={() =>
+                  downloadCropPhoto(
+                    resolvedPhotoUri,
+                    `crop_${cropName.toLowerCase().replace(/\s+/g, '_')}_p${slotIdx + 1}.jpg`,
+                  )
+                }
+                accessibilityLabel={`Download Photo ${slotIdx + 1}`}
+              >
+                <Ionicons name="download-outline" size={11} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => confirmDeletePhoto(slotIdx)}
+                accessibilityLabel={`Delete Photo ${slotIdx + 1}`}
+              >
+                <Ionicons name="trash" size={11} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    if (isTop3) {
+      return (
+        <TouchableOpacity
+          key={slotIdx}
+          style={[styles.emptySlot, styles.emptySlotTop3]}
+          activeOpacity={0.8}
+          onPress={() => setSlotPickerTarget(slotIdx)}
+          accessibilityLabel={`Add photo slot ${slotIdx + 1}`}
+        >
+          <View style={[styles.emptySlotCircle, { backgroundColor: '#dcfce7' }]}>
+            <Ionicons name="add" size={15} color="#15803d" />
+          </View>
+          <Text style={styles.emptySlotText}>+ Photo {slotIdx + 1}</Text>
+          <View style={styles.slotPermitPillGreen}>
+            <Text style={styles.slotPermitPillGreenText}>Live / Gallery</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        key={slotIdx}
+        style={[styles.emptySlot, styles.emptySlotBottom3]}
+        activeOpacity={0.8}
+        onPress={handleTakePhotoLive}
+        accessibilityLabel={`Take live photo slot ${slotIdx + 1}`}
+      >
+        <View style={[styles.emptySlotCircle, { backgroundColor: '#fef3c7' }]}>
+          <Ionicons name="camera" size={14} color="#b45309" />
+        </View>
+        <Text style={[styles.emptySlotText, { color: '#92400e' }]}>+ Photo {slotIdx + 1}</Text>
+        <View style={styles.slotPermitPillAmber}>
+          <Ionicons name="lock-closed" size={8} color="#b45309" />
+          <Text style={styles.slotPermitPillAmberText}>Live Only</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderVideoSlotCard = () => {
+    if (videoUri) {
+      return (
+        <View key="slot-video" style={[styles.photoThumbCard, styles.videoThumbCardBorder]}>
+          <TouchableOpacity
+            style={styles.photoImageWrap}
+            activeOpacity={0.9}
+            onPress={() => setPreviewingVideo(true)}
+            accessibilityLabel="Play live recorded video"
+          >
+            <View style={styles.videoCardPlaceholder}>
+              <View style={styles.videoPlayCircle}>
+                <Ionicons name="play" size={18} color="#ffffff" style={{ marginLeft: 2 }} />
+              </View>
+              <Text style={styles.videoThumbPreviewText}>Live Video</Text>
+            </View>
+            <View style={[styles.cardSourceBadge, styles.cardSourceBadgeVideo]}>
+              <Ionicons name="videocam" size={9} color="#ffffff" />
+              <Text style={styles.cardSourceBadgeText}>LIVE VIDEO</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.cardCornerDeleteBtn}
+              activeOpacity={0.8}
+              onPress={confirmDeleteVideo}
+              accessibilityLabel="Delete live video"
+            >
+              <Ionicons name="trash" size={11} color="#ffffff" />
+            </TouchableOpacity>
+          </TouchableOpacity>
+
+          <View style={styles.photoActionFooter}>
+            <Text style={[styles.photoSlotCaption, { color: '#dc2626' }]}>Video #6</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <TouchableOpacity
+                style={[styles.inspectBtn, { backgroundColor: '#dc2626', borderColor: '#b91c1c' }]}
+                onPress={() => setPreviewingVideo(true)}
+                accessibilityLabel="Play live video"
+              >
+                <Ionicons name="play" size={11} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.reRecordSmallBtn}
+                onPress={handleStartShootVideo}
+                accessibilityLabel="Re-record live video"
+              >
+                <Ionicons name="radio-button-on" size={11} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={confirmDeleteVideo}
+                accessibilityLabel="Delete live video"
+              >
+                <Ionicons name="trash" size={11} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        key="slot-video-empty"
+        style={[styles.emptySlot, styles.emptySlotVideo]}
+        activeOpacity={0.8}
+        onPress={handleStartShootVideo}
+        accessibilityLabel="Record live field video"
+      >
+        <View style={[styles.emptySlotCircle, { backgroundColor: '#fee2e2' }]}>
+          <Ionicons name="videocam" size={15} color="#dc2626" />
+        </View>
+        <Text style={[styles.emptySlotText, { color: '#dc2626' }]}>+ Live Video</Text>
+        <View style={styles.slotPermitPillRed}>
+          <Ionicons name="lock-closed" size={8} color="#dc2626" />
+          <Text style={styles.slotPermitPillRedText}>Live (60s)</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -614,7 +890,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
                 <Ionicons name="shield-checkmark" size={11} color="#4ade80" />
                 <Text style={styles.modalCorporateText} numberOfLines={1}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · ISO 9001 & ISO 27001 VERIFIED
+                  FARMSKING · ISO 9001 & ISO 27001
                 </Text>
               </View>
               <View style={styles.modalIcarBadge}>
@@ -646,9 +922,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                       >
                         {daysRemaining > 0
                           ? `ACTIVE · ${daysRemaining}D LEFT`
-                          : hasExpiredArchive
-                            ? 'NEW UPLOAD UNLOCKED'
-                            : 'NEW 7-DAY UPLOAD'}
+                          : 'NEW UPLOAD'}
                       </Text>
                     </View>
                   </View>
@@ -663,7 +937,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            {/* BUILT-IN TAB SWITCHER: ACTIVE GALLERY (7 DAYS) vs PAST GALLERY (ARCHIVE) */}
+            {/* TAB SWITCHER */}
             <View style={styles.modalTabRow}>
               <TouchableOpacity
                 style={[styles.modalTabBtn, activeTab === 'CURRENT' && styles.modalTabBtnActive]}
@@ -681,7 +955,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     activeTab === 'CURRENT' && styles.modalTabTextActive,
                   ]}
                 >
-                  {daysRemaining > 0 ? 'Active Gallery (7 Days)' : 'New Gallery Upload'}
+                  {daysRemaining > 0 ? 'Active (7 Days)' : 'New Upload'}
                 </Text>
               </TouchableOpacity>
 
@@ -701,7 +975,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     activeTab === 'ARCHIVE' && styles.modalTabTextActive,
                   ]}
                 >
-                  Past Gallery ({pastBatches.length})
+                  Past Archive ({pastBatches.length})
                 </Text>
               </TouchableOpacity>
             </View>
@@ -709,342 +983,68 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
 
           <ScrollView
             style={{ flex: 1 }}
-            contentContainerStyle={{ padding: 18, paddingBottom: 24 }}
+            contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ gap: 15 }}>
+            <View style={{ gap: 10 }}>
               {isLoadingMedia && (
                 <View style={styles.loadingMediaBanner}>
                   <ActivityIndicator size="small" color="#15803d" />
-                  <Text style={styles.loadingMediaText}>Loading Crop Gallery...</Text>
+                  <Text style={styles.loadingMediaText}>Loading gallery...</Text>
                 </View>
               )}
 
               {errorMessage && (
                 <View style={styles.errorBanner}>
-                  <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                  <Ionicons name="alert-circle" size={15} color="#dc2626" />
                   <Text style={styles.errorBannerText}>{errorMessage}</Text>
                 </View>
               )}
 
               {activeTab === 'CURRENT' ? (
                 <>
-                  {/* QUICK SUMMARY CHIPS STRIP */}
-                  <View style={styles.summaryStripRow}>
-                    <View style={styles.summaryChip}>
-                      <Ionicons name="images" size={13} color="#15803d" />
-                      <Text style={styles.summaryChipText}>Photos: {photos.length}/6</Text>
-                    </View>
-                    <View style={styles.summaryChip}>
-                      <Ionicons name="videocam" size={13} color="#dc2626" />
-                      <Text style={styles.summaryChipText}>
-                        Video: {videoUri ? 'Recorded ✓' : '0/1'}
-                      </Text>
-                    </View>
-                    <View style={styles.summaryChip}>
-                      <Ionicons name="mic" size={13} color="#0284c7" />
-                      <Text style={styles.summaryChipText}>
-                        Voice: {audioUri ? 'Recorded ✓' : '0/1'}
-                      </Text>
-                    </View>
-                    <View style={styles.summaryChip}>
-                      <Ionicons name="document-text" size={13} color="#7c3aed" />
-                      <Text style={styles.summaryChipText}>
-                        Note: {remarksText.trim().length}/{MAX_REMARK_CHARS}
-                      </Text>
-                    </View>
-                  </View>
-
                   {isActiveCycleLocked && (
-                    <View style={styles.activeCycleBanner}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                          <Ionicons name="shield-checkmark" size={17} color="#15803d" />
-                          <Text style={styles.activeCycleTitle}>
-                            Sunday to Saturday Cycle · Day {dayOfCycle}/7 ({currentCalWeek.dayName})
-                          </Text>
-                        </View>
-                        <View style={styles.activeDaysPill}>
-                          <Text style={styles.activeDaysPillText}>
-                            DAY {dayOfCycle} OF 7 ({currentCalWeek.dayName.toUpperCase()})
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={styles.modalProgressTrack}>
-                        <View style={[styles.modalProgressFill, { width: `${cycleProgressPct}%` }]} />
-                      </View>
-                      <Text style={styles.activeCycleDesc}>
-                        Week of {currentCalWeek.dateLabel}. Sunday is Day 1 of the weekly cycle. Display active until Saturday midnight ({currentCalWeek.daysRemaining} day{currentCalWeek.daysRemaining === 1 ? '' : 's'} remaining this week).
-                        {photos.length < 6
-                          ? ` You can add ${6 - photos.length} more photo(s), or update video, audio and remarks anytime.`
-                          : ' 6 photos saved. You can inspect, download, or replace them anytime.'}
+                    <View style={styles.activeCycleCompactStrip}>
+                      <Ionicons name="time-outline" size={13} color="#15803d" />
+                      <Text style={styles.activeCycleCompactText}>
+                        Day {dayOfCycle}/7 ({currentCalWeek.dayName}) · {currentCalWeek.daysRemaining} days left
                       </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 }}>
-                        <TouchableOpacity
-                          style={styles.openActivitiesLinkBtn}
-                          activeOpacity={0.85}
-                          onPress={() => setActiveTab('ARCHIVE')}
-                        >
-                          <Ionicons name="archive-outline" size={14} color="#15803d" />
-                          <Text style={styles.openActivitiesLinkText}>
-                            View Past Records ({pastBatches.length})
-                          </Text>
-                        </TouchableOpacity>
-                        {onOpenActivities ? (
-                          <TouchableOpacity
-                            style={styles.openActivitiesLinkBtn}
-                            activeOpacity={0.85}
-                            onPress={onOpenActivities}
-                          >
-                            <Ionicons name="calendar-outline" size={14} color="#15803d" />
-                            <Text style={styles.openActivitiesLinkText}>Open Crop Activities</Text>
-                          </TouchableOpacity>
-                        ) : null}
+                      <View style={styles.activeCycleMiniBar}>
+                        <View style={[styles.activeCycleMiniFill, { width: `${cycleProgressPct}%` }]} />
                       </View>
                     </View>
                   )}
 
                   {!isActiveCycleLocked && hasExpiredArchive && (
-                    <View style={styles.expiredArchiveBanner}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="refresh-circle" size={18} color="#b45309" />
-                        <Text style={styles.expiredArchiveTitle}>
-                          7 Days Complete · Ready for New Gallery Upload
-                        </Text>
-                      </View>
-                      <Text style={styles.expiredArchiveDesc}>
-                        Your last Crop Gallery is saved in Past Gallery ({pastBatches.length}). You can add fresh photos/video below for the next 7 days.
-                      </Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                        <TouchableOpacity
-                          style={styles.openArchiveLinkBtn}
-                          activeOpacity={0.85}
-                          onPress={() => setActiveTab('ARCHIVE')}
-                        >
-                          <Ionicons name="archive-outline" size={14} color="#b45309" />
-                          <Text style={styles.openArchiveLinkText}>
-                            View Past Records ({pastBatches.length})
-                          </Text>
-                        </TouchableOpacity>
-                        {onOpenActivities ? (
-                          <TouchableOpacity
-                            style={styles.openArchiveLinkBtn}
-                            activeOpacity={0.85}
-                            onPress={onOpenActivities}
-                          >
-                            <Ionicons name="calendar-outline" size={14} color="#b45309" />
-                            <Text style={styles.openArchiveLinkText}>Open Crop Activities</Text>
-                          </TouchableOpacity>
-                        ) : null}
-                      </View>
+                    <View style={styles.expiredArchiveCompactStrip}>
+                      <Ionicons name="checkmark-done-circle" size={13} color="#b45309" />
+                      <Text style={styles.expiredArchiveCompactText}>Previous cycle complete · Ready for new upload</Text>
+                      <TouchableOpacity onPress={() => setActiveTab('ARCHIVE')}>
+                        <Text style={styles.expiredArchiveLinkText}>Past ({pastBatches.length}) →</Text>
+                      </TouchableOpacity>
                     </View>
                   )}
 
-                  {/* STEP 1: CROP PHOTOS (UP TO 6) */}
+                  {/* STEP 1: FIELD PHOTOS & LIVE VIDEO (COMPACT 3x2 GRID) */}
                   <View style={styles.sectionCard}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                        <View style={styles.stepTagGreen}>
-                          <Text style={styles.stepTagText}>STEP 1</Text>
-                        </View>
-                        <Text style={styles.sectionHeading}>Crop Field Photos</Text>
+                    <View style={styles.mediaCardHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="images" size={15} color="#15803d" />
+                        <Text style={styles.sectionHeading}>Field Photos & Live Video</Text>
                       </View>
-                      <View style={styles.countBadge}>
-                        <Text style={styles.countBadgeText}>{photos.length} / 6 Photos Added</Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.sectionSub}>
-                      Take live photos of your crop leaves, stem, or field, or choose from phone gallery. Each photo is watermarked automatically with date, time, your name, and plot location.
-                    </Text>
-
-                    {photos.length === 0 && (
-                      <View style={{
-                        backgroundColor: '#fffbeb',
-                        borderWidth: 1,
-                        borderColor: '#fde68a',
-                        borderRadius: 10,
-                        padding: 10,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 6,
-                      }}>
-                        <Ionicons name="images-outline" size={18} color="#d97706" />
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>
-                            No Photo Preview for Current Week
-                          </Text>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#b45309' }}>
-                            No photos uploaded yet for the week of {currentCalWeek.dateLabel} (Sunday to Saturday). Add up to 6 field photos below.
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* PHOTO ACTION BUTTONS */}
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <TouchableOpacity
-                        style={[
-                          styles.actionBtnGreen,
-                          photos.length >= 6 && { opacity: 0.45 },
-                        ]}
-                        activeOpacity={0.85}
-                        disabled={photos.length >= 6}
-                        onPress={handleTakePhotoLive}
-                      >
-                        <Ionicons name="camera" size={16} color="#ffffff" />
-                        <Text style={styles.actionBtnText}>
-                          {photos.length >= 6 ? 'Photos Limit (6/6)' : 'Take Live Photo'}
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.actionBtnOutline,
-                          photos.length >= 6 && { opacity: 0.45 },
-                        ]}
-                        activeOpacity={0.85}
-                        disabled={photos.length >= 6}
-                        onPress={handlePickPhotoLibrary}
-                      >
-                        <Ionicons name="folder-open" size={16} color="#2563eb" />
-                        <Text style={styles.actionBtnOutlineText}>
-                          {photos.length >= 6 ? 'Limit Reached' : 'From Gallery'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* 6-SLOT PHOTO GRID: SAVED PHOTOS FIRST, REMAINING SHOW "NO PHOTO" */}
-                    <View style={styles.photoGrid}>
-                      {[0, 1, 2, 3, 4, 5].map((slotIdx) => {
-                        const photoUri = photos[slotIdx];
-                        if (photoUri) {
-                          const resolvedPhotoUri = resolveCropMediaDisplayUri(photoUri) || photoUri;
-                          return (
-                            <View key={slotIdx} style={styles.photoThumbCard}>
-                              <TouchableOpacity
-                                style={styles.photoImageWrap}
-                                activeOpacity={0.9}
-                                onPress={() => setPreviewingPhotoIndex(slotIdx)}
-                              >
-                                <Image source={{ uri: resolvedPhotoUri }} style={styles.photoThumbImg} resizeMode="contain" />
-                              </TouchableOpacity>
-
-                              <View style={styles.photoActionFooter}>
-                                <Text style={styles.photoSlotCaption}>Photo #{slotIdx + 1}</Text>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                  <TouchableOpacity
-                                    style={styles.inspectBtn}
-                                    onPress={() => setPreviewingPhotoIndex(slotIdx)}
-                                    accessibilityLabel={`Inspect Photo ${slotIdx + 1}`}
-                                  >
-                                    <Ionicons name="eye" size={13} color="#ffffff" />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={styles.downloadSmallBtn}
-                                    onPress={() =>
-                                      downloadCropPhoto(
-                                        resolvedPhotoUri,
-                                        `crop_${cropName.toLowerCase().replace(/\s+/g, '_')}_p${slotIdx + 1}.jpg`,
-                                      )
-                                    }
-                                    accessibilityLabel={`Download Photo ${slotIdx + 1}`}
-                                  >
-                                    <Ionicons name="download-outline" size={13} color="#ffffff" />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={styles.deleteBtn}
-                                    onPress={() => handleRemovePhoto(slotIdx)}
-                                    accessibilityLabel={`Delete Photo ${slotIdx + 1}`}
-                                  >
-                                    <Ionicons name="trash" size={12} color="#ffffff" />
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            </View>
-                          );
-                        }
-                        return (
-                          <TouchableOpacity
-                            key={slotIdx}
-                            style={styles.emptySlot}
-                            activeOpacity={0.8}
-                            onPress={handleTakePhotoLive}
-                            accessibilityLabel={`Add photo slot ${slotIdx + 1}`}
-                          >
-                            <View style={styles.emptySlotCircle}>
-                              <Ionicons name="camera" size={18} color="#15803d" />
-                            </View>
-                            <Text style={styles.emptySlotText}>+ Add Photo</Text>
-                            <Text style={styles.emptySlotSub}>Slot #{slotIdx + 1}</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  </View>
-
-                  {/* STEP 2: LIVE FIELD VIDEO ONLY */}
-                  <View style={styles.sectionCard}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                        <View style={[styles.stepTagGreen, { backgroundColor: '#fee2e2' }]}>
-                          <Text style={[styles.stepTagText, { color: '#dc2626' }]}>STEP 2</Text>
-                        </View>
-                        <Text style={styles.sectionHeading}>Live Field Video (Max 1 Min)</Text>
-                      </View>
-                      {videoUri ? (
-                        <View style={styles.attachedBadge}>
-                          <Text style={styles.attachedBadgeText}>Recorded ✓</Text>
-                        </View>
-                      ) : (
-                        <View style={[styles.attachedBadge, { backgroundColor: '#f1f5f9' }]}>
-                          <Text style={[styles.attachedBadgeText, { color: '#64748b' }]}>Optional</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <Text style={styles.sectionSub}>
-                      Record a quick live camera video (up to 60 seconds) showing your crop field and leaf health. Recorded live with real-time watermark.
-                    </Text>
-
-                    <TouchableOpacity
-                      style={styles.actionBtnRed}
-                      activeOpacity={0.85}
-                      onPress={handleStartShootVideo}
-                    >
-                      <Ionicons name="radio-button-on" size={16} color="#ffffff" />
-                      <Text style={styles.actionBtnText}>
-                        {videoUri ? 'Re-record Live Video' : 'Record Live Video'}
+                      <Text style={styles.mediaHeaderCount}>
+                        {photos.length}/5 Photos · {videoUri ? '1' : '0'}/1 Video
                       </Text>
-                    </TouchableOpacity>
+                    </View>
 
-                    {videoUri ? (
-                      <CropVideoPlayer
-                        videoUri={videoUri}
-                        cropName={cropName}
-                        fieldName={fieldName}
-                        farmerName={effectiveFarmerName}
-                        recordedAt={videoRecordedAt}
-                        height={220}
-                        onRemove={() => setVideoUri(null)}
-                      />
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.noVideoBox}
-                        activeOpacity={0.8}
-                        onPress={handleStartShootVideo}
-                      >
-                        <View style={styles.noVideoCircle}>
-                          <Ionicons name="videocam" size={20} color="#dc2626" />
-                        </View>
-                        <Text style={styles.noVideoText}>Tap to Record 60-Second Live Video</Text>
-                        <Text style={styles.noVideoSub}>Watermarked with date, time, and plot coordinates</Text>
-                      </TouchableOpacity>
-                    )}
+                    {/* UNIFIED 6-SLOT COMPACT GRID */}
+                    <View style={styles.photoGrid}>
+                      {[0, 1, 2, 3, 4].map(renderSlotCard)}
+                      {renderVideoSlotCard()}
+                    </View>
                   </View>
 
-                  {/* STEP 3: FARMER VOICE AUDIO OR WRITTEN REMARKS */}
+                  {/* STEP 2: VOICE NOTE & WRITTEN REMARKS */}
                   <CropRemarksSection
                     remarksText={remarksText}
                     onChangeRemarksText={setRemarksText}
@@ -1060,148 +1060,99 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                     readOnly={false}
                   />
 
-                  {/* SAVE TO CROP GALLERY (7-DAY ACTIVE DISPLAY) OPTION */}
+                  {/* COMPACT 1-LINE SAVE TO GALLERY OPTION */}
                   <TouchableOpacity
-                    style={styles.recordOptionCard}
+                    style={styles.compactSaveCheckRow}
                     activeOpacity={0.85}
                     onPress={() => setSaveToCropRecord((prev) => !prev)}
                   >
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
-                      <View
-                        style={[
-                          styles.recordCheckbox,
-                          saveToCropRecord && styles.recordCheckboxChecked,
-                        ]}
-                      >
-                        {saveToCropRecord ? (
-                          <Ionicons name="checkmark" size={14} color="#ffffff" />
-                        ) : null}
-                      </View>
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={styles.recordOptionTitle}>
-                          {isActiveCycleLocked && daysRemaining > 0
-                            ? `Keep Saved in Active Crop Gallery (${daysRemaining}d Left)`
-                            : `Save as Crop Gallery (${MEDIA_DISPLAY_DAYS}-Day Display)`}
-                        </Text>
-                        <Text style={styles.recordOptionDesc}>
-                          {isActiveCycleLocked && daysRemaining > 0
-                            ? `Keeps this record active on display for ${daysRemaining} more days. You can update photos, video, audio or remarks anytime.`
-                            : `Stays visible on display for ${MEDIA_DISPLAY_DAYS} days, then automatically archives into Past Gallery and Crop Activities.`}
-                        </Text>
-                      </View>
+                    <View
+                      style={[
+                        styles.compactCheckbox,
+                        saveToCropRecord && styles.compactCheckboxChecked,
+                      ]}
+                    >
+                      {saveToCropRecord ? (
+                        <Ionicons name="checkmark" size={11} color="#ffffff" />
+                      ) : null}
                     </View>
+                    <Text style={styles.compactSaveCheckText}>
+                      {isActiveCycleLocked && daysRemaining > 0
+                        ? `Keep in Active 7-Day Gallery (${daysRemaining}d left)`
+                        : 'Save to 7-Day Active Crop Gallery'}
+                    </Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 /* TAB 2: PAST CROP GALLERY (PERMANENT ARCHIVE) */
-                <View style={{ gap: 14 }}>
-                  <View style={styles.archiveIntroCard}>
-                    <Ionicons name="archive" size={18} color="#0284c7" />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.archiveIntroTitle}>
-                        Past Crop Gallery ({pastBatches.length})
-                      </Text>
-                      <Text style={styles.archiveIntroSub}>
-                        Every saved 7-day Crop Gallery stays permanently here. Older records remain safe even after a new record starts.
-                      </Text>
-                    </View>
-                  </View>
-
+                <View style={{ gap: 10 }}>
                   {pastBatches.length === 0 ? (
                     <View style={styles.emptyArchiveCard}>
-                      <Ionicons name="images-outline" size={32} color="#94a3b8" />
-                      <Text style={styles.emptyArchiveTitle}>No Past Crop Gallery Yet</Text>
-                      <Text style={styles.emptyArchiveSub}>
-                        Save your first upload under the New Gallery Upload tab. It will appear here automatically.
-                      </Text>
+                      <Ionicons name="folder-open-outline" size={26} color="#94a3b8" />
+                      <Text style={styles.emptyArchiveTitle}>No Past Records</Text>
                     </View>
                   ) : (
                     pastBatches.map((batch) => (
                       <View key={batch.batchKey} style={styles.archiveBatchCard}>
                         <View style={styles.archiveBatchHeader}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Ionicons name="calendar-outline" size={14} color="#475569" />
+                            <Ionicons name="calendar-outline" size={13} color="#475569" />
                             <Text style={styles.archiveBatchDate}>Saved {batch.dateLabel}</Text>
                           </View>
                           {batch.isActiveDisplay ? (
                             <View style={styles.archiveBadgeActive}>
                               <Text style={styles.archiveBadgeActiveText}>
-                                Active Display · {batch.daysRemaining}d Left
+                                Active · {batch.daysRemaining}d left
                               </Text>
                             </View>
                           ) : (
                             <View style={styles.archiveBadgePast}>
                               <Text style={styles.archiveBadgePastText}>
-                                Completed · Archived Archive
+                                Archived
                               </Text>
                             </View>
                           )}
                         </View>
 
                         {batch.photos.length > 0 ? (
-                          <View style={styles.photoGrid}>
+                          <View style={styles.archivePhotoStrip}>
                             {batch.photos.map((photoItem, idx) => {
                               const resolvedP =
                                 resolveCropMediaDisplayUri(photoItem.url) || photoItem.url;
+                              const isLive = photoItem.source === 'LIVE';
                               return (
-                                <View key={`${batch.batchKey}_p${idx}`} style={styles.photoThumbCard}>
-                                  <TouchableOpacity
-                                    style={styles.photoImageWrap}
-                                    activeOpacity={0.9}
-                                    onPress={() =>
-                                      setArchivePreviewPhoto({
-                                        url: resolvedP,
-                                        source: photoItem.source,
-                                        label: `Photo #${idx + 1} · ${batch.dateLabel}`,
-                                      })
-                                    }
-                                  >
-                                    <Image
-                                      source={{ uri: resolvedP }}
-                                      style={styles.photoThumbImg}
-                                      resizeMode="contain"
-                                    />
-                                  </TouchableOpacity>
-                                  <View style={styles.photoActionFooter}>
-                                    <Text style={styles.photoSlotCaption}>
-                                      Photo #{idx + 1} · {photoItem.source}
-                                    </Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                      <TouchableOpacity
-                                        style={styles.inspectBtn}
-                                        onPress={() =>
-                                          setArchivePreviewPhoto({
-                                            url: resolvedP,
-                                            source: photoItem.source,
-                                            label: `Photo #${idx + 1} · ${batch.dateLabel}`,
-                                          })
-                                        }
-                                        accessibilityLabel={`Inspect Archived Photo ${idx + 1}`}
-                                      >
-                                        <Ionicons name="eye" size={13} color="#ffffff" />
-                                      </TouchableOpacity>
-                                      <TouchableOpacity
-                                        style={styles.downloadSmallBtn}
-                                        onPress={() =>
-                                          downloadCropPhoto(
-                                            resolvedP,
-                                            `archive_${cropName.toLowerCase().replace(/\s+/g, '_')}_p${idx + 1}.jpg`,
-                                          )
-                                        }
-                                        accessibilityLabel={`Download Archived Photo ${idx + 1}`}
-                                      >
-                                        <Ionicons name="download-outline" size={13} color="#ffffff" />
-                                      </TouchableOpacity>
-                                    </View>
+                                <TouchableOpacity
+                                  key={`${batch.batchKey}_p${idx}`}
+                                  style={styles.archiveThumbCard}
+                                  activeOpacity={0.85}
+                                  onPress={() =>
+                                    setArchivePreviewPhoto({
+                                      url: resolvedP,
+                                      source: photoItem.source,
+                                      label: `Photo #${idx + 1} · ${batch.dateLabel}`,
+                                    })
+                                  }
+                                  accessibilityLabel={`Inspect Archived Photo ${idx + 1}`}
+                                >
+                                  <Image
+                                    source={{ uri: resolvedP }}
+                                    style={styles.archiveThumbImg}
+                                    resizeMode="cover"
+                                  />
+                                  <View style={styles.archiveThumbCornerBadge}>
+                                    <Text style={styles.archiveThumbCornerText}>#{idx + 1}</Text>
                                   </View>
-                                </View>
+                                  <View style={[styles.archiveSourceTag, isLive ? styles.archiveSourceTagLive : styles.archiveSourceTagUpload]}>
+                                    <Text style={styles.archiveSourceTagText}>{isLive ? 'LIVE' : 'UP'}</Text>
+                                  </View>
+                                </TouchableOpacity>
                               );
                             })}
                           </View>
                         ) : (
                           <View style={styles.noVideoBox}>
-                            <Ionicons name="image-outline" size={20} color="#94a3b8" />
-                            <Text style={styles.noVideoText}>No Photo in this record</Text>
+                            <Ionicons name="image-outline" size={18} color="#94a3b8" />
+                            <Text style={styles.noVideoText}>No photos in this record</Text>
                           </View>
                         )}
 
@@ -1212,10 +1163,17 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                             fieldName={fieldName}
                             farmerName={effectiveFarmerName}
                             recordedAt={batch.savedAt}
-                            height={200}
+                            height={180}
                             compact
                           />
-                        ) : null}
+                        ) : (
+                          <View style={styles.archivedVideosPurgedTag}>
+                            <Ionicons name="videocam-off-outline" size={11} color="#64748b" />
+                            <Text style={styles.archivedVideosPurgedText}>
+                              Field videos purged on completion · Live photos preserved
+                            </Text>
+                          </View>
+                        )}
 
                         {batch.audio || batch.remarksText ? (
                           <CropRemarksSection
@@ -1233,14 +1191,6 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                   )}
                 </View>
               )}
-
-              {/* INSTITUTIONAL TRUST & ISO AUDIT NOTE */}
-              <View style={styles.institutionalTrustStrip}>
-                <Ionicons name="shield-checkmark" size={14} color="#16a34a" />
-                <Text style={styles.institutionalTrustText}>
-                  Verified Digital Agronomy Record · Protected by ISO 27001 Data Security Standards.
-                </Text>
-              </View>
             </View>
           </ScrollView>
 
@@ -1260,7 +1210,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               >
                 <Ionicons name={daysRemaining > 0 ? 'eye' : 'add-circle'} size={16} color="#ffffff" />
                 <Text style={styles.footerSaveText}>
-                  {daysRemaining > 0 ? 'Back to Active Gallery' : 'Add New Gallery Upload'}
+                  {daysRemaining > 0 ? 'Back to Active' : 'New Upload'}
                 </Text>
               </TouchableOpacity>
             ) : (
@@ -1280,12 +1230,10 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
                 )}
                 <Text style={styles.footerSaveText}>
                   {isSaving
-                    ? 'Saving Crop Gallery...'
+                    ? 'Saving...'
                     : daysRemaining > 0
-                      ? `Update Crop Gallery (${daysRemaining}d Left)`
-                      : saveToCropRecord
-                        ? 'Save to Crop Gallery (7-Day Display)'
-                        : 'Save Media & Remarks'}
+                      ? `Update Gallery (${daysRemaining}d Left)`
+                      : 'Save 7-Day Gallery'}
                 </Text>
               </TouchableOpacity>
             )}
@@ -1342,6 +1290,17 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
               </View>
 
               <View style={styles.inspectFooterRow}>
+                {previewingPhotoIndex !== null && !archivePreviewPhoto && (
+                  <TouchableOpacity
+                    style={styles.inspectDeleteBtn}
+                    activeOpacity={0.85}
+                    onPress={() => confirmDeletePhoto(previewingPhotoIndex)}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#ffffff" />
+                    <Text style={styles.inspectDeleteBtnText}>Delete Photo</Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={styles.inspectDownloadBtn}
                   activeOpacity={0.85}
@@ -1376,6 +1335,137 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
         </Modal>
       ) : null}
 
+      {/* SLOT PICKER MODAL (FOR TOP 3 SLOTS: LIVE OR GALLERY) */}
+      <Modal
+        visible={slotPickerTarget !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSlotPickerTarget(null)}
+      >
+        <View style={styles.chooserOverlay}>
+          <View style={styles.chooserCard}>
+            <View style={styles.chooserHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="add-circle" size={22} color="#15803d" />
+                <Text style={styles.chooserTitle}>
+                  Add Photo #{slotPickerTarget !== null ? slotPickerTarget + 1 : 1}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setSlotPickerTarget(null)}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <View style={{ gap: 10, marginTop: 10 }}>
+              <TouchableOpacity
+                style={styles.chooserOptionLive}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setSlotPickerTarget(null);
+                  handleTakePhotoLive();
+                }}
+              >
+                <View style={styles.chooserOptionIconLive}>
+                  <Ionicons name="camera" size={20} color="#ffffff" />
+                </View>
+                <Text style={styles.chooserOptionTitle}>Take Live Photo</Text>
+                <Ionicons name="chevron-forward" size={18} color="#15803d" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.chooserOptionGallery}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setSlotPickerTarget(null);
+                  handlePickPhotoLibrary();
+                }}
+              >
+                <View style={styles.chooserOptionIconGallery}>
+                  <Ionicons name="images" size={20} color="#ffffff" />
+                </View>
+                <Text style={styles.chooserOptionTitle}>Choose From Gallery</Text>
+                <Ionicons name="chevron-forward" size={18} color="#2563eb" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* FULL VIDEO PLAYER MODAL */}
+      {previewingVideo && videoUri ? (
+        <Modal
+          visible={true}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPreviewingVideo(false)}
+        >
+          <View style={styles.inspectOverlay}>
+            <View style={[styles.inspectCard, { maxWidth: 540 }]}>
+              {/* CLEAN EXECUTIVE HEADER */}
+              <View style={styles.videoModalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <View style={styles.videoModalLiveBadge}>
+                    <View style={styles.videoModalLiveDot} />
+                    <Text style={styles.videoModalLiveText}>LIVE VIDEO</Text>
+                  </View>
+                  <Text style={styles.videoModalTitle} numberOfLines={1}>
+                    {cropName} · {fieldName}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setPreviewingVideo(false)} style={styles.videoModalCloseBtn}>
+                  <Ionicons name="close" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              </View>
+
+              {/* VIDEO VIEWPORT IN CLEAN MODE */}
+              <View style={styles.videoPlayerContainer}>
+                <CropVideoPlayer
+                  videoUri={videoUri}
+                  cropName={cropName}
+                  fieldName={fieldName}
+                  farmerName={effectiveFarmerName}
+                  recordedAt={videoRecordedAt}
+                  height={300}
+                  cleanMode={true}
+                />
+              </View>
+
+              {/* BALANCED 3-BUTTON FOOTER ROW */}
+              <View style={styles.videoModalFooterRow}>
+                <TouchableOpacity
+                  style={styles.videoFooterBtnReRecord}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    setPreviewingVideo(false);
+                    handleStartShootVideo();
+                  }}
+                >
+                  <Ionicons name="radio-button-on" size={14} color="#ef4444" />
+                  <Text style={styles.videoFooterBtnText}>Re-record</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.videoFooterBtnDelete}
+                  activeOpacity={0.85}
+                  onPress={confirmDeleteVideo}
+                >
+                  <Ionicons name="trash-outline" size={14} color="#ffffff" />
+                  <Text style={styles.videoFooterBtnText}>Delete</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.videoFooterBtnDone}
+                  activeOpacity={0.85}
+                  onPress={() => setPreviewingVideo(false)}
+                >
+                  <Ionicons name="checkmark" size={16} color="#ffffff" />
+                  <Text style={styles.videoFooterBtnText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+
       <WebCameraPhotoModal
         visible={showWebPhotoCamera}
         farmerName={effectiveFarmerName}
@@ -1383,7 +1473,7 @@ export const CropMediaModal: React.FC<CropMediaModalProps> = ({
         cropName={cropName}
         onClose={() => setShowWebPhotoCamera(false)}
         onCaptured={(stampedDataUrl) => {
-          setPhotos((prev) => [...prev, stampedDataUrl].slice(0, 6));
+          setPhotos((prev) => [...prev, stampedDataUrl].slice(0, 5));
           setPhotoSources((prev) => ({ ...prev, [stampedDataUrl]: 'LIVE' }));
         }}
       />
@@ -1413,10 +1503,10 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 920,
+    maxWidth: 840,
     maxHeight: '94%',
     backgroundColor: '#ffffff',
-    borderRadius: 22,
+    borderRadius: 18,
     padding: 0,
     overflow: 'hidden',
     borderWidth: 1.5,
@@ -1432,13 +1522,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    paddingBottom: 8,
-    marginBottom: 4,
+    paddingBottom: 6,
+    marginBottom: 2,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
   modalCorporateText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '700',
     color: '#86efac',
     letterSpacing: 0.3,
@@ -1447,21 +1537,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(56, 189, 248, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(125, 211, 252, 0.35)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: 4,
   },
   modalIcarText: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontWeight: '800',
     color: '#7dd3fc',
     letterSpacing: 0.4,
   },
   headerGradient: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 14,
-    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 10,
+    gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(74, 222, 128, 0.2)',
   },
@@ -1469,12 +1559,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 8,
   },
   headerIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: 'rgba(22, 163, 74, 0.2)',
     borderWidth: 1,
     borderColor: 'rgba(74, 222, 128, 0.45)',
@@ -1482,42 +1572,42 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
     color: '#ffffff',
     letterSpacing: -0.2,
   },
   headerStatusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 999,
     borderWidth: 1,
   },
   headerStatusPillText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontWeight: '900',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   headerSubtitle: {
-    fontSize: 11.5,
+    fontSize: 11,
     color: '#cbd5e1',
-    marginTop: 2,
+    marginTop: 1,
     fontWeight: '600',
   },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalTabRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: 12,
-    padding: 4,
+    borderRadius: 10,
+    padding: 3,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
@@ -1526,16 +1616,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 9,
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
   },
   modalTabBtnActive: {
     backgroundColor: '#4ade80',
   },
   modalTabText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#cbd5e1',
   },
@@ -1546,16 +1636,49 @@ const styles = StyleSheet.create({
 
   sectionCard: {
     backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 10,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    gap: 10,
+    gap: 8,
+  },
+  mediaCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 2,
+  },
+  mediaHeaderCount: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 5,
   },
   sectionHeading: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#0f172a',
+  },
+  emptyPreviewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  emptyPreviewBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#92400e',
   },
   sectionSub: {
     fontSize: 11,
@@ -1631,11 +1754,12 @@ const styles = StyleSheet.create({
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 7,
   },
   photoThumbCard: {
-    width: '31%',
-    borderRadius: 10,
+    width: '31.6%',
+    height: 106,
+    borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#334155',
@@ -1643,7 +1767,7 @@ const styles = StyleSheet.create({
   },
   photoImageWrap: {
     width: '100%',
-    height: 152,
+    height: 78,
     backgroundColor: '#090e17',
   },
   photoThumbImg: {
@@ -1651,17 +1775,17 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   photoActionFooter: {
+    height: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 6,
     backgroundColor: '#0f172a',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.08)',
   },
   photoSlotCaption: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '700',
     color: '#cbd5e1',
   },
@@ -1770,9 +1894,9 @@ const styles = StyleSheet.create({
 
   inspectBtn: {
     backgroundColor: '#1e293b',
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -1780,51 +1904,51 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     backgroundColor: '#dc2626',
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   downloadSmallBtn: {
     backgroundColor: '#0284c7',
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptySlot: {
-    width: '31%',
-    height: 189,
-    borderRadius: 10,
-    borderWidth: 1.5,
+    width: '31.6%',
+    height: 106,
+    borderRadius: 8,
+    borderWidth: 1.2,
     borderColor: '#86efac',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: 'rgba(22, 163, 74, 0.04)',
     cursor: Platform.OS === 'web' ? 'pointer' : undefined,
   },
   emptySlotCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: '#dcfce7',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#86efac',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   emptySlotText: {
-    fontSize: 11,
+    fontSize: 10.5,
     color: '#15803d',
     fontWeight: '800',
   },
   emptySlotSub: {
-    fontSize: 9.5,
+    fontSize: 9,
     color: '#64748b',
     fontWeight: '600',
   },
@@ -2029,9 +2153,9 @@ const styles = StyleSheet.create({
 
   footerRow: {
     flexDirection: 'row',
-    gap: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
     backgroundColor: '#f8fafc',
@@ -2039,13 +2163,13 @@ const styles = StyleSheet.create({
   footerCancelBtn: {
     flex: 1,
     backgroundColor: '#f1f5f9',
-    paddingVertical: 11,
+    paddingVertical: 9,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   footerCancelText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
     color: '#475569',
   },
@@ -2056,11 +2180,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 11,
+    paddingVertical: 9,
     borderRadius: 8,
   },
   footerSaveText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
     color: '#ffffff',
   },
@@ -2080,6 +2204,99 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 12,
+  },
+  videoModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingBottom: 2,
+  },
+  videoModalLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
+  videoModalLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#ffffff',
+  },
+  videoModalLiveText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  videoModalTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+    flex: 1,
+  },
+  videoModalCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoPlayerContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#020617',
+    borderWidth: 1,
+    borderColor: '#1e293b',
+    marginVertical: 4,
+  },
+  videoModalFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  videoFooterBtnReRecord: {
+    flex: 1,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#475569',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  videoFooterBtnDelete: {
+    flex: 1,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#dc2626',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  videoFooterBtnDone: {
+    flex: 1.2,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: '#16a34a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  videoFooterBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
   inspectHeader: {
     flexDirection: 'row',
@@ -2481,5 +2698,457 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     color: '#b45309',
+  },
+
+  // Slot Groups & Badges
+  slotGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  slotGroupTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  slotGroupBadgeGreen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  slotGroupBadgeGreenText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  slotGroupBadgeAmber: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  slotGroupBadgeAmberText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+  },
+
+  // Card Badges & Delete Buttons
+  cardSourceBadge: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 4,
+    paddingVertical: 1.5,
+    borderRadius: 3,
+    zIndex: 5,
+  },
+  cardSourceBadgeLive: {
+    backgroundColor: '#16a34a',
+  },
+  cardSourceBadgeUploaded: {
+    backgroundColor: '#2563eb',
+  },
+  cardSourceBadgeText: {
+    fontSize: 8,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  cardCornerDeleteBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(220, 38, 38, 0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  emptySlotTop3: {
+    borderColor: '#86efac',
+    backgroundColor: '#f0fdf4',
+  },
+  emptySlotBottom3: {
+    borderColor: '#fde68a',
+    backgroundColor: '#fffbeb',
+  },
+  slotPermitPillGreen: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  slotPermitPillGreenText: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  slotPermitPillAmber: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  slotPermitPillAmberText: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+  },
+
+  // Video Slot Card Styles (Slot #6)
+  videoThumbCardBorder: {
+    borderColor: '#fca5a5',
+  },
+  videoCardPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#090e17',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  videoPlayCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(220, 38, 38, 0.90)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#dc2626',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  videoThumbPreviewText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#fca5a5',
+  },
+  cardSourceBadgeVideo: {
+    backgroundColor: '#dc2626',
+  },
+  reRecordSmallBtn: {
+    backgroundColor: '#dc2626',
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptySlotVideo: {
+    borderColor: '#fca5a5',
+    backgroundColor: '#fff1f2',
+  },
+  slotPermitPillRed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#fee2e2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  slotPermitPillRedText: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+  },
+
+  // Sleek 1-line Compact Banners & Options
+  activeCycleCompactStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  activeCycleCompactText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  activeCycleMiniBar: {
+    width: 50,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(22, 163, 74, 0.2)',
+    overflow: 'hidden',
+  },
+  activeCycleMiniFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#16a34a',
+  },
+  expiredArchiveCompactStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  expiredArchiveCompactText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+  },
+  expiredArchiveLinkText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+    textDecorationLine: 'underline',
+  },
+  compactSaveCheckRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  compactCheckbox: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#16a34a',
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactCheckboxChecked: {
+    backgroundColor: '#16a34a',
+  },
+  compactSaveCheckText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+
+  // Inspect Delete Button
+  inspectDeleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  inspectDeleteBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+
+  // Slot Chooser Modal
+  chooserOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  chooserCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    maxWidth: 420,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  chooserHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  chooserTitle: {
+    fontSize: 16,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  chooserSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  chooserOptionLive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    borderRadius: 12,
+    padding: 12,
+  },
+  chooserOptionGallery: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1.5,
+    borderColor: '#bfdbfe',
+    borderRadius: 12,
+    padding: 12,
+  },
+  chooserOptionIconLive: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chooserOptionIconGallery: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2563eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chooserOptionTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  chooserOptionDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+
+  // Compact Past Gallery (Archive) Thumbnails
+  archivePhotoStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  archiveThumbCard: {
+    width: 74,
+    height: 74,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#090e17',
+    position: 'relative',
+  },
+  archiveThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  archiveThumbCornerBadge: {
+    position: 'absolute',
+    top: 3,
+    left: 3,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  archiveThumbCornerText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  archiveSourceTag: {
+    position: 'absolute',
+    bottom: 3,
+    right: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  archiveSourceTagLive: {
+    backgroundColor: 'rgba(22, 163, 74, 0.92)',
+  },
+  archiveSourceTagUpload: {
+    backgroundColor: 'rgba(37, 99, 235, 0.92)',
+  },
+  archiveSourceTagText: {
+    fontSize: 8,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.2,
+  },
+  archivedVideosPurgedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#f8fafc',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  archivedVideosPurgedText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
   },
 });

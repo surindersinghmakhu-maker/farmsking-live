@@ -29,6 +29,7 @@ interface CropVideoPlayerProps {
   height?: number;
   onRemove?: () => void;
   compact?: boolean;
+  cleanMode?: boolean;
 }
 
 /**
@@ -47,6 +48,7 @@ export const CropVideoPlayer: React.FC<CropVideoPlayerProps> = ({
   height = 220,
   onRemove,
   compact = false,
+  cleanMode = false,
 }) => {
   const resolvedUrl = resolveCropMediaDisplayUri(videoUri) || videoUri;
   const videoElRef = useRef<HTMLVideoElement | null>(null);
@@ -90,46 +92,48 @@ export const CropVideoPlayer: React.FC<CropVideoPlayerProps> = ({
 
   return (
     <>
-      <View style={styles.playerCard}>
-        {/* TOP WATERMARK BAR: LIVE LEFT, EYE/ACTION + FAVICON RIGHT */}
-        <View style={styles.topWatermarkRow}>
-          <View style={styles.liveBadge}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>LIVE</Text>
-          </View>
+      <View style={[styles.playerCard, cleanMode && { borderWidth: 0, backgroundColor: 'transparent' }]}>
+        {/* TOP WATERMARK BAR (HIDDEN IN CLEAN MODE) */}
+        {!cleanMode && (
+          <View style={styles.topWatermarkRow}>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE</Text>
+            </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <TouchableOpacity
-              style={styles.iconActionBtn}
-              onPress={() => setFullscreenOpen(true)}
-              accessibilityLabel="Inspect video player"
-            >
-              <Ionicons name="eye" size={14} color="#e2e8f0" />
-              {!compact && <Text style={styles.iconActionText}>Watch</Text>}
-            </TouchableOpacity>
-
-            {onRemove && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <TouchableOpacity
-                style={styles.removeBtn}
-                onPress={onRemove}
-                accessibilityLabel="Remove attached video"
+                style={styles.iconActionBtn}
+                onPress={() => setFullscreenOpen(true)}
+                accessibilityLabel="Inspect video player"
               >
-                <Ionicons name="trash-outline" size={13} color="#fecaca" />
+                <Ionicons name="eye" size={14} color="#e2e8f0" />
+                {!compact && <Text style={styles.iconActionText}>Watch</Text>}
               </TouchableOpacity>
-            )}
 
-            <View style={styles.faviconPill}>
-              <Image
-                source={require('@/assets/images/favicon.png')}
-                style={{ width: compact ? 22 : 26, height: compact ? 22 : 26, borderRadius: 6 }}
-                resizeMode="contain"
-              />
+              {onRemove && (
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={onRemove}
+                  accessibilityLabel="Remove attached video"
+                >
+                  <Ionicons name="trash-outline" size={13} color="#fecaca" />
+                </TouchableOpacity>
+              )}
+
+              <View style={styles.faviconPill}>
+                <Image
+                  source={require('@/assets/images/favicon.png')}
+                  style={{ width: compact ? 22 : 26, height: compact ? 22 : 26, borderRadius: 6 }}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* VIDEO VIEWPORT */}
-        <View style={[styles.viewport, { height }]}>
+        <View style={[styles.viewport, { height }, cleanMode && { borderRadius: 10, overflow: 'hidden' }]}>
           {Platform.OS === 'web' ? (
             loadError ? (
               <View style={styles.errorBox}>
@@ -184,7 +188,7 @@ export const CropVideoPlayer: React.FC<CropVideoPlayerProps> = ({
                   },
                 })}
 
-                {!isPlayingInline && !isLoadingMeta && (
+                {!cleanMode && !isPlayingInline && !isLoadingMeta && (
                   <View style={styles.playOverlayCenter} pointerEvents="box-none">
                     <TouchableOpacity
                       style={styles.playOverlayBtn}
@@ -217,19 +221,21 @@ export const CropVideoPlayer: React.FC<CropVideoPlayerProps> = ({
 
         {/* BOTTOM WATERMARK: DATE, TIME, FARMER NAME, PLOT NAME */}
         <View style={styles.bottomWatermarkRow}>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: 2 }}>
             <Text style={styles.watermarkDateTime} numberOfLines={1}>
-              Date: {timestamp.dateStr}  ·  Time: {timestamp.timeStr}
+              Date: {timestamp.dateStr} · Time: {timestamp.timeStr}
             </Text>
             <Text style={styles.watermarkMeta} numberOfLines={1}>
-              Farmer: {farmerName}  |  Plot: {fieldName} ({cropName})
+              Farmer: {farmerName} | Plot: {fieldName} ({cropName})
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.playPillBtn} onPress={() => setFullscreenOpen(true)}>
-            <Ionicons name="eye" size={14} color="#4ade80" />
-            <Text style={styles.playPillText}>Play</Text>
-          </TouchableOpacity>
+          {!cleanMode && (
+            <TouchableOpacity style={styles.playPillBtn} onPress={() => setFullscreenOpen(true)}>
+              <Ionicons name="eye" size={13} color="#4ade80" />
+              <Text style={styles.playPillText}>Watch</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

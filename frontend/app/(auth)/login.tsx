@@ -827,8 +827,8 @@ export default function LoginScreen() {
     }
   };
 
-  const autoFillDevOtp = () => {
-    const code = '123456';
+  const autoFillDevOtp = (codeOverride?: string) => {
+    const code = String(codeOverride || devOtp || '123456').slice(0, 6);
     setOtpDigits(code.split(''));
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -1293,6 +1293,25 @@ export default function LoginScreen() {
               </View>
             ) : (
               <>
+                {/* Localhost Testing Mode Banner: Strictly shown only on Localhost when devOtp is present */}
+                {isLocalhost && devOtp && (
+                  <View style={styles.devBanner}>
+                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="construct" size={14} color="#10b981" />
+                      <Text style={styles.devBannerSubtitle}>
+                        Local Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>{devOtp}</Text>
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => autoFillDevOtp(devOtp)}
+                      style={styles.autoFillBtn}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.autoFillBtnText}>Auto-Fill {devOtp}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {/* ── STEP 1: Mobile Number Input ── */}
                 <View style={styles.inputSection}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
@@ -1415,6 +1434,16 @@ export default function LoginScreen() {
                       <Text style={styles.otpInfoText}>
                         OTP sent to <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
                       </Text>
+                      {isLocalhost && devOtp && (
+                        <TouchableOpacity
+                          onPress={() => autoFillDevOtp(devOtp)}
+                          style={styles.quickFillButton}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="flash" size={12} color="#10b981" />
+                          <Text style={styles.quickFillText}>Fill {devOtp}</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
 
                     <Text style={styles.fieldLabel}>Enter 6-Digit OTP</Text>

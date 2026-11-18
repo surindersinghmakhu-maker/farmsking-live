@@ -18,8 +18,8 @@ export declare class ExpensesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         key: string;
+        isActive: boolean;
         isSystem: boolean;
         labelEn: string;
         labelHi: string;
@@ -30,8 +30,8 @@ export declare class ExpensesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         key: string;
+        isActive: boolean;
         isSystem: boolean;
         labelEn: string;
         labelHi: string;
@@ -47,8 +47,8 @@ export declare class ExpensesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         key: string;
+        isActive: boolean;
         isSystem: boolean;
         labelEn: string;
         labelHi: string;
@@ -64,8 +64,8 @@ export declare class ExpensesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         key: string;
+        isActive: boolean;
         isSystem: boolean;
         labelEn: string;
         labelHi: string;
@@ -76,8 +76,8 @@ export declare class ExpensesService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         key: string;
+        isActive: boolean;
         isSystem: boolean;
         labelEn: string;
         labelHi: string;
@@ -94,8 +94,8 @@ export declare class ExpensesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             key: string;
+            isActive: boolean;
             isSystem: boolean;
             labelEn: string;
             labelHi: string;
@@ -133,8 +133,8 @@ export declare class ExpensesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             key: string;
+            isActive: boolean;
             isSystem: boolean;
             labelEn: string;
             labelHi: string;
@@ -193,8 +193,8 @@ export declare class ExpensesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             key: string;
+            isActive: boolean;
             isSystem: boolean;
             labelEn: string;
             labelHi: string;
@@ -256,8 +256,8 @@ export declare class ExpensesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             key: string;
+            isActive: boolean;
             isSystem: boolean;
             labelEn: string;
             labelHi: string;
@@ -295,8 +295,8 @@ export declare class ExpensesService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             key: string;
+            isActive: boolean;
             isSystem: boolean;
             labelEn: string;
             labelHi: string;

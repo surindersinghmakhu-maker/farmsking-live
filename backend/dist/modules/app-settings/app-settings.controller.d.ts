@@ -28,7 +28,6 @@ export declare class AppSettingsController {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -66,6 +65,7 @@ export declare class AppSettingsController {
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     getSeo(): Promise<{
         seoTitle: any;
@@ -80,7 +80,6 @@ export declare class AppSettingsController {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -118,6 +117,7 @@ export declare class AppSettingsController {
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     getIntegrations(): Promise<import("./constants/system-integrations.constant").SystemIntegrationsConfig>;
     requestAdminActionOtp(user: AuthUser): Promise<{

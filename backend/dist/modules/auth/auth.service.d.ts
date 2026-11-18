@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
+import { SmsService } from '../sms/sms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterTraderDto } from './dto/register-trader.dto';
@@ -28,6 +29,8 @@ export declare class AuthService {
     private readonly userSessionService;
     private readonly emailService;
     private readonly uploadsService?;
+    private readonly smsService?;
+    private readonly logger;
     private readonly otpStore;
     private readonly mobileLinkOtpStore;
     private readonly loginOtpStore;
@@ -36,7 +39,7 @@ export declare class AuthService {
     private readonly partyOtpStore;
     private readonly partnerSignupOtpStore;
     private readonly partnerVerifiedMap;
-    constructor(prisma: PrismaService, jwtService: JwtService, whatsappBotService: WhatsappBotService, whatsappGroupSyncService: WhatsAppGroupSyncService, appSettingsService: AppSettingsService, walletService: WalletService, userSessionService: UserSessionService, emailService: EmailService, uploadsService?: UploadsService | undefined);
+    constructor(prisma: PrismaService, jwtService: JwtService, whatsappBotService: WhatsappBotService, whatsappGroupSyncService: WhatsAppGroupSyncService, appSettingsService: AppSettingsService, walletService: WalletService, userSessionService: UserSessionService, emailService: EmailService, uploadsService?: UploadsService | undefined, smsService?: SmsService | undefined);
     sendWhatsAppOtp(mobile: string, otpCode: string): Promise<{
         success: import("../whatsapp/whatsapp.service").WhatsAppMessageResult;
         message: string;
@@ -50,6 +53,7 @@ export declare class AuthService {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -63,6 +67,7 @@ export declare class AuthService {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -82,6 +87,7 @@ export declare class AuthService {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -101,6 +107,7 @@ export declare class AuthService {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -296,6 +303,7 @@ export declare class AuthService {
     sendMobileLinkOtp(user: AuthUser, mobile: string): Promise<{
         success: boolean;
         message: string;
+        devOtp: string | undefined;
     }>;
     verifyMobileLinkOtp(user: AuthUser, dto: {
         mobile: string;
@@ -403,6 +411,7 @@ export declare class AuthService {
         success: boolean;
         isNewUser: boolean;
         waSent: boolean;
+        smsSent: boolean;
         message: string;
         devOtp: string | undefined;
     }>;

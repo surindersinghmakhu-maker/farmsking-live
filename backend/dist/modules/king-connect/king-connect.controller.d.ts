@@ -112,8 +112,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.SyncRequestStatus;
@@ -140,8 +140,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.SyncRequestStatus;
@@ -172,8 +172,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.SyncRequestStatus;
@@ -193,8 +193,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.SyncRequestStatus;
@@ -315,8 +315,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.PaymentRequestStatus;
@@ -346,8 +346,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.PaymentRequestStatus;
@@ -370,8 +370,8 @@ export declare class KingConnectController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        expiresAt: Date;
         senderId: string;
+        expiresAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         reason: string;
         status: import(".prisma/client").$Enums.PaymentRequestStatus;
@@ -424,8 +424,8 @@ export declare class KingConnectController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            expiresAt: Date;
             senderId: string;
+            expiresAt: Date;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             status: import(".prisma/client").$Enums.SyncRequestStatus;
@@ -454,8 +454,8 @@ export declare class KingConnectController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            expiresAt: Date;
             senderId: string;
+            expiresAt: Date;
             amount: import("@prisma/client/runtime/library").Decimal;
             reason: string;
             status: import(".prisma/client").$Enums.PaymentRequestStatus;

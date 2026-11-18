@@ -22,6 +22,7 @@ export declare class AuthController {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -37,6 +38,7 @@ export declare class AuthController {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -53,6 +55,7 @@ export declare class AuthController {
         success: boolean;
         mobile: string;
         sentViaWhatsApp: boolean;
+        sentViaSms: boolean;
         message: string;
         devOtp: string | undefined;
         expiresInSeconds: number;
@@ -150,6 +153,7 @@ export declare class AuthController {
         success: boolean;
         isNewUser: boolean;
         waSent: boolean;
+        smsSent: boolean;
         message: string;
         devOtp: string | undefined;
     }>;
@@ -392,6 +396,7 @@ export declare class AuthController {
     sendMobileLinkOtp(user: AuthUser, body: SendMobileLinkOtpDto): Promise<{
         success: boolean;
         message: string;
+        devOtp: string | undefined;
     }>;
     verifyMobileLinkOtp(user: AuthUser, dto: VerifyMobileLinkOtpDto): Promise<{
         success: boolean;

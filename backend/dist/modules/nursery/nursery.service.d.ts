@@ -724,8 +724,8 @@ export declare class NurseryService {
     logEnquiryTicket(agentId: string, dto: LogEnquiryDto): Promise<{
         id: string;
         createdAt: Date;
-        description: string;
         customerId: string;
+        description: string;
         status: string;
         resolvedAt: Date | null;
         orderId: string | null;

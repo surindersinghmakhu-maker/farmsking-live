@@ -14,10 +14,10 @@ export declare class PartnerAssignmentService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        businessPartnerId: string;
         startDate: Date;
         endDate: Date | null;
         customerId: string;
+        businessPartnerId: string;
         status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     findMyCustomers(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
@@ -31,10 +31,10 @@ export declare class PartnerAssignmentService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        businessPartnerId: string;
         startDate: Date;
         endDate: Date | null;
         customerId: string;
+        businessPartnerId: string;
         status: import(".prisma/client").$Enums.PartnerAssignmentStatus;
     })[]>;
 }

@@ -719,8 +719,8 @@ export declare class NurseryController {
     logEnquiryTicket(user: AuthUser, dto: LogEnquiryDto): Promise<{
         id: string;
         createdAt: Date;
-        description: string;
         customerId: string;
+        description: string;
         status: string;
         resolvedAt: Date | null;
         orderId: string | null;

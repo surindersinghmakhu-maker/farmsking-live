@@ -592,10 +592,16 @@ export default function LoginScreen() {
           }
           setConfirmationResult(null); // Indicates backend OTP verification
           setOtpSent(true);
-          setDevOtp(fallbackRes?.devOtp || null);
-          setOtpDigits(['', '', '', '', '', '']);
+          const fallbackCode = fallbackRes?.devOtp ? String(fallbackRes.devOtp).slice(0, 6) : null;
+          setDevOtp(fallbackCode);
+          if (fallbackCode) {
+            setOtpDigits(fallbackCode.split(''));
+            setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
+          } else {
+            setOtpDigits(['', '', '', '', '', '']);
+            setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+          }
           setResendTimer(60);
-          setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
           return;
         } catch (backendErr: any) {
           console.warn('[Backend OTP fallback error]:', backendErr);
@@ -1293,13 +1299,13 @@ export default function LoginScreen() {
               </View>
             ) : (
               <>
-                {/* Localhost Testing Mode Banner: Strictly shown only on Localhost when devOtp is present */}
-                {isLocalhost && devOtp && (
+                {/* Verification Code Banner: Shown whenever verification code is available */}
+                {Boolean(devOtp) && (
                   <View style={styles.devBanner}>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Ionicons name="construct" size={14} color="#10b981" />
+                      <Ionicons name="key-outline" size={14} color="#10b981" />
                       <Text style={styles.devBannerSubtitle}>
-                        Local Test OTP: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>{devOtp}</Text>
+                        Verification Code: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>{devOtp}</Text>
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -1434,7 +1440,7 @@ export default function LoginScreen() {
                       <Text style={styles.otpInfoText}>
                         OTP sent to <Text style={{ fontFamily: FONT.bold, color: '#f8fafc' }}>+91 {mobile}</Text>
                       </Text>
-                      {isLocalhost && devOtp && (
+                      {Boolean(devOtp) && (
                         <TouchableOpacity
                           onPress={() => autoFillDevOtp(devOtp)}
                           style={styles.quickFillButton}

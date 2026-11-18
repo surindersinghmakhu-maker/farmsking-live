@@ -7,6 +7,7 @@ import { SystemIntegrationsConfig } from './constants/system-integrations.consta
 export declare class AppSettingsService {
     private readonly prisma;
     private readonly moduleRef?;
+    private readonly logger;
     private cache;
     private rawCache;
     private readonly CACHE_TTL_MS;
@@ -42,7 +43,6 @@ export declare class AppSettingsService {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -80,6 +80,7 @@ export declare class AppSettingsService {
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     get(): Promise<any>;
     getSupportContact(): Promise<{
@@ -196,7 +197,6 @@ export declare class AppSettingsService {
         upiId: string | null;
         createdAt: Date;
         updatedAt: Date;
-        updatedById: string | null;
         appName: string;
         logoUrl: string | null;
         tagline: string | null;
@@ -234,6 +234,7 @@ export declare class AppSettingsService {
         walletUsageGstPercent: number;
         walletTaxEnabled: boolean;
         featureFlags: import("@prisma/client/runtime/library").JsonValue | null;
+        updatedById: string | null;
     }>;
     getIntegrations(): Promise<SystemIntegrationsConfig>;
     updateIntegrations(admin: AuthUser, rawPayload: Partial<SystemIntegrationsConfig> & {

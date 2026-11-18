@@ -7,10 +7,10 @@ export declare class NotificationsController {
         id: string;
         createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
+        body: string;
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         userId: string;
-        body: string;
         isRead: boolean;
         readAt: Date | null;
     }[]>;
@@ -21,10 +21,10 @@ export declare class NotificationsController {
         id: string;
         createdAt: Date;
         data: import("@prisma/client/runtime/library").JsonValue | null;
+        body: string;
         type: import(".prisma/client").$Enums.NotificationType;
         title: string;
         userId: string;
-        body: string;
         isRead: boolean;
         readAt: Date | null;
     }>;

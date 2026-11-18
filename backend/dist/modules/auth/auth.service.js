@@ -149,14 +149,7 @@ let AuthService = AuthService_1 = class AuthService {
         this.logger.warn(`[Mobile OTP Challenge for +91 ${cleanMobile} (${key})]: ${otpCode}`);
         let sentViaWhatsApp = false;
         let sentViaSms = false;
-        try {
-            const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-            sentViaWhatsApp = Boolean(waRes?.success);
-        }
-        catch {
-            sentViaWhatsApp = false;
-        }
-        if (!sentViaWhatsApp && this.smsService) {
+        if (this.smsService) {
             try {
                 const smsRes = await this.smsService.sendTextMessage(cleanMobile, `Your FarmsKing verification code is ${otpCode}. Valid for 10 minutes. - FarmsKing Technologies Private Limited`, 'OTP_CHALLENGE');
                 sentViaSms = Boolean(smsRes?.success);
@@ -1134,14 +1127,7 @@ let AuthService = AuthService_1 = class AuthService {
         this.logger.warn(`[FarmsKing Mobile Link OTP for user ${user.id} (+91 ${cleanMobile})]: ${otpCode}`);
         let sent = false;
         let smsSent = false;
-        try {
-            const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-            sent = Boolean(waRes?.success);
-        }
-        catch {
-            sent = false;
-        }
-        if (!sent && this.smsService) {
+        if (this.smsService) {
             try {
                 const smsRes = await this.smsService.sendTextMessage(cleanMobile, `Your FarmsKing mobile link verification code is ${otpCode}. Valid for 10 minutes. - FarmsKing Technologies Private Limited`, 'LINK_MOBILE');
                 smsSent = Boolean(smsRes?.success);
@@ -1732,13 +1718,11 @@ let AuthService = AuthService_1 = class AuthService {
             userId: user.id,
             verified: false,
         });
-        const sentViaWhatsApp = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
+        this.logger.warn(`[Forgot Password OTP for ${mobile}]: ${otpCode}`);
         return {
             success: true,
             mobile,
-            message: sentViaWhatsApp
-                ? 'WhatsApp OTP has been sent to your mobile number.'
-                : 'WhatsApp OTP message triggered. Please check your WhatsApp.',
+            message: 'OTP verification code generated. Please verify to continue.',
         };
     }
     async forgotPasswordVerify(dto) {
@@ -2014,14 +1998,7 @@ let AuthService = AuthService_1 = class AuthService {
         this.logger.warn(`[FarmsKing Login OTP for +91 ${cleanMobile}]: ${otpCode}`);
         let waSent = false;
         let smsSent = false;
-        try {
-            const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-            waSent = Boolean(waResult?.success);
-        }
-        catch {
-            waSent = false;
-        }
-        if (!waSent && this.smsService) {
+        if (this.smsService) {
             try {
                 const smsResult = await this.smsService.sendTextMessage(cleanMobile, `Your FarmsKing login OTP is ${otpCode}. Valid for 10 minutes. - FarmsKing Technologies Private Limited`, 'LOGIN_OTP');
                 smsSent = Boolean(smsResult?.success);
@@ -2036,11 +2013,9 @@ let AuthService = AuthService_1 = class AuthService {
             isNewUser: !user && !existingWorker,
             waSent,
             smsSent,
-            message: waSent
-                ? 'OTP sent via WhatsApp!'
-                : smsSent
-                    ? 'OTP sent via SMS text message!'
-                    : 'Verification code generated. Please verify to continue.',
+            message: smsSent
+                ? 'OTP sent via SMS text message!'
+                : 'Verification code generated. Please verify to continue.',
             devOtp: allowDevOtp ? otpCode : undefined,
         };
     }

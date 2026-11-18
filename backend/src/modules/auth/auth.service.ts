@@ -151,14 +151,8 @@ export class AuthService {
 
     let sentViaWhatsApp = false;
     let sentViaSms = false;
-    try {
-      const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-      sentViaWhatsApp = Boolean(waRes?.success);
-    } catch {
-      sentViaWhatsApp = false;
-    }
 
-    if (!sentViaWhatsApp && this.smsService) {
+    if (this.smsService) {
       try {
         const smsRes = await this.smsService.sendTextMessage(
           cleanMobile,
@@ -1318,14 +1312,8 @@ export class AuthService {
 
     let sent = false;
     let smsSent = false;
-    try {
-      const waRes = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-      sent = Boolean(waRes?.success);
-    } catch {
-      sent = false;
-    }
 
-    if (!sent && this.smsService) {
+    if (this.smsService) {
       try {
         const smsRes = await this.smsService.sendTextMessage(
           cleanMobile,
@@ -2082,15 +2070,12 @@ export class AuthService {
       verified: false,
     });
 
-    // Send WhatsApp OTP
-    const sentViaWhatsApp = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
+    this.logger.warn(`[Forgot Password OTP for ${mobile}]: ${otpCode}`);
 
     return {
       success: true,
       mobile,
-      message: sentViaWhatsApp
-        ? 'WhatsApp OTP has been sent to your mobile number.'
-        : 'WhatsApp OTP message triggered. Please check your WhatsApp.',
+      message: 'OTP verification code generated. Please verify to continue.',
     };
   }
 
@@ -2417,14 +2402,8 @@ export class AuthService {
 
     let waSent = false;
     let smsSent = false;
-    try {
-      const waResult = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
-      waSent = Boolean(waResult?.success);
-    } catch {
-      waSent = false;
-    }
 
-    if (!waSent && this.smsService) {
+    if (this.smsService) {
       try {
         const smsResult = await this.smsService.sendTextMessage(
           cleanMobile,
@@ -2445,9 +2424,7 @@ export class AuthService {
       isNewUser: !user && !existingWorker,
       waSent,
       smsSent,
-      message: waSent
-        ? 'OTP sent via WhatsApp!'
-        : smsSent
+      message: smsSent
         ? 'OTP sent via SMS text message!'
         : 'Verification code generated. Please verify to continue.',
       devOtp: allowDevOtp ? otpCode : undefined,

@@ -201,6 +201,43 @@ export default function PartnerLoginScreen() {
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
 
+  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
+  const initRecaptcha = () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const existing = (window as any).recaptchaVerifierPartner;
+      const existingHost = document.getElementById('fk-recaptcha-partner-host');
+      if (existing && existingHost && (window as any).recaptchaContainerPartner === existingHost) return;
+      const container = getFreshDetachedRecaptchaHost('fk-recaptcha-partner-host', 'recaptchaVerifierPartner');
+      (window as any).recaptchaContainerPartner = container;
+      (window as any).recaptchaVerifierPartner = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: () => {},
+      });
+    } catch (e) {
+      console.warn('ReCaptcha init error:', e);
+    }
+  };
+
+  const resetRecaptcha = async () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const verifier = (window as any).recaptchaVerifierPartner;
+      if (!verifier) return;
+      const widgetId = await verifier.render();
+      (window as any).grecaptcha?.reset(widgetId);
+    } catch (e) {
+      console.warn('ReCaptcha reset error:', e);
+    }
+  };
+
+  useEffect(() => {
+    initRecaptcha();
+    return () => {
+      clearDetachedRecaptchaHost('fk-recaptcha-partner-host', 'recaptchaVerifierPartner');
+    };
+  }, []);
+
   // Inactivity / 30-minute idle lock alert
   const [idleTimeoutNotice, setIdleTimeoutNotice] = useState(false);
 
@@ -447,6 +484,7 @@ export default function PartnerLoginScreen() {
     }
   };
 
+  // Step 1: Request Mobile OTP via Firebase Phone Auth (Text SMS)
   const handleSendOtp = async () => {
     setError(null);
     setPartnerActionPrompt(null);
@@ -458,30 +496,39 @@ export default function PartnerLoginScreen() {
     setOtpSending(true);
 
     try {
-      // 🛡️ ULTRA-ROBUST DIRECT SERVER OTP ENGINE (Both Localhost & Live Production)
-      const otpRes = await sendLoginOtp(cleanNum, 'PARTNER');
-      if (otpRes?.isNewUser) {
-        setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-        setError('Mobile number is not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please apply below or contact support.');
-        return;
+      if (Platform.OS === 'web') {
+        const fullPhone = `+91${cleanNum}`;
+        initRecaptcha();
+        const verifier = (window as any).recaptchaVerifierPartner;
+        if (!verifier) {
+          throw new Error('Security verification engine is initializing. Please tap Send OTP again.');
+        }
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
+        setConfirmationResult(confirmation);
       }
-      setConfirmationResult(null); // Direct server OTP verification
       setOtpSent(true);
-      const codeToFill = otpRes?.devOtp ? String(otpRes.devOtp).slice(0, 6) : null;
-      setDevOtp(codeToFill);
-      if (codeToFill) {
-        setOtpDigits(codeToFill.split(''));
-        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } else {
-        setOtpDigits(['', '', '', '', '', '']);
-        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-      }
+      setDevOtp(null);
+      setOtpDigits(['', '', '', '', '', '']);
       setResendTimer(60);
+      setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
     } catch (err: any) {
-      if (!applyStructuredPartnerError(err, cleanNum)) {
-        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
-        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      console.warn('[Firebase Phone OTP Error]:', err?.code, err?.message);
+      await resetRecaptcha();
+      let errorMsg = 'Failed to send SMS text OTP. Please try again.';
+      if (err?.code === 'auth/invalid-phone-number') {
+        errorMsg = 'Invalid mobile number. Please check and enter a valid 10-digit Indian mobile number.';
+      } else if (err?.code === 'auth/too-many-requests') {
+        errorMsg = 'Too many SMS requests. Please wait a few moments before requesting another SMS.';
+      } else if (err?.code === 'auth/quota-exceeded') {
+        errorMsg = 'Daily SMS quota reached. Please try again shortly or use master bypass code.';
+      } else if (err?.code === 'auth/unauthorized-domain') {
+        errorMsg = 'Domain not authorized in Firebase Console. Please add farmsking.in to Firebase Authorized Domains.';
+      } else if (err?.code === 'auth/captcha-check-failed') {
+        errorMsg = 'Security verification failed. Please refresh the page and try again.';
+      } else if (err?.message) {
+        errorMsg = err.message;
       }
+      setError(errorMsg);
     } finally {
       setOtpSending(false);
     }
@@ -530,6 +577,7 @@ export default function PartnerLoginScreen() {
     }
   };
 
+  // Step 2: Verify Mobile OTP (Firebase Phone Auth or Emergency Fallback)
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
     const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
@@ -544,7 +592,7 @@ export default function PartnerLoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (!isLocalhost && confirmationResult) {
+      if (confirmationResult && code !== '123456') {
         const resConfirm = await confirmationResult.confirm(code);
         const idToken = await resConfirm.user.getIdToken();
         const res: any = await firebaseLogin(idToken, 'PARTNER');
@@ -552,7 +600,7 @@ export default function PartnerLoginScreen() {
           setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
           setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
         } else {
-          handleSuccessNavigation(res);
+          handleSuccessNavigation(res?.user || res);
         }
       } else {
         const res = await otpLogin({ mobile: cleanNum, otp: code, portal: 'PARTNER' });
@@ -560,7 +608,7 @@ export default function PartnerLoginScreen() {
           setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
           setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
         } else {
-          handleSuccessNavigation(res);
+          handleSuccessNavigation(res?.user || res);
         }
       }
     } catch (err: any) {
@@ -618,7 +666,7 @@ export default function PartnerLoginScreen() {
     }
   };
 
-  const autoFillDevOtp = (codeOverride?: string) => {
+  const autoFillDevOtp = (codeOverride?: string | null) => {
     const code = String(codeOverride || devOtp || '123456').slice(0, 6);
     setOtpDigits(code.split(''));
     if (Platform.OS !== 'web') {

@@ -264,6 +264,43 @@ export default function LoginScreen() {
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
 
+  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
+  const initRecaptcha = () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const existing = (window as any).recaptchaVerifierLogin;
+      const existingHost = document.getElementById('fk-recaptcha-login-host');
+      if (existing && existingHost && (window as any).recaptchaContainerLogin === existingHost) return;
+      const container = getFreshDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
+      (window as any).recaptchaContainerLogin = container;
+      (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: () => {},
+      });
+    } catch (e) {
+      console.warn('ReCaptcha init error:', e);
+    }
+  };
+
+  const resetRecaptcha = async () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const verifier = (window as any).recaptchaVerifierLogin;
+      if (!verifier) return;
+      const widgetId = await verifier.render();
+      (window as any).grecaptcha?.reset(widgetId);
+    } catch (e) {
+      console.warn('ReCaptcha reset error:', e);
+    }
+  };
+
+  useEffect(() => {
+    initRecaptcha();
+    return () => {
+      clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
+    };
+  }, []);
+
   // New User Role Selection State
   const [isNewUserModal, setIsNewUserModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('FARMER');
@@ -518,7 +555,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Step 1: Request Mobile OTP
+  // Step 1: Request Mobile OTP via Firebase Phone Auth (Text SMS)
   const handleSendOtp = async () => {
     setError(null);
     setPartnerActionPrompt(null);
@@ -531,30 +568,39 @@ export default function LoginScreen() {
     setOtpSending(true);
 
     try {
-      // 🛡️ ULTRA-ROBUST DIRECT SERVER OTP ENGINE (Both Localhost & Live Production)
-      const otpRes = await sendLoginOtp(cleanNum, activePortal);
-      if (activePortal === 'PARTNER' && otpRes?.isNewUser) {
-        setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-        setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or apply below.');
-        return;
+      if (Platform.OS === 'web') {
+        const fullPhone = `+91${cleanNum}`;
+        initRecaptcha();
+        const verifier = (window as any).recaptchaVerifierLogin;
+        if (!verifier) {
+          throw new Error('Security verification engine is initializing. Please tap Send OTP again.');
+        }
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
+        setConfirmationResult(confirmation);
       }
-      setConfirmationResult(null); // Direct server OTP verification
       setOtpSent(true);
-      const codeToFill = otpRes?.devOtp ? String(otpRes.devOtp).slice(0, 6) : null;
-      setDevOtp(codeToFill);
-      if (codeToFill) {
-        setOtpDigits(codeToFill.split(''));
-        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } else {
-        setOtpDigits(['', '', '', '', '', '']);
-        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-      }
+      setDevOtp(null);
+      setOtpDigits(['', '', '', '', '', '']);
       setResendTimer(60);
+      setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
     } catch (err: any) {
-      if (!applyStructuredPartnerError(err, cleanNum)) {
-        const msg = err?.response?.data?.message ?? err?.message ?? 'Could not send verification code. Please check your details.';
-        setError(Array.isArray(msg) ? msg.join(', ') : String(msg));
+      console.warn('[Firebase Phone OTP Error]:', err?.code, err?.message);
+      await resetRecaptcha();
+      let errorMsg = 'Failed to send SMS text OTP. Please try again.';
+      if (err?.code === 'auth/invalid-phone-number') {
+        errorMsg = 'Invalid mobile number. Please check and enter a valid 10-digit Indian mobile number.';
+      } else if (err?.code === 'auth/too-many-requests') {
+        errorMsg = 'Too many SMS requests. Please wait a few moments before requesting another SMS.';
+      } else if (err?.code === 'auth/quota-exceeded') {
+        errorMsg = 'Daily SMS quota reached. Please try again shortly or use master bypass code.';
+      } else if (err?.code === 'auth/unauthorized-domain') {
+        errorMsg = 'Domain not authorized in Firebase Console. Please add farmsking.in to Firebase Authorized Domains.';
+      } else if (err?.code === 'auth/captcha-check-failed') {
+        errorMsg = 'Security verification failed. Please refresh the page and try again.';
+      } else if (err?.message) {
+        errorMsg = err.message;
       }
+      setError(errorMsg);
     } finally {
       setOtpSending(false);
     }
@@ -605,7 +651,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Step 2: Verify Mobile OTP (supports explicit code passed from auto-submit)
+  // Step 2: Verify Mobile OTP (Firebase Phone Auth or Emergency Fallback)
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
     const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
@@ -620,7 +666,7 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (!isLocalhost && confirmationResult) {
+      if (confirmationResult && code !== '123456') {
         // 🚀 LIVE PRODUCTION: Verify SMS code via Firebase & backend session
         const resConfirm = await confirmationResult.confirm(code);
         const idToken = await resConfirm.user.getIdToken();
@@ -633,10 +679,10 @@ export default function LoginScreen() {
             setIsNewUserModal(true);
           }
         } else {
-          handleSuccessNavigation(false, res);
+          handleSuccessNavigation(false, res?.user || res);
         }
       } else {
-        // 💻 LOCALHOST: Verify via backend OTP store
+        // 💻 EMERGENCY / MASTER CODE (123456) / SERVER BACKEND FALLBACK
         const res = await otpLogin({ mobile: cleanNum, otp: code, portal: portalMode });
         if (res?.isNewUser) {
           if (portalMode === 'PARTNER') {
@@ -646,7 +692,7 @@ export default function LoginScreen() {
             setIsNewUserModal(true);
           }
         } else {
-          handleSuccessNavigation(false, res);
+          handleSuccessNavigation(false, res?.user || res);
         }
       }
     } catch (err: any) {
@@ -756,7 +802,7 @@ export default function LoginScreen() {
     }
   };
 
-  const autoFillDevOtp = (codeOverride?: string) => {
+  const autoFillDevOtp = (codeOverride?: string | null) => {
     const code = String(codeOverride || devOtp || '123456').slice(0, 6);
     setOtpDigits(code.split(''));
     if (Platform.OS !== 'web') {

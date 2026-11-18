@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -8,6 +8,7 @@ import { AdvocateComplianceDesk } from '@/components/compliance/AdvocateComplian
 
 export default function LegalComplianceScreen() {
   const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { colors, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
 
   return (
@@ -25,7 +26,7 @@ export default function LegalComplianceScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <AdvocateComplianceDesk mode="STANDALONE" />
+        <AdvocateComplianceDesk mode="STANDALONE" initialTab={(tab as any) || 'DOCUMENTS'} />
       </ScrollView>
     </SafeAreaView>
   );

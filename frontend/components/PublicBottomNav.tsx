@@ -678,7 +678,7 @@ export default function PublicBottomNav() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={sheetStyles.menuTitle}>MCA Statutory Compliance</Text>
-                    <Text style={sheetStyles.menuSubtitle}>CIN: U01100PB2026PTC063294 • Ministry of Corporate Affairs</Text>
+                    <Text style={sheetStyles.menuSubtitle}>CIN: U62013PB2026PTC070389 • Ministry of Corporate Affairs</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#64748b" />
                 </TouchableOpacity>
@@ -732,7 +732,7 @@ export default function PublicBottomNav() {
                   FARMSKING TECHNOLOGIES PRIVATE LIMITED
                 </Text>
                 <Text style={sheetStyles.footerSubText}>
-                  ISO 9001:2015 &amp; ISO 27001 Certified • CIN: U01100PB2026PTC063294
+                  ISO 9001:2015 &amp; ISO 27001 Certified • CIN: U62013PB2026PTC070389
                 </Text>
               </View>
             </ScrollView>

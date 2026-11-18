@@ -32,6 +32,7 @@ export function AdminActionOtpModal({
   const [loading, setLoading] = useState(false);
   const [requestingOtp, setRequestingOtp] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [deliveryInfo, setDeliveryInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isLocalhost =
@@ -52,11 +53,18 @@ export function AdminActionOtpModal({
   const handleRequestOtp = async () => {
     setRequestingOtp(true);
     setDevOtp(null);
+    setDeliveryInfo(null);
     setError(null);
     try {
       const res = await apiClient.post('/app-settings/request-admin-action-otp');
       if (res.data?.devOtp) {
         setDevOtp(String(res.data.devOtp));
+      }
+      if (res.data?.mobile) {
+        const channels = res.data?.deliveredVia?.length ? ` (${res.data.deliveredVia.join(' / ')})` : '';
+        setDeliveryInfo(`OTP dispatched to Admin Mobile: +91 ${res.data.mobile}${channels}`);
+      } else if (res.data?.message) {
+        setDeliveryInfo(res.data.message);
       }
     } catch (e: any) {
       console.warn('[AdminActionOtp] Request OTP error:', e?.message);
@@ -106,6 +114,13 @@ export function AdminActionOtpModal({
               <Ionicons name="close" size={20} color="#94a3b8" />
             </TouchableOpacity>
           </View>
+
+          {deliveryInfo ? (
+            <View style={styles.deliveryBadge}>
+              <Ionicons name="phone-portrait-outline" size={15} color="#10b981" style={{ marginRight: 8 }} />
+              <Text style={styles.deliveryText}>{deliveryInfo}</Text>
+            </View>
+          ) : null}
 
           {isLocalhost && devOtp ? (
             <View style={styles.devPill}>
@@ -212,6 +227,23 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     padding: 4,
+  },
+  deliveryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16,185,129,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 8,
+    marginBottom: 14,
+  },
+  deliveryText: {
+    color: '#34d399',
+    fontSize: 12,
+    fontWeight: '700',
+    flex: 1,
   },
   devPill: {
     flexDirection: 'row',

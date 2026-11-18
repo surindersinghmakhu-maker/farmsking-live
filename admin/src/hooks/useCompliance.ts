@@ -15,6 +15,13 @@ export function useComplianceRecords() {
   });
 }
 
+export function useStatutoryDocuments() {
+  return useQuery({
+    queryKey: ['compliance', 'statutory-documents'],
+    queryFn: api.fetchStatutoryDocuments,
+  });
+}
+
 export function useCreateComplianceRecord() {
   const qc = useQueryClient();
   return useMutation({

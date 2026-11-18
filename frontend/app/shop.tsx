@@ -5066,7 +5066,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   </View>
 
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                    CIN: U01100PB2026PTC063294 | FARMSKING TECHNOLOGIES PRIVATE LIMITED · 100% Certified Genuine Agri Products
+                    CIN: U62013PB2026PTC070389 | FARMSKING TECHNOLOGIES PRIVATE LIMITED · 100% Certified Genuine Agri Products
                   </Text>
                 </View>
 

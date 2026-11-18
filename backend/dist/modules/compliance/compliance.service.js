@@ -1,16 +1,51 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComplianceService = void 0;
 const common_1 = require("@nestjs/common");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
 const app_settings_service_1 = require("../app-settings/app-settings.service");
@@ -23,7 +58,7 @@ const DEFAULT_STATUTORY_SEED = [
         authority: 'ROC Punjab & Chandigarh (MCA V3)',
         status: 'PENDING',
         assignedTo: 'ADVOCATE',
-        notes: 'Mandatory within 180 days of incorporation (CIN U01100PB2026PTC063294) with bank subscription credit proof before commencing paid share operations.',
+        notes: 'Mandatory within 180 days of incorporation (CIN U62013PB2026PTC070389) with bank subscription credit proof before commencing paid share operations.',
     },
     {
         category: 'MCA_ROC',
@@ -423,9 +458,9 @@ let ComplianceService = class ComplianceService {
         const rawCompanyTan = pm?.companyTan;
         const companyRegistryReadiness = {
             companyLegalName: pm?.companyLegalName || 'FARMSKING TECHNOLOGIES PRIVATE LIMITED',
-            cin: pm?.cinNumber || 'U01100PB2026PTC063294',
+            cin: pm?.cinNumber || 'U62013PB2026PTC070389',
             rocJurisdiction: pm?.rocJurisdiction || 'ROC Punjab and Chandigarh',
-            registeredAddress: pm?.registeredAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India',
+            registeredAddress: pm?.registeredAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India',
             operationalHq: pm?.operationalHq || 'Main Market, Makhu, Tehsil Zira, District Ferozepur, Punjab - 142044, India',
             gstinConfigured: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyGstin),
             gstin: (0, tax_compliance_util_1.isRealStatutoryId)(rawCompanyGstin) ? rawCompanyGstin : null,
@@ -655,6 +690,159 @@ let ComplianceService = class ComplianceService {
                 updatedById: actor.id,
             },
         });
+    }
+    getStatutoryDocumentsCatalog() {
+        return [
+            {
+                id: 'doc-flex-board-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Official Corporate Office Flex Board Design (Section 12(3))',
+                category: 'Statutory Board',
+                authority: 'Ministry of Corporate Affairs (Companies Act 2013)',
+                referenceNo: 'CIN: U62013PB2026PTC070389 | PAN: AAHCF3566C',
+                status: 'READY TO PRINT',
+                fileSize: '554 KB',
+                fileName: '15_OFFICIAL_CORPORATE_FLEX_BOARD_REGISTERED_OFFICE.html',
+                downloadKey: 'corporate-flex-board',
+                remarks: 'Official registered office nameboard design matching CA drafting with verified logo, CIN, PAN, TAN, Registered Office & contact numbers for flex printing and MCA / GST site photo verification.',
+            },
+            {
+                id: 'doc-coi-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Certificate of Incorporation (SPICe+ Part B Approval)',
+                category: 'MCA / ROC',
+                authority: 'Central Registration Centre, Ministry of Corporate Affairs',
+                referenceNo: 'SRN: AC7349109 | CIN: U62013PB2026PTC070389',
+                status: 'APPROVED / PERMANENT',
+                fileSize: '74.1 KB',
+                fileName: '14_OFFICIAL_CERTIFICATE_OF_INCORPORATION_MCA.pdf',
+                downloadKey: 'certificate-of-incorporation',
+                remarks: 'Official Government Certificate of Incorporation establishing FARMSKING TECHNOLOGIES PRIVATE LIMITED. Allots CIN, PAN (AAHCF3566C), TAN (AMRF11527F).',
+            },
+            {
+                id: 'doc-spice-b-signed-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Form SPICe+ Part B — Master Incorporation Application (Signed)',
+                category: 'MCA / ROC',
+                authority: 'Ministry of Corporate Affairs (MCA V3)',
+                referenceNo: 'SRN: AC7349109 (Resubmission Approved)',
+                status: 'APPROVED / FILED',
+                fileSize: '8.28 MB',
+                fileName: 'SPICE + Part B_AC7349109 signed.pdf',
+                downloadKey: 'spice-part-b-signed',
+                remarks: 'Final DSC-signed master incorporation form with director shareholding, authorized capital (₹1,00,000), PAN, TAN, and registered office records.',
+            },
+            {
+                id: 'doc-inc-33-emoa-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Form INC-33 — Approved e-MoA (Memorandum of Association)',
+                category: 'MCA / ROC',
+                authority: 'Registrar of Companies (MCA V3)',
+                referenceNo: 'SRN: 1-28403906940 (Linked Form Approved)',
+                status: 'APPROVED / PERMANENT',
+                fileSize: '1.09 MB',
+                fileName: 'INC-33_1-28403906940 signed.pdf',
+                downloadKey: 'inc-33-emoa-signed',
+                remarks: 'Company Constitution. Clause III Main Objects: AI Crop Doctor, Live Mandi, Agritech E-commerce, Satellite Telemetry. Essential for Corporate Bank Account, DPIIT & GST.',
+            },
+            {
+                id: 'doc-inc-34-eaoa-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Form INC-34 — Approved e-AoA (Articles of Association)',
+                category: 'MCA / ROC',
+                authority: 'Registrar of Companies (MCA V3)',
+                referenceNo: 'SRN: 1-28403906929 (Linked Form Approved)',
+                status: 'APPROVED / PERMANENT',
+                fileSize: '330.6 KB',
+                fileName: 'INC-34_1-28403906929 signed.pdf',
+                downloadKey: 'inc-34-eaoa-signed',
+                remarks: 'Internal governance constitution, share transfer protocols, borrowing powers, and Director statutory authorities. Required for Corporate Bank Account & Board Resolutions.',
+            },
+            {
+                id: 'doc-agile-pro-s-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Form AGILE-PRO-S — Statutory Multi-Agency Linked Application',
+                category: 'MCA / Multi-Agency',
+                authority: 'MCA / EPFO / ESIC / Professional Tax / Banking',
+                referenceNo: 'SRN: 1-28403906920 (Linked Form Approved)',
+                status: 'APPROVED / FILED',
+                fileSize: '3.61 MB',
+                fileName: '1-28403906920 signed.pdf',
+                downloadKey: 'agile-pro-s-signed',
+                remarks: 'Integrated statutory application for EPFO registration, ESIC, Professional Tax, and Corporate Current Bank Account lead integration.',
+            },
+            {
+                id: 'doc-inc-9-declaration-nov-2026',
+                date: '18/11/2026',
+                orderDate: '2026-11-18',
+                title: 'Form INC-9 — Statutory Directors & Subscribers Declaration',
+                category: 'MCA / ROC',
+                authority: 'Ministry of Corporate Affairs',
+                referenceNo: 'SRN: 1-28403906952 (Linked Form Approved)',
+                status: 'APPROVED / FILED',
+                fileSize: '1.71 MB',
+                fileName: '1-28403906952 signed.pdf',
+                downloadKey: 'inc-9-declaration-signed',
+                remarks: 'Statutory legal declaration signed via Class-3 DSC by First Directors Bakhshish Singh & Gagandeep Kaur affirming full compliance under Companies Act 2013.',
+            },
+            {
+                id: 'doc-name-approval-oct-2026',
+                date: '22/10/2026',
+                orderDate: '2026-10-22',
+                title: 'Central Registration Centre Name Approval Letter',
+                category: 'MCA / CRC',
+                authority: 'Central Registration Centre, Manesar (MCA)',
+                referenceNo: 'SRN: AC6979718',
+                status: 'APPROVED / EXCLUSIVE',
+                fileSize: '26.1 KB',
+                fileName: '01_SPICe_Part_A_Approved_Name_AC6979718.pdf',
+                downloadKey: 'name-approval-letter',
+                remarks: 'Exclusive statutory reservation of corporate name FARMSKING TECHNOLOGIES PRIVATE LIMITED under Rule 8 of Companies (Incorporation) Rules 2014.',
+            },
+            {
+                id: 'doc-reg-office-noc-oct-2026',
+                date: '22/10/2026',
+                orderDate: '2026-10-22',
+                title: 'Registered Office Landowner NOC & Utility Proof',
+                category: 'Statutory Office',
+                authority: 'Landowner / BSNL Punjab Circle',
+                referenceNo: 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala - 144601',
+                status: 'VERIFIED / ATTACHED',
+                fileSize: '1.24 MB',
+                fileName: '03_Registered_Office_NOC_Signed_By_Bakhshish_Singh.pdf',
+                downloadKey: 'registered-office-noc',
+                remarks: 'Landowner No-Objection Certificate and latest BSNL telecom utility bill verifying statutory registered office address at Village Booh, Kapurthala, Punjab - 144601.',
+            },
+        ];
+    }
+    getStatutoryDocumentFilePath(downloadKey) {
+        const possibleRoots = [
+            path.resolve(process.cwd(), 'Govt', 'docs'),
+            path.resolve(process.cwd(), '..', 'Govt', 'docs'),
+            'D:\\farmsking\\Govt\\docs',
+        ];
+        const base = possibleRoots.find((p) => fs.existsSync(p));
+        if (!base)
+            return null;
+        const keyMap = {
+            'corporate-flex-board': path.join(base, '01_Company_Registration_MCA', '15_OFFICIAL_CORPORATE_FLEX_BOARD_REGISTERED_OFFICE.html'),
+            'certificate-of-incorporation': path.join(base, '01_Company_Registration_MCA', '14_OFFICIAL_CERTIFICATE_OF_INCORPORATION_MCA.pdf'),
+            'spice-part-b-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', 'SPICE + Part B_AC7349109 signed.pdf'),
+            'inc-33-emoa-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', 'INC-33_1-28403906940 signed.pdf'),
+            'inc-34-eaoa-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', 'INC-34_1-28403906929 signed.pdf'),
+            'agile-pro-s-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', '1-28403906920 signed.pdf'),
+            'inc-9-declaration-signed': path.join(base, '01_Company_Registration_MCA', '00_OFFICIAL_UPLOADED_SIGNED_MCA_FORMS', 'FINAL_APPROVED_RESUBMISSION_NOV_2026', '1-28403906952 signed.pdf'),
+            'name-approval-letter': path.join(base, '01_Company_Registration_MCA', '01_SPICe_Part_A_Approved_Name_AC6979718.pdf'),
+            'registered-office-noc': path.join(base, '01_Company_Registration_MCA', '03_Registered_Office_NOC_Signed_By_Bakhshish_Singh.pdf'),
+        };
+        const target = keyMap[downloadKey];
+        return target && fs.existsSync(target) ? target : null;
     }
 };
 exports.ComplianceService = ComplianceService;

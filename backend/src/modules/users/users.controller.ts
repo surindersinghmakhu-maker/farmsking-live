@@ -476,8 +476,21 @@ export class UsersController {
   }
 
   @Patch(':id/reactivate')
-  reactivate(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.usersService.reactivate(user, id);
+  reactivate(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body?: { newMobile?: string; newName?: string },
+  ) {
+    return this.usersService.reactivate(user, id, body);
+  }
+
+  @Post(':id/reactivate')
+  reactivatePost(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() body?: { newMobile?: string; newName?: string },
+  ) {
+    return this.usersService.reactivate(user, id, body);
   }
 
   @Roles(Role.SUPER_ADMIN)

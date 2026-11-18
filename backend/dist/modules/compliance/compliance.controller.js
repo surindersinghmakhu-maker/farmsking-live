@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -14,6 +47,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ComplianceController = void 0;
 const common_1 = require("@nestjs/common");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const client_1 = require("@prisma/client");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
@@ -45,6 +80,23 @@ let ComplianceController = class ComplianceController {
     }
     updateRecord(user, id, dto) {
         return this.complianceService.updateRecord(user, id, dto);
+    }
+    listStatutoryDocuments() {
+        return this.complianceService.getStatutoryDocumentsCatalog();
+    }
+    downloadStatutoryDocument(downloadKey, forceDownload, res) {
+        const filePath = this.complianceService.getStatutoryDocumentFilePath(downloadKey);
+        if (!filePath || !fs.existsSync(filePath)) {
+            throw new common_1.NotFoundException('Statutory document file not found.');
+        }
+        const filename = path.basename(filePath);
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = ext === '.html' ? 'text/html; charset=utf-8' : 'application/pdf';
+        const disposition = forceDownload === '1' ? 'attachment' : 'inline';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+        const stream = fs.createReadStream(filePath);
+        stream.pipe(res);
     }
 };
 exports.ComplianceController = ComplianceController;
@@ -96,6 +148,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, compliance_record_dto_1.UpdateComplianceRecordDto]),
     __metadata("design:returntype", void 0)
 ], ComplianceController.prototype, "updateRecord", null);
+__decorate([
+    (0, common_1.Get)('documents'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], ComplianceController.prototype, "listStatutoryDocuments", null);
+__decorate([
+    (0, common_1.Get)('documents/:downloadKey/download'),
+    __param(0, (0, common_1.Param)('downloadKey')),
+    __param(1, (0, common_1.Query)('download')),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], ComplianceController.prototype, "downloadStatutoryDocument", null);
 exports.ComplianceController = ComplianceController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN, client_1.Role.ACCOUNTANT),

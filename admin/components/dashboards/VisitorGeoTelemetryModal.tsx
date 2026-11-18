@@ -1136,7 +1136,7 @@ export function VisitorGeoTelemetryModal({
                         FARMSKING TECHNOLOGIES PRIVATE LIMITED (Corporate Identity)
                       </Text>
                       <Text style={styles.statutoryEntitySub}>
-                        CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+                        CIN: U62013PB2026PTC070389 • Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
                       </Text>
                       <Text style={styles.statutoryEntitySub}>
                         Grievance & Cyber Security Inquiries: compliance@farmsking.in / grievance@farmsking.in

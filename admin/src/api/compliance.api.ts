@@ -70,6 +70,52 @@ export interface PartnerKycAuditItem {
   isKycReady: boolean;
 }
 
+export interface StatutoryDocumentItem {
+  id: string;
+  date: string;
+  orderDate: string;
+  title: string;
+  category: string;
+  authority: string;
+  referenceNo: string;
+  status: string;
+  fileSize: string;
+  fileName: string;
+  downloadKey: string;
+  remarks: string;
+}
+
+export async function fetchStatutoryDocuments(): Promise<StatutoryDocumentItem[]> {
+  const { data } = await apiClient.get<StatutoryDocumentItem[]>('/compliance/documents');
+  return data;
+}
+
+export async function downloadStatutoryDocument(
+  downloadKey: string,
+  fileName: string,
+  forceDownload: boolean = false,
+): Promise<void> {
+  const url = `/compliance/documents/${downloadKey}/download${forceDownload ? '?download=1' : ''}`;
+  const response = await apiClient.get(url, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data], { type: 'application/pdf' });
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const objectUrl = window.URL.createObjectURL(blob);
+    if (!forceDownload) {
+      window.open(objectUrl, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    setTimeout(() => window.URL.revokeObjectURL(objectUrl), 60000);
+  }
+}
+
 export interface CaComplianceSummary {
   generatedAt: string;
   financialYear: string;

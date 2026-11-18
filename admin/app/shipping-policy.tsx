@@ -21,12 +21,12 @@ export default function AdminShippingPolicyScreen() {
           </TouchableOpacity>
           <View style={styles.card}>
             <Text style={styles.title}>Shipping & Delivery Policy</Text>
-            <Text style={styles.sub}>FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294</Text>
+            <Text style={styles.sub}>FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C</Text>
             <Text style={styles.body}>
               • Dispatch Window: Orders verified before 2:00 PM IST are packed and dispatched within 24–48 business hours.{'\n\n'}
               • Delivery Timelines: 2–5 business days across Punjab/North India and 4–7 business days Pan-India via Shiprocket/Delhivery/BlueDart/Xpressbees/India Post.{'\n\n'}
               • Shipping & Heavy Inputs: Free delivery applies over ₹499 where eligible; heavy bags (25 kg+) and liquid sprays require prepaid checkout (Cashfree, Razorpay, PhonePe, UPI).{'\n\n'}
-              • Support: support@farmsking.in • +91 95776-22000 • Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab - 143422 • HQ: Makhu, Ferozepur, Punjab - 142044.
+              • Support: support@farmsking.in • +91 95776-22000 • Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601 • HQ: Makhu, Ferozepur, Punjab - 142044.
             </Text>
           </View>
         </View>

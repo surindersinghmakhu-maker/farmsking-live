@@ -2952,7 +2952,7 @@ export default function PublicLandingPage() {
                     </View>
                   </View>
                   <Text style={[S.isoCardScope, isDay && S.isoCardScopeDay]}>
-                    FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Punjab - 143422.
+                    FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C • Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601.
                   </Text>
                 </View>
               </View>
@@ -4124,7 +4124,7 @@ export default function PublicLandingPage() {
                 © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
               </Text>
               <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay, { fontSize: 11 }]}>
-                Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 • CIN: U01100PB2026PTC063294
+                Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601 • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C
               </Text>
               <Text style={[S.footerCopyText, isDay && S.footerCopyTextDay, { fontSize: 11 }]}>
                 Platform Technology Partner: <Text style={{ fontFamily: FONT.bold, color: isDay ? '#059669' : '#34d399' }}>Exilent Web Solutions</Text>

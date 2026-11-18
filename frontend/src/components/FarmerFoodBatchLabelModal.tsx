@@ -155,7 +155,7 @@ export function FarmerFoodBatchLabelModal({
                 </div>
                 <div class="footer">
                   <span>${fssaiNumber}</span>
-                  <span>CIN: U01100PB2026PTC063294 • ICAR Quality Protocol</span>
+                  <span>CIN: U62013PB2026PTC070389 • ICAR Quality Protocol</span>
                 </div>
               </div>
             `

@@ -93,7 +93,7 @@ export default function RefundPolicyScreen() {
               Transparent, Farmer-First Guidelines for Certified Seeds, Organic Bio-Nutrients, and Crop Care Supplies
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Office: VPO Goindwal Sahib, Tarn Taran, Punjab - 143422
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C • Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
             </Text>
           </View>
 

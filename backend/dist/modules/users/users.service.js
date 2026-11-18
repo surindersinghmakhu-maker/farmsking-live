@@ -272,13 +272,31 @@ let UsersService = class UsersService {
             }),
             this.prisma.user.count({ where }),
         ]);
+        const now = Date.now();
         const items = rawItems.map(({ passwordHash, ...rest }) => {
             const presence = !rest.deletedAt && !rest.isPermanentlyBlocked
                 ? this.userSessionService?.getUserPresence(rest.id)
                 : undefined;
+            const isSelfDeleted = Boolean(!rest.isPermanentlyBlocked && rest.deletedAt);
+            let daysSinceDeleted = 0;
+            let daysRemainingToRestore = 0;
+            let isGraceExpired = false;
+            if (isSelfDeleted && rest.deletedAt) {
+                const deletedTime = new Date(rest.deletedAt).getTime();
+                daysSinceDeleted = Math.floor((now - deletedTime) / (1000 * 60 * 60 * 24));
+                daysRemainingToRestore = Math.max(0, 14 - daysSinceDeleted);
+                isGraceExpired = daysSinceDeleted > 14;
+            }
+            const isPermDeleted = Boolean(passwordHash === 'ACCOUNT_DELETED_PERMANENTLY' || isGraceExpired);
+            const canRestore = rest.isPermanentlyBlocked ? true : (isSelfDeleted && !isGraceExpired);
             return {
                 ...rest,
-                isPermanentlyDeleted: passwordHash === 'ACCOUNT_DELETED_PERMANENTLY',
+                isPermanentlyDeleted: isPermDeleted,
+                isSelfDeleted,
+                daysSinceDeleted,
+                daysRemainingToRestore,
+                isGraceExpired,
+                canRestore,
                 isOnline: Boolean(presence?.isOnline),
                 lastSeenAt: presence?.lastSeenAt ? new Date(presence.lastSeenAt).toISOString() : null,
             };
@@ -1685,16 +1703,30 @@ let UsersService = class UsersService {
             message: `User has ${relatedCount} linked platform records. Mobile number has been unlinked and freed, and the account is preserved in audit archive.`,
         };
     }
-    async reactivate(caller, id) {
+    async reactivate(caller, id, dto) {
         const user = await this.findActiveOrThrow(id);
         this.assertCanManageTarget(caller, user);
-        if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY' || (!user.isPermanentlyBlocked && Boolean(user.deletedAt))) {
-            throw new common_1.ConflictException('This account was permanently deleted by the user and cannot be restored. It remains strictly as an audit ledger.');
-        }
         if (!user.deletedAt && !user.isPermanentlyBlocked) {
             throw new common_1.ConflictException('User is already active.');
         }
-        const restoredMobile = this.stripDeletedMarkers(user.mobile);
+        const isSelfDeleted = !user.isPermanentlyBlocked && Boolean(user.deletedAt);
+        if (isSelfDeleted && user.deletedAt) {
+            const daysSinceDeleted = Math.floor((Date.now() - new Date(user.deletedAt).getTime()) / (1000 * 60 * 60 * 24));
+            if (daysSinceDeleted > 14) {
+                throw new common_1.ConflictException(`The 14-day restoration grace window has expired (${daysSinceDeleted} days elapsed). This account is permanently deleted and cannot be restored.`);
+            }
+        }
+        let restoredMobile;
+        if (dto?.newMobile?.trim()) {
+            const cleanDigits = dto.newMobile.replace(/\D/g, '').slice(-10);
+            if (cleanDigits.length !== 10) {
+                throw new common_1.BadRequestException('Please provide a valid 10-digit mobile number to restore this account.');
+            }
+            restoredMobile = cleanDigits;
+        }
+        else {
+            restoredMobile = this.stripDeletedMarkers(user.mobile);
+        }
         const restoredEmail = user.email ? this.stripDeletedMarkers(user.email) : null;
         const restoredKingId = user.kingId ? user.kingId.replace(/_del_[a-z0-9_]+$/i, '') : undefined;
         const cleanDigits = restoredMobile.replace(/\D/g, '');
@@ -1711,7 +1743,18 @@ let UsersService = class UsersService {
             select: { id: true, kingId: true, name: true },
         });
         if (existing) {
-            throw new common_1.ConflictException(`Cannot unblock: Mobile number ${restoredMobile} has already been registered by a new active user (${existing.kingId || existing.name}).`);
+            throw new common_1.ConflictException(`Cannot restore: Mobile number ${restoredMobile} is already in use by active user (${existing.kingId || existing.name}). Please provide a new mobile number to restore this account.`);
+        }
+        let targetName = user.name;
+        if (dto?.newName?.trim() && dto.newName.trim() !== 'Deleted Account') {
+            targetName = dto.newName.trim();
+        }
+        else if (user.name === 'Deleted Account') {
+            targetName = `Restored User (${restoredKingId || restoredMobile.slice(-4)})`;
+        }
+        let newPasswordHash = user.passwordHash;
+        if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY') {
+            newPasswordHash = await argon2.hash((0, crypto_1.randomBytes)(24).toString('hex'));
         }
         const updated = await this.prisma.user.update({
             where: { id },
@@ -1721,6 +1764,8 @@ let UsersService = class UsersService {
                 failedLoginAttempts: 0,
                 lockoutUntil: null,
                 mobile: restoredMobile,
+                name: targetName,
+                passwordHash: newPasswordHash,
                 email: restoredEmail,
                 ...(restoredKingId ? { kingId: restoredKingId } : {}),
             },

@@ -42,6 +42,11 @@ export declare class UsersService implements OnModuleInit {
     list(query: ListUsersQueryDto): Promise<{
         items: {
             isPermanentlyDeleted: boolean;
+            isSelfDeleted: boolean;
+            daysSinceDeleted: number;
+            daysRemainingToRestore: number;
+            isGraceExpired: boolean;
+            canRestore: boolean;
             isOnline: boolean;
             lastSeenAt: string | null;
             sellerStore: {
@@ -2199,7 +2204,10 @@ export declare class UsersService implements OnModuleInit {
             };
         }[];
     }>;
-    reactivate(caller: AuthUser, id: string): Promise<{
+    reactivate(caller: AuthUser, id: string, dto?: {
+        newMobile?: string;
+        newName?: string;
+    }): Promise<{
         sellerStore: {
             id: string;
             storeName: string;

@@ -1,4 +1,7 @@
-import { Body, Controller, Get, Header, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, NotFoundException, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -62,6 +65,33 @@ export class ComplianceController {
     @Body() dto: UpdateComplianceRecordDto,
   ) {
     return this.complianceService.updateRecord(user, id, dto);
+  }
+
+  /** Official Corporate Legal & Statutory Documents Catalog (Datewise) */
+  @Get('documents')
+  listStatutoryDocuments() {
+    return this.complianceService.getStatutoryDocumentsCatalog();
+  }
+
+  /** View or Download Corporate Legal Document by Key */
+  @Get('documents/:downloadKey/download')
+  downloadStatutoryDocument(
+    @Param('downloadKey') downloadKey: string,
+    @Query('download') forceDownload: string,
+    @Res() res: Response,
+  ) {
+    const filePath = this.complianceService.getStatutoryDocumentFilePath(downloadKey);
+    if (!filePath || !fs.existsSync(filePath)) {
+      throw new NotFoundException('Statutory document file not found.');
+    }
+    const filename = path.basename(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = ext === '.html' ? 'text/html; charset=utf-8' : 'application/pdf';
+    const disposition = forceDownload === '1' ? 'attachment' : 'inline';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
   }
 }
 

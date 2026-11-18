@@ -93,7 +93,7 @@ export default function TermsOfServiceScreen() {
               Official Legal Agreement for Cultivators, Agronomists, Store Vendors, and Platform Members
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              Last Updated: November 2026 • FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294
+              Last Updated: November 2026 • FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C
             </Text>
           </View>
 
@@ -235,7 +235,7 @@ export default function TermsOfServiceScreen() {
                 Grievance Officer: Surinder Singh (Designated Nodal &amp; Compliance Officer)
               </Text>
               <Text style={[styles.officerRole, isDay ? styles.officerRoleDay : styles.officerRoleNight]}>
-                FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C
               </Text>
               <Text style={[styles.officerDetail, isDay ? styles.officerDetailDay : styles.officerDetailNight]}>
                 Email: grievance@farmsking.in / support@farmsking.in

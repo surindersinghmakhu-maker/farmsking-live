@@ -492,6 +492,20 @@ function AboutSettingsSection({
         </View>
       </View>
 
+      {/* Link to Legal Documents Vault */}
+      <TouchableOpacity
+        style={styles.legalVaultLinkBtn}
+        onPress={() => router.push('/admin/(tabs)/legal-compliance?tab=DOCUMENTS' as any)}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          <Ionicons name="shield-checkmark" size={17} color="#0284c7" />
+          <Text style={styles.legalVaultLinkBtnText}>
+            Open Statutory Legal Documents Vault (8 Verified Records: COI, MoA, AoA, Signed SPICe+)
+          </Text>
+        </View>
+        <Ionicons name="arrow-forward" size={15} color="#0284c7" />
+      </TouchableOpacity>
+
       <View style={styles.formContainer}>
         <View style={styles.twoColRow}>
           <View style={styles.colHalf}>
@@ -542,7 +556,7 @@ function AboutSettingsSection({
           label="Registered Office Address"
           value={data.registeredAddress}
           onChangeText={(val) => onChange({ ...data, registeredAddress: val })}
-          placeholder="VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab 143422"
+          placeholder="C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Punjab 144601"
         />
 
         <InputField
@@ -566,7 +580,7 @@ function AboutSettingsSection({
               label="Corporate Identification Number (CIN)"
               value={data.cin}
               onChangeText={(val) => onChange({ ...data, cin: val })}
-              placeholder="U01100PB2026PTC000000"
+              placeholder="U62013PB2026PTC070389"
             />
           </View>
         </View>
@@ -1276,5 +1290,24 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: Platform.OS === 'web' ? 16 : 24,
+  },
+  legalVaultLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderWidth: 1.5,
+    borderColor: '#0284c7',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  legalVaultLinkBtnText: {
+    color: '#38bdf8',
+    fontSize: 12.5,
+    fontWeight: '700',
+    flex: 1,
   },
 });

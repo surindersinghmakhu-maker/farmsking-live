@@ -109,8 +109,12 @@ export async function deactivateUser(id: string): Promise<AdminUser> {
   return data;
 }
 
-export async function reactivateUser(id: string): Promise<AdminUser> {
-  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/reactivate`);
+export async function reactivateUser(
+  payload: string | { id: string; newMobile?: string; newName?: string },
+): Promise<AdminUser> {
+  const id = typeof payload === 'string' ? payload : payload.id;
+  const body = typeof payload === 'string' ? {} : { newMobile: payload.newMobile, newName: payload.newName };
+  const { data } = await apiClient.patch<AdminUser>(`/users/${id}/reactivate`, body);
   return data;
 }
 

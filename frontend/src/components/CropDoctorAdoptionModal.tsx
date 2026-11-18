@@ -193,7 +193,7 @@ export function CropDoctorAdoptionModal({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
                 <Ionicons name="shield-checkmark" size={11} color="#4ade80" />
                 <Text style={styles.modalCorporateText} numberOfLines={1}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389
                 </Text>
               </View>
               <View style={styles.modalIcarBadge}>
@@ -530,7 +530,7 @@ export function CropDoctorAdoptionModal({
                       <View style={styles.statutoryFooterStrip}>
                         <Ionicons name="business" size={11} color="#86efac" />
                         <Text style={styles.statutoryFooterText}>
-                          FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294 · B2C LEGAL INVOICE
+                          FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389 · B2C LEGAL INVOICE
                         </Text>
                       </View>
                     </View>

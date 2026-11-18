@@ -584,7 +584,7 @@ export default function PartnersGovernanceScreen() {
                 </View>
               </View>
               <Text style={[styles.instSubtitle, { color: subTextColor }]} numberOfLines={1}>
-                FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294 · Regd. Office: VPO Goindwal Sahib, Punjab
+                FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389 · Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab
               </Text>
             </View>
           </View>
@@ -1607,7 +1607,7 @@ export default function PartnersGovernanceScreen() {
                 <View style={styles.a4Header}>
                   <Text style={styles.a4CompanyTitle}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
                   <Text style={styles.a4CompanySub}>
-                    CIN: U01100PB2026PTC063294 · Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+                    CIN: U62013PB2026PTC070389 · Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
                   </Text>
                   <Text style={styles.a4DocTitle}>OFFICIAL PARTNER GOVERNANCE & SETTLEMENT REGISTRY</Text>
                 </View>

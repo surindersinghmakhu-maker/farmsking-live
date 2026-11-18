@@ -87,7 +87,7 @@ export function LegalPoliciesModal({
                   {getHeaderTitle()}
                 </Text>
                 <Text style={styles.updatedSub} numberOfLines={1}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389
                 </Text>
               </View>
             </View>
@@ -180,7 +180,7 @@ export function LegalPoliciesModal({
                 <View style={styles.sectionBlock}>
                   <Text style={styles.head}>1. Acceptance of Terms & Platform Scope</Text>
                   <Text style={styles.bodyText}>
-                    By accessing, registering, browsing, or using the FarmsKing platform (Web & Mobile applications), you agree to be legally bound by these Terms of Service. FarmsKing is an agricultural technology platform operated by <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> (CIN: U01100PB2026PTC063294), providing digital farm management records, live mandi rates, AI crop diagnostic recommendations, AgriStore e-commerce marketplace, and verified agronomy consultations.
+                    By accessing, registering, browsing, or using the FarmsKing platform (Web & Mobile applications), you agree to be legally bound by these Terms of Service. FarmsKing is an agricultural technology platform operated by <Text style={styles.boldText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text> (CIN: U62013PB2026PTC070389), providing digital farm management records, live mandi rates, AI crop diagnostic recommendations, AgriStore e-commerce marketplace, and verified agronomy consultations.
                   </Text>
                 </View>
 

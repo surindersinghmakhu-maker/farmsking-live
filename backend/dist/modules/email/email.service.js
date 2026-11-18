@@ -146,7 +146,7 @@ let EmailService = EmailService_1 = class EmailService {
           </div>
           <p style="font-size: 12px; color: #9CA3AF;">This OTP code is valid for 10 minutes. Please do not share this OTP code with anyone.</p>
           <hr style="border-color: #065F46; margin-top: 20px;" />
-          <p style="font-size: 11px; color: #6EE7B7; text-align: center;">FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294</p>
+          <p style="font-size: 11px; color: #6EE7B7; text-align: center;">FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389</p>
         </div>
       `,
         };
@@ -188,10 +188,10 @@ let EmailService = EmailService_1 = class EmailService {
           </p>
           <hr style="border-color: #065F46; margin-top: 24px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
           <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
           </p>
         </div>
       `,
@@ -238,7 +238,7 @@ let EmailService = EmailService_1 = class EmailService {
           </p>
           <hr style="border-color: #065F46; margin-top: 22px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
         </div>
       `,
@@ -286,7 +286,7 @@ let EmailService = EmailService_1 = class EmailService {
           </div>
           <hr style="border-color: #312e81; margin-top: 22px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
         </div>
       `,
@@ -337,10 +337,10 @@ let EmailService = EmailService_1 = class EmailService {
           </div>
           <hr style="border-color: #065F46; margin-top: 24px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
           <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
           </p>
         </div>
       `,
@@ -391,10 +391,10 @@ let EmailService = EmailService_1 = class EmailService {
           </div>
           <hr style="border-color: #065F46; margin-top: 22px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
           <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
           </p>
         </div>
       `,
@@ -458,10 +458,10 @@ let EmailService = EmailService_1 = class EmailService {
 
           <hr style="border-color: #065F46; margin-top: 20px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
           <p style="font-size: 11px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
           </p>
         </div>
       `,
@@ -558,10 +558,10 @@ let EmailService = EmailService_1 = class EmailService {
 
           <hr style="border-color: #065F46; margin: 20px 0 12px;" />
           <p style="font-size: 11px; color: #9CA3AF; text-align: center; margin-bottom: 2px;">
-            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U01100PB2026PTC063294
+            FARMSKING TECHNOLOGIES PRIVATE LIMITED | CIN: U62013PB2026PTC070389
           </p>
           <p style="font-size: 10.5px; color: #6EE7B7; text-align: center; margin-top: 2px;">
-            Regd. Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+            Regd. Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
           </p>
         </div>
       `,

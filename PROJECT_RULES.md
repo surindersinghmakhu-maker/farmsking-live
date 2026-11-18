@@ -312,7 +312,11 @@ Every screen and feature in FarmsKing MUST achieve a **5-Star Quality Rating**:
 3. **100% Web Application & Legal Identity Harmonization ("ਵੈੱਬ ਐਪਲੀਕੇਸ਼ਨ ਅਤੇ ਲੀਗਲ ਦਾ ਆਪਸ ਵਿੱਚ ਪੂਰਾ ਮੇਲ")**:
    - The web application (Terms of Service, Privacy Policy, Footer Disclosures, Company About Us, Contact & Support, Invoices, Mandi Disclaimers, and Agri-Store Seller Policies) MUST ALWAYS match and harmonize 100% with the legal entity:
      - **Legal Corporate Name**: `FARMSKING TECHNOLOGIES PRIVATE LIMITED`
-     - **Registered Office**: `VPO Goindwal Sahib, Tehsil Khadur Sahib, District Tarn Taran, Punjab - 143422, India`
+     - **CIN**: `U62013PB2026PTC070389`
+     - **PAN**: `AAHCF3566C`
+     - **TAN**: `AMRF11527F`
+     - **Date of Incorporation**: `18 November 2026`
+     - **Registered Office**: `C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India`
      - **Official Support Email**: `surindersinghmakhu@gmail.com`
      - **Official Helpline / Phone**: `+91 98720-66901`
      - **MoA Objects Synchronization**: All web application features (AI Crop Doctor, Live APMC Mandi Ticker, Agri-Input E-Commerce, Drone & Telemetry Services, Kisan Vidya) must directly reflect and operate within the official approved MCA e-MoA objects (Main Object Clause III).
@@ -381,7 +385,7 @@ Every developer, designer, and AI agent working on FarmsKing MUST strictly uphol
 
 3. **Institutional ISO Compliance Standard**:
    - Align every view with ISO 9001 (Quality Management) and ISO 27001 (Security) standards.
-   - Prominently feature verified MCA corporate registration (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`, CIN: `U01100PB2026PTC063294`), official ICAR protocol seals, and real-time synchronized telemetry.
+   - Prominently feature verified MCA corporate registration (`FARMSKING TECHNOLOGIES PRIVATE LIMITED`, CIN: `U62013PB2026PTC070389`), official ICAR protocol seals, and real-time synchronized telemetry.
 
 4. **Primary PC/Website View & Zero Desktop Truncation**:
    - The primary testing and evaluation canvas is the laptop/PC screen.

@@ -70,7 +70,7 @@ export default function ShippingPolicyScreen() {
               Dispatch SLAs, Courier Partners, Delivery Windows & Packaging Standards for Certified Agri Inputs
             </Text>
             <Text style={[styles.effectiveDate, isDay ? styles.effectiveDateDay : styles.effectiveDateNight]}>
-              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Pan-India Fulfillment
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C • Pan-India Fulfillment
             </Text>
           </View>
 
@@ -121,8 +121,8 @@ export default function ShippingPolicyScreen() {
               5. Logistics Support & Registered Fulfillment Desk
             </Text>
             <Text style={[styles.bodyText, isDay ? styles.bodyTextDay : styles.bodyTextNight]}>
-              Entity: FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U01100PB2026PTC063294){'\n'}
-              Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422{'\n'}
+              Entity: FARMSKING TECHNOLOGIES PRIVATE LIMITED (CIN: U62013PB2026PTC070389, PAN: AAHCF3566C){'\n'}
+              Registered Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala - 144601, Punjab, India{'\n'}
               Operational HQ: Main Market, Makhu, Tehsil Zira, Ferozepur, Punjab - 142044{'\n'}
               Support Email: support@farmsking.in • Logistics Helpline: +91 95776-22000 (Mon–Sat, 10 AM – 6 PM IST)
             </Text>

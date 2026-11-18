@@ -18,11 +18,14 @@ import {
   ComplianceCategory,
   ComplianceStatus,
   StatutoryComplianceRecord,
+  StatutoryDocumentItem,
+  downloadStatutoryDocument,
   printA4StatutoryReport,
 } from '@/src/api/compliance.api';
 import {
   useCaSummary,
   useCreateComplianceRecord,
+  useStatutoryDocuments,
   useUpdateComplianceRecord,
 } from '@/src/hooks/useCompliance';
 
@@ -43,14 +46,23 @@ const STATUS_META: Record<ComplianceStatus, { label: string; color: string; bg: 
   OVERDUE: { label: 'Overdue', color: '#ef4444', bg: 'rgba(239,68,68,0.14)' },
 };
 
-export function AdvocateComplianceDesk({ mode = 'EMBEDDED' }: { mode?: 'EMBEDDED' | 'STANDALONE' }) {
+export function AdvocateComplianceDesk({
+  mode = 'EMBEDDED',
+  initialTab = 'DOCUMENTS',
+}: {
+  mode?: 'EMBEDDED' | 'STANDALONE';
+  initialTab?: 'DOCUMENTS' | 'FILINGS' | 'STORES_KYC' | 'PARTNERS_KYC' | 'GATEWAY';
+}) {
   const { isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const { data: summary, isLoading, refetch } = useCaSummary();
+  const { data: statutoryDocs, isLoading: isLoadingDocs, refetch: refetchDocs } = useStatutoryDocuments();
   const createRecord = useCreateComplianceRecord();
   const updateRecord = useUpdateComplianceRecord();
 
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | ComplianceCategory>('ALL');
-  const [auditTab, setAuditTab] = useState<'FILINGS' | 'STORES_KYC' | 'PARTNERS_KYC' | 'GATEWAY'>('FILINGS');
+  const [auditTab, setAuditTab] = useState<'DOCUMENTS' | 'FILINGS' | 'STORES_KYC' | 'PARTNERS_KYC' | 'GATEWAY'>(initialTab);
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+  const [docSearchQuery, setDocSearchQuery] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingRec, setEditingRec] = useState<StatutoryComplianceRecord | null>(null);
   const [printingA4, setPrintingA4] = useState(false);
@@ -128,6 +140,31 @@ export function AdvocateComplianceDesk({ mode = 'EMBEDDED' }: { mode?: 'EMBEDDED
       },
     });
   };
+
+  const handleDocAction = async (doc: StatutoryDocumentItem, forceDownload: boolean) => {
+    try {
+      setDownloadingKey(doc.downloadKey + (forceDownload ? '-dl' : '-vw'));
+      await downloadStatutoryDocument(doc.downloadKey, doc.fileName, forceDownload);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Failed to open document.';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Document Error', msg);
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
+  const filteredDocs = (statutoryDocs || []).filter((d) => {
+    if (!docSearchQuery.trim()) return true;
+    const q = docSearchQuery.toLowerCase();
+    return (
+      d.title.toLowerCase().includes(q) ||
+      d.referenceNo.toLowerCase().includes(q) ||
+      d.authority.toLowerCase().includes(q) ||
+      d.remarks.toLowerCase().includes(q) ||
+      d.date.toLowerCase().includes(q)
+    );
+  });
 
   const handlePrintA4 = async () => {
     if (!summary) return;
@@ -239,6 +276,7 @@ export function AdvocateComplianceDesk({ mode = 'EMBEDDED' }: { mode?: 'EMBEDDED
       {/* Sub-Section Switcher */}
       <View style={styles.tabRow}>
         {[
+          { id: 'DOCUMENTS' as const, label: `🏛️ Statutory Documents Vault (${statutoryDocs?.length || 8})` },
           { id: 'FILINGS' as const, label: `Govt Filings & Notices (${summary.statutoryRecords.length})` },
           { id: 'STORES_KYC' as const, label: `Seller Store KYC & Licenses (${audit.nonCompliantStoresCount} Issues)` },
           { id: 'PARTNERS_KYC' as const, label: `Partner / Doctor PAN Audit (${audit.nonCompliantPartnersCount} Pending)` },
@@ -264,6 +302,199 @@ export function AdvocateComplianceDesk({ mode = 'EMBEDDED' }: { mode?: 'EMBEDDED
           );
         })}
       </View>
+
+      {/* 0. Official Corporate Legal & Statutory Documents Vault */}
+      {auditTab === 'DOCUMENTS' && (
+        <View style={[styles.panel, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          {/* Top Banner & Search */}
+          <View style={styles.vaultHeaderRow}>
+            <View style={{ flex: 1, minWidth: 260 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={[styles.panelHeading, { color: textColor }]}>
+                  Permanent Statutory &amp; Legal Records Vault
+                </Text>
+                <View style={styles.liveSyncBadge}>
+                  <Text style={styles.liveSyncBadgeText}>MCA V3 ARCHIVED</Text>
+                </View>
+              </View>
+              <Text style={[styles.panelSub, { color: subTextColor }]}>
+                All official DSC-signed incorporation filings, Ministry orders, constitutional documents (MoA / AoA), and registered office deeds arranged datewise with direct 1-click preview and download.
+              </Text>
+            </View>
+
+            <View style={styles.vaultSearchBox}>
+              <Ionicons name="search-outline" size={16} color={subTextColor} />
+              <TextInput
+                style={[styles.vaultSearchInput, { color: textColor }]}
+                placeholder="Search by document, SRN, date..."
+                placeholderTextColor={subTextColor}
+                value={docSearchQuery}
+                onChangeText={setDocSearchQuery}
+              />
+              {docSearchQuery ? (
+                <TouchableOpacity onPress={() => setDocSearchQuery('')}>
+                  <Ionicons name="close-circle" size={16} color={subTextColor} />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </View>
+
+          {/* Quick Filter Info Strip */}
+          <View style={[styles.vaultInfoStrip, { backgroundColor: isLight ? '#f8fafc' : '#0f172a', borderColor: cardBorder }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="shield-checkmark" size={16} color="#10b981" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: textColor }}>
+                Legal Entity: FARMSKING TECHNOLOGIES PRIVATE LIMITED
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: subTextColor }}>
+              CIN: <Text style={{ fontFamily: FONT.bold, color: textColor }}>U62013PB2026PTC070389</Text> · PAN: <Text style={{ fontFamily: FONT.bold, color: textColor }}>AAHCF3566C</Text> · TAN: <Text style={{ fontFamily: FONT.bold, color: textColor }}>AMRF11527F</Text>
+            </Text>
+          </View>
+
+          {isLoadingDocs ? (
+            <View style={{ padding: 32, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color="#0284c7" />
+              <Text style={{ marginTop: 8, fontSize: 12, color: subTextColor }}>Loading statutory documents...</Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{ width: '100%' }}>
+              <View style={[styles.tableContainer, { minWidth: 980 }]}>
+                {/* Table Header */}
+                <View style={[styles.tableHeaderRow, { backgroundColor: isLight ? '#f1f5f9' : '#1e293b', borderColor: cardBorder }]}>
+                  <Text style={[styles.thText, { width: 110 }]}>Date</Text>
+                  <Text style={[styles.thText, { flex: 2 }]}>Document &amp; SRN Reference</Text>
+                  <Text style={[styles.thText, { width: 160 }]}>Authority / Category</Text>
+                  <Text style={[styles.thText, { width: 160 }]}>Status</Text>
+                  <Text style={[styles.thText, { flex: 2.2 }]}>Statutory Remarks &amp; Purpose</Text>
+                  <Text style={[styles.thText, { width: 180, textAlign: 'center' }]}>Actions</Text>
+                </View>
+
+                {/* Table Body Rows */}
+                {filteredDocs.length === 0 ? (
+                  <View style={{ padding: 24, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 13, color: subTextColor }}>No matching statutory documents found.</Text>
+                  </View>
+                ) : (
+                  filteredDocs.map((doc, idx) => {
+                    const isViewing = downloadingKey === doc.downloadKey + '-vw';
+                    const isDownloading = downloadingKey === doc.downloadKey + '-dl';
+                    const isApproved = doc.status.includes('APPROVED');
+
+                    return (
+                      <View
+                        key={doc.id}
+                        style={[
+                          styles.tableDataRow,
+                          {
+                            backgroundColor: idx % 2 === 0 ? cardBg : isLight ? '#fcfdfd' : '#0a101d',
+                            borderBottomColor: cardBorder,
+                          },
+                        ]}
+                      >
+                        {/* Date */}
+                        <View style={{ width: 110 }}>
+                          <View style={styles.dateBadge}>
+                            <Ionicons name="calendar-outline" size={11} color="#0284c7" />
+                            <Text style={styles.dateBadgeText}>{doc.date}</Text>
+                          </View>
+                        </View>
+
+                        {/* Document Title & File Info */}
+                        <View style={{ flex: 2, paddingRight: 8 }}>
+                          <Text style={[styles.docTitleText, { color: textColor }]}>{doc.title}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                            <View style={styles.refBadge}>
+                              <Text style={styles.refBadgeText}>{doc.referenceNo}</Text>
+                            </View>
+                            <View style={styles.fileSizeBadge}>
+                              <Ionicons name="document-text-outline" size={10} color={subTextColor} />
+                              <Text style={[styles.fileSizeText, { color: subTextColor }]}>{doc.fileSize}</Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Authority & Category */}
+                        <View style={{ width: 160, paddingRight: 8 }}>
+                          <Text style={[styles.authorityText, { color: textColor }]}>{doc.authority}</Text>
+                          <View style={[styles.catPill, { marginTop: 4 }]}>
+                            <Text style={styles.catPillText}>{doc.category}</Text>
+                          </View>
+                        </View>
+
+                        {/* Status */}
+                        <View style={{ width: 160, paddingRight: 8 }}>
+                          <View
+                            style={[
+                              styles.statusPill,
+                              {
+                                backgroundColor: isApproved ? 'rgba(16,185,129,0.14)' : 'rgba(2,132,199,0.14)',
+                                borderColor: isApproved ? '#10b981' : '#0284c7',
+                              },
+                            ]}
+                          >
+                            <Ionicons
+                              name={isApproved ? 'checkmark-circle' : 'time'}
+                              size={12}
+                              color={isApproved ? '#10b981' : '#0284c7'}
+                            />
+                            <Text
+                              style={[
+                                styles.statusPillText,
+                                { color: isApproved ? '#10b981' : '#38bdf8' },
+                              ]}
+                            >
+                              {doc.status}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Remarks */}
+                        <View style={{ flex: 2.2, paddingRight: 8 }}>
+                          <Text style={[styles.remarksText, { color: subTextColor }]}>{doc.remarks}</Text>
+                        </View>
+
+                        {/* Actions */}
+                        <View style={{ width: 180, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <TouchableOpacity
+                            style={[styles.docBtn, { backgroundColor: '#0284c7' }]}
+                            onPress={() => handleDocAction(doc, false)}
+                            disabled={isViewing || isDownloading}
+                          >
+                            {isViewing ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <>
+                                <Ionicons name="eye-outline" size={13} color="#ffffff" />
+                                <Text style={styles.docBtnText}>View</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={[styles.docBtn, { backgroundColor: '#059669' }]}
+                            onPress={() => handleDocAction(doc, true)}
+                            disabled={isViewing || isDownloading}
+                          >
+                            {isDownloading ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <>
+                                <Ionicons name="download-outline" size={13} color="#ffffff" />
+                                <Text style={styles.docBtnText}>Download</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      )}
 
       {/* 1. Statutory Government Filings & Legal Notices */}
       {auditTab === 'FILINGS' && (
@@ -665,5 +896,165 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   saveBtnText: { color: '#ffffff', fontSize: 13.5, fontFamily: FONT.extraBold },
+  vaultHeaderRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  panelHeading: { fontSize: 15, fontFamily: FONT.extraBold },
+  panelSub: { fontSize: 11.5, fontFamily: FONT.medium, marginTop: 4, lineHeight: 17 },
+  liveSyncBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.16)',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  liveSyncBadgeText: { color: '#10b981', fontSize: 9.5, fontFamily: FONT.extraBold },
+  vaultSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minWidth: 240,
+  },
+  vaultSearchInput: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    flex: 1,
+    padding: 0,
+  },
+  vaultInfoStrip: {
+    borderWidth: 1,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tableContainer: {
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.25)',
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+  },
+  thText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tableDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+  },
+  dateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+  },
+  dateBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  docTitleText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  refBadge: {
+    backgroundColor: 'rgba(148, 163, 184, 0.15)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  refBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.semiBold,
+    color: '#94a3b8',
+  },
+  fileSizeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  fileSizeText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+  },
+  authorityText: {
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+  },
+  catPill: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+  },
+  catPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+  },
+  statusPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+  },
+  remarksText: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    lineHeight: 16,
+  },
+  docBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+  },
+  docBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
 });
 

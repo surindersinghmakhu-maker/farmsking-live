@@ -63,7 +63,8 @@ export function useDeactivateUser() {
 export function useReactivateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: api.reactivateUser,
+    mutationFn: (payload: string | { id: string; newMobile?: string; newName?: string }) =>
+      api.reactivateUser(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] }),
   });
 }

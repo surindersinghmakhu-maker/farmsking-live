@@ -243,6 +243,7 @@ export default function SuperUsersScreen() {
   };
 
   const [blockVerificationTarget, setBlockVerificationTarget] = useState<AdminUser | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<AdminUser | null>(null);
 
   const handleBlockUser = (targetUser: AdminUser) => {
     if (targetUser.mobile === '9872066901') {
@@ -913,9 +914,11 @@ export default function SuperUsersScreen() {
             <View style={[styles.usersGridContainer, isDesktop && styles.usersGridContainerDesktop]}>
               {visibleItems.map((u) => {
                 const isUserOperator = u.role === 'OPERATOR' || (Array.isArray(u.roles) && u.roles.includes('OPERATOR'));
-                const isDeletedUser = Boolean(u.deletedAt);
-                const isSelfDeletedUser = Boolean(u.isPermanentlyDeleted || u.name === 'Deleted Account' || (!u.isPermanentlyBlocked && isDeletedUser));
-                const canRestoreUser = isDeletedUser && !isSelfDeletedUser && !hasNewActiveAccountOnMobile(u);
+                const isBlocked = Boolean(u.isPermanentlyBlocked);
+                const isDeletedUser = Boolean(u.deletedAt) || isBlocked;
+                const daysSince = u.daysSinceDeleted ?? (u.deletedAt ? Math.floor((Date.now() - new Date(u.deletedAt).getTime()) / (1000 * 60 * 60 * 24)) : 0);
+                const isGraceExpired = !isBlocked && daysSince > 14;
+                const canRestoreUser = isBlocked ? true : (isDeletedUser && !isGraceExpired);
                 return (
                   <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
                     <UserRow
@@ -924,20 +927,7 @@ export default function SuperUsersScreen() {
                       isOperator={isUserOperator}
                       canRestore={canRestoreUser}
                       onDeactivate={() => handleBlockUser(u)}
-                      onReactivate={() => {
-                        reactivate.mutate(u.id, {
-                          onSuccess: () => {
-                            const msg = `Account for ${u.name} unblocked successfully and mobile number restored.`;
-                            if (Platform.OS === 'web') alert(msg);
-                            else Alert.alert('Unblocked', msg);
-                          },
-                          onError: (err: any) => {
-                            const msg = err?.response?.data?.message || err?.message || 'Cannot restore this account.';
-                            if (Platform.OS === 'web') alert(msg);
-                            else Alert.alert('Restore Blocked', msg);
-                          },
-                        });
-                      }}
+                      onReactivate={() => setRestoreTarget(u)}
                       onEditPermissions={isUserOperator ? () => setPermissionsTarget(u) : undefined}
                       onEditRoles={u.role !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
                       onOpenDetail={() => setDetailTargetId(u.id)}
@@ -1028,6 +1018,7 @@ export default function SuperUsersScreen() {
       <EditRolesModal target={rolesTarget} onClose={() => setRolesTarget(null)} />
       <UserDetailModal userId={detailTargetId} onClose={() => setDetailTargetId(null)} />
       <BlockUserSecurityModal target={blockVerificationTarget} onClose={() => setBlockVerificationTarget(null)} />
+      <RestoreUserModal target={restoreTarget} onClose={() => setRestoreTarget(null)} />
       <AddTrainerModal visible={isAddTrainerOpen} onClose={() => setIsAddTrainerOpen(false)} />
       <TrainerReportsModal visible={isTrainerReportsOpen} onClose={() => setIsTrainerReportsOpen(false)} />
     </View>
@@ -1229,6 +1220,168 @@ function BlockUserSecurityModal({ target, onClose }: { target: AdminUser | null;
                 <Text style={styles.submitBtnText}>🛑 Block User</Text>
               )}
             </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function RestoreUserModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
+  const reactivate = useReactivateUser();
+  const [mobileInput, setMobileInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (target) {
+      const strippedMobile = target.mobile.replace(/_del_[a-z0-9_]+$/i, '').replace(/\D/g, '').slice(-10);
+      setMobileInput(strippedMobile);
+      setNameInput(target.name === 'Deleted Account' ? '' : target.name);
+      setError(null);
+    }
+  }, [target]);
+
+  if (!target) return null;
+
+  const isBlocked = Boolean(target.isPermanentlyBlocked);
+  const daysSince = target.daysSinceDeleted ?? (target.deletedAt ? Math.floor((Date.now() - new Date(target.deletedAt).getTime()) / (1000 * 60 * 60 * 24)) : 0);
+  const daysLeft = Math.max(0, 14 - daysSince);
+  const isGraceExpired = !isBlocked && daysSince > 14;
+
+  const handleConfirmRestore = async () => {
+    setError(null);
+    const cleanDigits = mobileInput.replace(/\D/g, '').slice(-10);
+    if (cleanDigits.length !== 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    try {
+      await reactivate.mutateAsync({
+        id: target.id,
+        newMobile: cleanDigits,
+        newName: nameInput.trim() || undefined,
+      });
+      const msg = `Account for ${nameInput.trim() || target.name} ${isBlocked ? 'unblocked' : 'restored'} successfully with mobile number ${cleanDigits}.`;
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert(isBlocked ? 'User Unblocked' : 'Account Restored', msg);
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || 'Could not restore user account.');
+    }
+  };
+
+  return (
+    <Modal visible={!!target} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { borderColor: isBlocked ? '#38bdf8' : '#4ade80', borderWidth: 1.5, maxWidth: 460 }]}>
+          <View style={styles.modalHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <Ionicons name={isBlocked ? 'lock-open-outline' : 'refresh-circle-outline'} size={22} color={isBlocked ? '#0284c7' : '#16a34a'} />
+              <Text style={[styles.modalTitle, { color: isBlocked ? '#0284c7' : '#16a34a' }]}>
+                {isBlocked ? 'Unblock User Account' : 'Restore Deleted Account'}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          {isBlocked ? (
+            <View style={{ backgroundColor: '#f0f9ff', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd', marginVertical: 6 }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0369a1' }}>
+                🔓 Admin Unblock Access
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#0c4a6e', marginTop: 4, lineHeight: 17 }}>
+                This user was blocked by an Admin. Unblocking will restore their account to <Text style={{ fontFamily: FONT.bold }}>ACTIVE</Text> status with all previous roles and historical data intact.
+              </Text>
+            </View>
+          ) : isGraceExpired ? (
+            <View style={{ backgroundColor: '#fef2f2', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fecaca', marginVertical: 6 }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#991b1b' }}>
+                ⛔ 14-Day Grace Window Expired
+              </Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#7f1d1d', marginTop: 4, lineHeight: 17 }}>
+                This account was self-deleted {daysSince} days ago. The statutory 14-day restoration window has expired. This account is permanently deleted and preserved strictly as an anonymous audit ledger.
+              </Text>
+            </View>
+          ) : (
+            <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', marginVertical: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="time" size={14} color="#15803d" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#15803d' }}>
+                  14-Day Restoration Grace Window ({daysLeft} days remaining)
+                </Text>
+              </View>
+              <Text style={{ fontSize: 12, fontFamily: FONT.regular, color: '#14532d', marginTop: 4, lineHeight: 17 }}>
+                This account was self-deleted by the user. Restoring will reactivate their original profile, roles, farm records, and crops without any data loss.
+              </Text>
+            </View>
+          )}
+
+          {!isGraceExpired && (
+            <View style={{ marginVertical: 8, gap: 10 }}>
+              <View>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
+                  Mobile Number (10 Digits) *
+                </Text>
+                <TextInput
+                  style={[styles.input, { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, padding: 10, fontSize: 13 }]}
+                  value={mobileInput}
+                  onChangeText={setMobileInput}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  placeholder="Enter 10-digit mobile number"
+                />
+                <Text style={{ fontSize: 10.5, color: '#64748b', marginTop: 3 }}>
+                  • You can edit the mobile number if the previous SIM was re-assigned or if the user requested a new number.
+                </Text>
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
+                  User Name (Optional Edit)
+                </Text>
+                <TextInput
+                  style={[styles.input, { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, padding: 10, fontSize: 13 }]}
+                  value={nameInput}
+                  onChangeText={setNameInput}
+                  placeholder="Enter user name"
+                />
+              </View>
+            </View>
+          )}
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+            <TouchableOpacity
+              style={[styles.submitBtn, { flex: 1, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]}
+              onPress={onClose}
+              disabled={reactivate.isPending}
+            >
+              <Text style={[styles.submitBtnText, { color: '#475569' }]}>Cancel</Text>
+            </TouchableOpacity>
+
+            {!isGraceExpired && (
+              <TouchableOpacity
+                style={[
+                  styles.submitBtn,
+                  { flex: 1.4, backgroundColor: isBlocked ? '#0284c7' : '#16a34a' },
+                ]}
+                disabled={reactivate.isPending}
+                onPress={handleConfirmRestore}
+              >
+                {reactivate.isPending ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.submitBtnText}>
+                    {isBlocked ? '🔓 Confirm Unblock' : '↺ Confirm & Restore'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -2214,7 +2367,10 @@ function UserRow({
   const { isLight } = useExecutiveTheme();
   const isBlocked = Boolean(user.isPermanentlyBlocked);
   const isDeactivated = Boolean(user.deletedAt) || isBlocked;
-  const isSelfDeleted = Boolean(user.isPermanentlyDeleted || user.name === 'Deleted Account' || (!isBlocked && Boolean(user.deletedAt)));
+  const isSelfDeleted = !isBlocked && (Boolean(user.deletedAt) || user.name === 'Deleted Account');
+  const daysSince = user.daysSinceDeleted ?? (user.deletedAt ? Math.floor((Date.now() - new Date(user.deletedAt).getTime()) / (1000 * 60 * 60 * 24)) : 0);
+  const daysRemaining = Math.max(0, 14 - daysSince);
+  const isGraceExpired = isSelfDeleted && daysSince > 14;
   const isOnline = !isDeactivated && Boolean(user.isOnline);
   const isPrimarySuperAdmin = user.mobile === '9872066901';
   const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p: any) => p[0] ?? '').join('').toUpperCase() || '?';
@@ -2328,10 +2484,24 @@ function UserRow({
           ) : null}
 
           {isDeactivated ? (
-            <View style={styles.deactivatedBadgeCompact}>
-              <Ionicons name={isBlocked ? 'ban' : 'trash'} size={9} color="#ef4444" />
-              <Text style={styles.deactivatedBadgeTextCompact}>{isBlocked ? 'Blocked' : 'Deleted'}</Text>
-            </View>
+            isBlocked ? (
+              <View style={styles.deactivatedBadgeCompact}>
+                <Ionicons name="ban" size={9} color="#ef4444" />
+                <Text style={styles.deactivatedBadgeTextCompact}>Blocked (Admin)</Text>
+              </View>
+            ) : isGraceExpired ? (
+              <View style={[styles.deactivatedBadgeCompact, { backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.18)', borderColor: isLight ? '#cbd5e1' : 'rgba(100, 116, 139, 0.35)' }]}>
+                <Ionicons name="trash-outline" size={9} color={isLight ? '#64748b' : '#94a3b8'} />
+                <Text style={[styles.deactivatedBadgeTextCompact, { color: isLight ? '#64748b' : '#94a3b8' }]}>Permanently Deleted</Text>
+              </View>
+            ) : (
+              <View style={[styles.deactivatedBadgeCompact, { backgroundColor: 'rgba(245, 158, 11, 0.14)', borderColor: 'rgba(245, 158, 11, 0.35)' }]}>
+                <Ionicons name="time-outline" size={9} color="#f59e0b" />
+                <Text style={[styles.deactivatedBadgeTextCompact, { color: '#f59e0b' }]}>
+                  Self-Deleted ({daysRemaining}d left)
+                </Text>
+              </View>
+            )
           ) : isOnline ? (
             <View
               style={[
@@ -2398,18 +2568,42 @@ function UserRow({
           ) : null}
 
           {isDeactivated ? (
-            isSelfDeleted ? (
-              <View
-                style={[
-                  styles.actionBtnCompact,
-                  { backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.14)', borderColor: isLight ? '#cbd5e1' : 'rgba(100, 116, 139, 0.35)' },
-                ]}
+            isBlocked ? (
+              <TouchableOpacity
+                style={[styles.actionBtnCompact, styles.actionBtnRestore]}
+                activeOpacity={0.8}
+                onPress={onReactivate}
               >
-                <Ionicons name="archive-outline" size={12} color={isLight ? '#64748b' : '#94a3b8'} />
-                <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#64748b' : '#94a3b8' }]}>
-                  Self-Deleted (Audit)
+                <Ionicons name="lock-open-outline" size={12} color="#00ff87" />
+                <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>
+                  Unblock
                 </Text>
-              </View>
+              </TouchableOpacity>
+            ) : isSelfDeleted ? (
+              !isGraceExpired ? (
+                <TouchableOpacity
+                  style={[styles.actionBtnCompact, styles.actionBtnRestore]}
+                  activeOpacity={0.8}
+                  onPress={onReactivate}
+                >
+                  <Ionicons name="refresh-outline" size={12} color="#00ff87" />
+                  <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>
+                    Restore ({daysRemaining}d)
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <View
+                  style={[
+                    styles.actionBtnCompact,
+                    { backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.14)', borderColor: isLight ? '#cbd5e1' : 'rgba(100, 116, 139, 0.35)' },
+                  ]}
+                >
+                  <Ionicons name="trash-outline" size={12} color={isLight ? '#64748b' : '#94a3b8'} />
+                  <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#64748b' : '#94a3b8' }]}>
+                    Perm Deleted
+                  </Text>
+                </View>
+              )
             ) : canRestore ? (
               <TouchableOpacity
                 style={[styles.actionBtnCompact, styles.actionBtnRestore]}
@@ -2425,11 +2619,11 @@ function UserRow({
               <View
                 style={[
                   styles.actionBtnCompact,
-                  { backgroundColor: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)' },
+                  { backgroundColor: isLight ? '#f1f5f9' : 'rgba(100, 116, 139, 0.14)', borderColor: isLight ? '#cbd5e1' : 'rgba(100, 116, 139, 0.35)' },
                 ]}
               >
-                <Ionicons name="ban-outline" size={12} color="#f87171" />
-                <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Mobile Reused</Text>
+                <Ionicons name="archive-outline" size={12} color={isLight ? '#64748b' : '#94a3b8'} />
+                <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#64748b' : '#94a3b8' }]}>Archived</Text>
               </View>
             )
           ) : !isPrimarySuperAdmin ? (

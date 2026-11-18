@@ -1,3 +1,4 @@
+import type { Response } from 'express';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { ComplianceService } from './compliance.service';
 import { CreateComplianceRecordDto, UpdateComplianceRecordDto } from './dto/compliance-record.dto';
@@ -237,4 +238,19 @@ export declare class ComplianceController {
         assignedTo: string | null;
         documentUrl: string | null;
     }>;
+    listStatutoryDocuments(): {
+        id: string;
+        date: string;
+        orderDate: string;
+        title: string;
+        category: string;
+        authority: string;
+        referenceNo: string;
+        status: string;
+        fileSize: string;
+        fileName: string;
+        downloadKey: string;
+        remarks: string;
+    }[];
+    downloadStatutoryDocument(downloadKey: string, forceDownload: string, res: Response): void;
 }

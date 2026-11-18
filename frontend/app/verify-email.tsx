@@ -124,7 +124,7 @@ export default function VerifyEmailScreen() {
         {/* Statutory footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>FARMSKING TECHNOLOGIES PRIVATE LIMITED</Text>
-          <Text style={styles.footerSubText}>CIN: U01100PB2026PTC063294 • ISO 27001 Certified Security</Text>
+          <Text style={styles.footerSubText}>CIN: U62013PB2026PTC070389 • ISO 27001 Certified Security</Text>
         </View>
       </View>
     </View>

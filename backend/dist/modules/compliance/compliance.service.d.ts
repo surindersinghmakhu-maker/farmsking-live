@@ -240,4 +240,19 @@ export declare class ComplianceService {
         assignedTo: string | null;
         documentUrl: string | null;
     }>;
+    getStatutoryDocumentsCatalog(): {
+        id: string;
+        date: string;
+        orderDate: string;
+        title: string;
+        category: string;
+        authority: string;
+        referenceNo: string;
+        status: string;
+        fileSize: string;
+        fileName: string;
+        downloadKey: string;
+        remarks: string;
+    }[];
+    getStatutoryDocumentFilePath(downloadKey: string): string | null;
 }

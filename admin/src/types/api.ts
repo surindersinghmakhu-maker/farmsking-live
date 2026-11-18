@@ -135,6 +135,11 @@ export interface AdminUser {
   deletedAt?: string | null;
   isPermanentlyDeleted?: boolean;
   isPermanentlyBlocked?: boolean;
+  isSelfDeleted?: boolean;
+  daysSinceDeleted?: number;
+  daysRemainingToRestore?: number;
+  isGraceExpired?: boolean;
+  canRestore?: boolean;
   isOnline?: boolean;
   lastSeenAt?: string | null;
   // Advisor-only

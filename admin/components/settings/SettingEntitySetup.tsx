@@ -869,7 +869,7 @@ export default function SettingEntitySetup() {
                         handleUpdateMasterField('cinNumber', txt);
                         handleUpdateMasterField('cin' as any, txt);
                       }}
-                      placeholder="U01100PB2026PTC063294"
+                      placeholder="U62013PB2026PTC070389"
                       placeholderTextColor={subTextColor}
                     />
                   </View>
@@ -1666,7 +1666,7 @@ export default function SettingEntitySetup() {
               © 2026 FARMSKING TECHNOLOGIES PRIVATE LIMITED. All rights reserved.
             </Text>
             <Text style={[styles.statutoryCopyrightSub, { color: subTextColor }]}>
-              MCA Incorporated under Companies Act, 2013 • CIN: U01100PB2026PTC063294 • Regd Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422
+              MCA Incorporated under Companies Act, 2013 • CIN: U62013PB2026PTC070389 • Regd Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601
             </Text>
           </View>
         </View>

@@ -238,8 +238,11 @@ let UsersController = class UsersController {
     deactivate(user, id) {
         return this.usersService.deactivate(user, id);
     }
-    reactivate(user, id) {
-        return this.usersService.reactivate(user, id);
+    reactivate(user, id, body) {
+        return this.usersService.reactivate(user, id, body);
+    }
+    reactivatePost(user, id, body) {
+        return this.usersService.reactivate(user, id, body);
     }
     deleteUserByAdmin(user, id, body, queryOtp, headerOtp) {
         return this.usersService.deleteUserByAdmin(user, id, body?.adminConfirmationOtp || queryOtp || headerOtp);
@@ -765,10 +768,20 @@ __decorate([
     (0, common_1.Patch)(':id/reactivate'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "reactivate", null);
+__decorate([
+    (0, common_1.Post)(':id/reactivate'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "reactivatePost", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.SUPER_ADMIN),
     (0, common_1.Delete)(':id'),

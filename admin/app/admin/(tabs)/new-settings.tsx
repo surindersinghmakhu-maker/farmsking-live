@@ -272,10 +272,10 @@ export default function NewSettingsScreen() {
                     </View>
                     <TouchableOpacity
                       style={styles.heroCinBadge}
-                      onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294')}
+                      onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U62013PB2026PTC070389')}
                     >
                       <Text style={styles.heroCinText}>
-                        CIN: {masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294'}
+                        CIN: {masterData.cinNumber || (masterData as any).cin || 'U62013PB2026PTC070389'}
                       </Text>
                       <Ionicons name="copy-outline" size={11} color="rgba(255,255,255,0.7)" style={{ marginLeft: 4 }} />
                     </TouchableOpacity>
@@ -369,33 +369,33 @@ export default function NewSettingsScreen() {
 
                   <TouchableOpacity
                     style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
-                    onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294')}
+                    onPress={() => handleCopy('CIN', masterData.cinNumber || (masterData as any).cin || 'U62013PB2026PTC070389')}
                   >
                     <Text style={[styles.statCodeLabel, { color: subTextColor }]}>CIN</Text>
                     <View style={styles.statCodeValWrap}>
-                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.cinNumber || (masterData as any).cin || 'U01100PB2026PTC063294'}</Text>
+                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.cinNumber || (masterData as any).cin || 'U62013PB2026PTC070389'}</Text>
                       <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
-                    onPress={() => handleCopy('PAN', masterData.companyPan || (masterData as any).panNumber || 'AAJCF0540K')}
+                    onPress={() => handleCopy('PAN', masterData.companyPan || (masterData as any).panNumber || 'AAHCF3566C')}
                   >
                     <Text style={[styles.statCodeLabel, { color: subTextColor }]}>PAN</Text>
                     <View style={styles.statCodeValWrap}>
-                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyPan || (masterData as any).panNumber || 'AAJCF0540K'}</Text>
+                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyPan || (masterData as any).panNumber || 'AAHCF3566C'}</Text>
                       <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[styles.statCodeItem, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}
-                    onPress={() => handleCopy('TAN', masterData.companyTan || 'ASRF04294G')}
+                    onPress={() => handleCopy('TAN', masterData.companyTan || 'AMRF11527F')}
                   >
                     <Text style={[styles.statCodeLabel, { color: subTextColor }]}>TAN</Text>
                     <View style={styles.statCodeValWrap}>
-                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyTan || 'ASRF04294G'}</Text>
+                      <Text style={[styles.statCodeValue, { color: textColor }]}>{masterData.companyTan || 'AMRF11527F'}</Text>
                       <Ionicons name="copy-outline" size={11} color="#6366f1" />
                     </View>
                   </TouchableOpacity>
@@ -410,16 +410,40 @@ export default function NewSettingsScreen() {
                     </View>
                     <TouchableOpacity
                       style={styles.copyInlineBtn}
-                      onPress={() => handleCopy('Registered Address', masterData.registeredAddress || masterData.registeredOfficeAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India')}
+                      onPress={() => handleCopy('Registered Address', masterData.registeredAddress || masterData.registeredOfficeAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India')}
                     >
                       <Ionicons name="copy-outline" size={11} color="#6366f1" />
                       <Text style={styles.copyInlineText}>Copy</Text>
                     </TouchableOpacity>
                   </View>
                   <Text style={[styles.addressText, { color: textColor }]} numberOfLines={2}>
-                    {masterData.registeredAddress || masterData.registeredOfficeAddress || 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422, India'}
+                    {masterData.registeredAddress || masterData.registeredOfficeAddress || 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India'}
                   </Text>
                 </View>
+
+                {/* 1-Click Link to Statutory Legal Documents Vault */}
+                <TouchableOpacity
+                  style={[styles.legalVaultBanner, { backgroundColor: isLight ? '#eff6ff' : '#0c1e36', borderColor: '#3b82f6' }]}
+                  onPress={() => router.push('/admin/(tabs)/legal-compliance?tab=DOCUMENTS' as any)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                    <View style={styles.legalVaultIcon}>
+                      <Ionicons name="folder-open" size={20} color="#3b82f6" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.legalVaultTitle, { color: textColor }]}>
+                        Corporate Legal Documents Vault (8 Files)
+                      </Text>
+                      <Text style={[styles.legalVaultSub, { color: subTextColor }]}>
+                        COI, Signed SPICe+ Part B, e-MoA, e-AoA, AGILE-PRO-S, INC-9 &amp; NOC · 1-Click Preview &amp; Download
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.legalVaultArrow}>
+                    <Text style={styles.legalVaultBtnText}>Open Vault</Text>
+                    <Ionicons name="arrow-forward" size={14} color="#3b82f6" />
+                  </View>
+                </TouchableOpacity>
 
                 <View style={[styles.addressBlock, { backgroundColor: isLight ? '#f8fafc' : '#020617', borderColor: cardBorder }]}>
                   <View style={styles.addressHead}>
@@ -1491,5 +1515,47 @@ const styles = StyleSheet.create({
   visitorFooterText: {
     fontSize: 11,
     fontFamily: FONT.medium,
+  },
+  legalVaultBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    marginTop: 6,
+    gap: 12,
+  },
+  legalVaultIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legalVaultTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  legalVaultSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  legalVaultArrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+  },
+  legalVaultBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#3b82f6',
   },
 });

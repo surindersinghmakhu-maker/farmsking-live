@@ -290,14 +290,36 @@ export class UsersService implements OnModuleInit {
       this.prisma.user.count({ where }),
     ]);
 
+    const now = Date.now();
     const items = rawItems.map(({ passwordHash, ...rest }) => {
       const presence =
         !rest.deletedAt && !rest.isPermanentlyBlocked
           ? this.userSessionService?.getUserPresence(rest.id)
           : undefined;
+
+      const isSelfDeleted = Boolean(!rest.isPermanentlyBlocked && rest.deletedAt);
+      let daysSinceDeleted = 0;
+      let daysRemainingToRestore = 0;
+      let isGraceExpired = false;
+
+      if (isSelfDeleted && rest.deletedAt) {
+        const deletedTime = new Date(rest.deletedAt).getTime();
+        daysSinceDeleted = Math.floor((now - deletedTime) / (1000 * 60 * 60 * 24));
+        daysRemainingToRestore = Math.max(0, 14 - daysSinceDeleted);
+        isGraceExpired = daysSinceDeleted > 14;
+      }
+
+      const isPermDeleted = Boolean(passwordHash === 'ACCOUNT_DELETED_PERMANENTLY' || isGraceExpired);
+      const canRestore = rest.isPermanentlyBlocked ? true : (isSelfDeleted && !isGraceExpired);
+
       return {
         ...rest,
-        isPermanentlyDeleted: passwordHash === 'ACCOUNT_DELETED_PERMANENTLY',
+        isPermanentlyDeleted: isPermDeleted,
+        isSelfDeleted,
+        daysSinceDeleted,
+        daysRemainingToRestore,
+        isGraceExpired,
+        canRestore,
         isOnline: Boolean(presence?.isOnline),
         lastSeenAt: presence?.lastSeenAt ? new Date(presence.lastSeenAt).toISOString() : null,
       };
@@ -2073,22 +2095,38 @@ export class UsersService implements OnModuleInit {
     };
   }
 
-  async reactivate(caller: AuthUser, id: string) {
+  async reactivate(caller: AuthUser, id: string, dto?: { newMobile?: string; newName?: string }) {
     const user = await this.findActiveOrThrow(id);
     this.assertCanManageTarget(caller, user);
-
-    // Rule: User self-deleted accounts CANNOT be restored or unblocked by Admin
-    if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY' || (!user.isPermanentlyBlocked && Boolean(user.deletedAt))) {
-      throw new ConflictException(
-        'This account was permanently deleted by the user and cannot be restored. It remains strictly as an audit ledger.',
-      );
-    }
 
     if (!user.deletedAt && !user.isPermanentlyBlocked) {
       throw new ConflictException('User is already active.');
     }
 
-    const restoredMobile = this.stripDeletedMarkers(user.mobile);
+    const isSelfDeleted = !user.isPermanentlyBlocked && Boolean(user.deletedAt);
+
+    // 1. 14-Day Restoration Grace Window for self-deleted accounts
+    if (isSelfDeleted && user.deletedAt) {
+      const daysSinceDeleted = Math.floor((Date.now() - new Date(user.deletedAt).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceDeleted > 14) {
+        throw new ConflictException(
+          `The 14-day restoration grace window has expired (${daysSinceDeleted} days elapsed). This account is permanently deleted and cannot be restored.`,
+        );
+      }
+    }
+
+    // 2. Mobile number resolution (use updated mobile if provided by admin, otherwise strip delete markers)
+    let restoredMobile: string;
+    if (dto?.newMobile?.trim()) {
+      const cleanDigits = dto.newMobile.replace(/\D/g, '').slice(-10);
+      if (cleanDigits.length !== 10) {
+        throw new BadRequestException('Please provide a valid 10-digit mobile number to restore this account.');
+      }
+      restoredMobile = cleanDigits;
+    } else {
+      restoredMobile = this.stripDeletedMarkers(user.mobile);
+    }
+
     const restoredEmail = user.email ? this.stripDeletedMarkers(user.email) : null;
     const restoredKingId = user.kingId ? user.kingId.replace(/_del_[a-z0-9_]+$/i, '') : undefined;
 
@@ -2108,8 +2146,20 @@ export class UsersService implements OnModuleInit {
     });
     if (existing) {
       throw new ConflictException(
-        `Cannot unblock: Mobile number ${restoredMobile} has already been registered by a new active user (${existing.kingId || existing.name}).`,
+        `Cannot restore: Mobile number ${restoredMobile} is already in use by active user (${existing.kingId || existing.name}). Please provide a new mobile number to restore this account.`,
       );
+    }
+
+    let targetName = user.name;
+    if (dto?.newName?.trim() && dto.newName.trim() !== 'Deleted Account') {
+      targetName = dto.newName.trim();
+    } else if (user.name === 'Deleted Account') {
+      targetName = `Restored User (${restoredKingId || restoredMobile.slice(-4)})`;
+    }
+
+    let newPasswordHash = user.passwordHash;
+    if (user.passwordHash === 'ACCOUNT_DELETED_PERMANENTLY') {
+      newPasswordHash = await argon2.hash(randomBytes(24).toString('hex'));
     }
 
     const updated = await this.prisma.user.update({
@@ -2120,6 +2170,8 @@ export class UsersService implements OnModuleInit {
         failedLoginAttempts: 0,
         lockoutUntil: null,
         mobile: restoredMobile,
+        name: targetName,
+        passwordHash: newPasswordHash,
         email: restoredEmail,
         ...(restoredKingId ? { kingId: restoredKingId } : {}),
       },

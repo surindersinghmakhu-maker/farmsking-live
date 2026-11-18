@@ -1405,7 +1405,7 @@ export default function PartnerLoginScreen() {
               <View style={styles.statutoryFooter}>
                 <Ionicons name="shield-checkmark" size={13} color="#fbbf24" />
                 <Text style={styles.statutoryFooterText}>
-                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                  FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389
                 </Text>
               </View>
             </View>

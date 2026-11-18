@@ -1589,10 +1589,10 @@ export const AdvisorDashboardView: React.FC = () => {
                     <View style={{ height: 1, backgroundColor: isLight ? '#e2e8f0' : 'rgba(255, 255, 255, 0.08)' }} />
                     <View style={{ gap: 2 }}>
                       <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isLight ? '#475569' : '#cbd5e1' }}>
-                        FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U01100PB2026PTC063294
+                        FARMSKING TECHNOLOGIES PRIVATE LIMITED · CIN: U62013PB2026PTC070389 · PAN: AAHCF3566C
                       </Text>
                       <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                        Registered Office: VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab - 143422 · DPDPA 2023 Compliant
+                        Registered Office: C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Punjab - 144601 · DPDPA 2023 Compliant
                       </Text>
                     </View>
                   </View>

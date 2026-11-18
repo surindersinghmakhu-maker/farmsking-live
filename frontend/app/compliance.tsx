@@ -183,7 +183,7 @@ export default function ComplianceScreen() {
                 isDay ? styles.heroSubtitleDay : styles.heroSubtitleNight,
               ]}
             >
-              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U01100PB2026PTC063294 • Regd. Jurisdiction: Punjab, India
+              FARMSKING TECHNOLOGIES PRIVATE LIMITED • CIN: U62013PB2026PTC070389 • PAN: AAHCF3566C • TAN: AMRF11527F
             </Text>
             <Text
               style={[
@@ -355,7 +355,7 @@ export default function ComplianceScreen() {
                         isDay ? styles.profileValueHighlightDay : styles.profileValueHighlightNight,
                       ]}
                     >
-                      U01100PB2026PTC063294
+                      U62013PB2026PTC070389
                     </Text>
                   </View>
 
@@ -592,14 +592,16 @@ export default function ComplianceScreen() {
 
               <View style={styles.tableContainer}>
                 {[
-                  { k: 'Corporate Identification Number (CIN)', v: 'U01100PB2026PTC063294' },
+                  { k: 'Corporate Identification Number (CIN)', v: 'U62013PB2026PTC070389' },
+                  { k: 'Company PAN', v: 'AAHCF3566C' },
+                  { k: 'Company TAN', v: 'AMRF11527F' },
                   { k: 'Company Name', v: 'FARMSKING TECHNOLOGIES PRIVATE LIMITED' },
-                  { k: 'ROC Registration Jurisdiction', v: 'ROC - Chandigarh (Punjab)' },
+                  { k: 'ROC Registration Jurisdiction', v: 'ROC - Central Registration Centre (CRC), Manesar / Punjab' },
                   { k: 'Company Category', v: 'Company limited by Shares' },
                   { k: 'Class of Company', v: 'Private Company' },
-                  { k: 'Operating Status', v: 'Active (Incorporated under Companies Act, 2013)' },
+                  { k: 'Operating Status', v: 'Active (Incorporated under Companies Act, 2013 on 18 Nov 2026)' },
                   { k: 'Principal Sector', v: 'Agri-Tech Digital Platforms, AI Crop Diagnostics & Farm Commerce' },
-                  { k: 'Registered Office Address', v: 'VPO Goindwal Sahib, Tehsil Khadur Sahib, Tarn Taran, Punjab, India - 143422' },
+                  { k: 'Registered Office Address', v: 'C/o BALDEV SINGH, VILLAGE BOOH, Kapurthala, Kapurthala, Kapurthala - 144601, Punjab, India' },
                   { k: 'Corporate / Operations Office', v: 'Near Grain Market, Makhu, District Ferozepur, Punjab, India - 142044' },
                   { k: 'Official Email Contact', v: 'farmskingindia@gmail.com / support@farmsking.in' },
                   { k: 'Farmer Support Helpline', v: '+91 95776-22000 (Mon - Sat, 10:00 AM – 5:00 PM IST)' },

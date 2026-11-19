@@ -70,11 +70,11 @@ export declare class GardenerPlansService {
     createCoupon(admin: AuthUser, dto: CreateGardenerPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -82,27 +82,27 @@ export declare class GardenerPlansService {
     }>;
     listAllCoupons(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            name: string;
             id: string;
+            name: string;
         };
         assignedGardener: {
-            name: string;
             id: string;
             mobile: string;
+            name: string;
         } | null;
         usedByGardener: {
-            name: string;
             id: string;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -110,14 +110,14 @@ export declare class GardenerPlansService {
     })[]>;
     listAllGardenerPlans(): import(".prisma/client").Prisma.PrismaPromise<({
         coupon: {
-            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             code: string;
+            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         } | null;
         gardener: {
-            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;

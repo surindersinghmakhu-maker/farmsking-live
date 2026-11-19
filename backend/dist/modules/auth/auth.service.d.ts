@@ -238,13 +238,13 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -271,13 +271,13 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
@@ -503,13 +503,13 @@ export declare class AuthService {
         message: string;
         email: string | null;
         user: {
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            name: string;
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;

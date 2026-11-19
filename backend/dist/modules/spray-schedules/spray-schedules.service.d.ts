@@ -80,8 +80,8 @@ export declare class SprayScheduleService {
         completedSprayId: string | null;
     }>;
     searchCatalog(query: string): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;

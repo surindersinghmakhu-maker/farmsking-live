@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
 import ViewShot, { captureRef } from 'react-native-view-shot';
@@ -90,7 +90,63 @@ export function MarketRatesCard() {
   const [isSharingImage, setIsSharingImage] = useState(false);
   const [showMultiMandiModal, setShowMultiMandiModal] = useState(false);
   const [selectedMultiMandiCrop, setSelectedMultiMandiCrop] = useState<string>('Wheat');
+  const [showWidgetModal, setShowWidgetModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isCopiedLink, setIsCopiedLink] = useState(false);
   const posterRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handler = (e: any) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+      };
+      window.addEventListener('beforeinstallprompt', handler);
+      return () => window.removeEventListener('beforeinstallprompt', handler);
+    }
+  }, []);
+
+  const handleInstallPrompt = async () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+        }
+      } catch (err) {
+        console.warn('Install prompt error:', err);
+      }
+    } else {
+      Alert.alert(
+        'Add to Phone Screen',
+        'To add this live widget to your phone screen:\n\n1. Open farmsking.in in Chrome or Safari on your phone.\n2. Tap the browser menu (⋮) or Share button.\n3. Tap "Add to Home screen" / "Install App".'
+      );
+    }
+  };
+
+  const handleShareToWhatsApp = () => {
+    const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
+    const shareUrl = `https://farmsking.in/register?ref=${userRefCode}`;
+    const text = `🌾 *FarmsKing — Live Crop Mandi Price Widget* 📱\n\nOpen this link on your phone and tap *'Add to Home screen'* to keep live crop rates on your phone screen:\n👉 ${shareUrl}`;
+    const url = `whatsapp://send?text=${encodeURIComponent(text)}`;
+    if (Platform.OS === 'web') {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    } else {
+      Linking.openURL(url).catch(() => Share.share({ message: text }));
+    }
+  };
+
+  const handleCopyLink = () => {
+    const link = 'https://farmsking.in';
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(link);
+      setIsCopiedLink(true);
+      setTimeout(() => setIsCopiedLink(false), 2500);
+    } else {
+      Alert.alert('Link Copied', link);
+    }
+  };
 
   const getStateWiseRatesForCrop = (cropName: string) => {
     const homeState = userState || 'Punjab';
@@ -899,7 +955,7 @@ export function MarketRatesCard() {
         ))}
       </View>
 
-      {/* Compact Header with LIVE Indicator */}
+      {/* Compact Header with LIVE Indicator & Mobile Widget Launcher */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={[styles.title, { color: colors.text }]}>{t('cropPricesLive', 'Your Crop Prices')}</Text>
@@ -909,9 +965,23 @@ export function MarketRatesCard() {
           </View>
         </View>
 
-        <View style={[styles.pill, !colors.isDark && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
-          <Ionicons name="time-outline" size={10} color={colors.isDark ? theme.primary : '#15803d'} />
-          <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>Previous 24 hrs</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={[styles.pill, !colors.isDark && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
+            <Ionicons name="time-outline" size={10} color={colors.isDark ? theme.primary : '#15803d'} />
+            <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>Previous 24 hrs</Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.widgetShortcutBtn,
+              { backgroundColor: colors.isDark ? 'rgba(16, 185, 129, 0.2)' : '#dcfce7', borderColor: '#86efac' }
+            ]}
+            activeOpacity={0.75}
+            onPress={() => setShowWidgetModal(true)}
+          >
+            <Ionicons name="phone-portrait-outline" size={11} color="#15803d" />
+            <Text style={styles.widgetShortcutBtnText}>📱 Phone Widget</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -1194,6 +1264,171 @@ export function MarketRatesCard() {
               onPress={() => setShowMultiMandiModal(false)}
             >
               <Text style={styles.mandiModalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 📱 Phone Home Screen Widget & Live Price Shortcut Modal */}
+      <Modal
+        visible={showWidgetModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWidgetModal(false)}
+      >
+        <View style={styles.widgetModalOverlay}>
+          <View style={styles.widgetModalContainer}>
+            {/* Modal Header */}
+            <View style={styles.widgetModalHeader}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="phone-portrait" size={20} color="#10b981" />
+                  <Text style={styles.widgetModalTitle}>Phone Home Screen Widget</Text>
+                </View>
+                <Text style={styles.widgetModalSub}>
+                  Live Mandi rates & crop prices directly on your phone home screen
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowWidgetModal(false)} style={styles.closeBtn}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+              {/* 🌟 4x2 Android Home Screen Widget Interactive Live Preview */}
+              <View style={styles.previewBoxContainer}>
+                <View style={styles.previewBoxHeader}>
+                  <Text style={styles.previewBoxHeaderTitle}>📱 WIDGET PREVIEW ON PHONE SCREEN</Text>
+                  <View style={styles.previewLivePill}>
+                    <View style={styles.previewLiveDot} />
+                    <Text style={styles.previewLiveText}>LIVE 24H</Text>
+                  </View>
+                </View>
+
+                {/* Simulated Android Phone Widget Card */}
+                <View style={styles.simulatedWidgetCard}>
+                  {/* Top Branding Row */}
+                  <View style={styles.widgetTopRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <BrandLogo size={22} useGoldRing useHdQuality />
+                      <Text style={styles.widgetBrandName}>FarmsKing Mandi</Text>
+                    </View>
+                    <View style={styles.widgetLocationPill}>
+                      <Ionicons name="location" size={10} color="#34d399" />
+                      <Text style={styles.widgetLocationText}>{userState ? userState.toUpperCase() : 'PUNJAB'}</Text>
+                    </View>
+                  </View>
+
+                  {/* Crop Rate Rows in Simulated Widget */}
+                  <View style={styles.widgetCropsList}>
+                    {subcategoryRates.slice(0, 3).map((crop) => (
+                      <View key={crop.displayTitle} style={styles.widgetCropRow}>
+                        <View style={{ flex: 1.2 }}>
+                          <Text style={styles.widgetCropTitle} numberOfLines={1}>🌾 {crop.displayTitle}</Text>
+                          <Text style={styles.widgetCropUnit}>Per {crop.unit}</Text>
+                        </View>
+
+                        <View style={styles.widgetRateBlock}>
+                          <Text style={styles.widgetRateLabel}>LOCAL MANDI</Text>
+                          <Text style={styles.widgetRateAvg}>
+                            {crop.localAvgRate != null ? `₹${crop.localAvgRate.toLocaleString('en-IN')}` : '-'}
+                          </Text>
+                        </View>
+
+                        <View style={styles.widgetRateBlock}>
+                          <Text style={styles.widgetRateLabel}>ALL INDIA</Text>
+                          <Text style={styles.widgetRateNat}>
+                            {crop.nationalAvgRate != null ? `₹${crop.nationalAvgRate.toLocaleString('en-IN')}` : '-'}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+
+                  {/* Widget Footer Row */}
+                  <View style={styles.widgetBottomRow}>
+                    <Text style={styles.widgetSyncText}>🔄 Cloud Auto-Sync • farmsking.in</Text>
+                    <Text style={styles.widgetTapToOpen}>Tap to View All ↗</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* ⚡ Primary Action Buttons */}
+              <View style={styles.actionButtonsWrap}>
+                <TouchableOpacity
+                  style={styles.primaryInstallBtn}
+                  activeOpacity={0.85}
+                  onPress={handleInstallPrompt}
+                >
+                  <Ionicons name="download-outline" size={18} color="#ffffff" />
+                  <Text style={styles.primaryInstallBtnText}>Add Shortcut to Phone Screen</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.whatsAppShareBtn}
+                  activeOpacity={0.85}
+                  onPress={handleShareToWhatsApp}
+                >
+                  <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
+                  <Text style={styles.whatsAppShareBtnText}>Send to Phone via WhatsApp</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.copyLinkBtn}
+                  activeOpacity={0.85}
+                  onPress={handleCopyLink}
+                >
+                  <Ionicons name={isCopiedLink ? 'checkmark-circle' : 'copy-outline'} size={16} color="#0f172a" />
+                  <Text style={styles.copyLinkBtnText}>
+                    {isCopiedLink ? 'Link Copied!' : 'Copy Live Rates Web Link'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* 📋 Visual 3-Step Guide (How to Add Directly from Website) */}
+              <View style={styles.guideContainer}>
+                <Text style={styles.guideTitle}>💡 How to Link with Website (No App Install Required):</Text>
+
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumberBadge}><Text style={styles.stepNumberText}>1</Text></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepHead}>Open in Mobile Chrome or Safari</Text>
+                    <Text style={styles.stepDesc}>Visit <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>https://farmsking.in</Text> on your Android or iPhone browser.</Text>
+                  </View>
+                </View>
+
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumberBadge}><Text style={styles.stepNumberText}>2</Text></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepHead}>Tap Browser Menu (⋮ or Share)</Text>
+                    <Text style={styles.stepDesc}>Tap the 3 dots in the top-right corner of Chrome, or the Share button in Safari.</Text>
+                  </View>
+                </View>
+
+                <View style={styles.stepItem}>
+                  <View style={styles.stepNumberBadge}><Text style={styles.stepNumberText}>3</Text></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stepHead}>Select "Add to Home screen"</Text>
+                    <Text style={styles.stepDesc}>Tap "Add to Home screen" or "Install App". The FarmsKing Live Crop Price icon will appear directly on your phone screen!</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 🚀 Native Android APK Future Link Note */}
+              <View style={styles.apkInfoBox}>
+                <Ionicons name="information-circle" size={18} color="#2563eb" />
+                <Text style={styles.apkInfoText}>
+                  <Text style={{ fontFamily: FONT.bold }}>Website & App Synchronization:</Text> This live web widget uses standard PWA technology to sync real-time mandi prices directly from the farmsking.in server. When the native Android APK is built, it connects to this exact same cloud API feed.
+                </Text>
+              </View>
+            </ScrollView>
+
+            {/* Modal Bottom Close Button */}
+            <TouchableOpacity
+              style={styles.widgetModalCloseBtn}
+              onPress={() => setShowWidgetModal(false)}
+            >
+              <Text style={styles.widgetModalCloseText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -2225,6 +2460,324 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: FONT.medium,
     color: '#64748b',
+  },
+  widgetShortcutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  widgetShortcutBtnText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  widgetModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  widgetModalContainer: {
+    width: '100%',
+    maxWidth: 520,
+    maxHeight: '90%',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#0f172a', 'md'),
+  },
+  widgetModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  widgetModalTitle: {
+    fontSize: 17,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  widgetModalSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  closeBtn: {
+    padding: 2,
+  },
+  previewBoxContainer: {
+    backgroundColor: '#0f172a',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1e293b',
+  },
+  previewBoxHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  previewBoxHeaderTitle: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#94a3b8',
+    letterSpacing: 0.5,
+  },
+  previewLivePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  previewLiveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#ef4444',
+  },
+  previewLiveText: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#ef4444',
+  },
+  simulatedWidgetCard: {
+    backgroundColor: '#090e17',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    padding: 12,
+  },
+  widgetTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  widgetBrandName: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  widgetLocationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  widgetLocationText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+  },
+  widgetCropsList: {
+    gap: 8,
+  },
+  widgetCropRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: RADIUS.sm,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  widgetCropTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  widgetCropUnit: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  widgetRateBlock: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  widgetRateLabel: {
+    fontSize: 8,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    letterSpacing: 0.3,
+  },
+  widgetRateAvg: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#34d399',
+    marginTop: 1,
+  },
+  widgetRateNat: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#38bdf8',
+    marginTop: 1,
+  },
+  widgetBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  widgetSyncText: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  widgetTapToOpen: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  actionButtonsWrap: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  primaryInstallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#16a34a',
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+    ...premiumShadow('#16a34a', 'sm'),
+  },
+  primaryInstallBtnText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  whatsAppShareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#25D366',
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
+  },
+  whatsAppShareBtnText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  copyLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+  copyLinkBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  guideContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 14,
+    marginBottom: 12,
+  },
+  guideTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    marginBottom: 10,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 8,
+  },
+  stepNumberBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  stepNumberText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  stepHead: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  stepDesc: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#64748b',
+    marginTop: 1,
+    lineHeight: 15,
+  },
+  apkInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: RADIUS.md,
+    padding: 12,
+  },
+  apkInfoText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#1e40af',
+    lineHeight: 16,
+  },
+  widgetModalCloseBtn: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  widgetModalCloseText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#475569',
   },
 });
 

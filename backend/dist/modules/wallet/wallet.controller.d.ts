@@ -11,10 +11,10 @@ export declare class WalletController {
         commissionEarnings: number;
         transactions: ({
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             } | null;
         } & {
             id: string;
@@ -35,10 +35,10 @@ export declare class WalletController {
         commissionEarnings: number;
         transactions: ({
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             } | null;
         } & {
             id: string;
@@ -88,12 +88,12 @@ export declare class WalletController {
             welcomeEarnings: number;
             referralEarnings: number;
             commissionEarnings: number;
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
-            roles: import(".prisma/client").$Enums.Role[];
+            name: string;
             upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
@@ -121,18 +121,18 @@ export declare class WalletController {
             createdAt: Date;
             category: "OTHER" | "WELCOME" | "REFERRAL_SIGNUP" | "REFERRAL_PLAN";
             user: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             };
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             } | null;
         }[];
     }>;
@@ -159,11 +159,11 @@ export declare class WalletController {
             welcomeEarnings: number;
             referralEarnings: number;
             commissionEarnings: number;
-            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
             role: import(".prisma/client").$Enums.Role;
+            name: string;
             upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
@@ -171,10 +171,10 @@ export declare class WalletController {
         }[];
         withdrawals: ({
             businessPartner: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
                 upiId: string | null;
                 bankAccountNumber: string | null;
                 bankIfsc: string | null;
@@ -196,11 +196,11 @@ export declare class WalletController {
         })[];
         manualTransactions: ({
             user: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             };
         } & {
             id: string;
@@ -215,11 +215,11 @@ export declare class WalletController {
         })[];
         inAppUsageTransactions: ({
             user: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
                 role: import(".prisma/client").$Enums.Role;
+                name: string;
             };
         } & {
             id: string;
@@ -240,10 +240,10 @@ export declare class WalletController {
         commissionEarnings: number;
         transactions: ({
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             } | null;
         } & {
             id: string;
@@ -264,10 +264,10 @@ export declare class WalletController {
         commissionEarnings: number;
         transactions: ({
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             } | null;
         } & {
             id: string;
@@ -288,10 +288,10 @@ export declare class WalletController {
         commissionEarnings: number;
         transactions: ({
             relatedUser: {
-                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
+                name: string;
             } | null;
         } & {
             id: string;

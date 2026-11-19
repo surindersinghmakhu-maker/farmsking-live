@@ -9,10 +9,10 @@ export declare class PlanRenewalController {
     create(user: AuthUser, dto: CreatePlanRenewalCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        daysGranted: number;
-        assignedAdvisorId: string | null;
         code: string;
         createdById: string;
+        daysGranted: number;
+        assignedAdvisorId: string | null;
         assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;
@@ -20,22 +20,22 @@ export declare class PlanRenewalController {
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         assignedAdvisor: {
-            name: string;
             id: string;
             mobile: string;
+            name: string;
         } | null;
         assignedFarmer: {
-            name: string;
             id: string;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        daysGranted: number;
-        assignedAdvisorId: string | null;
         code: string;
         createdById: string;
+        daysGranted: number;
+        assignedAdvisorId: string | null;
         assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;
@@ -44,10 +44,10 @@ export declare class PlanRenewalController {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        daysGranted: number;
-        assignedAdvisorId: string | null;
         code: string;
         createdById: string;
+        daysGranted: number;
+        assignedAdvisorId: string | null;
         assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;

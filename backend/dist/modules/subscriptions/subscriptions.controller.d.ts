@@ -5,15 +5,15 @@ export declare class SubscriptionsController {
     private readonly subscriptionsService;
     constructor(subscriptionsService: SubscriptionsService);
     listPlans(): import(".prisma/client").Prisma.PrismaPromise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
+        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -30,9 +30,9 @@ export declare class SubscriptionsController {
     create(user: AuthUser, dto: CreateSubscriptionDto): Promise<{
         advisorAssignment: {
             advisor: {
-                name: string;
                 id: string;
                 mobile: string;
+                name: string;
             };
         } & {
             id: string;
@@ -49,15 +49,15 @@ export declare class SubscriptionsController {
             assignedById: string | null;
         };
         plan: {
-            name: string;
             id: string;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
+            isActive: boolean;
             description: string | null;
             adminNotes: string | null;
             reviewedById: string | null;
             reviewedAt: Date | null;
-            isActive: boolean;
             advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
@@ -87,34 +87,11 @@ export declare class SubscriptionsController {
         approvedById: string | null;
     }>;
     findMine(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorSubscriptionClient<({
-        plan: {
-            name: string;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
-            adminNotes: string | null;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
-            isActive: boolean;
-            advisorId: string | null;
-            hiringModel: import(".prisma/client").$Enums.HiringModelType;
-            price: import("@prisma/client/runtime/library").Decimal;
-            chatEnabled: boolean;
-            billingCycle: string;
-            planType: import(".prisma/client").$Enums.FarmerPlanType;
-            maxFarms: number;
-            callRequestLimit: number;
-            inAppCallLimit: number;
-            videoCallAllowed: boolean;
-            videoCallLimit: number;
-            approvalStatus: string;
-        };
         advisorAssignment: ({
             advisor: {
-                name: string;
                 id: string;
                 mobile: string;
+                name: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -133,6 +110,29 @@ export declare class SubscriptionsController {
             subscriptionId: string | null;
             assignedById: string | null;
         }) | null;
+        plan: {
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            isActive: boolean;
+            description: string | null;
+            adminNotes: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
+            advisorId: string | null;
+            hiringModel: import(".prisma/client").$Enums.HiringModelType;
+            price: import("@prisma/client/runtime/library").Decimal;
+            chatEnabled: boolean;
+            billingCycle: string;
+            planType: import(".prisma/client").$Enums.FarmerPlanType;
+            maxFarms: number;
+            callRequestLimit: number;
+            inAppCallLimit: number;
+            videoCallAllowed: boolean;
+            videoCallLimit: number;
+            approvalStatus: string;
+        };
     } & {
         id: string;
         createdAt: Date;

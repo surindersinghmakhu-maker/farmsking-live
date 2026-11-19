@@ -200,47 +200,17 @@ export default function PartnerLoginScreen() {
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
 
-  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
-  const initRecaptcha = async () => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    try {
-      const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-partner-login-host');
-      if (!container) return;
-      if (!(window as any).recaptchaVerifierPartner) {
-        const verifier = new RecaptchaVerifier(auth, container, {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            resetRecaptcha();
-          },
-        });
-        (window as any).recaptchaVerifierPartner = verifier;
-        await verifier.render().catch((renderErr: any) => {
-          console.warn('[RecaptchaVerifier partner pre-render notice]:', renderErr?.message);
-        });
-      }
-    } catch (e) {
-      console.warn('ReCaptcha partner init error:', e);
-    }
-  };
-
+  // Firebase reCAPTCHA cleanup for Phone Auth SMS delivery
   const resetRecaptcha = async () => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     try {
-      const verifier = (window as any).recaptchaVerifierPartner;
-      if (verifier) {
-        const widgetId = await verifier.render().catch(() => null);
-        if (widgetId !== null && (window as any).grecaptcha?.reset) {
-          (window as any).grecaptcha.reset(widgetId);
-        }
-      }
+      clearDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartner');
     } catch (e) {
       console.warn('ReCaptcha partner reset error:', e);
     }
   };
 
   useEffect(() => {
-    initRecaptcha();
     return () => {
       clearDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartner');
     };
@@ -506,17 +476,33 @@ export default function PartnerLoginScreen() {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const fullPhone = `+91${cleanNum}`;
-        await initRecaptcha();
-        let verifier = (window as any).recaptchaVerifierPartner;
-        if (!verifier) {
-          const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-partner-login-host');
-          verifier = new RecaptchaVerifier(auth, container, {
-            size: 'invisible',
-            callback: () => {},
-            'expired-callback': () => resetRecaptcha(),
-          });
-          (window as any).recaptchaVerifierPartner = verifier;
+
+        // 1. Clean previous verifier if any to prevent stale/consumed token error
+        if ((window as any).recaptchaVerifierPartner) {
+          try {
+            (window as any).recaptchaVerifierPartner.clear();
+          } catch {}
+          (window as any).recaptchaVerifierPartner = null;
         }
+
+        // 2. Prepare clean host
+        const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-partner-login-host');
+        if (container) {
+          container.innerHTML = '';
+        }
+
+        // 3. Create fresh invisible RecaptchaVerifier on demand right on send click
+        const verifier = new RecaptchaVerifier(auth, container, {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            try {
+              verifier.clear();
+            } catch {}
+            (window as any).recaptchaVerifierPartner = null;
+          },
+        });
+        (window as any).recaptchaVerifierPartner = verifier;
 
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
         setConfirmationResult(confirmation);
@@ -534,36 +520,15 @@ export default function PartnerLoginScreen() {
       }
     } catch (err: any) {
       console.warn('[Firebase Partner Phone Auth error]:', err?.code, err?.message, err?.customData);
-      await resetRecaptcha();
+      try {
+        if ((window as any).recaptchaVerifierPartner) {
+          (window as any).recaptchaVerifierPartner.clear();
+        }
+      } catch {}
+      (window as any).recaptchaVerifierPartner = null;
+
       if (applyStructuredPartnerError(err, cleanNum)) {
         return;
-      }
-
-      // 🛡️ Automatic High-Reliability Fallback:
-      // If Firebase fails with auth/internal-error, quota-exceeded, or network issue,
-      // seamlessly dispatch verification session without blocking partner!
-      // (The OTP boxes remain 100% clean and empty, no code is shown on screen)
-      if (
-        err?.code === 'auth/internal-error' ||
-        err?.code === 'auth/quota-exceeded' ||
-        err?.code === 'auth/captcha-check-failed' ||
-        err?.code === 'auth/network-request-failed' ||
-        err?.message?.includes('internal-error')
-      ) {
-        try {
-          await sendLoginOtp(cleanNum, 'PARTNER');
-          setConfirmationResult(null); // Direct verification fallback
-          setOtpSent(true);
-          setOtpDigits(['', '', '', '', '', '']);
-          setResendTimer(60);
-          setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-          return;
-        } catch (fallbackErr: any) {
-          console.warn('[Partner Server OTP Fallback error]:', fallbackErr);
-          if (applyStructuredPartnerError(fallbackErr, cleanNum)) {
-            return;
-          }
-        }
       }
 
       let errorMsg = 'Failed to send SMS OTP. Please try again.';
@@ -573,10 +538,12 @@ export default function PartnerLoginScreen() {
         errorMsg = 'SMS quota or rate limit reached. Please wait a few moments before requesting another OTP.';
       } else if (err?.code === 'auth/captcha-check-failed' || err?.message?.includes('Hostname match not found')) {
         errorMsg = 'Security verification failed. Please ensure you are accessing https://farmsking.in.';
+      } else if (err?.code === 'auth/invalid-app-credential' || err?.message?.includes('invalid-app-credential')) {
+        errorMsg = 'Security token refreshed. Please tap Continue again to receive your SMS.';
       } else if (err?.code === 'auth/network-request-failed') {
         errorMsg = 'Network error! Please check your internet connection.';
       } else if (err?.code === 'auth/internal-error' || err?.message?.includes('internal-error')) {
-        errorMsg = 'Verification service was refreshed. Please tap Continue again or check connection.';
+        errorMsg = 'Verification service was refreshed. Please tap Continue again.';
       } else if (err?.message) {
         errorMsg = String(err.message);
       }
@@ -644,7 +611,7 @@ export default function PartnerLoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (confirmationResult && code !== '123456') {
+      if (confirmationResult) {
         const resConfirm = await confirmationResult.confirm(code);
         const idToken = await resConfirm.user.getIdToken();
         const res: any = await firebaseLogin(idToken, 'PARTNER');

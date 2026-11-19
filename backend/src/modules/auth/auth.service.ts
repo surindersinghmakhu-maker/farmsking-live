@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException, Optional, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { NotificationType, PartnerApplicationStatus, Role, SellerType, VerifiedLeadStatus } from '@prisma/client';
+import { FarmerSubscriptionPlan, NotificationType, PartnerApplicationStatus, Role, SellerType, VerifiedLeadStatus } from '@prisma/client';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { SmsService } from '../sms/sms.service';
@@ -1851,7 +1851,16 @@ export class AuthService {
           data: { role: Role.FARMER, roles: { push: [Role.FARMER] } },
           select: SAFE_USER_SELECT,
         }),
-        this.prisma.farmerPlan.upsert({ where: { farmerId: userId }, create: { farmerId: userId }, update: {} }),
+        this.prisma.farmerPlan.upsert({
+          where: { farmerId: userId },
+          create: {
+            farmerId: userId,
+            plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? FarmerSubscriptionPlan.VIP : FarmerSubscriptionPlan.FREE,
+            startDate: new Date(),
+            endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+          },
+          update: {},
+        }),
       ]);
       return updated;
     }

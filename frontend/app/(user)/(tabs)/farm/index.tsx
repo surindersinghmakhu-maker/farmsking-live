@@ -712,7 +712,13 @@ export default function FarmListScreen() {
     const totalCropsCount = cropFields.length;
 
     const planDisplayName =
-      plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+      plan === 'VIP' || plan === 'SUPER'
+        ? 'Farmer VIP Card 👑'
+        : plan === 'PRO'
+        ? 'Lite Plan'
+        : plan === 'SMART'
+        ? 'Pro Plan'
+        : 'Free Plan';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
       const message = `⚠️ Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxTotalCrops} total crop(s).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.`;
@@ -798,10 +804,17 @@ export default function FarmListScreen() {
   );
 
   const renderHeroHeader = () => {
-    const planLabel = plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
-    const planColor = plan !== 'FREE' ? '#d97706' : '#16a34a';
-    const planBg = plan !== 'FREE' ? 'rgba(217,119,6,0.18)' : 'rgba(22,163,74,0.18)';
-    const planBorder = plan !== 'FREE' ? 'rgba(217,119,6,0.4)' : 'rgba(22,163,74,0.4)';
+    const isVipTier = plan === 'VIP' || plan === 'SUPER';
+    const planLabel = isVipTier
+      ? 'Farmer VIP Card 👑'
+      : plan === 'PRO'
+      ? 'Lite Plan'
+      : plan === 'SMART'
+      ? 'Pro Plan'
+      : 'Free Plan';
+    const planColor = isVipTier ? '#b45309' : plan !== 'FREE' ? '#d97706' : '#16a34a';
+    const planBg = isVipTier ? (isDark ? 'rgba(245,158,11,0.22)' : '#fef3c7') : plan !== 'FREE' ? 'rgba(217,119,6,0.18)' : 'rgba(22,163,74,0.18)';
+    const planBorder = isVipTier ? '#fde68a' : plan !== 'FREE' ? 'rgba(217,119,6,0.4)' : 'rgba(22,163,74,0.4)';
     const totalRevenue = salesRecords.reduce((s: number, r: any) => s + (Number(r.totalAmount) || 0), 0);
     const revenueDisplay = totalRevenue >= 1000
       ? (totalRevenue / 1000).toFixed(1) + 'K'

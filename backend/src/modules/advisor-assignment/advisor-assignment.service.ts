@@ -24,7 +24,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
   /** Only paid plan farmers (PRO/SMART/SUPER) ever come with an advisor included — every roster query and stat is scoped to those tiers. */
   private readonly STANDARD_OR_PREMIUM_FARMER_CLAUSE = {
-    farmer: { farmerPlan: { plan: { in: [FarmerSubscriptionPlan.PRO, FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER] } } },
+    farmer: { farmerPlan: { plan: { in: [FarmerSubscriptionPlan.PRO, FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER, FarmerSubscriptionPlan.VIP] } } },
   };
 
   /** Total/active/inactive counts for the logged-in advisor's own farmer roster (scoped per-advisor, not platform-wide). */

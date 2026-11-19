@@ -263,47 +263,17 @@ export default function LoginScreen() {
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
 
-  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
-  const initRecaptcha = async () => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    try {
-      const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-login-host');
-      if (!container) return;
-      if (!(window as any).recaptchaVerifierLogin) {
-        const verifier = new RecaptchaVerifier(auth, container, {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            resetRecaptcha();
-          },
-        });
-        (window as any).recaptchaVerifierLogin = verifier;
-        await verifier.render().catch((renderErr: any) => {
-          console.warn('[RecaptchaVerifier pre-render notice]:', renderErr?.message);
-        });
-      }
-    } catch (e) {
-      console.warn('ReCaptcha init error:', e);
-    }
-  };
-
+  // Firebase reCAPTCHA cleanup for Phone Auth SMS delivery
   const resetRecaptcha = async () => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     try {
-      const verifier = (window as any).recaptchaVerifierLogin;
-      if (verifier) {
-        const widgetId = await verifier.render().catch(() => null);
-        if (widgetId !== null && (window as any).grecaptcha?.reset) {
-          (window as any).grecaptcha.reset(widgetId);
-        }
-      }
+      clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
     } catch (e) {
       console.warn('ReCaptcha reset error:', e);
     }
   };
 
   useEffect(() => {
-    initRecaptcha();
     return () => {
       clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
     };
@@ -578,17 +548,33 @@ export default function LoginScreen() {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const fullPhone = `+91${cleanNum}`;
-        await initRecaptcha();
-        let verifier = (window as any).recaptchaVerifierLogin;
-        if (!verifier) {
-          const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-login-host');
-          verifier = new RecaptchaVerifier(auth, container, {
-            size: 'invisible',
-            callback: () => {},
-            'expired-callback': () => resetRecaptcha(),
-          });
-          (window as any).recaptchaVerifierLogin = verifier;
+
+        // 1. Clean previous verifier if any to prevent stale/consumed token error
+        if ((window as any).recaptchaVerifierLogin) {
+          try {
+            (window as any).recaptchaVerifierLogin.clear();
+          } catch {}
+          (window as any).recaptchaVerifierLogin = null;
         }
+
+        // 2. Prepare clean host
+        const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-login-host');
+        if (container) {
+          container.innerHTML = '';
+        }
+
+        // 3. Create fresh invisible RecaptchaVerifier on demand right on send click
+        const verifier = new RecaptchaVerifier(auth, container, {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            try {
+              verifier.clear();
+            } catch {}
+            (window as any).recaptchaVerifierLogin = null;
+          },
+        });
+        (window as any).recaptchaVerifierLogin = verifier;
 
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
         setConfirmationResult(confirmation);
@@ -607,33 +593,15 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       console.warn('[Firebase Phone Auth error]:', err?.code, err?.message, err?.customData);
-      await resetRecaptcha();
+      try {
+        if ((window as any).recaptchaVerifierLogin) {
+          (window as any).recaptchaVerifierLogin.clear();
+        }
+      } catch {}
+      (window as any).recaptchaVerifierLogin = null;
+
       if (applyStructuredPartnerError(err, cleanNum)) {
         return;
-      }
-
-      // 🛡️ Automatic High-Reliability Fallback:
-      // If Firebase fails with auth/internal-error, quota-exceeded, or network issue (e.g. Spark free limit or carrier blocked),
-      // seamlessly dispatch verification session without blocking the user!
-      // (The OTP boxes remain 100% clean and empty, no code is shown on screen)
-      if (
-        err?.code === 'auth/internal-error' ||
-        err?.code === 'auth/quota-exceeded' ||
-        err?.code === 'auth/captcha-check-failed' ||
-        err?.code === 'auth/network-request-failed' ||
-        err?.message?.includes('internal-error')
-      ) {
-        try {
-          await sendLoginOtp(cleanNum, activePortal);
-          setConfirmationResult(null); // Direct verification fallback
-          setOtpSent(true);
-          setOtpDigits(['', '', '', '', '', '']);
-          setResendTimer(60);
-          setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-          return;
-        } catch (fallbackErr: any) {
-          console.warn('[Server OTP Fallback error]:', fallbackErr);
-        }
       }
 
       let errorMsg = 'Failed to send SMS OTP. Please try again.';
@@ -643,10 +611,12 @@ export default function LoginScreen() {
         errorMsg = 'SMS rate limit reached. Please wait a few moments before requesting another OTP.';
       } else if (err?.code === 'auth/captcha-check-failed' || err?.message?.includes('Hostname match not found')) {
         errorMsg = 'Security verification failed. Please ensure you are accessing https://farmsking.in.';
+      } else if (err?.code === 'auth/invalid-app-credential' || err?.message?.includes('invalid-app-credential')) {
+        errorMsg = 'Security token refreshed. Please tap Continue again to receive your SMS.';
       } else if (err?.code === 'auth/network-request-failed') {
         errorMsg = 'Network error! Please check your internet connection.';
       } else if (err?.code === 'auth/internal-error' || err?.message?.includes('internal-error')) {
-        errorMsg = 'Verification service was refreshed. Please tap Continue again or check connection.';
+        errorMsg = 'Verification service was refreshed. Please tap Continue again.';
       } else if (err?.message) {
         errorMsg = String(err.message);
       }
@@ -716,7 +686,7 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (confirmationResult && code !== '123456') {
+      if (confirmationResult) {
         // 🚀 LIVE PRODUCTION: Verify SMS code received on mobile phone via Firebase
         const resConfirm = await confirmationResult.confirm(code);
         const idToken = await resConfirm.user.getIdToken();

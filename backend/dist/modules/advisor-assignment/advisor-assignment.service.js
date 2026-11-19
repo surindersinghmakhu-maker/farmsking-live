@@ -24,7 +24,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         this.walletService = walletService;
         this.whatsAppGroupSyncService = whatsAppGroupSyncService;
         this.STANDARD_OR_PREMIUM_FARMER_CLAUSE = {
-            farmer: { farmerPlan: { plan: { in: [client_1.FarmerSubscriptionPlan.PRO, client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER] } } },
+            farmer: { farmerPlan: { plan: { in: [client_1.FarmerSubscriptionPlan.PRO, client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER, client_1.FarmerSubscriptionPlan.VIP] } } },
         };
         this.FARMER_BASIC_SELECT = {
             id: true,

@@ -17,6 +17,7 @@ export declare const STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
 export declare const PREMIUM_PLAN_MAX_ADVISOR_CROPS = 10;
 export declare const PLAN_RANK: Record<FarmerSubscriptionPlan, number>;
 export declare const EXPIRY_WARNING_DAYS = 5;
+export declare const DEFAULT_FARMER_VIP_PROMO_END: Date;
 export declare const GRACE_PERIOD_DAYS = 2;
 export declare const RENEW_HISTORY_MONTHS = 3;
 export declare class FarmerPlansService implements OnModuleInit {
@@ -27,6 +28,7 @@ export declare class FarmerPlansService implements OnModuleInit {
     constructor(prisma: PrismaService, advisorAssignmentService: AdvisorAssignmentService, walletService: WalletService, notificationsService: NotificationsService);
     onModuleInit(): Promise<void>;
     private ensureDefaultPricing;
+    ensureVipPromoActiveForAllFarmers(): Promise<void>;
     getEffectivePlan(farmerId: string): Promise<{
         plan: FarmerSubscriptionPlan;
         startDate: Date | null;

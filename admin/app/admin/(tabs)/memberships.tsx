@@ -239,14 +239,20 @@ export default function MembershipsScreen() {
                     <Text style={styles.statusLabel}>CURRENT VIP PASS</Text>
                     <Text style={styles.statusPlanName}>
                       {!isExpired && plan !== 'FREE'
-                        ? `${plan === 'PRO' ? 'Lite VIP Plan 👑' : plan === 'SMART' ? 'Pro VIP Plan 👑' : 'Super VIP Plan 👑'} (Free Trial)`
-                        : plan === 'PRO' ? 'Lite VIP Plan 👑' : plan === 'SMART' ? 'Pro VIP Plan 👑' : 'Free Starter Plan'}
+                        ? (plan === 'VIP' || plan === 'SUPER'
+                            ? 'Farmer VIP Card 👑'
+                            : plan === 'SMART'
+                            ? 'Pro VIP Plan 👑'
+                            : plan === 'PRO'
+                            ? 'Lite VIP Plan 👑'
+                            : `${plan} VIP Card 👑`)
+                        : 'Free Starter Plan'}
                     </Text>
                   </View>
                 </View>
                 <View style={[styles.activePill, { backgroundColor: isExpired ? '#fef2f2' : '#ecfdf5' }]}>
                   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
-                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? '✨ Trial Active' : 'ACTIVE'}
+                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? '✨ VIP Active' : 'ACTIVE'}
                   </Text>
                 </View>
               </View>

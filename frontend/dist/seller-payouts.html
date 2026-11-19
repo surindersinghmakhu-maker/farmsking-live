@@ -200,7 +200,7 @@
     }
     </script>
     
-    <link rel="preload" href="/_expo/static/js/web/entry-31360a81b5c128ed8b00485d1a9f1c92.js" as="script" />
+    <link rel="preload" href="/_expo/static/js/web/entry-085e4dfa6e5d7cd13a776d35043cf6c9.js" as="script" />
     <!-- 100% Reliable Production Vector Icon Fonts -->
     <link rel="preload" href="/fonts/Ionicons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
     <link rel="preload" href="/fonts/MaterialCommunityIcons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
@@ -327,9 +327,13 @@
              url('/assets/fonts/Zocial.ttf') format('truetype');
         font-display: swap;
       }
-      /* Allow reCAPTCHA to function safely with proper layering */
+      /* Completely hide reCAPTCHA badge - legal disclosure is placed in auth screen footer */
       .grecaptcha-badge {
-        z-index: 9999999 !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        display: none !important;
+        z-index: -1 !important;
       }
     </style>
     
@@ -490,6 +494,6 @@
       })();
     </script>
     
-  <script src="/_expo/static/js/web/entry-31360a81b5c128ed8b00485d1a9f1c92.js" defer></script>
+  <script src="/_expo/static/js/web/entry-085e4dfa6e5d7cd13a776d35043cf6c9.js" defer></script>
 </body>
 </html>

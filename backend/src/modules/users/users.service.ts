@@ -894,7 +894,12 @@ export class UsersService implements OnModuleInit {
       }),
       this.prisma.farmerPlan.upsert({
         where: { farmerId: user.id },
-        create: { farmerId: user.id },
+        create: {
+          farmerId: user.id,
+          plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? FarmerSubscriptionPlan.VIP : FarmerSubscriptionPlan.FREE,
+          startDate: new Date(),
+          endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+        },
         update: {},
       }),
     ]);
@@ -1806,7 +1811,16 @@ export class UsersService implements OnModuleInit {
       await provisionPartnerReferralCoupon(this.prisma, id, caller.id);
     }
     if (toGrant.includes(Role.FARMER) || toReactivate.includes(Role.FARMER)) {
-      await this.prisma.farmerPlan.upsert({ where: { farmerId: id }, create: { farmerId: id }, update: {} });
+      await this.prisma.farmerPlan.upsert({
+        where: { farmerId: id },
+        create: {
+          farmerId: id,
+          plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? FarmerSubscriptionPlan.VIP : FarmerSubscriptionPlan.FREE,
+          startDate: new Date(),
+          endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+        },
+        update: {},
+      });
     }
     if (toGrant.includes(Role.GARDENER) || toReactivate.includes(Role.GARDENER)) {
       await this.prisma.gardenerPlan.upsert({ where: { gardenerId: id }, create: { gardenerId: id }, update: {} });
@@ -3439,7 +3453,12 @@ export class UsersService implements OnModuleInit {
       if (chosenRole === Role.FARMER) {
         await tx.farmerPlan.upsert({
           where: { farmerId: createdUser.id },
-          create: { farmerId: createdUser.id },
+          create: {
+            farmerId: createdUser.id,
+            plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? FarmerSubscriptionPlan.VIP : FarmerSubscriptionPlan.FREE,
+            startDate: new Date(),
+            endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+          },
           update: {},
         });
       } else if (chosenRole === Role.GARDENER) {
@@ -4047,7 +4066,12 @@ export class UsersService implements OnModuleInit {
       if (primaryRole === Role.FARMER) {
         await tx.farmerPlan.upsert({
           where: { farmerId: user.id },
-          create: { farmerId: user.id },
+          create: {
+            farmerId: user.id,
+            plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? FarmerSubscriptionPlan.VIP : FarmerSubscriptionPlan.FREE,
+            startDate: new Date(),
+            endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+          },
           update: {},
         });
       } else if (primaryRole === Role.GARDENER) {

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FarmerPlansService = exports.RENEW_HISTORY_MONTHS = exports.GRACE_PERIOD_DAYS = exports.EXPIRY_WARNING_DAYS = exports.PLAN_RANK = exports.PREMIUM_PLAN_MAX_ADVISOR_CROPS = exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = exports.FREE_PLAN_MAX_ACTIVE_CROPS = exports.FREE_PLAN_MAX_CROPS = void 0;
+exports.FarmerPlansService = exports.RENEW_HISTORY_MONTHS = exports.GRACE_PERIOD_DAYS = exports.DEFAULT_FARMER_VIP_PROMO_END = exports.EXPIRY_WARNING_DAYS = exports.PLAN_RANK = exports.PREMIUM_PLAN_MAX_ADVISOR_CROPS = exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = exports.FREE_PLAN_MAX_ACTIVE_CROPS = exports.FREE_PLAN_MAX_CROPS = void 0;
 const crypto_1 = require("crypto");
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
@@ -37,6 +37,7 @@ exports.PLAN_RANK = {
     ROYAL: 5,
 };
 exports.EXPIRY_WARNING_DAYS = 5;
+exports.DEFAULT_FARMER_VIP_PROMO_END = new Date('2026-12-12T18:29:59.999Z');
 exports.GRACE_PERIOD_DAYS = 2;
 exports.RENEW_HISTORY_MONTHS = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -66,6 +67,7 @@ let FarmerPlansService = class FarmerPlansService {
     async onModuleInit() {
         setTimeout(() => {
             this.ensureDefaultPricing().catch(err => console.error('Boot seed failed', err));
+            this.ensureVipPromoActiveForAllFarmers().catch(err => console.error('VIP promo boot check failed', err));
         }, 5000);
     }
     async ensureDefaultPricing() {
@@ -73,6 +75,7 @@ let FarmerPlansService = class FarmerPlansService {
             { plan: client_1.FarmerSubscriptionPlan.PRO, price: 199, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
             { plan: client_1.FarmerSubscriptionPlan.SMART, price: 499, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
             { plan: client_1.FarmerSubscriptionPlan.SUPER, price: 999, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
+            { plan: client_1.FarmerSubscriptionPlan.VIP, price: 999, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
             { plan: client_1.FarmerSubscriptionPlan.SILVER, price: 999, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
             { plan: client_1.FarmerSubscriptionPlan.GOLD, price: 1999, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
             { plan: client_1.FarmerSubscriptionPlan.ROYAL, price: 3499, billingPeriodDays: 365, partnerShareType: client_1.DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 10, maxDoctorCrops: 10, advisorIncluded: true },
@@ -97,8 +100,105 @@ let FarmerPlansService = class FarmerPlansService {
             }
         }
     }
+    async ensureVipPromoActiveForAllFarmers() {
+        const promoEnd = exports.DEFAULT_FARMER_VIP_PROMO_END;
+        const now = new Date();
+        if (now > promoEnd)
+            return;
+        try {
+            await this.prisma.farmerPlanPricing.upsert({
+                where: {
+                    plan_billingPeriodDays: { plan: client_1.FarmerSubscriptionPlan.VIP, billingPeriodDays: 365 },
+                },
+                create: {
+                    plan: client_1.FarmerSubscriptionPlan.VIP,
+                    price: 999,
+                    billingPeriodDays: 365,
+                    partnerShareType: client_1.DiscountValueType.PERCENTAGE,
+                    partnerShareValue: 10,
+                    maxActiveCrops: null,
+                    maxTotalCrops: null,
+                    advisorIncluded: false,
+                    chatEnabled: true,
+                    weatherEnabled: true,
+                    isActive: true,
+                },
+                update: {
+                    maxActiveCrops: null,
+                    maxTotalCrops: null,
+                    chatEnabled: true,
+                    weatherEnabled: true,
+                    isActive: true,
+                },
+            });
+            const farmers = await this.prisma.user.findMany({
+                where: {
+                    OR: [
+                        { role: client_1.Role.FARMER },
+                        { roles: { has: client_1.Role.FARMER } },
+                    ],
+                },
+                select: { id: true },
+            });
+            for (const f of farmers) {
+                const existing = await this.prisma.farmerPlan.findUnique({ where: { farmerId: f.id } });
+                if (!existing) {
+                    await this.prisma.farmerPlan.create({
+                        data: {
+                            farmerId: f.id,
+                            plan: client_1.FarmerSubscriptionPlan.VIP,
+                            startDate: now,
+                            endDate: promoEnd,
+                        },
+                    });
+                }
+                else if (existing.plan === client_1.FarmerSubscriptionPlan.FREE ||
+                    !existing.endDate ||
+                    existing.endDate < promoEnd) {
+                    await this.prisma.farmerPlan.update({
+                        where: { farmerId: f.id },
+                        data: {
+                            plan: client_1.FarmerSubscriptionPlan.VIP,
+                            startDate: existing.startDate ?? now,
+                            endDate: promoEnd,
+                            expiredAt: null,
+                        },
+                    });
+                }
+            }
+        }
+        catch (err) {
+            console.error('[FarmerPlansService] Error syncing VIP promo for farmers:', err);
+        }
+    }
     async getEffectivePlan(farmerId) {
-        const record = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+        const now = new Date();
+        let record = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+        if (now <= exports.DEFAULT_FARMER_VIP_PROMO_END) {
+            if (!record) {
+                record = await this.prisma.farmerPlan.create({
+                    data: {
+                        farmerId,
+                        plan: client_1.FarmerSubscriptionPlan.VIP,
+                        startDate: now,
+                        endDate: exports.DEFAULT_FARMER_VIP_PROMO_END,
+                    },
+                });
+            }
+            else if (record.plan === client_1.FarmerSubscriptionPlan.FREE ||
+                !record.endDate ||
+                record.endDate < exports.DEFAULT_FARMER_VIP_PROMO_END) {
+                record = await this.prisma.farmerPlan.update({
+                    where: { farmerId },
+                    data: {
+                        plan: client_1.FarmerSubscriptionPlan.VIP,
+                        startDate: record.startDate ?? now,
+                        endDate: exports.DEFAULT_FARMER_VIP_PROMO_END,
+                        expiredAt: null,
+                    },
+                });
+            }
+        }
         if (!record) {
             await this.prisma.farmerPlan.create({ data: { farmerId, plan: client_1.FarmerSubscriptionPlan.FREE } });
             return { plan: client_1.FarmerSubscriptionPlan.FREE, startDate: null, endDate: null, isExpired: false, inGrace: false, expiringSoon: false, daysUntilExpiry: null };
@@ -106,7 +206,6 @@ let FarmerPlansService = class FarmerPlansService {
         if (record.plan === client_1.FarmerSubscriptionPlan.FREE) {
             return { plan: client_1.FarmerSubscriptionPlan.FREE, startDate: null, endDate: null, isExpired: false, inGrace: false, expiringSoon: false, daysUntilExpiry: null };
         }
-        const now = new Date();
         if (record.endDate && record.endDate >= now) {
             const daysUntilExpiry = Math.ceil((record.endDate.getTime() - now.getTime()) / DAY_MS);
             return {
@@ -462,7 +561,7 @@ let FarmerPlansService = class FarmerPlansService {
             });
         }
         let advisorHired = false;
-        if ([client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER].includes(targetPlan)) {
+        if ([client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER, client_1.FarmerSubscriptionPlan.VIP].includes(targetPlan)) {
             advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
         }
         await this.trimAdvisorCropsToCap(farmerId, null);
@@ -792,7 +891,7 @@ let FarmerPlansService = class FarmerPlansService {
                 notes: `Free trial activated for ${freeTrialDays} days (${planName} plan)`,
             },
         });
-        if (planName === client_1.FarmerSubscriptionPlan.SMART || planName === client_1.FarmerSubscriptionPlan.SUPER) {
+        if (planName === client_1.FarmerSubscriptionPlan.SMART || planName === client_1.FarmerSubscriptionPlan.SUPER || planName === client_1.FarmerSubscriptionPlan.VIP) {
             await this.ensurePremiumAdvisorHire(farmerId, targetEndDate);
         }
         return {

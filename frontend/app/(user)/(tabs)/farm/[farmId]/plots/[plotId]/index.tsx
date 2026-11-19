@@ -65,7 +65,7 @@ export default function PlotDetailScreen() {
     const totalCropsCount = myCrops?.length ?? 0;
 
     const planDisplayName =
-      effectivePlan === 'PRO' ? 'Basic VIP Pass' : effectivePlan === 'SMART' ? 'Pro VIP Pass' : effectivePlan === 'SUPER' ? 'Super VIP Pass' : 'Free VIP Pass';
+      effectivePlan === 'PRO' ? 'Basic VIP Pass' : effectivePlan === 'SMART' ? 'Pro VIP Pass' : (effectivePlan === 'SUPER' || effectivePlan === 'VIP') ? 'Farmer VIP Card' : 'Free VIP Pass';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
       const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;

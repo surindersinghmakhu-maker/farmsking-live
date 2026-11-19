@@ -97,7 +97,7 @@ export class CropsService {
           },
         });
         if (totalCrops >= maxTotalCrops) {
-          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : plan === FarmerSubscriptionPlan.SUPER ? 'Smart Plan' : 'Free Plan';
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
           throw new ForbiddenException(
             `Your current plan (${planName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`,
           );
@@ -114,7 +114,7 @@ export class CropsService {
           },
         });
         if (activeCrops >= maxActiveCrops) {
-          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : plan === FarmerSubscriptionPlan.SUPER ? 'Smart Plan' : 'Free Plan';
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.VIP) ? 'Farmer VIP Card' : 'Free Plan';
           throw new ForbiddenException(
             `Your current plan (${planName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`,
           );

@@ -1542,7 +1542,16 @@ let AuthService = AuthService_1 = class AuthService {
                     data: { role: client_1.Role.FARMER, roles: { push: [client_1.Role.FARMER] } },
                     select: SAFE_USER_SELECT,
                 }),
-                this.prisma.farmerPlan.upsert({ where: { farmerId: userId }, create: { farmerId: userId }, update: {} }),
+                this.prisma.farmerPlan.upsert({
+                    where: { farmerId: userId },
+                    create: {
+                        farmerId: userId,
+                        plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? client_1.FarmerSubscriptionPlan.VIP : client_1.FarmerSubscriptionPlan.FREE,
+                        startDate: new Date(),
+                        endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+                    },
+                    update: {},
+                }),
             ]);
             return updated;
         }

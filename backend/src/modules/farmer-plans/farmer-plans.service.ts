@@ -46,6 +46,8 @@ export const PLAN_RANK: Record<FarmerSubscriptionPlan, number> = {
 
 /** Days before expiry that the "plan expiring soon" indicator turns on for both farmer and advisor. */
 export const EXPIRY_WARNING_DAYS = 5;
+/** Default Farmer VIP promo end date: 12 Dec 2026 (23:59:59 IST) */
+export const DEFAULT_FARMER_VIP_PROMO_END = new Date('2026-12-12T18:29:59.999Z');
 /** After expiry, the same plan's benefits keep working for this long while showing "Renew" instead of "Extend". */
 export const GRACE_PERIOD_DAYS = 2;
 /** Renewing within this window of the original expiry continues from that expiry date (no lost days). Past it, the advisor history is dropped. */
@@ -82,6 +84,7 @@ export class FarmerPlansService implements OnModuleInit {
   async onModuleInit() {
     setTimeout(() => {
       this.ensureDefaultPricing().catch(err => console.error('Boot seed failed', err));
+      this.ensureVipPromoActiveForAllFarmers().catch(err => console.error('VIP promo boot check failed', err));
     }, 5000);
   }
 
@@ -90,6 +93,7 @@ export class FarmerPlansService implements OnModuleInit {
       { plan: FarmerSubscriptionPlan.PRO, price: 199, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
       { plan: FarmerSubscriptionPlan.SMART, price: 499, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
       { plan: FarmerSubscriptionPlan.SUPER, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
+      { plan: FarmerSubscriptionPlan.VIP, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
 
       // 🩺 3-Tier Doctor Crop Care Plans
       { plan: FarmerSubscriptionPlan.SILVER, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
@@ -117,6 +121,83 @@ export class FarmerPlansService implements OnModuleInit {
     }
   }
 
+  /**
+   * 👑 Promo: Ensure every online farmer has Farmer VIP Card active until 12 Dec 2026.
+   */
+  async ensureVipPromoActiveForAllFarmers() {
+    const promoEnd = DEFAULT_FARMER_VIP_PROMO_END;
+    const now = new Date();
+    if (now > promoEnd) return;
+
+    try {
+      await this.prisma.farmerPlanPricing.upsert({
+        where: {
+          plan_billingPeriodDays: { plan: FarmerSubscriptionPlan.VIP, billingPeriodDays: 365 },
+        },
+        create: {
+          plan: FarmerSubscriptionPlan.VIP,
+          price: 999,
+          billingPeriodDays: 365,
+          partnerShareType: DiscountValueType.PERCENTAGE,
+          partnerShareValue: 10,
+          maxActiveCrops: null,
+          maxTotalCrops: null,
+          advisorIncluded: false,
+          chatEnabled: true,
+          weatherEnabled: true,
+          isActive: true,
+        },
+        update: {
+          maxActiveCrops: null,
+          maxTotalCrops: null,
+          chatEnabled: true,
+          weatherEnabled: true,
+          isActive: true,
+        },
+      });
+
+      const farmers = await this.prisma.user.findMany({
+        where: {
+          OR: [
+            { role: Role.FARMER },
+            { roles: { has: Role.FARMER } },
+          ],
+        },
+        select: { id: true },
+      });
+
+      for (const f of farmers) {
+        const existing = await this.prisma.farmerPlan.findUnique({ where: { farmerId: f.id } });
+        if (!existing) {
+          await this.prisma.farmerPlan.create({
+            data: {
+              farmerId: f.id,
+              plan: FarmerSubscriptionPlan.VIP,
+              startDate: now,
+              endDate: promoEnd,
+            },
+          });
+        } else if (
+          existing.plan === FarmerSubscriptionPlan.FREE ||
+          !existing.endDate ||
+          existing.endDate < promoEnd
+        ) {
+          await this.prisma.farmerPlan.update({
+            where: { farmerId: f.id },
+            data: {
+              plan: FarmerSubscriptionPlan.VIP,
+              startDate: existing.startDate ?? now,
+              endDate: promoEnd,
+              expiredAt: null,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[FarmerPlansService] Error syncing VIP promo for farmers:', err);
+    }
+  }
+
   // ─── Plan helpers ────────────────────────────────────────────────────────
 
   /**
@@ -137,7 +218,36 @@ export class FarmerPlansService implements OnModuleInit {
     expiringSoon: boolean;
     daysUntilExpiry: number | null;
   }> {
-    const record = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+    const now = new Date();
+    let record = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+
+    // 👑 Promo: Every online farmer gets Farmer VIP Card active by default until 12 Dec 2026
+    if (now <= DEFAULT_FARMER_VIP_PROMO_END) {
+      if (!record) {
+        record = await this.prisma.farmerPlan.create({
+          data: {
+            farmerId,
+            plan: FarmerSubscriptionPlan.VIP,
+            startDate: now,
+            endDate: DEFAULT_FARMER_VIP_PROMO_END,
+          },
+        });
+      } else if (
+        record.plan === FarmerSubscriptionPlan.FREE ||
+        !record.endDate ||
+        record.endDate < DEFAULT_FARMER_VIP_PROMO_END
+      ) {
+        record = await this.prisma.farmerPlan.update({
+          where: { farmerId },
+          data: {
+            plan: FarmerSubscriptionPlan.VIP,
+            startDate: record.startDate ?? now,
+            endDate: DEFAULT_FARMER_VIP_PROMO_END,
+            expiredAt: null,
+          },
+        });
+      }
+    }
 
     if (!record) {
       // Auto-create FREE plan if missing (edge case for existing farmers)
@@ -148,8 +258,6 @@ export class FarmerPlansService implements OnModuleInit {
     if (record.plan === FarmerSubscriptionPlan.FREE) {
       return { plan: FarmerSubscriptionPlan.FREE, startDate: null, endDate: null, isExpired: false, inGrace: false, expiringSoon: false, daysUntilExpiry: null };
     }
-
-    const now = new Date();
 
     // Still within the paid period.
     if (record.endDate && record.endDate >= now) {
@@ -612,7 +720,7 @@ export class FarmerPlansService implements OnModuleInit {
     }
 
     let advisorHired = false;
-    if (([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER] as FarmerSubscriptionPlan[]).includes(targetPlan)) {
+    if (([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER, FarmerSubscriptionPlan.VIP] as FarmerSubscriptionPlan[]).includes(targetPlan)) {
       advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
     }
 
@@ -1042,7 +1150,7 @@ export class FarmerPlansService implements OnModuleInit {
       },
     });
 
-    if (planName === FarmerSubscriptionPlan.SMART || planName === FarmerSubscriptionPlan.SUPER) {
+    if (planName === FarmerSubscriptionPlan.SMART || planName === FarmerSubscriptionPlan.SUPER || planName === FarmerSubscriptionPlan.VIP) {
       await this.ensurePremiumAdvisorHire(farmerId, targetEndDate);
     }
 

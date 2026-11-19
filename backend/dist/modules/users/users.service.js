@@ -789,7 +789,12 @@ let UsersService = class UsersService {
             }),
             this.prisma.farmerPlan.upsert({
                 where: { farmerId: user.id },
-                create: { farmerId: user.id },
+                create: {
+                    farmerId: user.id,
+                    plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? client_1.FarmerSubscriptionPlan.VIP : client_1.FarmerSubscriptionPlan.FREE,
+                    startDate: new Date(),
+                    endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+                },
                 update: {},
             }),
         ]);
@@ -1469,7 +1474,16 @@ let UsersService = class UsersService {
             await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, id, caller.id);
         }
         if (toGrant.includes(client_1.Role.FARMER) || toReactivate.includes(client_1.Role.FARMER)) {
-            await this.prisma.farmerPlan.upsert({ where: { farmerId: id }, create: { farmerId: id }, update: {} });
+            await this.prisma.farmerPlan.upsert({
+                where: { farmerId: id },
+                create: {
+                    farmerId: id,
+                    plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? client_1.FarmerSubscriptionPlan.VIP : client_1.FarmerSubscriptionPlan.FREE,
+                    startDate: new Date(),
+                    endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+                },
+                update: {},
+            });
         }
         if (toGrant.includes(client_1.Role.GARDENER) || toReactivate.includes(client_1.Role.GARDENER)) {
             await this.prisma.gardenerPlan.upsert({ where: { gardenerId: id }, create: { gardenerId: id }, update: {} });
@@ -2840,7 +2854,12 @@ let UsersService = class UsersService {
             if (chosenRole === client_1.Role.FARMER) {
                 await tx.farmerPlan.upsert({
                     where: { farmerId: createdUser.id },
-                    create: { farmerId: createdUser.id },
+                    create: {
+                        farmerId: createdUser.id,
+                        plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? client_1.FarmerSubscriptionPlan.VIP : client_1.FarmerSubscriptionPlan.FREE,
+                        startDate: new Date(),
+                        endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+                    },
                     update: {},
                 });
             }
@@ -3379,7 +3398,12 @@ let UsersService = class UsersService {
             if (primaryRole === client_1.Role.FARMER) {
                 await tx.farmerPlan.upsert({
                     where: { farmerId: user.id },
-                    create: { farmerId: user.id },
+                    create: {
+                        farmerId: user.id,
+                        plan: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? client_1.FarmerSubscriptionPlan.VIP : client_1.FarmerSubscriptionPlan.FREE,
+                        startDate: new Date(),
+                        endDate: new Date() <= new Date('2026-12-12T18:29:59.999Z') ? new Date('2026-12-12T18:29:59.999Z') : null,
+                    },
                     update: {},
                 });
             }

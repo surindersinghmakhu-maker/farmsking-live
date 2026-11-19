@@ -996,7 +996,7 @@ export function MarketRatesCard() {
             <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
             <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('stateMandi', 'LOCAL')} ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
             <Text style={[styles.columnHeader, styles.rateColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('nationalMandi', 'ALL INDIA')}</Text>
-            <Text style={[styles.columnHeader, styles.shareColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('shareRates', 'SHARE')}</Text>
+            <View style={styles.shareColumn} />
           </View>
 
           {/* Subcategory Rates List */}

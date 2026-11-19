@@ -184,9 +184,9 @@ let SmsService = SmsService_1 = class SmsService {
                 default: {
                     this.logger.log(`[Firebase SMS Active · Dispatched to +91 ${cleanMobile}]: ${text}`);
                     return {
-                        success: true,
+                        success: false,
                         provider: 'FIREBASE_SMS',
-                        messageId: `fb_sms_${Date.now()}`,
+                        error: 'Server-side SMS delivery requires Fast2SMS, MSG91, or Twilio gateway credentials. Firebase SMS operates client-side only.',
                     };
                 }
             }

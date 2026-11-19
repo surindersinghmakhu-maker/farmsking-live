@@ -2,27 +2,20 @@
  * Manages an invisible Firebase reCAPTCHA host element completely outside React's Virtual DOM.
  * Prevents React DOM errors such as "Failed to execute 'insertBefore' on 'Node'".
  */
-export function getFreshDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: string): HTMLElement {
+export function getOrCreateDetachedRecaptchaHost(hostId: string): HTMLElement {
   if (typeof document === 'undefined') return null as any;
-  if (verifierGlobalKey && typeof window !== 'undefined' && (window as any)[verifierGlobalKey]) {
-    try {
-      (window as any)[verifierGlobalKey].clear();
-    } catch {}
-    (window as any)[verifierGlobalKey] = null;
+  let existing = document.getElementById(hostId);
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.id = hostId;
+    existing.style.position = 'fixed';
+    existing.style.bottom = '10px';
+    existing.style.right = '10px';
+    existing.style.zIndex = '9999999';
+    existing.style.pointerEvents = 'auto';
+    document.body.appendChild(existing);
   }
-  const existing = document.getElementById(hostId);
-  if (existing && existing.parentNode) {
-    existing.parentNode.removeChild(existing);
-  }
-  const el = document.createElement('div');
-  el.id = hostId;
-  el.style.position = 'fixed';
-  el.style.bottom = '10px';
-  el.style.right = '10px';
-  el.style.zIndex = '9999999';
-  el.style.pointerEvents = 'auto';
-  document.body.appendChild(el);
-  return el;
+  return existing;
 }
 
 export function clearDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: string): void {
@@ -39,3 +32,5 @@ export function clearDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: s
   }
 }
 
+// Backward compatibility alias
+export const getFreshDetachedRecaptchaHost = getOrCreateDetachedRecaptchaHost;

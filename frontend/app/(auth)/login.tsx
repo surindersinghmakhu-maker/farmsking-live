@@ -27,7 +27,7 @@ import {
   ConfirmationResult,
 } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
-import { clearDetachedRecaptchaHost, getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
+import { clearDetachedRecaptchaHost, getOrCreateDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useLanguage } from '@/src/store/language-context';
@@ -262,6 +262,52 @@ export default function LoginScreen() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
+
+  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
+  const initRecaptcha = async () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-login-host');
+      if (!container) return;
+      if (!(window as any).recaptchaVerifierLogin) {
+        const verifier = new RecaptchaVerifier(auth, container, {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            resetRecaptcha();
+          },
+        });
+        (window as any).recaptchaVerifierLogin = verifier;
+        await verifier.render().catch((renderErr: any) => {
+          console.warn('[RecaptchaVerifier pre-render notice]:', renderErr?.message);
+        });
+      }
+    } catch (e) {
+      console.warn('ReCaptcha init error:', e);
+    }
+  };
+
+  const resetRecaptcha = async () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    try {
+      const verifier = (window as any).recaptchaVerifierLogin;
+      if (verifier) {
+        const widgetId = await verifier.render().catch(() => null);
+        if (widgetId !== null && (window as any).grecaptcha?.reset) {
+          (window as any).grecaptcha.reset(widgetId);
+        }
+      }
+    } catch (e) {
+      console.warn('ReCaptcha reset error:', e);
+    }
+  };
+
+  useEffect(() => {
+    initRecaptcha();
+    return () => {
+      clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
+    };
+  }, []);
 
   // New User Role Selection State
   const [isNewUserModal, setIsNewUserModal] = useState(false);
@@ -532,20 +578,19 @@ export default function LoginScreen() {
     try {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const fullPhone = `+91${cleanNum}`;
-        const container = getFreshDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-        (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(auth, container, {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-          },
-        });
+        await initRecaptcha();
+        let verifier = (window as any).recaptchaVerifierLogin;
+        if (!verifier) {
+          const container = getOrCreateDetachedRecaptchaHost('fk-recaptcha-login-host');
+          verifier = new RecaptchaVerifier(auth, container, {
+            size: 'invisible',
+            callback: () => {},
+            'expired-callback': () => resetRecaptcha(),
+          });
+          (window as any).recaptchaVerifierLogin = verifier;
+        }
 
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          fullPhone,
-          (window as any).recaptchaVerifierLogin
-        );
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
         setConfirmationResult(confirmation);
         setOtpSent(true);
         setOtpDigits(['', '', '', '', '', '']);
@@ -561,11 +606,36 @@ export default function LoginScreen() {
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       }
     } catch (err: any) {
-      console.warn('[Firebase Phone Auth error]:', err?.code, err?.message);
-      clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
+      console.warn('[Firebase Phone Auth error]:', err?.code, err?.message, err?.customData);
+      await resetRecaptcha();
       if (applyStructuredPartnerError(err, cleanNum)) {
         return;
       }
+
+      // 🛡️ Automatic High-Reliability Fallback:
+      // If Firebase fails with auth/internal-error, quota-exceeded, or network issue (e.g. Spark free limit or carrier blocked),
+      // seamlessly dispatch verification session without blocking the user!
+      // (The OTP boxes remain 100% clean and empty, no code is shown on screen)
+      if (
+        err?.code === 'auth/internal-error' ||
+        err?.code === 'auth/quota-exceeded' ||
+        err?.code === 'auth/captcha-check-failed' ||
+        err?.code === 'auth/network-request-failed' ||
+        err?.message?.includes('internal-error')
+      ) {
+        try {
+          await sendLoginOtp(cleanNum, activePortal);
+          setConfirmationResult(null); // Direct verification fallback
+          setOtpSent(true);
+          setOtpDigits(['', '', '', '', '', '']);
+          setResendTimer(60);
+          setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+          return;
+        } catch (fallbackErr: any) {
+          console.warn('[Server OTP Fallback error]:', fallbackErr);
+        }
+      }
+
       let errorMsg = 'Failed to send SMS OTP. Please try again.';
       if (err?.code === 'auth/invalid-phone-number') {
         errorMsg = 'Please enter a valid 10-digit mobile number.';
@@ -575,6 +645,8 @@ export default function LoginScreen() {
         errorMsg = 'Security verification failed. Please ensure you are accessing https://farmsking.in.';
       } else if (err?.code === 'auth/network-request-failed') {
         errorMsg = 'Network error! Please check your internet connection.';
+      } else if (err?.code === 'auth/internal-error' || err?.message?.includes('internal-error')) {
+        errorMsg = 'Verification service was refreshed. Please tap Continue again or check connection.';
       } else if (err?.message) {
         errorMsg = String(err.message);
       }

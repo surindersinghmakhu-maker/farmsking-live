@@ -107,9 +107,9 @@ export declare class FarmerPlanPaymentsService {
         isAutoActivated: boolean;
         coupon: {
             id: string;
+            createdAt: Date;
             category: import(".prisma/client").$Enums.PlanCouponCategory;
             createdById: string;
-            createdAt: Date;
             code: string;
             expiresAt: Date | null;
             daysGranted: number;
@@ -223,9 +223,9 @@ export declare class FarmerPlanPaymentsService {
         };
         coupon: {
             id: string;
+            createdAt: Date;
             category: import(".prisma/client").$Enums.PlanCouponCategory;
             createdById: string;
-            createdAt: Date;
             code: string;
             expiresAt: Date | null;
             daysGranted: number;

@@ -67,8 +67,10 @@ export class PlanPaymentsService {
     const settings = await this.appSettingsService.get();
     let upiId = settings.upiId;
     let upiPayeeName = settings.upiPayeeName;
+    let activeGateway = 'UPI_DIRECT';
     try {
       const integrations = await this.appSettingsService.getIntegrations();
+      activeGateway = integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
       if (integrations?.gateway?.providers?.upiDirect?.upiId) {
         upiId = integrations.gateway.providers.upiDirect.upiId;
       }
@@ -76,17 +78,17 @@ export class PlanPaymentsService {
         upiPayeeName = integrations.gateway.providers.upiDirect.payeeName;
       }
     } catch {}
-    if (!upiId) {
+    if (!upiId && activeGateway !== 'TEST_MODE') {
       throw new BadRequestException('UPI payment is not configured yet. Please contact support.');
     }
     const upiLink = buildUpiPaymentLink({
       amount,
       note: remark,
       transactionRef: request.id,
-      payeeVpa: upiId,
+      payeeVpa: upiId || 'surindersinghmakhu-8@okicici',
       payeeName: upiPayeeName ?? undefined,
     });
-    return { ...request, upiLink };
+    return { ...request, activeGateway, upiLink };
   }
 
   listMine(user: AuthUser) {
@@ -127,7 +129,9 @@ export class PlanPaymentsService {
       include: DETAIL_INCLUDE,
     });
 
-    const isTestPayment = dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
+    const integrations = await this.appSettingsService.getIntegrations();
+    const activeGateway = integrations?.gateway?.routing?.advisorBookingGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
+    const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
     if (isTestPayment) {
       const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
       const adminId = actualAdmin?.id || user.id;

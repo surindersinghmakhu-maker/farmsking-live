@@ -12,48 +12,48 @@ export declare class PlanRenewalService {
     create(admin: AuthUser, dto: CreatePlanRenewalCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
-        assignedAdvisorId: string | null;
-        assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;
+        assignedFarmerId: string | null;
+        assignedAdvisorId: string | null;
         bonusDayApplied: boolean;
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
-        assignedAdvisor: {
-            id: string;
-            mobile: string;
-            name: string;
-        } | null;
         assignedFarmer: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
+        } | null;
+        assignedAdvisor: {
+            id: string;
+            name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
-        assignedAdvisorId: string | null;
-        assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;
+        assignedFarmerId: string | null;
+        assignedAdvisorId: string | null;
         bonusDayApplied: boolean;
     })[]>;
     listMineForAdvisor(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
-        assignedAdvisorId: string | null;
-        assignedFarmerId: string | null;
         isUsed: boolean;
         usedAt: Date | null;
+        assignedFarmerId: string | null;
+        assignedAdvisorId: string | null;
         bonusDayApplied: boolean;
     }[]>;
     private resolveCouponAndFarmer;
@@ -65,20 +65,20 @@ export declare class PlanRenewalService {
     }>;
     redeem(user: AuthUser, code: string, dto: RedeemPlanRenewalCouponDto): Promise<{
         subscription: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
             startDate: Date | null;
             endDate: Date | null;
+            id: string;
+            updatedAt: Date;
+            createdAt: Date;
+            deletedAt: Date | null;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-            requestedAt: Date;
-            notes: string | null;
-            farmerId: string;
             cancelledAt: Date | null;
+            requestedAt: Date;
+            farmerId: string;
             planId: string;
             approvedAt: Date | null;
             approvedById: string | null;
+            notes: string | null;
         };
         daysAdded: number;
         bonusDayApplied: boolean;
@@ -93,20 +93,20 @@ export declare class PlanRenewalService {
     }>;
     grantDaysDirectly(farmerId: string, daysGranted: number): Promise<{
         subscription: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            deletedAt: Date | null;
             startDate: Date | null;
             endDate: Date | null;
+            id: string;
+            updatedAt: Date;
+            createdAt: Date;
+            deletedAt: Date | null;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-            requestedAt: Date;
-            notes: string | null;
-            farmerId: string;
             cancelledAt: Date | null;
+            requestedAt: Date;
+            farmerId: string;
             planId: string;
             approvedAt: Date | null;
             approvedById: string | null;
+            notes: string | null;
         };
         daysAdded: number;
         newEndDate: Date;

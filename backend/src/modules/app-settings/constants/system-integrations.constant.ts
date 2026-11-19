@@ -1,4 +1,5 @@
 export type SupportedPaymentGateway =
+  | 'TEST_MODE'
   | 'PHONEPE'
   | 'CASHFREE'
   | 'RAZORPAY'
@@ -65,6 +66,7 @@ export interface SystemIntegrationsConfig {
       ecommerceStore: ModulePaymentFeatureConfig;
     };
     providers: {
+      testMode?: { enabled: boolean; autoConfirmOnSubmit: boolean; label: string; bypassVerification: boolean };
       phonepe: { merchantId: string; clientId: string; clientSecret: string; saltKey: string; saltIndex: string; webhookUsername: string; webhookPassword: string };
       cashfree: { appId: string; secretKey: string; webhookSecret: string };
       razorpay: { keyId: string; keySecret: string; webhookSecret: string };
@@ -652,6 +654,12 @@ export const DEFAULT_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       },
     },
     providers: {
+      testMode: {
+        enabled: true,
+        autoConfirmOnSubmit: true,
+        label: '⚡ Instant Demo & Test Payment Mode',
+        bypassVerification: true,
+      },
       phonepe: {
         merchantId: process.env.PHONEPE_MERCHANT_ID || '',
         clientId: process.env.PHONEPE_CLIENT_ID || '',

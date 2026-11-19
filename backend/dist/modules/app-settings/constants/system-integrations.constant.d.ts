@@ -1,4 +1,4 @@
-export type SupportedPaymentGateway = 'PHONEPE' | 'CASHFREE' | 'RAZORPAY' | 'PAYU' | 'STRIPE' | 'UPI_DIRECT' | 'PAYTM' | 'CCAVENUE' | 'INSTAMOJO' | 'EASEBUZZ';
+export type SupportedPaymentGateway = 'TEST_MODE' | 'PHONEPE' | 'CASHFREE' | 'RAZORPAY' | 'PAYU' | 'STRIPE' | 'UPI_DIRECT' | 'PAYTM' | 'CCAVENUE' | 'INSTAMOJO' | 'EASEBUZZ';
 export interface ModulePaymentFeatureConfig {
     gateway: SupportedPaymentGateway;
     checkoutMode: 'UPI_ONLY' | 'UPI_AND_NETBANKING' | 'ALL_METHODS' | 'CUSTOM';
@@ -84,6 +84,12 @@ export interface SystemIntegrationsConfig {
             ecommerceStore: ModulePaymentFeatureConfig;
         };
         providers: {
+            testMode?: {
+                enabled: boolean;
+                autoConfirmOnSubmit: boolean;
+                label: string;
+                bypassVerification: boolean;
+            };
             phonepe: {
                 merchantId: string;
                 clientId: string;

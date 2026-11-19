@@ -672,6 +672,36 @@ export function ThirdPartyServicesSection() {
                 </Text>
               </View>
 
+              {/* Test Mode */}
+              {localConfig.gateway?.activeGateway === 'TEST_MODE' && (
+                <View style={styles.formGrid}>
+                  <View style={[styles.fieldCol, { width: '100%' }]}>
+                    <View style={{ backgroundColor: isLight ? '#fefce8' : 'rgba(234, 179, 8, 0.12)', padding: 16, borderRadius: 12, borderWidth: 1.5, borderColor: isLight ? '#fde047' : 'rgba(234, 179, 8, 0.4)' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <Ionicons name="flask" size={22} color="#eab308" />
+                        <Text style={{ fontSize: 15, fontWeight: '800', color: isLight ? '#854d0e' : '#fef08a' }}>
+                          ⚡ Instant Demo & Test Payment Simulator Active
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 12.5, lineHeight: 19, color: isLight ? '#713f12' : '#fef9c3', marginBottom: 12 }}>
+                        Test Payment mode is currently selected as the platform's primary checkout engine. All customer & farmer payment touchpoints (Farmer VIP passes, Crop Care doctor consultations, and AgriStore shop orders) will render a <Text style={{ fontWeight: '800' }}>TEST PAYMENT</Text> button. Clicking it executes an immediate successful payment and auto-activates subscriptions/orders without charging real money.
+                      </Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                        <View style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>AUTO-CONFIRM: ACTIVE</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#2563eb', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>1-CLICK ACTIVATION: ON</Text>
+                        </View>
+                        <View style={{ backgroundColor: '#eab308', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#000000' }}>0% REAL MONEY DEDUCTED</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              )}
+
               {/* PhonePe */}
               {localConfig.gateway?.activeGateway === 'PHONEPE' && (
                 <View style={styles.formGrid}>
@@ -1113,7 +1143,7 @@ export function ThirdPartyServicesSection() {
                         <View style={{ flex: 1 }}>
                           <Text style={[styles.microLabel, { color: subTextColor }]}>ASSIGNED GATEWAY:</Text>
                           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                            {(['UPI_DIRECT', 'PHONEPE', 'CASHFREE', 'RAZORPAY'] as SupportedPaymentGateway[]).map((gwOption) => {
+                            {(['TEST_MODE', 'UPI_DIRECT', 'PHONEPE', 'CASHFREE', 'RAZORPAY', 'PAYTM', 'PAYU'] as SupportedPaymentGateway[]).map((gwOption) => {
                               const isOptActive = currentGateway === gwOption;
                               return (
                                 <TouchableOpacity
@@ -1122,10 +1152,14 @@ export function ThirdPartyServicesSection() {
                                     styles.microChip,
                                     {
                                       backgroundColor: isOptActive
-                                        ? isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.15)'
+                                        ? gwOption === 'TEST_MODE'
+                                          ? isLight ? '#fefce8' : 'rgba(234, 179, 8, 0.2)'
+                                          : isLight ? '#f0fdf4' : 'rgba(0, 255, 135, 0.15)'
                                         : innerBg,
                                       borderColor: isOptActive
-                                        ? isLight ? '#16a34a' : '#00ff87'
+                                        ? gwOption === 'TEST_MODE'
+                                          ? isLight ? '#eab308' : '#facc15'
+                                          : isLight ? '#16a34a' : '#00ff87'
                                         : cardBorder,
                                     },
                                   ]}
@@ -1151,11 +1185,17 @@ export function ThirdPartyServicesSection() {
                                   <Text
                                     style={[
                                       styles.microChipText,
-                                      { color: isOptActive ? (isLight ? '#16a34a' : '#00ff87') : textColor },
+                                      {
+                                        color: isOptActive
+                                          ? gwOption === 'TEST_MODE'
+                                            ? isLight ? '#854d0e' : '#fef08a'
+                                            : isLight ? '#16a34a' : '#00ff87'
+                                          : textColor,
+                                      },
                                       isOptActive && { fontWeight: '800' },
                                     ]}
                                   >
-                                    {gwOption === 'UPI_DIRECT' ? 'Direct UPI (0%)' : gwOption}
+                                    {gwOption === 'TEST_MODE' ? '⚡ Test Mode' : gwOption === 'UPI_DIRECT' ? 'Direct UPI (0%)' : gwOption}
                                   </Text>
                                 </TouchableOpacity>
                               );
@@ -1206,6 +1246,7 @@ export function ThirdPartyServicesSection() {
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                 {[
+                  { key: 'TEST_MODE', label: 'Test Mode (1-Click Demo)', icon: 'flask' },
                   { key: 'UPI_DIRECT', label: 'Direct UPI QR (0% Fee)', icon: 'qr-code' },
                   { key: 'PHONEPE', label: 'PhonePe UPI & Cards', icon: 'flash' },
                   { key: 'CASHFREE', label: 'Cashfree Split', icon: 'wallet' },

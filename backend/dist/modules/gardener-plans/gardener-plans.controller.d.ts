@@ -25,8 +25,13 @@ export declare class GardenerPlansController {
         gardenerId: string;
     }>;
     initiatePayment(user: AuthUser, plan: GardenerSubscriptionPlan): Promise<{
+        isTestPayment: boolean;
+        paymentSessionId: null;
+        orderId: string;
+    } | {
         paymentSessionId: any;
         orderId: string;
+        isTestPayment?: undefined;
     }>;
     activateVipTrial(user: AuthUser): Promise<{
         success: boolean;
@@ -44,14 +49,14 @@ export declare class GardenerPlansController {
     }>;
     redeemCoupon(user: AuthUser, dto: RedeemGardenerPlanCouponDto): Promise<{
         plan: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             startDate: Date;
             endDate: Date | null;
+            id: string;
+            updatedAt: Date;
+            createdAt: Date;
+            couponId: string | null;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
-            couponId: string | null;
             gardenerId: string;
             hasUsedVipTrial: boolean;
             trialStartedAt: Date | null;
@@ -63,11 +68,11 @@ export declare class GardenerPlansController {
     createCoupon(user: AuthUser, dto: CreateGardenerPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
+        createdById: string;
         code: string;
         expiresAt: Date | null;
-        createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         daysGranted: number;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -80,22 +85,22 @@ export declare class GardenerPlansController {
         };
         assignedGardener: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         usedByGardener: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
+        createdById: string;
         code: string;
         expiresAt: Date | null;
-        createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         daysGranted: number;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -108,19 +113,19 @@ export declare class GardenerPlansController {
         } | null;
         gardener: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
     } & {
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
         startDate: Date;
         endDate: Date | null;
+        id: string;
+        updatedAt: Date;
+        createdAt: Date;
+        couponId: string | null;
         plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         expiredAt: Date | null;
-        couponId: string | null;
         gardenerId: string;
         hasUsedVipTrial: boolean;
         trialStartedAt: Date | null;

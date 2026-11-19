@@ -39,6 +39,7 @@ import {
   useCreateOrder,
   useOrderUpiLink,
   useInitiateCashfreePayment,
+  useSubmitOrderUtr,
   useMyOrders,
   useStartPackingOrder,
   useMarkOrderPacked,
@@ -470,7 +471,8 @@ export default function ShopScreen() {
   const [deliveryAddress, setDeliveryAddress] = useState(
     [user?.village, user?.district, user?.state].filter(Boolean).join(', ')
   );
-  const [paymentMethod, setPaymentMethod] = useState<'DIRECT_QR' | 'COD' | 'ONLINE'>('DIRECT_QR');
+  const isStoreTestMode = (settings as any)?.ecommerceStoreGateway === 'TEST_MODE' || (settings as any)?.activePaymentGateway === 'TEST_MODE' || (settings as any)?.paymentGateway?.routing?.ecommerceStoreGateway === 'TEST_MODE';
+  const [paymentMethod, setPaymentMethod] = useState<'TEST_MODE' | 'DIRECT_QR' | 'COD' | 'ONLINE'>(isStoreTestMode ? 'TEST_MODE' : 'DIRECT_QR');
   const [utrTransactionId, setUtrTransactionId] = useState('');
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -495,9 +497,11 @@ export default function ShopScreen() {
   const paymentMethodSlideAnim = useRef(new Animated.Value(0)).current;
 
   const availablePaymentModes = useMemo(() => {
-    const list: Array<{ id: 'DIRECT_QR' | 'ONLINE' | 'COD'; label: string; icon: keyof typeof Ionicons.glyphMap; short: string }> = [
-      { id: 'DIRECT_QR', label: 'UPI QR Code', icon: 'qr-code-outline', short: 'UPI QR' },
-    ];
+    const list: Array<{ id: 'TEST_MODE' | 'DIRECT_QR' | 'ONLINE' | 'COD'; label: string; icon: keyof typeof Ionicons.glyphMap; short: string }> = [];
+    if (isStoreTestMode) {
+      list.push({ id: 'TEST_MODE', label: '⚡ Test Mode', icon: 'flask', short: 'Test' });
+    }
+    list.push({ id: 'DIRECT_QR', label: 'UPI QR Code', icon: 'qr-code-outline', short: 'UPI QR' });
     if (onlinePayEnabled) {
       list.push({ id: 'ONLINE', label: 'Online Gateway', icon: 'card-outline', short: 'Online' });
     }
@@ -505,7 +509,13 @@ export default function ShopScreen() {
       list.push({ id: 'COD', label: 'Cash on Delivery', icon: 'cash-outline', short: 'Cash' });
     }
     return list;
-  }, [onlinePayEnabled, codEnabled]);
+  }, [isStoreTestMode, onlinePayEnabled, codEnabled]);
+
+  useEffect(() => {
+    if (isStoreTestMode && paymentMethod !== 'TEST_MODE') {
+      setPaymentMethod('TEST_MODE');
+    }
+  }, [isStoreTestMode]);
 
   useEffect(() => {
     const activeIdx = availablePaymentModes.findIndex((m) => m.id === paymentMethod);
@@ -539,6 +549,7 @@ export default function ShopScreen() {
   const couponPreview = useCouponPreview();
   const orderUpiLink = useOrderUpiLink();
   const initiateCashfree = useInitiateCashfreePayment();
+  const submitOrderUtr = useSubmitOrderUtr();
   const { data: savedAddresses = [] } = useMyAddresses();
   const createAddressMutation = useCreateAddress();
   const updateAddressMutation = useUpdateAddress();
@@ -1397,22 +1408,26 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePlaceOrderDirect = async () => {
+  const handlePlaceOrderDirect = async (overrideUtr?: string) => {
     if (items.length === 0) return;
     if (!deliveryAddress.trim()) {
       setCheckoutError('Please enter delivery address.');
       return;
     }
-    if (paymentMethod === 'DIRECT_QR' && finalPayableAmount > 0 && !utrTransactionId.trim()) {
+    const activeUtr = (overrideUtr || utrTransactionId).trim();
+    if (paymentMethod === 'DIRECT_QR' && finalPayableAmount > 0 && !activeUtr) {
       setCheckoutError('Please enter 12-digit UTR / Payment Reference ID.');
       return;
     }
     setCheckoutError(null);
     try {
       tap();
+      const isTestOrder = paymentMethod === 'TEST_MODE' || activeUtr.toUpperCase().includes('TEST');
       let addressParts = [deliveryAddress.trim()];
-      if (paymentMethod === 'DIRECT_QR' && utrTransactionId.trim()) {
-        addressParts.push(`[UPI UTR: ${utrTransactionId.trim()}]`);
+      if (isTestOrder) {
+        addressParts.push(`[TEST PAYMENT SIMULATOR: AUTO-PAID]`);
+      } else if (paymentMethod === 'DIRECT_QR' && activeUtr) {
+        addressParts.push(`[UPI UTR: ${activeUtr}]`);
       }
       const finalAddressNote = addressParts.join(' | ');
 
@@ -1424,7 +1439,12 @@ export default function ShopScreen() {
         useWalletBalance,
       } as any);
 
-      if (paymentMethod === 'ONLINE') {
+      if (isTestOrder) {
+        const testUtr = activeUtr || `TEST-ORDER-${Date.now().toString().slice(-6)}`;
+        try {
+          await submitOrderUtr.mutateAsync({ id: order.id, utr: testUtr });
+        } catch {}
+      } else if (paymentMethod === 'ONLINE') {
         try {
           const res = await initiateCashfree.mutateAsync({ id: order.id });
           if (res.paymentSessionId) {
@@ -1444,17 +1464,19 @@ export default function ShopScreen() {
       const placedOrderNum = order?.orderNumber || 'PLACED';
       clearCart();
       setIsQrPaymentModalOpen(false);
-      const utrSubmitted = utrTransactionId.trim();
+      const utrSubmitted = activeUtr;
       setUtrTransactionId('');
       setCouponCode('');
       setAppliedDiscount(null);
       setCheckoutStep(1);
 
-      const msg = `Order #${placedOrderNum} confirmed successfully! ${paymentMethod === 'DIRECT_QR' ? 'UTR transaction reference saved.' : ''}`;
+      const msg = isTestOrder
+        ? `🎉 Test Payment Successful! Order #${placedOrderNum} confirmed and marked as PAID.`
+        : `Order #${placedOrderNum} confirmed successfully! ${paymentMethod === 'DIRECT_QR' ? 'UTR transaction reference saved.' : ''}`;
       if (Platform.OS === 'web') {
         alert(msg);
       } else {
-        Alert.alert('Order Confirmed 🎉', msg);
+        Alert.alert(isTestOrder ? 'Test Order Paid 🎉' : 'Order Confirmed 🎉', msg);
       }
 
       // Switch to My Orders subtab inside shop
@@ -3088,6 +3110,35 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                       {/* Payment Mode Detail Cards with interactive selection */}
                       <View style={{ flexDirection: 'column', gap: 8 }}>
+                        {isStoreTestMode && (
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 10,
+                              padding: 12,
+                              borderRadius: RADIUS.md,
+                              borderWidth: 1.5,
+                              borderColor: paymentMethod === 'TEST_MODE' ? '#eab308' : '#cbd5e1',
+                              backgroundColor: paymentMethod === 'TEST_MODE' ? '#fefce8' : '#ffffff',
+                            }}
+                            onPress={() => {
+                              tap();
+                              setPaymentMethod('TEST_MODE');
+                            }}
+                          >
+                            <Ionicons name={paymentMethod === 'TEST_MODE' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'TEST_MODE' ? '#ca8a04' : '#94a3b8'} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'TEST_MODE' ? '#854d0e' : '#0f172a' }}>
+                                ⚡ Test Payment Mode (Instant Auto-Paid Demo)
+                              </Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                                Instant 1-click test checkout. Simulates successful payment and confirms order immediately without deducting money.
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
                           style={{
                             flexDirection: 'row',
@@ -3280,7 +3331,15 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={[styles.placeOrderBtn, { flex: 2.5, backgroundColor: '#15803d', paddingVertical: 14, borderRadius: RADIUS.md }]}
+                        style={[
+                          styles.placeOrderBtn,
+                          {
+                            flex: 2.5,
+                            backgroundColor: paymentMethod === 'TEST_MODE' ? '#eab308' : '#15803d',
+                            paddingVertical: 14,
+                            borderRadius: RADIUS.md,
+                          },
+                        ]}
                         activeOpacity={0.88}
                         onPress={() => {
                           if (!deliveryAddress.trim()) {
@@ -3288,7 +3347,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             return;
                           }
                           setCheckoutError(null);
-                          if (finalPayableAmount === 0) {
+                          if (finalPayableAmount === 0 || paymentMethod === 'TEST_MODE') {
                             handlePlaceOrderDirect();
                           } else if (paymentMethod === 'DIRECT_QR') {
                             setIsQrPaymentModalOpen(true);
@@ -3297,9 +3356,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           }
                         }}
                       >
-                        <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold }]}>
+                        <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold, color: paymentMethod === 'TEST_MODE' ? '#000000' : '#ffffff' }]}>
                           {finalPayableAmount === 0
                             ? '🎉 Confirm Order with Wallet (₹0 Payable)'
+                            : paymentMethod === 'TEST_MODE'
+                            ? `⚡ TEST PAYMENT (PLACE ORDER)`
                             : paymentMethod === 'DIRECT_QR'
                             ? `📱 Scan QR & Confirm (₹${finalPayableAmount.toLocaleString('en-IN')})`
                             : paymentMethod === 'ONLINE'
@@ -3502,10 +3563,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               activeOpacity={0.85}
               disabled={createOrder.isPending}
               onPress={() => {
-                setUtrTransactionId(`TEST-ORDER-${Date.now().toString().slice(-6)}`);
-                setTimeout(() => {
-                  handlePlaceOrderDirect();
-                }, 100);
+                const testUtr = `TEST-ORDER-${Date.now().toString().slice(-6)}`;
+                setUtrTransactionId(testUtr);
+                handlePlaceOrderDirect(testUtr);
               }}
             >
               <Ionicons name="flash" size={15} color="#059669" />

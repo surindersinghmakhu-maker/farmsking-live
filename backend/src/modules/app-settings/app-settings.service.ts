@@ -326,6 +326,22 @@ export class AppSettingsService {
       doctorMaintenanceMode: flags.doctorMaintenanceMode ?? false,
       gardenAdvisorMaintenanceMode: flags.gardenAdvisorMaintenanceMode ?? false,
       accountsMaintenanceMode: flags.accountsMaintenanceMode ?? false,
+      activePaymentGateway: storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+      ecommerceStoreGateway: storedInt?.gateway?.routing?.ecommerceStoreGateway || storedInt?.gateway?.activeGateway || 'CASHFREE',
+      farmerPlanGateway: storedInt?.gateway?.routing?.farmerPlanGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+      advisorBookingGateway: storedInt?.gateway?.routing?.advisorBookingGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+      gardenStoreGateway: storedInt?.gateway?.routing?.gardenStoreGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+      paymentGateway: {
+        activeGateway: storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+        routing: {
+          farmerPlanGateway: storedInt?.gateway?.routing?.farmerPlanGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+          advisorBookingGateway: storedInt?.gateway?.routing?.advisorBookingGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+          gardenStoreGateway: storedInt?.gateway?.routing?.gardenStoreGateway || storedInt?.gateway?.activeGateway || 'UPI_DIRECT',
+          ecommerceStoreGateway: storedInt?.gateway?.routing?.ecommerceStoreGateway || storedInt?.gateway?.activeGateway || 'CASHFREE',
+        },
+        upiId: storedInt?.gateway?.providers?.upiDirect?.upiId || settings.upiId || 'surindersinghmakhu-8@okicici',
+        upiPayeeName: storedInt?.gateway?.providers?.upiDirect?.payeeName || settings.upiPayeeName || 'FarmsKing India',
+      },
       walletWithdrawalEnabled: false, // Permanently disabled by platform rule
       allowedWithdrawalRoles: [], // Permanently disabled by platform rule
     };

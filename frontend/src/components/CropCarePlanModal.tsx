@@ -70,6 +70,8 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
   const adminFeePercent = appSettings?.advisorAdminFeePercent ?? 10.0;
   const doctorPayoutPercent = Math.max(0, 100 - (platformFeePercent + adminFeePercent));
 
+  const isTestCareGateway = (appSettings as any)?.advisorBookingGateway === 'TEST_MODE' || (appSettings as any)?.activePaymentGateway === 'TEST_MODE' || (appSettings as any)?.paymentGateway?.routing?.advisorBookingGateway === 'TEST_MODE';
+
   const packageBaseFee = selectedPackage === 'PRESCRIPTION'
     ? (Number(selectedAdv?.feePerConsultation) || 199)
     : selectedPackage === 'SEASON'
@@ -131,6 +133,16 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         doctorKingId: isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
         advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
       });
+
+      const isTestGateway = res.activeGateway === 'TEST_MODE' || (appSettings as any)?.advisorBookingGateway === 'TEST_MODE' || (appSettings as any)?.activePaymentGateway === 'TEST_MODE';
+      if (isTestGateway) {
+        await submitPayment.mutateAsync({
+          id: res.id,
+          utr: `TEST-CARE-${Date.now().toString().slice(-6)}`,
+        });
+        setSubmitSuccessMsg('🎉 Test Payment Successful & Crop Care Plan Activated!');
+        return;
+      }
 
       if (res.cashfreeSessionId) {
         if (Platform.OS === 'web') {
@@ -702,17 +714,17 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                     </View>
 
                     <TouchableOpacity
-                      style={[styles.buyBtn, { backgroundColor: '#16a34a' }]}
+                      style={[styles.buyBtn, { backgroundColor: isTestCareGateway ? '#eab308' : '#16a34a' }]}
                       disabled={isGeneratingQr}
                       onPress={() => handleInitiatePayment(selectedPlanKey)}
                     >
                       {isGeneratingQr ? (
-                        <ActivityIndicator color="#ffffff" />
+                        <ActivityIndicator color={isTestCareGateway ? '#000000' : '#ffffff'} />
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name={isAutoDebit ? 'repeat' : 'card-outline'} size={18} color="#ffffff" />
-                          <Text style={styles.buyBtnText}>
-                            {isAutoDebit ? `Setup UPI AutoPay (₹${totalPayable}/mo)` : `Pay ₹${totalPayable} via Cashfree`}
+                          <Ionicons name={isTestCareGateway ? 'flask' : isAutoDebit ? 'repeat' : 'card-outline'} size={18} color={isTestCareGateway ? '#000000' : '#ffffff'} />
+                          <Text style={[styles.buyBtnText, isTestCareGateway && { color: '#000000', fontWeight: '800' }]}>
+                            {isTestCareGateway ? '⚡ TEST PAYMENT (ACTIVATE PLAN)' : isAutoDebit ? `Setup UPI AutoPay (₹${totalPayable}/mo)` : `Pay ₹${totalPayable} via Cashfree`}
                           </Text>
                         </View>
                       )}

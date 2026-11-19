@@ -249,6 +249,12 @@ exports.DEFAULT_INTEGRATIONS_CONFIG = {
             },
         },
         providers: {
+            testMode: {
+                enabled: true,
+                autoConfirmOnSubmit: true,
+                label: '⚡ Instant Demo & Test Payment Mode',
+                bypassVerification: true,
+            },
             phonepe: {
                 merchantId: process.env.PHONEPE_MERCHANT_ID || '',
                 clientId: process.env.PHONEPE_CLIENT_ID || '',

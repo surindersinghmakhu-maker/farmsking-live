@@ -813,7 +813,16 @@ function UpiUpgradeFlow({
       setError(null);
       try {
         const res = await initiate.mutateAsync({ targetPlan: plan, billingPeriodDays, isAutoDebit });
-        if (isMounted) setRequest(res);
+        if (isMounted) {
+          setRequest(res);
+          if (res?.activeGateway === 'TEST_MODE') {
+            setSelectedPayMethod('ADMIN_TEST');
+          } else if (res?.activeGateway === 'UPI_DIRECT') {
+            setSelectedPayMethod('UPI_QR');
+          } else if (res?.activeGateway) {
+            setSelectedPayMethod('GATEWAY');
+          }
+        }
       } catch (err: any) {
         if (isMounted) setError(err?.response?.data?.message ?? 'Could not generate payment link. Try again.');
       }

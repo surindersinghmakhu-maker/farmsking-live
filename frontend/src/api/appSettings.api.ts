@@ -52,6 +52,22 @@ export interface AppSettings {
   gardenerVipCardPrice?: number;
   walletWithdrawalEnabled?: boolean;
   allowedWithdrawalRoles?: string[];
+  activePaymentGateway?: string;
+  ecommerceStoreGateway?: string;
+  farmerPlanGateway?: string;
+  advisorBookingGateway?: string;
+  gardenStoreGateway?: string;
+  paymentGateway?: {
+    activeGateway: string;
+    routing?: {
+      farmerPlanGateway: string;
+      advisorBookingGateway: string;
+      gardenStoreGateway: string;
+      ecommerceStoreGateway: string;
+    };
+    upiId?: string;
+    upiPayeeName?: string;
+  };
   updatedAt: string;
   updatedById: string | null;
 }

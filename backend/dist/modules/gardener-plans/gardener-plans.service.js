@@ -214,6 +214,28 @@ let GardenerPlansService = class GardenerPlansService {
             },
         });
         const orderId = `GCARD-${request.id}`;
+        const integrations = await this.appSettingsService.getIntegrations();
+        const activeGateway = integrations?.gateway?.routing?.gardenStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
+        if (activeGateway === 'TEST_MODE') {
+            const now = new Date();
+            const trialEndDate = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+            await this.prisma.gardenerPlan.upsert({
+                where: { gardenerId: user.id },
+                create: {
+                    gardenerId: user.id,
+                    plan,
+                    startDate: now,
+                    endDate: trialEndDate,
+                },
+                update: {
+                    plan,
+                    startDate: now,
+                    endDate: trialEndDate,
+                    expiredAt: null,
+                },
+            });
+            return { isTestPayment: true, paymentSessionId: null, orderId };
+        }
         const cfOrder = await this.cashfreeService.createStandardOrder({
             orderId,
             amount: Number(price),

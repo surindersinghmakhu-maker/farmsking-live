@@ -9,8 +9,8 @@ export declare class BasicPlanCouponsService {
     create(admin: AuthUser, dto: CreateBasicPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
@@ -23,24 +23,24 @@ export declare class BasicPlanCouponsService {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
@@ -53,24 +53,24 @@ export declare class BasicPlanCouponsService {
     listAvailableForPurchase(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
@@ -83,24 +83,24 @@ export declare class BasicPlanCouponsService {
     listMinePurchased(partner: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
@@ -113,24 +113,24 @@ export declare class BasicPlanCouponsService {
     purchase(partner: AuthUser, code: string): Promise<{
         createdBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         };
         usedByFarmer: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
         purchasedBy: {
             id: string;
-            kingId: string | null;
             name: string;
+            kingId: string | null;
         } | null;
     } & {
         id: string;
         createdAt: Date;
-        code: string;
         createdById: string;
+        code: string;
         daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
@@ -142,15 +142,15 @@ export declare class BasicPlanCouponsService {
     }>;
     redeem(farmer: AuthUser, code: string): Promise<{
         plan: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
             startDate: Date;
             endDate: Date | null;
+            id: string;
+            updatedAt: Date;
+            createdAt: Date;
+            couponId: string | null;
             farmerId: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
-            couponId: string | null;
         };
         daysAdded: number;
         newEndDate: Date;

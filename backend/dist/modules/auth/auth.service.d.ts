@@ -238,17 +238,19 @@ export declare class AuthService {
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            email: string | null;
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
-            email: string | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -258,30 +260,30 @@ export declare class AuthService {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     unlinkGoogleAccount(currentUser: AuthUser): Promise<{
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            email: string | null;
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
-            email: string | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -291,13 +293,11 @@ export declare class AuthService {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     sendMobileLinkOtp(user: AuthUser, mobile: string): Promise<{
@@ -503,17 +503,19 @@ export declare class AuthService {
         message: string;
         email: string | null;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
+            email: string | null;
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
-            email: string | null;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -523,13 +525,11 @@ export declare class AuthService {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
 }

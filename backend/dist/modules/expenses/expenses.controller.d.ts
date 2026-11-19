@@ -7,8 +7,8 @@ export declare class ExpensesController {
     constructor(expensesService: ExpensesService);
     listCategories(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         key: string;
         isActive: boolean;
         isSystem: boolean;
@@ -19,8 +19,8 @@ export declare class ExpensesController {
     }[]>;
     listAllCategoriesForAdmin(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         key: string;
         isActive: boolean;
         isSystem: boolean;
@@ -36,8 +36,8 @@ export declare class ExpensesController {
         sortOrder?: number;
     }): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         key: string;
         isActive: boolean;
         isSystem: boolean;
@@ -53,8 +53,8 @@ export declare class ExpensesController {
         isActive?: boolean;
     }): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         key: string;
         isActive: boolean;
         isSystem: boolean;
@@ -65,8 +65,8 @@ export declare class ExpensesController {
     }>;
     deleteCategory(id: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         key: string;
         isActive: boolean;
         isSystem: boolean;
@@ -82,8 +82,8 @@ export declare class ExpensesController {
         } | null;
         category: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             key: string;
             isActive: boolean;
             isSystem: boolean;
@@ -94,18 +94,18 @@ export declare class ExpensesController {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;
@@ -117,16 +117,16 @@ export declare class ExpensesController {
     findAllForAdmin(): import(".prisma/client").Prisma.PrismaPromise<({
         party: {
             id: string;
-            mobile: string | null;
             name: string;
+            mobile: string | null;
         } | null;
         farm: {
             id: string;
             name: string;
             owner: {
                 id: string;
-                mobile: string;
                 name: string;
+                mobile: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -142,8 +142,8 @@ export declare class ExpensesController {
         } | null;
         category: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             key: string;
             isActive: boolean;
             isSystem: boolean;
@@ -154,26 +154,26 @@ export declare class ExpensesController {
         };
         recordedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             village: string | null;
             district: string | null;
             state: string | null;
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;
@@ -189,8 +189,8 @@ export declare class ExpensesController {
         } | null;
         category: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             key: string;
             isActive: boolean;
             isSystem: boolean;
@@ -201,18 +201,18 @@ export declare class ExpensesController {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;
@@ -224,13 +224,13 @@ export declare class ExpensesController {
     findOne(user: AuthUser, id: string): Promise<{
         farm: {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             name: string;
             village: string | null;
             district: string | null;
             state: string | null;
             soilType: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             deletedAt: Date | null;
             notes: string | null;
             ownerId: string;
@@ -244,8 +244,8 @@ export declare class ExpensesController {
         } | null;
         category: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             key: string;
             isActive: boolean;
             isSystem: boolean;
@@ -256,18 +256,18 @@ export declare class ExpensesController {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;
@@ -283,8 +283,8 @@ export declare class ExpensesController {
         } | null;
         category: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             key: string;
             isActive: boolean;
             isSystem: boolean;
@@ -295,18 +295,18 @@ export declare class ExpensesController {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;
@@ -317,18 +317,18 @@ export declare class ExpensesController {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         description: string | null;
+        unit: string | null;
+        quantity: number | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         notes: string | null;
-        paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
         expenseDate: Date;
         vendorName: string | null;
-        quantity: number | null;
-        unit: string | null;
         receiptPhotoUrl: string | null;
         farmId: string;
         plotId: string | null;

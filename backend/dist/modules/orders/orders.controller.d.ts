@@ -35,27 +35,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -86,11 +90,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -104,10 +104,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -121,19 +121,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -149,6 +149,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -170,7 +171,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -203,27 +203,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -254,11 +258,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -272,10 +272,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -289,19 +289,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -317,6 +317,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -338,7 +339,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -371,27 +371,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -422,11 +426,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -440,10 +440,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -457,19 +457,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -485,6 +485,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -506,7 +507,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -539,27 +539,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -590,11 +594,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -608,10 +608,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -625,19 +625,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -653,6 +653,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -674,7 +675,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -707,27 +707,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -758,11 +762,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -776,10 +776,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -793,19 +793,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -821,6 +821,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -842,7 +843,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -891,8 +891,8 @@ export declare class OrdersController {
     }>;
     getOrderInvoices(user: AuthUser, id: string): Promise<{
         id: string;
-        sellerStoreId: string | null;
         createdAt: Date;
+        sellerStoreId: string | null;
         commissionAmount: import("@prisma/client/runtime/library").Decimal;
         tcsAmount: import("@prisma/client/runtime/library").Decimal;
         orderId: string | null;
@@ -919,8 +919,13 @@ export declare class OrdersController {
     }[]>;
     getInvoiceHtml(user: AuthUser, invoiceId: string): Promise<string>;
     initiateCashfreePayment(user: AuthUser, id: string): Promise<{
+        isTestPayment: boolean;
+        paymentSessionId: null;
+        orderId: string;
+    } | {
         paymentSessionId: any;
         orderId: any;
+        isTestPayment?: undefined;
     }>;
     getCashfreePaymentStatus(user: AuthUser, id: string): Promise<{
         paymentStatus: "PENDING" | "PAID" | "FAILED";
@@ -953,27 +958,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1004,11 +1013,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1022,10 +1027,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1039,19 +1044,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1067,6 +1072,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1088,7 +1094,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1121,27 +1126,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1172,11 +1181,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1190,10 +1195,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1207,19 +1212,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1235,6 +1240,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1256,7 +1262,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1289,27 +1294,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1340,11 +1349,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1358,10 +1363,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1375,19 +1380,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1403,6 +1408,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1424,7 +1430,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1457,27 +1462,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1508,11 +1517,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1526,10 +1531,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1543,19 +1548,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1571,6 +1576,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1592,7 +1598,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1625,27 +1630,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1676,11 +1685,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1694,10 +1699,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1711,19 +1716,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1739,6 +1744,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1760,7 +1766,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1793,27 +1798,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -1844,11 +1853,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -1862,10 +1867,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -1879,19 +1884,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -1907,6 +1912,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -1928,7 +1934,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -1961,27 +1966,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -2012,11 +2021,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -2030,10 +2035,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -2047,19 +2052,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -2075,6 +2080,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -2096,7 +2102,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -2129,27 +2134,31 @@ export declare class OrdersController {
             } | null;
             sellerStore: {
                 id: string;
+                upiId: string | null;
+                updatedAt: Date;
+                createdAt: Date;
+                panNumber: string | null;
+                panDocUrl: string | null;
+                aadhaarLast4: string | null;
+                aadhaarBackUrl: string | null;
+                gstin: string | null;
+                gstDocUrl: string | null;
+                chequeDocUrl: string | null;
+                kycVerifiedAt: Date | null;
+                bankIfsc: string | null;
                 rating: number;
                 isActive: boolean;
                 rejectionReason: string | null;
-                createdAt: Date;
-                updatedAt: Date;
                 sellerId: string;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
                 legalName: string | null;
-                gstin: string | null;
                 isCompositionDealer: boolean;
                 gstEnrolmentId: string | null;
-                panNumber: string | null;
-                aadhaarLast4: string | null;
-                upiId: string | null;
                 kycStatus: import(".prisma/client").$Enums.SellerKycStatus;
-                kycVerifiedAt: Date | null;
                 kycVerifiedById: string | null;
                 bankAccountNo: string | null;
-                bankIfsc: string | null;
                 bankBeneficiaryName: string | null;
                 cashfreeVendorId: string | null;
                 shiprocketPickupLocationId: string | null;
@@ -2180,11 +2189,7 @@ export declare class OrdersController {
                 additionalDoc1Url: string | null;
                 additionalDoc2Title: string | null;
                 additionalDoc2Url: string | null;
-                gstDocUrl: string | null;
-                panDocUrl: string | null;
-                chequeDocUrl: string | null;
                 aadhaarFrontUrl: string | null;
-                aadhaarBackUrl: string | null;
                 tradeLicenseUrl: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 categoryCommissions: import("@prisma/client/runtime/library").JsonValue | null;
@@ -2198,10 +2203,10 @@ export declare class OrdersController {
             } | null;
         } & {
             id: string;
+            updatedAt: Date;
+            createdAt: Date;
             price: import("@prisma/client/runtime/library").Decimal;
             sellerStoreId: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             productName: string;
             quantity: number;
             subtotal: import("@prisma/client/runtime/library").Decimal;
@@ -2215,19 +2220,19 @@ export declare class OrdersController {
         subOrders: ({
             sellerStore: {
                 id: string;
+                gstin: string | null;
                 storeName: string;
                 slug: string;
                 sellerType: import(".prisma/client").$Enums.SellerType;
-                gstin: string | null;
                 commissionRate: import("@prisma/client/runtime/library").Decimal;
                 rtoBearer: import(".prisma/client").$Enums.RtoBearer;
                 rtoSharedVendorRatio: import("@prisma/client/runtime/library").Decimal;
             };
         } & {
             id: string;
-            sellerStoreId: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            sellerStoreId: string;
             subtotal: import("@prisma/client/runtime/library").Decimal;
             commissionAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string;
@@ -2243,6 +2248,7 @@ export declare class OrdersController {
             cashfreeTransferId: string | null;
         })[];
     } & {
+        customerId: string;
         id: string;
         orderNumber: string;
         totalAmount: import("@prisma/client/runtime/library").Decimal;
@@ -2264,7 +2270,6 @@ export declare class OrdersController {
         paymentStatus: import(".prisma/client").$Enums.OrderPaymentStatus;
         phonepeMerchantOrderId: string | null;
         phonepePaymentState: string | null;
-        customerId: string;
         packedById: string | null;
         dispatchedById: string | null;
         couponId: string | null;
@@ -2293,9 +2298,9 @@ export declare class OrdersPublicController {
             quantity: number;
         }[];
         shippingLogs: {
+            updatedAt: Date;
             status: import(".prisma/client").$Enums.ShipmentStatus;
             courierName: string | null;
-            updatedAt: Date;
             awbCode: string | null;
             deliveredAt: Date | null;
         }[];

@@ -10,9 +10,9 @@ export declare class GardensService {
     constructor(prisma: PrismaService, gardenerPlansService: GardenerPlansService);
     create(user: AuthUser, dto: CreateGardenDto): import(".prisma/client").Prisma.Prisma__GardenClient<{
         id: string;
-        name: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
+        name: string;
         status: string;
         gardenerId: string;
         area: number | null;
@@ -22,20 +22,20 @@ export declare class GardensService {
     findAll(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         plants: {
             id: string;
-            name: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            name: string;
             deletedAt: Date | null;
             gardenId: string;
-            species: string | null;
             plantedDate: Date | null;
+            species: string | null;
             healthNotes: string | null;
         }[];
     } & {
         id: string;
-        name: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
+        name: string;
         status: string;
         gardenerId: string;
         area: number | null;
@@ -45,20 +45,20 @@ export declare class GardensService {
     findOneOrThrow(user: AuthUser, id: string): Promise<{
         plants: {
             id: string;
-            name: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
+            name: string;
             deletedAt: Date | null;
             gardenId: string;
-            species: string | null;
             plantedDate: Date | null;
+            species: string | null;
             healthNotes: string | null;
         }[];
     } & {
         id: string;
-        name: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
+        name: string;
         status: string;
         gardenerId: string;
         area: number | null;
@@ -67,30 +67,30 @@ export declare class GardensService {
     }>;
     addPlant(user: AuthUser, gardenId: string, dto: CreatePlantDto): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
+        name: string;
         deletedAt: Date | null;
         gardenId: string;
-        species: string | null;
         plantedDate: Date | null;
+        species: string | null;
         healthNotes: string | null;
     }>;
     listPlants(user: AuthUser, gardenId: string): Promise<{
         id: string;
-        name: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
+        name: string;
         deletedAt: Date | null;
         gardenId: string;
-        species: string | null;
         plantedDate: Date | null;
+        species: string | null;
         healthNotes: string | null;
     }[]>;
     addExpense(user: AuthUser, dto: CreateGardenExpenseDto): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
@@ -111,8 +111,8 @@ export declare class GardensService {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;
@@ -124,8 +124,8 @@ export declare class GardensService {
     })[]>;
     deleteExpense(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
         recordedById: string;

@@ -203,6 +203,10 @@ export class OrdersService {
     );
     const categoryCommMap = await this.getCategoryCommissionsMap(storeIds);
 
+    const integrations = await this.appSettingsService.getIntegrations();
+    const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
+    const isTestPaymentMode = activeGateway === 'TEST_MODE' || (dto.paymentMode as string) === 'TEST_MODE';
+
     // Master Order & Vendor Sub-Orders Splitting (with atomic wallet check + debit)
     const order = await this.prisma.$transaction(async (tx) => {
       let totalAmount = postCouponAmount;
@@ -257,13 +261,18 @@ export class OrdersService {
         }
       }
 
+      const isOnlineTest = isTestPaymentMode && (dto.paymentMode === OrderPaymentMode.ONLINE || (dto.paymentMode as string) === 'TEST_MODE');
       const created = await tx.customerOrder.create({
         data: {
           customerId: targetCustomerId,
           orderNumber: generateOrderNumber(),
           totalAmount,
           deliveryAddress: dto.deliveryAddress,
-          paymentMode: dto.paymentMode ?? OrderPaymentMode.COD,
+          paymentMode: (dto.paymentMode as string) === 'TEST_MODE' ? OrderPaymentMode.ONLINE : (dto.paymentMode ?? OrderPaymentMode.COD),
+          paymentStatus: isOnlineTest ? OrderPaymentStatus.PAID : OrderPaymentStatus.PENDING,
+          status: isOnlineTest ? OrderStatus.CONFIRMED : OrderStatus.PLACED,
+          phonepePaymentState: isOnlineTest ? 'PAYMENT_SUCCESS_TEST_MODE' : undefined,
+          phonepeMerchantOrderId: isOnlineTest ? `TEST-ORDER-${Date.now()}` : undefined,
           couponId: couponResult?.coupon.id,
           discountAmount: couponResult ? discountAmount : undefined,
           walletUsedAmount: walletDeduction > 0 ? walletDeduction : undefined,
@@ -618,6 +627,22 @@ export class OrdersService {
       throw new ConflictException('This order has already been paid for.');
     }
 
+    const integrations = await this.appSettingsService.getIntegrations();
+    const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
+    if (activeGateway === 'TEST_MODE') {
+      await this.prisma.customerOrder.update({
+        where: { id },
+        data: {
+          phonepeMerchantOrderId: `TEST-ORDER-${Date.now()}`,
+          phonepePaymentState: 'PAYMENT_SUCCESS_TEST_MODE',
+          paymentStatus: OrderPaymentStatus.PAID,
+          status: OrderStatus.CONFIRMED,
+        },
+        include: DETAIL_INCLUDE,
+      });
+      return { isTestPayment: true, paymentSessionId: null, orderId: order.orderNumber };
+    }
+
     const splits = order.subOrders.map(subOrder => ({
       cashfreeVendorId: (subOrder.sellerStore as any)?.cashfreeVendorId,
       itemSubtotal: Number(subOrder.subtotal),
@@ -699,7 +724,9 @@ export class OrdersService {
     if (order.customerId !== customer.id && !this.isOrderStaff(customer)) {
       throw new ForbiddenException('You cannot update payment reference for this order.');
     }
-    const isTestPayment = utrNumber.toUpperCase().includes('TEST') || utrNumber === '123456';
+    const integrations = await this.appSettingsService.getIntegrations();
+    const activeGateway = integrations?.gateway?.routing?.ecommerceStoreGateway || integrations?.gateway?.activeGateway || 'CASHFREE';
+    const isTestPayment = activeGateway === 'TEST_MODE' || utrNumber.toUpperCase().includes('TEST') || utrNumber === '123456';
     return this.prisma.customerOrder.update({
       where: { id },
       data: {

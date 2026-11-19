@@ -20,6 +20,7 @@ import { useRedeemFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/use
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors } from '@/src/hooks/useAdvisorAssignments';
 import { useAuth } from '@/src/store/auth-context';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import QRCode from 'react-native-qrcode-svg';
 
 import { previewFarmerPlanCoupon, FarmerPlanCouponPreview } from '@/src/api/farmerPlans.api';
@@ -37,6 +38,8 @@ interface CropCarePlanModalProps {
 
 export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) {
   const { user } = useAuth();
+  const { data: appSettings } = useAppSettings();
+  const isTestCareGateway = (appSettings as any)?.advisorBookingGateway === 'TEST_MODE' || (appSettings as any)?.activePaymentGateway === 'TEST_MODE' || (appSettings as any)?.paymentGateway?.routing?.advisorBookingGateway === 'TEST_MODE';
   const redeemCoupon = useRedeemFarmerPlanCoupon();
   const initiatePayment = useInitiateFarmerPlanPayment();
   const submitPayment = useSubmitFarmerPlanPayment();
@@ -107,6 +110,16 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         doctorKingId: isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
         advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
       });
+
+      const isTestGateway = res.activeGateway === 'TEST_MODE' || isTestCareGateway;
+      if (isTestGateway) {
+        await submitPayment.mutateAsync({
+          id: res.id,
+          utr: `TEST-CARE-${Date.now().toString().slice(-6)}`,
+        });
+        setSubmitSuccessMsg('🎉 Test Payment Successful & Crop Care Plan Activated!');
+        return;
+      }
 
       if (res.cashfreeSessionId) {
         if (Platform.OS === 'web') {
@@ -522,17 +535,17 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                     </View>
 
                     <TouchableOpacity
-                      style={[styles.buyBtn, { backgroundColor: selectedPlanKey === 'ROYAL' ? '#7c3aed' : '#0284c7' }]}
+                      style={[styles.buyBtn, { backgroundColor: isTestCareGateway ? '#eab308' : selectedPlanKey === 'ROYAL' ? '#7c3aed' : '#0284c7' }]}
                       disabled={isGeneratingQr}
                       onPress={() => handleInitiatePayment(selectedPlanKey)}
                     >
                       {isGeneratingQr ? (
-                        <ActivityIndicator color="#ffffff" />
+                        <ActivityIndicator color={isTestCareGateway ? '#000000' : '#ffffff'} />
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="card-outline" size={18} color="#ffffff" />
-                          <Text style={styles.buyBtnText}>
-                            Pay securely via Cashfree ({selectedPlanKey === 'GOLD' ? '₹499' : '₹299'})
+                          <Ionicons name={isTestCareGateway ? 'flask' : 'card-outline'} size={18} color={isTestCareGateway ? '#000000' : '#ffffff'} />
+                          <Text style={[styles.buyBtnText, isTestCareGateway && { color: '#000000', fontWeight: '800' }]}>
+                            {isTestCareGateway ? '⚡ TEST PAYMENT (ACTIVATE PLAN)' : `Pay securely via Cashfree (${selectedPlanKey === 'GOLD' ? '₹499' : '₹299'})`}
                           </Text>
                         </View>
                       )}

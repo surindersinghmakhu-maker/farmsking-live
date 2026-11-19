@@ -168,7 +168,9 @@ let FarmerPlanPaymentsService = class FarmerPlanPaymentsService {
             data: { status: client_1.PlanPaymentStatus.SUBMITTED, submittedAt: new Date(), utr: dto.utr, screenshotUrl: dto.screenshotUrl },
             include: DETAIL_INCLUDE,
         });
-        const isTestPayment = dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
+        const integrations = await this.appSettingsService.getIntegrations();
+        const activeGateway = integrations?.gateway?.routing?.farmerPlanGateway || integrations?.gateway?.activeGateway || 'UPI_DIRECT';
+        const isTestPayment = activeGateway === 'TEST_MODE' || dto.utr?.toUpperCase().includes('TEST') || dto.utr === '123456';
         if (isTestPayment) {
             const actualAdmin = await this.prisma.user.findFirst({ where: { role: { in: [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN] }, deletedAt: null }, select: { id: true } });
             const adminId = actualAdmin?.id || user.id;

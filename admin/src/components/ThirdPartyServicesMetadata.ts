@@ -115,6 +115,7 @@ export const ALL_MARKET_GATEWAYS: {
   tag: string;
   icon: keyof typeof Ionicons.glyphMap;
 }[] = [
+  { key: 'TEST_MODE', label: 'Test Mode', tag: 'DEMO MODE', icon: 'flask' },
   { key: 'UPI_DIRECT', label: 'Direct UPI', tag: '0% FEE', icon: 'qr-code' },
   { key: 'PHONEPE', label: 'PhonePe', tag: 'TOP UPI', icon: 'flash' },
   { key: 'CASHFREE', label: 'Cashfree', tag: 'AUTO-SPLIT', icon: 'wallet' },
@@ -529,6 +530,22 @@ export interface GatewayDetail {
 }
 
 export const ALL_GATEWAY_METADATA: GatewayDetail[] = [
+  {
+    key: 'TEST_MODE',
+    name: 'Instant Demo & Test Payment Mode',
+    tag: '⚡ 1-CLICK TEST & DEMO',
+    planBadge: '100% Mock Testing (Zero Real Money)',
+    mdrRate: '0.00% Zero Fee (Simulator)',
+    settlement: 'Instant Simulation (Real-Time)',
+    successRate: '100.0% Guaranteed Test Pass',
+    vendorSplit: 'Instant Simulated Auto-Activation',
+    freeVolumeMonthly: 99999999,
+    simulatedUsedVolume: 0,
+    icon: 'flask',
+    color: '#eab308',
+    recommendation: '🧪 Recommended for Demoing, Platform Testing & 1-Click VIP Activation',
+    summary: 'Instant 1-click test payment mode. When selected as Active Gateway or assigned to a domain module, all payment prompts display a TEST PAYMENT button that completes without real bank charges.',
+  },
   {
     key: 'UPI_DIRECT',
     name: 'Direct NPCI UPI QR & VPA',

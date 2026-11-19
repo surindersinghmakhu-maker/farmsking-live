@@ -63,6 +63,22 @@ export interface AppSettings {
   walletWithdrawalEnabled?: boolean;
   allowedWithdrawalRoles?: string[];
   otpDeliveryChannel?: string;
+  activePaymentGateway?: string;
+  ecommerceStoreGateway?: string;
+  farmerPlanGateway?: string;
+  advisorBookingGateway?: string;
+  gardenStoreGateway?: string;
+  paymentGateway?: {
+    activeGateway: string;
+    routing?: {
+      farmerPlanGateway: string;
+      advisorBookingGateway: string;
+      gardenStoreGateway: string;
+      ecommerceStoreGateway: string;
+    };
+    upiId?: string;
+    upiPayeeName?: string;
+  };
   updatedAt: string;
   updatedById: string | null;
 }
@@ -308,6 +324,7 @@ export async function getSupportContact(): Promise<SupportContact> {
 }
 
 export type SupportedPaymentGateway =
+  | 'TEST_MODE'
   | 'PHONEPE'
   | 'CASHFREE'
   | 'RAZORPAY'
@@ -374,6 +391,7 @@ export interface SystemIntegrationsConfig {
       ecommerceStore: ModulePaymentFeatureConfig;
     };
     providers: {
+      testMode?: { enabled: boolean; autoConfirmOnSubmit: boolean; label: string; bypassVerification: boolean };
       phonepe: { merchantId: string; clientId: string; clientSecret: string; saltKey: string; saltIndex: string; webhookUsername: string; webhookPassword: string };
       cashfree: { appId: string; secretKey: string; webhookSecret: string };
       razorpay: { keyId: string; keySecret: string; webhookSecret: string };
@@ -986,6 +1004,12 @@ export const DEFAULT_SYSTEM_INTEGRATIONS_CONFIG: SystemIntegrationsConfig = {
       },
     },
     providers: {
+      testMode: {
+        enabled: true,
+        autoConfirmOnSubmit: true,
+        label: '⚡ Instant Demo & Test Payment Mode',
+        bypassVerification: true,
+      },
       phonepe: {
         merchantId: 'M22KMYD10AWD8_2607081836',
         clientId: 'M22KMYD10AWD8_2607081836',

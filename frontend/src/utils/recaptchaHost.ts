@@ -1,17 +1,66 @@
 /**
- * Manages an invisible Firebase reCAPTCHA host element completely outside React's Virtual DOM.
- * Prevents React DOM errors such as "Failed to execute 'insertBefore' on 'Node'".
- * Ensures the invisible reCAPTCHA container is positioned off-screen without any visible badge.
+ * 👑 FarmsKing Detached reCAPTCHA Host Manager
+ * - Creates a clean, fresh, dedicated DOM element completely isolated from React's Virtual DOM.
+ * - Safely unmounts and removes the old DOM element before creating a new one, so window.grecaptcha
+ *   never throws "reCAPTCHA has already been rendered in this element".
+ * - Injects Google's official rule `.grecaptcha-badge { visibility: hidden !important; }` so no unwanted
+ *   floating badge obscures user UI elements.
  */
-export function getOrCreateDetachedRecaptchaHost(hostId: string): HTMLElement {
+
+let badgeStyleInjected = false;
+export function injectRecaptchaBadgeHiddenStyle(): void {
+  if (typeof document === 'undefined' || badgeStyleInjected) return;
+  try {
+    const styleId = 'fk-recaptcha-badge-hidden-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .grecaptcha-badge {
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    badgeStyleInjected = true;
+  } catch {}
+}
+
+export function getFreshDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: string): HTMLElement {
   if (typeof document === 'undefined') return null as any;
-  let existing = document.getElementById(hostId);
-  if (!existing) {
-    existing = document.createElement('div');
-    existing.id = hostId;
-    document.body.appendChild(existing);
+
+  injectRecaptchaBadgeHiddenStyle();
+
+  // 1. Destroy and clear old verifier instance if any
+  if (verifierGlobalKey && typeof window !== 'undefined' && (window as any)[verifierGlobalKey]) {
+    try {
+      (window as any)[verifierGlobalKey].clear();
+    } catch {}
+    (window as any)[verifierGlobalKey] = null;
   }
-  return existing;
+
+  // 2. Remove previous DOM element to prevent "reCAPTCHA has already been rendered in this element"
+  const existing = document.getElementById(hostId);
+  if (existing && existing.parentNode) {
+    try {
+      existing.parentNode.removeChild(existing);
+    } catch {}
+  }
+
+  // 3. Create fresh DOM container with unique lifecycle
+  const el = document.createElement('div');
+  el.id = hostId;
+  el.style.position = 'fixed';
+  el.style.bottom = '0px';
+  el.style.right = '0px';
+  el.style.width = '0px';
+  el.style.height = '0px';
+  el.style.overflow = 'visible';
+  el.style.zIndex = '999999';
+  document.body.appendChild(el);
+  return el;
 }
 
 export function clearDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: string): void {
@@ -23,15 +72,12 @@ export function clearDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: s
     (window as any)[verifierGlobalKey] = null;
   }
   const existing = document.getElementById(hostId);
-  if (existing) {
+  if (existing && existing.parentNode) {
     try {
-      existing.innerHTML = '';
-      if (existing.parentNode) {
-        existing.parentNode.removeChild(existing);
-      }
+      existing.parentNode.removeChild(existing);
     } catch {}
   }
 }
 
 // Backward compatibility alias
-export const getFreshDetachedRecaptchaHost = getOrCreateDetachedRecaptchaHost;
+export const getOrCreateDetachedRecaptchaHost = getFreshDetachedRecaptchaHost;

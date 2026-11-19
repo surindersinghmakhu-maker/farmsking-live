@@ -153,6 +153,7 @@ export default function PartnerLoginScreen() {
     error,
     setError,
     confirmationResult,
+    isFallback,
     otpCellRefs,
     sendOtp,
     verifyOtp,
@@ -162,6 +163,9 @@ export default function PartnerLoginScreen() {
   } = useFirebasePhoneAuth({
     hostId: 'fk-recaptcha-partner-login-host',
     verifierGlobalKey: 'recaptchaVerifierPartner',
+    portal: 'PARTNER',
+    fallbackSendOtp: (mob) => sendLoginOtp(mob, 'PARTNER'),
+    fallbackVerifyOtp: (p) => otpLogin({ mobile: p.mobile, otp: p.otp, portal: 'PARTNER' }),
   });
 
   const handleSuccessNavigation = (loggedInUser?: any) => {
@@ -470,10 +474,20 @@ export default function PartnerLoginScreen() {
   // Step 2: Verify Mobile OTP via centralized Firebase Phone Auth
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
-    const verified = await verifyOtp(explicitCode);
+    const verified: any = await verifyOtp(explicitCode);
     if (!verified) return;
 
     try {
+      if (verified.isFallback) {
+        if (verified.isNewUser) {
+          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanMobile });
+          setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
+        } else {
+          handleSuccessNavigation(verified.user);
+        }
+        return;
+      }
+
       const res: any = await firebaseLogin(verified.idToken, 'PARTNER');
       if (res?.isNewUser) {
         setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanMobile });

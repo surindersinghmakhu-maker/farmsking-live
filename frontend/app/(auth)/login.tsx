@@ -252,6 +252,7 @@ export default function LoginScreen() {
     error,
     setError,
     confirmationResult,
+    isFallback,
     otpCellRefs,
     sendOtp,
     verifyOtp,
@@ -261,6 +262,9 @@ export default function LoginScreen() {
   } = useFirebasePhoneAuth({
     hostId: 'fk-recaptcha-login-host',
     verifierGlobalKey: 'recaptchaVerifierLogin',
+    portal: portalMode,
+    fallbackSendOtp: (mob) => sendLoginOtp(mob, portalModeRef.current),
+    fallbackVerifyOtp: (p) => otpLogin({ mobile: p.mobile, otp: p.otp, portal: portalModeRef.current }),
   });
 
   const [focusedField, setFocusedField] = useState<'mobile' | 'otp' | 'name' | 'partnerId' | 'partnerPass' | null>(null);
@@ -541,10 +545,24 @@ export default function LoginScreen() {
   // Step 2: Verify Mobile OTP via centralized Firebase Phone Auth
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
-    const verified = await verifyOtp(explicitCode);
+    const verified: any = await verifyOtp(explicitCode);
     if (!verified) return;
 
     try {
+      if (verified.isFallback) {
+        if (verified.isNewUser) {
+          if (portalMode === 'PARTNER') {
+            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanMobile });
+            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
+          } else {
+            setIsNewUserModal(true);
+          }
+        } else {
+          handleSuccessNavigation(false, verified.user);
+        }
+        return;
+      }
+
       const res: any = await firebaseLogin(verified.idToken, portalMode);
       if (res?.isNewUser) {
         if (portalMode === 'PARTNER') {

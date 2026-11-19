@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
 import ViewShot, { captureRef } from 'react-native-view-shot';
@@ -938,6 +938,8 @@ export function MarketRatesCard() {
   const { colors } = useExecutiveTheme();
   const { t } = useLanguage();
   const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompact = windowWidth < 720;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm'), { position: 'relative', overflow: 'hidden' }]}>
@@ -956,7 +958,7 @@ export function MarketRatesCard() {
       </View>
 
       {/* Compact Header with LIVE Indicator & Mobile Widget Launcher */}
-      <View style={styles.header}>
+      <View style={[styles.header, isCompact && styles.headerCompact]}>
         <View style={styles.titleRow}>
           <Text style={[styles.title, { color: colors.text }]}>{t('cropPricesLive', 'Your Crop Prices')}</Text>
           <View style={styles.liveBadge}>
@@ -965,10 +967,10 @@ export function MarketRatesCard() {
           </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={[styles.headerActionsRight, isCompact && styles.headerActionsRightCompact]}>
           <View style={[styles.pill, !colors.isDark && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
             <Ionicons name="time-outline" size={10} color={colors.isDark ? theme.primary : '#15803d'} />
-            <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>Previous 24 hrs</Text>
+            <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>24h Live</Text>
           </View>
 
           <TouchableOpacity
@@ -988,9 +990,125 @@ export function MarketRatesCard() {
       {isLoading ? (
         <ActivityIndicator color={theme.primary} style={styles.spinner} />
       ) : isError ? (
-        <Text style={[styles.emptyText, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>{t('noMandiData', 'Could not load crop prices right now.')}</Text>
+        <Text style={[styles.emptyText, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>
+          {t('noMandiData', 'Could not load crop prices right now.')}
+        </Text>
+      ) : subcategoryRates.length === 0 ? (
+        <Text style={[styles.emptyText, { textAlign: 'center', marginVertical: 8, color: colors.isDark ? '#94a3b8' : '#334155' }]}>
+          No active crops to show live prices right now.
+        </Text>
+      ) : isCompact ? (
+        /* 📱 RESPONSIVE MOBILE VIEW (Compact Dual-Pill Cards) */
+        <View style={styles.mobileListWrap}>
+          {subcategoryRates.map((rate) => {
+            const hasLocal = rate.localAvgRate != null && rate.localAvgRate > 0;
+            const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
+
+            return (
+              <View
+                key={rate.displayTitle}
+                style={[
+                  styles.mobileCropCard,
+                  {
+                    backgroundColor: colors.isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+                    borderColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                  },
+                ]}
+              >
+                {/* Mobile Top Header: Crop Name, Unit Badge, Multi-Mandi link & Share */}
+                <View style={styles.mobileCardHeader}>
+                  <TouchableOpacity
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedMultiMandiCrop(rate.displayTitle);
+                      setShowMultiMandiModal(true);
+                    }}
+                  >
+                    <Text style={[styles.mobileCropName, { color: colors.isDark ? '#f8fafc' : '#0f172a' }]} numberOfLines={1}>
+                      🌾 {rate.displayTitle}
+                    </Text>
+                    <View style={styles.mobileUnitPill}>
+                      <Text style={styles.mobileUnitPillText}>Per {rate.unit}</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      style={styles.mobileCompareBtn}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedMultiMandiCrop(rate.displayTitle);
+                        setShowMultiMandiModal(true);
+                      }}
+                    >
+                      <Ionicons name="stats-chart" size={11} color="#2563eb" />
+                      <Text style={styles.mobileCompareBtnText}>Compare ↗</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.mobileShareBtn}
+                      activeOpacity={0.7}
+                      onPress={() => setSelectedCropForShare(rate)}
+                    >
+                      <Ionicons name="share-social-outline" size={14} color="#16a34a" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Mobile Bottom Rates: Dual Pill Comparison (Local vs All India) */}
+                <View style={styles.mobileRatePillsRow}>
+                  {/* Left Pill: Local Mandi */}
+                  <View style={[styles.mobileRatePill, styles.mobileRatePillLocal]}>
+                    <View style={styles.mobilePillHeader}>
+                      <Text style={styles.mobilePillTitleLocal}>🏛️ LOCAL ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
+                    </View>
+                    {hasLocal ? (
+                      <View style={{ marginTop: 2 }}>
+                        <Text style={styles.mobileAvgRateLocal}>
+                          {formatInr(rate.localAvgRate!)}
+                          <Text style={styles.mobileAvgUnit}> /{rate.unit}</Text>
+                        </Text>
+                        <View style={styles.mobileMinMaxRow}>
+                          <Text style={styles.mobileMinText}>Min: {formatInr(rate.localMinRate!)}</Text>
+                          <Text style={styles.mobileDividerDot}>•</Text>
+                          <Text style={styles.mobileMaxText}>Max: {formatInr(rate.localMaxRate!)}</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <Text style={styles.mobileDashText}>-</Text>
+                    )}
+                  </View>
+
+                  {/* Right Pill: All India */}
+                  <View style={[styles.mobileRatePill, styles.mobileRatePillNational]}>
+                    <View style={styles.mobilePillHeader}>
+                      <Text style={styles.mobilePillTitleNat}>🇮🇳 ALL INDIA</Text>
+                    </View>
+                    {hasNational ? (
+                      <View style={{ marginTop: 2 }}>
+                        <Text style={styles.mobileAvgRateNat}>
+                          {formatInr(rate.nationalAvgRate!)}
+                          <Text style={styles.mobileAvgUnit}> /{rate.unit}</Text>
+                        </Text>
+                        <View style={styles.mobileMinMaxRow}>
+                          <Text style={styles.mobileMinText}>Min: {formatInr(rate.nationalMinRate!)}</Text>
+                          <Text style={styles.mobileDividerDot}>•</Text>
+                          <Text style={styles.mobileMaxText}>Max: {formatInr(rate.nationalMaxRate!)}</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <Text style={styles.mobileDashText}>-</Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+        </View>
       ) : (
-        <>
+        /* 💻 DESKTOP / PC VIEW (Compact High-Contrast Table Grid) */
+        <View style={styles.tableContainerPc}>
           {/* Table Header */}
           <View style={[styles.columnHeaderRow, { borderBottomColor: colors.isDark ? 'rgba(255, 255, 255, 0.08)' : '#cbd5e1' }]}>
             <Text style={[styles.columnHeader, styles.cropColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('tabCrops', 'YOUR CROP')}</Text>
@@ -999,93 +1117,81 @@ export function MarketRatesCard() {
             <Text style={[styles.columnHeader, styles.shareColumn, { color: colors.isDark ? '#cbd5e1' : '#0f172a' }]}>{t('shareRates', 'SHARE')}</Text>
           </View>
 
-          {/* Subcategory Rates List */}
-          {subcategoryRates.length === 0 ? (
-            <Text style={[styles.emptyText, { textAlign: 'center', marginVertical: 8, color: colors.isDark ? '#94a3b8' : '#334155' }]}>
-              No active crops to show live prices right now.
-            </Text>
-          ) : (
-            subcategoryRates.map((rate) => {
-              const hasLocal = rate.localAvgRate != null && rate.localAvgRate > 0;
-              const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
+          {/* Table Data Rows */}
+          {subcategoryRates.map((rate) => {
+            const hasLocal = rate.localAvgRate != null && rate.localAvgRate > 0;
+            const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
 
-              return (
-                <View key={rate.displayTitle} style={[styles.row, { borderTopColor: colors.isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }]}>
-                  {/* 1. Crop Name (Clickable to open Multi-Mandi State-wise comparison) */}
-                  <TouchableOpacity
-                    style={styles.cropColumn}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setSelectedMultiMandiCrop(rate.displayTitle);
-                      setShowMultiMandiModal(true);
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-                      <Text style={[styles.cropNameClickable, { color: colors.isDark ? '#38bdf8' : '#1d4ed8' }]} numberOfLines={1}>
-                        {rate.displayTitle}
-                      </Text>
-                      <Ionicons name="stats-chart" size={11} color={colors.isDark ? '#38bdf8' : '#2563eb'} />
+            return (
+              <View key={rate.displayTitle} style={[styles.row, { borderTopColor: colors.isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }]}>
+                {/* 1. Crop Name */}
+                <TouchableOpacity
+                  style={styles.cropColumn}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedMultiMandiCrop(rate.displayTitle);
+                    setShowMultiMandiModal(true);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Text style={[styles.cropNameClickable, { color: colors.isDark ? '#38bdf8' : '#1d4ed8' }]} numberOfLines={1}>
+                      {rate.displayTitle}
+                    </Text>
+                    <Ionicons name="stats-chart" size={11} color={colors.isDark ? '#38bdf8' : '#2563eb'} />
+                  </View>
+                  <Text style={[styles.cropUnitSub, { color: colors.isDark ? '#94a3b8' : '#64748b' }]}>Per {rate.unit}</Text>
+                </TouchableOpacity>
+
+                {/* 2. Local Mandi Box */}
+                <View style={styles.rateColumn}>
+                  {hasLocal ? (
+                    <View style={styles.rateDetailBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
+                        <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#475569' }]}>Avg:</Text>
+                        <Text style={[styles.rateValueAvg, { color: colors.isDark ? '#4ade80' : '#15803d' }]}>{formatInr(rate.localAvgRate!)}</Text>
+                      </View>
+                      <View style={styles.minMaxRow}>
+                        <Text style={styles.minText}>Min: {formatInr(rate.localMinRate!)}</Text>
+                        <Text style={{ fontSize: 9, color: '#94a3b8' }}>·</Text>
+                        <Text style={styles.maxText}>Max: {formatInr(rate.localMaxRate!)}</Text>
+                      </View>
                     </View>
-                    <Text style={[styles.cropUnitSub, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Per {rate.unit}</Text>
-                  </TouchableOpacity>
-
-                  {/* 2. Local (State) Rate Box */}
-                  <View style={styles.rateColumn}>
-                    {hasLocal ? (
-                      <View style={styles.rateDetailBox}>
-                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
-                          <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Avg: </Text>
-                          <Text style={[styles.rateValueAvg, { color: colors.isDark ? colors.primary : '#15803d' }]}>{formatInr(rate.localAvgRate!)}</Text>
-                        </View>
-                        <View style={styles.minMaxRow}>
-                          <Text style={styles.minText}>
-                            Min: <Text style={{ fontFamily: FONT.bold, color: '#15803d' }}>{formatInr(rate.localMinRate!)}</Text>
-                          </Text>
-                          <Text style={styles.maxText}>
-                            Max: <Text style={{ fontFamily: FONT.bold, color: '#dc2626' }}>{formatInr(rate.localMaxRate!)}</Text>
-                          </Text>
-                        </View>
-                      </View>
-                    ) : (
-                      <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#1e293b' }]}>-</Text>
-                    )}
-                  </View>
-
-                  {/* 3. National Rate Box */}
-                  <View style={styles.rateColumn}>
-                    {hasNational ? (
-                      <View style={styles.rateDetailBox}>
-                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
-                          <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#334155' }]}>Avg: </Text>
-                          <Text style={[styles.rateValueAvg, { color: colors.isDark ? '#ffffff' : '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
-                        </View>
-                        <View style={styles.minMaxRow}>
-                          <Text style={styles.minText}>
-                            Min: <Text style={{ fontFamily: FONT.bold, color: '#15803d' }}>{formatInr(rate.nationalMinRate!)}</Text>
-                          </Text>
-                          <Text style={styles.maxText}>
-                            Max: <Text style={{ fontFamily: FONT.bold, color: '#dc2626' }}>{formatInr(rate.nationalMaxRate!)}</Text>
-                          </Text>
-                        </View>
-                      </View>
-                    ) : (
-                      <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#1e293b' }]}>-</Text>
-                    )}
-                  </View>
-
-                  {/* 4. Crop-wise Share Button */}
-                  <TouchableOpacity
-                    style={styles.shareButton}
-                    activeOpacity={0.7}
-                    onPress={() => setSelectedCropForShare(rate)}
-                  >
-                    <Ionicons name="share-social-outline" size={16} color="#16a34a" />
-                  </TouchableOpacity>
+                  ) : (
+                    <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#94a3b8' }]}>-</Text>
+                  )}
                 </View>
-              );
-            })
-          )}
-        </>
+
+                {/* 3. National Mandi Box */}
+                <View style={styles.rateColumn}>
+                  {hasNational ? (
+                    <View style={styles.rateDetailBox}>
+                      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
+                        <Text style={[styles.rateLabelPrefix, { color: colors.isDark ? '#94a3b8' : '#475569' }]}>Avg:</Text>
+                        <Text style={[styles.rateValueAvg, { color: colors.isDark ? '#38bdf8' : '#0284c7' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
+                      </View>
+                      <View style={styles.minMaxRow}>
+                        <Text style={styles.minText}>Min: {formatInr(rate.nationalMinRate!)}</Text>
+                        <Text style={{ fontSize: 9, color: '#94a3b8' }}>·</Text>
+                        <Text style={styles.maxText}>Max: {formatInr(rate.nationalMaxRate!)}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text style={[styles.dashText, { color: colors.isDark ? '#94a3b8' : '#94a3b8' }]}>-</Text>
+                  )}
+                </View>
+
+                {/* 4. Share Button */}
+                <TouchableOpacity
+                  style={styles.shareButton}
+                  activeOpacity={0.7}
+                  onPress={() => setSelectedCropForShare(rate)}
+                >
+                  <Ionicons name="share-social-outline" size={15} color="#16a34a" />
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
       )}
 
       {/* Share Options Modal (Text vs Image Card) */}
@@ -1631,6 +1737,145 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
+  },
+  headerCompact: {
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  headerActionsRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerActionsRightCompact: {
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tableContainerPc: {
+    width: '100%',
+  },
+  mobileListWrap: {
+    gap: 8,
+    marginTop: 2,
+  },
+  mobileCropCard: {
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    padding: 10,
+  },
+  mobileCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(15, 23, 42, 0.06)',
+  },
+  mobileCropName: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+  },
+  mobileUnitPill: {
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  mobileUnitPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  mobileCompareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  mobileCompareBtnText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#2563eb',
+  },
+  mobileShareBtn: {
+    padding: 4,
+  },
+  mobileRatePillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  mobileRatePill: {
+    flex: 1,
+    borderRadius: RADIUS.sm,
+    padding: 8,
+    borderWidth: 1,
+  },
+  mobileRatePillLocal: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  mobileRatePillNational: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd',
+  },
+  mobilePillHeader: {
+    marginBottom: 2,
+  },
+  mobilePillTitleLocal: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#166534',
+    letterSpacing: 0.3,
+  },
+  mobilePillTitleNat: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+    letterSpacing: 0.3,
+  },
+  mobileAvgRateLocal: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  mobileAvgRateNat: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#0284c7',
+  },
+  mobileAvgUnit: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  mobileMinMaxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  mobileMinText: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#15803d',
+  },
+  mobileDividerDot: {
+    fontSize: 8,
+    color: '#94a3b8',
+  },
+  mobileMaxText: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#dc2626',
+  },
+  mobileDashText: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginVertical: 4,
   },
   titleRow: {
     flexDirection: 'row',

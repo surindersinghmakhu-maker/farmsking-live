@@ -70,7 +70,7 @@ export const SEASON_FILTER_OPTIONS_PAGE = [
 export default function CropIntelligenceScreen() {
   const router = useRouter();
   const { language } = useLanguage();
-  const [selectedLang, setSelectedLang] = useState<LangCode>('pa');
+  const [selectedLang, setSelectedLang] = useState<LangCode>('en');
   
   // Primary operational tab (Demand vs Sowing)
   const [activeMainTab, setActiveMainTab] = useState<MainTabType>('DEMAND_PRICE');
@@ -87,6 +87,8 @@ export default function CropIntelligenceScreen() {
   useEffect(() => {
     if (language && (language === 'en' || language === 'pa' || language === 'hi')) {
       setSelectedLang(language as LangCode);
+    } else {
+      setSelectedLang('en');
     }
   }, [language]);
 

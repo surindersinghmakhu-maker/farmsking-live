@@ -806,7 +806,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
   const { data: rawDocsList = [], isLoading } = useAdminDocsList();
   const downloadDoc = useDownloadAdminDoc();
 
-  const [selectedLang, setSelectedLang] = useState<'pa' | 'en' | 'hi'>('pa');
+  const [selectedLang, setSelectedLang] = useState<'pa' | 'en' | 'hi'>('en');
   const [selectedDoc, setSelectedDoc] = useState<{ title: string; fileName: string; content: string } | null>(null);
 
   // Robust Role-Based User Guide Filtering (Supports multi-role users & all role variants)

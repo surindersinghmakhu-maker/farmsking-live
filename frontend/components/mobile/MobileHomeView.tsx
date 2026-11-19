@@ -225,9 +225,12 @@ export const MobileHomeView: React.FC<MobileHomeViewProps> = ({
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         const stored = localStorage.getItem('farmsking_user_language');
-        if (stored) {
+        const isExplicit = localStorage.getItem('farmsking_user_language_explicit');
+        if (stored && isExplicit === 'true') {
           const u = stored.toUpperCase();
           if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+        } else {
+          setLang('EN');
         }
       }
     } catch {}
@@ -237,6 +240,7 @@ export const MobileHomeView: React.FC<MobileHomeViewProps> = ({
     setLang(l);
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem('farmsking_user_language', l.toLowerCase());
+      localStorage.setItem('farmsking_user_language_explicit', 'true');
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('farmsking_language_change', { detail: l }));
     }

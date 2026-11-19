@@ -179,7 +179,7 @@ export const LabourDashboardView: React.FC = () => {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)' }}>
               <Ionicons name="eye-outline" size={12} color="#94a3b8" />
-              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#cbd5e1' }}>View Only (ਵੇਖਣ ਲਈ)</Text>
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#cbd5e1' }}>View Only</Text>
             </View>
           </View>
 
@@ -200,7 +200,7 @@ export const LabourDashboardView: React.FC = () => {
               <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#00ff87' }}>● Active</Text>
             </View>
             <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 3 }}>
-              ਜੇਕਰ ਕੋਈ ਹੋਰ ਕਿਸਾਨ ਵੀ ਤੁਹਾਨੂੰ ਕੰਮ 'ਤੇ ਰੱਖਦਾ ਹੈ, ਤਾਂ ਉਹ ਇਸ King ID ਜਾਂ ਤੁਹਾਡੇ ਮੋਬਾਈਲ ਰਾਹੀਂ ਐਂਟਰੀਆਂ ਪਾ ਸਕਦਾ ਹੈ।
+              If another farmer employs you, they can record entries using this King ID or your mobile number.
             </Text>
           </View>
 

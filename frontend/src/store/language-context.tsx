@@ -19,17 +19,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
-    // Load saved language on startup
+    // Load saved language on startup — English is default unless explicitly chosen
     const loadSavedLanguage = async () => {
       try {
         let savedLang: string | null = null;
+        let isExplicit: string | null = null;
         if (Platform.OS === 'web') {
           savedLang = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+          isExplicit = localStorage.getItem('farmsking_user_language_explicit');
         } else {
           savedLang = await SecureStore.getItemAsync(LANGUAGE_STORAGE_KEY);
+          isExplicit = await SecureStore.getItemAsync('farmsking_user_language_explicit');
         }
-        if (savedLang && VALID_LANGUAGES.has(savedLang)) {
-          setLanguageState(savedLang as Language);
+
+        // Only switch to non-English if the user has explicitly selected it
+        if (savedLang && VALID_LANGUAGES.has(savedLang.toLowerCase()) && isExplicit === 'true') {
+          setLanguageState(savedLang.toLowerCase() as Language);
         } else {
           setLanguageState('en');
         }
@@ -39,15 +44,49 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
     };
     loadSavedLanguage();
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handleStorageChange = () => {
+        try {
+          const isExplicit = localStorage.getItem('farmsking_user_language_explicit');
+          const l = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+          if (l && VALID_LANGUAGES.has(l.toLowerCase()) && isExplicit === 'true') {
+            setLanguageState(l.toLowerCase() as Language);
+          } else {
+            setLanguageState('en');
+          }
+        } catch {}
+      };
+      const handleCustomLang = (e: any) => {
+        const raw = e?.detail || localStorage.getItem(LANGUAGE_STORAGE_KEY);
+        if (raw) {
+          const lower = String(raw).toLowerCase();
+          if (VALID_LANGUAGES.has(lower)) {
+            setLanguageState(lower as Language);
+          }
+        }
+      };
+
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('farmsking_language_change', handleCustomLang);
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('farmsking_language_change', handleCustomLang);
+      };
+    }
   }, []);
 
   const setLanguage = async (newLang: Language) => {
     setLanguageState(newLang);
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
         localStorage.setItem(LANGUAGE_STORAGE_KEY, newLang);
+        localStorage.setItem('farmsking_user_language_explicit', 'true');
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('farmsking_language_change', { detail: newLang.toUpperCase() }));
       } else {
         await SecureStore.setItemAsync(LANGUAGE_STORAGE_KEY, newLang);
+        await SecureStore.setItemAsync('farmsking_user_language_explicit', 'true');
       }
     } catch (err) {
       console.warn('Failed to save language preference:', err);

@@ -27,25 +27,25 @@ const FARMSKING_LOGO = require('../assets/images/farmsking_logo_transparent_bg.p
 const FARMSKING_ICON = require('../assets/images/farmsking_logo_icon.png');
 
 const DEFAULT_SCHEDULE: DoseItem[] = [
-  { srNo: 1, product: 'Jaggery (Gud) / गुड़', quantity: '3 kg' },
-  { srNo: 2, product: 'Fulvic Acid / फुलविक एसिड', quantity: '500 grams' },
-  { srNo: 3, product: 'DAP Fertilizer / डी.ए.पी. खाद', quantity: '10 kg' },
-  { srNo: 4, product: 'MOP / एम.ਓ.ਪੀ. ਪੋਟਾਸ਼ (Potash)', quantity: '15 kg' },
-  { srNo: 5, product: 'Urea* (Apply where growth is less) / यूरिया*', quantity: '5 kg' },
-  { srNo: 6, product: 'Mustard Cake / सरसों खली', quantity: '10 kg' },
-  { srNo: 7, product: 'Neem Cake / नीम खली', quantity: '5 kg' },
-  { srNo: 8, product: 'Sulphur (80% WDG) / सल्फर', quantity: '2 kg' },
-  { srNo: 9, product: 'Magnesium Sulphate / मैग्नीशियम सल्फेट', quantity: '2 kg' },
-  { srNo: 10, product: 'Roko Fungicide / रोको फफूंदनाशक', quantity: '250 grams' },
-  { srNo: 11, product: 'Humic Acid (98%) / ह्यूमिक एसिड', quantity: '2 kg' },
-  { srNo: 12, product: 'Boron 20% / बोरोन 20%', quantity: '500 grams' },
-  { srNo: 13, product: 'Biovita / बायोविटा', quantity: '500 grams' },
-  { srNo: 14, product: 'Amino Acid (Liquid 20%/50%) / अमीनो एसिड', quantity: '500 ml' },
-  { srNo: 15, product: 'Chelated Iron (Fe 12%) / चिलेटेड आयरन', quantity: '250 grams' },
-  { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%) / चिलेटेड जिंक', quantity: '500 grams' },
-  { srNo: 17, product: 'Chelated Calcium (10–12%) / चिलेटेड कैल्शियम', quantity: '500 grams' },
-  { srNo: 18, product: 'Sai power plus / Multiplex Kranti / साईं पावर प्लस - क्रांति', quantity: '500 ml' },
-  { srNo: 19, product: 'Chelated Micronutrient / चिलेटेड माइक्रोन्यूट्रिएंट', quantity: '500 grams' },
+  { srNo: 1, product: 'Jaggery (Gud)', quantity: '3 kg' },
+  { srNo: 2, product: 'Fulvic Acid', quantity: '500 grams' },
+  { srNo: 3, product: 'DAP Fertilizer', quantity: '10 kg' },
+  { srNo: 4, product: 'MOP Potash (Potassium Chloride)', quantity: '15 kg' },
+  { srNo: 5, product: 'Urea* (Apply where growth is less)', quantity: '5 kg' },
+  { srNo: 6, product: 'Mustard Cake', quantity: '10 kg' },
+  { srNo: 7, product: 'Neem Cake', quantity: '5 kg' },
+  { srNo: 8, product: 'Sulphur (80% WDG)', quantity: '2 kg' },
+  { srNo: 9, product: 'Magnesium Sulphate', quantity: '2 kg' },
+  { srNo: 10, product: 'Roko Fungicide', quantity: '250 grams' },
+  { srNo: 11, product: 'Humic Acid (98%)', quantity: '2 kg' },
+  { srNo: 12, product: 'Boron 20%', quantity: '500 grams' },
+  { srNo: 13, product: 'Biovita', quantity: '500 grams' },
+  { srNo: 14, product: 'Amino Acid (Liquid 20%/50%)', quantity: '500 ml' },
+  { srNo: 15, product: 'Chelated Iron (Fe 12%)', quantity: '250 grams' },
+  { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 grams' },
+  { srNo: 17, product: 'Chelated Calcium (10–12%)', quantity: '500 grams' },
+  { srNo: 18, product: 'Sai Power Plus / Multiplex Kranti', quantity: '500 ml' },
+  { srNo: 19, product: 'Chelated Micronutrient', quantity: '500 grams' },
   { srNo: 20, product: '', quantity: '' },
   { srNo: 21, product: '', quantity: '' },
 ];
@@ -135,10 +135,10 @@ export default function DosePage() {
             <View style={styles.metaRow}>
               {/* Farmer Name */}
               <View style={[styles.metaCell, { flex: 1.4 }]}>
-                <Text style={styles.metaLabel}>FARMER NAME / किसान</Text>
+                <Text style={styles.metaLabel}>FARMER NAME</Text>
                 <TextInput
                   style={styles.metaInput}
-                  placeholder="Enter Name / ਨਾਮ ਦਰਜ ਕਰੋ"
+                  placeholder="Enter Farmer Name"
                   placeholderTextColor="#94A3B8"
                   value={farmerName}
                   onChangeText={setFarmerName}
@@ -147,7 +147,7 @@ export default function DosePage() {
 
               {/* Area */}
               <View style={[styles.metaCell, { flex: 1, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
-                <Text style={styles.metaLabel}>AREA / क्षेत्रफल</Text>
+                <Text style={styles.metaLabel}>AREA</Text>
                 <TextInput
                   style={styles.metaInput}
                   placeholder="1 Acre"
@@ -159,7 +159,7 @@ export default function DosePage() {
 
               {/* Plants */}
               <View style={[styles.metaCell, { flex: 1, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
-                <Text style={styles.metaLabel}>PLANTS / पौधे</Text>
+                <Text style={styles.metaLabel}>PLANTS</Text>
                 <TextInput
                   style={styles.metaInput}
                   placeholder="10,000"
@@ -176,8 +176,8 @@ export default function DosePage() {
             {/* Table Header Row */}
             <View style={styles.gridHeaderRow}>
               <Text style={[styles.gridTh, { flex: 0.6, textAlign: 'center' }]}>SR.</Text>
-              <Text style={[styles.gridTh, { flex: 3.4, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME / उत्पाद</Text>
-              <Text style={[styles.gridTh, { flex: 1.8, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY (grams) / मात्रा (ग्राम)</Text>
+              <Text style={[styles.gridTh, { flex: 3.4, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME</Text>
+              <Text style={[styles.gridTh, { flex: 1.8, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY (grams)</Text>
             </View>
 
             {/* Table Data Rows */}
@@ -198,7 +198,7 @@ export default function DosePage() {
                     style={styles.productInputText}
                     value={item.product}
                     onChangeText={(val) => updateItemProduct(index, val)}
-                    placeholder="Enter Product / उत्पाद नाम"
+                    placeholder="Enter Product Name"
                     placeholderTextColor="#A1A1AA"
                     multiline={true}
                     scrollEnabled={false}
@@ -237,7 +237,7 @@ export default function DosePage() {
         {/* Download JPG Report Button */}
         <TouchableOpacity style={styles.jpgBtn} onPress={handleDownloadJPG} activeOpacity={0.85}>
           <Ionicons name="image-outline" size={22} color="#FFF" />
-          <Text style={styles.jpgBtnText}>🖼️ DOWNLOAD REPORT JPG / ਡਾਊਨਲੋਡ ਕਰੋ</Text>
+          <Text style={styles.jpgBtnText}>🖼️ DOWNLOAD REPORT (JPG)</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

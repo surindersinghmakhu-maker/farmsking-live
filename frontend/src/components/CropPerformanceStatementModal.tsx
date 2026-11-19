@@ -21,6 +21,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { formatInr } from '@/src/utils/formatInr';
+import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 
 const tap = () => {
@@ -54,6 +55,8 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
   const shotRef = useRef<any>(null);
   const { user } = useAuth();
   const { colors } = useExecutiveTheme();
+  const { language } = useLanguage();
+  const isPa = language === 'pa';
   const { data: settings } = useAppSettings();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -165,15 +168,15 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
 
               <div style="margin-bottom: 14px;">
                 <div class="stat-row stat-expense">
-                  <span>Total Crop Expenses (ਖਰਚਾ):</span>
+                  <span>Total Crop Expenses${isPa ? ' (ਖਰਚਾ)' : ''}:</span>
                   <span>₹${data.totalExpenses.toLocaleString('en-IN')}</span>
                 </div>
                 <div class="stat-row stat-sales">
-                  <span>Total Harvest Sales (ਵਿਕਰੀ):</span>
+                  <span>Total Harvest Sales${isPa ? ' (ਵਿਕਰੀ)' : ''}:</span>
                   <span>₹${data.totalSales.toLocaleString('en-IN')}</span>
                 </div>
                 <div class="stat-row stat-net">
-                  <span>Net Profit / Margin (ਸ਼ੁੱਧ ਮੁਨਾਫਾ):</span>
+                  <span>Net Profit / Margin${isPa ? ' (ਸ਼ੁੱਧ ਮੁਨਾਫਾ)' : ''}:</span>
                   <span>₹${data.netProfit.toLocaleString('en-IN')}</span>
                 </div>
               </div>
@@ -266,17 +269,17 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
               {/* Performance Breakdown Table */}
               <View style={styles.statsContainer}>
                 <View style={[styles.statRow, { backgroundColor: '#ffe4e6' }]}>
-                  <Text style={[styles.statLabel, { color: '#9f1239' }]}>Total Crop Expenses (ਖਰਚਾ):</Text>
+                  <Text style={[styles.statLabel, { color: '#9f1239' }]}>Total Crop Expenses{isPa ? ' (ਖਰਚਾ)' : ''}:</Text>
                   <Text style={[styles.statValue, { color: '#9f1239' }]}>- {formatInr(data.totalExpenses)}</Text>
                 </View>
 
                 <View style={[styles.statRow, { backgroundColor: '#dcfce7' }]}>
-                  <Text style={[styles.statLabel, { color: '#166534' }]}>Total Harvest Sales (ਵਿਕਰੀ):</Text>
+                  <Text style={[styles.statLabel, { color: '#166534' }]}>Total Harvest Sales{isPa ? ' (ਵਿਕਰੀ)' : ''}:</Text>
                   <Text style={[styles.statValue, { color: '#166534' }]}>+ {formatInr(data.totalSales)}</Text>
                 </View>
 
                 <View style={[styles.statRow, styles.statRowProfit, { backgroundColor: isProfit ? '#dcfce7' : '#ffe4e6', borderColor: isProfit ? '#16a34a' : '#e11d48' }]}>
-                  <Text style={[styles.statLabelMain, { color: isProfit ? '#15803d' : '#be123c' }]}>Net Profit / Margin (ਸ਼ੁੱਧ ਮੁਨਾਫਾ):</Text>
+                  <Text style={[styles.statLabelMain, { color: isProfit ? '#15803d' : '#be123c' }]}>Net Profit / Margin{isPa ? ' (ਸ਼ੁੱਧ ਮੁਨਾਫਾ)' : ''}:</Text>
                   <Text style={[styles.statValueMain, { color: isProfit ? '#15803d' : '#be123c' }]}>{formatInr(data.netProfit)}</Text>
                 </View>
               </View>

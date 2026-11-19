@@ -808,7 +808,7 @@ export const CROP_INTELLIGENCE_DATA: CropIntelligenceItem[] = [
 
 export const KisanCropIntelligenceCard: React.FC = () => {
   const { language } = useLanguage();
-  const [selectedLang, setSelectedLang] = useState<LangCode>('pa');
+  const [selectedLang, setSelectedLang] = useState<LangCode>('en');
   const [activeMainTab, setActiveMainTab] = useState<MainTabType>('DEMAND_PRICE');
   const [selectedSeasonFilter, setSelectedSeasonFilter] = useState<string>('ALL_SEASONS');
   const [selectedCropFilter, setSelectedCropFilter] = useState<string>('ALL');
@@ -818,6 +818,8 @@ export const KisanCropIntelligenceCard: React.FC = () => {
   useEffect(() => {
     if (language && (language === 'en' || language === 'pa' || language === 'hi')) {
       setSelectedLang(language as LangCode);
+    } else {
+      setSelectedLang('en');
     }
   }, [language]);
 

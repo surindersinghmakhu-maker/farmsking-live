@@ -1237,24 +1237,33 @@ export default function PublicLandingPage() {
         setThemeMode(savedTheme);
       }
       const savedLang = localStorage.getItem('farmsking_user_language');
-      if (savedLang) {
+      const isExplicit = localStorage.getItem('farmsking_user_language_explicit');
+      if (savedLang && isExplicit === 'true') {
         const u = savedLang.toUpperCase();
         if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+      } else {
+        setLang('EN');
       }
       const handleStorage = () => {
         const theme = localStorage.getItem('farmsking_theme_mode');
         if (theme === 'night' || theme === 'day') setThemeMode(theme);
         const l = localStorage.getItem('farmsking_user_language');
-        if (l) {
+        const exp = localStorage.getItem('farmsking_user_language_explicit');
+        if (l && exp === 'true') {
           const u = l.toUpperCase();
           if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+        } else {
+          setLang('EN');
         }
       };
       const handleCustomLang = (e: any) => {
         const l = e?.detail || localStorage.getItem('farmsking_user_language');
-        if (l) {
+        const exp = localStorage.getItem('farmsking_user_language_explicit');
+        if (l && exp === 'true') {
           const u = String(l).toUpperCase();
           if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+        } else {
+          setLang('EN');
         }
       };
       window.addEventListener('storage', handleStorage);

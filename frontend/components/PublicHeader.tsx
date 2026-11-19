@@ -153,17 +153,23 @@ export default function PublicHeader({
         setInternalTheme(savedTheme);
       }
       const savedLang = localStorage.getItem('farmsking_user_language');
-      if (savedLang) {
+      const isExplicit = localStorage.getItem('farmsking_user_language_explicit');
+      if (savedLang && isExplicit === 'true') {
         const u = savedLang.toUpperCase();
         if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+      } else {
+        setLang('EN');
       }
       const handleStorage = () => {
         const t = localStorage.getItem('farmsking_theme_mode');
         if (t === 'night' || t === 'day') setInternalTheme(t);
         const l = localStorage.getItem('farmsking_user_language');
-        if (l) {
+        const exp = localStorage.getItem('farmsking_user_language_explicit');
+        if (l && exp === 'true') {
           const u = l.toUpperCase();
           if (u === 'EN' || u === 'PA' || u === 'HI') setLang(u as any);
+        } else {
+          setLang('EN');
         }
       };
       window.addEventListener('storage', handleStorage);
@@ -184,6 +190,7 @@ export default function PublicHeader({
     setLang(l);
     if (typeof window !== 'undefined') {
       localStorage.setItem('farmsking_user_language', l.toLowerCase());
+      localStorage.setItem('farmsking_user_language_explicit', 'true');
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('farmsking_language_change', { detail: l }));
     }

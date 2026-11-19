@@ -69,13 +69,25 @@ try {
     if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
   });
 
+  const safeCopy = (src, dst) => {
+    try {
+      fs.copyFileSync(src, dst);
+    } catch (e) {
+      try {
+        if (!fs.existsSync(dst)) {
+          fs.writeFileSync(dst, fs.readFileSync(src));
+        }
+      } catch {}
+    }
+  };
+
   if (fs.existsSync(fontsSourceDir)) {
     const fontFiles = fs.readdirSync(fontsSourceDir).filter(f => f.endsWith('.ttf'));
     fontFiles.forEach(file => {
       const srcFile = path.join(fontsSourceDir, file);
-      fs.copyFileSync(srcFile, path.join(distFontsDir, file));
-      fs.copyFileSync(srcFile, path.join(distAssetsFontsDir, file));
-      fs.copyFileSync(srcFile, path.join(distExpoFontsDir, file));
+      safeCopy(srcFile, path.join(distFontsDir, file));
+      safeCopy(srcFile, path.join(distAssetsFontsDir, file));
+      safeCopy(srcFile, path.join(distExpoFontsDir, file));
     });
     console.log(`✅ Copied ${fontFiles.length} vector icon fonts to dist/fonts, dist/assets/fonts, and Expo vendor path.`);
   }
@@ -86,8 +98,8 @@ try {
       const match = f.match(/^([a-zA-Z0-9_\-]+)\.[a-f0-9]{32}\.ttf$/i);
       if (match) {
         const baseName = `${match[1]}.ttf`;
-        fs.copyFileSync(path.join(distExpoFontsDir, f), path.join(distFontsDir, baseName));
-        fs.copyFileSync(path.join(distExpoFontsDir, f), path.join(distAssetsFontsDir, baseName));
+        safeCopy(path.join(distExpoFontsDir, f), path.join(distFontsDir, baseName));
+        safeCopy(path.join(distExpoFontsDir, f), path.join(distAssetsFontsDir, baseName));
       }
     });
   }

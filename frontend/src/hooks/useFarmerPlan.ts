@@ -283,7 +283,7 @@ export function useAdminDocsList() {
 
 export function useDownloadAdminDoc() {
   return useMutation({
-    mutationFn: ({ docKey, lang }: { docKey: string; lang?: string }) => downloadAdminDocContent(docKey, lang || 'pa'),
+    mutationFn: ({ docKey, lang }: { docKey: string; lang?: string }) => downloadAdminDocContent(docKey, lang || 'en'),
   });
 }
 

@@ -21,7 +21,7 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
   onExploreEngine,
 }) => {
   const { language } = useLanguage();
-  const [lang, setLang] = useState<'pa' | 'hi' | 'en'>((language === 'hi' || language === 'pa' ? language : 'en'));
+  const lang = language === 'hi' || language === 'pa' ? language : 'en';
 
   const sharePromoWhatsApp = () => {
     tap();

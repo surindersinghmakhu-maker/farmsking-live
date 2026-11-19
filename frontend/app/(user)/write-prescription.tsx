@@ -70,7 +70,7 @@ export default function WritePrescriptionScreen() {
 
         {/* Prescription Form */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>1. Diagnosis (ਬਿਮਾਰੀ ਦੀ ਪਛਾਣ) *</Text>
+          <Text style={styles.sectionLabel}>1. Diagnosis *</Text>
           <TextInput
             style={styles.textInput}
             placeholder="e.g. Nutrient deficiency or fungal infection..."
@@ -115,7 +115,7 @@ export default function WritePrescriptionScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>3. Usage Instructions (ਵਰਤਣ ਦਾ ਤਰੀਕਾ) *</Text>
+          <Text style={styles.sectionLabel}>3. Usage Instructions *</Text>
           <TextInput
             style={[styles.textInput, { minHeight: 100 }]}
             placeholder="e.g. Mix 5ml in 1 litre water and spray on leaves twice a week."

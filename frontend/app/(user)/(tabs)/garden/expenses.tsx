@@ -223,7 +223,7 @@ export default function GardenExpensesScreen() {
         </TouchableOpacity>
         <View>
           <Text style={styles.headerTitle}>Garden Accounts</Text>
-          <Text style={styles.headerSub}>ਖਰਚੇ • ਫ਼ਸਲ • ਪੌਦੇ</Text>
+          <Text style={styles.headerSub}>Expenses • Harvest • Plants</Text>
         </View>
         {activeTab === 'EXPENSES' && (
           <TouchableOpacity style={styles.addHeaderBtn} onPress={() => { tap(); setShowAddModal(true); }}>

@@ -54,10 +54,10 @@ export const LiveWebsiteWebView: React.FC<LiveWebsiteWebViewProps> = ({
           <View style={styles.errorContainer}>
             <Text style={styles.errorTitle}>FarmsKing Live</Text>
             <Text style={styles.errorMessage}>
-              ਇੰਟਰਨੈੱਟ ਕਨੈਕਸ਼ਨ ਦੀ ਸਮੱਸਿਆ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਇੰਟਰਨੈੱਟ ਚੈੱਕ ਕਰੋ।
+              Network connection error. Please check your internet connection.
             </Text>
             <TouchableOpacity style={styles.retryButton} onPress={handleRetry} activeOpacity={0.8}>
-              <Text style={styles.retryButtonText}>ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ (Retry)</Text>
+              <Text style={styles.retryButtonText}>Retry Connection</Text>
             </TouchableOpacity>
           </View>
         ) : Platform.OS === 'web' ? (
@@ -89,7 +89,7 @@ export const LiveWebsiteWebView: React.FC<LiveWebsiteWebViewProps> = ({
             renderLoading={() => (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#15803d" />
-                <Text style={styles.loadingText}>FarmsKing Live ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...</Text>
+                <Text style={styles.loadingText}>Loading FarmsKing Live...</Text>
               </View>
             )}
           />

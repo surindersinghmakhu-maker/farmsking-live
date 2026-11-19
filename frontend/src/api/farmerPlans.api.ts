@@ -273,7 +273,7 @@ export async function getAdminDocsList(): Promise<AdminDocItem[]> {
   return data;
 }
 
-export async function downloadAdminDocContent(docKey: string, lang: string = 'pa'): Promise<{ title: string; fileName: string; content: string; htmlPdfContent?: string }> {
+export async function downloadAdminDocContent(docKey: string, lang: string = 'en'): Promise<{ title: string; fileName: string; content: string; htmlPdfContent?: string }> {
   const { data } = await apiClient.get<{ title: string; fileName: string; content: string; htmlPdfContent?: string }>(`/farmer-plans/admin/docs/${docKey}/download`, { params: { lang } });
   return data;
 }
@@ -319,56 +319,56 @@ export const PLAN_DISPLAY_MAP: Record<string, { title: string; badge: string; ic
     badge: '🟢 Free Pass',
     icon: 'ticket-outline',
     color: '#10b981',
-    desc: 'ਮੁਫ਼ਤ ਐਂਟਰੀ (ਮੰਡੀ ਰੇਟ, ਬੁਨਿਆਦੀ ਮੌਸਮ ਜਾਣਕਾਰੀ, 30 ਫ੍ਰੀ ਬਿਲ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ)',
+    desc: 'Free Entry (Mandi rates, basic weather updates, 30 free bill downloads/shares)',
   },
   PRO: {
     title: 'Kisan Card',
     badge: '📝 Kisan Card',
     icon: 'card-outline',
     color: '#0284c7',
-    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+    desc: 'Crop Digital Account (All crops list, active limit max 5 crops)',
   },
   BASIC: {
     title: 'Kisan Card',
     badge: '📝 Kisan Card',
     icon: 'card-outline',
     color: '#0284c7',
-    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+    desc: 'Crop Digital Account (All crops list, active limit max 5 crops)',
   },
   SMART: {
     title: 'Boss Card',
     badge: '👷 Boss Card',
     icon: 'briefcase-outline',
     color: '#d97706',
-    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+    desc: 'Crops + Labour Management (Unlimited crops + labour records and login)',
   },
   SILVER: {
     title: 'Boss Card',
     badge: '👷 Boss Card',
     icon: 'briefcase-outline',
     color: '#d97706',
-    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+    desc: 'Crops + Labour Management (Unlimited crops + labour records and login)',
   },
   SUPER: {
     title: 'King Card',
     badge: '👑 King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'Super Farmer Estate (All crops + labour records + 5 team members access)',
   },
   VIP: {
     title: 'King Card',
     badge: '👑 King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'Super Farmer Estate (All crops + labour records + 5 team members access)',
   },
   ROYAL: {
     title: 'King Card',
     badge: '👑 King Card',
     icon: 'ribbon-outline',
     color: '#6d28d9',
-    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+    desc: 'Super Farmer Estate (All crops + labour records + 5 team members access)',
   },
 };
 
@@ -384,12 +384,15 @@ export type CardFeatureKey =
 export function checkCardPermission(
   plan: string | undefined | null,
   feature: CardFeatureKey,
-  options?: { billCount?: number }
+  options?: { billCount?: number; lang?: string }
 ): { allowed: boolean; requiredCard: 'Kisan Card' | 'Boss Card' | 'King Card'; message: string } {
   const currentPlan = (plan || 'FREE').toUpperCase();
   const isPaid = currentPlan !== 'FREE';
   const isBossOrHigher = ['SMART', 'SILVER', 'SUPER', 'VIP', 'ROYAL', 'GOLD', 'PLATINUM', 'DIAMOND'].includes(currentPlan);
   const isKingOrHigher = ['SUPER', 'VIP', 'ROYAL', 'PLATINUM', 'DIAMOND'].includes(currentPlan);
+
+  const activeLang = options?.lang || (typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('farmsking_user_language') : 'en') || 'en';
+  const isPa = activeLang === 'pa';
 
   switch (feature) {
     case 'OTHER_STATES_MANDI_RATES':
@@ -397,7 +400,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Kisan Card',
-          message: 'ਦੂਜੇ ਰਾਜਾਂ (ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, MP, ਦਿੱਲੀ) ਦੇ ਮੰਡੀ ਰੇਟ ਵੇਖਣ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+          message: isPa
+            ? 'ਦੂਜੇ ਰਾਜਾਂ (ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, MP, ਦਿੱਲੀ) ਦੇ ਮੰਡੀ ਰੇਟ ਵੇਖਣ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!'
+            : 'Unlock Kisan Card to view live Mandi rates of other states (Haryana, Rajasthan, MP, Delhi)!',
         };
       }
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };
@@ -412,7 +417,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Kisan Card',
-          message: 'Free Pass ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+          message: isPa
+            ? 'Free Pass ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!'
+            : 'Free Pass includes up to 30 bill downloads/shares. Unlock Kisan Card for unlimited bills!',
         };
       }
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };
@@ -422,7 +429,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਮੈਕਸੀਮਮ 5 ਫਸਲਾਂ (Kisan Card) ਤੋਂ ਵੱਧ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ ਜੋੜਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: isPa
+            ? 'ਮੈਕਸੀਮਮ 5 ਫਸਲਾਂ (Kisan Card) ਤੋਂ ਵੱਧ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ ਜੋੜਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!'
+            : 'Upgrade to Boss Card to manage unlimited active crops beyond the 5-crop limit!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -432,7 +441,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਫੋਟੋ ਅਪਲੋਡ (ਬੀਮਾਰ ਫਸਲ, ਬਿਲ ਸਕੈਨ) ਅਤੇ AI ਜਾਂਚ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: isPa
+            ? 'ਫੋਟੋ ਅਪਲੋਡ (ਬੀਮਾਰ ਫਸਲ, ਬਿਲ ਸਕੈਨ) ਅਤੇ AI ਜਾਂਚ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!'
+            : 'Upgrade to Boss Card for crop disease photo uploads, bill scans, and AI diagnostics!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -442,7 +453,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Boss Card',
-          message: 'ਮਜ਼ਦੂਰ/ਲੇਬਰ ਹਿਸਾਬ, ਹਾਜ਼ਰੀ ਅਤੇ Labour Login ਚਾਲੂ ਕਰਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: isPa
+            ? 'ਮਜ਼ਦੂਰ/ਲੇਬਰ ਹਿਸਾਬ, ਹਾਜ਼ਰੀ ਅਤੇ Labour Login ਚਾਲੂ ਕਰਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!'
+            : 'Upgrade to Boss Card to enable labour records, attendance logs, and Labour Login!',
         };
       }
       return { allowed: true, requiredCard: 'Boss Card', message: '' };
@@ -452,7 +465,9 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'King Card',
-          message: 'ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ/ਸੁਪਰਵਾਈਜ਼ਰ ਜੋੜਨ ਲਈ King Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+          message: isPa
+            ? 'ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ/ਸੁਪਰਵਾਈਜ਼ਰ ਜੋੜਨ ਲਈ King Card ਅਪਗ੍ਰੇਡ ਕਰੋ!'
+            : 'Upgrade to King Card to add 5 team members or supervisors to your agricultural estate!',
         };
       }
       return { allowed: true, requiredCard: 'King Card', message: '' };

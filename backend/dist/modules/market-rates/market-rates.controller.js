@@ -24,6 +24,9 @@ let MarketRatesController = class MarketRatesController {
     getMyCropRates(user) {
         return this.marketRatesService.getMyCropRates(user);
     }
+    getWidgetSummary(cropName, state, unit) {
+        return this.marketRatesService.getCropWidgetSummary(cropName || 'Marigold', state || 'Punjab', unit || 'KG');
+    }
 };
 exports.MarketRatesController = MarketRatesController;
 __decorate([
@@ -33,6 +36,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], MarketRatesController.prototype, "getMyCropRates", null);
+__decorate([
+    (0, common_1.Get)('widget-summary'),
+    __param(0, (0, common_1.Query)('crop')),
+    __param(1, (0, common_1.Query)('state')),
+    __param(2, (0, common_1.Query)('unit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", void 0)
+], MarketRatesController.prototype, "getWidgetSummary", null);
 exports.MarketRatesController = MarketRatesController = __decorate([
     (0, common_1.UseGuards)(optional_jwt_auth_guard_1.OptionalJwtAuthGuard),
     (0, common_1.Controller)('market-rates'),

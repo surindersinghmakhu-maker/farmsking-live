@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getMyCropRates } from '../api/marketRates.api';
+import { getMyCropRates, getWidgetSummary } from '../api/marketRates.api';
 import { getChatSocket } from '../lib/socket';
 
 export function useMyCropRates() {
@@ -36,6 +36,16 @@ export function useMyCropRates() {
     refetchInterval: 15_000, // Refresh automatically every 15 seconds
     refetchOnWindowFocus: true,
     retry: 1,
+  });
+}
+
+export function useWidgetSummary(crop = 'Marigold', state = 'Punjab', unit = 'KG') {
+  return useQuery({
+    queryKey: ['market-rates', 'widget-summary', crop, state, unit],
+    queryFn: () => getWidgetSummary(crop, state, unit),
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 }
 

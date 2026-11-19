@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleHeader } from './RoleHeader';
 import { MarketRatesCard } from '@/src/components/MarketRatesCard';
+import { AndroidHomeScreenWidgetPreview } from '@/src/components/AndroidHomeScreenWidgetPreview';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
@@ -408,6 +409,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />
+
+        {/* 📱 Android Home Screen Widget Preview & Telemetry Card */}
+        <AndroidHomeScreenWidgetPreview />
 
         {/* 🚜 Essential Farm Tools & Agronomy Hub Section (Compact) */}
         <View style={[styles.toolsSectionWrapper, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>

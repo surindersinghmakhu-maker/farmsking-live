@@ -2416,8 +2416,8 @@ export class AuthService {
       }
     }
 
-    // If external delivery (WhatsApp & SMS) did not deliver, or if dev/owner mode, ALWAYS provide devOtp so user is NEVER blocked!
-    const allowDevOtp = isTestEnv || isDevEnv || (!waSent && !smsSent);
+    // In production, do not return devOtp to client unless in dev/test environment or test mobile
+    const allowDevOtp = isTestEnv || (process.env.NODE_ENV !== 'production' && (isDevEnv || (!waSent && !smsSent))) || isOwnerOrTestMobile;
 
     return {
       success: true,

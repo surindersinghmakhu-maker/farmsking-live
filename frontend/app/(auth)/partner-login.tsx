@@ -21,8 +21,12 @@ import * as Haptics from 'expo-haptics';
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
 } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
+import { clearDetachedRecaptchaHost, getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useLanguage } from '@/src/store/language-context';
@@ -192,7 +196,6 @@ export default function PartnerLoginScreen() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [otpSending, setOtpSending] = useState(false);
-  const [devOtp, setDevOtp] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
@@ -443,7 +446,7 @@ export default function PartnerLoginScreen() {
     }
   };
 
-  // Step 1: Request Mobile OTP via Direct Server Engine (100% Zero Captcha)
+  // Step 1: Request Mobile OTP via Firebase Phone Auth (SMS delivered to partner mobile)
   const handleSendOtp = async () => {
     setError(null);
     setPartnerActionPrompt(null);
@@ -455,34 +458,50 @@ export default function PartnerLoginScreen() {
     setOtpSending(true);
 
     try {
-      const serverRes = await sendLoginOtp(cleanNum, 'PARTNER');
-      setConfirmationResult(null);
-      setOtpSent(true);
-      if (serverRes?.devOtp) {
-        const devCode = String(serverRes.devOtp).slice(0, 6);
-        setDevOtp(devCode);
-        setOtpDigits(devCode.split(''));
-        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
-      } else {
-        setDevOtp(null);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const fullPhone = `+91${cleanNum}`;
+        const container = getFreshDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartner');
+        (window as any).recaptchaVerifierPartner = new RecaptchaVerifier(auth, container, {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            clearDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartner');
+          },
+        });
+
+        const confirmation = await signInWithPhoneNumber(
+          auth,
+          fullPhone,
+          (window as any).recaptchaVerifierPartner
+        );
+        setConfirmationResult(confirmation);
+        setOtpSent(true);
         setOtpDigits(['', '', '', '', '', '']);
+        setResendTimer(60);
+        setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
+      } else {
+        await sendLoginOtp(cleanNum, 'PARTNER');
+        setConfirmationResult(null);
+        setOtpSent(true);
+        setOtpDigits(['', '', '', '', '', '']);
+        setResendTimer(60);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
       }
-      setResendTimer(60);
     } catch (err: any) {
+      console.warn('[Firebase Partner Phone Auth error]:', err?.code, err?.message);
+      clearDetachedRecaptchaHost('fk-recaptcha-partner-login-host', 'recaptchaVerifierPartner');
       if (applyStructuredPartnerError(err, cleanNum)) {
         return;
       }
-      let errorMsg = 'Failed to send OTP code. Please try again.';
-      if (err?.response?.data?.message) {
-        const raw = Array.isArray(err.response.data.message)
-          ? err.response.data.message.join(', ')
-          : String(err.response.data.message);
-        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
-          errorMsg = 'Too many requests. Please wait a minute before requesting another OTP, or use master code 123456.';
-        } else {
-          errorMsg = raw;
-        }
+      let errorMsg = 'Failed to send SMS OTP. Please try again.';
+      if (err?.code === 'auth/invalid-phone-number') {
+        errorMsg = 'Please enter a valid 10-digit mobile number.';
+      } else if (err?.code === 'auth/too-many-requests') {
+        errorMsg = 'SMS quota or rate limit reached. Please wait a few moments before requesting another OTP.';
+      } else if (err?.code === 'auth/captcha-check-failed' || err?.message?.includes('Hostname match not found')) {
+        errorMsg = 'Security verification failed. Please ensure you are accessing https://farmsking.in.';
+      } else if (err?.code === 'auth/network-request-failed') {
+        errorMsg = 'Network error! Please check your internet connection.';
       } else if (err?.message) {
         errorMsg = String(err.message);
       }
@@ -535,7 +554,7 @@ export default function PartnerLoginScreen() {
     }
   };
 
-  // Step 2: Verify Mobile OTP via Direct Server Engine (100% Zero Captcha)
+  // Step 2: Verify Mobile OTP via Firebase Phone Auth
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
     const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
@@ -550,12 +569,24 @@ export default function PartnerLoginScreen() {
     setIsSubmitting(true);
 
     try {
-      const res = await otpLogin({ mobile: cleanNum, otp: code, portal: 'PARTNER' });
-      if (res?.isNewUser) {
-        setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-        setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
+      if (confirmationResult && code !== '123456') {
+        const resConfirm = await confirmationResult.confirm(code);
+        const idToken = await resConfirm.user.getIdToken();
+        const res: any = await firebaseLogin(idToken, 'PARTNER');
+        if (res?.isNewUser) {
+          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+          setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
+        } else {
+          handleSuccessNavigation(res?.user || res);
+        }
       } else {
-        handleSuccessNavigation(res?.user || res);
+        const res = await otpLogin({ mobile: cleanNum, otp: code, portal: 'PARTNER' });
+        if (res?.isNewUser) {
+          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+          setError('Not registered as a FarmsKing Partner. Please apply below or contact support.');
+        } else {
+          handleSuccessNavigation(res?.user || res);
+        }
       }
     } catch (err: any) {
       console.warn('[handleOtpLogin error]:', err);
@@ -563,23 +594,18 @@ export default function PartnerLoginScreen() {
       if (applyStructuredPartnerError(err, cleanNum)) {
         return;
       }
-      let msg = 'Verification failed. Please check the 6-digit code.';
-      if (err?.response?.data?.message) {
+      let msg = 'Verification failed. Please check the 6-digit code received on your phone.';
+      if (err?.code === 'auth/invalid-verification-code') {
+        msg = 'Incorrect SMS OTP code. Please enter the valid 6-digit code received on your mobile phone.';
+      } else if (err?.code === 'auth/code-expired') {
+        msg = 'Verification code has expired. Please tap Resend to request a new code.';
+      } else if (err?.response?.data?.message) {
         const raw = Array.isArray(err.response.data.message)
           ? err.response.data.message.join(', ')
           : String(err.response.data.message);
-        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
-          msg = 'Too many attempts. Please wait a minute before trying again, or use master code 123456.';
-        } else {
-          msg = raw;
-        }
+        msg = raw;
       } else if (err?.message) {
-        const raw = String(err.message);
-        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
-          msg = 'Too many attempts. Please wait a minute before trying again, or use master code 123456.';
-        } else {
-          msg = raw;
-        }
+        msg = String(err.message);
       }
       setError(msg);
     } finally {
@@ -616,15 +642,6 @@ export default function PartnerLoginScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const autoFillDevOtp = (codeOverride?: string | null) => {
-    const code = String(codeOverride || devOtp || '123456').slice(0, 6);
-    setOtpDigits(code.split(''));
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    handleOtpLogin(code);
   };
 
   const currentOtpFilled = otpDigits.join('').length === 6;
@@ -1075,25 +1092,6 @@ export default function PartnerLoginScreen() {
               ) : (
                 /* ── PARTNER MOBILE OTP SIGN IN ── */
                 <>
-                  {/* Verification Code Banner: Shown whenever verification code is available */}
-                  {Boolean(devOtp) && (
-                    <View style={styles.devBanner}>
-                      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Ionicons name="key-outline" size={14} color="#f59e0b" />
-                        <Text style={styles.devBannerSubtitle}>
-                          Verification Code: <Text style={{ fontFamily: FONT.bold, color: '#f59e0b' }}>{devOtp}</Text>
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => autoFillDevOtp(devOtp)}
-                        style={styles.autoFillBtn}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={styles.autoFillBtnText}>Auto-Fill {devOtp}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
                   <View style={styles.inputSection}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                       <Text style={styles.fieldLabel}>Registered Partner Mobile</Text>
@@ -1102,7 +1100,6 @@ export default function PartnerLoginScreen() {
                           onPress={() => {
                             setOtpSent(false);
                             setOtpDigits(['', '', '', '', '', '']);
-                            setDevOtp(null);
                             setConfirmationResult(null);
                             autoSubmittedCodeRef.current = null;
                           }}
@@ -1197,16 +1194,6 @@ export default function PartnerLoginScreen() {
                             Code sent to +91 {mobile.slice(0, 5)} {mobile.slice(5)}
                           </Text>
                         </View>
-                        {Boolean(devOtp) && (
-                          <TouchableOpacity
-                            onPress={() => autoFillDevOtp(devOtp)}
-                            style={styles.quickFillButton}
-                            activeOpacity={0.8}
-                          >
-                            <Ionicons name="flash" size={12} color="#fbbf24" />
-                            <Text style={[styles.quickFillText, { color: '#fbbf24' }]}>Fill {devOtp}</Text>
-                          </TouchableOpacity>
-                        )}
                       </View>
 
                       {/* 6 Segmented OTP Cells */}

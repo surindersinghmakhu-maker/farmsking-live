@@ -2007,7 +2007,7 @@ let AuthService = AuthService_1 = class AuthService {
                 smsSent = false;
             }
         }
-        const allowDevOtp = isTestEnv || isDevEnv || (!waSent && !smsSent);
+        const allowDevOtp = isTestEnv || (process.env.NODE_ENV !== 'production' && (isDevEnv || (!waSent && !smsSent))) || isOwnerOrTestMobile;
         return {
             success: true,
             isNewUser: !user && !existingWorker,

@@ -227,9 +227,9 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
              url('/assets/fonts/Zocial.ttf') format('truetype');
         font-display: swap;
       }
-      /* Suppress reCAPTCHA floating badge safely without blocking mobile challenges */
+      /* Allow reCAPTCHA to function safely with proper layering */
       .grecaptcha-badge {
-        visibility: hidden !important;
+        z-index: 9999999 !important;
       }
     </style>
     `;

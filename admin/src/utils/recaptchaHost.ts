@@ -3,6 +3,7 @@
  * Prevents React DOM errors such as "Failed to execute 'insertBefore' on 'Node'".
  */
 export function getFreshDetachedRecaptchaHost(hostId: string, verifierGlobalKey?: string): HTMLElement {
+  if (typeof document === 'undefined') return null as any;
   if (verifierGlobalKey && typeof window !== 'undefined' && (window as any)[verifierGlobalKey]) {
     try {
       (window as any)[verifierGlobalKey].clear();

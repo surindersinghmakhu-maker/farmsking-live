@@ -6,22 +6,18 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  Linking,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { auth } from '@/src/lib/firebase';
-import { getFreshDetachedRecaptchaHost, clearDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { apiClient } from '../api/client';
 
 interface OtpVerificationModalProps {
   visible: boolean;
   mobileNumber: string;
-  onVerifySuccess: (firebaseIdToken: string) => void;
+  onVerifySuccess: () => void;
   onClose: () => void;
 }
 
@@ -36,7 +32,7 @@ export function OtpVerificationModal({
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: any = null;
@@ -48,42 +44,28 @@ export function OtpVerificationModal({
 
   useEffect(() => {
     if (visible && mobileNumber) {
-      triggerFirebaseOtp();
+      triggerServerOtp();
     } else {
-      setConfirmationResult(null);
       setEnteredOtp('');
       setErrorText(null);
+      setServerDevOtp(null);
     }
   }, [visible, mobileNumber]);
 
-  const triggerFirebaseOtp = async () => {
+  const triggerServerOtp = async () => {
     setIsSending(true);
     setErrorText(null);
+    setServerDevOtp(null);
     try {
-      if (typeof window !== 'undefined') {
-        const hostEl = getFreshDetachedRecaptchaHost('fk-recaptcha-otp-host', 'recaptchaVerifier');
-        (window as any).recaptchaVerifier = new RecaptchaVerifier(
-          auth,
-          hostEl,
-          { size: 'invisible' }
-        );
+      const res = await apiClient.post('/auth/send-register-otp', {
+        mobile: mobileNumber,
+      });
+      if (res.data?.devOtp) {
+        setServerDevOtp(String(res.data.devOtp));
       }
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${mobileNumber}`,
-        (window as any).recaptchaVerifier
-      );
-      setConfirmationResult(confirmation);
       setTimer(30);
     } catch (err: any) {
-      clearDetachedRecaptchaHost('fk-recaptcha-otp-host', 'recaptchaVerifier');
-      let msg = 'Failed to send OTP via SMS. Please retry.';
-      if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
-        msg = 'Verification service refreshed. Please tap Resend to try again.';
-      } else if (err?.message) {
-        msg = err.message;
-      }
-      setErrorText(msg);
+      setErrorText(err?.response?.data?.message || 'Failed to send OTP code. Please retry.');
     } finally {
       setIsSending(false);
     }
@@ -94,22 +76,19 @@ export function OtpVerificationModal({
     setErrorText(null);
     const clean = enteredOtp.trim();
     if (clean.length < 4) {
-      setErrorText('Please enter a valid OTP.');
-      return;
-    }
-    
-    if (!confirmationResult) {
-      setErrorText('OTP session expired. Please request a new OTP.');
+      setErrorText('Please enter the 4-digit OTP code.');
       return;
     }
     
     setIsVerifying(true);
     try {
-      const res = await confirmationResult.confirm(clean);
-      const idToken = await res.user.getIdToken();
-      onVerifySuccess(idToken);
+      await apiClient.post('/auth/verify-register-otp', {
+        mobile: mobileNumber,
+        otp: clean,
+      });
+      onVerifySuccess();
     } catch (err: any) {
-      setErrorText(err.message || 'Invalid OTP! Please try again.');
+      setErrorText(err?.response?.data?.message || 'Invalid or expired OTP! Please try again.');
     } finally {
       setIsVerifying(false);
     }
@@ -136,13 +115,18 @@ export function OtpVerificationModal({
           {isSending ? (
             <View style={{ alignItems: 'center', marginVertical: 20 }}>
               <ActivityIndicator size="small" color="#16a34a" />
-              <Text style={{ marginTop: 10, color: '#475569', fontFamily: FONT.medium }}>Sending OTP via Firebase...</Text>
+              <Text style={{ marginTop: 10, color: '#475569', fontFamily: FONT.medium }}>Sending OTP verification code...</Text>
             </View>
           ) : (
             <>
               <Text style={styles.instruction}>
-                A 6-digit OTP code has been sent via SMS to (+91 {mobileNumber}). Enter the code below:
+                A verification code has been generated for (+91 {mobileNumber}). Enter the code below:
               </Text>
+              {serverDevOtp ? (
+                <Text style={{ color: '#16a34a', fontFamily: FONT.semiBold, fontSize: 13, marginBottom: 8, textAlign: 'center' }}>
+                  Verification Code: {serverDevOtp}
+                </Text>
+              ) : null}
             </>
           )}
 

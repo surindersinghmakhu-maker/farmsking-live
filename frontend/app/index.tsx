@@ -1290,12 +1290,9 @@ export default function PublicLandingPage() {
             max-width: 100vw !important;
             width: 100% !important;
           }
-          /* ── Suppress reCAPTCHA v3 badge ── */
+          /* ── Suppress reCAPTCHA floating badge safely without blocking mobile challenges ── */
           .grecaptcha-badge {
-            display: none !important;
             visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
           }
           /* ── Premium Continuous FarmsKing Ticker Flow ── */
           @keyframes farmskingTickerFlow {

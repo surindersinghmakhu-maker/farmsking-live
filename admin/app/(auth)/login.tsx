@@ -19,9 +19,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '@/src/lib/firebase';
-import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
@@ -41,7 +38,7 @@ const discovery = {
 type LoginTab = 'password' | 'otp';
 
 export default function LoginScreen() {
-  const { login, firebaseLogin, googleLogin } = useAuth();
+  const { login, firebaseLogin, googleLogin, sendLoginOtp, otpLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const otpInputRef = useRef<TextInput>(null);
@@ -86,39 +83,6 @@ export default function LoginScreen() {
     const t = setTimeout(() => setResendTimer(v => v - 1), 1000);
     return () => clearTimeout(t);
   }, [resendTimer]);
-
-  const initRecaptcha = () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const existing = (window as any).recaptchaVerifier;
-      const existingHost = document.getElementById('fk-admin-recaptcha-login-host');
-      if (existing && existingHost && (window as any).recaptchaContainer === existingHost) return;
-      const container = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-login-host', 'recaptchaVerifier');
-      (window as any).recaptchaContainer = container;
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
-        size: 'invisible',
-        callback: () => {},
-      });
-    } catch (e) {
-      console.warn('ReCaptcha init error:', e);
-    }
-  };
-
-  const resetRecaptcha = async () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const verifier = (window as any).recaptchaVerifier;
-      if (!verifier) return;
-      const widgetId = await verifier.render();
-      (window as any).grecaptcha?.reset(widgetId);
-    } catch (e) {
-      console.warn('ReCaptcha reset error:', e);
-    }
-  };
-
-  useEffect(() => {
-    initRecaptcha();
-  }, []);
 
   useEffect(() => {
     setOtpSent(false);
@@ -219,18 +183,13 @@ export default function LoginScreen() {
     }
     setOtpSending(true);
     try {
-      if (Platform.OS === 'web') {
-        const fullPhone = `+91${cleanNum}`;
-        try {
-          initRecaptcha();
-          const verifier = (window as any).recaptchaVerifier;
-          const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
-          setConfirmationResult(result);
-        } catch (firebaseErr: any) {
-          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
-          await resetRecaptcha();
-          throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
-        }
+      const serverRes = await sendLoginOtp(cleanNum);
+      setConfirmationResult(null);
+      if (serverRes?.devOtp) {
+        setDevOtp(serverRes.devOtp);
+        setOtpCode(serverRes.devOtp);
+      } else {
+        setDevOtp(null);
       }
       setOtpSent(true);
       setResendTimer(60);
@@ -250,16 +209,11 @@ export default function LoginScreen() {
       setError('Please enter the 6-digit OTP code.');
       return;
     }
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
     try {
-      if (confirmationResult) {
-        const credential = await confirmationResult.confirm(cleanCode);
-        const idToken = await credential.user.getIdToken();
-        await firebaseLogin(idToken);
-        router.replace('/admin/(tabs)' as any);
-      } else {
-        throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
-      }
+      await otpLogin({ mobile: cleanNum, otp: cleanCode });
+      router.replace('/admin/(tabs)' as any);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet ? 'Network error! Please check your internet connection.' : (err?.response?.data?.message ?? err?.message ?? 'OTP verification failed.'));

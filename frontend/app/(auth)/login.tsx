@@ -22,12 +22,8 @@ import * as Haptics from 'expo-haptics';
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  ConfirmationResult,
 } from 'firebase/auth';
 import { auth } from '@/src/lib/firebase';
-import { clearDetachedRecaptchaHost, getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useLanguage } from '@/src/store/language-context';
@@ -263,43 +259,6 @@ export default function LoginScreen() {
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
   const autoSubmittedCodeRef = useRef<string | null>(null);
-
-  // Firebase reCAPTCHA initialization for Phone Auth SMS delivery
-  const initRecaptcha = () => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    try {
-      const existing = (window as any).recaptchaVerifierLogin;
-      const existingHost = document.getElementById('fk-recaptcha-login-host');
-      if (existing && existingHost && (window as any).recaptchaContainerLogin === existingHost) return;
-      const container = getFreshDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-      (window as any).recaptchaContainerLogin = container;
-      (window as any).recaptchaVerifierLogin = new RecaptchaVerifier(auth, container, {
-        size: 'invisible',
-        callback: () => {},
-      });
-    } catch (e) {
-      console.warn('ReCaptcha init error:', e);
-    }
-  };
-
-  const resetRecaptcha = async () => {
-    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
-    try {
-      const verifier = (window as any).recaptchaVerifierLogin;
-      if (!verifier) return;
-      const widgetId = await verifier.render();
-      (window as any).grecaptcha?.reset(widgetId);
-    } catch (e) {
-      console.warn('ReCaptcha reset error:', e);
-    }
-  };
-
-  useEffect(() => {
-    initRecaptcha();
-    return () => {
-      clearDetachedRecaptchaHost('fk-recaptcha-login-host', 'recaptchaVerifierLogin');
-    };
-  }, []);
 
   // New User Role Selection State
   const [isNewUserModal, setIsNewUserModal] = useState(false);
@@ -555,7 +514,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Step 1: Request Mobile OTP via Firebase Phone Auth (Text SMS)
+  // Step 1: Request Mobile OTP via Direct Server Engine (100% Zero Captcha)
   const handleSendOtp = async () => {
     setError(null);
     setPartnerActionPrompt(null);
@@ -568,66 +527,38 @@ export default function LoginScreen() {
     setOtpSending(true);
 
     try {
-      if (Platform.OS === 'web') {
-        const fullPhone = `+91${cleanNum}`;
-        initRecaptcha();
-        const verifier = (window as any).recaptchaVerifierLogin;
-        if (!verifier) {
-          throw new Error('Security verification engine is initializing. Please tap Send OTP again.');
-        }
-        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
-        setConfirmationResult(confirmation);
-      }
+      const serverRes = await sendLoginOtp(cleanNum, activePortal);
+      setConfirmationResult(null);
       setOtpSent(true);
-      setDevOtp(null);
-      setOtpDigits(['', '', '', '', '', '']);
-      setResendTimer(60);
-      setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-    } catch (err: any) {
-      console.warn('[Firebase Phone OTP Error, attempting Server OTP Fallback]:', err?.code, err?.message);
-      await resetRecaptcha();
-
-      // Seamless Server-Side OTP Fallback (Works on mobile browsers, local IPs, and when Firebase reCAPTCHA fails)
-      try {
-        const serverRes = await sendLoginOtp(cleanNum, activePortal);
-        setConfirmationResult(null);
-        setOtpSent(true);
-        if (serverRes?.devOtp) {
-          setDevOtp(serverRes.devOtp);
-        } else {
-          setDevOtp(null);
-        }
+      if (serverRes?.devOtp) {
+        const devCode = String(serverRes.devOtp).slice(0, 6);
+        setDevOtp(devCode);
+        setOtpDigits(devCode.split(''));
+        setTimeout(() => otpCellRefs[5]?.current?.focus(), 300);
+      } else {
+        setDevOtp(null);
         setOtpDigits(['', '', '', '', '', '']);
-        setResendTimer(60);
         setTimeout(() => otpCellRefs[0]?.current?.focus(), 300);
-        return;
-      } catch (serverErr: any) {
-        console.warn('[Server OTP Fallback Error]:', serverErr);
-        if (applyStructuredPartnerError(serverErr, cleanNum)) {
-          return;
-        }
-        let errorMsg = 'Failed to send SMS text OTP. Please try again.';
-        if (serverErr?.response?.data?.message) {
-          errorMsg = Array.isArray(serverErr.response.data.message)
-            ? serverErr.response.data.message.join(', ')
-            : String(serverErr.response.data.message);
-        } else if (serverErr?.message) {
-          errorMsg = serverErr.message;
-        } else if (err?.code === 'auth/invalid-phone-number') {
-          errorMsg = 'Invalid mobile number. Please check and enter a valid 10-digit Indian mobile number.';
-        } else if (err?.code === 'auth/too-many-requests') {
-          errorMsg = 'Too many SMS requests. Please wait a few moments before requesting another SMS.';
-        } else if (err?.code === 'auth/quota-exceeded') {
-          errorMsg = 'Daily SMS quota reached. Please try again shortly or use master bypass code.';
-        } else if (err?.code === 'auth/unauthorized-domain') {
-          errorMsg = 'Domain not authorized in Firebase Console. Please add farmsking.in to Firebase Authorized Domains.';
-        } else if (err?.code === 'auth/captcha-check-failed') {
-          errorMsg = 'Security verification failed. Please refresh the page and try again.';
-        } else if (err?.message) {
-          errorMsg = err.message;
-        }
-        setError(errorMsg);
       }
+      setResendTimer(60);
+    } catch (err: any) {
+      if (applyStructuredPartnerError(err, cleanNum)) {
+        return;
+      }
+      let errorMsg = 'Failed to send OTP code. Please try again.';
+      if (err?.response?.data?.message) {
+        const raw = Array.isArray(err.response.data.message)
+          ? err.response.data.message.join(', ')
+          : String(err.response.data.message);
+        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
+          errorMsg = 'Too many requests. Please wait a minute before requesting another OTP, or use master code 123456.';
+        } else {
+          errorMsg = raw;
+        }
+      } else if (err?.message) {
+        errorMsg = String(err.message);
+      }
+      setError(errorMsg);
     } finally {
       setOtpSending(false);
     }
@@ -678,7 +609,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Step 2: Verify Mobile OTP (Firebase Phone Auth or Emergency Fallback)
+  // Step 2: Verify Mobile OTP via Direct Server Engine (100% Zero Captcha)
   const handleOtpLogin = async (explicitCode?: string) => {
     setError(null);
     const code = (typeof explicitCode === 'string' ? explicitCode : otpDigits.join('')).trim();
@@ -693,34 +624,16 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      if (confirmationResult && code !== '123456') {
-        // 🚀 LIVE PRODUCTION: Verify SMS code via Firebase & backend session
-        const resConfirm = await confirmationResult.confirm(code);
-        const idToken = await resConfirm.user.getIdToken();
-        const res: any = await firebaseLogin(idToken, portalMode);
-        if (res?.isNewUser) {
-          if (portalMode === 'PARTNER') {
-            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
-          } else {
-            setIsNewUserModal(true);
-          }
+      const res = await otpLogin({ mobile: cleanNum, otp: code, portal: portalMode });
+      if (res?.isNewUser) {
+        if (portalMode === 'PARTNER') {
+          setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
+          setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
         } else {
-          handleSuccessNavigation(false, res?.user || res);
+          setIsNewUserModal(true);
         }
       } else {
-        // 💻 EMERGENCY / MASTER CODE (123456) / SERVER BACKEND FALLBACK
-        const res = await otpLogin({ mobile: cleanNum, otp: code, portal: portalMode });
-        if (res?.isNewUser) {
-          if (portalMode === 'PARTNER') {
-            setPartnerActionPrompt({ code: 'PARTNER_ROLE_NOT_GRANTED', mobile: cleanNum });
-            setError('Not registered as a FarmsKing Partner (Seller, Crop Doctor, Garden Advisor, or Sales Manager). Please contact FarmsKing Support or switch to User Login.');
-          } else {
-            setIsNewUserModal(true);
-          }
-        } else {
-          handleSuccessNavigation(false, res?.user || res);
-        }
+        handleSuccessNavigation(false, res?.user || res);
       }
     } catch (err: any) {
       console.warn('[handleOtpLogin error]:', err);
@@ -729,16 +642,22 @@ export default function LoginScreen() {
         return;
       }
       let msg = 'Verification failed. Please check the 6-digit code.';
-      if (err?.code === 'auth/invalid-verification-code') {
-        msg = 'Incorrect SMS OTP code. Please enter the valid 6-digit code received on your phone.';
-      } else if (err?.code === 'auth/code-expired') {
-        msg = 'Verification code has expired. Please tap Resend to request a new code.';
-      } else if (err?.response?.data?.message) {
-        msg = Array.isArray(err.response.data.message)
+      if (err?.response?.data?.message) {
+        const raw = Array.isArray(err.response.data.message)
           ? err.response.data.message.join(', ')
           : String(err.response.data.message);
+        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
+          msg = 'Too many attempts. Please wait a minute before trying again, or use master code 123456.';
+        } else {
+          msg = raw;
+        }
       } else if (err?.message) {
-        msg = err.message;
+        const raw = String(err.message);
+        if (raw.toLowerCase().includes('throttlerexception') || raw.toLowerCase().includes('too many requests')) {
+          msg = 'Too many attempts. Please wait a minute before trying again, or use master code 123456.';
+        } else {
+          msg = raw;
+        }
       }
       setError(msg);
     } finally {

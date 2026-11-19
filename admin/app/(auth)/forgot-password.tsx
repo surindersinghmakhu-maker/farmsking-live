@@ -14,10 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
-import { firebaseForgotPasswordReset } from '@/src/api/auth.api';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '@/src/lib/firebase';
-import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
+import { forgotPasswordStart, forgotPasswordVerify, forgotPasswordReset } from '@/src/api/auth.api';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const theme = RoleThemes.FARMER;
@@ -37,8 +34,7 @@ export default function ForgotPasswordScreen() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
 
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [idToken, setIdToken] = useState<string | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
@@ -46,40 +42,7 @@ export default function ForgotPasswordScreen() {
     return () => clearTimeout(t);
   }, [resendTimer]);
 
-  const initRecaptcha = () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const existing = (window as any).recaptchaVerifier;
-      const existingHost = document.getElementById('fk-admin-recaptcha-forgot-host');
-      if (existing && existingHost && (window as any).recaptchaContainer === existingHost) return;
-      const container = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-forgot-host', 'recaptchaVerifier');
-      (window as any).recaptchaContainer = container;
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
-        size: 'invisible',
-        callback: () => {},
-      });
-    } catch (e) {
-      console.warn('ReCaptcha init error:', e);
-    }
-  };
-
-  const resetRecaptcha = async () => {
-    if (Platform.OS !== 'web') return;
-    try {
-      const verifier = (window as any).recaptchaVerifier;
-      if (!verifier) return;
-      const widgetId = await verifier.render();
-      (window as any).grecaptcha?.reset(widgetId);
-    } catch (e) {
-      console.warn('ReCaptcha reset error:', e);
-    }
-  };
-
-  useEffect(() => {
-    initRecaptcha();
-  }, []);
-
-  // Step 1: Send Firebase OTP
+  // Step 1: Send OTP
   const onSendOtp = async () => {
     setError(null);
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
@@ -90,30 +53,18 @@ export default function ForgotPasswordScreen() {
     
     setIsSubmitting(true);
     try {
-      if (Platform.OS === 'web') {
-        const fullPhone = `+91${cleanNum}`;
-        try {
-          initRecaptcha();
-          const verifier = (window as any).recaptchaVerifier;
-          const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
-          setConfirmationResult(result);
-        } catch (firebaseErr: any) {
-          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
-          await resetRecaptcha();
-          throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
-        }
-      }
+      await forgotPasswordStart({ mobile: cleanNum });
       setResendTimer(60);
       setStep('otp');
       setTimeout(() => otpInputRef.current?.focus(), 300);
     } catch (err: any) {
-      setError(err?.message ?? 'Could not send OTP. Please try again.');
+      setError(err?.response?.data?.message ?? err?.message ?? 'Could not send OTP. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Step 2: Verify Firebase OTP
+  // Step 2: Verify OTP
   const onVerifyOtp = async () => {
     setError(null);
     const cleanCode = otp.trim();
@@ -121,18 +72,14 @@ export default function ForgotPasswordScreen() {
       setError('Enter the 6-digit OTP code received via SMS.');
       return;
     }
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
     try {
-      if (confirmationResult) {
-        const credential = await confirmationResult.confirm(cleanCode);
-        const token = await credential.user.getIdToken();
-        setIdToken(token);
-        setStep('new-password');
-      } else {
-        throw new Error('Verification session missing. Please request a new OTP.');
-      }
+      const res = await forgotPasswordVerify({ mobile: cleanNum, otp: cleanCode });
+      setResetToken(res.resetToken);
+      setStep('new-password');
     } catch (err: any) {
-      setError('Invalid or expired OTP code.');
+      setError(err?.response?.data?.message ?? err?.message ?? 'Invalid or expired OTP code.');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,15 +96,15 @@ export default function ForgotPasswordScreen() {
       setError('Passwords do not match. Please re-type your password.');
       return;
     }
-    if (!idToken) {
+    if (!resetToken) {
       setError('Authentication session missing. Please restart the process.');
       return;
     }
     
     setIsSubmitting(true);
     try {
-      const result = await firebaseForgotPasswordReset({
-        idToken,
+      const result = await forgotPasswordReset({
+        resetToken,
         newPassword,
       });
       setSuccessMessage(result.message);

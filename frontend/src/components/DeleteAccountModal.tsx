@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '@/src/lib/firebase';
-import { getFreshDetachedRecaptchaHost, clearDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { deleteMyAccount, requestDeleteMeOtp } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
@@ -24,29 +21,18 @@ export function DeleteAccountModal({ visible, onClose, portal = 'USER' }: Delete
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpSent, setOtpSent] = useState(false);
-  const [useServerOtp, setUseServerOtp] = useState(false);
   const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isDeletedSuccess, setIsDeletedSuccess] = useState(false);
   const [deletedSummary, setDeletedSummary] = useState<string | null>(null);
-
-  const isLocalhost =
-    Platform.OS === 'web' &&
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.includes('192.168.'));
 
   useEffect(() => {
     if (visible) {
       setMobileInput('');
       setOtpInput('');
       setDeleteConfirmInput('');
-      setConfirmationResult(null);
       setOtpSent(false);
-      setUseServerOtp(false);
       setServerDevOtp(null);
       setErrorMsg(null);
       setIsSendingOtp(false);
@@ -73,66 +59,14 @@ export function DeleteAccountModal({ visible, onClose, portal = 'USER' }: Delete
     setErrorMsg(null);
     setServerDevOtp(null);
 
-    if (isLocalhost) {
-      try {
-        const res = await requestDeleteMeOtp(cleanNumber);
-        setUseServerOtp(true);
-        if (res?.devOtp) {
-          setServerDevOtp(String(res.devOtp));
-        }
-        setOtpSent(true);
-      } catch (err: any) {
-        setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to generate verification OTP.');
-      } finally {
-        setIsSendingOtp(false);
-      }
-      return;
-    }
-
     try {
-      if (typeof window !== 'undefined') {
-        const hostEl = getFreshDetachedRecaptchaHost('fk-recaptcha-delete-host', 'recaptchaVerifierDelete');
-        (window as any).recaptchaVerifierDelete = new RecaptchaVerifier(
-          auth,
-          hostEl,
-          { size: 'invisible' }
-        );
+      const res = await requestDeleteMeOtp(cleanNumber);
+      if (res?.devOtp) {
+        setServerDevOtp(String(res.devOtp));
       }
-
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${cleanNumber}`,
-        (window as any).recaptchaVerifierDelete
-      );
-
-      setUseServerOtp(false);
-      setConfirmationResult(confirmation);
       setOtpSent(true);
     } catch (err: any) {
-      clearDetachedRecaptchaHost('fk-recaptcha-delete-host', 'recaptchaVerifierDelete');
-      // Fallback to server-side WhatsApp/Email OTP if Firebase reCAPTCHA is unavailable
-      try {
-        const res = await requestDeleteMeOtp(cleanNumber);
-        setUseServerOtp(true);
-        if (res?.devOtp) {
-          setServerDevOtp(String(res.devOtp));
-        }
-        setOtpSent(true);
-        return;
-      } catch (srvErr: any) {
-        console.warn('OTP Dispatch Error:', err, srvErr);
-      }
-      let msg = 'Failed to send OTP. Please try again.';
-      if (err?.code === 'auth/invalid-phone-number') {
-        msg = 'Invalid mobile number format. Please check the 10-digit number.';
-      } else if (err?.code === 'auth/too-many-requests') {
-        msg = 'Too many requests. Please wait a few moments before retrying.';
-      } else if (err?.message?.includes('already been rendered') || err?.code === 'auth/internal-error') {
-        msg = 'Verification service was refreshed. Please tap Send OTP again.';
-      } else if (err?.message) {
-        msg = err.message;
-      }
-      setErrorMsg(msg);
+      setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to generate verification OTP.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -164,26 +98,9 @@ export function DeleteAccountModal({ visible, onClose, portal = 'USER' }: Delete
         ? 'Your FarmsKing Partner account has been securely deactivated.'
         : 'Your FarmsKing ID and account have been permanently deleted.';
 
-      if (useServerOtp) {
-        // Verify server-issued 6-digit OTP atomically inside DELETE /users/me
-        setIsDeletingAccount(true);
-        const res = await deleteMyAccount({ otp: otpInput.trim(), portal });
-        if (res?.message) resultMsg = res.message;
-      } else {
-        if (!confirmationResult) {
-          setErrorMsg('OTP session expired. Please request a new OTP.');
-          setIsVerifying(false);
-          return;
-        }
-        // 1. Verify OTP with Firebase and obtain signed ID token for server verification
-        const cred = await confirmationResult.confirm(otpInput.trim());
-        const firebaseIdToken = await cred.user.getIdToken();
-
-        // 2. Delete / Deactivate Account on Backend with cryptographic verification proof
-        setIsDeletingAccount(true);
-        const res = await deleteMyAccount({ firebaseIdToken, portal });
-        if (res?.message) resultMsg = res.message;
-      }
+      setIsDeletingAccount(true);
+      const res = await deleteMyAccount({ otp: otpInput.trim(), portal });
+      if (res?.message) resultMsg = res.message;
 
       setIsDeletingAccount(false);
       setIsVerifying(false);

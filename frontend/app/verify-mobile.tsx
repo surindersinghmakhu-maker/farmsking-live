@@ -12,9 +12,6 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '@/src/lib/firebase';
-import { clearDetachedRecaptchaHost, getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
@@ -26,21 +23,12 @@ export default function VerifyMobileScreen() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [useServerOtp, setUseServerOtp] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
-
-  const isLocalhost =
-    Platform.OS === 'web' &&
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.includes('192.168.'));
 
   useEffect(() => {
     if (!user) {
@@ -87,58 +75,18 @@ export default function VerifyMobileScreen() {
     setDevOtpHint(null);
     setIsSending(true);
 
-    if (isLocalhost) {
-      try {
-        const res = await sendMobileLinkOtp(cleanMobile);
-        setUseServerOtp(true);
-        if (res?.devOtp) {
-          setDevOtpHint(res.devOtp);
-        }
-        setInfoMsg(res?.message || `Verification code sent to +91 ${cleanMobile}.`);
-        setOtpSent(true);
-        setOtp('');
-        setResendTimer(30);
-      } catch (err: any) {
-        const msg = err?.response?.data?.message || err?.message || 'Could not send OTP.';
-        setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
-      } finally {
-        setIsSending(false);
-      }
-      return;
-    }
-
     try {
-      if (typeof window !== 'undefined') {
-        const hostEl = getFreshDetachedRecaptchaHost('fk-recaptcha-verify-mobile', 'recaptchaVerifierMobileLink');
-        (window as any).recaptchaVerifierMobileLink = new RecaptchaVerifier(auth, hostEl, { size: 'invisible' });
+      const res = await sendMobileLinkOtp(cleanMobile);
+      if (res?.devOtp) {
+        setDevOtpHint(res.devOtp);
       }
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${cleanMobile}`,
-        (window as any).recaptchaVerifierMobileLink,
-      );
-      setUseServerOtp(false);
-      setConfirmationResult(confirmation);
+      setInfoMsg(res?.message || `Verification code sent to +91 ${cleanMobile}.`);
       setOtpSent(true);
       setOtp('');
       setResendTimer(30);
-      setInfoMsg(`6-digit SMS code sent to +91 ${cleanMobile}.`);
-    } catch {
-      clearDetachedRecaptchaHost('fk-recaptcha-verify-mobile', 'recaptchaVerifierMobileLink');
-      try {
-        const res = await sendMobileLinkOtp(cleanMobile);
-        setUseServerOtp(true);
-        if (res?.devOtp) {
-          setDevOtpHint(res.devOtp);
-        }
-        setInfoMsg(res?.message || `Verification code sent to +91 ${cleanMobile}.`);
-        setOtpSent(true);
-        setOtp('');
-        setResendTimer(30);
-      } catch (srvErr: any) {
-        const msg = srvErr?.response?.data?.message || srvErr?.message || 'Failed to send verification OTP.';
-        setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
-      }
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not send verification OTP.';
+      setErrorMsg(Array.isArray(msg) ? msg.join(', ') : String(msg));
     } finally {
       setIsSending(false);
     }
@@ -155,19 +103,7 @@ export default function VerifyMobileScreen() {
     setErrorMsg(null);
     setIsVerifying(true);
     try {
-      let result;
-      if (useServerOtp) {
-        result = await verifyMobileLinkOtp({ mobile: cleanMobile, otp: cleanOtp });
-      } else {
-        if (!confirmationResult) {
-          setErrorMsg('OTP session expired. Please request a new code.');
-          setIsVerifying(false);
-          return;
-        }
-        const cred = await confirmationResult.confirm(cleanOtp);
-        const idToken = await cred.user.getIdToken();
-        result = await firebaseMobileLink({ idToken });
-      }
+      const result = await verifyMobileLinkOtp({ mobile: cleanMobile, otp: cleanOtp });
       navigateAfterVerification(result?.user || user);
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Invalid OTP code. Please try again.';

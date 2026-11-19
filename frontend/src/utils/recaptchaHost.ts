@@ -16,13 +16,10 @@ export function getFreshDetachedRecaptchaHost(hostId: string, verifierGlobalKey?
   const el = document.createElement('div');
   el.id = hostId;
   el.style.position = 'fixed';
-  el.style.bottom = '0';
-  el.style.right = '0';
-  el.style.width = '1px';
-  el.style.height = '1px';
-  el.style.opacity = '0';
-  el.style.pointerEvents = 'none';
-  el.style.zIndex = '-1';
+  el.style.bottom = '10px';
+  el.style.right = '10px';
+  el.style.zIndex = '9999999';
+  el.style.pointerEvents = 'auto';
   document.body.appendChild(el);
   return el;
 }

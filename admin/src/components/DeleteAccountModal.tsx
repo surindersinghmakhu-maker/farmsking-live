@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
-import { auth } from '@/src/lib/firebase';
-import { getFreshDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { deleteMyAccount } from '@/src/api/users.api';
+import { deleteMyAccount, requestDeleteMeOtp } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
 
 interface DeleteAccountModalProps {
@@ -22,8 +19,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpSent, setOtpSent] = useState(false);
+  const [serverDevOtp, setServerDevOtp] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   useEffect(() => {
@@ -31,8 +28,8 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       setMobileInput('');
       setOtpInput('');
       setDeleteConfirmInput('');
-      setConfirmationResult(null);
       setOtpSent(false);
+      setServerDevOtp(null);
       setErrorMsg(null);
       setIsSendingOtp(false);
       setIsVerifying(false);
@@ -54,27 +51,16 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
 
     setIsSendingOtp(true);
     setErrorMsg(null);
+    setServerDevOtp(null);
     try {
-      if (typeof window !== 'undefined') {
-        const hostEl = getFreshDetachedRecaptchaHost('fk-admin-recaptcha-delete-host', 'recaptchaVerifierDelete');
-        (window as any).recaptchaVerifierDelete = new RecaptchaVerifier(
-          auth,
-          hostEl,
-          { size: 'invisible' }
-        );
+      const res = await requestDeleteMeOtp(cleanNumber);
+      if (res?.devOtp) {
+        setServerDevOtp(String(res.devOtp));
       }
-
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${cleanNumber}`,
-        (window as any).recaptchaVerifierDelete
-      );
-
-      setConfirmationResult(confirmation);
       setOtpSent(true);
     } catch (err: any) {
-      console.warn('Firebase OTP Error:', err);
-      setErrorMsg(err?.message || 'Failed to send OTP. Please try again.');
+      console.warn('Delete OTP Error:', err);
+      setErrorMsg(err?.response?.data?.message || err?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -91,23 +77,11 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
       return;
     }
 
-    if (!confirmationResult) {
-      setErrorMsg('OTP session expired. Please request a new OTP.');
-      return;
-    }
-
     setIsVerifying(true);
     setErrorMsg(null);
     try {
-      // 1. Verify OTP with Firebase and pass cryptographic ID token to server
-      const cred = await confirmationResult.confirm(otpInput.trim());
-      const firebaseIdToken = await cred.user.getIdToken();
-
-      // 2. Delete Account on Backend
       setIsDeletingAccount(true);
-      await deleteMyAccount({ firebaseIdToken });
-
-      // 3. Logout
+      await deleteMyAccount({ otp: otpInput.trim() });
       await logout();
     } catch (err: any) {
       console.warn('Verification/Deletion Error:', err);
@@ -177,7 +151,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
               <>
                 <View style={styles.successBox}>
                   <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <Text style={styles.successText}>OTP sent to {mobileInput}</Text>
+                  <Text style={styles.successText}>OTP sent to {mobileInput}{serverDevOtp ? ` (Verification code: ${serverDevOtp})` : ''}</Text>
                 </View>
 
                 <View>

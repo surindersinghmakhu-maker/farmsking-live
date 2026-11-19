@@ -28,6 +28,13 @@ import { AppFaviconGlobalizer } from '@/src/hooks/useAppSettings';
 import { WebKeyboardScrollGlobalizer } from '@/src/utils/webKeyboardScroll';
 import { StaffSessionGuardian } from '@/src/components/StaffSessionGuardian';
 
+// Auto-canonicalize www.farmsking.in to farmsking.in so Firebase Auth and reCAPTCHA domain matches 100%
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  if (window.location.hostname === 'www.farmsking.in') {
+    window.location.replace(`https://farmsking.in${window.location.pathname}${window.location.search}${window.location.hash}`);
+  }
+}
+
 // Prevent the splash screen from auto-hiding on native mobile until assets load; hide immediately on web.
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {});

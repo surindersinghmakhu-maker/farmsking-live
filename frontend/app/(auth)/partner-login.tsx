@@ -852,6 +852,27 @@ export default function PartnerLoginScreen() {
                         </Text>
                       </TouchableOpacity>
                     ) : null}
+                    {!otpSent && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setError(null);
+                          setOtpSent(true);
+                          setResendTimer(60);
+                          setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+                        }}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.portalSwitchHintBtn,
+                          { borderColor: 'rgba(245, 158, 11, 0.7)', backgroundColor: 'rgba(245, 158, 11, 0.22)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+                        ]}
+                      >
+                        <Ionicons name="key" size={13} color="#fbbf24" />
+                        <Text style={[styles.portalSwitchHintText, { color: '#fbbf24', fontFamily: FONT.bold }]}>
+                          Already received the 6-digit SMS code? Enter code here →
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
                     <TouchableOpacity
                       onPress={() => router.push('/contact-us' as any)}
                       activeOpacity={0.85}
@@ -864,27 +885,6 @@ export default function PartnerLoginScreen() {
                         Contact FarmsKing Support →
                       </Text>
                     </TouchableOpacity>
-
-                    {!otpSent && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setError(null);
-                          setOtpSent(true);
-                          setResendTimer(60);
-                          setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
-                        }}
-                        activeOpacity={0.85}
-                        style={[
-                          styles.portalSwitchHintBtn,
-                          { borderColor: 'rgba(245, 158, 11, 0.6)', backgroundColor: 'rgba(245, 158, 11, 0.18)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-                        ]}
-                      >
-                        <Ionicons name="key" size={13} color="#fbbf24" />
-                        <Text style={[styles.portalSwitchHintText, { color: '#fbbf24', fontFamily: FONT.bold }]}>
-                          Already received the 6-digit SMS code? Enter code here →
-                        </Text>
-                      </TouchableOpacity>
-                    )}
                     {(error.includes('User Login') || error.includes('Farmer')) && (
                       <TouchableOpacity
                         onPress={() => router.replace('/login' as any)}

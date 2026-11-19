@@ -699,12 +699,14 @@ export class OrdersService {
     if (order.customerId !== customer.id && !this.isOrderStaff(customer)) {
       throw new ForbiddenException('You cannot update payment reference for this order.');
     }
+    const isTestPayment = utrNumber.toUpperCase().includes('TEST') || utrNumber === '123456';
     return this.prisma.customerOrder.update({
       where: { id },
       data: {
         phonepeMerchantOrderId: utrNumber.trim(),
-        phonepePaymentState: 'UTR_SUBMITTED_BY_CUSTOMER',
-        paymentStatus: OrderPaymentStatus.PENDING,
+        phonepePaymentState: isTestPayment ? 'PAYMENT_SUCCESS_TEST_MODE' : 'UTR_SUBMITTED_BY_CUSTOMER',
+        paymentStatus: isTestPayment ? OrderPaymentStatus.PAID : OrderPaymentStatus.PENDING,
+        status: isTestPayment ? OrderStatus.CONFIRMED : order.status,
       },
       include: DETAIL_INCLUDE,
     });

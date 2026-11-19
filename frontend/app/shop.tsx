@@ -3483,6 +3483,37 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
             {checkoutError ? <Text style={styles.errorText}>{checkoutError}</Text> : null}
 
+            {/* 🧪 Developer & User Testing Mode: 1-Click Instant Auto-Pay */}
+            <TouchableOpacity
+              style={{
+                width: '100%',
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                borderWidth: 1.5,
+                borderColor: '#10b981',
+                paddingVertical: 10,
+                borderRadius: RADIUS.md,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                marginTop: 2,
+                marginBottom: 4,
+              }}
+              activeOpacity={0.85}
+              disabled={createOrder.isPending}
+              onPress={() => {
+                setUtrTransactionId(`TEST-ORDER-${Date.now().toString().slice(-6)}`);
+                setTimeout(() => {
+                  handlePlaceOrderDirect();
+                }, 100);
+              }}
+            >
+              <Ionicons name="flash" size={15} color="#059669" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#065f46' }}>
+                🧪 Test Mode: Auto-Fill & Instant Confirm Order
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={[styles.modalSubmitBtn, { width: '100%', backgroundColor: '#0d9488' }]}
               disabled={createOrder.isPending}

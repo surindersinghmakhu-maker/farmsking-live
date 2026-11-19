@@ -31,10 +31,10 @@ export declare class WithdrawalsController {
             commissionEarnings: number;
         };
         businessPartner: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;

@@ -25,12 +25,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -46,8 +46,8 @@ export declare class CropsService {
     }>;
     listMineForFarmer(user: AuthUser): Promise<({
         plot: {
-            id: string;
             name: string;
+            id: string;
             soilType: string | null;
             createdAt: Date;
             updatedAt: Date;
@@ -60,10 +60,10 @@ export declare class CropsService {
             waterSource: string | null;
         };
         assignedAdvisor: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
             specialization: string | null;
             qualification: string | null;
@@ -84,12 +84,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -113,12 +113,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -136,14 +136,14 @@ export declare class CropsService {
         plot: {
             farm: {
                 owner: {
+                    name: string;
                     id: string;
                     kingId: string | null;
                     mobile: string;
-                    name: string;
                 };
             } & {
-                id: string;
                 name: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -158,8 +158,8 @@ export declare class CropsService {
                 irrigationSource: string | null;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
             soilType: string | null;
             createdAt: Date;
             updatedAt: Date;
@@ -181,12 +181,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -203,8 +203,8 @@ export declare class CropsService {
     findOneOrThrow(user: AuthUser, id: string): Promise<({
         plot: {
             farm: {
-                id: string;
                 name: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -219,8 +219,8 @@ export declare class CropsService {
                 irrigationSource: string | null;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
             soilType: string | null;
             createdAt: Date;
             updatedAt: Date;
@@ -242,12 +242,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -265,8 +265,8 @@ export declare class CropsService {
         planGatedMessage: string;
         plot: {
             farm: {
-                id: string;
                 name: string;
+                id: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -281,8 +281,8 @@ export declare class CropsService {
                 irrigationSource: string | null;
             };
         } & {
-            id: string;
             name: string;
+            id: string;
             soilType: string | null;
             createdAt: Date;
             updatedAt: Date;
@@ -303,12 +303,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -332,12 +332,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -362,12 +362,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -391,12 +391,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -420,12 +420,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -449,12 +449,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -478,12 +478,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -508,12 +508,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -529,18 +529,22 @@ export declare class CropsService {
     }>;
     listPendingForAdvisor(user: AuthUser): Promise<({
         plot: {
+            name: string;
+            id: string;
+            soilType: string | null;
+            areaUnit: import(".prisma/client").$Enums.AreaUnit;
             farm: {
-                id: string;
                 name: string;
+                id: string;
                 soilType: string | null;
                 ownerId: string;
                 totalArea: number;
                 areaUnit: import(".prisma/client").$Enums.AreaUnit;
                 irrigationSource: string | null;
                 owner: {
+                    name: string;
                     id: string;
                     mobile: string;
-                    name: string;
                     village: string | null;
                     district: string | null;
                     state: string | null;
@@ -549,10 +553,6 @@ export declare class CropsService {
                     waterType: import(".prisma/client").$Enums.WaterType | null;
                 };
             };
-            id: string;
-            name: string;
-            soilType: string | null;
-            areaUnit: import(".prisma/client").$Enums.AreaUnit;
             area: number;
             irrigationType: string | null;
             waterSource: string | null;
@@ -567,12 +567,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;
@@ -588,18 +588,22 @@ export declare class CropsService {
     })[]>;
     listAcceptedForAdvisor(user: AuthUser): Promise<({
         plot: {
+            name: string;
+            id: string;
+            soilType: string | null;
+            areaUnit: import(".prisma/client").$Enums.AreaUnit;
             farm: {
-                id: string;
                 name: string;
+                id: string;
                 soilType: string | null;
                 ownerId: string;
                 totalArea: number;
                 areaUnit: import(".prisma/client").$Enums.AreaUnit;
                 irrigationSource: string | null;
                 owner: {
+                    name: string;
                     id: string;
                     mobile: string;
-                    name: string;
                     village: string | null;
                     district: string | null;
                     state: string | null;
@@ -608,10 +612,6 @@ export declare class CropsService {
                     waterType: import(".prisma/client").$Enums.WaterType | null;
                 };
             };
-            id: string;
-            name: string;
-            soilType: string | null;
-            areaUnit: import(".prisma/client").$Enums.AreaUnit;
             area: number;
             irrigationType: string | null;
             waterSource: string | null;
@@ -626,12 +626,12 @@ export declare class CropsService {
         unit: string | null;
         plotId: string;
         assignedAdvisorId: string | null;
-        area: number | null;
-        category: import(".prisma/client").$Enums.CropCategory | null;
         subscriptionId: string | null;
         cropId: string | null;
+        category: import(".prisma/client").$Enums.CropCategory | null;
         cropName: string;
         variety: string | null;
+        area: number | null;
         plantCount: number | null;
         sowingDate: Date | null;
         transplantDate: Date | null;

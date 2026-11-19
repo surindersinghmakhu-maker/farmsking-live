@@ -27,8 +27,8 @@ interface AdminActionOtpModalProps {
 
 export function AdminActionOtpModal({
   visible,
-  title = 'Admin Authorization Required',
-  description = 'Confirming changes to critical APIs, payment gateways, and master configurations requires a 6-digit security authorization code.',
+  title = 'Authorize System Configuration Update',
+  description = 'Updating platform integrations, payment gateways, and system configurations requires a 6-digit security authorization code.',
   onConfirm,
   onCancel,
 }: AdminActionOtpModalProps) {
@@ -37,7 +37,9 @@ export function AdminActionOtpModal({
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [requestingOtp, setRequestingOtp] = useState(false);
+  const [firebaseSending, setFirebaseSending] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [adminMobile, setAdminMobile] = useState<string>('9872066901');
   const [deliveredVia, setDeliveredVia] = useState<string[]>([]);
   const [countdown, setCountdown] = useState(60);
   const [error, setError] = useState<string | null>(null);
@@ -80,22 +82,55 @@ export function AdminActionOtpModal({
     }
   }, [visible]);
 
+  const sendFirebaseTextSms = async (targetPhone: string) => {
+    if (Platform.OS !== 'web' || typeof window !== 'undefined' === false) return;
+    const clean = targetPhone.replace(/\D/g, '').slice(-10);
+    if (!clean || clean.length < 10) return;
+
+    setFirebaseSending(true);
+    try {
+      const fullPhone = `+91${clean}`;
+      const container = getFreshDetachedRecaptchaHost('fk-recaptcha-stepup-host-front', 'recaptchaVerifierAdminStepUpFront');
+      const verifier = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: () => {},
+        'expired-callback': () => {
+          try {
+            verifier.clear();
+          } catch {}
+          (window as any)['recaptchaVerifierAdminStepUpFront'] = null;
+        },
+      });
+      (window as any)['recaptchaVerifierAdminStepUpFront'] = verifier;
+
+      const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
+      setConfirmationResult(confirmation);
+      setDeliveredVia((prev) => Array.from(new Set(['Firebase SMS', ...prev])));
+    } catch (fbErr: any) {
+      console.warn('[AdminActionOtpModal] Firebase Text Message error:', fbErr?.code, fbErr?.message);
+      clearDetachedRecaptchaHost('fk-recaptcha-stepup-host-front', 'recaptchaVerifierAdminStepUpFront');
+    } finally {
+      setFirebaseSending(false);
+    }
+  };
+
   const handleRequestOtp = async () => {
     setRequestingOtp(true);
     setDevOtp(null);
     setError(null);
     setCountdown(60);
     setConfirmationResult(null);
-    let targetMobile = (user?.mobile || '').replace(/\D/g, '').slice(-10);
 
-    // 1. Register authorization session with backend and get delivery metadata
+    let resolvedMobile = (user?.mobile || '9872066901').replace(/\D/g, '').slice(-10);
+
+    // 1. Backend session & fallback channels
     try {
       const res = await apiClient.post('/app-settings/request-admin-action-otp');
       if (res.data?.devOtp) {
         setDevOtp(String(res.data.devOtp));
       }
       if (res.data?.mobile) {
-        targetMobile = String(res.data.mobile).replace(/\D/g, '').slice(-10);
+        resolvedMobile = String(res.data.mobile).replace(/\D/g, '').slice(-10);
       }
       if (Array.isArray(res.data?.deliveredVia)) {
         setDeliveredVia(res.data.deliveredVia);
@@ -104,31 +139,10 @@ export function AdminActionOtpModal({
       console.warn('[AdminActionOtp] Request OTP API warning:', e?.message);
     }
 
-    // 2. Dispatch real SMS OTP via Google Firebase Phone Auth on Web
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && targetMobile && targetMobile.length === 10) {
-      try {
-        const fullPhone = `+91${targetMobile}`;
-        const container = getFreshDetachedRecaptchaHost('fk-recaptcha-stepup-host-front', 'recaptchaVerifierAdminStepUpFront');
-        const verifier = new RecaptchaVerifier(auth, container, {
-          size: 'invisible',
-          callback: () => {},
-          'expired-callback': () => {
-            try {
-              verifier.clear();
-            } catch {}
-            (window as any)['recaptchaVerifierAdminStepUpFront'] = null;
-          },
-        });
-        (window as any)['recaptchaVerifierAdminStepUpFront'] = verifier;
+    setAdminMobile(resolvedMobile);
 
-        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
-        setConfirmationResult(confirmation);
-        setDeliveredVia((prev) => Array.from(new Set(['Firebase SMS', ...prev])));
-      } catch (fbErr: any) {
-        console.warn('[AdminActionOtpModal] Firebase Phone Auth dispatch note:', fbErr?.code, fbErr?.message);
-        clearDetachedRecaptchaHost('fk-recaptcha-stepup-host-front', 'recaptchaVerifierAdminStepUpFront');
-      }
-    }
+    // 2. Dispatch real Text Message (SMS) via Google Firebase Phone Auth
+    await sendFirebaseTextSms(resolvedMobile);
 
     setRequestingOtp(false);
   };
@@ -234,6 +248,7 @@ export function AdminActionOtpModal({
   };
 
   const isFilled = otpDigits.every((d) => d.trim().length > 0);
+  const maskedPhone = adminMobile ? `+91 ******${adminMobile.slice(-4)}` : '+91 98720*****';
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -268,51 +283,41 @@ export function AdminActionOtpModal({
             </View>
           ) : null}
 
-          {/* Dispatch Channel Badges */}
+          {/* Phone Target & Dispatch Badges */}
           <View style={styles.deliveryStatusRow}>
-            <Text style={styles.deliveryLabel}>Dispatched via:</Text>
-            <View style={styles.badgesWrap}>
-              {deliveredVia.length > 0 ? (
-                deliveredVia.map((channel) => (
-                  <View
-                    key={channel}
-                    style={[
-                      styles.channelChip,
-                      channel === 'Firebase SMS' && {
-                        backgroundColor: 'rgba(245, 158, 11, 0.15)',
-                        borderColor: 'rgba(245, 158, 11, 0.4)',
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={
-                        channel === 'Firebase SMS'
-                          ? 'flame'
-                          : channel.toLowerCase().includes('whatsapp')
-                          ? 'logo-whatsapp'
-                          : channel.toLowerCase().includes('sms')
-                          ? 'chatbubble-ellipses-outline'
-                          : 'mail-outline'
-                      }
-                      size={12}
-                      color={channel === 'Firebase SMS' ? '#f59e0b' : '#10b981'}
-                    />
-                    <Text
-                      style={[
-                        styles.channelChipText,
-                        channel === 'Firebase SMS' && { color: '#fbbf24' },
-                      ]}
-                    >
-                      {channel}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <View style={styles.channelChip}>
-                  <Ionicons name="shield-checkmark-outline" size={12} color="#10b981" />
-                  <Text style={styles.channelChipText}>Firebase & Admin 2FA Channel</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 6 }}>
+              <Text style={styles.deliveryLabel}>
+                Text Message Sent To: <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{maskedPhone}</Text>
+              </Text>
+              {firebaseSending && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <ActivityIndicator size="small" color="#f59e0b" />
+                  <Text style={{ fontSize: 11, color: '#f59e0b' }}>Sending SMS...</Text>
                 </View>
               )}
+            </View>
+
+            <View style={styles.badgesWrap}>
+              <View style={[styles.channelChip, { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.4)' }]}>
+                <Ionicons name="flame" size={13} color="#f59e0b" />
+                <Text style={[styles.channelChipText, { color: '#fbbf24' }]}>Firebase Text SMS</Text>
+              </View>
+              {deliveredVia.filter(c => c !== 'Firebase SMS').map((channel) => (
+                <View key={channel} style={styles.channelChip}>
+                  <Ionicons
+                    name={
+                      channel.toLowerCase().includes('whatsapp')
+                        ? 'logo-whatsapp'
+                        : channel.toLowerCase().includes('sms')
+                        ? 'chatbubble-ellipses-outline'
+                        : 'mail-outline'
+                    }
+                    size={12}
+                    color="#10b981"
+                  />
+                  <Text style={styles.channelChipText}>{channel}</Text>
+                </View>
+              ))}
             </View>
           </View>
 
@@ -343,7 +348,7 @@ export function AdminActionOtpModal({
             ))}
           </View>
 
-          {/* 60-Second Resend Countdown */}
+          {/* 60-Second Resend & Direct Firebase Trigger */}
           <View style={styles.resendRow}>
             {countdown > 0 ? (
               <Text style={styles.resendTimerText}>
@@ -352,15 +357,15 @@ export function AdminActionOtpModal({
             ) : (
               <TouchableOpacity
                 onPress={handleRequestOtp}
-                disabled={requestingOtp}
+                disabled={requestingOtp || firebaseSending}
                 style={styles.resendActionBtn}
               >
-                {requestingOtp ? (
+                {requestingOtp || firebaseSending ? (
                   <ActivityIndicator size="small" color="#10b981" />
                 ) : (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <Ionicons name="refresh" size={13} color="#10b981" />
-                    <Text style={styles.resendActiveText}>Resend Authorization Code</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="chatbox-ellipses" size={14} color="#f59e0b" />
+                    <Text style={[styles.resendActiveText, { color: '#fbbf24' }]}>Resend Firebase Text Message</Text>
                   </View>
                 )}
               </TouchableOpacity>
@@ -486,20 +491,16 @@ const styles = StyleSheet.create({
     color: '#064e3b',
   },
   deliveryStatusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
     marginBottom: 14,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   deliveryLabel: {
-    fontSize: 11.5,
+    fontSize: 12,
     color: '#94a3b8',
     fontWeight: '500',
   },

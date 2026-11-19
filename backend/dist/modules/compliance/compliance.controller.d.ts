@@ -83,12 +83,12 @@ export declare class ComplianceController {
         };
         gstr8Count: number;
         gstr8Reports: {
-            year: number;
-            month: number;
             id: string;
             createdAt: Date;
             status: string;
+            year: number;
             sellerStoreId: string;
+            month: number;
             totalGrossSales: import("@prisma/client/runtime/library").Decimal;
             totalSalesReturn: import("@prisma/client/runtime/library").Decimal;
             netTaxableValue: import("@prisma/client/runtime/library").Decimal;
@@ -105,8 +105,8 @@ export declare class ComplianceController {
             tcsAmount: import("@prisma/client/runtime/library").Decimal;
             commissionGstAmount: import("@prisma/client/runtime/library").Decimal;
             invoiceNumber: string;
-            financialYear: string;
             invoiceType: import(".prisma/client").$Enums.InvoiceType;
+            financialYear: string;
             netTaxableAmount: import("@prisma/client/runtime/library").Decimal;
             cgstAmount: import("@prisma/client/runtime/library").Decimal;
             sgstAmount: import("@prisma/client/runtime/library").Decimal;
@@ -176,9 +176,9 @@ export declare class ComplianceController {
             createdAt: Date;
             updatedAt: Date;
             updatedById: string | null;
-            title: string;
             status: string;
             notes: string | null;
+            title: string;
             category: string;
             dueDate: Date | null;
             authority: string | null;
@@ -195,9 +195,9 @@ export declare class ComplianceController {
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        title: string;
         status: string;
         notes: string | null;
+        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;
@@ -211,9 +211,9 @@ export declare class ComplianceController {
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        title: string;
         status: string;
         notes: string | null;
+        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;
@@ -227,9 +227,9 @@ export declare class ComplianceController {
         createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        title: string;
         status: string;
         notes: string | null;
+        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;

@@ -15,15 +15,10 @@ export declare class AdvisorAssignmentController {
     }>;
     findFarmers(user: AuthUser, query: ListFarmersQueryDto): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            farmerPlan: {
-                endDate: Date | null;
-                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-                expiredAt: Date | null;
-            } | null;
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -31,18 +26,23 @@ export declare class AdvisorAssignmentController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
+            farmerPlan: {
+                endDate: Date | null;
+                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+                expiredAt: Date | null;
+            } | null;
         };
         subscription: ({
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -89,15 +89,10 @@ export declare class AdvisorAssignmentController {
     findFarmerDetail(user: AuthUser, farmerId: string): Promise<{
         farmer: {
             farms: any;
-            farmerPlan: {
-                endDate: Date | null;
-                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
-                expiredAt: Date | null;
-            } | null;
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -107,19 +102,24 @@ export declare class AdvisorAssignmentController {
             waterType: import(".prisma/client").$Enums.WaterType | null;
             createdAt: Date;
             deletedAt: Date | null;
+            farmerPlan: {
+                endDate: Date | null;
+                plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
+                expiredAt: Date | null;
+            } | null;
         };
         assignment: ({
             subscription: ({
                 plan: {
-                    id: string;
                     name: string;
+                    id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    isActive: boolean;
                     description: string | null;
                     adminNotes: string | null;
                     reviewedById: string | null;
                     reviewedAt: Date | null;
+                    isActive: boolean;
                     advisorId: string | null;
                     hiringModel: import(".prisma/client").$Enums.HiringModelType;
                     price: import("@prisma/client/runtime/library").Decimal;
@@ -167,9 +167,9 @@ export declare class AdvisorAssignmentController {
     }>;
     findMyAdvisor(user: AuthUser): Promise<({
         advisor: {
+            name: string;
             id: string;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -194,8 +194,8 @@ export declare class AdvisorAssignmentController {
     }) | null>;
     findMyPendingRequest(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorAssignmentClient<({
         advisor: {
-            id: string;
             name: string;
+            id: string;
             photoUrl: string | null;
             specialization: string | null;
         };
@@ -218,8 +218,8 @@ export declare class AdvisorAssignmentController {
         ratingCount: number;
         ratingLabel: string;
         activeFarmerCount: number;
-        id: string;
         name: string;
+        id: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -255,9 +255,9 @@ export declare class AdvisorAssignmentController {
         ratingCount: number;
         ratingLabel: string;
         activeFarmerCount: number;
+        name: string;
         id: string;
         kingId: string | null;
-        name: string;
         village: string | null;
         district: string | null;
         state: string | null;
@@ -366,17 +366,17 @@ export declare class AdvisorAssignmentController {
     }>;
     findPendingDoctorChangeRequests(): Promise<({
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             district: string | null;
             state: string | null;
         };
         advisor: {
+            name: string;
             id: string;
             mobile: string;
-            name: string;
             photoUrl: string | null;
             specialization: string | null;
         };
@@ -429,15 +429,15 @@ export declare class AdvisorAssignmentController {
     }>;
     createOrUpdateAdvisorPlan(user: AuthUser, dto: CreateAdvisorPlanDto): Promise<any>;
     getMyAdvisorPlans(user: AuthUser): Promise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -452,15 +452,15 @@ export declare class AdvisorAssignmentController {
         approvalStatus: string;
     }[]>;
     getDoctorApprovedPlans(advisorId: string): Promise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -476,22 +476,22 @@ export declare class AdvisorAssignmentController {
     }[]>;
     getPendingAdvisorPlansForAdmin(): Promise<{
         advisor: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
             photoUrl: string | null;
             specialization: string | null;
         } | null | undefined;
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -506,15 +506,15 @@ export declare class AdvisorAssignmentController {
         approvalStatus: string;
     }[]>;
     adminApproveAdvisorPlan(user: AuthUser, id: string, dto?: AdminApprovePlanDto): Promise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -529,15 +529,15 @@ export declare class AdvisorAssignmentController {
         approvalStatus: string;
     }>;
     adminRejectAdvisorPlan(user: AuthUser, id: string, dto?: AdminRejectPlanDto): Promise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;

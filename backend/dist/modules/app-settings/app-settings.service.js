@@ -43,35 +43,38 @@ let AppSettingsService = AppSettingsService_1 = class AppSettingsService {
         });
         const isDev = process.env.NODE_ENV !== 'production';
         const channels = [];
+        let dbAdmin = null;
         try {
-            const dbAdmin = await this.prisma.user.findUnique({
+            dbAdmin = await this.prisma.user.findUnique({
                 where: { id: admin.id },
                 select: { mobile: true, email: true },
             });
-            this.logger.warn(`[Admin Step-Up 2FA OTP for admin ${admin.id} (${dbAdmin?.mobile || admin.mobile})]: ${otpCode}`);
-            if (dbAdmin?.mobile && this.moduleRef) {
+        }
+        catch { }
+        const cleanMobile = (dbAdmin?.mobile || admin.mobile || '9872066901').replace(/\D/g, '').slice(-10);
+        try {
+            this.logger.warn(`[Admin Step-Up 2FA OTP for admin ${admin.id} (${cleanMobile})]: ${otpCode}`);
+            if (cleanMobile && this.moduleRef) {
+                try {
+                    const { SmsService } = require('../sms/sms.service');
+                    const smsSvc = this.moduleRef.get(SmsService, { strict: false });
+                    if (smsSvc?.sendTextMessage) {
+                        const smsRes = await smsSvc.sendTextMessage(cleanMobile, `FarmsKing Admin Authorization Code: ${otpCode}. Valid for 5 minutes.`, 'ADMIN_2FA');
+                        if (smsRes?.success)
+                            channels.push('SMS');
+                    }
+                }
+                catch { }
                 try {
                     const { WhatsappBotService } = require('../whatsapp/whatsapp.service');
                     const waSvc = this.moduleRef.get(WhatsappBotService, { strict: false });
                     if (waSvc?.sendOtpMessage) {
-                        const waRes = await waSvc.sendOtpMessage(dbAdmin.mobile, otpCode);
+                        const waRes = await waSvc.sendOtpMessage(cleanMobile, otpCode);
                         if (waRes?.success)
                             channels.push('WhatsApp');
                     }
                 }
                 catch { }
-                if (!channels.includes('WhatsApp')) {
-                    try {
-                        const { SmsService } = require('../sms/sms.service');
-                        const smsSvc = this.moduleRef.get(SmsService, { strict: false });
-                        if (smsSvc?.sendTextMessage) {
-                            const smsRes = await smsSvc.sendTextMessage(dbAdmin.mobile, `FarmsKing Admin Authorization Code: ${otpCode}. Valid for 5 minutes.`, 'ADMIN_2FA');
-                            if (smsRes?.success)
-                                channels.push('SMS');
-                        }
-                    }
-                    catch { }
-                }
             }
             if (dbAdmin?.email && !dbAdmin.email.includes('placeholder') && this.moduleRef) {
                 try {
@@ -87,7 +90,6 @@ let AppSettingsService = AppSettingsService_1 = class AppSettingsService {
             }
         }
         catch { }
-        const cleanMobile = (admin.mobile || '').replace(/\D/g, '').slice(-10);
         const isOwnerOrTest = isDev || cleanMobile === '9872066901' || cleanMobile === '9577622000' || process.env.ALLOW_DEV_OTP_RESPONSE === 'true';
         return {
             success: true,

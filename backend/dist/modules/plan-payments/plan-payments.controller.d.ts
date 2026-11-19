@@ -9,22 +9,22 @@ export declare class PlanPaymentsController {
         activeGateway: string;
         upiLink: string;
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -70,22 +70,22 @@ export declare class PlanPaymentsController {
     }>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -132,22 +132,22 @@ export declare class PlanPaymentsController {
     })[]>;
     listPending(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -194,22 +194,22 @@ export declare class PlanPaymentsController {
     })[]>;
     submit(user: AuthUser, id: string, dto: SubmitPlanPaymentDto): Promise<({
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -257,22 +257,22 @@ export declare class PlanPaymentsController {
         isAutoActivated: boolean;
         newEndDate: Date;
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;
@@ -319,22 +319,22 @@ export declare class PlanPaymentsController {
     confirm(user: AuthUser, id: string): Promise<{
         request: {
             farmer: {
+                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
             };
             subscription: {
                 plan: {
-                    id: string;
                     name: string;
+                    id: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    isActive: boolean;
                     description: string | null;
                     adminNotes: string | null;
                     reviewedById: string | null;
                     reviewedAt: Date | null;
+                    isActive: boolean;
                     advisorId: string | null;
                     hiringModel: import(".prisma/client").$Enums.HiringModelType;
                     price: import("@prisma/client/runtime/library").Decimal;
@@ -383,22 +383,22 @@ export declare class PlanPaymentsController {
     }>;
     reject(user: AuthUser, id: string, dto: RejectPlanPaymentDto): Promise<{
         farmer: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
         subscription: {
             plan: {
-                id: string;
                 name: string;
+                id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                isActive: boolean;
                 description: string | null;
                 adminNotes: string | null;
                 reviewedById: string | null;
                 reviewedAt: Date | null;
+                isActive: boolean;
                 advisorId: string | null;
                 hiringModel: import(".prisma/client").$Enums.HiringModelType;
                 price: import("@prisma/client/runtime/library").Decimal;

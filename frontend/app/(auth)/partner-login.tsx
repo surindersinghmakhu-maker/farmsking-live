@@ -864,6 +864,27 @@ export default function PartnerLoginScreen() {
                         Contact FarmsKing Support →
                       </Text>
                     </TouchableOpacity>
+
+                    {!otpSent && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setError(null);
+                          setOtpSent(true);
+                          setResendTimer(60);
+                          setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+                        }}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.portalSwitchHintBtn,
+                          { borderColor: 'rgba(245, 158, 11, 0.6)', backgroundColor: 'rgba(245, 158, 11, 0.18)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+                        ]}
+                      >
+                        <Ionicons name="key" size={13} color="#fbbf24" />
+                        <Text style={[styles.portalSwitchHintText, { color: '#fbbf24', fontFamily: FONT.bold }]}>
+                          Already received the 6-digit SMS code? Enter code here →
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                     {(error.includes('User Login') || error.includes('Farmer')) && (
                       <TouchableOpacity
                         onPress={() => router.replace('/login' as any)}
@@ -1023,7 +1044,6 @@ export default function PartnerLoginScreen() {
                           if (otpSent) {
                             setOtpSent(false);
                             setOtpDigits(['', '', '', '', '', '']);
-                            setDevOtp(null);
                             setConfirmationResult(null);
                             autoSubmittedCodeRef.current = null;
                           }
@@ -1033,11 +1053,6 @@ export default function PartnerLoginScreen() {
                         returnKeyType="send"
                         onSubmitEditing={() => {
                           if (mobile.trim().length >= 10 && !otpSending) {
-                            handleSendOtp();
-                          }
-                        }}
-                        onKeyPress={(e: any) => {
-                          if (e.nativeEvent.key === 'Enter' && mobile.trim().length >= 10 && !otpSending) {
                             handleSendOtp();
                           }
                         }}
@@ -1051,15 +1066,16 @@ export default function PartnerLoginScreen() {
                   </View>
 
                   {!otpSent ? (
-                    <TouchableOpacity
-                      onPress={handleSendOtp}
-                      disabled={otpSending || mobile.trim().length < 10}
-                      activeOpacity={0.88}
-                      style={[
-                        styles.primaryActionBtn,
-                        (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 },
-                      ]}
-                    >
+                    <>
+                      <TouchableOpacity
+                        onPress={handleSendOtp}
+                        disabled={otpSending || mobile.trim().length < 10}
+                        activeOpacity={0.88}
+                        style={[
+                          styles.primaryActionBtn,
+                          (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 },
+                        ]}
+                      >
                       <LinearGradient
                         colors={['#f59e0b', '#d97706']}
                         start={{ x: 0, y: 0 }}
@@ -1076,6 +1092,25 @@ export default function PartnerLoginScreen() {
                         )}
                       </LinearGradient>
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setError(null);
+                        setOtpSent(true);
+                        setResendTimer(60);
+                        setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+                      }}
+                      activeOpacity={0.7}
+                      style={{ marginTop: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 }}
+                    >
+                      <Text style={{ fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium }}>
+                        Already received the SMS code?{' '}
+                        <Text style={{ color: '#fbbf24', fontFamily: FONT.bold, textDecorationLine: 'underline' }}>
+                          Enter code here
+                        </Text>
+                      </Text>
+                    </TouchableOpacity>
+                  </>
                   ) : (
                     <View style={styles.otpSectionBox}>
                       <View style={styles.otpInfoBar}>

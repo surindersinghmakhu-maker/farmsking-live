@@ -55,10 +55,12 @@ export function getFreshDetachedRecaptchaHost(hostId: string, verifierGlobalKey?
   el.style.position = 'fixed';
   el.style.bottom = '0px';
   el.style.right = '0px';
-  el.style.width = '0px';
-  el.style.height = '0px';
-  el.style.overflow = 'visible';
-  el.style.zIndex = '999999';
+  el.style.width = '100px';
+  el.style.height = '100px';
+  el.style.opacity = '0';
+  el.style.pointerEvents = 'none';
+  el.style.overflow = 'hidden';
+  el.style.zIndex = '-1';
   document.body.appendChild(el);
   return el;
 }

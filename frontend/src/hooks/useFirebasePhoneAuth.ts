@@ -73,6 +73,7 @@ export function useFirebasePhoneAuth(options?: UseFirebasePhoneAuthOptions) {
   const [isFallback, setIsFallback] = useState(false);
 
   const autoSubmittedCodeRef = useRef<string | null>(null);
+  const isSendingRef = useRef(false);
 
   const otpCellRefs = [
     useRef<TextInput>(null),
@@ -104,9 +105,15 @@ export function useFirebasePhoneAuth(options?: UseFirebasePhoneAuthOptions) {
    */
   const sendOtp = useCallback(
     async (overrideMobile?: string): Promise<{ success: boolean; confirmation?: ConfirmationResult; isFallback?: boolean; error?: any }> => {
+      if (isSendingRef.current) {
+        console.warn('[useFirebasePhoneAuth] sendOtp already in flight, ignoring duplicate call');
+        return { success: false, error: new Error('IN_PROGRESS') };
+      }
+      isSendingRef.current = true;
       setError(null);
       const targetClean = (overrideMobile ?? mobile).trim().replace(/\D/g, '').slice(-10);
       if (!targetClean || targetClean.length < 10) {
+        isSendingRef.current = false;
         const msg = 'Please enter a valid 10-digit mobile number.';
         setError(msg);
         return { success: false, error: new Error(msg) };
@@ -199,6 +206,7 @@ export function useFirebasePhoneAuth(options?: UseFirebasePhoneAuthOptions) {
         setError(formatFirebasePhoneAuthError(err));
         return { success: false, error: err };
       } finally {
+        isSendingRef.current = false;
         setOtpSending(false);
       }
     },

@@ -73,6 +73,7 @@ export default function LoginScreen() {
   // OTP state
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [devOtp, setDevOtp] = useState<string | null>(null);
   const [otpSending, setOtpSending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
@@ -182,7 +183,8 @@ export default function LoginScreen() {
     }
     setOtpSending(true);
     try {
-      await sendLoginOtp(cleanNum);
+      const res: any = await sendLoginOtp(cleanNum);
+      if (res?.devOtp) setDevOtp(res.devOtp);
       setOtpCode('');
       setOtpSent(true);
       setResendTimer(60);
@@ -383,6 +385,12 @@ export default function LoginScreen() {
                 ) : (
                   <>
                     <Text style={styles.otpSentMsg}>✅ OTP sent to +91 {mobile}</Text>
+                    {devOtp && (
+                      <View style={styles.devOtpBox}>
+                        <Text style={styles.devOtpLabel}>Test OTP:</Text>
+                        <Text style={styles.devOtpCode}>{devOtp}</Text>
+                      </View>
+                    )}
                     <Text style={styles.label}>Enter 6-Digit OTP</Text>
                     <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
                       <Ionicons name="keypad-outline" size={18} color={focusedField === 'otp' ? '#10b981' : '#64748b'} style={styles.inputIcon} />

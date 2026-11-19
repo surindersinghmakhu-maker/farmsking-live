@@ -998,6 +998,42 @@ export default function LoginScreen() {
                       </Text>
                     </TouchableOpacity>
                   ) : null}
+
+                  {!otpSent && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setError(null);
+                        setOtpSent(true);
+                        setResendTimer(60);
+                        setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+                      }}
+                      activeOpacity={0.85}
+                      style={[
+                        styles.portalSwitchHintBtn,
+                        {
+                          borderColor: portalMode === 'PARTNER' ? 'rgba(245, 158, 11, 0.6)' : 'rgba(16, 185, 129, 0.6)',
+                          backgroundColor: portalMode === 'PARTNER' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(16, 185, 129, 0.18)',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                        },
+                      ]}
+                    >
+                      <Ionicons name="key" size={13} color={portalMode === 'PARTNER' ? '#fbbf24' : '#10b981'} />
+                      <Text
+                        style={[
+                          styles.portalSwitchHintText,
+                          {
+                            color: portalMode === 'PARTNER' ? '#fbbf24' : '#10b981',
+                            fontFamily: FONT.bold,
+                          },
+                        ]}
+                      >
+                        Already received the 6-digit SMS code? Enter code here →
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                   {((error.includes('Agent Login') || error.includes('Partner Login') || error.includes('Partner'))) && (
                     <TouchableOpacity
                       onPress={() => router.push('/partner-login' as any)}
@@ -1134,7 +1170,6 @@ export default function LoginScreen() {
                         onPress={() => {
                           setOtpSent(false);
                           setOtpDigits(['', '', '', '', '', '']);
-                          setDevOtp(null);
                           setConfirmationResult(null);
                           autoSubmittedCodeRef.current = null;
                         }}
@@ -1170,7 +1205,6 @@ export default function LoginScreen() {
                         if (otpSent) {
                           setOtpSent(false);
                           setOtpDigits(['', '', '', '', '', '']);
-                          setDevOtp(null);
                           setConfirmationResult(null);
                           autoSubmittedCodeRef.current = null;
                         }
@@ -1180,11 +1214,6 @@ export default function LoginScreen() {
                       returnKeyType="send"
                       onSubmitEditing={() => {
                         if (mobile.trim().length >= 10 && !otpSending) {
-                          handleSendOtp();
-                        }
-                      }}
-                      onKeyPress={(e: any) => {
-                        if (e.nativeEvent.key === 'Enter' && mobile.trim().length >= 10 && !otpSending) {
                           handleSendOtp();
                         }
                       }}
@@ -1199,44 +1228,64 @@ export default function LoginScreen() {
 
                 {/* Request OTP Button */}
                 {!otpSent ? (
-                  <TouchableOpacity
-                    onPress={handleSendOtp}
-                    disabled={otpSending || mobile.trim().length < 10}
-                    activeOpacity={0.88}
-                    style={[styles.primaryActionBtn, (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 }]}
-                  >
-                    <LinearGradient
-                      colors={portalMode === 'PARTNER' ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.gradientBtn}
+                  <>
+                    <TouchableOpacity
+                      onPress={handleSendOtp}
+                      disabled={otpSending || mobile.trim().length < 10}
+                      activeOpacity={0.88}
+                      style={[styles.primaryActionBtn, (mobile.trim().length < 10 || otpSending) && { opacity: 0.55 }]}
                     >
-                      {otpSending ? (
-                        <ActivityIndicator
-                          color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
-                          size="small"
-                        />
-                      ) : (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Ionicons
-                            name="paper-plane"
-                            size={15}
+                      <LinearGradient
+                        colors={portalMode === 'PARTNER' ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.gradientBtn}
+                      >
+                        {otpSending ? (
+                          <ActivityIndicator
                             color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                            size="small"
                           />
-                          <Text
-                            style={[
-                              styles.buttonText,
-                              portalMode === 'PARTNER' && { color: '#0f172a' },
-                            ]}
-                          >
-                            {portalMode === 'PARTNER'
-                              ? 'Send Agent OTP Code'
-                              : 'Send OTP on Mobile'}
-                          </Text>
-                        </View>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <Ionicons
+                              name="paper-plane"
+                              size={15}
+                              color={portalMode === 'PARTNER' ? '#0f172a' : '#fff'}
+                            />
+                            <Text
+                              style={[
+                                styles.buttonText,
+                                portalMode === 'PARTNER' && { color: '#0f172a' },
+                              ]}
+                            >
+                              {portalMode === 'PARTNER'
+                                ? 'Send Agent OTP Code'
+                                : 'Send OTP on Mobile'}
+                            </Text>
+                          </View>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setError(null);
+                        setOtpSent(true);
+                        setResendTimer(60);
+                        setTimeout(() => otpCellRefs[0]?.current?.focus(), 250);
+                      }}
+                      activeOpacity={0.7}
+                      style={{ marginTop: 12, alignItems: 'center', justifyContent: 'center', paddingVertical: 4 }}
+                    >
+                      <Text style={{ fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium }}>
+                        Already received the SMS code?{' '}
+                        <Text style={{ color: portalMode === 'PARTNER' ? '#fbbf24' : '#34d399', fontFamily: FONT.bold, textDecorationLine: 'underline' }}>
+                          Enter code here
+                        </Text>
+                      </Text>
+                    </TouchableOpacity>
+                  </>
                 ) : (
                   /* ── STEP 2: Segmented 6-Cell OTP Input ── */
                   <View style={styles.otpSectionBox}>

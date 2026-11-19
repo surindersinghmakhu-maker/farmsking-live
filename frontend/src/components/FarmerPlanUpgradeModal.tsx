@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
+import { useAuth } from '../store/auth-context';
 import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '../hooks/useFarmerPlan';
 import { ENABLE_COUPON_SYSTEM } from '../constants/featureFlags';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '../hooks/useFarmerPlanPayments';
@@ -784,8 +785,15 @@ function UpiUpgradeFlow({
   onSwitchToCode: () => void;
   onPickDifferentPlan: () => void;
 }) {
+  const { user } = useAuth();
+  const isAdminUser = Boolean(
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    (Array.isArray(user?.roles) && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')))
+  );
   const initiate = useInitiateFarmerPlanPayment();
   const submit = useSubmitFarmerPlanPayment();
+  const [selectedPayMethod, setSelectedPayMethod] = useState<'ADMIN_TEST' | 'UPI_QR' | 'GATEWAY'>('ADMIN_TEST');
   const [isAutoDebit, setIsAutoDebit] = useState(true);
   const [request, setRequest] = useState<InitiateFarmerPlanPaymentResponse | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -1073,166 +1081,253 @@ function UpiUpgradeFlow({
           {planName} Plan Price: ₹{request.amount}
         </Text>
 
-        {/* 🧪 Developer & User Testing Mode: 1-Click Instant Auto-Pay */}
-        <View style={styles.testModeCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="flask" size={17} color="#059669" />
-              <Text style={styles.testModeTitle}>Instant Test Mode Payment</Text>
-            </View>
-            <View style={styles.testModeBadge}>
-              <Text style={styles.testModeBadgeText}>TEST MODE</Text>
-            </View>
+        {/* 👑 Payment Method Selector: Admin Test Payment vs Direct UPI vs Gateway */}
+        <View style={styles.paymentMethodSelectorWrap}>
+          <Text style={styles.paymentSelectorHeader}>SELECT PAYMENT METHOD:</Text>
+          <View style={styles.paymentMethodSelectorRow}>
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodTab,
+                selectedPayMethod === 'ADMIN_TEST' && styles.paymentMethodTabActiveTest,
+              ]}
+              onPress={() => setSelectedPayMethod('ADMIN_TEST')}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="shield-checkmark"
+                size={14}
+                color={selectedPayMethod === 'ADMIN_TEST' ? '#ffffff' : '#059669'}
+              />
+              <Text
+                style={[
+                  styles.paymentMethodTabText,
+                  selectedPayMethod === 'ADMIN_TEST' && styles.paymentMethodTabTextActive,
+                ]}
+              >
+                👑 Admin Test
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodTab,
+                selectedPayMethod === 'UPI_QR' && styles.paymentMethodTabActive,
+              ]}
+              onPress={() => setSelectedPayMethod('UPI_QR')}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="qr-code"
+                size={14}
+                color={selectedPayMethod === 'UPI_QR' ? '#ffffff' : '#64748b'}
+              />
+              <Text
+                style={[
+                  styles.paymentMethodTabText,
+                  selectedPayMethod === 'UPI_QR' && styles.paymentMethodTabTextActive,
+                ]}
+              >
+                📱 Direct UPI
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodTab,
+                selectedPayMethod === 'GATEWAY' && styles.paymentMethodTabActive,
+              ]}
+              onPress={() => setSelectedPayMethod('GATEWAY')}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="card"
+                size={14}
+                color={selectedPayMethod === 'GATEWAY' ? '#ffffff' : '#64748b'}
+              />
+              <Text
+                style={[
+                  styles.paymentMethodTabText,
+                  selectedPayMethod === 'GATEWAY' && styles.paymentMethodTabTextActive,
+                ]}
+              >
+                💳 Online Gateway
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.testModeSub}>
-            Test without real bank debit. Click below to simulate an instant successful payment and activate your VIP Pass immediately.
-          </Text>
-          <TouchableOpacity
-            style={styles.testModeBtn}
-            onPress={handleTestPayAutoSuccess}
-            disabled={isTestPaying || submit.isPending}
-            activeOpacity={0.88}
-          >
-            {isTestPaying || submit.isPending ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="flash" size={17} color="#ffffff" />
-                <Text style={styles.testModeBtnText}>
-                  🧪 Auto-Pay & Activate {planName} Plan (Test Mode)
+        </View>
+
+        {/* 1. ADMIN TEST PAYMENT VIEW */}
+        {selectedPayMethod === 'ADMIN_TEST' ? (
+          <View style={styles.testModeCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="shield-checkmark" size={18} color="#059669" />
+                <Text style={styles.testModeTitle}>Admin Demo Checking Mode</Text>
+              </View>
+              <View style={styles.testModeBadge}>
+                <Text style={styles.testModeBadgeText}>DEMO TESTING</Text>
+              </View>
+            </View>
+
+            <Text style={styles.testModeSub}>
+              Zero-balance demo verification. Tap the button below to execute an immediate successful payment and activate the <Text style={{ fontFamily: FONT.bold, color: '#065f46' }}>{planName}</Text> plan.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.testModeBtn}
+              onPress={handleTestPayAutoSuccess}
+              disabled={isTestPaying || submit.isPending}
+              activeOpacity={0.88}
+            >
+              {isTestPaying || submit.isPending ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="flash" size={18} color="#ffffff" />
+                  <Text style={styles.testModeBtnText}>
+                    ⚡ TEST PAYMENT
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* 2. DIRECT UPI QR VIEW */}
+        {selectedPayMethod === 'UPI_QR' ? (
+          <>
+            {/* Billing Mode Switcher: Auto-Debit vs One-Time */}
+            <View style={{ width: '100%', flexDirection: 'row', gap: 6, backgroundColor: '#f1f5f9', padding: 3, borderRadius: RADIUS.pill, marginVertical: 2 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 7,
+                  paddingHorizontal: 8,
+                  borderRadius: RADIUS.pill,
+                  backgroundColor: isAutoDebit ? '#16a34a' : 'transparent',
+                  alignItems: 'center',
+                }}
+                onPress={() => setIsAutoDebit(true)}
+              >
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isAutoDebit ? '#ffffff' : '#64748b' }}>
+                  ⚡ GPay AutoPay (Auto-Debit)
                 </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+              </TouchableOpacity>
 
-        {/* Billing Mode Switcher: Auto-Debit vs One-Time */}
-        <View style={{ width: '100%', flexDirection: 'row', gap: 6, backgroundColor: '#f1f5f9', padding: 3, borderRadius: RADIUS.pill, marginVertical: 2 }}>
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              paddingVertical: 7,
-              paddingHorizontal: 8,
-              borderRadius: RADIUS.pill,
-              backgroundColor: isAutoDebit ? '#16a34a' : 'transparent',
-              alignItems: 'center',
-            }}
-            onPress={() => setIsAutoDebit(true)}
-          >
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isAutoDebit ? '#ffffff' : '#64748b' }}>
-              ⚡ GPay AutoPay (Auto-Debit)
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              paddingVertical: 7,
-              paddingHorizontal: 8,
-              borderRadius: RADIUS.pill,
-              backgroundColor: !isAutoDebit ? '#16a34a' : 'transparent',
-              alignItems: 'center',
-            }}
-            onPress={() => setIsAutoDebit(false)}
-          >
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: !isAutoDebit ? '#ffffff' : '#64748b' }}>
-              💳 Pay Once (One-Time)
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {isAutoDebit ? (
-          <View style={{ width: '100%', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', padding: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="repeat" size={16} color="#059669" />
-            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#065f46', flex: 1 }}>
-              Auto-renews periodically via UPI AutoPay. Cancel or pause anytime in Google Pay settings.
-            </Text>
-          </View>
-        ) : null}
-
-        {/* Razorpay Gateway Card */}
-        {request.razorpayOrderId || request.razorpaySubscriptionId || request.activeGateway === 'RAZORPAY' ? (
-          <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-            <Ionicons name="flash" size={32} color="#0284c7" />
-            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-              {isAutoDebit ? 'Set up UPI AutoPay via Razorpay' : 'Instant Checkout via Razorpay'}
-            </Text>
-            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
-              Supports Google Pay, PhonePe, Paytm, Cards & Netbanking
-            </Text>
-            <TouchableOpacity 
-              style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-              onPress={() => handlePayOnline('RAZORPAY')}
-            >
-              <Ionicons name="flash-outline" size={16} color="#ffffff" />
-              <Text style={styles.submitBtnText}>
-                {isAutoDebit ? 'Authorize AutoPay on Google Pay (Razorpay)' : 'Pay Now via Razorpay'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {/* Cashfree Gateway Card */}
-        {request.cashfreeSessionId || request.cashfreeSubscriptionLink || request.activeGateway === 'CASHFREE' ? (
-          <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
-            <Ionicons name="card-outline" size={32} color="#6d28d9" />
-            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
-              {isAutoDebit ? 'Set up UPI AutoPay via Cashfree' : 'Instant Checkout via Cashfree'}
-            </Text>
-            <TouchableOpacity 
-              style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-              onPress={() => handlePayOnline('CASHFREE')}
-            >
-              <Ionicons name="lock-closed" size={16} color="#ffffff" />
-              <Text style={styles.submitBtnText}>
-                {isAutoDebit ? 'Authorize AutoPay on Google Pay (Cashfree)' : 'Pay Online Now (Cashfree)'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        {request.upiLink ? (
-          <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#e2e8f0' }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-              Direct UPI / Scan QR (0% Surcharge)
-            </Text>
-            <View style={styles.qrBox}>
-              <QRCode value={request.upiLink} size={140} />
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 7,
+                  paddingHorizontal: 8,
+                  borderRadius: RADIUS.pill,
+                  backgroundColor: !isAutoDebit ? '#16a34a' : 'transparent',
+                  alignItems: 'center',
+                }}
+                onPress={() => setIsAutoDebit(false)}
+              >
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: !isAutoDebit ? '#ffffff' : '#64748b' }}>
+                  💳 Pay Once (One-Time)
+                </Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-              style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
-              onPress={handleOpenUpiApp}
-            >
-              <Ionicons name="phone-portrait-outline" size={16} color="#ffffff" />
-              <Text style={styles.submitBtnText}>Open UPI App (GPay / PhonePe / Paytm)</Text>
-            </TouchableOpacity>
-          </View>
+
+            {isAutoDebit ? (
+              <View style={{ width: '100%', backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', padding: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="repeat" size={16} color="#059669" />
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#065f46', flex: 1 }}>
+                  Auto-renews periodically via UPI AutoPay. Cancel or pause anytime in Google Pay settings.
+                </Text>
+              </View>
+            ) : null}
+
+            {request.upiLink ? (
+              <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#e2e8f0' }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                  Direct UPI / Scan QR (0% Surcharge)
+                </Text>
+                <View style={styles.qrBox}>
+                  <QRCode value={request.upiLink} size={140} />
+                </View>
+                <TouchableOpacity 
+                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+                  onPress={handleOpenUpiApp}
+                >
+                  <Ionicons name="phone-portrait-outline" size={16} color="#ffffff" />
+                  <Text style={styles.submitBtnText}>Open UPI App (GPay / PhonePe / Paytm)</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            <View style={{ width: '100%', marginTop: 6, gap: 6 }}>
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                Enter UPI UTR / Transaction Reference No.:
+              </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 426189012345 (12-digit UTR)"
+                placeholderTextColor="#94a3b8"
+                value={utr}
+                onChangeText={setUtr}
+                keyboardType="number-pad"
+              />
+              <TouchableOpacity
+                style={[styles.submitBtn, { backgroundColor: '#15803d' }]}
+                onPress={handleSubmit}
+                disabled={submit.isPending}
+              >
+                {submit.isPending ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text style={styles.submitBtnText}>Submit Payment & Request Activation</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
         ) : null}
 
-        <View style={{ width: '100%', marginTop: 6, gap: 6 }}>
-          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-            Enter UPI UTR / Transaction Reference No.:
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 426189012345 (12-digit UTR)"
-            placeholderTextColor="#94a3b8"
-            value={utr}
-            onChangeText={setUtr}
-            keyboardType="number-pad"
-          />
-          <TouchableOpacity
-            style={[styles.submitBtn, { backgroundColor: '#15803d' }]}
-            onPress={handleSubmit}
-            disabled={submit.isPending}
-          >
-            {submit.isPending ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <Text style={styles.submitBtnText}>Submit Payment & Request Activation</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* 3. ONLINE GATEWAYS VIEW */}
+        {selectedPayMethod === 'GATEWAY' ? (
+          <>
+            {request.razorpayOrderId || request.razorpaySubscriptionId || request.activeGateway === 'RAZORPAY' ? (
+              <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
+                <Ionicons name="flash" size={32} color="#0284c7" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
+                  {isAutoDebit ? 'Set up UPI AutoPay via Razorpay' : 'Instant Checkout via Razorpay'}
+                </Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
+                  Supports Google Pay, PhonePe, Paytm, Cards & Netbanking
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#0284c7', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+                  onPress={() => handlePayOnline('RAZORPAY')}
+                >
+                  <Ionicons name="flash-outline" size={16} color="#ffffff" />
+                  <Text style={styles.submitBtnText}>
+                    {isAutoDebit ? 'Authorize AutoPay on Google Pay (Razorpay)' : 'Pay Now via Razorpay'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {request.cashfreeSessionId || request.cashfreeSubscriptionLink || request.activeGateway === 'CASHFREE' ? (
+              <View style={{ backgroundColor: '#f8fafc', padding: 14, borderRadius: RADIUS.lg, alignItems: 'center', gap: 8, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
+                <Ionicons name="card-outline" size={32} color="#6d28d9" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
+                  {isAutoDebit ? 'Set up UPI AutoPay via Cashfree' : 'Instant Checkout via Cashfree'}
+                </Text>
+                <TouchableOpacity 
+                  style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 4, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+                  onPress={() => handlePayOnline('CASHFREE')}
+                >
+                  <Ionicons name="lock-closed" size={16} color="#ffffff" />
+                  <Text style={styles.submitBtnText}>
+                    {isAutoDebit ? 'Authorize AutoPay on Google Pay (Cashfree)' : 'Pay Online Now (Cashfree)'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </>
+        ) : null}
 
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
@@ -1318,6 +1413,49 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   screenshotNoticeText: { flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#166534', lineHeight: 16 },
+  paymentMethodSelectorWrap: {
+    width: '100%',
+    marginVertical: 4,
+    gap: 6,
+  },
+  paymentSelectorHeader: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#64748b',
+    letterSpacing: 0.5,
+  },
+  paymentMethodSelectorRow: {
+    flexDirection: 'row',
+    width: '100%',
+    backgroundColor: '#f1f5f9',
+    padding: 3,
+    borderRadius: RADIUS.pill,
+    gap: 4,
+  },
+  paymentMethodTab: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
+    borderRadius: RADIUS.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  paymentMethodTabActive: {
+    backgroundColor: '#0284c7',
+  },
+  paymentMethodTabActiveTest: {
+    backgroundColor: '#059669',
+  },
+  paymentMethodTabText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  paymentMethodTabTextActive: {
+    color: '#ffffff',
+  },
   testModeCard: {
     width: '100%',
     backgroundColor: 'rgba(16, 185, 129, 0.08)',

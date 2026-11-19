@@ -78,50 +78,255 @@ function convertRateForCropUnit(rawRate: number, sourceUnit: string, targetUnit:
   return Math.round(rawRate);
 }
 
+// Geographic Coordinate Map & Centroids for Indian States (100% Offline Resilience)
+const INDIAN_STATES_COORDINATES = [
+  { name: 'Punjab', lat: 31.1471, lon: 75.3412, minLat: 29.5, maxLat: 32.5, minLon: 73.8, maxLon: 76.9 },
+  { name: 'Haryana', lat: 29.0588, lon: 76.0856, minLat: 27.6, maxLat: 30.9, minLon: 74.4, maxLon: 77.6 },
+  { name: 'Delhi NCR', lat: 28.6139, lon: 77.2090, minLat: 28.4, maxLat: 28.9, minLon: 76.8, maxLon: 77.4 },
+  { name: 'Himachal Pradesh', lat: 31.7433, lon: 77.1202, minLat: 30.3, maxLat: 33.2, minLon: 75.7, maxLon: 79.1 },
+  { name: 'Rajasthan', lat: 27.0238, lon: 74.2179, minLat: 23.0, maxLat: 30.2, minLon: 69.5, maxLon: 78.3 },
+  { name: 'Uttar Pradesh', lat: 26.8467, lon: 80.9462, minLat: 23.8, maxLat: 30.4, minLon: 77.1, maxLon: 84.7 },
+  { name: 'Uttarakhand', lat: 30.0668, lon: 79.0193, minLat: 28.7, maxLat: 31.5, minLon: 77.5, maxLon: 81.1 },
+  { name: 'Madhya Pradesh', lat: 23.4733, lon: 77.9479, minLat: 21.3, maxLat: 26.9, minLon: 74.0, maxLon: 82.8 },
+  { name: 'Gujarat', lat: 22.2587, lon: 71.1924, minLat: 20.1, maxLat: 24.7, minLon: 68.1, maxLon: 74.5 },
+  { name: 'Maharashtra', lat: 19.7515, lon: 75.7139, minLat: 15.6, maxLat: 22.0, minLon: 72.6, maxLon: 80.9 },
+  { name: 'Bihar', lat: 25.0961, lon: 85.3131, minLat: 24.3, maxLat: 27.5, minLon: 83.3, maxLon: 88.3 },
+  { name: 'West Bengal', lat: 22.9868, lon: 87.8550, minLat: 21.5, maxLat: 27.2, minLon: 85.8, maxLon: 89.9 },
+  { name: 'Jharkhand', lat: 23.6102, lon: 85.2799, minLat: 21.9, maxLat: 25.3, minLon: 83.3, maxLon: 87.9 },
+  { name: 'Odisha', lat: 20.9517, lon: 85.0985, minLat: 17.8, maxLat: 22.6, minLon: 81.4, maxLon: 87.5 },
+  { name: 'Chhattisgarh', lat: 21.2787, lon: 81.8661, minLat: 17.8, maxLat: 24.1, minLon: 80.2, maxLon: 84.4 },
+  { name: 'Karnataka', lat: 15.3173, lon: 75.7139, minLat: 11.5, maxLat: 18.5, minLon: 74.0, maxLon: 78.6 },
+  { name: 'Telangana', lat: 17.8749, lon: 78.1008, minLat: 15.8, maxLat: 19.9, minLon: 77.2, maxLon: 81.8 },
+  { name: 'Andhra Pradesh', lat: 15.9129, lon: 79.7400, minLat: 12.6, maxLat: 19.1, minLon: 76.7, maxLon: 84.8 },
+  { name: 'Tamil Nadu', lat: 11.1271, lon: 78.6569, minLat: 8.1, maxLat: 13.6, minLon: 76.2, maxLon: 80.3 },
+  { name: 'Kerala', lat: 10.8505, lon: 76.2711, minLat: 8.3, maxLat: 12.8, minLon: 74.8, maxLon: 77.4 },
+  { name: 'Assam', lat: 26.2006, lon: 92.9376, minLat: 24.1, maxLat: 28.2, minLon: 89.7, maxLon: 96.0 },
+  { name: 'Jammu & Kashmir', lat: 33.7782, lon: 76.5762, minLat: 32.2, maxLat: 37.1, minLon: 73.4, maxLon: 80.3 }
+];
+
+async function resolveIndianStateFromCoords(lat: number, lon: number): Promise<string> {
+  // 1. Try free reverse geocode client API
+  try {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+      controller ? { signal: controller.signal } : undefined
+    );
+    if (timeoutId) clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      const sub = (data.principalSubdivision || data.region || '').trim();
+      if (sub) {
+        const found = INDIAN_STATES_COORDINATES.find(
+          (s) =>
+            sub.toLowerCase().includes(s.name.toLowerCase()) ||
+            s.name.toLowerCase().includes(sub.toLowerCase())
+        );
+        if (found) return found.name;
+        if (/delhi/i.test(sub)) return 'Delhi NCR';
+      }
+    }
+  } catch {
+    // Fall back to offline geographic boundary & centroid calculation
+  }
+
+  // 2. High-precision offline boundary & centroid matching
+  const insideBoxes = INDIAN_STATES_COORDINATES.filter(
+    (s) => lat >= s.minLat && lat <= s.maxLat && lon >= s.minLon && lon <= s.maxLon
+  );
+
+  if (insideBoxes.length === 1) {
+    return insideBoxes[0].name;
+  }
+
+  if (insideBoxes.length > 1) {
+    insideBoxes.sort((a, b) => {
+      const distA = Math.hypot(lat - a.lat, lon - a.lon);
+      const distB = Math.hypot(lat - b.lat, lon - b.lon);
+      return distA - distB;
+    });
+    return insideBoxes[0].name;
+  }
+
+  let best = 'Punjab';
+  let minDist = Infinity;
+  for (const s of INDIAN_STATES_COORDINATES) {
+    const d = Math.hypot(lat - s.lat, lon - s.lon);
+    if (d < minDist) {
+      minDist = d;
+      best = s.name;
+    }
+  }
+  return best;
+}
+
 export function MarketRatesCard() {
   const { user } = useAuth();
   const { data, isLoading, isError } = useMyCropRates();
   const { cropFields } = useCrops();
   const { data: settingsData } = useAppSettings();
+  const { colors } = useExecutiveTheme();
+  const { t } = useLanguage();
+  const { width: windowWidth } = useWindowDimensions();
+  const isCompact = windowWidth < 720;
 
   const bonusAmount = settingsData?.newUserSignupBonusAmount ?? settingsData?.referralSignupBonusAmount ?? 10;
+
+  // 📍 GPS Device Location Auto-Detection State
+  const [deviceLocationState, setDeviceLocationState] = useState<string | null>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem('farmsking_device_state') || null;
+    }
+    return null;
+  });
+  const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [isGpsDetected, setIsGpsDetected] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.localStorage) {
+      return !!window.localStorage.getItem('farmsking_device_state');
+    }
+    return false;
+  });
+
+  // 🌟 Priority Rule: Mobile GPS Location Takes Precedence as Local Mandi Rate
+  const userState = deviceLocationState || user?.state || data?.state || 'Punjab';
+
+  const requestGpsLocation = () => {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.geolocation) {
+      setIsDetectingGps(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const state = await resolveIndianStateFromCoords(latitude, longitude);
+            if (state) {
+              setDeviceLocationState(state);
+              setIsGpsDetected(true);
+              if (typeof window !== 'undefined' && window.localStorage) {
+                window.localStorage.setItem('farmsking_device_state', state);
+              }
+            }
+          } catch (e) {
+            console.warn('GPS state resolve failed:', e);
+          } finally {
+            setIsDetectingGps(false);
+          }
+        },
+        (err) => {
+          console.log('GPS location permission / lookup status:', err.message);
+          setIsDetectingGps(false);
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 1800000 }
+      );
+    }
+  };
+
+  useEffect(() => {
+    // Automatically detect device location on mount to treat mobile phone location as Local Rate
+    requestGpsLocation();
+  }, []);
 
   const [selectedCropForShare, setSelectedCropForShare] = useState<CropRateItem | null>(null);
   const [isSharingImage, setIsSharingImage] = useState(false);
   const [showMultiMandiModal, setShowMultiMandiModal] = useState(false);
   const [selectedMultiMandiCrop, setSelectedMultiMandiCrop] = useState<string>('Wheat');
   const [showWidgetModal, setShowWidgetModal] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return (window as any).__farmsking_deferred_prompt || null;
+    }
+    return null;
+  });
+  const [isAppInstalled, setIsAppInstalled] = useState(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true
+      );
+    }
+    return false;
+  });
+  const [showManualGuide, setShowManualGuide] = useState(false);
+  const [installSuccess, setInstallSuccess] = useState(false);
   const [isCopiedLink, setIsCopiedLink] = useState(false);
   const posterRef = useRef<any>(null);
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const handler = (e: any) => {
+      if ((window as any).__farmsking_deferred_prompt) {
+        setDeferredPrompt((window as any).__farmsking_deferred_prompt);
+      }
+
+      const promptHandler = (e: any) => {
         e.preventDefault();
+        (window as any).__farmsking_deferred_prompt = e;
         setDeferredPrompt(e);
       };
-      window.addEventListener('beforeinstallprompt', handler);
-      return () => window.removeEventListener('beforeinstallprompt', handler);
+
+      const customPromptHandler = () => {
+        if ((window as any).__farmsking_deferred_prompt) {
+          setDeferredPrompt((window as any).__farmsking_deferred_prompt);
+        }
+      };
+
+      const appInstalledHandler = () => {
+        setIsAppInstalled(true);
+        setInstallSuccess(true);
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') {
+          (window as any).__farmsking_deferred_prompt = null;
+        }
+      };
+
+      window.addEventListener('beforeinstallprompt', promptHandler);
+      window.addEventListener('farmsking:prompt-ready', customPromptHandler);
+      window.addEventListener('appinstalled', appInstalledHandler);
+
+      return () => {
+        window.removeEventListener('beforeinstallprompt', promptHandler);
+        window.removeEventListener('farmsking:prompt-ready', customPromptHandler);
+        window.removeEventListener('appinstalled', appInstalledHandler);
+      };
     }
   }, []);
 
   const handleInstallPrompt = async () => {
-    if (deferredPrompt) {
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && (navigator as any).vibrate) {
+      try { (navigator as any).vibrate(40); } catch {}
+    }
+
+    const promptObj = deferredPrompt || (typeof window !== 'undefined' && (window as any).__farmsking_deferred_prompt);
+
+    if (promptObj) {
       try {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
+        await promptObj.prompt();
+        const { outcome } = await promptObj.userChoice;
         if (outcome === 'accepted') {
+          setIsAppInstalled(true);
+          setInstallSuccess(true);
           setDeferredPrompt(null);
+          if (typeof window !== 'undefined') {
+            (window as any).__farmsking_deferred_prompt = null;
+          }
         }
       } catch (err) {
         console.warn('Install prompt error:', err);
+        setShowManualGuide(true);
       }
     } else {
-      Alert.alert(
-        'Add to Phone Screen',
-        'To add this live widget to your phone screen:\n\n1. Open farmsking.in in Chrome or Safari on your phone.\n2. Tap the browser menu (⋮) or Share button.\n3. Tap "Add to Home screen" / "Install App".'
-      );
+      setShowManualGuide(true);
+    }
+  };
+
+  const handleOpenInChrome = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // Android Intent scheme to open directly in Google Chrome
+      const chromeIntentUrl = 'intent://farmsking.in/farm?view=rates#Intent;scheme=https;package=com.android.chrome;end';
+      try {
+        window.location.href = chromeIntentUrl;
+      } catch {
+        window.open('https://farmsking.in/farm?view=rates', '_blank');
+      }
     }
   };
 
@@ -255,8 +460,6 @@ export function MarketRatesCard() {
       })),
     };
   };
-
-  const userState = user?.state || data?.state || 'Punjab';
 
   // Calculate 24h Min, Max & Avg for State level and National level for crops.
   // Calculate 24h Min, Max & Avg for State level and National level for active crops of logged in farmer.
@@ -478,91 +681,114 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(480, 0, 160, 6);
 
-      // 5. Header Row (Date & Time Pill on Left)
+      // 5. TOP BRAND HEADER: Prominent Official Brand Logo + Company Details
+      if (logoImg.naturalWidth > 0) {
+        ctx.drawImage(logoImg, 24, 14, 46, 46);
+        ctx.fillStyle = '#166534';
+        ctx.font = '800 24px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('FarmsKing', 78, 36);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 11.5px sans-serif';
+        ctx.fillText('Smart Farming • Live Mandi Rates', 78, 50);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 8.5px sans-serif';
+        ctx.fillText('FARMSKING TECHNOLOGIES PVT LTD • CIN: U62013PB2026PTC070389', 78, 62);
+      } else {
+        ctx.fillStyle = '#166534';
+        ctx.font = '800 24px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('👑 FarmsKing', 24, 36);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 11.5px sans-serif';
+        ctx.fillText('Smart Farming • Live Mandi Rates', 24, 50);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 8.5px sans-serif';
+        ctx.fillText('FARMSKING TECHNOLOGIES PVT LTD • CIN: U62013PB2026PTC070389', 24, 62);
+      }
+
+      // Top Right: Date & Time Pill
       ctx.fillStyle = '#f0fdf4';
       ctx.strokeStyle = '#bbf7d0';
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.2;
       if (typeof (ctx as any).roundRect === 'function') {
         ctx.beginPath();
-        (ctx as any).roundRect(24, 20, 165, 30, 15);
+        (ctx as any).roundRect(436, 14, 180, 24, 12);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(24, 20, 165, 30);
-        ctx.strokeRect(24, 20, 165, 30);
+        ctx.fillRect(436, 14, 180, 24);
       }
-
       ctx.fillStyle = '#15803d';
-      ctx.font = 'bold 11.5px sans-serif';
-      ctx.fillText(`🕒 ${todayDateStr}  ${currentTimeStr}`, 32, 39);
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`🕒 ${todayDateStr}  ${currentTimeStr}`, 526, 30);
 
-      // Header Center: Official Brand Logo + Title + Tagline
-      if (logoImg.naturalWidth > 0) {
-        ctx.drawImage(logoImg, 215, 14, 38, 38);
-        ctx.fillStyle = '#16a34a';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('FarmsKing', 260, 39);
-        ctx.fillStyle = '#64748b';
-        ctx.font = '500 11px sans-serif';
-        ctx.fillText('Smart Farming • Live Mandi Rates', 260, 53);
+      // Top Right: Local Mandi Pill (GPS Detected)
+      ctx.fillStyle = '#eff6ff';
+      ctx.strokeStyle = '#bfdbfe';
+      ctx.lineWidth = 1.2;
+      if (typeof (ctx as any).roundRect === 'function') {
+        ctx.beginPath();
+        (ctx as any).roundRect(436, 42, 180, 22, 11);
+        ctx.fill();
+        ctx.stroke();
       } else {
-        ctx.fillStyle = '#16a34a';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('👑 FarmsKing', 320, 34);
-        ctx.fillStyle = '#64748b';
-        ctx.font = '500 11px sans-serif';
-        ctx.fillText('Smart Farming • Live Mandi Rates', 320, 51);
-        ctx.textAlign = 'left';
+        ctx.fillRect(436, 42, 180, 22);
       }
+      ctx.fillStyle = '#1d4ed8';
+      ctx.font = 'bold 10.5px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`📍 Local Mandi: ${userState}`, 526, 57);
+      ctx.textAlign = 'left';
 
       // 6. Green Heading Pill Banner (Ratecard Aligned & Clear)
       ctx.fillStyle = '#16a34a';
       if (typeof (ctx as any).roundRect === 'function') {
         ctx.beginPath();
-        (ctx as any).roundRect(110, 64, 420, 30, 15);
+        (ctx as any).roundRect(100, 74, 440, 28, 14);
         ctx.fill();
       } else {
-        ctx.fillRect(110, 64, 420, 30);
+        ctx.fillRect(100, 74, 440, 28);
       }
       ctx.fillStyle = '#ffffff';
-      ctx.font = '800 13px sans-serif';
+      ctx.font = '800 12.5px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🌾 DAILY LIVE CROP MANDI RATE CARD 🌾', 320, 84);
+      ctx.fillText('🌾 DAILY LIVE CROP MANDI RATE CARD 🌾', 320, 93);
       ctx.textAlign = 'left';
 
       // 7. Crop Info Header Container (Vibrant Emerald Box)
+      const cropBoxY = 110;
       ctx.fillStyle = '#f0fdf4';
       ctx.strokeStyle = '#16a34a';
       ctx.lineWidth = 2;
       if (typeof (ctx as any).roundRect === 'function') {
         ctx.beginPath();
-        (ctx as any).roundRect(24, 106, 592, 46, 10);
+        (ctx as any).roundRect(24, cropBoxY, 592, 44, 10);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(24, 106, 592, 46);
-        ctx.strokeRect(24, 106, 592, 46);
+        ctx.fillRect(24, cropBoxY, 592, 44);
+        ctx.strokeRect(24, cropBoxY, 592, 44);
       }
 
       ctx.fillStyle = '#166534';
       ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('🌱 CROP NAME:', 38, 134);
+      ctx.fillText('🌱 CROP NAME:', 38, cropBoxY + 27);
 
       ctx.fillStyle = '#0f172a';
-      ctx.font = '800 20px sans-serif';
-      ctx.fillText(crop.displayTitle, 148, 135);
+      ctx.font = '800 19px sans-serif';
+      ctx.fillText(crop.displayTitle, 146, cropBoxY + 28);
 
       const titleWidth = ctx.measureText(crop.displayTitle).width;
       ctx.fillStyle = '#16a34a';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`(Per ${crop.unit})`, 160 + titleWidth, 134);
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.fillText(`(Per ${crop.unit})`, 156 + titleWidth, cropBoxY + 27);
 
       ctx.fillStyle = '#15803d';
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = 'bold 11.5px sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText('📍 Live Mandi', 600, 134);
+      ctx.fillText('📍 Live Mandi', 600, cropBoxY + 27);
       ctx.textAlign = 'left';
 
       const localAvg = crop.localAvgRate != null ? `₹${crop.localAvgRate.toLocaleString('en-IN')}` : '-';
@@ -935,11 +1161,7 @@ export function MarketRatesCard() {
     }
   };
 
-  const { colors } = useExecutiveTheme();
-  const { t } = useLanguage();
   const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
-  const { width: windowWidth } = useWindowDimensions();
-  const isCompact = windowWidth < 720;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm'), { position: 'relative', overflow: 'hidden' }]}>
@@ -968,6 +1190,23 @@ export function MarketRatesCard() {
         </View>
 
         <View style={[styles.headerActionsRight, isCompact && styles.headerActionsRightCompact]}>
+          <TouchableOpacity
+            style={[
+              styles.gpsPill,
+              {
+                backgroundColor: colors.isDark ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff',
+                borderColor: colors.isDark ? '#3b82f6' : '#bfdbfe',
+              }
+            ]}
+            activeOpacity={0.75}
+            onPress={requestGpsLocation}
+          >
+            <Ionicons name="navigate-circle" size={12} color="#2563eb" />
+            <Text style={[styles.gpsPillText, { color: colors.isDark ? '#93c5fd' : '#1d4ed8' }]}>
+              {isDetectingGps ? 'Locating...' : `Local: ${userState} (GPS)`}
+            </Text>
+          </TouchableOpacity>
+
           <View style={[styles.pill, !colors.isDark && { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
             <Ionicons name="time-outline" size={10} color={colors.isDark ? theme.primary : '#15803d'} />
             <Text style={[styles.pillText, !colors.isDark && { color: '#15803d', fontFamily: FONT.bold }]}>24h Live</Text>
@@ -1461,13 +1700,43 @@ export function MarketRatesCard() {
 
               {/* ⚡ Primary Action Buttons */}
               <View style={styles.actionButtonsWrap}>
+                {isAppInstalled ? (
+                  <View style={styles.installedNoticeBox}>
+                    <Ionicons name="checkmark-done-circle" size={18} color="#16a34a" />
+                    <Text style={styles.installedNoticeText}>
+                      FarmsKing widget is active on your phone screen!
+                    </Text>
+                  </View>
+                ) : null}
+
+                {installSuccess ? (
+                  <View style={styles.successInstallBox}>
+                    <Ionicons name="sparkles" size={18} color="#16a34a" />
+                    <Text style={styles.successInstallText}>
+                      Shortcut successfully added to your phone home screen!
+                    </Text>
+                  </View>
+                ) : null}
+
                 <TouchableOpacity
-                  style={styles.primaryInstallBtn}
-                  activeOpacity={0.85}
+                  style={[styles.primaryInstallBtn, installSuccess && { backgroundColor: '#15803d' }]}
+                  activeOpacity={0.8}
                   onPress={handleInstallPrompt}
                 >
-                  <Ionicons name="download-outline" size={18} color="#ffffff" />
-                  <Text style={styles.primaryInstallBtnText}>Add Shortcut to Phone Screen</Text>
+                  <Ionicons name={installSuccess ? 'checkmark-circle' : 'add-circle-outline'} size={19} color="#ffffff" />
+                  <Text style={styles.primaryInstallBtnText}>
+                    {installSuccess ? 'Added to Phone Screen' : 'Add Shortcut to Phone Screen'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Direct Google Chrome Launcher for users in in-app browsers */}
+                <TouchableOpacity
+                  style={styles.chromeLaunchBtn}
+                  activeOpacity={0.8}
+                  onPress={handleOpenInChrome}
+                >
+                  <Ionicons name="globe-outline" size={16} color="#1d4ed8" />
+                  <Text style={styles.chromeLaunchBtnText}>Open in Google Chrome (Direct Install)</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -1562,21 +1831,26 @@ export function MarketRatesCard() {
 
               return (
                 <View style={styles.posterVoucherHeader}>
-                  <View style={{ flex: 1.3 }}>
-                    <View style={styles.posterDateTimePill}>
-                      <Ionicons name="time-outline" size={11} color="#15803d" />
-                      <Text style={styles.posterDateTimePillText}>
-                        {pDateStr}  {pTimeStr}
-                      </Text>
+                  <View style={styles.posterTopBrandRow}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <BrandLogo size={44} useGoldRing useHdQuality />
+                      <View>
+                        <Text style={styles.posterVchBrandTitle}>FarmsKing</Text>
+                        <Text style={styles.posterVchBrandSub}>Smart Farming • Live Mandi Rates</Text>
+                        <Text style={styles.posterVchCorporateText}>FARMSKING TECHNOLOGIES PVT LTD • CIN: U62013PB2026PTC070389</Text>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={{ flex: 1.7, alignItems: 'flex-end' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <BrandLogo size={32} useGoldRing useHdQuality />
-                      <Text style={styles.posterVchBrandTitle}>FarmsKing</Text>
+                    <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                      <View style={styles.posterDateTimePill}>
+                        <Ionicons name="time-outline" size={10} color="#15803d" />
+                        <Text style={styles.posterDateTimePillText}>{pDateStr}  {pTimeStr}</Text>
+                      </View>
+                      <View style={styles.posterLocationPill}>
+                        <Ionicons name="location" size={10} color="#2563eb" />
+                        <Text style={styles.posterLocationPillText}>Local: {userState}</Text>
+                      </View>
                     </View>
-                    <Text style={styles.posterVchBrandSub}>Smart Farming, Live Mandi Rates</Text>
                   </View>
                 </View>
               );
@@ -2222,6 +2496,34 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#64748b',
   },
+  posterTopBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  posterVchCorporateText: {
+    fontSize: 7.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  posterLocationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+  },
+  posterLocationPillText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#2563eb',
+  },
   posterOfficialPill: {
     borderWidth: 1.5,
     borderColor: '#16a34a',
@@ -2706,6 +3008,19 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#64748b',
   },
+  gpsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  gpsPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
   widgetShortcutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2918,6 +3233,54 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
+  },
+  installedNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  installedNoticeText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  successInstallBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#6ee7b7',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  successInstallText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#047857',
+  },
+  chromeLaunchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1.5,
+    borderColor: '#93c5fd',
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+  chromeLaunchBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#1d4ed8',
   },
   whatsAppShareBtn: {
     flexDirection: 'row',

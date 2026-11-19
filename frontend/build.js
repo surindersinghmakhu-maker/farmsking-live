@@ -279,6 +279,34 @@ ${bundlePreload}    <!-- 100% Reliable Production Vector Icon Fonts -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icon.png?v=7" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=7" />
 
+    <!-- 📱 Progressive Web App (PWA) Manifest & Mobile Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FarmsKing" />
+    <meta name="application-name" content="FarmsKing" />
+    <meta name="theme-color" content="#16a34a" />
+
+    <!-- ⚡ Service Worker Registration & Early PWA Install Prompt Capture -->
+    <script>
+      window.__farmsking_deferred_prompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__farmsking_deferred_prompt = e;
+        window.dispatchEvent(new CustomEvent('farmsking:prompt-ready'));
+      });
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js').then(function(reg) {
+            console.log('FarmsKing SW active:', reg.scope);
+          }).catch(function(err) {
+            console.warn('FarmsKing SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
+
     <!-- Google WebSite Schema for Site Name & Brand Authority -->
     <script type="application/ld+json">
     {

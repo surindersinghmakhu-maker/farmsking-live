@@ -2,11 +2,14 @@
   "name": "FarmsKing - Smart Farming",
   "short_name": "FarmsKing",
   "description": "Live Mandi Rates, Crop Intelligence Engine, Farming Advisory & Shop",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "id": "/?source=pwa",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#16a34a",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "/icon.png?v=7",
@@ -24,6 +27,32 @@
       "src": "/favicon.png?v=7",
       "sizes": "128x128",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live Crop Mandi Rates",
+      "short_name": "Crop Rates",
+      "description": "Real-time crop prices across local and national mandis",
+      "url": "/farm?view=rates&source=shortcut",
+      "icons": [
+        {
+          "src": "/icon.png?v=7",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Crop Doctor Advisory",
+      "short_name": "Crop Doctor",
+      "description": "Instant crop pathology & pest diagnosis",
+      "url": "/crop-doctor?source=shortcut",
+      "icons": [
+        {
+          "src": "/icon.png?v=7",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

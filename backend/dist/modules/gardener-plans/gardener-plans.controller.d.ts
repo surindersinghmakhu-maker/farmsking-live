@@ -68,11 +68,11 @@ export declare class GardenerPlansController {
     createCoupon(user: AuthUser, dto: CreateGardenerPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -80,27 +80,27 @@ export declare class GardenerPlansController {
     }>;
     listAllCoupons(): import(".prisma/client").Prisma.PrismaPromise<({
         createdBy: {
-            id: string;
             name: string;
+            id: string;
         };
         assignedGardener: {
+            name: string;
             id: string;
             mobile: string;
-            name: string;
         } | null;
         usedByGardener: {
+            name: string;
             id: string;
             mobile: string;
-            name: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -108,14 +108,14 @@ export declare class GardenerPlansController {
     })[]>;
     listAllGardenerPlans(): import(".prisma/client").Prisma.PrismaPromise<({
         coupon: {
-            code: string;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+            code: string;
         } | null;
         gardener: {
+            name: string;
             id: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
     } & {
         id: string;

@@ -97,8 +97,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
@@ -115,27 +115,18 @@ export declare class ExpensesController {
         partyId: string | null;
     }>;
     findAllForAdmin(): import(".prisma/client").Prisma.PrismaPromise<({
-        party: {
-            id: string;
-            mobile: string | null;
-            name: string;
-        } | null;
         farm: {
-            id: string;
             name: string;
+            id: string;
             owner: {
+                name: string;
                 id: string;
                 mobile: string;
-                name: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
             };
         };
-        plot: {
-            id: string;
-            name: string;
-        } | null;
         cropCycle: {
             id: string;
             cropName: string;
@@ -152,10 +143,19 @@ export declare class ExpensesController {
             icon: string | null;
             sortOrder: number;
         };
+        plot: {
+            name: string;
+            id: string;
+        } | null;
+        party: {
+            name: string;
+            id: string;
+            mobile: string | null;
+        } | null;
         recordedBy: {
+            name: string;
             id: string;
             mobile: string;
-            name: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -165,8 +165,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
@@ -204,8 +204,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
@@ -223,8 +223,8 @@ export declare class ExpensesController {
     })[]>;
     findOne(user: AuthUser, id: string): Promise<{
         farm: {
-            id: string;
             name: string;
+            id: string;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -259,8 +259,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
@@ -298,8 +298,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;
@@ -320,8 +320,8 @@ export declare class ExpensesController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        description: string | null;
         amount: import("@prisma/client/runtime/library").Decimal;
+        description: string | null;
         notes: string | null;
         paymentMode: import(".prisma/client").$Enums.PaymentMode | null;
         recordedById: string;

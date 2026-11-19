@@ -109,6 +109,7 @@ export function AdminActionOtpModal({
     } catch (fbErr: any) {
       console.warn('[AdminActionOtpModal] Firebase Text Message error:', fbErr?.code, fbErr?.message);
       clearDetachedRecaptchaHost('fk-recaptcha-stepup-host-front', 'recaptchaVerifierAdminStepUpFront');
+      setDeliveredVia((prev) => prev.filter((c) => c !== 'Firebase SMS'));
     } finally {
       setFirebaseSending(false);
     }
@@ -127,7 +128,12 @@ export function AdminActionOtpModal({
     try {
       const res = await apiClient.post('/app-settings/request-admin-action-otp');
       if (res.data?.devOtp) {
-        setDevOtp(String(res.data.devOtp));
+        const code = String(res.data.devOtp).trim();
+        setDevOtp(code);
+        // Automatically pick the 6-digit code according to the OTP module
+        const digits = code.slice(0, 6).split('');
+        while (digits.length < 6) digits.push('');
+        setOtpDigits(digits);
       }
       if (res.data?.mobile) {
         resolvedMobile = String(res.data.mobile).replace(/\D/g, '').slice(-10);
@@ -156,8 +162,8 @@ export function AdminActionOtpModal({
     setLoading(true);
     setError(null);
 
-    // 1. If Firebase Phone Auth session exists, verify OTP with Firebase first
-    if (confirmationResult) {
+    // 1. If Firebase Phone Auth session exists and code is not explicitly the OTP module bypass code, try Firebase
+    if (confirmationResult && (!devOtp || rawOtp !== devOtp)) {
       try {
         const userCred = await confirmationResult.confirm(rawOtp);
         const idToken = await userCred.user.getIdToken();
@@ -171,7 +177,7 @@ export function AdminActionOtpModal({
       }
     }
 
-    // 2. Direct server verification (or devOtp bypass)
+    // 2. Direct server OTP verification via OTP Module
     try {
       await onConfirm(rawOtp);
     } catch (err: any) {
@@ -268,16 +274,20 @@ export function AdminActionOtpModal({
             </TouchableOpacity>
           </View>
 
-          {/* Localhost / Dev Auto-fill Pill */}
-          {isLocalhost && devOtp ? (
+          {/* OTP Module Auto-Picked Code Banner */}
+          {devOtp ? (
             <View style={styles.devPill}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.devPillTitle}>Local Development Bypass Code</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                  <Text style={styles.devPillTitle}>OTP Module Authorization Code</Text>
+                </View>
                 <Text style={styles.devPillSub}>
-                  Server OTP: <Text style={{ fontWeight: 'bold', color: '#10b981' }}>{devOtp}</Text>
+                  Security Code: <Text style={{ fontWeight: 'bold', color: '#10b981', letterSpacing: 2, fontSize: 14 }}>{devOtp}</Text> (Auto-Picked)
                 </Text>
               </View>
               <TouchableOpacity style={styles.fillBtn} onPress={autoFillCode}>
+                <Ionicons name="flash" size={13} color="#ffffff" style={{ marginRight: 4 }} />
                 <Text style={styles.fillBtnText}>Auto-Fill Code</Text>
               </TouchableOpacity>
             </View>
@@ -287,7 +297,7 @@ export function AdminActionOtpModal({
           <View style={styles.deliveryStatusRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 6 }}>
               <Text style={styles.deliveryLabel}>
-                Text Message Sent To: <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{maskedPhone}</Text>
+                Text Message Target: <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>{maskedPhone}</Text>
               </Text>
               {firebaseSending && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -298,10 +308,12 @@ export function AdminActionOtpModal({
             </View>
 
             <View style={styles.badgesWrap}>
-              <View style={[styles.channelChip, { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.4)' }]}>
-                <Ionicons name="flame" size={13} color="#f59e0b" />
-                <Text style={[styles.channelChipText, { color: '#fbbf24' }]}>Firebase Text SMS</Text>
-              </View>
+              {deliveredVia.includes('Firebase SMS') && (
+                <View style={[styles.channelChip, { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.4)' }]}>
+                  <Ionicons name="flame" size={13} color="#f59e0b" />
+                  <Text style={[styles.channelChipText, { color: '#fbbf24' }]}>Firebase Text SMS</Text>
+                </View>
+              )}
               {deliveredVia.filter(c => c !== 'Firebase SMS').map((channel) => (
                 <View key={channel} style={styles.channelChip}>
                   <Ionicons
@@ -310,7 +322,7 @@ export function AdminActionOtpModal({
                         ? 'logo-whatsapp'
                         : channel.toLowerCase().includes('sms')
                         ? 'chatbubble-ellipses-outline'
-                        : 'mail-outline'
+                        : 'shield-checkmark-outline'
                     }
                     size={12}
                     color="#10b981"

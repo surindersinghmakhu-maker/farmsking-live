@@ -10,15 +10,15 @@ export declare class SubscriptionsService {
     constructor(prisma: PrismaService, advisorAssignmentService: AdvisorAssignmentService, whatsAppGroupSyncService: WhatsAppGroupSyncService);
     private upgradePlanForSubscription;
     listPlans(): import(".prisma/client").Prisma.PrismaPromise<{
-        id: string;
         name: string;
+        id: string;
         createdAt: Date;
         updatedAt: Date;
-        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
+        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -35,9 +35,9 @@ export declare class SubscriptionsService {
     create(user: AuthUser, dto: CreateSubscriptionDto): Promise<{
         advisorAssignment: {
             advisor: {
+                name: string;
                 id: string;
                 mobile: string;
-                name: string;
             };
         } & {
             id: string;
@@ -54,15 +54,15 @@ export declare class SubscriptionsService {
             assignedById: string | null;
         };
         plan: {
-            id: string;
             name: string;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
-            isActive: boolean;
             description: string | null;
             adminNotes: string | null;
             reviewedById: string | null;
             reviewedAt: Date | null;
+            isActive: boolean;
             advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
@@ -92,11 +92,34 @@ export declare class SubscriptionsService {
         approvedById: string | null;
     }>;
     findMine(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorSubscriptionClient<({
+        plan: {
+            name: string;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            description: string | null;
+            adminNotes: string | null;
+            reviewedById: string | null;
+            reviewedAt: Date | null;
+            isActive: boolean;
+            advisorId: string | null;
+            hiringModel: import(".prisma/client").$Enums.HiringModelType;
+            price: import("@prisma/client/runtime/library").Decimal;
+            chatEnabled: boolean;
+            billingCycle: string;
+            planType: import(".prisma/client").$Enums.FarmerPlanType;
+            maxFarms: number;
+            callRequestLimit: number;
+            inAppCallLimit: number;
+            videoCallAllowed: boolean;
+            videoCallLimit: number;
+            approvalStatus: string;
+        };
         advisorAssignment: ({
             advisor: {
+                name: string;
                 id: string;
                 mobile: string;
-                name: string;
                 village: string | null;
                 district: string | null;
                 state: string | null;
@@ -115,29 +138,6 @@ export declare class SubscriptionsService {
             subscriptionId: string | null;
             assignedById: string | null;
         }) | null;
-        plan: {
-            id: string;
-            name: string;
-            createdAt: Date;
-            updatedAt: Date;
-            isActive: boolean;
-            description: string | null;
-            adminNotes: string | null;
-            reviewedById: string | null;
-            reviewedAt: Date | null;
-            advisorId: string | null;
-            hiringModel: import(".prisma/client").$Enums.HiringModelType;
-            price: import("@prisma/client/runtime/library").Decimal;
-            chatEnabled: boolean;
-            billingCycle: string;
-            planType: import(".prisma/client").$Enums.FarmerPlanType;
-            maxFarms: number;
-            callRequestLimit: number;
-            inAppCallLimit: number;
-            videoCallAllowed: boolean;
-            videoCallLimit: number;
-            approvalStatus: string;
-        };
     } & {
         id: string;
         createdAt: Date;

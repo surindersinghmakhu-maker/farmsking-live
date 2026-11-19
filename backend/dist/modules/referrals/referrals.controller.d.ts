@@ -15,10 +15,10 @@ export declare class ReferralsController {
         totalRoyaltiesEarned: number;
         directReferrals: ({
             referredUser: {
+                name: string;
                 id: string;
                 kingId: string | null;
                 mobile: string;
-                name: string;
                 createdAt: Date;
             };
         } & {
@@ -32,9 +32,9 @@ export declare class ReferralsController {
         })[];
         extendedReferrals: ({
             referredUser: {
+                name: string;
                 id: string;
                 kingId: string | null;
-                name: string;
                 createdAt: Date;
             };
         } & {
@@ -48,9 +48,9 @@ export declare class ReferralsController {
         })[];
         royaltiesHistory: ({
             sourceUser: {
+                name: string;
                 id: string;
                 kingId: string | null;
-                name: string;
             };
         } & {
             id: string;

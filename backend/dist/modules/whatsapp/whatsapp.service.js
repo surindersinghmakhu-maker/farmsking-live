@@ -86,9 +86,10 @@ let WhatsappBotService = WhatsappBotService_1 = class WhatsappBotService {
         if (!token) {
             this.logger.log(`[WhatsApp Sandbox Echo to ${cleanRecipient}]: ${text.slice(0, 80)}...`);
             return {
-                success: true,
+                success: false,
                 messageId: `sim_wa_${Date.now()}`,
                 provider: 'META_CLOUD_SIMULATED',
+                error: 'WhatsApp Meta token not configured.',
             };
         }
         try {

@@ -89,7 +89,9 @@ export class AppSettingsService {
           const waSvc = this.moduleRef.get(WhatsappBotService, { strict: false });
           if (waSvc?.sendOtpMessage) {
             const waRes = await waSvc.sendOtpMessage(cleanMobile, otpCode);
-            if (waRes?.success) channels.push('WhatsApp');
+            if (waRes?.success && waRes?.provider !== 'META_CLOUD_SIMULATED') {
+              channels.push('WhatsApp');
+            }
           }
         } catch {}
       }
@@ -106,6 +108,10 @@ export class AppSettingsService {
         } catch {}
       }
     } catch {}
+
+    if (channels.length === 0) {
+      channels.push('OTP Module');
+    }
 
     const isOwnerOrTest = isDev || cleanMobile === '9872066901' || cleanMobile === '9577622000' || process.env.ALLOW_DEV_OTP_RESPONSE === 'true';
 

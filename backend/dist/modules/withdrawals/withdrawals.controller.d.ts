@@ -32,10 +32,10 @@ export declare class WithdrawalsController {
         };
         businessPartner: {
             id: string;
-            upiId: string | null;
-            name: string;
             kingId: string | null;
             mobile: string;
+            name: string;
+            upiId: string | null;
             bankAccountNumber: string | null;
             bankIfsc: string | null;
         };

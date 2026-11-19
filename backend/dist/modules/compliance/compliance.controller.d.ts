@@ -59,9 +59,9 @@ export declare class ComplianceController {
             }[];
             recordedChallanRows: {
                 id: string;
-                updatedAt: Date;
-                createdAt: Date;
                 panNumber: string | null;
+                createdAt: Date;
+                updatedAt: Date;
                 grossAmount: import("@prisma/client/runtime/library").Decimal;
                 netAmount: import("@prisma/client/runtime/library").Decimal;
                 financialYear: string;
@@ -83,12 +83,12 @@ export declare class ComplianceController {
         };
         gstr8Count: number;
         gstr8Reports: {
+            year: number;
+            month: number;
             id: string;
             createdAt: Date;
             status: string;
-            year: number;
             sellerStoreId: string;
-            month: number;
             totalGrossSales: import("@prisma/client/runtime/library").Decimal;
             totalSalesReturn: import("@prisma/client/runtime/library").Decimal;
             netTaxableValue: import("@prisma/client/runtime/library").Decimal;
@@ -105,8 +105,8 @@ export declare class ComplianceController {
             tcsAmount: import("@prisma/client/runtime/library").Decimal;
             commissionGstAmount: import("@prisma/client/runtime/library").Decimal;
             invoiceNumber: string;
-            invoiceType: import(".prisma/client").$Enums.InvoiceType;
             financialYear: string;
+            invoiceType: import(".prisma/client").$Enums.InvoiceType;
             netTaxableAmount: import("@prisma/client/runtime/library").Decimal;
             cgstAmount: import("@prisma/client/runtime/library").Decimal;
             sgstAmount: import("@prisma/client/runtime/library").Decimal;
@@ -173,12 +173,12 @@ export declare class ComplianceController {
         };
         statutoryRecords: {
             id: string;
+            createdAt: Date;
             updatedAt: Date;
             updatedById: string | null;
-            createdAt: Date;
+            title: string;
             status: string;
             notes: string | null;
-            title: string;
             category: string;
             dueDate: Date | null;
             authority: string | null;
@@ -192,12 +192,12 @@ export declare class ComplianceController {
     exportTdsCsv(section?: string): Promise<string>;
     listRecords(): Promise<{
         id: string;
+        createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        createdAt: Date;
+        title: string;
         status: string;
         notes: string | null;
-        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;
@@ -208,12 +208,12 @@ export declare class ComplianceController {
     }[]>;
     createRecord(user: AuthUser, dto: CreateComplianceRecordDto): Promise<{
         id: string;
+        createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        createdAt: Date;
+        title: string;
         status: string;
         notes: string | null;
-        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;
@@ -224,12 +224,12 @@ export declare class ComplianceController {
     }>;
     updateRecord(user: AuthUser, id: string, dto: UpdateComplianceRecordDto): Promise<{
         id: string;
+        createdAt: Date;
         updatedAt: Date;
         updatedById: string | null;
-        createdAt: Date;
+        title: string;
         status: string;
         notes: string | null;
-        title: string;
         category: string;
         dueDate: Date | null;
         authority: string | null;

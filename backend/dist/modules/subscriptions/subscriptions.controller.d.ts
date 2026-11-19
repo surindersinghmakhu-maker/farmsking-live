@@ -6,14 +6,14 @@ export declare class SubscriptionsController {
     constructor(subscriptionsService: SubscriptionsService);
     listPlans(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
-        updatedAt: Date;
-        createdAt: Date;
         name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        isActive: boolean;
         description: string | null;
         adminNotes: string | null;
         reviewedById: string | null;
         reviewedAt: Date | null;
-        isActive: boolean;
         advisorId: string | null;
         hiringModel: import(".prisma/client").$Enums.HiringModelType;
         price: import("@prisma/client/runtime/library").Decimal;
@@ -31,16 +31,16 @@ export declare class SubscriptionsController {
         advisorAssignment: {
             advisor: {
                 id: string;
-                name: string;
                 mobile: string;
+                name: string;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
             startDate: Date;
             endDate: Date | null;
-            deletedAt: Date | null;
             status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
             notes: string | null;
             farmerId: string;
@@ -50,14 +50,14 @@ export declare class SubscriptionsController {
         };
         plan: {
             id: string;
-            updatedAt: Date;
-            createdAt: Date;
             name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            isActive: boolean;
             description: string | null;
             adminNotes: string | null;
             reviewedById: string | null;
             reviewedAt: Date | null;
-            isActive: boolean;
             advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
@@ -72,11 +72,11 @@ export declare class SubscriptionsController {
             approvalStatus: string;
         };
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         startDate: Date | null;
         endDate: Date | null;
-        deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
         requestedAt: Date;
         notes: string | null;
@@ -87,16 +87,39 @@ export declare class SubscriptionsController {
         approvedById: string | null;
     }>;
     findMine(user: AuthUser): import(".prisma/client").Prisma.Prisma__AdvisorSubscriptionClient<({
+        advisorAssignment: ({
+            advisor: {
+                id: string;
+                mobile: string;
+                name: string;
+                village: string | null;
+                district: string | null;
+                state: string | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            startDate: Date;
+            endDate: Date | null;
+            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
+            notes: string | null;
+            farmerId: string;
+            advisorId: string;
+            subscriptionId: string | null;
+            assignedById: string | null;
+        }) | null;
         plan: {
             id: string;
-            updatedAt: Date;
-            createdAt: Date;
             name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            isActive: boolean;
             description: string | null;
             adminNotes: string | null;
             reviewedById: string | null;
             reviewedAt: Date | null;
-            isActive: boolean;
             advisorId: string | null;
             hiringModel: import(".prisma/client").$Enums.HiringModelType;
             price: import("@prisma/client/runtime/library").Decimal;
@@ -110,36 +133,13 @@ export declare class SubscriptionsController {
             videoCallLimit: number;
             approvalStatus: string;
         };
-        advisorAssignment: ({
-            advisor: {
-                id: string;
-                name: string;
-                mobile: string;
-                village: string | null;
-                district: string | null;
-                state: string | null;
-            };
-        } & {
-            id: string;
-            updatedAt: Date;
-            createdAt: Date;
-            startDate: Date;
-            endDate: Date | null;
-            deletedAt: Date | null;
-            status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
-            notes: string | null;
-            farmerId: string;
-            advisorId: string;
-            subscriptionId: string | null;
-            assignedById: string | null;
-        }) | null;
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         startDate: Date | null;
         endDate: Date | null;
-        deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
         requestedAt: Date;
         notes: string | null;
@@ -151,11 +151,11 @@ export declare class SubscriptionsController {
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     cancel(user: AuthUser, id: string): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         startDate: Date | null;
         endDate: Date | null;
-        deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
         requestedAt: Date;
         notes: string | null;
@@ -167,11 +167,11 @@ export declare class SubscriptionsController {
     }>;
     approve(user: AuthUser, id: string): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         startDate: Date | null;
         endDate: Date | null;
-        deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
         requestedAt: Date;
         notes: string | null;
@@ -183,11 +183,11 @@ export declare class SubscriptionsController {
     }>;
     reject(user: AuthUser, id: string): Promise<{
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
         startDate: Date | null;
         endDate: Date | null;
-        deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
         requestedAt: Date;
         notes: string | null;

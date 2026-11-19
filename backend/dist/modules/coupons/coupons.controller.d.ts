@@ -10,8 +10,8 @@ export declare class CouponsController {
     create(user: AuthUser, dto: CreateCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        businessPartnerId: string;
         code: string;
+        businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
         commissionValue: import("@prisma/client/runtime/library").Decimal;
         commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -31,8 +31,8 @@ export declare class CouponsController {
         coupons: {
             id: string;
             createdAt: Date;
-            businessPartnerId: string;
             code: string;
+            businessPartnerId: string;
             commissionType: import(".prisma/client").$Enums.DiscountValueType;
             commissionValue: import("@prisma/client/runtime/library").Decimal;
             commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -51,14 +51,14 @@ export declare class CouponsController {
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         businessPartner: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         };
     } & {
         id: string;
         createdAt: Date;
-        businessPartnerId: string;
         code: string;
+        businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
         commissionValue: import("@prisma/client/runtime/library").Decimal;
         commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -76,8 +76,8 @@ export declare class CouponsController {
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         createdAt: Date;
-        businessPartnerId: string;
         code: string;
+        businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
         commissionValue: import("@prisma/client/runtime/library").Decimal;
         commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -106,8 +106,8 @@ export declare class CouponsController {
     update(id: string, dto: UpdateCouponDto): Promise<{
         id: string;
         createdAt: Date;
-        businessPartnerId: string;
         code: string;
+        businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
         commissionValue: import("@prisma/client/runtime/library").Decimal;
         commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -125,8 +125,8 @@ export declare class CouponsController {
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
-        businessPartnerId: string;
         code: string;
+        businessPartnerId: string;
         commissionType: import(".prisma/client").$Enums.DiscountValueType;
         commissionValue: import("@prisma/client/runtime/library").Decimal;
         commissionMaxCap: import("@prisma/client/runtime/library").Decimal | null;
@@ -144,13 +144,13 @@ export declare class CouponsController {
     getRedemptions(user: AuthUser, id: string): Promise<({
         customer: {
             id: string;
-            name: string;
             mobile: string;
+            name: string;
         } | null;
     } & {
         id: string;
-        couponId: string;
         customerId: string | null;
+        couponId: string;
         discountAmount: import("@prisma/client/runtime/library").Decimal;
         orderId: string | null;
         orderAmount: import("@prisma/client/runtime/library").Decimal;
@@ -163,8 +163,8 @@ export declare class CouponsController {
         commissionAmount: number;
         redemption: {
             id: string;
-            couponId: string;
             customerId: string | null;
+            couponId: string;
             discountAmount: import("@prisma/client/runtime/library").Decimal;
             orderId: string | null;
             orderAmount: import("@prisma/client/runtime/library").Decimal;

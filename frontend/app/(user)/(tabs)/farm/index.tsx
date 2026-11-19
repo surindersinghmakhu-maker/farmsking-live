@@ -882,7 +882,7 @@ export default function FarmListScreen() {
                 fontFamily: FONT.extraBold,
               }
             ]}>
-              {t('activeCrops', 'Active Crops')} ({activeCropFields.length})
+              {t('activeCrops', 'Active Crops')}
             </Text>
           </TouchableOpacity>
 

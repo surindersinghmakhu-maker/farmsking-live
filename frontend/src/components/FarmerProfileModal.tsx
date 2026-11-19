@@ -266,7 +266,7 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
 
               {/* Active Crops Table View */}
               <View style={styles.tableCard}>
-                <Text style={styles.tableCardHeader}>🌾 Active Crops ({activeCrops.length})</Text>
+                <Text style={styles.tableCardHeader}>🌾 Active Crops</Text>
                 {activeCrops.length === 0 ? (
                   <Text style={styles.noCropsText}>No active crops registered for this farmer.</Text>
                 ) : (

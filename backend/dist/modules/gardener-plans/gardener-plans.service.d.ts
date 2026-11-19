@@ -52,8 +52,8 @@ export declare class GardenerPlansService {
     redeemCoupon(user: AuthUser, dto: RedeemGardenerPlanCouponDto): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             startDate: Date;
             endDate: Date | null;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
@@ -70,11 +70,11 @@ export declare class GardenerPlansService {
     createCoupon(admin: AuthUser, dto: CreateGardenerPlanCouponDto): Promise<{
         id: string;
         createdAt: Date;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -87,22 +87,22 @@ export declare class GardenerPlansService {
         };
         assignedGardener: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         usedByGardener: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
     } & {
         id: string;
         createdAt: Date;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+        daysGranted: number;
         code: string;
         expiresAt: Date | null;
         createdById: string;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
-        daysGranted: number;
         isUsed: boolean;
         usedAt: Date | null;
         assignedGardenerId: string | null;
@@ -110,19 +110,19 @@ export declare class GardenerPlansService {
     })[]>;
     listAllGardenerPlans(): import(".prisma/client").Prisma.PrismaPromise<({
         coupon: {
-            code: string;
             plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
+            code: string;
         } | null;
         gardener: {
             id: string;
+            name: string;
             kingId: string | null;
             mobile: string;
-            name: string;
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         startDate: Date;
         endDate: Date | null;
         plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;

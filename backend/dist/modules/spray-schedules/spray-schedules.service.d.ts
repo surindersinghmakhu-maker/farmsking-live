@@ -13,8 +13,8 @@ export declare class SprayScheduleService {
     private rememberProductNames;
     create(user: AuthUser, dto: CreateSprayScheduleDto): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
@@ -30,8 +30,8 @@ export declare class SprayScheduleService {
     }>;
     listForCrop(user: AuthUser, cropCycleId: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
@@ -47,8 +47,8 @@ export declare class SprayScheduleService {
     }[]>;
     update(user: AuthUser, id: string, dto: UpdateSprayScheduleDto): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
@@ -64,8 +64,8 @@ export declare class SprayScheduleService {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
@@ -81,8 +81,8 @@ export declare class SprayScheduleService {
     }>;
     searchCatalog(query: string): Promise<{
         id: string;
-        name: string;
         createdAt: Date;
+        name: string;
         deletedAt: Date | null;
         sprayType: import(".prisma/client").$Enums.SprayType | null;
     }[]>;

@@ -107,6 +107,7 @@ export class AppSettingsService {
     return {
       success: true,
       deliveredVia: channels,
+      mobile: cleanMobile,
       message:
         channels.length > 0
           ? `Admin Step-Up 2FA code sent via ${channels.join(' & ')}.`
@@ -119,20 +120,42 @@ export class AppSettingsService {
   }
 
   /** Strictly validates mandatory Step-Up 2FA OTP before saving critical admin changes */
-  verifyAdminActionOtp(adminId: string, otp?: string) {
+  async verifyAdminActionOtp(adminId: string, otp?: string) {
     if (!adminId) {
       throw new UnauthorizedException('Admin authentication required for this action.');
     }
 
-    const stored = this.adminActionOtpStore.get(adminId);
     const provided = otp?.trim();
+    if (!provided) {
+      throw new BadRequestException('Admin 6-digit Step-Up 2FA authorization code is required to complete this change.');
+    }
+
+    // 1. Firebase Phone Auth cryptographic token verification (if ID Token passed)
+    if (provided.split('.').length === 3) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { getAuth } = require('firebase-admin/auth');
+        const decoded = await getAuth().verifyIdToken(provided);
+        const adminUser = await this.prisma.user.findUnique({
+          where: { id: adminId },
+          select: { mobile: true },
+        });
+        const tokenDigits = (decoded?.phone_number || '').replace(/\D/g, '').slice(-10);
+        const adminDigits = (adminUser?.mobile || '').replace(/\D/g, '').slice(-10);
+        if (tokenDigits && adminDigits && tokenDigits === adminDigits) {
+          this.logger.log(`[Admin Step-Up 2FA] Cryptographically verified via Firebase Phone Auth for admin ${adminId}`);
+          this.adminActionOtpStore.delete(adminId);
+          return true;
+        }
+      } catch (fbErr: any) {
+        this.logger.warn(`[Admin Step-Up 2FA] Firebase ID Token check failed: ${fbErr?.message}`);
+      }
+    }
+
+    const stored = this.adminActionOtpStore.get(adminId);
 
     if (!stored) {
       throw new BadRequestException('Admin Step-Up 2FA verification required. Please request a fresh 6-digit authorization code.');
-    }
-
-    if (!provided) {
-      throw new BadRequestException('Admin 6-digit Step-Up 2FA authorization code is required to complete this change.');
     }
 
     if (Date.now() > stored.expiresAt) {
@@ -1005,7 +1028,7 @@ export class AppSettingsService {
     options?: { skipStepUp?: boolean },
   ): Promise<SystemIntegrationsConfig> {
     if (!options?.skipStepUp) {
-      this.verifyAdminActionOtp(admin?.id, rawPayload?.adminConfirmationOtp);
+      await this.verifyAdminActionOtp(admin?.id, rawPayload?.adminConfirmationOtp);
     }
     const { adminConfirmationOtp: _ignoredOtp, ...payload } = rawPayload || {};
     this.clearCache();
@@ -1278,7 +1301,7 @@ export class AppSettingsService {
   }
 
   async updateServiceConfig(admin: AuthUser, body: { serviceId: string; activeProvider: string; config: Record<string, string>; adminConfirmationOtp?: string }) {
-    this.verifyAdminActionOtp(admin?.id, body?.adminConfirmationOtp);
+    await this.verifyAdminActionOtp(admin?.id, body?.adminConfirmationOtp);
     this.clearCache();
     const existing = await this.prisma.appSetting.findUnique({ where: { id: SINGLETON_ID } });
     const currentFlags = ((existing as any)?.featureFlags as Record<string, any>) || {};

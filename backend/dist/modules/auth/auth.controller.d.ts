@@ -243,17 +243,19 @@ export declare class AuthController {
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -263,30 +265,30 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     unlinkGoogleAccount(user: AuthUser): Promise<{
         success: boolean;
         message: string;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -296,13 +298,11 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     sendEmailVerification(user: AuthUser, body: {
@@ -325,17 +325,19 @@ export declare class AuthController {
         message: string;
         email: string | null;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -345,13 +347,11 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     verifyEmailGet(token: string): Promise<{
@@ -364,17 +364,19 @@ export declare class AuthController {
         message: string;
         email: string | null;
         user: {
-            roles: import(".prisma/client").$Enums.Role[];
-            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             id: string;
+            upiId: string | null;
+            createdAt: Date;
+            name: string;
             kingId: string | null;
             mobile: string;
+            googleId: string | null;
             role: import(".prisma/client").$Enums.Role;
-            name: string;
+            roles: import(".prisma/client").$Enums.Role[];
+            deactivatedRoles: import(".prisma/client").$Enums.Role[];
             email: string | null;
             isEmailVerified: boolean;
             pendingEmail: string | null;
-            googleId: string | null;
             village: string | null;
             district: string | null;
             state: string | null;
@@ -384,13 +386,11 @@ export declare class AuthController {
             sprayTankSizeL: number | null;
             soilType: import(".prisma/client").$Enums.SoilType | null;
             waterType: import(".prisma/client").$Enums.WaterType | null;
-            upiId: string | null;
             billPrintingAddress: string | null;
             farmName: string | null;
             farmAddress: string | null;
             referredById: string | null;
             isPhoneVerified: boolean;
-            createdAt: Date;
         };
     }>;
     sendMobileLinkOtp(user: AuthUser, body: SendMobileLinkOtpDto): Promise<{

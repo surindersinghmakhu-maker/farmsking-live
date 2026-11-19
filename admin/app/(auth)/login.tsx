@@ -24,6 +24,9 @@ import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { BlurView } from 'expo-blur';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/src/lib/firebase';
+import { getFreshDetachedRecaptchaHost, clearDetachedRecaptchaHost } from '@/src/utils/recaptchaHost';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -182,6 +185,39 @@ export default function LoginScreen() {
       return;
     }
     setOtpSending(true);
+
+    // 1. Dispatch real SMS OTP via Google Firebase Phone Auth on Web
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try {
+        const fullPhone = `+91${cleanNum}`;
+        const container = getFreshDetachedRecaptchaHost('fk-recaptcha-admin-login', 'recaptchaVerifierAdminLogin');
+        const verifier = new RecaptchaVerifier(auth, container, {
+          size: 'invisible',
+          callback: () => {},
+          'expired-callback': () => {
+            try {
+              verifier.clear();
+            } catch {}
+            (window as any)['recaptchaVerifierAdminLogin'] = null;
+          },
+        });
+        (window as any)['recaptchaVerifierAdminLogin'] = verifier;
+
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, verifier);
+        setConfirmationResult(confirmation);
+        setOtpCode('');
+        setOtpSent(true);
+        setResendTimer(60);
+        setTimeout(() => otpInputRef.current?.focus(), 300);
+        setOtpSending(false);
+        return;
+      } catch (fbErr: any) {
+        console.warn('[Admin Login] Firebase Phone Auth dispatch note:', fbErr?.code, fbErr?.message);
+        clearDetachedRecaptchaHost('fk-recaptcha-admin-login', 'recaptchaVerifierAdminLogin');
+      }
+    }
+
+    // 2. Fallback to server SMS / WhatsApp OTP
     try {
       const res: any = await sendLoginOtp(cleanNum);
       if (res?.devOtp) setDevOtp(res.devOtp);
@@ -206,6 +242,23 @@ export default function LoginScreen() {
     }
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
     setIsSubmitting(true);
+
+    // 1. Confirm with Firebase if Firebase session is active
+    if (confirmationResult) {
+      try {
+        const userCred = await confirmationResult.confirm(cleanCode);
+        const idToken = await userCred.user.getIdToken();
+        if (idToken) {
+          await firebaseLogin(idToken);
+          router.replace('/admin/(tabs)' as any);
+          return;
+        }
+      } catch (fbVerifyErr: any) {
+        console.warn('[Admin Login] Firebase verify note:', fbVerifyErr?.message);
+      }
+    }
+
+    // 2. Fallback to server OTP login
     try {
       await otpLogin({ mobile: cleanNum, otp: cleanCode });
       router.replace('/admin/(tabs)' as any);

@@ -8,23 +8,23 @@ export declare class CropProblemsController {
     constructor(cropProblemsService: CropProblemsService);
     create(user: AuthUser, dto: CreateCropProblemDto): Promise<{
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -36,14 +36,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -57,23 +57,23 @@ export declare class CropProblemsController {
     }>;
     findMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -85,14 +85,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -106,23 +106,23 @@ export declare class CropProblemsController {
     })[]>;
     findAssigned(user: AuthUser): Promise<({
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -134,14 +134,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -155,23 +155,23 @@ export declare class CropProblemsController {
     })[]>;
     findOne(user: AuthUser, id: string): Promise<{
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -183,14 +183,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -205,23 +205,23 @@ export declare class CropProblemsController {
     respond(user: AuthUser, id: string, dto: RespondCropProblemDto): Promise<{
         insertedScheduleDate: Date | null;
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -232,14 +232,14 @@ export declare class CropProblemsController {
             cropProblemId: string;
         }[];
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -253,23 +253,23 @@ export declare class CropProblemsController {
     }>;
     updateStatus(user: AuthUser, id: string, dto: UpdateCropProblemStatusDto): Promise<{
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -281,14 +281,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -305,23 +305,23 @@ export declare class CropProblemsController {
         feedback?: string;
     }): Promise<{
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -333,14 +333,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
@@ -354,23 +354,23 @@ export declare class CropProblemsController {
     }>;
     forwardToSeniorDoctor(user: AuthUser, id: string): Promise<{
         cropCycle: {
+            id: string;
+            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
-            id: string;
-            cropName: string;
         };
         assignedAdvisor: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
         } | null;
         reportedBy: {
             id: string;
-            mobile: string;
             name: string;
+            mobile: string;
             sprayTankSizeL: number | null;
         };
         photos: {
@@ -382,14 +382,14 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         description: string;
-        title: string;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         cropCycleId: string;
         reportedById: string;
+        title: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
         advisorResponse: string | null;
         recommendedProduct: string | null;
